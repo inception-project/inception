@@ -220,8 +220,7 @@ public class BratAjaxCasController
 
         Project project = new Project();
         if (!aCollection.equals("/")) {
-            List<Project> projects = repository.getProjects(aCollection.replace("/", ""));
-            project = projects.get(0);
+            project = repository.getProject(aCollection.replace("/", ""));
         }
         // Get list of TagSets configured in BRAT UI
 
@@ -251,8 +250,8 @@ public class BratAjaxCasController
             }
         }
         else {
-            List<Project> projects = repository.getProjects(aCollection.replace("/", ""));
-            project = projects.get(0);
+
+            project = repository.getProject(aCollection.replace("/", ""));
 
             for (SourceDocument document : repository.listSourceDocuments(project)) {
                 info.addDocument(document.getName());

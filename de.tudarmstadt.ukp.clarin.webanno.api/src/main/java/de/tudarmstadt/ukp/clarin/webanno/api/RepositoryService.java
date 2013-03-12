@@ -112,6 +112,14 @@ public interface RepositoryService
         throws IOException;
 
     /**
+     * A method that check is a project exists with the same name already.
+     * getSingleResult() fails if the project is not created, hence existProject
+     * returns false.
+     * @param name
+     * @return
+     */
+    boolean existsProject(String name);
+    /**
      * Exports an {@link AnnotationDocument } CAS Object as TCF/TXT/XMI... file formats.
      *
      * @param document
@@ -193,7 +201,7 @@ public interface RepositoryService
      * @return {@link Project} object from the database or an error if the project is not found.
      *         Exception is handled from the calling method.
      */
-    List<Project> getProjects(String name);
+    Project getProject(String name);
 
     /**
      * Get a {@link ProjectPermissions }objects where a project is member of. We need to get them,

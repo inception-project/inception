@@ -23,7 +23,6 @@ import static org.uimafit.pipeline.SimplePipeline.runPipeline;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileFilter;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -37,8 +36,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 import javax.annotation.Resource;
 import javax.persistence.EntityManager;
@@ -349,6 +346,19 @@ public class RepositoryServiceDbData
         entityManager.persist(aDocument);
     }
 
+    @Override
+    @Transactional
+    public boolean existsProject(String aName){
+        try{
+            entityManager.createQuery("FROM Project WHERE name = :name", Project.class)
+                    .setParameter("name", aName).getSingleResult();
+            return true;
+        }
+        catch(NoResultException ex){
+            return false;
+        }
+    }
+
     /**
      * A new directory is created using UUID so that every exported file will reside in its own
      * directory. This is useful as the written file can have multiple extensions based on the
@@ -386,10 +396,10 @@ public class RepositoryServiceDbData
                 " Exported file [" + aDocument.getName() + "] with ID [" + aDocument.getId()
                         + "] from Project[" + aProject.getId() + "]");
         createLog(aProject, aUser).removeAllAppenders();
-        // FIXME make it zip file
+
         if (exportTempDir.listFiles().length > 1) {
             try {
-                zipFolder(exportTempDir.getAbsolutePath(), exportTempDir.getName() + ".zip");
+                DaoUtils.zipFolder(exportTempDir, new File(exportTempDir.getName() + ".zip"));
             }
             catch (Exception e) {
                 createLog(aProject, aUser).info("Unable to create Zip File");
@@ -510,10 +520,10 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public List<Project> getProjects(String aName)
+    public Project getProject(String aName)
     {
         return entityManager.createQuery("FROM Project WHERE name = :name", Project.class)
-                .setParameter("name", aName).getResultList();
+                .setParameter("name", aName).getSingleResult();
     }
 
     @Override
@@ -779,54 +789,6 @@ public class RepositoryServiceDbData
             }
         }
         return writableFormats;
-    }
-
-    private void zipFolder(String srcFolder, String destZipFile)
-        throws Exception
-    {
-        ZipOutputStream zip = null;
-        FileOutputStream fileWriter = null;
-
-        fileWriter = new FileOutputStream(destZipFile);
-        zip = new ZipOutputStream(fileWriter);
-
-        addFolderToZip("", srcFolder, zip);
-        zip.flush();
-        zip.close();
-    }
-
-    private void addFileToZip(String path, String srcFile, ZipOutputStream zip)
-        throws Exception
-    {
-
-        File folder = new File(srcFile);
-        if (folder.isDirectory()) {
-            addFolderToZip(path, srcFile, zip);
-        }
-        else {
-            byte[] buf = new byte[1024];
-            int len;
-            FileInputStream in = new FileInputStream(srcFile);
-            zip.putNextEntry(new ZipEntry(path + "/" + folder.getName()));
-            while ((len = in.read(buf)) > 0) {
-                zip.write(buf, 0, len);
-            }
-        }
-    }
-
-    private void addFolderToZip(String path, String srcFolder, ZipOutputStream zip)
-        throws Exception
-    {
-        File folder = new File(srcFolder);
-
-        for (String fileName : folder.list()) {
-            if (path.equals("")) {
-                addFileToZip(folder.getName(), srcFolder + "/" + fileName, zip);
-            }
-            else {
-                addFileToZip(path + "/" + folder.getName(), srcFolder + "/" + fileName, zip);
-            }
-        }
     }
 
 }

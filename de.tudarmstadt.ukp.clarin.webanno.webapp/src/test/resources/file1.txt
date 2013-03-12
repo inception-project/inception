@@ -1,0 +1,2 @@
+This is content of file one to be ziped.
+It has two lines.

@@ -320,8 +320,8 @@ public class ProjectPage
 
                     // If only the project is new!
                     if (project.getId() == 0) {
-                        List<Project> projects = projectRepository.getProjects(project.getName());
-                        if (projects.size() > 0) {
+                        // Check if the project with this name already exist
+                        if(projectRepository.existsProject(project.getName())){
                             error("Project with this name already exist !");
                             LOG.error("Project with this name already exist !");
                         }
@@ -830,7 +830,7 @@ public class ProjectPage
                                                 newTag.setTagSet(newTagSet);
                                                 annotationService.createTag(newTag, user);
                                             }
-                                            info("TagSet succeffuly imported, Refresh page to see the imported tagset.");
+                                            info("TagSet successfully imported. Refresh page to see the imported TagSet.");
                                         }
                                         else {
                                             error("Tagset" + importedTagSets.get(0).getName()

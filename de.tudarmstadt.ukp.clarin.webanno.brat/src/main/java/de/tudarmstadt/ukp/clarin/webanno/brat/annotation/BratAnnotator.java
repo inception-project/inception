@@ -487,7 +487,7 @@ public class BratAnnotator
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = repository.getUser(username);
 
-        setProject(repository.getProjects(aProjectName.replace("/", "")).get(0));
+        setProject(repository.getProject(aProjectName.replace("/", "")));
         setDocument(repository.getSourceDocument(aDocumentName, project));
 
         if (sentenceAddress == -1 || document.getId() != currentDocumentId
@@ -518,7 +518,7 @@ public class BratAnnotator
     public void setAttributesForGetCollection(String aProjectName)
     {
         if (!aProjectName.equals("/")) {
-            setProject(repository.getProjects(aProjectName.replace("/", "")).get(0));
+            setProject(repository.getProject(aProjectName.replace("/", "")));
 
             if (project.getId() != currentprojectId) {
                 setAnnotationLayers((ArrayList<TagSet>) annotationService.listTagSets(project));

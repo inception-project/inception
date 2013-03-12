@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -118,7 +118,7 @@ public class WicketApplication
                     new JavaScriptResourceReference(Myresources.class, "client/src/annotator_ui.js"));
             mountResource("/client/src/spinner.js",
                     new JavaScriptResourceReference(Myresources.class, "client/src/spinner.js"));
-            
+
             mountResource("/client/src/curation_mod.js",
             		new JavaScriptResourceReference(Myresources.class, "client/src/curation_mod.js"));
 
@@ -128,6 +128,15 @@ public class WicketApplication
                     new CssResourceReference(Myresources.class, "client/css/style-vis.css"));
             mountResource("/style-ui.css",
                     new CssResourceReference(Myresources.class, "client/css/style-ui.css"));
+
+            // mount fonts
+            mountResource("/static/fonts/Astloch-Bold.ttf",
+                    new CssResourceReference(Myresources.class, "fonts/Astloch-Bold.ttf"));
+            mountResource("/static/fonts/Liberation_Sans-Regular.ttf",
+                    new CssResourceReference(Myresources.class, "fonts/Liberation_Sans-Regular.ttf"));
+            mountResource("/static/fonts/PT_Sans-Caption-Web-Regular.ttf",
+                    new CssResourceReference(Myresources.class, "fonts/PT_Sans-Caption-Web-Regular.ttf"));
+
             isInitialized = true;
         }
     }
