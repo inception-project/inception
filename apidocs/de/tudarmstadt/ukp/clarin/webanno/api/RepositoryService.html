@@ -1,0 +1,962 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!--NewPage-->
+<HTML>
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<TITLE>
+RepositoryService (WebAnno 0.1.0 API)
+</TITLE>
+
+
+<LINK REL ="stylesheet" TYPE="text/css" HREF="../../../../../../stylesheet.css" TITLE="Style">
+
+<SCRIPT type="text/javascript">
+function windowTitle()
+{
+    if (location.href.indexOf('is-external=true') == -1) {
+        parent.document.title="RepositoryService (WebAnno 0.1.0 API)";
+    }
+}
+</SCRIPT>
+<NOSCRIPT>
+</NOSCRIPT>
+
+</HEAD>
+
+<BODY BGCOLOR="white" onload="windowTitle();">
+<HR>
+
+
+<!-- ========= START OF TOP NAVBAR ======= -->
+<A NAME="navbar_top"><!-- --></A>
+<A HREF="#skip-navbar_top" title="Skip navigation links"></A>
+<TABLE BORDER="0" WIDTH="100%" CELLPADDING="1" CELLSPACING="0" SUMMARY="">
+<TR>
+<TD COLSPAN=2 BGCOLOR="#EEEEFF" CLASS="NavBarCell1">
+<A NAME="navbar_top_firstrow"><!-- --></A>
+<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="3" SUMMARY="">
+  <TR ALIGN="center" VALIGN="top">
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../../overview-summary.html"><FONT CLASS="NavBarFont1"><B>Overview</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-summary.html"><FONT CLASS="NavBarFont1"><B>Package</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#FFFFFF" CLASS="NavBarCell1Rev"> &nbsp;<FONT CLASS="NavBarFont1Rev"><B>Class</B></FONT>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="class-use/RepositoryService.html"><FONT CLASS="NavBarFont1"><B>Use</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-tree.html"><FONT CLASS="NavBarFont1"><B>Tree</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../../deprecated-list.html"><FONT CLASS="NavBarFont1"><B>Deprecated</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../../index-all.html"><FONT CLASS="NavBarFont1"><B>Index</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../../help-doc.html"><FONT CLASS="NavBarFont1"><B>Help</B></FONT></A>&nbsp;</TD>
+  </TR>
+</TABLE>
+</TD>
+<TD ALIGN="right" VALIGN="top" ROWSPAN=3><EM>
+</EM>
+</TD>
+</TR>
+
+<TR>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+&nbsp;<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html" title="interface in de.tudarmstadt.ukp.clarin.webanno.api"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;NEXT CLASS</FONT></TD>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+  <A HREF="../../../../../../index.html?de/tudarmstadt/ukp/clarin/webanno/api/RepositoryService.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+&nbsp;<A HREF="RepositoryService.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
+&nbsp;<SCRIPT type="text/javascript">
+  <!--
+  if(window==top) {
+    document.writeln('<A HREF="../../../../../../allclasses-noframe.html"><B>All Classes</B></A>');
+  }
+  //-->
+</SCRIPT>
+<NOSCRIPT>
+  <A HREF="../../../../../../allclasses-noframe.html"><B>All Classes</B></A>
+</NOSCRIPT>
+
+
+</FONT></TD>
+</TR>
+<TR>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+DETAIL:&nbsp;FIELD&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
+</TR>
+</TABLE>
+<A NAME="skip-navbar_top"></A>
+<!-- ========= END OF TOP NAVBAR ========= -->
+
+<HR>
+<!-- ======== START OF CLASS DATA ======== -->
+<H2>
+<FONT SIZE="-1">
+de.tudarmstadt.ukp.clarin.webanno.api</FONT>
+<BR>
+Interface RepositoryService</H2>
+<DL>
+<DT><B>All Known Implementing Classes:</B> <DD><A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/dao/RepositoryServiceDbData.html" title="class in de.tudarmstadt.ukp.clarin.webanno.brat.dao">RepositoryServiceDbData</A></DD>
+</DL>
+<HR>
+<DL>
+<DT><PRE>public interface <B>RepositoryService</B></DL>
+</PRE>
+
+<P>
+This interface contains methods that are related to accessing/creating/deleting... documents,
+ Users, and Projects for the annotation system. while meta data about documents and projects and
+ users are stored in the database, source and annotation documents are stored in a file system
+<P>
+
+<P>
+<DL>
+<DT><B>Author:</B></DT>
+  <DD>Seid Muhie Yimam, Richard Eckart de Castilho</DD>
+</DL>
+<HR>
+
+<P>
+
+<!-- ========== METHOD SUMMARY =========== -->
+
+<A NAME="method_summary"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Method Summary</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/RepositoryService.html#createAnnotationDocument(de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument)">createAnnotationDocument</A></B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">AnnotationDocument</A>&nbsp;annotationDocument)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;creates the <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>AnnotationDocument</CODE></A> object in the database.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/RepositoryService.html#createAnnotationDocumentContent(org.apache.uima.jcas.JCas, de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument, de.tudarmstadt.ukp.clarin.webanno.model.User)">createAnnotationDocumentContent</A></B>(org.apache.uima.jcas.JCas&nbsp;jCas,
+                                <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">AnnotationDocument</A>&nbsp;annotationDocument,
+                                <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;user)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Creates an annotation document which is CAS object seriealized in xmi format using the
+ <CODE>SerializedCasWriter</CODE>.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/RepositoryService.html#createProject(de.tudarmstadt.ukp.clarin.webanno.model.Project, de.tudarmstadt.ukp.clarin.webanno.model.User)">createProject</A></B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;project,
+              <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;user)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Creates a <code>Project</code>.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/RepositoryService.html#createProjectPermission(de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermissions)">createProjectPermission</A></B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/ProjectPermissions.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">ProjectPermissions</A>&nbsp;permission)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;creates a project permission, adding permission level for the user in the given project</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/RepositoryService.html#createSourceDocument(de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument, de.tudarmstadt.ukp.clarin.webanno.model.User)">createSourceDocument</A></B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">SourceDocument</A>&nbsp;document,
+                     <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;user)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Creates a <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>SourceDocument</CODE></A> in a database.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/File.html?is-external=true" title="class or interface in java.io">File</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/RepositoryService.html#exportAnnotationDocument(de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument, de.tudarmstadt.ukp.clarin.webanno.model.Project, de.tudarmstadt.ukp.clarin.webanno.model.User, java.lang.Class)">exportAnnotationDocument</A></B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">SourceDocument</A>&nbsp;document,
+                         <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;project,
+                         <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;user,
+                         <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/Class.html?is-external=true" title="class or interface in java.lang">Class</A>&nbsp;writer)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Exports an <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>AnnotationDocument</CODE></A> CAS Object as TCF/TXT/XMI... file formats.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">AnnotationDocument</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/RepositoryService.html#getAnnotationDocument(de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument, de.tudarmstadt.ukp.clarin.webanno.model.User)">getAnnotationDocument</A></B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">SourceDocument</A>&nbsp;document,
+                      <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;user)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Get an <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>AnnotationDocument</CODE></A> object from the database using the <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>SourceDocument</CODE></A>
+ and <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>User</CODE></A> Objects.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;org.apache.uima.jcas.JCas</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/RepositoryService.html#getAnnotationDocumentContent(de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument)">getAnnotationDocumentContent</A></B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">AnnotationDocument</A>&nbsp;annotationDocument)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;If already created, returns the CAS object either for document annotation for example in
+ <CODE>de.tudarmstadt.ukp.clarin.webanno.brat.ajax.controller.BratAjaxCasController#getDocument</CODE>
+ or for exporting the annotated document as TCF files as in
+ <CODE>de.tudarmstadt.ukp.clarin.webanno.brat.ajax.controller.BratAjaxCasController#retrieveStored</CODE></TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Authority.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Authority</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/RepositoryService.html#getAuthorities(de.tudarmstadt.ukp.clarin.webanno.model.User)">getAuthorities</A></B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;user)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns a role of a user, globally we will have ROLE_ADMIN and ROLE_USER</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/File.html?is-external=true" title="class or interface in java.io">File</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/RepositoryService.html#getDir()">getDir</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The Directory where the <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>SourceDocument</CODE></A>s and <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>AnnotationDocument</CODE></A>s stored</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/RepositoryService.html#getPermisionLevel(de.tudarmstadt.ukp.clarin.webanno.model.User, de.tudarmstadt.ukp.clarin.webanno.model.Project)">getPermisionLevel</A></B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;user,
+                  <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;project)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;For a given project, get the permission level of the user if it is granted</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/ProjectPermissions.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">ProjectPermissions</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/RepositoryService.html#getProjectPermisions(de.tudarmstadt.ukp.clarin.webanno.model.Project)">getProjectPermisions</A></B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;project)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Get a <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/ProjectPermissions.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>ProjectPermissions</CODE></A>objects where a project is member of.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/ProjectPermissions.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">ProjectPermissions</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/RepositoryService.html#getProjectPermission(de.tudarmstadt.ukp.clarin.webanno.model.User, de.tudarmstadt.ukp.clarin.webanno.model.Project)">getProjectPermission</A></B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;user,
+                     <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;project)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;get a permission object where a user is granted permission/permissions;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/RepositoryService.html#getProjects(java.lang.String)">getProjects</A></B>(<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Get a <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>Project</CODE></A> from the database the name of the Project</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</A>&lt;<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>,<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/Class.html?is-external=true" title="class or interface in java.lang">Class</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/RepositoryService.html#getReadableFormats()">getReadableFormats</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns the format of the <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>SourceDocument</CODE></A> to be read from a properties File</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">SourceDocument</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/RepositoryService.html#getSourceDocument(java.lang.String, de.tudarmstadt.ukp.clarin.webanno.model.Project)">getSourceDocument</A></B>(<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;documentName,
+                  <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;project)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Get meta data information about <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>SourceDocument</CODE></A> from the database.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/File.html?is-external=true" title="class or interface in java.io">File</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/RepositoryService.html#getSourceDocumentContent(de.tudarmstadt.ukp.clarin.webanno.model.Project, de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument)">getSourceDocumentContent</A></B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;project,
+                         <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">SourceDocument</A>&nbsp;document)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Return the Master TCF file Directory path.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/RepositoryService.html#getUser(java.lang.String)">getUser</A></B>(<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;username)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Get a <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>User</CODE></A> object from the database based on the username.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</A>&lt;<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>,<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/Class.html?is-external=true" title="class or interface in java.lang">Class</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/RepositoryService.html#getWritableFormats()">getWritableFormats</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns the format of <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>AnnotationDocument</CODE></A> while exporting</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">AnnotationDocument</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/RepositoryService.html#listAnnotationDocument(de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument)">listAnnotationDocument</A></B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">SourceDocument</A>&nbsp;document)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;List all the <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>AnnotationDocument</CODE></A>s, if available for a given <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>SourceDocument</CODE></A>.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/RepositoryService.html#listProjectPermisionLevels(de.tudarmstadt.ukp.clarin.webanno.model.User, de.tudarmstadt.ukp.clarin.webanno.model.Project)">listProjectPermisionLevels</A></B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;user,
+                           <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;project)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Get list of permissions a user have in a given project</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/RepositoryService.html#listProjects()">listProjects</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;List all Projects.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/RepositoryService.html#listProjectUsers(de.tudarmstadt.ukp.clarin.webanno.model.Project)">listProjectUsers</A></B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;project)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;list users in a project.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">SourceDocument</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/RepositoryService.html#listSourceDocuments(de.tudarmstadt.ukp.clarin.webanno.model.Project)">listSourceDocuments</A></B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;aProject)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;List all source documents in a project.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/RepositoryService.html#listUsers()">listUsers</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Lists all users in the application.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/RepositoryService.html#removeProject(de.tudarmstadt.ukp.clarin.webanno.model.Project, de.tudarmstadt.ukp.clarin.webanno.model.User)">removeProject</A></B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;project,
+              <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;aser)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Remove a project.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/RepositoryService.html#removeProjectPermission(de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermissions)">removeProjectPermission</A></B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/ProjectPermissions.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">ProjectPermissions</A>&nbsp;projectPermission)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;remove a user permission from the project</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/RepositoryService.html#removeSourceDocument(de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument, de.tudarmstadt.ukp.clarin.webanno.model.User)">removeSourceDocument</A></B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">SourceDocument</A>&nbsp;document,
+                     <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;user)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ROLE_ADMINs or Projetc admins can remove source documents from a project. removing a a source
+ document also removes an annotation document related to that document</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/RepositoryService.html#uploadSourceDocument(java.lang.String, de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument, long, de.tudarmstadt.ukp.clarin.webanno.model.User)">uploadSourceDocument</A></B>(<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;text,
+                     <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">SourceDocument</A>&nbsp;document,
+                     long&nbsp;projectId,
+                     <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;user)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This method creates the source document (TCF File) to a file system.</TD>
+</TR>
+</TABLE>
+&nbsp;
+<P>
+
+<!-- ============ METHOD DETAIL ========== -->
+
+<A NAME="method_detail"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
+<B>Method Detail</B></FONT></TH>
+</TR>
+</TABLE>
+
+<A NAME="createAnnotationDocument(de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument)"><!-- --></A><H3>
+createAnnotationDocument</H3>
+<PRE>
+<FONT SIZE="-1">@PreAuthorize(value="hasAnyRole(\'ROLE_ADMIN\',\'ROLE_USER\')")
+</FONT>void <B>createAnnotationDocument</B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">AnnotationDocument</A>&nbsp;annotationDocument)</PRE>
+<DL>
+<DD>creates the <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>AnnotationDocument</CODE></A> object in the database.
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>annotationDocument</CODE> - <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>AnnotationDocument</CODE></A> comprises of the the name of the <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>SourceDocument</CODE></A>
+            , id of <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>SourceDocument</CODE></A>, id of the <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>Project</CODE></A>, and id of <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>User</CODE></A></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="createAnnotationDocumentContent(org.apache.uima.jcas.JCas, de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument, de.tudarmstadt.ukp.clarin.webanno.model.User)"><!-- --></A><H3>
+createAnnotationDocumentContent</H3>
+<PRE>
+<FONT SIZE="-1">@PreAuthorize(value="hasAnyRole(\'ROLE_ADMIN\',\'ROLE_USER\')")
+</FONT>void <B>createAnnotationDocumentContent</B>(org.apache.uima.jcas.JCas&nbsp;jCas,
+                                                  <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">AnnotationDocument</A>&nbsp;annotationDocument,
+                                                  <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;user)
+                                     throws <A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></PRE>
+<DL>
+<DD>Creates an annotation document which is CAS object seriealized in xmi format using the
+ <CODE>SerializedCasWriter</CODE>. The <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>AnnotationDocument</CODE></A> is stored in the
+ weblab.home/project/Project.id/document/document.id/annotation/username.ser. annotated
+ documents are stored per project, user and document
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>user</CODE> - TODO
+<DT><B>Throws:</B>
+<DD><CODE><A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="createProject(de.tudarmstadt.ukp.clarin.webanno.model.Project, de.tudarmstadt.ukp.clarin.webanno.model.User)"><!-- --></A><H3>
+createProject</H3>
+<PRE>
+<FONT SIZE="-1">@PreAuthorize(value="hasAnyRole(\'ROLE_ADMIN\')")
+</FONT>void <B>createProject</B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;project,
+                                <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;user)
+                   throws <A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></PRE>
+<DL>
+<DD>Creates a <code>Project</code>. Creating a project needs a global ROLE_ADMIN role. For the first
+ time the project is created, an associated project path will be created on the file system as
+ <code>weblab.home/project/Project.id </code>
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>aProject</CODE> - The <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>Project</CODE></A> object to be created.<DD><CODE>user</CODE> - TODO
+<DT><B>Throws:</B>
+<DD><CODE><A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE> - If the specified weblab.home directory is not available no write permission</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="createProjectPermission(de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermissions)"><!-- --></A><H3>
+createProjectPermission</H3>
+<PRE>
+<FONT SIZE="-1">@PreAuthorize(value="hasAnyRole(\'ROLE_ADMIN\',\'ROLE_USER\')")
+</FONT>void <B>createProjectPermission</B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/ProjectPermissions.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">ProjectPermissions</A>&nbsp;permission)
+                             throws <A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></PRE>
+<DL>
+<DD>creates a project permission, adding permission level for the user in the given project
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>permission</CODE> - 
+<DT><B>Throws:</B>
+<DD><CODE><A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="createSourceDocument(de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument, de.tudarmstadt.ukp.clarin.webanno.model.User)"><!-- --></A><H3>
+createSourceDocument</H3>
+<PRE>
+<FONT SIZE="-1">@PreAuthorize(value="hasAnyRole(\'ROLE_ADMIN\',\'ROLE_USER\')")
+</FONT>void <B>createSourceDocument</B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">SourceDocument</A>&nbsp;document,
+                                       <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;user)
+                          throws <A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></PRE>
+<DL>
+<DD>Creates a <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>SourceDocument</CODE></A> in a database. The source document is created by ROLE_ADMIN
+ or Project admins. Source documents are created per project and it should have a unique name
+ in the <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>Project</CODE></A> it belongs. renaming a a source document is not possible, rather the
+ administrator should delete and re create it.
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>document</CODE> - <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>SourceDocument</CODE></A> to be created<DD><CODE>user</CODE> - TODO
+<DT><B>Throws:</B>
+<DD><CODE><A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="exportAnnotationDocument(de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument, de.tudarmstadt.ukp.clarin.webanno.model.Project, de.tudarmstadt.ukp.clarin.webanno.model.User, java.lang.Class)"><!-- --></A><H3>
+exportAnnotationDocument</H3>
+<PRE>
+<A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/File.html?is-external=true" title="class or interface in java.io">File</A> <B>exportAnnotationDocument</B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">SourceDocument</A>&nbsp;document,
+                              <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;project,
+                              <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;user,
+                              <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/Class.html?is-external=true" title="class or interface in java.lang">Class</A>&nbsp;writer)
+                              throws <A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/FileNotFoundException.html?is-external=true" title="class or interface in java.io">FileNotFoundException</A>,
+                                     org.apache.uima.UIMAException,
+                                     <A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A>,
+                                     eu.clarin.weblicht.wlfxb.io.WLFormatException,
+                                     <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/ClassNotFoundException.html?is-external=true" title="class or interface in java.lang">ClassNotFoundException</A></PRE>
+<DL>
+<DD>Exports an <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>AnnotationDocument</CODE></A> CAS Object as TCF/TXT/XMI... file formats.
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>document</CODE> - The <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>SourceDocument</CODE></A> where we get the id which hosts both the source
+            Document and the annotated document<DD><CODE>project</CODE> - the project that <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>AnnotationDocument</CODE></A> belongs to<DD><CODE>user</CODE> - the <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>User</CODE></A> who annotates the document.
+<DT><B>Throws:</B>
+<DD><CODE><A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/FileNotFoundException.html?is-external=true" title="class or interface in java.io">FileNotFoundException</A></CODE>
+<DD><CODE>org.apache.uima.UIMAException</CODE>
+<DD><CODE><A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE>
+<DD><CODE>eu.clarin.weblicht.wlfxb.io.WLFormatException</CODE>
+<DD><CODE><A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/ClassNotFoundException.html?is-external=true" title="class or interface in java.lang">ClassNotFoundException</A></CODE></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getAnnotationDocument(de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument, de.tudarmstadt.ukp.clarin.webanno.model.User)"><!-- --></A><H3>
+getAnnotationDocument</H3>
+<PRE>
+<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">AnnotationDocument</A> <B>getAnnotationDocument</B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">SourceDocument</A>&nbsp;document,
+                                         <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;user)</PRE>
+<DL>
+<DD>Get an <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>AnnotationDocument</CODE></A> object from the database using the <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>SourceDocument</CODE></A>
+ and <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>User</CODE></A> Objects. If <code>getAnnotationDocument</code> fails, it will be created anew
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>annotationDOcument</CODE> - 
+<DT><B>Returns:</B><DD><A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>AnnotationDocument</CODE></A></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getAnnotationDocumentContent(de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument)"><!-- --></A><H3>
+getAnnotationDocumentContent</H3>
+<PRE>
+org.apache.uima.jcas.JCas <B>getAnnotationDocumentContent</B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">AnnotationDocument</A>&nbsp;annotationDocument)
+                                                       throws org.apache.uima.UIMAException,
+                                                              <A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A>,
+                                                              <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/ClassNotFoundException.html?is-external=true" title="class or interface in java.lang">ClassNotFoundException</A></PRE>
+<DL>
+<DD>If already created, returns the CAS object either for document annotation for example in
+ <CODE>de.tudarmstadt.ukp.clarin.webanno.brat.ajax.controller.BratAjaxCasController#getDocument</CODE>
+ or for exporting the annotated document as TCF files as in
+ <CODE>de.tudarmstadt.ukp.clarin.webanno.brat.ajax.controller.BratAjaxCasController#retrieveStored</CODE>
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>annotationDocument</CODE> - 
+<DT><B>Returns:</B><DD>
+<DT><B>Throws:</B>
+<DD><CODE>org.apache.uima.UIMAException</CODE>
+<DD><CODE><A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE>
+<DD><CODE><A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/ClassNotFoundException.html?is-external=true" title="class or interface in java.lang">ClassNotFoundException</A></CODE></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getAuthorities(de.tudarmstadt.ukp.clarin.webanno.model.User)"><!-- --></A><H3>
+getAuthorities</H3>
+<PRE>
+<A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Authority.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Authority</A>&gt; <B>getAuthorities</B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;user)</PRE>
+<DL>
+<DD>Returns a role of a user, globally we will have ROLE_ADMIN and ROLE_USER
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>aUser</CODE> - the <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>User</CODE></A> object
+<DT><B>Returns:</B><DD></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getDir()"><!-- --></A><H3>
+getDir</H3>
+<PRE>
+<A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/File.html?is-external=true" title="class or interface in java.io">File</A> <B>getDir</B>()</PRE>
+<DL>
+<DD>The Directory where the <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>SourceDocument</CODE></A>s and <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>AnnotationDocument</CODE></A>s stored
+<P>
+<DD><DL>
+
+<DT><B>Returns:</B><DD></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getPermisionLevel(de.tudarmstadt.ukp.clarin.webanno.model.User, de.tudarmstadt.ukp.clarin.webanno.model.Project)"><!-- --></A><H3>
+getPermisionLevel</H3>
+<PRE>
+<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>getPermisionLevel</B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;user,
+                         <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;project)</PRE>
+<DL>
+<DD>For a given project, get the permission level of the user if it is granted
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>aUser</CODE> - the user, if already assigned in that project<DD><CODE>aProject</CODE> - the project to be examined
+<DT><B>Returns:</B><DD></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getProjectPermission(de.tudarmstadt.ukp.clarin.webanno.model.User, de.tudarmstadt.ukp.clarin.webanno.model.Project)"><!-- --></A><H3>
+getProjectPermission</H3>
+<PRE>
+<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/ProjectPermissions.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">ProjectPermissions</A> <B>getProjectPermission</B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;user,
+                                        <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;project)</PRE>
+<DL>
+<DD>get a permission object where a user is granted permission/permissions;
+<P>
+<DD><DL>
+
+<DT><B>Returns:</B><DD></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getProjects(java.lang.String)"><!-- --></A><H3>
+getProjects</H3>
+<PRE>
+<A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&gt; <B>getProjects</B>(<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;name)</PRE>
+<DL>
+<DD>Get a <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>Project</CODE></A> from the database the name of the Project
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>name</CODE> - name of the project
+<DT><B>Returns:</B><DD><A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>Project</CODE></A> object from the database or an error if the project is not found.
+         Exception is handled from the calling method.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getProjectPermisions(de.tudarmstadt.ukp.clarin.webanno.model.Project)"><!-- --></A><H3>
+getProjectPermisions</H3>
+<PRE>
+<A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/ProjectPermissions.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">ProjectPermissions</A>&gt; <B>getProjectPermisions</B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;project)</PRE>
+<DL>
+<DD>Get a <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/ProjectPermissions.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>ProjectPermissions</CODE></A>objects where a project is member of. We need to get them,
+ for example if the associated <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>Project</CODE></A> is deleted, the <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/ProjectPermissions.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>ProjectPermissions</CODE></A>
+ objects too.
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>project</CODE> - The project contained in a projectPermision
+<DT><B>Returns:</B><DD>the <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/ProjectPermissions.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>ProjectPermissions</CODE></A> list to be analysed.</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getSourceDocument(java.lang.String, de.tudarmstadt.ukp.clarin.webanno.model.Project)"><!-- --></A><H3>
+getSourceDocument</H3>
+<PRE>
+<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">SourceDocument</A> <B>getSourceDocument</B>(<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;documentName,
+                                 <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;project)</PRE>
+<DL>
+<DD>Get meta data information about <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>SourceDocument</CODE></A> from the database. This method is
+ called either for <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>AnnotationDocument</CODE></A> object creation or
+ <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/RepositoryService.html#createSourceDocument(de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument, de.tudarmstadt.ukp.clarin.webanno.model.User)"><CODE>createSourceDocument(SourceDocument, User)</CODE></A>
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>documentName</CODE> - the name of the <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>SourceDocument</CODE></A><DD><CODE>project</CODE> - the <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>Project</CODE></A> where the <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>SourceDocument</CODE></A> belongs
+<DT><B>Returns:</B><DD></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getSourceDocumentContent(de.tudarmstadt.ukp.clarin.webanno.model.Project, de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument)"><!-- --></A><H3>
+getSourceDocumentContent</H3>
+<PRE>
+<A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/File.html?is-external=true" title="class or interface in java.io">File</A> <B>getSourceDocumentContent</B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;project,
+                              <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">SourceDocument</A>&nbsp;document)</PRE>
+<DL>
+<DD>Return the Master TCF file Directory path. For the first time, all available TCF layers will
+ be read and converted to CAS object. subsequent accesses will be to the annotated document
+ unless and otherwise the document is removed from the project.
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>project</CODE> - The <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>Project</CODE></A> wherever the Source document belongs<DD><CODE>document</CODE> - The <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>SourceDocument</CODE></A> to be examined
+<DT><B>Returns:</B><DD>the Directory path of the source document</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getUser(java.lang.String)"><!-- --></A><H3>
+getUser</H3>
+<PRE>
+<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A> <B>getUser</B>(<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;username)</PRE>
+<DL>
+<DD>Get a <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>User</CODE></A> object from the database based on the username.
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>username</CODE> - the username to be searched in the database
+<DT><B>Returns:</B><DD>a Single <code>User</code> object</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="listAnnotationDocument(de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument)"><!-- --></A><H3>
+listAnnotationDocument</H3>
+<PRE>
+<A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">AnnotationDocument</A>&gt; <B>listAnnotationDocument</B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">SourceDocument</A>&nbsp;document)</PRE>
+<DL>
+<DD>List all the <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>AnnotationDocument</CODE></A>s, if available for a given <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>SourceDocument</CODE></A>.
+ Returns list of <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>AnnotationDocument</CODE></A>s for all <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>User</CODE></A>s in the <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>Project</CODE></A> that
+ has already annotated the <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>SourceDocument</CODE></A>
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>document</CODE> - the <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>SourceDocument</CODE></A>
+<DT><B>Returns:</B><DD><A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>AnnotationDocument</CODE></A></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="listProjects()"><!-- --></A><H3>
+listProjects</H3>
+<PRE>
+<A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&gt; <B>listProjects</B>()</PRE>
+<DL>
+<DD>List all Projects. If the user logged have a ROLE_ADMIN, he can see all the projects.
+ Otherwise, a user will see projects only he is member of.
+<P>
+<DD><DL>
+
+<DT><B>Returns:</B><DD></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="listProjectUsers(de.tudarmstadt.ukp.clarin.webanno.model.Project)"><!-- --></A><H3>
+listProjectUsers</H3>
+<PRE>
+<A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt; <B>listProjectUsers</B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;project)</PRE>
+<DL>
+<DD>list users in a project. Hence, only users in a project can annotate documents
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>project</CODE> - The project where users are member of
+<DT><B>Returns:</B><DD>returns list of <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>User</CODE></A>s in a project</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="listSourceDocuments(de.tudarmstadt.ukp.clarin.webanno.model.Project)"><!-- --></A><H3>
+listSourceDocuments</H3>
+<PRE>
+<A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">SourceDocument</A>&gt; <B>listSourceDocuments</B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;aProject)</PRE>
+<DL>
+<DD>List all source documents in a project. The source documents are the original TCF documents
+ imported.
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>aProject</CODE> - The Project we are looking for source documents
+<DT><B>Returns:</B><DD>list of source documents</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="listUsers()"><!-- --></A><H3>
+listUsers</H3>
+<PRE>
+<A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&gt; <B>listUsers</B>()</PRE>
+<DL>
+<DD>Lists all users in the application.
+<P>
+<DD><DL>
+
+<DT><B>Returns:</B><DD>list of users</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="removeProjectPermission(de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermissions)"><!-- --></A><H3>
+removeProjectPermission</H3>
+<PRE>
+<FONT SIZE="-1">@PreAuthorize(value="hasAnyRole(\'ROLE_ADMIN\',\'ROLE_USER\')")
+</FONT>void <B>removeProjectPermission</B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/ProjectPermissions.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">ProjectPermissions</A>&nbsp;projectPermission)
+                             throws <A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></PRE>
+<DL>
+<DD>remove a user permission from the project
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>projectPermission</CODE> - TODO
+<DT><B>Throws:</B>
+<DD><CODE><A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="removeProject(de.tudarmstadt.ukp.clarin.webanno.model.Project, de.tudarmstadt.ukp.clarin.webanno.model.User)"><!-- --></A><H3>
+removeProject</H3>
+<PRE>
+<FONT SIZE="-1">@PreAuthorize(value="hasAnyRole(\'ROLE_ADMIN\',\'ROLE_USER\')")
+</FONT>void <B>removeProject</B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;project,
+                                <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;aser)
+                   throws <A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></PRE>
+<DL>
+<DD>Remove a project. A ROLE_ADMIN or project admin can remove a project. removing a project will
+ remove associated source documents and annotation documents.
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>project</CODE> - the project to be deleted<DD><CODE>aUser</CODE> - TODO
+<DT><B>Throws:</B>
+<DD><CODE><A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE> - if the project to be deleted is not available in the file system</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="removeSourceDocument(de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument, de.tudarmstadt.ukp.clarin.webanno.model.User)"><!-- --></A><H3>
+removeSourceDocument</H3>
+<PRE>
+<FONT SIZE="-1">@PreAuthorize(value="hasAnyRole(\'ROLE_ADMIN\',\'ROLE_USER\')")
+</FONT>void <B>removeSourceDocument</B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">SourceDocument</A>&nbsp;document,
+                                       <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;user)
+                          throws <A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></PRE>
+<DL>
+<DD>ROLE_ADMINs or Projetc admins can remove source documents from a project. removing a a source
+ document also removes an annotation document related to that document
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>document</CODE> - the source document to be deleted<DD><CODE>user</CODE> - TODO
+<DT><B>Throws:</B>
+<DD><CODE><A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE> - If the source document searched for deletion is not availble</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="uploadSourceDocument(java.lang.String, de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument, long, de.tudarmstadt.ukp.clarin.webanno.model.User)"><!-- --></A><H3>
+uploadSourceDocument</H3>
+<PRE>
+<FONT SIZE="-1">@PreAuthorize(value="hasAnyRole(\'ROLE_ADMIN\',\'ROLE_USER\')")
+</FONT>void <B>uploadSourceDocument</B>(<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;text,
+                                       <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">SourceDocument</A>&nbsp;document,
+                                       long&nbsp;projectId,
+                                       <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;user)
+                          throws <A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A>,
+                                 org.apache.uima.UIMAException,
+                                 eu.clarin.weblicht.wlfxb.io.WLFormatException</PRE>
+<DL>
+<DD>This method creates the source document (TCF File) to a file system. It creates a directory
+ structure under weblab.home/project/project.id/document/Document.id/source/document.name.xml
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>text</CODE> - the TCF file content<DD><CODE>document</CODE> - The <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>SourceDocument</CODE></A> object to be created<DD><CODE>projectId</CODE> - The id of the <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>Project</CODE></A><DD><CODE>user</CODE> - TODO
+<DT><B>Throws:</B>
+<DD><CODE><A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE>
+<DD><CODE>org.apache.uima.UIMAException</CODE>
+<DD><CODE>eu.clarin.weblicht.wlfxb.io.WLFormatException</CODE></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getReadableFormats()"><!-- --></A><H3>
+getReadableFormats</H3>
+<PRE>
+<A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</A>&lt;<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>,<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/Class.html?is-external=true" title="class or interface in java.lang">Class</A>&gt; <B>getReadableFormats</B>()
+                                     throws <A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A>,
+                                            <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/ClassNotFoundException.html?is-external=true" title="class or interface in java.lang">ClassNotFoundException</A></PRE>
+<DL>
+<DD>Returns the format of the <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>SourceDocument</CODE></A> to be read from a properties File
+<P>
+<DD><DL>
+
+<DT><B>Returns:</B><DD>
+<DT><B>Throws:</B>
+<DD><CODE><A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE>
+<DD><CODE><A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/ClassNotFoundException.html?is-external=true" title="class or interface in java.lang">ClassNotFoundException</A></CODE></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getWritableFormats()"><!-- --></A><H3>
+getWritableFormats</H3>
+<PRE>
+<A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</A>&lt;<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>,<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/Class.html?is-external=true" title="class or interface in java.lang">Class</A>&gt; <B>getWritableFormats</B>()
+                                     throws <A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A>,
+                                            <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/ClassNotFoundException.html?is-external=true" title="class or interface in java.lang">ClassNotFoundException</A></PRE>
+<DL>
+<DD>Returns the format of <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>AnnotationDocument</CODE></A> while exporting
+<P>
+<DD><DL>
+
+<DT><B>Returns:</B><DD>
+<DT><B>Throws:</B>
+<DD><CODE><A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE>
+<DD><CODE><A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/ClassNotFoundException.html?is-external=true" title="class or interface in java.lang">ClassNotFoundException</A></CODE></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="listProjectPermisionLevels(de.tudarmstadt.ukp.clarin.webanno.model.User, de.tudarmstadt.ukp.clarin.webanno.model.Project)"><!-- --></A><H3>
+listProjectPermisionLevels</H3>
+<PRE>
+<A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt; <B>listProjectPermisionLevels</B>(<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;user,
+                                        <A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;project)</PRE>
+<DL>
+<DD>Get list of permissions a user have in a given project
+<P>
+<DD><DL>
+
+<DT><B>Returns:</B><DD></DL>
+</DD>
+</DL>
+<!-- ========= END OF CLASS DATA ========= -->
+<HR>
+
+
+<!-- ======= START OF BOTTOM NAVBAR ====== -->
+<A NAME="navbar_bottom"><!-- --></A>
+<A HREF="#skip-navbar_bottom" title="Skip navigation links"></A>
+<TABLE BORDER="0" WIDTH="100%" CELLPADDING="1" CELLSPACING="0" SUMMARY="">
+<TR>
+<TD COLSPAN=2 BGCOLOR="#EEEEFF" CLASS="NavBarCell1">
+<A NAME="navbar_bottom_firstrow"><!-- --></A>
+<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="3" SUMMARY="">
+  <TR ALIGN="center" VALIGN="top">
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../../overview-summary.html"><FONT CLASS="NavBarFont1"><B>Overview</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-summary.html"><FONT CLASS="NavBarFont1"><B>Package</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#FFFFFF" CLASS="NavBarCell1Rev"> &nbsp;<FONT CLASS="NavBarFont1Rev"><B>Class</B></FONT>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="class-use/RepositoryService.html"><FONT CLASS="NavBarFont1"><B>Use</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-tree.html"><FONT CLASS="NavBarFont1"><B>Tree</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../../deprecated-list.html"><FONT CLASS="NavBarFont1"><B>Deprecated</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../../index-all.html"><FONT CLASS="NavBarFont1"><B>Index</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../../help-doc.html"><FONT CLASS="NavBarFont1"><B>Help</B></FONT></A>&nbsp;</TD>
+  </TR>
+</TABLE>
+</TD>
+<TD ALIGN="right" VALIGN="top" ROWSPAN=3><EM>
+</EM>
+</TD>
+</TR>
+
+<TR>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+&nbsp;<A HREF="../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html" title="interface in de.tudarmstadt.ukp.clarin.webanno.api"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;NEXT CLASS</FONT></TD>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+  <A HREF="../../../../../../index.html?de/tudarmstadt/ukp/clarin/webanno/api/RepositoryService.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+&nbsp;<A HREF="RepositoryService.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
+&nbsp;<SCRIPT type="text/javascript">
+  <!--
+  if(window==top) {
+    document.writeln('<A HREF="../../../../../../allclasses-noframe.html"><B>All Classes</B></A>');
+  }
+  //-->
+</SCRIPT>
+<NOSCRIPT>
+  <A HREF="../../../../../../allclasses-noframe.html"><B>All Classes</B></A>
+</NOSCRIPT>
+
+
+</FONT></TD>
+</TR>
+<TR>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+DETAIL:&nbsp;FIELD&nbsp;|&nbsp;CONSTR&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
+</TR>
+</TABLE>
+<A NAME="skip-navbar_bottom"></A>
+<!-- ======== END OF BOTTOM NAVBAR ======= -->
+
+<HR>
+Copyright &#169; 2012-2013. All Rights Reserved.
+</BODY>
+</HTML>

@@ -1,0 +1,875 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!--NewPage-->
+<HTML>
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<TITLE>
+BratAjaxCasController (WebAnno 0.1.0 API)
+</TITLE>
+
+
+<LINK REL ="stylesheet" TYPE="text/css" HREF="../../../../../../../stylesheet.css" TITLE="Style">
+
+<SCRIPT type="text/javascript">
+function windowTitle()
+{
+    if (location.href.indexOf('is-external=true') == -1) {
+        parent.document.title="BratAjaxCasController (WebAnno 0.1.0 API)";
+    }
+}
+</SCRIPT>
+<NOSCRIPT>
+</NOSCRIPT>
+
+</HEAD>
+
+<BODY BGCOLOR="white" onload="windowTitle();">
+<HR>
+
+
+<!-- ========= START OF TOP NAVBAR ======= -->
+<A NAME="navbar_top"><!-- --></A>
+<A HREF="#skip-navbar_top" title="Skip navigation links"></A>
+<TABLE BORDER="0" WIDTH="100%" CELLPADDING="1" CELLSPACING="0" SUMMARY="">
+<TR>
+<TD COLSPAN=2 BGCOLOR="#EEEEFF" CLASS="NavBarCell1">
+<A NAME="navbar_top_firstrow"><!-- --></A>
+<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="3" SUMMARY="">
+  <TR ALIGN="center" VALIGN="top">
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../../../overview-summary.html"><FONT CLASS="NavBarFont1"><B>Overview</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-summary.html"><FONT CLASS="NavBarFont1"><B>Package</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#FFFFFF" CLASS="NavBarCell1Rev"> &nbsp;<FONT CLASS="NavBarFont1Rev"><B>Class</B></FONT>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="class-use/BratAjaxCasController.html"><FONT CLASS="NavBarFont1"><B>Use</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-tree.html"><FONT CLASS="NavBarFont1"><B>Tree</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../../../deprecated-list.html"><FONT CLASS="NavBarFont1"><B>Deprecated</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../../../index-all.html"><FONT CLASS="NavBarFont1"><B>Index</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../../../help-doc.html"><FONT CLASS="NavBarFont1"><B>Help</B></FONT></A>&nbsp;</TD>
+  </TR>
+</TABLE>
+</TD>
+<TD ALIGN="right" VALIGN="top" ROWSPAN=3><EM>
+</EM>
+</TD>
+</TR>
+
+<TR>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+&nbsp;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/controller/AnnotationType.html" title="class in de.tudarmstadt.ukp.clarin.webanno.brat.controller"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/controller/BratAjaxCasUtil.html" title="class in de.tudarmstadt.ukp.clarin.webanno.brat.controller"><B>NEXT CLASS</B></A></FONT></TD>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+  <A HREF="../../../../../../../index.html?de/tudarmstadt/ukp/clarin/webanno/brat/controller/BratAjaxCasController.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+&nbsp;<A HREF="BratAjaxCasController.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
+&nbsp;<SCRIPT type="text/javascript">
+  <!--
+  if(window==top) {
+    document.writeln('<A HREF="../../../../../../../allclasses-noframe.html"><B>All Classes</B></A>');
+  }
+  //-->
+</SCRIPT>
+<NOSCRIPT>
+  <A HREF="../../../../../../../allclasses-noframe.html"><B>All Classes</B></A>
+</NOSCRIPT>
+
+
+</FONT></TD>
+</TR>
+<TR>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;<A HREF="#field_summary">FIELD</A>&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+DETAIL:&nbsp;<A HREF="#field_detail">FIELD</A>&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
+</TR>
+</TABLE>
+<A NAME="skip-navbar_top"></A>
+<!-- ========= END OF TOP NAVBAR ========= -->
+
+<HR>
+<!-- ======== START OF CLASS DATA ======== -->
+<H2>
+<FONT SIZE="-1">
+de.tudarmstadt.ukp.clarin.webanno.brat.controller</FONT>
+<BR>
+Class BratAjaxCasController</H2>
+<PRE>
+<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">java.lang.Object</A>
+  <IMG SRC="../../../../../../../resources/inherit.gif" ALT="extended by "><B>de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController</B>
+</PRE>
+<HR>
+<DL>
+<DT><PRE><FONT SIZE="-1">@Controller
+</FONT>public class <B>BratAjaxCasController</B><DT>extends <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A></DL>
+</PRE>
+
+<P>
+an Ajax Controller for the BRAT Front End. Most of the actions such as getCollectionInformation ,
+ getDocument, createArc, CreateSpan, deleteSpan, DeleteArc,... are implemented. Besides returning
+ the JSON response to the brat FrontEnd, This controller also manipulates creation of annotation
+ Documents
+<P>
+
+<P>
+<DL>
+<DT><B>Author:</B></DT>
+  <DD>Seid Muhie Yimam, Richard Eckart de Castilho</DD>
+</DL>
+<HR>
+
+<P>
+<!-- =========== FIELD SUMMARY =========== -->
+
+<A NAME="field_summary"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Field Summary</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/controller/BratAjaxCasController.html#CONSUMES_URLENCODED">CONSUMES_URLENCODED</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/controller/BratAjaxCasController.html#MIME_TYPE_XML">MIME_TYPE_XML</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/controller/BratAjaxCasController.html#PRODUCES_JSON">PRODUCES_JSON</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>static&nbsp;<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/controller/BratAjaxCasController.html#PRODUCES_XML">PRODUCES_XML</A></B></CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+</TABLE>
+&nbsp;
+<!-- ======== CONSTRUCTOR SUMMARY ======== -->
+
+<A NAME="constructor_summary"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Constructor Summary</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><CODE><B><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/controller/BratAjaxCasController.html#BratAjaxCasController()">BratAjaxCasController</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><CODE><B><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/controller/BratAjaxCasController.html#BratAjaxCasController(org.springframework.http.converter.json.MappingJacksonHttpMessageConverter, de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService, de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService)">BratAjaxCasController</A></B>(org.springframework.http.converter.json.MappingJacksonHttpMessageConverter&nbsp;aJsonConverter,
+                      <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/RepositoryService.html" title="interface in de.tudarmstadt.ukp.clarin.webanno.api">RepositoryService</A>&nbsp;aRepository,
+                      <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html" title="interface in de.tudarmstadt.ukp.clarin.webanno.api">AnnotationService</A>&nbsp;aAnnotationService)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+</TABLE>
+&nbsp;
+<!-- ========== METHOD SUMMARY =========== -->
+
+<A NAME="method_summary"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Method Summary</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/message/StoreSvgResponse.html" title="class in de.tudarmstadt.ukp.clarin.webanno.brat.message">StoreSvgResponse</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/controller/BratAjaxCasController.html#ajaxCall(org.springframework.util.MultiValueMap)">ajaxCall</A></B>(org.springframework.util.MultiValueMap&lt;<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>,<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt;&nbsp;aParameters)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This Method, a generic Ajax call serves the purpose of returning expected export file types.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/message/CreateArcResponse.html" title="class in de.tudarmstadt.ukp.clarin.webanno.brat.message">CreateArcResponse</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/controller/BratAjaxCasController.html#createArc(int, de.tudarmstadt.ukp.clarin.webanno.model.Project, de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument, de.tudarmstadt.ukp.clarin.webanno.model.User, int, int, int, java.lang.String, java.lang.String, java.lang.String, boolean, java.util.ArrayList, int, org.apache.uima.jcas.JCas, boolean)">createArc</A></B>(int&nbsp;windowSize,
+          <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;aProject,
+          <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">SourceDocument</A>&nbsp;aDocument,
+          <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;aUser,
+          int&nbsp;aSentenceAddress,
+          int&nbsp;aLastSentenceAddress,
+          int&nbsp;aAnnotationOffsetStart,
+          <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;origin,
+          <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;target,
+          <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;aType,
+          boolean&nbsp;aIsDisplayLemmaSelected,
+          <A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">ArrayList</A>&lt;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">TagSet</A>&gt;&nbsp;aAnnotationLayers,
+          int&nbsp;aWindowSize,
+          org.apache.uima.jcas.JCas&nbsp;aJCas,
+          boolean&nbsp;aMovePage)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Creates an arc annotation between two annotated spans</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/message/CreateSpanResponse.html" title="class in de.tudarmstadt.ukp.clarin.webanno.brat.message">CreateSpanResponse</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/controller/BratAjaxCasController.html#createSpan(int, de.tudarmstadt.ukp.clarin.webanno.model.Project, de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument, de.tudarmstadt.ukp.clarin.webanno.model.User, int, int, int, int, java.lang.String, boolean, java.util.ArrayList, org.apache.uima.jcas.JCas, boolean)">createSpan</A></B>(int&nbsp;windowSize,
+           <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;aProject,
+           <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">SourceDocument</A>&nbsp;aDocument,
+           <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;aUser,
+           int&nbsp;aSentenceAddress,
+           int&nbsp;aLastSentenceAddress,
+           int&nbsp;aAnnotationStartOffset,
+           int&nbsp;aAnnotationEndOffset,
+           <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;aType,
+           boolean&nbsp;aIsDisplayLemmaSelected,
+           <A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">ArrayList</A>&lt;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">TagSet</A>&gt;&nbsp;aAnnotationLayers,
+           org.apache.uima.jcas.JCas&nbsp;aJCas,
+           boolean&nbsp;aMovePage)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Creates a new span annotation, saves the annotation to a file system and return the newly
+ constructed JSON document as a response to BRAT visualizer.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/message/DeleteArcResponse.html" title="class in de.tudarmstadt.ukp.clarin.webanno.brat.message">DeleteArcResponse</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/controller/BratAjaxCasController.html#deleteArc(int, de.tudarmstadt.ukp.clarin.webanno.model.Project, de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument, de.tudarmstadt.ukp.clarin.webanno.model.User, int, int, int, java.lang.String, java.lang.String, java.lang.String, boolean, java.util.ArrayList, int, org.apache.uima.jcas.JCas, boolean)">deleteArc</A></B>(int&nbsp;windowSize,
+          <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;aProject,
+          <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">SourceDocument</A>&nbsp;aDocument,
+          <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;aUser,
+          int&nbsp;aSentenceAddress,
+          int&nbsp;aLastSentenceAddress,
+          int&nbsp;aAnnotationOffsetStart,
+          <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;origin,
+          <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;target,
+          <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;aType,
+          boolean&nbsp;aIsDisplayLemmaSelected,
+          <A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">ArrayList</A>&lt;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">TagSet</A>&gt;&nbsp;aAnnotationLayers,
+          int&nbsp;aWindowSize,
+          org.apache.uima.jcas.JCas&nbsp;aJCas,
+          boolean&nbsp;aMovePage)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;deletes an arc between the origin and target spans</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/message/DeleteSpanResponse.html" title="class in de.tudarmstadt.ukp.clarin.webanno.brat.message">DeleteSpanResponse</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/controller/BratAjaxCasController.html#deleteSpan(int, de.tudarmstadt.ukp.clarin.webanno.model.Project, de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument, de.tudarmstadt.ukp.clarin.webanno.model.User, int, int, int, int, java.lang.String, java.lang.String, boolean, java.util.ArrayList, int, org.apache.uima.jcas.JCas, boolean)">deleteSpan</A></B>(int&nbsp;windowSize,
+           <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;aProject,
+           <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">SourceDocument</A>&nbsp;aDocument,
+           <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;aUser,
+           int&nbsp;aSentenceAddress,
+           int&nbsp;aLastSentenceAddress,
+           int&nbsp;aAnnotationStartOffset,
+           int&nbsp;aAnnotationEndOffset,
+           <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;aType,
+           <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;aId,
+           boolean&nbsp;aIsDisplayLemmaSelected,
+           <A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">ArrayList</A>&lt;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">TagSet</A>&gt;&nbsp;aAnnotationLayers,
+           int&nbsp;aWindowSize,
+           org.apache.uima.jcas.JCas&nbsp;aJCas,
+           boolean&nbsp;aMovePage)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;deletes a span annotation, except POS annotation</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/message/GetCollectionInformationResponse.html" title="class in de.tudarmstadt.ukp.clarin.webanno.brat.message">GetCollectionInformationResponse</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/controller/BratAjaxCasController.html#getCollectionInformation(java.lang.String, java.util.ArrayList)">getCollectionInformation</A></B>(<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;aCollection,
+                         <A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">ArrayList</A>&lt;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">TagSet</A>&gt;&nbsp;aAnnotationLayers)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This the the method that send JSON response about annotation project information which
+ includes List <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Tag.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>Tag</CODE></A>s and <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>TagSet</CODE></A>s It includes information about span types
+ <CODE>POS</CODE>, <CODE>NamedEntity</CODE>, and <CODE>CoreferenceLink.getReferenceType()</CODE> and relation
+ types such as <CODE>Dependency</CODE>, <CODE>CoreferenceChain</CODE></TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/message/GetDocumentResponse.html" title="class in de.tudarmstadt.ukp.clarin.webanno.brat.message">GetDocumentResponse</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/controller/BratAjaxCasController.html#getDocument(int, de.tudarmstadt.ukp.clarin.webanno.model.Project, de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument, de.tudarmstadt.ukp.clarin.webanno.model.User, int, int, boolean, java.util.ArrayList)">getDocument</A></B>(int&nbsp;windowSize,
+            <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;aProject,
+            <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">SourceDocument</A>&nbsp;aDocument,
+            <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;aUser,
+            int&nbsp;aSentenceAddress,
+            int&nbsp;aLastSentenceAddress,
+            boolean&nbsp;aIsDisplayLemmaSelected,
+            <A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">ArrayList</A>&lt;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">TagSet</A>&gt;&nbsp;aAnnotationLayers)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns the JSON representation of the document for brat visualizer</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/message/GetDocumentTimestampResponse.html" title="class in de.tudarmstadt.ukp.clarin.webanno.brat.message">GetDocumentTimestampResponse</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/controller/BratAjaxCasController.html#getDocumentTimestamp(java.lang.String, java.lang.String)">getDocumentTimestamp</A></B>(<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;aCollection,
+                     <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;aDocument)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;org.apache.uima.jcas.JCas</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/controller/BratAjaxCasController.html#getJCas(de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument, de.tudarmstadt.ukp.clarin.webanno.model.Project, de.tudarmstadt.ukp.clarin.webanno.model.User)">getJCas</A></B>(<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">SourceDocument</A>&nbsp;aDocument,
+        <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;aProject,
+        <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;aUser)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Get the CAS object for the document in the project created by the the User.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/message/ImportDocumentResponse.html" title="class in de.tudarmstadt.ukp.clarin.webanno.brat.message">ImportDocumentResponse</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/controller/BratAjaxCasController.html#importDocument(java.lang.String, java.lang.String, java.lang.String, java.lang.String, javax.servlet.http.HttpServletRequest)">importDocument</A></B>(<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;aCollection,
+               <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;aDocId,
+               <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;aText,
+               <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;aTitle,
+               javax.servlet.http.HttpServletRequest&nbsp;aRequest)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/message/LoadConfResponse.html" title="class in de.tudarmstadt.ukp.clarin.webanno.brat.message">LoadConfResponse</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/controller/BratAjaxCasController.html#loadConf()">loadConf</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;some BRAT UI global configurations such as <code>textBackgrounds</code></TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/message/ReverseArcResponse.html" title="class in de.tudarmstadt.ukp.clarin.webanno.brat.message">ReverseArcResponse</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/controller/BratAjaxCasController.html#reverseArc(int, de.tudarmstadt.ukp.clarin.webanno.model.Project, de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument, de.tudarmstadt.ukp.clarin.webanno.model.User, int, int, int, java.lang.String, java.lang.String, java.lang.String, boolean, java.util.ArrayList, int, org.apache.uima.jcas.JCas, boolean)">reverseArc</A></B>(int&nbsp;windowSize,
+           <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;aProject,
+           <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">SourceDocument</A>&nbsp;aDocument,
+           <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;aUser,
+           int&nbsp;aSentenceAddress,
+           int&nbsp;aLastSentenceAddress,
+           int&nbsp;aAnnotationOffsetStart,
+           <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;origin,
+           <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;target,
+           <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;aType,
+           boolean&nbsp;aIsDisplayLemmaSelected,
+           <A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">ArrayList</A>&lt;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">TagSet</A>&gt;&nbsp;aAnnotationLayers,
+           int&nbsp;aWindowSize,
+           org.apache.uima.jcas.JCas&nbsp;aJCas,
+           boolean&nbsp;aMovePage)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;reverse the direction of arc annotations, in this case, Dependency parsing</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/message/StoreSvgResponse.html" title="class in de.tudarmstadt.ukp.clarin.webanno.brat.message">StoreSvgResponse</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/controller/BratAjaxCasController.html#storeSVG()">storeSVG</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a protocol to retunr the expected file type for annotation document exporting .</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/message/WhoamiResponse.html" title="class in de.tudarmstadt.ukp.clarin.webanno.brat.message">WhoamiResponse</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/controller/BratAjaxCasController.html#whoami()">whoami</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a protocol which returns the logged in user</TD>
+</TR>
+</TABLE>
+&nbsp;<A NAME="methods_inherited_from_class_java.lang.Object"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#EEEEFF" CLASS="TableSubHeadingColor">
+<TH ALIGN="left"><B>Methods inherited from class java.lang.<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A></B></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><CODE><A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/Object.html?is-external=true#clone()" title="class or interface in java.lang">clone</A>, <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/Object.html?is-external=true#equals(java.lang.Object)" title="class or interface in java.lang">equals</A>, <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/Object.html?is-external=true#finalize()" title="class or interface in java.lang">finalize</A>, <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/Object.html?is-external=true#getClass()" title="class or interface in java.lang">getClass</A>, <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/Object.html?is-external=true#hashCode()" title="class or interface in java.lang">hashCode</A>, <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/Object.html?is-external=true#notify()" title="class or interface in java.lang">notify</A>, <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/Object.html?is-external=true#notifyAll()" title="class or interface in java.lang">notifyAll</A>, <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/Object.html?is-external=true#toString()" title="class or interface in java.lang">toString</A>, <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait()" title="class or interface in java.lang">wait</A>, <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait(long)" title="class or interface in java.lang">wait</A>, <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait(long, int)" title="class or interface in java.lang">wait</A></CODE></TD>
+</TR>
+</TABLE>
+&nbsp;
+<P>
+
+<!-- ============ FIELD DETAIL =========== -->
+
+<A NAME="field_detail"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
+<B>Field Detail</B></FONT></TH>
+</TR>
+</TABLE>
+
+<A NAME="MIME_TYPE_XML"><!-- --></A><H3>
+MIME_TYPE_XML</H3>
+<PRE>
+public static final <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>MIME_TYPE_XML</B></PRE>
+<DL>
+<DL>
+<DT><B>See Also:</B><DD><A HREF="../../../../../../../constant-values.html#de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController.MIME_TYPE_XML">Constant Field Values</A></DL>
+</DL>
+<HR>
+
+<A NAME="PRODUCES_JSON"><!-- --></A><H3>
+PRODUCES_JSON</H3>
+<PRE>
+public static final <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>PRODUCES_JSON</B></PRE>
+<DL>
+<DL>
+<DT><B>See Also:</B><DD><A HREF="../../../../../../../constant-values.html#de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController.PRODUCES_JSON">Constant Field Values</A></DL>
+</DL>
+<HR>
+
+<A NAME="PRODUCES_XML"><!-- --></A><H3>
+PRODUCES_XML</H3>
+<PRE>
+public static final <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>PRODUCES_XML</B></PRE>
+<DL>
+<DL>
+<DT><B>See Also:</B><DD><A HREF="../../../../../../../constant-values.html#de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController.PRODUCES_XML">Constant Field Values</A></DL>
+</DL>
+<HR>
+
+<A NAME="CONSUMES_URLENCODED"><!-- --></A><H3>
+CONSUMES_URLENCODED</H3>
+<PRE>
+public static final <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A> <B>CONSUMES_URLENCODED</B></PRE>
+<DL>
+<DL>
+<DT><B>See Also:</B><DD><A HREF="../../../../../../../constant-values.html#de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController.CONSUMES_URLENCODED">Constant Field Values</A></DL>
+</DL>
+
+<!-- ========= CONSTRUCTOR DETAIL ======== -->
+
+<A NAME="constructor_detail"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
+<B>Constructor Detail</B></FONT></TH>
+</TR>
+</TABLE>
+
+<A NAME="BratAjaxCasController()"><!-- --></A><H3>
+BratAjaxCasController</H3>
+<PRE>
+public <B>BratAjaxCasController</B>()</PRE>
+<DL>
+</DL>
+<HR>
+
+<A NAME="BratAjaxCasController(org.springframework.http.converter.json.MappingJacksonHttpMessageConverter, de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService, de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService)"><!-- --></A><H3>
+BratAjaxCasController</H3>
+<PRE>
+public <B>BratAjaxCasController</B>(org.springframework.http.converter.json.MappingJacksonHttpMessageConverter&nbsp;aJsonConverter,
+                             <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/RepositoryService.html" title="interface in de.tudarmstadt.ukp.clarin.webanno.api">RepositoryService</A>&nbsp;aRepository,
+                             <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html" title="interface in de.tudarmstadt.ukp.clarin.webanno.api">AnnotationService</A>&nbsp;aAnnotationService)</PRE>
+<DL>
+</DL>
+
+<!-- ============ METHOD DETAIL ========== -->
+
+<A NAME="method_detail"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
+<B>Method Detail</B></FONT></TH>
+</TR>
+</TABLE>
+
+<A NAME="ajaxCall(org.springframework.util.MultiValueMap)"><!-- --></A><H3>
+ajaxCall</H3>
+<PRE>
+public <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/message/StoreSvgResponse.html" title="class in de.tudarmstadt.ukp.clarin.webanno.brat.message">StoreSvgResponse</A> <B>ajaxCall</B>(org.springframework.util.MultiValueMap&lt;<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>,<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&gt;&nbsp;aParameters)</PRE>
+<DL>
+<DD>This Method, a generic Ajax call serves the purpose of returning expected export file types.
+ This only will be called for Larger annotation documents
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>aParameters</CODE> - 
+<DT><B>Returns:</B><DD>export file type once in a while!!!</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="whoami()"><!-- --></A><H3>
+whoami</H3>
+<PRE>
+public <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/message/WhoamiResponse.html" title="class in de.tudarmstadt.ukp.clarin.webanno.brat.message">WhoamiResponse</A> <B>whoami</B>()</PRE>
+<DL>
+<DD>a protocol which returns the logged in user
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>aParameters</CODE> - 
+<DT><B>Returns:</B><DD></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="storeSVG()"><!-- --></A><H3>
+storeSVG</H3>
+<PRE>
+public <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/message/StoreSvgResponse.html" title="class in de.tudarmstadt.ukp.clarin.webanno.brat.message">StoreSvgResponse</A> <B>storeSVG</B>()</PRE>
+<DL>
+<DD>a protocol to retunr the expected file type for annotation document exporting . Currently, it
+ returns only tcf file type where in the future svg and pdf types are to be supported
+<P>
+<DD><DL>
+
+<DT><B>Returns:</B><DD></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="importDocument(java.lang.String, java.lang.String, java.lang.String, java.lang.String, javax.servlet.http.HttpServletRequest)"><!-- --></A><H3>
+importDocument</H3>
+<PRE>
+public <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/message/ImportDocumentResponse.html" title="class in de.tudarmstadt.ukp.clarin.webanno.brat.message">ImportDocumentResponse</A> <B>importDocument</B>(<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;aCollection,
+                                             <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;aDocId,
+                                             <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;aText,
+                                             <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;aTitle,
+                                             javax.servlet.http.HttpServletRequest&nbsp;aRequest)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="loadConf()"><!-- --></A><H3>
+loadConf</H3>
+<PRE>
+public <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/message/LoadConfResponse.html" title="class in de.tudarmstadt.ukp.clarin.webanno.brat.message">LoadConfResponse</A> <B>loadConf</B>()</PRE>
+<DL>
+<DD>some BRAT UI global configurations such as <code>textBackgrounds</code>
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>aParameters</CODE> - 
+<DT><B>Returns:</B><DD></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getCollectionInformation(java.lang.String, java.util.ArrayList)"><!-- --></A><H3>
+getCollectionInformation</H3>
+<PRE>
+public <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/message/GetCollectionInformationResponse.html" title="class in de.tudarmstadt.ukp.clarin.webanno.brat.message">GetCollectionInformationResponse</A> <B>getCollectionInformation</B>(<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;aCollection,
+                                                                 <A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">ArrayList</A>&lt;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">TagSet</A>&gt;&nbsp;aAnnotationLayers)</PRE>
+<DL>
+<DD>This the the method that send JSON response about annotation project information which
+ includes List <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Tag.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>Tag</CODE></A>s and <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>TagSet</CODE></A>s It includes information about span types
+ <CODE>POS</CODE>, <CODE>NamedEntity</CODE>, and <CODE>CoreferenceLink.getReferenceType()</CODE> and relation
+ types such as <CODE>Dependency</CODE>, <CODE>CoreferenceChain</CODE>
+<P>
+<DD><DL>
+<DT><B>Parameters:</B><DD><CODE>aCollection</CODE> - <DD><CODE>aRequest</CODE> - 
+<DT><B>Returns:</B><DD>
+<DT><B>Throws:</B>
+<DD><CODE>org.apache.uima.UIMAException</CODE>
+<DD><CODE><A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE><DT><B>See Also:</B><DD><a href="http://brat.nlplab.org/index.html">Brat</a></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getDocumentTimestamp(java.lang.String, java.lang.String)"><!-- --></A><H3>
+getDocumentTimestamp</H3>
+<PRE>
+public <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/message/GetDocumentTimestampResponse.html" title="class in de.tudarmstadt.ukp.clarin.webanno.brat.message">GetDocumentTimestampResponse</A> <B>getDocumentTimestamp</B>(<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;aCollection,
+                                                         <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;aDocument)</PRE>
+<DL>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getDocument(int, de.tudarmstadt.ukp.clarin.webanno.model.Project, de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument, de.tudarmstadt.ukp.clarin.webanno.model.User, int, int, boolean, java.util.ArrayList)"><!-- --></A><H3>
+getDocument</H3>
+<PRE>
+public <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/message/GetDocumentResponse.html" title="class in de.tudarmstadt.ukp.clarin.webanno.brat.message">GetDocumentResponse</A> <B>getDocument</B>(int&nbsp;windowSize,
+                                       <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;aProject,
+                                       <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">SourceDocument</A>&nbsp;aDocument,
+                                       <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;aUser,
+                                       int&nbsp;aSentenceAddress,
+                                       int&nbsp;aLastSentenceAddress,
+                                       boolean&nbsp;aIsDisplayLemmaSelected,
+                                       <A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">ArrayList</A>&lt;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">TagSet</A>&gt;&nbsp;aAnnotationLayers)
+                                throws org.apache.uima.UIMAException,
+                                       <A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A>,
+                                       <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/ClassNotFoundException.html?is-external=true" title="class or interface in java.lang">ClassNotFoundException</A></PRE>
+<DL>
+<DD>Returns the JSON representation of the document for brat visualizer
+<P>
+<DD><DL>
+
+<DT><B>Throws:</B>
+<DD><CODE><A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/ClassNotFoundException.html?is-external=true" title="class or interface in java.lang">ClassNotFoundException</A></CODE>
+<DD><CODE>org.apache.uima.UIMAException</CODE>
+<DD><CODE><A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="createSpan(int, de.tudarmstadt.ukp.clarin.webanno.model.Project, de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument, de.tudarmstadt.ukp.clarin.webanno.model.User, int, int, int, int, java.lang.String, boolean, java.util.ArrayList, org.apache.uima.jcas.JCas, boolean)"><!-- --></A><H3>
+createSpan</H3>
+<PRE>
+public <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/message/CreateSpanResponse.html" title="class in de.tudarmstadt.ukp.clarin.webanno.brat.message">CreateSpanResponse</A> <B>createSpan</B>(int&nbsp;windowSize,
+                                     <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;aProject,
+                                     <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">SourceDocument</A>&nbsp;aDocument,
+                                     <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;aUser,
+                                     int&nbsp;aSentenceAddress,
+                                     int&nbsp;aLastSentenceAddress,
+                                     int&nbsp;aAnnotationStartOffset,
+                                     int&nbsp;aAnnotationEndOffset,
+                                     <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;aType,
+                                     boolean&nbsp;aIsDisplayLemmaSelected,
+                                     <A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">ArrayList</A>&lt;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">TagSet</A>&gt;&nbsp;aAnnotationLayers,
+                                     org.apache.uima.jcas.JCas&nbsp;aJCas,
+                                     boolean&nbsp;aMovePage)
+                              throws org.codehaus.jackson.JsonParseException,
+                                     org.codehaus.jackson.map.JsonMappingException,
+                                     <A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A>,
+                                     org.apache.uima.UIMAException</PRE>
+<DL>
+<DD>Creates a new span annotation, saves the annotation to a file system and return the newly
+ constructed JSON document as a response to BRAT visualizer.
+<P>
+<DD><DL>
+
+<DT><B>Throws:</B>
+<DD><CODE>org.codehaus.jackson.JsonParseException</CODE>
+<DD><CODE>org.codehaus.jackson.map.JsonMappingException</CODE>
+<DD><CODE><A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE>
+<DD><CODE>org.apache.uima.UIMAException</CODE></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="createArc(int, de.tudarmstadt.ukp.clarin.webanno.model.Project, de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument, de.tudarmstadt.ukp.clarin.webanno.model.User, int, int, int, java.lang.String, java.lang.String, java.lang.String, boolean, java.util.ArrayList, int, org.apache.uima.jcas.JCas, boolean)"><!-- --></A><H3>
+createArc</H3>
+<PRE>
+public <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/message/CreateArcResponse.html" title="class in de.tudarmstadt.ukp.clarin.webanno.brat.message">CreateArcResponse</A> <B>createArc</B>(int&nbsp;windowSize,
+                                   <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;aProject,
+                                   <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">SourceDocument</A>&nbsp;aDocument,
+                                   <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;aUser,
+                                   int&nbsp;aSentenceAddress,
+                                   int&nbsp;aLastSentenceAddress,
+                                   int&nbsp;aAnnotationOffsetStart,
+                                   <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;origin,
+                                   <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;target,
+                                   <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;aType,
+                                   boolean&nbsp;aIsDisplayLemmaSelected,
+                                   <A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">ArrayList</A>&lt;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">TagSet</A>&gt;&nbsp;aAnnotationLayers,
+                                   int&nbsp;aWindowSize,
+                                   org.apache.uima.jcas.JCas&nbsp;aJCas,
+                                   boolean&nbsp;aMovePage)
+                            throws org.apache.uima.UIMAException,
+                                   <A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></PRE>
+<DL>
+<DD>Creates an arc annotation between two annotated spans
+<P>
+<DD><DL>
+
+<DT><B>Throws:</B>
+<DD><CODE>org.apache.uima.UIMAException</CODE>
+<DD><CODE><A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="reverseArc(int, de.tudarmstadt.ukp.clarin.webanno.model.Project, de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument, de.tudarmstadt.ukp.clarin.webanno.model.User, int, int, int, java.lang.String, java.lang.String, java.lang.String, boolean, java.util.ArrayList, int, org.apache.uima.jcas.JCas, boolean)"><!-- --></A><H3>
+reverseArc</H3>
+<PRE>
+public <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/message/ReverseArcResponse.html" title="class in de.tudarmstadt.ukp.clarin.webanno.brat.message">ReverseArcResponse</A> <B>reverseArc</B>(int&nbsp;windowSize,
+                                     <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;aProject,
+                                     <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">SourceDocument</A>&nbsp;aDocument,
+                                     <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;aUser,
+                                     int&nbsp;aSentenceAddress,
+                                     int&nbsp;aLastSentenceAddress,
+                                     int&nbsp;aAnnotationOffsetStart,
+                                     <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;origin,
+                                     <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;target,
+                                     <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;aType,
+                                     boolean&nbsp;aIsDisplayLemmaSelected,
+                                     <A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">ArrayList</A>&lt;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">TagSet</A>&gt;&nbsp;aAnnotationLayers,
+                                     int&nbsp;aWindowSize,
+                                     org.apache.uima.jcas.JCas&nbsp;aJCas,
+                                     boolean&nbsp;aMovePage)
+                              throws org.apache.uima.UIMAException,
+                                     <A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></PRE>
+<DL>
+<DD>reverse the direction of arc annotations, in this case, Dependency parsing
+<P>
+<DD><DL>
+
+<DT><B>Throws:</B>
+<DD><CODE>org.apache.uima.UIMAException</CODE>
+<DD><CODE><A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="deleteSpan(int, de.tudarmstadt.ukp.clarin.webanno.model.Project, de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument, de.tudarmstadt.ukp.clarin.webanno.model.User, int, int, int, int, java.lang.String, java.lang.String, boolean, java.util.ArrayList, int, org.apache.uima.jcas.JCas, boolean)"><!-- --></A><H3>
+deleteSpan</H3>
+<PRE>
+public <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/message/DeleteSpanResponse.html" title="class in de.tudarmstadt.ukp.clarin.webanno.brat.message">DeleteSpanResponse</A> <B>deleteSpan</B>(int&nbsp;windowSize,
+                                     <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;aProject,
+                                     <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">SourceDocument</A>&nbsp;aDocument,
+                                     <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;aUser,
+                                     int&nbsp;aSentenceAddress,
+                                     int&nbsp;aLastSentenceAddress,
+                                     int&nbsp;aAnnotationStartOffset,
+                                     int&nbsp;aAnnotationEndOffset,
+                                     <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;aType,
+                                     <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;aId,
+                                     boolean&nbsp;aIsDisplayLemmaSelected,
+                                     <A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">ArrayList</A>&lt;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">TagSet</A>&gt;&nbsp;aAnnotationLayers,
+                                     int&nbsp;aWindowSize,
+                                     org.apache.uima.jcas.JCas&nbsp;aJCas,
+                                     boolean&nbsp;aMovePage)
+                              throws org.codehaus.jackson.JsonParseException,
+                                     org.codehaus.jackson.map.JsonMappingException,
+                                     <A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A>,
+                                     org.apache.uima.UIMAException</PRE>
+<DL>
+<DD>deletes a span annotation, except POS annotation
+<P>
+<DD><DL>
+
+<DT><B>Throws:</B>
+<DD><CODE>org.codehaus.jackson.JsonParseException</CODE>
+<DD><CODE>org.codehaus.jackson.map.JsonMappingException</CODE>
+<DD><CODE><A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE>
+<DD><CODE>org.apache.uima.UIMAException</CODE></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="deleteArc(int, de.tudarmstadt.ukp.clarin.webanno.model.Project, de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument, de.tudarmstadt.ukp.clarin.webanno.model.User, int, int, int, java.lang.String, java.lang.String, java.lang.String, boolean, java.util.ArrayList, int, org.apache.uima.jcas.JCas, boolean)"><!-- --></A><H3>
+deleteArc</H3>
+<PRE>
+public <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/message/DeleteArcResponse.html" title="class in de.tudarmstadt.ukp.clarin.webanno.brat.message">DeleteArcResponse</A> <B>deleteArc</B>(int&nbsp;windowSize,
+                                   <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;aProject,
+                                   <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">SourceDocument</A>&nbsp;aDocument,
+                                   <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;aUser,
+                                   int&nbsp;aSentenceAddress,
+                                   int&nbsp;aLastSentenceAddress,
+                                   int&nbsp;aAnnotationOffsetStart,
+                                   <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;origin,
+                                   <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;target,
+                                   <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;aType,
+                                   boolean&nbsp;aIsDisplayLemmaSelected,
+                                   <A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/ArrayList.html?is-external=true" title="class or interface in java.util">ArrayList</A>&lt;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">TagSet</A>&gt;&nbsp;aAnnotationLayers,
+                                   int&nbsp;aWindowSize,
+                                   org.apache.uima.jcas.JCas&nbsp;aJCas,
+                                   boolean&nbsp;aMovePage)
+                            throws org.apache.uima.UIMAException,
+                                   <A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></PRE>
+<DL>
+<DD>deletes an arc between the origin and target spans
+<P>
+<DD><DL>
+
+<DT><B>Throws:</B>
+<DD><CODE>org.apache.uima.UIMAException</CODE>
+<DD><CODE><A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getJCas(de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument, de.tudarmstadt.ukp.clarin.webanno.model.Project, de.tudarmstadt.ukp.clarin.webanno.model.User)"><!-- --></A><H3>
+getJCas</H3>
+<PRE>
+public org.apache.uima.jcas.JCas <B>getJCas</B>(<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/SourceDocument.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">SourceDocument</A>&nbsp;aDocument,
+                                         <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;aProject,
+                                         <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;aUser)
+                                  throws org.apache.uima.UIMAException,
+                                         <A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A>,
+                                         <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/ClassNotFoundException.html?is-external=true" title="class or interface in java.lang">ClassNotFoundException</A></PRE>
+<DL>
+<DD>Get the CAS object for the document in the project created by the the User. If this is the
+ first time the user is accessing the annotation document, it will be read from the source
+ document, and converted to CAS
+<P>
+<DD><DL>
+
+<DT><B>Throws:</B>
+<DD><CODE><A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/ClassNotFoundException.html?is-external=true" title="class or interface in java.lang">ClassNotFoundException</A></CODE>
+<DD><CODE>org.apache.uima.UIMAException</CODE>
+<DD><CODE><A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE></DL>
+</DD>
+</DL>
+<!-- ========= END OF CLASS DATA ========= -->
+<HR>
+
+
+<!-- ======= START OF BOTTOM NAVBAR ====== -->
+<A NAME="navbar_bottom"><!-- --></A>
+<A HREF="#skip-navbar_bottom" title="Skip navigation links"></A>
+<TABLE BORDER="0" WIDTH="100%" CELLPADDING="1" CELLSPACING="0" SUMMARY="">
+<TR>
+<TD COLSPAN=2 BGCOLOR="#EEEEFF" CLASS="NavBarCell1">
+<A NAME="navbar_bottom_firstrow"><!-- --></A>
+<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="3" SUMMARY="">
+  <TR ALIGN="center" VALIGN="top">
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../../../overview-summary.html"><FONT CLASS="NavBarFont1"><B>Overview</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-summary.html"><FONT CLASS="NavBarFont1"><B>Package</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#FFFFFF" CLASS="NavBarCell1Rev"> &nbsp;<FONT CLASS="NavBarFont1Rev"><B>Class</B></FONT>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="class-use/BratAjaxCasController.html"><FONT CLASS="NavBarFont1"><B>Use</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-tree.html"><FONT CLASS="NavBarFont1"><B>Tree</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../../../deprecated-list.html"><FONT CLASS="NavBarFont1"><B>Deprecated</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../../../index-all.html"><FONT CLASS="NavBarFont1"><B>Index</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../../../help-doc.html"><FONT CLASS="NavBarFont1"><B>Help</B></FONT></A>&nbsp;</TD>
+  </TR>
+</TABLE>
+</TD>
+<TD ALIGN="right" VALIGN="top" ROWSPAN=3><EM>
+</EM>
+</TD>
+</TR>
+
+<TR>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+&nbsp;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/controller/AnnotationType.html" title="class in de.tudarmstadt.ukp.clarin.webanno.brat.controller"><B>PREV CLASS</B></A>&nbsp;
+&nbsp;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/controller/BratAjaxCasUtil.html" title="class in de.tudarmstadt.ukp.clarin.webanno.brat.controller"><B>NEXT CLASS</B></A></FONT></TD>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+  <A HREF="../../../../../../../index.html?de/tudarmstadt/ukp/clarin/webanno/brat/controller/BratAjaxCasController.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+&nbsp;<A HREF="BratAjaxCasController.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
+&nbsp;<SCRIPT type="text/javascript">
+  <!--
+  if(window==top) {
+    document.writeln('<A HREF="../../../../../../../allclasses-noframe.html"><B>All Classes</B></A>');
+  }
+  //-->
+</SCRIPT>
+<NOSCRIPT>
+  <A HREF="../../../../../../../allclasses-noframe.html"><B>All Classes</B></A>
+</NOSCRIPT>
+
+
+</FONT></TD>
+</TR>
+<TR>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;<A HREF="#field_summary">FIELD</A>&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+DETAIL:&nbsp;<A HREF="#field_detail">FIELD</A>&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
+</TR>
+</TABLE>
+<A NAME="skip-navbar_bottom"></A>
+<!-- ======== END OF BOTTOM NAVBAR ======= -->
+
+<HR>
+Copyright &#169; 2012-2013. All Rights Reserved.
+</BODY>
+</HTML>

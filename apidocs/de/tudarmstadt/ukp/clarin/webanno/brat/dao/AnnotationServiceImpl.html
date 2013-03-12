@@ -1,0 +1,660 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!--NewPage-->
+<HTML>
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<TITLE>
+AnnotationServiceImpl (WebAnno 0.1.0 API)
+</TITLE>
+
+
+<LINK REL ="stylesheet" TYPE="text/css" HREF="../../../../../../../stylesheet.css" TITLE="Style">
+
+<SCRIPT type="text/javascript">
+function windowTitle()
+{
+    if (location.href.indexOf('is-external=true') == -1) {
+        parent.document.title="AnnotationServiceImpl (WebAnno 0.1.0 API)";
+    }
+}
+</SCRIPT>
+<NOSCRIPT>
+</NOSCRIPT>
+
+</HEAD>
+
+<BODY BGCOLOR="white" onload="windowTitle();">
+<HR>
+
+
+<!-- ========= START OF TOP NAVBAR ======= -->
+<A NAME="navbar_top"><!-- --></A>
+<A HREF="#skip-navbar_top" title="Skip navigation links"></A>
+<TABLE BORDER="0" WIDTH="100%" CELLPADDING="1" CELLSPACING="0" SUMMARY="">
+<TR>
+<TD COLSPAN=2 BGCOLOR="#EEEEFF" CLASS="NavBarCell1">
+<A NAME="navbar_top_firstrow"><!-- --></A>
+<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="3" SUMMARY="">
+  <TR ALIGN="center" VALIGN="top">
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../../../overview-summary.html"><FONT CLASS="NavBarFont1"><B>Overview</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-summary.html"><FONT CLASS="NavBarFont1"><B>Package</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#FFFFFF" CLASS="NavBarCell1Rev"> &nbsp;<FONT CLASS="NavBarFont1Rev"><B>Class</B></FONT>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="class-use/AnnotationServiceImpl.html"><FONT CLASS="NavBarFont1"><B>Use</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-tree.html"><FONT CLASS="NavBarFont1"><B>Tree</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../../../deprecated-list.html"><FONT CLASS="NavBarFont1"><B>Deprecated</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../../../index-all.html"><FONT CLASS="NavBarFont1"><B>Index</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../../../help-doc.html"><FONT CLASS="NavBarFont1"><B>Help</B></FONT></A>&nbsp;</TD>
+  </TR>
+</TABLE>
+</TD>
+<TD ALIGN="right" VALIGN="top" ROWSPAN=3><EM>
+</EM>
+</TD>
+</TR>
+
+<TR>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+&nbsp;PREV CLASS&nbsp;
+&nbsp;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/dao/RepositoryServiceDbData.html" title="class in de.tudarmstadt.ukp.clarin.webanno.brat.dao"><B>NEXT CLASS</B></A></FONT></TD>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+  <A HREF="../../../../../../../index.html?de/tudarmstadt/ukp/clarin/webanno/brat/dao/AnnotationServiceImpl.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+&nbsp;<A HREF="AnnotationServiceImpl.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
+&nbsp;<SCRIPT type="text/javascript">
+  <!--
+  if(window==top) {
+    document.writeln('<A HREF="../../../../../../../allclasses-noframe.html"><B>All Classes</B></A>');
+  }
+  //-->
+</SCRIPT>
+<NOSCRIPT>
+  <A HREF="../../../../../../../allclasses-noframe.html"><B>All Classes</B></A>
+</NOSCRIPT>
+
+
+</FONT></TD>
+</TR>
+<TR>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+DETAIL:&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
+</TR>
+</TABLE>
+<A NAME="skip-navbar_top"></A>
+<!-- ========= END OF TOP NAVBAR ========= -->
+
+<HR>
+<!-- ======== START OF CLASS DATA ======== -->
+<H2>
+<FONT SIZE="-1">
+de.tudarmstadt.ukp.clarin.webanno.brat.dao</FONT>
+<BR>
+Class AnnotationServiceImpl</H2>
+<PRE>
+<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">java.lang.Object</A>
+  <IMG SRC="../../../../../../../resources/inherit.gif" ALT="extended by "><B>de.tudarmstadt.ukp.clarin.webanno.brat.dao.AnnotationServiceImpl</B>
+</PRE>
+<DL>
+<DT><B>All Implemented Interfaces:</B> <DD><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html" title="interface in de.tudarmstadt.ukp.clarin.webanno.api">AnnotationService</A></DD>
+</DL>
+<HR>
+<DL>
+<DT><PRE>public class <B>AnnotationServiceImpl</B><DT>extends <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A><DT>implements <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html" title="interface in de.tudarmstadt.ukp.clarin.webanno.api">AnnotationService</A></DL>
+</PRE>
+
+<P>
+<HR>
+
+<P>
+
+<!-- ======== CONSTRUCTOR SUMMARY ======== -->
+
+<A NAME="constructor_summary"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Constructor Summary</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><CODE><B><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/dao/AnnotationServiceImpl.html#AnnotationServiceImpl()">AnnotationServiceImpl</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+</TR>
+</TABLE>
+&nbsp;
+<!-- ========== METHOD SUMMARY =========== -->
+
+<A NAME="method_summary"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="2"><FONT SIZE="+2">
+<B>Method Summary</B></FONT></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/dao/AnnotationServiceImpl.html#createTag(de.tudarmstadt.ukp.clarin.webanno.model.Tag, de.tudarmstadt.ukp.clarin.webanno.model.User)">createTag</A></B>(<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Tag.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Tag</A>&nbsp;aTag,
+          <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;aUser)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;creates a <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Tag.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>Tag</CODE></A> for a given <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>TagSet</CODE></A>.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/dao/AnnotationServiceImpl.html#createTagSet(de.tudarmstadt.ukp.clarin.webanno.model.TagSet, de.tudarmstadt.ukp.clarin.webanno.model.User)">createTagSet</A></B>(<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">TagSet</A>&nbsp;aTagSet,
+             <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;aUser)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;creates a <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>TagSet</CODE></A> object in the database</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/dao/AnnotationServiceImpl.html#createType(de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType)">createType</A></B>(<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationType.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">AnnotationType</A>&nbsp;aType)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;creates a type which will be a span or arc(relation) type.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Tag.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Tag</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/dao/AnnotationServiceImpl.html#getTag(java.lang.String, de.tudarmstadt.ukp.clarin.webanno.model.TagSet)">getTag</A></B>(<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;aTagName,
+       <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">TagSet</A>&nbsp;aTagSet)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gets a <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Tag.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>Tag</CODE></A> using its name and a <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>TagSet</CODE></A></TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">TagSet</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/dao/AnnotationServiceImpl.html#getTagSet(de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType, de.tudarmstadt.ukp.clarin.webanno.model.Project)">getTagSet</A></B>(<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationType.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">AnnotationType</A>&nbsp;aType,
+          <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;aProject)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Get a a <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>TagSet</CODE></A> for a given <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationType.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>AnnotationType</CODE></A>.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">TagSet</A></CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/dao/AnnotationServiceImpl.html#getTagSet(java.lang.String)">getTagSet</A></B>(<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;aTagSetName)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;get a <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>TagSet</CODE></A> by its name</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationType.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">AnnotationType</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/dao/AnnotationServiceImpl.html#getTypes(java.lang.String, java.lang.String)">getTypes</A></B>(<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;aName,
+         <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;aType)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Get an annotation type using its name</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/dao/AnnotationServiceImpl.html#initializeTypesForProject(de.tudarmstadt.ukp.clarin.webanno.model.Project, de.tudarmstadt.ukp.clarin.webanno.model.User)">initializeTypesForProject</A></B>(<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;aProject,
+                          <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;aUser)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Initialize the project with default <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationType.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>AnnotationType</CODE></A>, <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>TagSet</CODE></A>s, and <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Tag.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>Tag</CODE></A>
+ s.</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationType.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">AnnotationType</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/dao/AnnotationServiceImpl.html#listAnnotationType()">listAnnotationType</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;list all <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationType.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>AnnotationType</CODE></A> in the system</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Tag.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Tag</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/dao/AnnotationServiceImpl.html#listTags()">listTags</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;list all <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Tag.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>Tag</CODE></A> in the system</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Tag.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Tag</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/dao/AnnotationServiceImpl.html#listTags(de.tudarmstadt.ukp.clarin.webanno.model.TagSet)">listTags</A></B>(<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">TagSet</A>&nbsp;aTagSet)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;list all <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Tag.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>Tag</CODE></A> in a <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>TagSet</CODE></A></TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">TagSet</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/dao/AnnotationServiceImpl.html#listTagSets()">listTagSets</A></B>()</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;list all <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>TagSet</CODE></A> in the system</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;<A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">TagSet</A>&gt;</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/dao/AnnotationServiceImpl.html#listTagSets(de.tudarmstadt.ukp.clarin.webanno.model.Project)">listTagSets</A></B>(<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;aProject)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;List all <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>TagSet</CODE></A>s in a project</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/dao/AnnotationServiceImpl.html#removeTag(de.tudarmstadt.ukp.clarin.webanno.model.Tag)">removeTag</A></B>(<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Tag.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Tag</A>&nbsp;aTag)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Removes a <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Tag.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>Tag</CODE></A> from the database</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
+<CODE>&nbsp;void</CODE></FONT></TD>
+<TD><CODE><B><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/dao/AnnotationServiceImpl.html#removeTagSet(de.tudarmstadt.ukp.clarin.webanno.model.TagSet)">removeTagSet</A></B>(<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">TagSet</A>&nbsp;aTagSet)</CODE>
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;removes a <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>TagSet</CODE></A> from the database</TD>
+</TR>
+</TABLE>
+&nbsp;<A NAME="methods_inherited_from_class_java.lang.Object"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#EEEEFF" CLASS="TableSubHeadingColor">
+<TH ALIGN="left"><B>Methods inherited from class java.lang.<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</A></B></TH>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD><CODE><A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/Object.html?is-external=true#clone()" title="class or interface in java.lang">clone</A>, <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/Object.html?is-external=true#equals(java.lang.Object)" title="class or interface in java.lang">equals</A>, <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/Object.html?is-external=true#finalize()" title="class or interface in java.lang">finalize</A>, <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/Object.html?is-external=true#getClass()" title="class or interface in java.lang">getClass</A>, <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/Object.html?is-external=true#hashCode()" title="class or interface in java.lang">hashCode</A>, <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/Object.html?is-external=true#notify()" title="class or interface in java.lang">notify</A>, <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/Object.html?is-external=true#notifyAll()" title="class or interface in java.lang">notifyAll</A>, <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/Object.html?is-external=true#toString()" title="class or interface in java.lang">toString</A>, <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait()" title="class or interface in java.lang">wait</A>, <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait(long)" title="class or interface in java.lang">wait</A>, <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/Object.html?is-external=true#wait(long, int)" title="class or interface in java.lang">wait</A></CODE></TD>
+</TR>
+</TABLE>
+&nbsp;
+<P>
+
+<!-- ========= CONSTRUCTOR DETAIL ======== -->
+
+<A NAME="constructor_detail"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
+<B>Constructor Detail</B></FONT></TH>
+</TR>
+</TABLE>
+
+<A NAME="AnnotationServiceImpl()"><!-- --></A><H3>
+AnnotationServiceImpl</H3>
+<PRE>
+public <B>AnnotationServiceImpl</B>()</PRE>
+<DL>
+</DL>
+
+<!-- ============ METHOD DETAIL ========== -->
+
+<A NAME="method_detail"><!-- --></A>
+<TABLE BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+<TR BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+<TH ALIGN="left" COLSPAN="1"><FONT SIZE="+2">
+<B>Method Detail</B></FONT></TH>
+</TR>
+</TABLE>
+
+<A NAME="createTag(de.tudarmstadt.ukp.clarin.webanno.model.Tag, de.tudarmstadt.ukp.clarin.webanno.model.User)"><!-- --></A><H3>
+createTag</H3>
+<PRE>
+<FONT SIZE="-1">@Transactional
+</FONT>public void <B>createTag</B>(<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Tag.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Tag</A>&nbsp;aTag,
+                                    <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;aUser)
+               throws <A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html#createTag(de.tudarmstadt.ukp.clarin.webanno.model.Tag, de.tudarmstadt.ukp.clarin.webanno.model.User)">AnnotationService</A></CODE></B></DD>
+<DD>creates a <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Tag.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>Tag</CODE></A> for a given <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>TagSet</CODE></A>. Combination of <code>tag name</code> and
+ <code>tagset name</code> should be unique
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html#createTag(de.tudarmstadt.ukp.clarin.webanno.model.Tag, de.tudarmstadt.ukp.clarin.webanno.model.User)">createTag</A></CODE> in interface <CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html" title="interface in de.tudarmstadt.ukp.clarin.webanno.api">AnnotationService</A></CODE></DL>
+</DD>
+<DD><DL>
+<DD><CODE>aUser</CODE> - TODO
+<DT><B>Throws:</B>
+<DD><CODE><A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="createTagSet(de.tudarmstadt.ukp.clarin.webanno.model.TagSet, de.tudarmstadt.ukp.clarin.webanno.model.User)"><!-- --></A><H3>
+createTagSet</H3>
+<PRE>
+<FONT SIZE="-1">@Transactional
+</FONT>public void <B>createTagSet</B>(<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">TagSet</A>&nbsp;aTagSet,
+                                       <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;aUser)
+                  throws <A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html#createTagSet(de.tudarmstadt.ukp.clarin.webanno.model.TagSet, de.tudarmstadt.ukp.clarin.webanno.model.User)">AnnotationService</A></CODE></B></DD>
+<DD>creates a <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>TagSet</CODE></A> object in the database
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html#createTagSet(de.tudarmstadt.ukp.clarin.webanno.model.TagSet, de.tudarmstadt.ukp.clarin.webanno.model.User)">createTagSet</A></CODE> in interface <CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html" title="interface in de.tudarmstadt.ukp.clarin.webanno.api">AnnotationService</A></CODE></DL>
+</DD>
+<DD><DL>
+<DD><CODE>aUser</CODE> - TODO
+<DT><B>Throws:</B>
+<DD><CODE><A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="createType(de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType)"><!-- --></A><H3>
+createType</H3>
+<PRE>
+<FONT SIZE="-1">@Transactional
+</FONT>public void <B>createType</B>(<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationType.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">AnnotationType</A>&nbsp;aType)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html#createType(de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType)">AnnotationService</A></CODE></B></DD>
+<DD>creates a type which will be a span or arc(relation) type. Currently the annotation types
+ are highly highly tied with the tagsets, one tagset per type. POS, Names Entity, and
+ coreference links are span types while coreference chains and dependency parsings are
+ arc(relation) types.
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html#createType(de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType)">createType</A></CODE> in interface <CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html" title="interface in de.tudarmstadt.ukp.clarin.webanno.api">AnnotationService</A></CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getTag(java.lang.String, de.tudarmstadt.ukp.clarin.webanno.model.TagSet)"><!-- --></A><H3>
+getTag</H3>
+<PRE>
+<FONT SIZE="-1">@Transactional
+</FONT>public <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Tag.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Tag</A> <B>getTag</B>(<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;aTagName,
+                                <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">TagSet</A>&nbsp;aTagSet)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html#getTag(java.lang.String, de.tudarmstadt.ukp.clarin.webanno.model.TagSet)">AnnotationService</A></CODE></B></DD>
+<DD>gets a <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Tag.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>Tag</CODE></A> using its name and a <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>TagSet</CODE></A>
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html#getTag(java.lang.String, de.tudarmstadt.ukp.clarin.webanno.model.TagSet)">getTag</A></CODE> in interface <CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html" title="interface in de.tudarmstadt.ukp.clarin.webanno.api">AnnotationService</A></CODE></DL>
+</DD>
+<DD><DL>
+
+<DT><B>Returns:</B><DD></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getTagSet(de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType, de.tudarmstadt.ukp.clarin.webanno.model.Project)"><!-- --></A><H3>
+getTagSet</H3>
+<PRE>
+<FONT SIZE="-1">@Transactional(noRollbackFor=javax.persistence.NoResultException.class)
+</FONT>public <A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">TagSet</A>&gt; <B>getTagSet</B>(<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationType.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">AnnotationType</A>&nbsp;aType,
+                                                                                     <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;aProject)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html#getTagSet(de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType, de.tudarmstadt.ukp.clarin.webanno.model.Project)">AnnotationService</A></CODE></B></DD>
+<DD>Get a a <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>TagSet</CODE></A> for a given <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationType.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>AnnotationType</CODE></A>. One Tagset per annotation type
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html#getTagSet(de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType, de.tudarmstadt.ukp.clarin.webanno.model.Project)">getTagSet</A></CODE> in interface <CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html" title="interface in de.tudarmstadt.ukp.clarin.webanno.api">AnnotationService</A></CODE></DL>
+</DD>
+<DD><DL>
+
+<DT><B>Returns:</B><DD></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getTagSet(java.lang.String)"><!-- --></A><H3>
+getTagSet</H3>
+<PRE>
+<FONT SIZE="-1">@Transactional
+</FONT>public <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">TagSet</A> <B>getTagSet</B>(<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;aTagSetName)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html#getTagSet(java.lang.String)">AnnotationService</A></CODE></B></DD>
+<DD>get a <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>TagSet</CODE></A> by its name
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html#getTagSet(java.lang.String)">getTagSet</A></CODE> in interface <CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html" title="interface in de.tudarmstadt.ukp.clarin.webanno.api">AnnotationService</A></CODE></DL>
+</DD>
+<DD><DL>
+
+<DT><B>Returns:</B><DD><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>TagSet</CODE></A></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="getTypes(java.lang.String, java.lang.String)"><!-- --></A><H3>
+getTypes</H3>
+<PRE>
+public <A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationType.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">AnnotationType</A>&gt; <B>getTypes</B>(<A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;aName,
+                                     <A HREF="http://docs.oracle.com/javase/6/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</A>&nbsp;aType)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html#getTypes(java.lang.String, java.lang.String)">AnnotationService</A></CODE></B></DD>
+<DD>Get an annotation type using its name
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html#getTypes(java.lang.String, java.lang.String)">getTypes</A></CODE> in interface <CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html" title="interface in de.tudarmstadt.ukp.clarin.webanno.api">AnnotationService</A></CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="initializeTypesForProject(de.tudarmstadt.ukp.clarin.webanno.model.Project, de.tudarmstadt.ukp.clarin.webanno.model.User)"><!-- --></A><H3>
+initializeTypesForProject</H3>
+<PRE>
+<FONT SIZE="-1">@Transactional
+</FONT>public void <B>initializeTypesForProject</B>(<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;aProject,
+                                                    <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/User.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">User</A>&nbsp;aUser)
+                               throws <A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html#initializeTypesForProject(de.tudarmstadt.ukp.clarin.webanno.model.Project, de.tudarmstadt.ukp.clarin.webanno.model.User)">AnnotationService</A></CODE></B></DD>
+<DD>Initialize the project with default <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationType.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>AnnotationType</CODE></A>, <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>TagSet</CODE></A>s, and <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Tag.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>Tag</CODE></A>
+ s. For the time being, this initialization occurs only for the first project. It should be
+ per project when <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>TagSet</CODE></A>s are associated with a project
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html#initializeTypesForProject(de.tudarmstadt.ukp.clarin.webanno.model.Project, de.tudarmstadt.ukp.clarin.webanno.model.User)">initializeTypesForProject</A></CODE> in interface <CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html" title="interface in de.tudarmstadt.ukp.clarin.webanno.api">AnnotationService</A></CODE></DL>
+</DD>
+<DD><DL>
+
+<DT><B>Throws:</B>
+<DD><CODE><A HREF="http://docs.oracle.com/javase/6/docs/api/java/io/IOException.html?is-external=true" title="class or interface in java.io">IOException</A></CODE></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="listAnnotationType()"><!-- --></A><H3>
+listAnnotationType</H3>
+<PRE>
+<FONT SIZE="-1">@Transactional
+</FONT>public <A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationType.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">AnnotationType</A>&gt; <B>listAnnotationType</B>()</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html#listAnnotationType()">AnnotationService</A></CODE></B></DD>
+<DD>list all <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/AnnotationType.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>AnnotationType</CODE></A> in the system
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html#listAnnotationType()">listAnnotationType</A></CODE> in interface <CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html" title="interface in de.tudarmstadt.ukp.clarin.webanno.api">AnnotationService</A></CODE></DL>
+</DD>
+<DD><DL>
+
+<DT><B>Returns:</B><DD><CODE>List<AnnotationType></CODE></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="listTags()"><!-- --></A><H3>
+listTags</H3>
+<PRE>
+<FONT SIZE="-1">@Transactional
+</FONT>public <A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Tag.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Tag</A>&gt; <B>listTags</B>()</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html#listTags()">AnnotationService</A></CODE></B></DD>
+<DD>list all <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Tag.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>Tag</CODE></A> in the system
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html#listTags()">listTags</A></CODE> in interface <CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html" title="interface in de.tudarmstadt.ukp.clarin.webanno.api">AnnotationService</A></CODE></DL>
+</DD>
+<DD><DL>
+
+<DT><B>Returns:</B><DD></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="listTags(de.tudarmstadt.ukp.clarin.webanno.model.TagSet)"><!-- --></A><H3>
+listTags</H3>
+<PRE>
+<FONT SIZE="-1">@Transactional
+</FONT>public <A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Tag.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Tag</A>&gt; <B>listTags</B>(<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">TagSet</A>&nbsp;aTagSet)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html#listTags(de.tudarmstadt.ukp.clarin.webanno.model.TagSet)">AnnotationService</A></CODE></B></DD>
+<DD>list all <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Tag.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>Tag</CODE></A> in a <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>TagSet</CODE></A>
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html#listTags(de.tudarmstadt.ukp.clarin.webanno.model.TagSet)">listTags</A></CODE> in interface <CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html" title="interface in de.tudarmstadt.ukp.clarin.webanno.api">AnnotationService</A></CODE></DL>
+</DD>
+<DD><DL>
+
+<DT><B>Returns:</B><DD></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="listTagSets()"><!-- --></A><H3>
+listTagSets</H3>
+<PRE>
+<FONT SIZE="-1">@Transactional
+</FONT>public <A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">TagSet</A>&gt; <B>listTagSets</B>()</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html#listTagSets()">AnnotationService</A></CODE></B></DD>
+<DD>list all <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>TagSet</CODE></A> in the system
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html#listTagSets()">listTagSets</A></CODE> in interface <CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html" title="interface in de.tudarmstadt.ukp.clarin.webanno.api">AnnotationService</A></CODE></DL>
+</DD>
+<DD><DL>
+
+<DT><B>Returns:</B><DD></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="listTagSets(de.tudarmstadt.ukp.clarin.webanno.model.Project)"><!-- --></A><H3>
+listTagSets</H3>
+<PRE>
+<FONT SIZE="-1">@Transactional(noRollbackFor=javax.persistence.NoResultException.class)
+</FONT>public <A HREF="http://docs.oracle.com/javase/6/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</A>&lt;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">TagSet</A>&gt; <B>listTagSets</B>(<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Project.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Project</A>&nbsp;aProject)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html#listTagSets(de.tudarmstadt.ukp.clarin.webanno.model.Project)">AnnotationService</A></CODE></B></DD>
+<DD>List all <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>TagSet</CODE></A>s in a project
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html#listTagSets(de.tudarmstadt.ukp.clarin.webanno.model.Project)">listTagSets</A></CODE> in interface <CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html" title="interface in de.tudarmstadt.ukp.clarin.webanno.api">AnnotationService</A></CODE></DL>
+</DD>
+<DD><DL>
+
+<DT><B>Returns:</B><DD></DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="removeTag(de.tudarmstadt.ukp.clarin.webanno.model.Tag)"><!-- --></A><H3>
+removeTag</H3>
+<PRE>
+<FONT SIZE="-1">@Transactional
+</FONT>public void <B>removeTag</B>(<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Tag.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">Tag</A>&nbsp;aTag)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html#removeTag(de.tudarmstadt.ukp.clarin.webanno.model.Tag)">AnnotationService</A></CODE></B></DD>
+<DD>Removes a <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/Tag.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>Tag</CODE></A> from the database
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html#removeTag(de.tudarmstadt.ukp.clarin.webanno.model.Tag)">removeTag</A></CODE> in interface <CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html" title="interface in de.tudarmstadt.ukp.clarin.webanno.api">AnnotationService</A></CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<HR>
+
+<A NAME="removeTagSet(de.tudarmstadt.ukp.clarin.webanno.model.TagSet)"><!-- --></A><H3>
+removeTagSet</H3>
+<PRE>
+<FONT SIZE="-1">@Transactional
+</FONT>public void <B>removeTagSet</B>(<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model">TagSet</A>&nbsp;aTagSet)</PRE>
+<DL>
+<DD><B>Description copied from interface: <CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html#removeTagSet(de.tudarmstadt.ukp.clarin.webanno.model.TagSet)">AnnotationService</A></CODE></B></DD>
+<DD>removes a <A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/model/TagSet.html" title="class in de.tudarmstadt.ukp.clarin.webanno.model"><CODE>TagSet</CODE></A> from the database
+<P>
+<DD><DL>
+<DT><B>Specified by:</B><DD><CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html#removeTagSet(de.tudarmstadt.ukp.clarin.webanno.model.TagSet)">removeTagSet</A></CODE> in interface <CODE><A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/api/AnnotationService.html" title="interface in de.tudarmstadt.ukp.clarin.webanno.api">AnnotationService</A></CODE></DL>
+</DD>
+<DD><DL>
+</DL>
+</DD>
+</DL>
+<!-- ========= END OF CLASS DATA ========= -->
+<HR>
+
+
+<!-- ======= START OF BOTTOM NAVBAR ====== -->
+<A NAME="navbar_bottom"><!-- --></A>
+<A HREF="#skip-navbar_bottom" title="Skip navigation links"></A>
+<TABLE BORDER="0" WIDTH="100%" CELLPADDING="1" CELLSPACING="0" SUMMARY="">
+<TR>
+<TD COLSPAN=2 BGCOLOR="#EEEEFF" CLASS="NavBarCell1">
+<A NAME="navbar_bottom_firstrow"><!-- --></A>
+<TABLE BORDER="0" CELLPADDING="0" CELLSPACING="3" SUMMARY="">
+  <TR ALIGN="center" VALIGN="top">
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../../../overview-summary.html"><FONT CLASS="NavBarFont1"><B>Overview</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-summary.html"><FONT CLASS="NavBarFont1"><B>Package</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#FFFFFF" CLASS="NavBarCell1Rev"> &nbsp;<FONT CLASS="NavBarFont1Rev"><B>Class</B></FONT>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="class-use/AnnotationServiceImpl.html"><FONT CLASS="NavBarFont1"><B>Use</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="package-tree.html"><FONT CLASS="NavBarFont1"><B>Tree</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../../../deprecated-list.html"><FONT CLASS="NavBarFont1"><B>Deprecated</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../../../index-all.html"><FONT CLASS="NavBarFont1"><B>Index</B></FONT></A>&nbsp;</TD>
+  <TD BGCOLOR="#EEEEFF" CLASS="NavBarCell1">    <A HREF="../../../../../../../help-doc.html"><FONT CLASS="NavBarFont1"><B>Help</B></FONT></A>&nbsp;</TD>
+  </TR>
+</TABLE>
+</TD>
+<TD ALIGN="right" VALIGN="top" ROWSPAN=3><EM>
+</EM>
+</TD>
+</TR>
+
+<TR>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+&nbsp;PREV CLASS&nbsp;
+&nbsp;<A HREF="../../../../../../../de/tudarmstadt/ukp/clarin/webanno/brat/dao/RepositoryServiceDbData.html" title="class in de.tudarmstadt.ukp.clarin.webanno.brat.dao"><B>NEXT CLASS</B></A></FONT></TD>
+<TD BGCOLOR="white" CLASS="NavBarCell2"><FONT SIZE="-2">
+  <A HREF="../../../../../../../index.html?de/tudarmstadt/ukp/clarin/webanno/brat/dao/AnnotationServiceImpl.html" target="_top"><B>FRAMES</B></A>  &nbsp;
+&nbsp;<A HREF="AnnotationServiceImpl.html" target="_top"><B>NO FRAMES</B></A>  &nbsp;
+&nbsp;<SCRIPT type="text/javascript">
+  <!--
+  if(window==top) {
+    document.writeln('<A HREF="../../../../../../../allclasses-noframe.html"><B>All Classes</B></A>');
+  }
+  //-->
+</SCRIPT>
+<NOSCRIPT>
+  <A HREF="../../../../../../../allclasses-noframe.html"><B>All Classes</B></A>
+</NOSCRIPT>
+
+
+</FONT></TD>
+</TR>
+<TR>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+  SUMMARY:&nbsp;NESTED&nbsp;|&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_summary">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_summary">METHOD</A></FONT></TD>
+<TD VALIGN="top" CLASS="NavBarCell3"><FONT SIZE="-2">
+DETAIL:&nbsp;FIELD&nbsp;|&nbsp;<A HREF="#constructor_detail">CONSTR</A>&nbsp;|&nbsp;<A HREF="#method_detail">METHOD</A></FONT></TD>
+</TR>
+</TABLE>
+<A NAME="skip-navbar_bottom"></A>
+<!-- ======== END OF BOTTOM NAVBAR ======= -->
+
+<HR>
+Copyright &#169; 2012-2013. All Rights Reserved.
+</BODY>
+</HTML>
