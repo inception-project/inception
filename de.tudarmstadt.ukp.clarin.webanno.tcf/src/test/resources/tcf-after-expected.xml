@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<?xml-model href="http://de.clarin.eu/images/weblicht-tutorials/resources/tcf-04/schemas/latest/d-spin_0_4.rnc" type="application/relax-ng-compact-syntax"?>
+
+<wl:D-Spin xmlns:ed="http://www.dspin.de/data/extdata" xmlns:lx="http://www.dspin.de/data/lexicon" xmlns:wl="http://www.dspin.de/data" xmlns:md="http://www.dspin.de/data/metadata" xmlns:tc="http://www.dspin.de/data/textcorpus" version="0.4">
+    <md:MetaData/>
+    <tc:TextCorpus lang="de">
+        <tc:text>Sie sind gegen den Euro , gegen Ausländer und Abtreibungen : Bei der Parlamentswahl in Finnland haben die &quot; Wahren Finnen &quot; riesige Gewinne erzielt . </tc:text>
+        <tc:tokens>
+            <tc:token ID="t_0">Sie</tc:token>
+            <tc:token ID="t_1">sind</tc:token>
+            <tc:token ID="t_2">gegen</tc:token>
+            <tc:token ID="t_3">den</tc:token>
+            <tc:token ID="t_4">Euro</tc:token>
+            <tc:token ID="t_5">,</tc:token>
+            <tc:token ID="t_6">gegen</tc:token>
+            <tc:token ID="t_7">Ausländer</tc:token>
+            <tc:token ID="t_8">und</tc:token>
+            <tc:token ID="t_9">Abtreibungen</tc:token>
+            <tc:token ID="t_10">:</tc:token>
+            <tc:token ID="t_11">Bei</tc:token>
+            <tc:token ID="t_12">der</tc:token>
+            <tc:token ID="t_13">Parlamentswahl</tc:token>
+            <tc:token ID="t_14">in</tc:token>
+            <tc:token ID="t_15">Finnland</tc:token>
+            <tc:token ID="t_16">haben</tc:token>
+            <tc:token ID="t_17">die</tc:token>
+            <tc:token ID="t_18">&quot;</tc:token>
+            <tc:token ID="t_19">Wahren</tc:token>
+            <tc:token ID="t_20">Finnen</tc:token>
+            <tc:token ID="t_21">&quot;</tc:token>
+            <tc:token ID="t_22">riesige</tc:token>
+            <tc:token ID="t_23">Gewinne</tc:token>
+            <tc:token ID="t_24">erzielt</tc:token>
+            <tc:token ID="t_25">.</tc:token>
+        </tc:tokens>
+        <tc:sentences>
+            <tc:sentence tokenIDs="t_0 t_1 t_2 t_3 t_4 t_5 t_6 t_7 t_8 t_9 t_10 t_11 t_12 t_13 t_14 t_15 t_16 t_17 t_18 t_19 t_20 t_21 t_22 t_23 t_24 t_25"/>
+        </tc:sentences>
+        <tc:lemmas>
+            <tc:lemma ID="l_0" tokenIDs="t_0">Sie|sie|sie</tc:lemma>
+            <tc:lemma ID="l_1" tokenIDs="t_1">sein</tc:lemma>
+            <tc:lemma ID="l_2" tokenIDs="t_2">gegen</tc:lemma>
+            <tc:lemma ID="l_3" tokenIDs="t_3">d</tc:lemma>
+            <tc:lemma ID="l_4" tokenIDs="t_4">Euro</tc:lemma>
+            <tc:lemma ID="l_5" tokenIDs="t_5">,</tc:lemma>
+            <tc:lemma ID="l_6" tokenIDs="t_6">gegen</tc:lemma>
+            <tc:lemma ID="l_7" tokenIDs="t_7">Ausländer</tc:lemma>
+            <tc:lemma ID="l_8" tokenIDs="t_8">und</tc:lemma>
+            <tc:lemma ID="l_9" tokenIDs="t_9">Abtreibung</tc:lemma>
+            <tc:lemma ID="l_10" tokenIDs="t_10">:</tc:lemma>
+            <tc:lemma ID="l_11" tokenIDs="t_11">bei</tc:lemma>
+            <tc:lemma ID="l_12" tokenIDs="t_12">d</tc:lemma>
+            <tc:lemma ID="l_13" tokenIDs="t_13">Parlamentswahl</tc:lemma>
+            <tc:lemma ID="l_14" tokenIDs="t_14">in</tc:lemma>
+            <tc:lemma ID="l_15" tokenIDs="t_15">Finnland</tc:lemma>
+            <tc:lemma ID="l_16" tokenIDs="t_16">haben</tc:lemma>
+            <tc:lemma ID="l_17" tokenIDs="t_17">d</tc:lemma>
+            <tc:lemma ID="l_18" tokenIDs="t_18">&quot;</tc:lemma>
+            <tc:lemma ID="l_19" tokenIDs="t_19">wahr</tc:lemma>
+            <tc:lemma ID="l_20" tokenIDs="t_20">Finne</tc:lemma>
+            <tc:lemma ID="l_21" tokenIDs="t_21">&quot;</tc:lemma>
+            <tc:lemma ID="l_22" tokenIDs="t_22">riesig</tc:lemma>
+            <tc:lemma ID="l_23" tokenIDs="t_23">Gewinn</tc:lemma>
+            <tc:lemma ID="l_24" tokenIDs="t_24">erzielen</tc:lemma>
+            <tc:lemma ID="l_25" tokenIDs="t_25">.</tc:lemma>
+        </tc:lemmas>
+        <tc:POStags tagset="STTS">
+            <tc:tag tokenIDs="t_0">PPER</tc:tag>
+            <tc:tag tokenIDs="t_1">VAFIN</tc:tag>
+            <tc:tag tokenIDs="t_2">APPR</tc:tag>
+            <tc:tag tokenIDs="t_3">ART</tc:tag>
+            <tc:tag tokenIDs="t_4">NN</tc:tag>
+            <tc:tag tokenIDs="t_5">$,</tc:tag>
+            <tc:tag tokenIDs="t_6">APPR</tc:tag>
+            <tc:tag tokenIDs="t_7">NN</tc:tag>
+            <tc:tag tokenIDs="t_8">KON</tc:tag>
+            <tc:tag tokenIDs="t_9">NN</tc:tag>
+            <tc:tag tokenIDs="t_10">$.</tc:tag>
+            <tc:tag tokenIDs="t_11">APPR</tc:tag>
+            <tc:tag tokenIDs="t_12">ART</tc:tag>
+            <tc:tag tokenIDs="t_13">NN</tc:tag>
+            <tc:tag tokenIDs="t_14">APPR</tc:tag>
+            <tc:tag tokenIDs="t_15">NE</tc:tag>
+            <tc:tag tokenIDs="t_16">VAFIN</tc:tag>
+            <tc:tag tokenIDs="t_17">ART</tc:tag>
+            <tc:tag tokenIDs="t_18">$(</tc:tag>
+            <tc:tag tokenIDs="t_19">ADJA</tc:tag>
+            <tc:tag tokenIDs="t_20">NN</tc:tag>
+            <tc:tag tokenIDs="t_21">$(</tc:tag>
+            <tc:tag tokenIDs="t_22">ADJA</tc:tag>
+            <tc:tag tokenIDs="t_23">NN</tc:tag>
+            <tc:tag tokenIDs="t_24">VVPP</tc:tag>
+            <tc:tag tokenIDs="t_25">$.</tc:tag>
+        </tc:POStags>
+        <tc:references typetagset="BART" reltagset="t_uebaDZ">
+            <tc:entity>
+                <tc:reference ID="rc_1" type="pro.per3" rel="cataphoric" target="rc_0" tokenIDs="t_0"/>
+                <tc:reference ID="rc_0" type="nam" tokenIDs="t_17 t_18 t_19 t_20 t_21"/>
+            </tc:entity>
+        </tc:references>
+    </tc:TextCorpus>
+</wl:D-Spin>

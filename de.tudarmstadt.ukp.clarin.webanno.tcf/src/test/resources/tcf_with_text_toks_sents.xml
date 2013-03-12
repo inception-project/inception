@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="http://de.clarin.eu/images/weblicht-tutorials/resources/tcf-04/schemas/latest/d-spin_0_4.rnc" type="application/relax-ng-compact-syntax"?>
+<D-Spin xmlns="http://www.dspin.de/data" version="0.4">
+
+<MetaData xmlns="http://www.dspin.de/data/metadata"/>
+
+<TextCorpus xmlns="http://www.dspin.de/data/textcorpus" lang="de">
+    <text>Karin fliegt nach New York. Sie will dort Urlaub machen.</text>
+    <tokens>
+        <token ID="t_0">Karin</token>
+        <token ID="t_1">fliegt</token>
+        <token ID="t_2">nach</token>
+        <token ID="t_3">New</token>
+        <token ID="t_4">York</token>
+        <token ID="t_5">.</token>
+        <token ID="t_6">Sie</token>
+        <token ID="t_7">will</token>
+        <token ID="t_8">dort</token>
+        <token ID="t_9">Urlaub</token>
+        <token ID="t_10">machen</token>
+        <token ID="t_11">.</token>
+    </tokens>
+    <sentences>
+        <sentence tokenIDs="t_0 t_1 t_2 t_3 t_4 t_5"/>
+        <sentence tokenIDs="t_6 t_7 t_8 t_9 t_10 t_11"/>
+    </sentences>
+</TextCorpus>
+</D-Spin>

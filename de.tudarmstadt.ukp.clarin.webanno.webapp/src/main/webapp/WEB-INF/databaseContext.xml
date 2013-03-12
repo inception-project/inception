@@ -1,0 +1,97 @@
+<!--
+	Copyright 2012
+	Ubiquitous Knowledge Processing (UKP) Lab
+	Technische Universität Darmstadt
+
+	Licensed under the Apache License, Version 2.0 (the "License");
+	you may not use this file except in compliance with the License.
+	You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+	Unless required by applicable law or agreed to in writing, software
+	distributed under the License is distributed on an "AS IS" BASIS,
+	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	See the License for the specific language governing permissions and
+	limitations under the License.
+-->
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd">
+
+	<bean
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="ignoreUnresolvablePlaceholders" value="true" />
+		<property name="ignoreResourceNotFound" value="true" />
+		<property name="properties">
+			<props>
+				<prop key="database.dialect">org.hibernate.dialect.MySQL5InnoDBDialect</prop>
+				<prop key="database.driver">com.mysql.jdbc.Driver</prop>
+				<prop key="database.url">jdbc:mysql://localhost:3306/tcf?useUnicode=true&amp;characterEncoding=utf8
+				</prop>
+				<prop key="database.username">root</prop>
+				<prop key="database.password"></prop>
+				<prop key="database.initial-pool-size">4</prop>
+				<prop key="database.min-pool-size">4</prop>
+				<prop key="database.max-pool-size">10</prop>
+				<prop key="database.generate">update</prop>
+			</props>
+		</property>
+		<property name="locations">
+			<list>
+				<value>classpath:META-INF/settings.properties</value>
+				<value>file:${weblab.home}/settings.properties</value>
+			</list>
+		</property>
+	</bean>
+
+	<bean
+		class="org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor" />
+
+	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+		<property name="entityManagerFactory" ref="entityManagerFactory" />
+	</bean>
+
+	<tx:annotation-driven />
+
+	<bean id="entityManagerFactory"
+		class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+		<property name="jpaDialect">
+			<bean class="org.springframework.orm.jpa.vendor.HibernateJpaDialect" />
+		</property>
+		<property name="jpaVendorAdapter">
+			<bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+				<property name="showSql" value="false" />
+				<property name="generateDdl" value="true" />
+			</bean>
+		</property>
+		<property name="jpaProperties">
+			<props>
+				<prop key="hibernate.dialect">${database.dialect}</prop>
+				<prop key="hibernate.hbm2ddl.auto">${database.generate}</prop>
+			</props>
+		</property>
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource">
+		<property name="driverClassName" value="${database.driver}" />
+		<property name="url" value="${database.url}" />
+		<property name="username" value="${database.username}" />
+		<property name="password" value="${database.password}" />
+		<property name="initialSize" value="${database.initial-pool-size}" />
+		<property name="maxIdle" value="${database.min-pool-size}" />
+		<property name="maxActive" value="${database.max-pool-size}" />
+		<property name="defaultTransactionIsolation"
+			value="#{ T(java.sql.Connection).TRANSACTION_READ_COMMITTED}" />
+	</bean>
+
+	<!-- <bean id="tcfDbMetaDataRepository" class="de.tudarmstadt.ukp.clarin.webanno.brat.dao.impl.RepositoryServiceDbMetaData">
+		<property name="dir" value="/srv/dkpro/repository/"></property> </bean> -->
+	<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+</beans>

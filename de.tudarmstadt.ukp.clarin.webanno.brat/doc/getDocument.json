@@ -1,0 +1,87 @@
+{
+    "modifications": [],
+    "ctime": 1.331148238E9,
+    "triggers": [],
+    "text": "The doc\nThe text \n",
+    "source_files": [
+        "ann",
+        "txt"
+    ],
+    "token_offsets": [
+        [
+            0,
+            3
+        ],
+        [
+            4,
+            7
+        ],
+        [
+            8,
+            11
+        ],
+        [
+            12,
+            16
+        ]
+    ],
+    "messages": [],
+    "sentence_offsets": [
+        [
+            0,
+            7
+        ],
+        [
+            8,
+            16
+        ],
+        [
+            17,
+            17
+        ]
+    ],
+    "relations": [],
+    "entities": [
+        [
+            "T1",
+            "Protein",
+            8,
+            11
+        ],
+        [
+            "T2",
+            "Entity",
+            8,
+            11
+        ],
+        [
+            "T3",
+            "Entity",
+            0,
+            3
+        ],
+        [
+            "T4",
+            "Entity",
+            4,
+            7
+        ],
+        [
+            "T5",
+            "Entity",
+            12,
+            16
+        ]
+    ],
+    "mtime": 1.331148238E9,
+    "comments": [[
+        "T2",
+        "AnnotatorNotes",
+        "le"
+    ]],
+    "offset": 0,
+    "action": "getDocument",
+    "attributes": [],
+    "equivs": [],
+    "events": []
+}

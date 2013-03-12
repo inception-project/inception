@@ -1,0 +1,36 @@
+@prefix an: <http://de.tudarmstadt.ukp.clarin.webanno.brat#> .
+
+an:pos an:name "NE,VVFIN,APPR,$.,PPER,VMFIN,ADV,NN,VVINF" ;
+	an:borderColor "darken";
+	an:bgColor "#7fa2ff" ;
+	an:fgColor "black" ;
+	an:unUsed "false" ;
+	an:type "pos" ;
+	an:labels "NE,VVFIN,APPR,$.,PPER,VMFIN,ADV,NN,VVINF". 
+
+an:coref an:name "RE" ;
+	an:borderColor "darken";
+	an:bgColor "lightgreen" ;
+	an:fgColor "black" ;
+	an:unUsed "false" ;
+	an:type "coref" ;
+	an:labels "RE" ;
+	an:arcs an:corefArcs .
+an:corefArcs an:arrowHead "triangle-5" ;
+	an:type "COREFERENCE" ;	
+	an:labels "REF" ;
+	an:dashArray "5-3" ;
+	an:color "blue" ;
+	an:bgColor "red" ;
+	an:targets "RE" .
+
+
+
+an:ne an:name "LOC,PER,ORG,MISC" ;
+	an:borderColor "darken";
+	an:bgColor "cyan" ;
+	an:fgColor "black" ;
+	an:unUsed "false" ;
+	an:type "ne" ;
+	an:labels "LOC,PER,ORG,MISC" .
+

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<?xml-model href="http://de.clarin.eu/images/weblicht-tutorials/resources/tcf-04/schemas/latest/d-spin_0_4.rnc" type="application/relax-ng-compact-syntax"?>
+<D-Spin xmlns="http://www.dspin.de/data" version="0.4">
+	<MetaData xmlns="http://www.dspin.de/data/metadata">
+		<source>IMS, Uni Stuttgart</source>
+	</MetaData>
+	<TextCorpus xmlns="http://www.dspin.de/data/textcorpus"
+		lang="de">
+		<text>Sie sind gegen den Euro, gegen Ausländer und Abtreibungen: Bei
+			der Parlamentswahl in Finnland haben die "Wahren Finnen" riesige
+			Gewinne erzielt.
+		</text>
+		<tokens>
+			<token ID="t_1">Sie</token>
+			<token ID="t_2">sind</token>
+			<token ID="t_3">gegen</token>
+			<token ID="t_4">den</token>
+			<token ID="t_5">Euro</token>
+			<token ID="t_6">,</token>
+			<token ID="t_7">gegen</token>
+			<token ID="t_8">Ausländer</token>
+			<token ID="t_9">und</token>
+			<token ID="t_10">Abtreibungen</token>
+			<token ID="t_11">:</token>
+			<token ID="t_12">Bei</token>
+			<token ID="t_13">der</token>
+			<token ID="t_14">Parlamentswahl</token>
+			<token ID="t_15">in</token>
+			<token ID="t_16">Finnland</token>
+			<token ID="t_17">haben</token>
+			<token ID="t_18">die</token>
+			<token ID="t_19">"</token>
+			<token ID="t_20">Wahren</token>
+			<token ID="t_21">Finnen</token>
+			<token ID="t_22">"</token>
+			<token ID="t_23">riesige</token>
+			<token ID="t_24">Gewinne</token>
+			<token ID="t_25">erzielt</token>
+			<token ID="t_26">.</token>
+		</tokens>
+		<sentences>
+			<sentence ID="s1"
+				tokenIDs="t_1 t_2 t_3 t_4 t_5 t_6 t_7 t_8 t_9 t_10 t_11 t_12 t_13 t_14 t_15 t_16 t_17 t_18 t_19 t_20 t_21 t_22 t_23 t_24 t_25 t_26"></sentence>
+		</sentences>
+		<lemmas>
+			<lemma tokenIDs="t_1">Sie|sie|sie</lemma>
+			<lemma tokenIDs="t_2">sein</lemma>
+			<lemma tokenIDs="t_3">gegen</lemma>
+			<lemma tokenIDs="t_4">d</lemma>
+			<lemma tokenIDs="t_5">Euro</lemma>
+			<lemma tokenIDs="t_6">,</lemma>
+			<lemma tokenIDs="t_7">gegen</lemma>
+			<lemma tokenIDs="t_8">Ausländer</lemma>
+			<lemma tokenIDs="t_9">und</lemma>
+			<lemma tokenIDs="t_10">Abtreibung</lemma>
+			<lemma tokenIDs="t_11">:</lemma>
+			<lemma tokenIDs="t_12">bei</lemma>
+			<lemma tokenIDs="t_13">d</lemma>
+			<lemma tokenIDs="t_14">Parlamentswahl</lemma>
+			<lemma tokenIDs="t_15">in</lemma>
+			<lemma tokenIDs="t_16">Finnland</lemma>
+			<lemma tokenIDs="t_17">haben</lemma>
+			<lemma tokenIDs="t_18">d</lemma>
+			<lemma tokenIDs="t_19">"</lemma>
+			<lemma tokenIDs="t_20">wahr</lemma>
+			<lemma tokenIDs="t_21">Finne</lemma>
+			<lemma tokenIDs="t_22">"</lemma>
+			<lemma tokenIDs="t_23">riesig</lemma>
+			<lemma tokenIDs="t_24">Gewinn</lemma>
+			<lemma tokenIDs="t_25">erzielen</lemma>
+			<lemma tokenIDs="t_26">.</lemma>
+		</lemmas>
+		<POStags tagset="STTS">
+			<tag tokenIDs="t_1">PPER</tag>
+			<tag tokenIDs="t_2">VAFIN</tag>
+			<tag tokenIDs="t_3">APPR</tag>
+			<tag tokenIDs="t_4">ART</tag>
+			<tag tokenIDs="t_5">NN</tag>
+			<tag tokenIDs="t_6">$,</tag>
+			<tag tokenIDs="t_7">APPR</tag>
+			<tag tokenIDs="t_8">NN</tag>
+			<tag tokenIDs="t_9">KON</tag>
+			<tag tokenIDs="t_10">NN</tag>
+			<tag tokenIDs="t_11">$.</tag>
+			<tag tokenIDs="t_12">APPR</tag>
+			<tag tokenIDs="t_13">ART</tag>
+			<tag tokenIDs="t_14">NN</tag>
+			<tag tokenIDs="t_15">APPR</tag>
+			<tag tokenIDs="t_16">NE</tag>
+			<tag tokenIDs="t_17">VAFIN</tag>
+			<tag tokenIDs="t_18">ART</tag>
+			<tag tokenIDs="t_19">$(</tag>
+			<tag tokenIDs="t_20">ADJA</tag>
+			<tag tokenIDs="t_21">NN</tag>
+			<tag tokenIDs="t_22">$(</tag>
+			<tag tokenIDs="t_23">ADJA</tag>
+			<tag tokenIDs="t_24">NN</tag>
+			<tag tokenIDs="t_25">VVPP</tag>
+			<tag tokenIDs="t_26">$.</tag>
+		</POStags>
+		<references typetagset="BART" reltagset="t_uebaDZ">
+			<entity>
+				<reference ID="rc_0" rel="cataphoric" target="rc_1"
+					tokenIDs="t_1" mintokIDs="t_1" type="pro.per3" />							
+					<reference ID="rc_1" tokenIDs="t_18 t_19 t_20 t_21 t_22" mintokIDs="t_20 t_21" type="nam" />
+			</entity>
+		</references>
+	</TextCorpus>
+</D-Spin>

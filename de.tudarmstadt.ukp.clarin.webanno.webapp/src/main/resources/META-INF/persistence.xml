@@ -1,0 +1,16 @@
+<persistence xmlns="http://java.sun.com/xml/ns/persistence"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
+	version="2.0">
+	<persistence-unit name="tcf">
+		<class>de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument</class>
+		<class>de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType</class>
+		<class>de.tudarmstadt.ukp.clarin.webanno.model.User</class>
+		<class>de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument</class>
+		<class>de.tudarmstadt.ukp.clarin.webanno.model.Project</class>
+		<class>de.tudarmstadt.ukp.clarin.webanno.model.Tag</class>
+		<class>de.tudarmstadt.ukp.clarin.webanno.model.TagSet</class>
+		<class>de.tudarmstadt.ukp.clarin.webanno.model.Authority</class>
+		<class>de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermissions</class>		
+	</persistence-unit>
+</persistence>

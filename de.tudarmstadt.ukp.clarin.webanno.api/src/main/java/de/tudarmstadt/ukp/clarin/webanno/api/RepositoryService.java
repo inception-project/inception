@@ -1,0 +1,377 @@
+/*******************************************************************************
+ * Copyright 2012
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ******************************************************************************/
+package de.tudarmstadt.ukp.clarin.webanno.api;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.uima.UIMAException;
+import org.apache.uima.jcas.JCas;
+import org.springframework.security.access.prepost.PreAuthorize;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermissions;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import eu.clarin.weblicht.wlfxb.io.WLFormatException;
+
+/**
+ * This interface contains methods that are related to accessing/creating/deleting... documents,
+ * Users, and Projects for the annotation system. while meta data about documents and projects and
+ * users are stored in the database, source and annotation documents are stored in a file system
+ *
+ * @author Seid Muhie Yimam
+ * @author Richard Eckart de Castilho
+ *
+ */
+public interface RepositoryService
+{
+    /**
+     * creates the {@link AnnotationDocument } object in the database.
+     *
+     * @param annotationDocument
+     *            {@link AnnotationDocument} comprises of the the name of the {@link SourceDocument}
+     *            , id of {@link SourceDocument}, id of the {@link Project}, and id of {@link User}
+     *
+     */
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
+    void createAnnotationDocument(AnnotationDocument annotationDocument);
+
+    /**
+     * Creates an annotation document which is CAS object seriealized in xmi format using the
+     * {@link SerializedCasWriter}. The {@link AnnotationDocument} is stored in the
+     * weblab.home/project/Project.id/document/document.id/annotation/username.ser. annotated
+     * documents are stored per project, user and document
+     *
+     * @param user
+     *            TODO
+     */
+
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
+    void createAnnotationDocumentContent(JCas jCas, AnnotationDocument annotationDocument, User user)
+        throws IOException;
+
+    /**
+     * Creates a {@code Project}. Creating a project needs a global ROLE_ADMIN role. For the first
+     * time the project is created, an associated project path will be created on the file system as
+     * {@code weblab.home/project/Project.id }
+     *
+     * @param aProject
+     *            The {@link Project} object to be created.
+     * @param user
+     *            TODO
+     * @throws IOException
+     *             If the specified weblab.home directory is not available no write permission
+     */
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
+    void createProject(Project project, User user)
+        throws IOException;
+
+    /**
+     * creates a project permission, adding permission level for the user in the given project
+     *
+     * @param permission
+     * @throws IOException
+     */
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
+    void createProjectPermission(ProjectPermissions permission)
+        throws IOException;
+
+    /**
+     * Creates a {@link SourceDocument} in a database. The source document is created by ROLE_ADMIN
+     * or Project admins. Source documents are created per project and it should have a unique name
+     * in the {@link Project} it belongs. renaming a a source document is not possible, rather the
+     * administrator should delete and re create it.
+     *
+     * @param document
+     *            {@link SourceDocument} to be created
+     * @param user
+     *            TODO
+     * @throws IOException
+     */
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
+    void createSourceDocument(SourceDocument document, User user)
+        throws IOException;
+
+    /**
+     * Exports an {@link AnnotationDocument } CAS Object as TCF/TXT/XMI... file formats.
+     *
+     * @param document
+     *            The {@link SourceDocument} where we get the id which hosts both the source
+     *            Document and the annotated document
+     * @param project
+     *            the project that {@link AnnotationDocument} belongs to
+     * @param user
+     *            the {@link User } who annotates the document.
+     */
+    File exportAnnotationDocument(SourceDocument document, Project project, User user, Class writer)
+        throws FileNotFoundException, UIMAException, IOException, WLFormatException,
+        ClassNotFoundException;
+
+    /**
+     * Get an {@link AnnotationDocument} object from the database using the {@link SourceDocument}
+     * and {@link User} Objects. If {@code getAnnotationDocument} fails, it will be created anew
+     *
+     * @param annotationDOcument
+     * @return {@link AnnotationDocument}
+     *
+     */
+    AnnotationDocument getAnnotationDocument(SourceDocument document, User user);
+
+    /**
+     * If already created, returns the CAS object either for document annotation for example in
+     * {@link de.tudarmstadt.ukp.clarin.webanno.brat.ajax.controller.BratAjaxCasController#getDocument}
+     * or for exporting the annotated document as TCF files as in
+     * {@link de.tudarmstadt.ukp.clarin.webanno.brat.ajax.controller.BratAjaxCasController#retrieveStored}
+     *
+     * @param annotationDocument
+     * @return
+     * @throws UIMAException
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
+    JCas getAnnotationDocumentContent(AnnotationDocument annotationDocument)
+        throws UIMAException, IOException, ClassNotFoundException;
+
+    /**
+     * Returns a role of a user, globally we will have ROLE_ADMIN and ROLE_USER
+     *
+     * @param aUser
+     *            the {@link User} object
+     * @return
+     */
+    List<Authority> getAuthorities(User user);
+
+    /**
+     * The Directory where the {@link SourceDocument}s and {@link AnnotationDocument}s stored
+     *
+     * @return
+     */
+    File getDir();
+
+    /**
+     * For a given project, get the permission level of the user if it is granted
+     *
+     * @param aUser
+     *            the user, if already assigned in that project
+     * @param aProject
+     *            the project to be examined
+     * @return
+     */
+    String getPermisionLevel(User user, Project project);
+
+    /**
+     * get a permission object where a user is granted permission/permissions;
+     *
+     * @return
+     */
+    ProjectPermissions getProjectPermission(User user, Project project);
+
+    /**
+     * Get a {@link Project} from the database the name of the Project
+     *
+     * @param name
+     *            name of the project
+     * @return {@link Project} object from the database or an error if the project is not found.
+     *         Exception is handled from the calling method.
+     */
+    List<Project> getProjects(String name);
+
+    /**
+     * Get a {@link ProjectPermissions }objects where a project is member of. We need to get them,
+     * for example if the associated {@link Project} is deleted, the {@link ProjectPermissions }
+     * objects too.
+     *
+     * @param project
+     *            The project contained in a projectPermision
+     * @return the {@link ProjectPermissions } list to be analysed.
+     */
+    List<ProjectPermissions> getProjectPermisions(Project project);
+
+    /**
+     * Get meta data information about {@link SourceDocument} from the database. This method is
+     * called either for {@link AnnotationDocument} object creation or
+     * {@link RepositoryService#createSourceDocument(SourceDocument, User)}
+     *
+     * @param documentName
+     *            the name of the {@link SourceDocument}
+     * @param project
+     *            the {@link Project} where the {@link SourceDocument} belongs
+     * @return
+     */
+    SourceDocument getSourceDocument(String documentName, Project project);
+
+    /**
+     * Return the Master TCF file Directory path. For the first time, all available TCF layers will
+     * be read and converted to CAS object. subsequent accesses will be to the annotated document
+     * unless and otherwise the document is removed from the project.
+     *
+     * @param project
+     *            The {@link Project} wherever the Source document belongs
+     * @param document
+     *            The {@link SourceDocument} to be examined
+     * @return the Directory path of the source document
+     */
+    File getSourceDocumentContent(Project project, SourceDocument document);
+
+    /**
+     * Get a {@link User} object from the database based on the username.
+     *
+     * @param username
+     *            the username to be searched in the database
+     * @return a Single {@code User} object
+     */
+    User getUser(String username);
+
+    /**
+     * List all the {@link AnnotationDocument}s, if available for a given {@link SourceDocument}.
+     * Returns list of {@link AnnotationDocument}s for all {@link User}s in the {@link Project} that
+     * has already annotated the {@link SourceDocument}
+     *
+     * @param document
+     *            the {@link SourceDocument}
+     * @return {@link AnnotationDocument}
+     */
+    List<AnnotationDocument> listAnnotationDocument(SourceDocument document);
+
+    /**
+     * List all Projects. If the user logged have a ROLE_ADMIN, he can see all the projects.
+     * Otherwise, a user will see projects only he is member of.
+     *
+     * @return
+     */
+    List<Project> listProjects();
+
+    /**
+     * list users in a project. Hence, only users in a project can annotate documents
+     *
+     * @param project
+     *            The project where users are member of
+     * @return returns list of {@link User}s in a project
+     */
+    List<String> listProjectUsers(Project project);
+
+    /**
+     * List all source documents in a project. The source documents are the original TCF documents
+     * imported.
+     *
+     * @param aProject
+     *            The Project we are looking for source documents
+     * @return list of source documents
+     */
+    List<SourceDocument> listSourceDocuments(Project aProject);
+
+    /**
+     * Lists all users in the application.
+     *
+     * @return list of users
+     */
+    List<User> listUsers();
+
+    /**
+     * remove a user permission from the project
+     *
+     * @param projectPermission
+     *            TODO
+     * @throws IOException
+     */
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
+    void removeProjectPermission(ProjectPermissions projectPermission)
+        throws IOException;
+
+    /**
+     * Remove a project. A ROLE_ADMIN or project admin can remove a project. removing a project will
+     * remove associated source documents and annotation documents.
+     *
+     * @param project
+     *            the project to be deleted
+     * @param aUser
+     *            TODO
+     * @throws IOException
+     *             if the project to be deleted is not available in the file system
+     */
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
+    void removeProject(Project project, User aser)
+        throws IOException;
+
+    /**
+     * ROLE_ADMINs or Projetc admins can remove source documents from a project. removing a a source
+     * document also removes an annotation document related to that document
+     *
+     * @param document
+     *            the source document to be deleted
+     * @param user
+     *            TODO
+     * @throws IOException
+     *             If the source document searched for deletion is not availble
+     */
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
+    void removeSourceDocument(SourceDocument document, User user)
+        throws IOException;
+
+    /**
+     * This method creates the source document (TCF File) to a file system. It creates a directory
+     * structure under weblab.home/project/project.id/document/Document.id/source/document.name.xml
+     *
+     * @param text
+     *            the TCF file content
+     * @param document
+     *            The {@link SourceDocument} object to be created
+     * @param projectId
+     *            The id of the {@link Project}
+     * @param user
+     *            TODO
+     * @throws IOException
+     * @throws UIMAException
+     * @throws WLFormatException
+     */
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
+    public void uploadSourceDocument(String text, SourceDocument document, long projectId, User user)
+        throws IOException, UIMAException, WLFormatException;
+
+    /**
+     * Returns the format of the {@link SourceDocument} to be read from a properties File
+     *
+     * @return
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
+    Map<String, Class> getReadableFormats()
+        throws IOException, ClassNotFoundException;
+
+    /**
+     * Returns the format of {@link AnnotationDocument} while exporting
+     *
+     * @return
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
+    Map<String, Class> getWritableFormats()
+        throws IOException, ClassNotFoundException;
+
+    /**
+     * Get list of permissions a user have in a given project
+     *
+     * @return
+     */
+    List<String> listProjectPermisionLevels(User user, Project project);
+
+}
