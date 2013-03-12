@@ -64,7 +64,10 @@ public class WelcomePage
                 break;
             }
         }
-        if (!projectSettingAdded) {
+        if(ApplicationUtils.isSuperAdmin(projectRepository, user) && !projectSettingAdded){
+            add(projectSettings);
+        }
+        else if (!projectSettingAdded) {
 
             add(projectSettings);
             projectSettings.setVisible(false);
@@ -92,8 +95,10 @@ public class WelcomePage
             }
 
         }
-
-        if (!curatorAdded) {
+        if(ApplicationUtils.isSuperAdmin(projectRepository, user) && !projectSettingAdded){
+            add(curation);
+        }
+        else if (!curatorAdded) {
             add(curation);
             curation.setVisible(false);
         }
@@ -119,7 +124,10 @@ public class WelcomePage
                 break;
             }
         }
-        if (!memberAdded) {
+        if(ApplicationUtils.isSuperAdmin(projectRepository, user) && !projectSettingAdded){
+            add(annotation);
+        }
+        else if (!memberAdded) {
             add(annotation);
             annotation.setVisible(false);
             error("You are not member of any projects to annotate or curate");

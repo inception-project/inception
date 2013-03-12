@@ -34,6 +34,7 @@ public class ApplicationUtils
 {
 
     private static final Log LOG = LogFactory.getLog(ApplicationUtils.class);
+
     /**
      * Read Tag and Tag Description. A line has a tag name and a tag description separated by a TAB
      *
@@ -58,12 +59,29 @@ public class ApplicationUtils
     }
 
     /**
+     * IS user super Admin
+     */
+    public static boolean isSuperAdmin(RepositoryService aProjectRepository, User aUser)
+    {
+        boolean roleAdmin = false;
+        List<Authority> authorities = aProjectRepository.getAuthorities(aUser);
+        for (Authority authority : authorities) {
+            if (authority.getRole().equals("ROLE_ADMIN")) {
+                roleAdmin = true;
+                break;
+            }
+        }
+        return roleAdmin;
+    }
+
+    /**
      * Determine if the User is allowed to update a project
      *
      * @param aProject
      * @return
      */
-    public static boolean isProjectAdmin(Project aProject, RepositoryService aProjectRepository, User aUser)
+    public static boolean isProjectAdmin(Project aProject, RepositoryService aProjectRepository,
+            User aUser)
     {
         boolean roleAdmin = false;
         List<Authority> authorities = aProjectRepository.getAuthorities(aUser);
@@ -95,7 +113,8 @@ public class ApplicationUtils
      * @param aProject
      * @return
      */
-    public static boolean isCurator(Project aProject, RepositoryService aProjectRepository,  User aUser)
+    public static boolean isCurator(Project aProject, RepositoryService aProjectRepository,
+            User aUser)
     {
         boolean roleAdmin = false;
         List<Authority> authorities = aProjectRepository.getAuthorities(aUser);
@@ -127,7 +146,8 @@ public class ApplicationUtils
      * @param aProject
      * @return
      */
-    public static boolean isMember(Project aProject, RepositoryService aProjectRepository,  User aUSer)
+    public static boolean isMember(Project aProject, RepositoryService aProjectRepository,
+            User aUSer)
     {
         boolean roleAdmin = false;
         List<Authority> authorities = aProjectRepository.getAuthorities(aUSer);
