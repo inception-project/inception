@@ -227,7 +227,9 @@
 	</modules>
 	<scm>
 		<developerConnection>scm:svn:https://webanno.googlecode.com/svn/trunk</developerConnection>
-  </scm>
+		<connection>scm:svn:https://webanno.googlecode.com/svn/trunk</connection>
+		<url>https://webanno.googlecode.com/svn/trunk</url>
+	</scm>
 	<build>
 		<extensions>
 			<extension>
