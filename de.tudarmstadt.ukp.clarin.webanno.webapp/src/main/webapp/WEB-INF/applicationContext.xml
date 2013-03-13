@@ -27,7 +27,7 @@
 	<!-- setup wicket application -->
 	
 		<util:properties id="formats"
-		location="file:${weblab.home}/formats.properties" /> 
+		location="file:${webanno.home}/formats.properties" /> 
 
 	<bean id="wicketApplication"
 		class="de.tudarmstadt.ukp.clarin.webanno.brat.WicketApplication" />
@@ -52,8 +52,8 @@
 		<property name="locations">
 			<list>
 				<value>classpath:META-INF/settings.properties</value>
-				<value>file:${weblab.home}/settings.properties</value>
-				<value>file:${weblab.home}/formats.properties</value>
+				<value>file:${webanno.home}/settings.properties</value>
+				<value>file:${webanno.home}/formats.properties</value>
 			</list>
 		</property>
 	</bean>
@@ -64,7 +64,7 @@
 
 	<bean id="documentRepository"
 		class="de.tudarmstadt.ukp.clarin.webanno.brat.dao.RepositoryServiceDbData">
-		<property name="dir" value="${weblab.home}/repository/" />
+		<property name="dir" value="${webanno.home}/repository/" />
 	</bean>
 
 	<bean id="applicationContextProvider"

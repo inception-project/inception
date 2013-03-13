@@ -42,7 +42,7 @@
 		<property name="locations">
 			<list>
 				<value>classpath:META-INF/settings.properties</value>
-				<value>file:${weblab.home}/settings.properties</value>
+				<value>file:${webanno.home}/settings.properties</value>
 			</list>
 		</property>
 	</bean>

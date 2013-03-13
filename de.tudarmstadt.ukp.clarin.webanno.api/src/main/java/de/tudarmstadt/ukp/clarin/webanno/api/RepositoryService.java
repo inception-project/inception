@@ -58,7 +58,7 @@ public interface RepositoryService
     /**
      * Creates an annotation document which is CAS object seriealized in xmi format using the
      * {@link SerializedCasWriter}. The {@link AnnotationDocument} is stored in the
-     * weblab.home/project/Project.id/document/document.id/annotation/username.ser. annotated
+     * webanno.home/project/Project.id/document/document.id/annotation/username.ser. annotated
      * documents are stored per project, user and document
      *
      * @param user
@@ -72,14 +72,14 @@ public interface RepositoryService
     /**
      * Creates a {@code Project}. Creating a project needs a global ROLE_ADMIN role. For the first
      * time the project is created, an associated project path will be created on the file system as
-     * {@code weblab.home/project/Project.id }
+     * {@code webanno.home/project/Project.id }
      *
      * @param aProject
      *            The {@link Project} object to be created.
      * @param user
      *            TODO
      * @throws IOException
-     *             If the specified weblab.home directory is not available no write permission
+     *             If the specified webanno.home directory is not available no write permission
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
     void createProject(Project project, User user)
@@ -337,7 +337,7 @@ public interface RepositoryService
 
     /**
      * This method creates the source document (TCF File) to a file system. It creates a directory
-     * structure under weblab.home/project/project.id/document/Document.id/source/document.name.xml
+     * structure under webanno.home/project/project.id/document/Document.id/source/document.name.xml
      *
      * @param text
      *            the TCF file content
