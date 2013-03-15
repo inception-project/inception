@@ -29,6 +29,7 @@ import org.apache.wicket.behavior.AbstractAjaxBehavior;
 import org.apache.wicket.markup.html.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
@@ -95,12 +96,18 @@ public class BratAnnotator
     private long currentDocumentId;
     private long currentprojectId;
 
+
+
     public BratAnnotator(String id, IModel<?> aModel)
     {
         super(id, aModel);
 
         vis = new WebMarkupContainer("vis");
         vis.setOutputMarkupId(true);
+
+        final FeedbackPanel feedbackPanel = new FeedbackPanel("bratAnnotatorfeedBackPanel");
+        add(feedbackPanel);
+        feedbackPanel.setOutputMarkupId(true);
 
         add(numberOfPages = (Label) new Label("numberOfPages", new LoadableDetachableModel()
         {
@@ -443,6 +450,8 @@ public class BratAnnotator
                 // getRequestCycle().scheduleRequestHandlerAfterCurrent(
                 // new TextRequestHandler("application/json", "UTF-8", out.toString()));
                 aTarget.add(numberOfPages);
+
+                aTarget.add(feedbackPanel);
             }
         };
 
@@ -479,9 +488,10 @@ public class BratAnnotator
     /**
      * Set different attributes for
      * {@link BratAjaxCasController#getDocument(int, Project, SourceDocument, User, int, int, boolean, ArrayList)}
+     * @throws UIMAException
      */
     @SuppressWarnings("unchecked")
-    public void setAttributesForGetDocument(String aProjectName, String aDocumentName)
+    public void setAttributesForGetDocument(String aProjectName, String aDocumentName) throws UIMAException
     {
 
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -502,6 +512,9 @@ public class BratAnnotator
             }
             catch (DataRetrievalFailureException ex) {
                 throw ex;
+            }
+            catch (UIMAException e) {
+                throw e;
             }
         }
 
@@ -527,7 +540,7 @@ public class BratAnnotator
         }
     }
 
-    private JCas getCas(Project aProject, User user, SourceDocument aDocument)
+    private JCas getCas(Project aProject, User user, SourceDocument aDocument) throws UIMAException
     {
         JCas jCas = null;
         try {
@@ -537,6 +550,7 @@ public class BratAnnotator
         }
         catch (UIMAException e) {
             error("CAS object not found :" + ExceptionUtils.getRootCauseMessage(e));
+            throw e;
         }
         catch (IOException e) {
             error("Unable to read CAS object: " + ExceptionUtils.getRootCauseMessage(e));
