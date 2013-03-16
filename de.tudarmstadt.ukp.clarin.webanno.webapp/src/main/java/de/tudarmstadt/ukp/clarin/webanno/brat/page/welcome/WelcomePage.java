@@ -25,6 +25,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.CurationPage;
+import de.tudarmstadt.ukp.clarin.webanno.brat.page.monitoring.MonitoringPage;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.project.ProjectPage;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -38,12 +39,15 @@ public class WelcomePage
     AjaxLink projectSettings;
     AjaxLink curation;
     AjaxLink annotation;
+    AjaxLink monitoring;
 
     public WelcomePage()
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = projectRepository.getUser(username);
 
+        // Add Project Setting Link
+        // Only Super Admin or Project admins can see this link
         boolean projectSettingAdded = false;
         projectSettings = new AjaxLink<Void>("projectSettings")
         {
@@ -74,6 +78,8 @@ public class WelcomePage
 
         }
 
+        // Add curation Link
+        // Only Admins or curators can see this link
         boolean curatorAdded = false;
         curation = new AjaxLink<Void>("curation")
         {
@@ -103,6 +109,8 @@ public class WelcomePage
             curation.setVisible(false);
         }
 
+        // Add annotation link
+        // Only Admins or annotators can see this link
         annotation = new AjaxLink<Void>("annotation")
         {
             private static final long serialVersionUID = 7496156015186497496L;
@@ -131,6 +139,39 @@ public class WelcomePage
             add(annotation);
             annotation.setVisible(false);
             error("You are not member of any projects to annotate or curate");
+        }
+
+        // Add monitoring link
+        // Only Admins can see this link
+
+        boolean monitoringAdded = false;
+        monitoring = new AjaxLink<Void>("monitoring")
+        {
+            private static final long serialVersionUID = 7496156015186497496L;
+
+            @Override
+            public void onClick(AjaxRequestTarget target)
+            {
+                setResponsePage(MonitoringPage.class);
+            }
+        };
+        for (Project project : projectRepository.listProjects()) {
+
+            if (projectRepository.listProjectUsers(project).contains(username)
+                    && ApplicationUtils.isProjectAdmin(project, projectRepository, user)) {
+                add(monitoring);
+                monitoringAdded = true;
+                break;
+            }
+        }
+        if(ApplicationUtils.isSuperAdmin(projectRepository, user) && !monitoringAdded){
+            add(monitoring);
+        }
+        else if (!monitoringAdded) {
+
+            add(monitoring);
+            monitoring.setVisible(false);
+
         }
     }
 
