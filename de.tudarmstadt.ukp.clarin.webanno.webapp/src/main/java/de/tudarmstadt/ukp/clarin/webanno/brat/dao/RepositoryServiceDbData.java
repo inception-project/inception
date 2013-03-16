@@ -348,6 +348,23 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
+    public boolean existsAnnotationDocument(SourceDocument aDocument, User aUser){
+        try{
+            entityManager.createQuery("FROM AnnotationDocument WHERE project = :project " +
+            		" AND document = :document AND user = :user", AnnotationDocument.class)
+                    .setParameter("project", aDocument.getProject())
+                    .setParameter("document", aDocument)
+                    .setParameter("user", aUser).getSingleResult();
+            return true;
+        }
+        catch(NoResultException ex){
+            return false;
+        }
+    }
+
+
+    @Override
+    @Transactional
     public boolean existsProject(String aName){
         try{
             entityManager.createQuery("FROM Project WHERE name = :name", Project.class)
@@ -417,9 +434,13 @@ public class RepositoryServiceDbData
 
         return entityManager
                 .createQuery(
-                        "FROM AnnotationDocument WHERE document = :document AND " + "user =:user",
-                        AnnotationDocument.class).setParameter("document", aDocument)
-                .setParameter("user", aUser).getSingleResult();
+                        "FROM AnnotationDocument WHERE document = :document AND " + "user =:user" +
+                        		" AND project = :project",
+                        AnnotationDocument.class)
+                        .setParameter("document", aDocument)
+                        .setParameter("user", aUser)
+                        .setParameter("project", aDocument.getProject())
+                        .getSingleResult();
     }
 
     @Override
@@ -580,7 +601,9 @@ public class RepositoryServiceDbData
      * "SELECT role FROM Authority where users =:users", String.class) .setParameter("users",
      * aUser).getSingleResult(); }
      */
-    private List<AnnotationDocument> listAnnotationDocuments()
+    @Override
+    @Transactional
+    public List<AnnotationDocument> listAnnotationDocument()
     {
         return entityManager.createQuery("From AnnotationDocument", AnnotationDocument.class)
                 .getResultList();
@@ -676,10 +699,10 @@ public class RepositoryServiceDbData
     {
 
         // remove metadata from DB
-        entityManager.remove(aDocument);
-        for (AnnotationDocument annotationDocument : listAnnotationDocuments()) {
-            entityManager.remove(annotationDocument);
-        }
+    if(existsAnnotationDocument(aDocument, aUser)) {
+        entityManager.remove(getAnnotationDocument(aDocument, aUser));
+    }
+    entityManager.remove(aDocument);
 
         String path = dir.getAbsolutePath() + PROJECT + aDocument.getProject().getId() + DOCUMENT
                 + aDocument.getId();

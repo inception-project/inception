@@ -112,6 +112,13 @@ public interface RepositoryService
         throws IOException;
 
     /**
+     * A Method that checks if there is already an annotation document created for
+     * the source code
+     * @param annotationDocument
+     * @return
+     */
+    boolean existsAnnotationDocument(SourceDocument document, User user);
+    /**
      * A method that check is a project exists with the same name already.
      * getSingleResult() fails if the project is not created, hence existProject
      * returns false.
@@ -248,6 +255,12 @@ public interface RepositoryService
      * @return a Single {@code User} object
      */
     User getUser(String username);
+
+    /**
+     * List all annotation documents in the system.
+     * @return
+     */
+    List<AnnotationDocument> listAnnotationDocument();
 
     /**
      * List all the {@link AnnotationDocument}s, if available for a given {@link SourceDocument}.
