@@ -20,6 +20,7 @@ import static org.apache.commons.io.IOUtils.closeQuietly;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,6 +28,7 @@ import java.util.Map;
 import java.util.StringTokenizer;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.apache.uima.collection.CollectionException;
@@ -61,7 +63,7 @@ public class ConllReader
     extends JCasResourceCollectionReader_ImplBase
 {
 
-    public void convertToCas(JCas aJCas, String aDocument)
+    public void convertToCas(JCas aJCas, Reader aReade)
         throws IOException
 
     {
@@ -77,13 +79,16 @@ public class ConllReader
         Map<Integer, Integer> dependencyDependent = new HashMap<Integer, Integer>();
 
         List<Integer> firstTokenInSentence = new ArrayList<Integer>();
-
-        StringTokenizer sentToknizer = new StringTokenizer(aDocument, "\n");
         boolean first = true;
         int base = 0;
-        while (sentToknizer.hasMoreElements()) {
-            String line = sentToknizer.nextToken().trim();
+
+        LineIterator lineIterator = IOUtils.lineIterator(aReade);
+        while (lineIterator.hasNext()) {
+            String line = lineIterator.next().trim();
             int count = StringUtils.countMatches(line, "\t");
+            if(line.isEmpty()) {
+                continue;
+            }
             if (count != 9) {// not a proper conll file
                 getUimaContext().getLogger().log(Level.INFO, "This is not valid conll File");
                 throw new IOException("This is not valid conll File");
@@ -226,11 +231,11 @@ public class ConllReader
 
             if (ENCODING_AUTO.equals(encoding)) {
                 CharsetDetector detector = new CharsetDetector();
-                convertToCas(aJCas, IOUtils.toString(detector.getReader(is, null)));
+                convertToCas(aJCas, detector.getReader(is, null));
             }
             else {
                 CharsetDetector detector = new CharsetDetector();
-                convertToCas(aJCas, IOUtils.toString(detector.getReader(is, encoding)));
+                convertToCas(aJCas, detector.getReader(is, encoding));
             }
         }
         finally {
@@ -297,9 +302,8 @@ public class ConllReader
         // If the last token have a named Entity with Multiple span, add it
         int lastTokenIndex = aTokensMap.size();
         String lastNamedEntity = aNamedEntityMap.get(lastTokenIndex);
-        if (lastNamedEntity.startsWith("I_")){
-            NamedEntity outNamedEntity = new NamedEntity(aJCas, namedEntityBegin,
-                    namedEntityEnd);
+        if (lastNamedEntity.startsWith("I_")) {
+            NamedEntity outNamedEntity = new NamedEntity(aJCas, namedEntityBegin, namedEntityEnd);
             outNamedEntity.setValue(previousNamedEntity.substring(2));
             outNamedEntity.addToIndexes();
         }
