@@ -281,7 +281,6 @@ public class MonitoringPage
         extends Panel
     {
         private static final long serialVersionUID = 1118880151557285316L;
-        private ProgressBar progressBar;
 
         public OverallProgressPanel(String id)
         {
@@ -295,6 +294,9 @@ public class MonitoringPage
             int coreferenceType = 0;
             final Map<String, Integer> annotatorProgressExpected = new HashMap<String, Integer>();
             final Map<String, Integer> annotatorProgressActual = new HashMap<String, Integer>();
+            final Map<String, Integer> projectsProgressExpected = new HashMap<String, Integer>();
+            final Map<String, Integer> projectsProgressActual = new HashMap<String, Integer>();
+
             for (AnnotationDocument annotationDocument : projectRepository.listAnnotationDocument()) {
                 try {
 
@@ -307,7 +309,8 @@ public class MonitoringPage
                     coreference = coreference + select(jCas, CoreferenceChain.class).size();
                     coreferenceType = coreferenceType + select(jCas, CoreferenceLink.class).size();
 
-                    String username = annotationDocument.getUser().getPassword();
+                    // Annotator's Progress
+                    String username = annotationDocument.getUser().getUsername();
                     if (annotatorProgressExpected.get(username) == null) {
                         annotatorProgressExpected.put(username,
                                 MonitoringUtils.expectedAnnotations(jCas));
@@ -324,6 +327,23 @@ public class MonitoringPage
                                 previousActualValue + MonitoringUtils.actualAnnotations(jCas));
                     }
 
+                    // Projects Progress
+                    String project = annotationDocument.getProject().getName();
+                    if (projectsProgressExpected.get(project) == null) {
+                        projectsProgressExpected.put(project,
+                                MonitoringUtils.expectedAnnotations(jCas));
+                        projectsProgressActual.put(project,
+                                MonitoringUtils.actualAnnotations(jCas));
+
+                    }
+                    else {
+                        int previousExpectedValue = projectsProgressExpected.get(project);
+                        int previousActualValue = projectsProgressActual.get(project);
+                        projectsProgressExpected.put(project, previousExpectedValue
+                                + MonitoringUtils.expectedAnnotations(jCas));
+                        projectsProgressActual.put(project,
+                                previousActualValue + MonitoringUtils.actualAnnotations(jCas));
+                    }
                 }
                 catch (UIMAException e) {
                     error("Unable to get annotation document "
@@ -358,25 +378,22 @@ public class MonitoringPage
             annotationProgress.put("coreft", coreferenceType);
             annotationProgress.put("expected", expected - actual);
 
+            // Add overall progress by annotation types
             Image annotationChart = new NonCachingImage("annotationChart");
             annotationChart.setImageResource(new ChartImageResource(
                     createPieChart(annotationProgress), CHART_WIDTH, 140));
             add(annotationChart);
 
-            Image annotatorChart = new NonCachingImage("annotatorChart");
-            annotatorChart.setImageResource(new ChartImageResource(
-                    createPieChart(annotationProgress), CHART_WIDTH, 140));
-            add(annotatorChart);
-
-            RepeatingView repeating = new RepeatingView("repeating");
-            add(repeating);
+            //Add overall progress by annotators
+            RepeatingView annotatorRepeator = new RepeatingView("annotatorRepeator");
+            add(annotatorRepeator);
 
             for (final String username : annotatorProgressExpected.keySet()) {
-                AbstractItem item = new AbstractItem(repeating.newChildId());
+                AbstractItem item = new AbstractItem(annotatorRepeator.newChildId());
 
-                repeating.add(item);
+                annotatorRepeator.add(item);
                 item.add(new Label("annotator", username));
-                item.add(new ProgressBar("progress", new ProgressionModel()
+                item.add(new ProgressBar("annotatorProgress", new ProgressionModel()
                 {
                     @Override
                     protected Progression getProgression()
@@ -387,8 +404,30 @@ public class MonitoringPage
                                 (int)(value*100));
                     }
                 }));
-
             }
+
+            // Overall progress by Projects
+            RepeatingView projectRepeator = new RepeatingView("projectRepeator");
+            add(projectRepeator);
+
+            for (final String project : projectsProgressExpected.keySet()) {
+                AbstractItem item = new AbstractItem(projectRepeator.newChildId());
+
+                projectRepeator.add(item);
+                item.add(new Label("project", project));
+                item.add(new ProgressBar("projectProgress", new ProgressionModel()
+                {
+                    @Override
+                    protected Progression getProgression()
+                    {
+                        double value =  (double) projectsProgressActual.get(project) / projectsProgressExpected
+                                .get(project);
+                        return new Progression(
+                                (int)(value*100));
+                    }
+                }));
+            }
+
         }
     }
 

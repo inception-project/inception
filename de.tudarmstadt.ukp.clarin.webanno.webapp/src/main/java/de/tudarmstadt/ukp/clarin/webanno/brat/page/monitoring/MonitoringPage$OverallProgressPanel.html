@@ -36,35 +36,48 @@
 		</tr>	
 	</table>
 	<br>
-	
-	<div style="color:green">Overall Annotation Progress</div>
-	
-	<br>	
-	<div>
-	<img wicket:id="overallChart" alt="Overall Progress" />
-	</div>	
-	<br>
-	
-	<div style="color:green">Progress by Annotation Types</div>
-	
-	<br>
-	<div>
-	<img wicket:id="annotationChart" alt="Overall Progress" />
-	</div>
-	<br>
-		
-		<div style="color:green">Annotator's Progress</div>
-		<br>
-		<table style="height: 100%; width: 100%;">
-			<tbody>
-				<tr wicket:id="repeating">
-				<td><span wicket:id="annotator">:</span></td>
-				<td style="border-left: 1px black solid;">
-						<div wicket:id="progress">
-						</div>
-					</td>
+	<table>
+		<tr style="color:green">
+			<td>Overall Annotation Progress</td>
+			<td>Progress by Annotation Types</td>
+		</tr>
+		<tr>
+			<td><img wicket:id="overallChart" alt="Overall Progress" /></td>
+			<td><img wicket:id="annotationChart" alt="Overall Progress" /></td>
+		</tr>
+		<tr style="color:green">
+			<td>Annotator's Progress</td>
+			<td>Projects's Progress</td>
+		</tr>
+		<tr>
+			<td> 		
+				<table style="height: 100%; width: 100%;">
+				<tbody>
+					<tr wicket:id="annotatorRepeator">
+						<td><span wicket:id="annotator">:</span></td>
+						<td style="border-left: 1px black solid;">
+							<div wicket:id="annotatorProgress">
+							</div>
+						</td>
 					</tr>
-			</tbody>
-			</table>			
+				</tbody>
+				</table>
+			</td>
+			<td>
+				<table style="height: 100%; width: 100%;">
+				<tbody>
+					<tr wicket:id="projectRepeator">
+						<td><span wicket:id="project">:</span></td>
+						<td style="border-left: 1px black solid;">
+							<div wicket:id="projectProgress">
+							</div>
+						</td>
+					</tr>
+				</tbody>
+				</table>
+				</td>
+		</tr>	
+	</table>
+						
 </wicket:panel>
 </html>
