@@ -38,7 +38,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 /**
  * Writes a specific Conll File (9 TAB separated) annotation from the CAS object. Example of output
  * file: 1 Heutzutage heutzutage ADV _ _ 2 ADV _ _ First column: token Number, in a sentence second
- * Column: the token third column: the lemma forth column: the POS fifth/sixth xolumn: Not Yet known
+ * Column: the token third column: the lemma forth column: the POS fifth/sixth xolumn: Named Entity annotations
+ * in BIO(the sixth column is used to encode nested Named Entity)
  * seventh column: the target token for a dependency parsing eighth column: the function of the
  * dependency parsing ninth and tenth column: Not Yet Known
  *
