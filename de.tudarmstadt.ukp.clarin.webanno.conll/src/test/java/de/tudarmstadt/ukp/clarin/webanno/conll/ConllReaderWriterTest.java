@@ -28,7 +28,7 @@ import org.apache.uima.collection.CollectionReader;
 import org.junit.Test;
 import org.uimafit.component.xwriter.CASDumpWriter;
 
-public class conllReaderWriterTest
+public class ConllReaderWriterTest
 {
     @Test
 
