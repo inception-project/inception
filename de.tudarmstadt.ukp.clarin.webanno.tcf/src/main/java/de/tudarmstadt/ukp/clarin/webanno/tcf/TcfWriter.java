@@ -23,7 +23,6 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +44,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
-import eu.clarin.weblicht.wlfxb.io.TextCorpusStreamed;
 import eu.clarin.weblicht.wlfxb.io.WLDObjector;
 import eu.clarin.weblicht.wlfxb.io.WLFormatException;
 import eu.clarin.weblicht.wlfxb.tc.api.DependencyParsingLayer;
@@ -56,7 +54,6 @@ import eu.clarin.weblicht.wlfxb.tc.api.Reference;
 import eu.clarin.weblicht.wlfxb.tc.api.ReferencesLayer;
 import eu.clarin.weblicht.wlfxb.tc.api.SentencesLayer;
 import eu.clarin.weblicht.wlfxb.tc.api.TokensLayer;
-import eu.clarin.weblicht.wlfxb.tc.xb.TextCorpusLayerTag;
 import eu.clarin.weblicht.wlfxb.tc.xb.TextCorpusStored;
 import eu.clarin.weblicht.wlfxb.xb.WLData;
 
@@ -147,20 +144,8 @@ public class TcfWriter
     public TextCorpusStored casToTcfWriter(InputStream aIs, JCas aJcas)
         throws ResourceInitializationException, AnalysisEngineProcessException, WLFormatException
     {
-        EnumSet<TextCorpusLayerTag> layersToRead = EnumSet.of(TextCorpusLayerTag.TEXT,
-                TextCorpusLayerTag.TOKENS, TextCorpusLayerTag.PARSING_DEPENDENCY,
-                TextCorpusLayerTag.SENTENCES, TextCorpusLayerTag.POSTAGS,
-                TextCorpusLayerTag.LEMMAS, TextCorpusLayerTag.NAMED_ENTITIES,
-                TextCorpusLayerTag.REFERENCES, TextCorpusLayerTag.ANTONYMY,
-                TextCorpusLayerTag.CORPUS_MATCHES, TextCorpusLayerTag.DISCOURSE_CONNECTIVES,
-                TextCorpusLayerTag.GEO, TextCorpusLayerTag.HYPERONYMY, TextCorpusLayerTag.HYPONYMY,
-                TextCorpusLayerTag.MORPHOLOGY, TextCorpusLayerTag.ORTHOGRAPHY,
-                TextCorpusLayerTag.PARSING_CONSTITUENT, TextCorpusLayerTag.PHONETICS,
-                TextCorpusLayerTag.RELATIONS, TextCorpusLayerTag.SYNONYMY,
-                TextCorpusLayerTag.TEXT_STRUCTURE, TextCorpusLayerTag.WORD_SPLITTINGS);
-
-        TextCorpusStored textCorpus;
-        textCorpus = new TextCorpusStreamed(aIs, layersToRead);
+        WLData wLData = WLDObjector.read(aIs);
+        TextCorpusStored textCorpus = wLData.getTextCorpus();
         writeToTcf(aJcas, textCorpus);
 
         return textCorpus;

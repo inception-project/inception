@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,7 +20,6 @@ import static org.apache.commons.io.IOUtils.closeQuietly;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -39,10 +38,12 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import eu.clarin.weblicht.wlfxb.io.TextCorpusStreamed;
+import eu.clarin.weblicht.wlfxb.io.WLDObjector;
 import eu.clarin.weblicht.wlfxb.io.WLFormatException;
 import eu.clarin.weblicht.wlfxb.tc.api.DependencyParse;
 import eu.clarin.weblicht.wlfxb.tc.api.Reference;
-import eu.clarin.weblicht.wlfxb.tc.xb.TextCorpusLayerTag;
+import eu.clarin.weblicht.wlfxb.tc.xb.TextCorpusStored;
+import eu.clarin.weblicht.wlfxb.xb.WLData;
 
 /**
  * Reader for the WebLicht TCF format. It reads all the available annotation Layers from the TCF
@@ -66,24 +67,12 @@ public class TcfReader
         Resource res = nextFile();
         initCas(aJCas, res);
 
-        EnumSet<TextCorpusLayerTag> layersToRead = EnumSet.of(TextCorpusLayerTag.TEXT,
-                TextCorpusLayerTag.TOKENS, TextCorpusLayerTag.PARSING_DEPENDENCY,
-                TextCorpusLayerTag.SENTENCES, TextCorpusLayerTag.POSTAGS,
-                TextCorpusLayerTag.LEMMAS, TextCorpusLayerTag.NAMED_ENTITIES,
-                TextCorpusLayerTag.REFERENCES, TextCorpusLayerTag.ANTONYMY,
-                TextCorpusLayerTag.CORPUS_MATCHES, TextCorpusLayerTag.DISCOURSE_CONNECTIVES,
-                TextCorpusLayerTag.GEO, TextCorpusLayerTag.HYPERONYMY, TextCorpusLayerTag.HYPONYMY,
-                TextCorpusLayerTag.MORPHOLOGY, TextCorpusLayerTag.ORTHOGRAPHY,
-                TextCorpusLayerTag.PARSING_CONSTITUENT, TextCorpusLayerTag.PHONETICS,
-                TextCorpusLayerTag.RELATIONS, TextCorpusLayerTag.SYNONYMY,
-                TextCorpusLayerTag.TEXT_STRUCTURE, TextCorpusLayerTag.WORD_SPLITTINGS);
-
         InputStream is = null;
         try {
             is = new BufferedInputStream(res.getInputStream());
-            TextCorpusStreamed aCorpusData = new TextCorpusStreamed(is, layersToRead);
+            WLData wLData = WLDObjector.read(is);
+            TextCorpusStored aCorpusData = wLData.getTextCorpus();
             convertToCas(aJCas, aCorpusData);
-            aCorpusData.close();
         }
         catch (WLFormatException e) {
             throw new CollectionException(e);
@@ -94,7 +83,7 @@ public class TcfReader
         }
     }
 
-    private void convertToCas(JCas aJCas, TextCorpusStreamed aCorpusData)
+    private void convertToCas(JCas aJCas, TextCorpusStored aCorpusData)
     {
         convertText(aJCas, aCorpusData);
         Map<String, Token> tokens = convertTokens(aJCas, aCorpusData);
@@ -122,7 +111,7 @@ public class TcfReader
      * @param aJCas
      * @param aCorpusData
      */
-    private void convertText(JCas aJCas, TextCorpusStreamed aCorpusData)
+    private void convertText(JCas aJCas, TextCorpusStored aCorpusData)
     {
         StringBuilder text = new StringBuilder();
 
@@ -141,7 +130,7 @@ public class TcfReader
      * @param aCorpusData
      * @return returns {@code Map} of (token_id, Token), for later references
      */
-    private Map<String, Token> convertTokens(JCas aJCas, TextCorpusStreamed aCorpusData)
+    private Map<String, Token> convertTokens(JCas aJCas, TextCorpusStored aCorpusData)
     {
         if (aCorpusData.getTokensLayer() == null) {
             // No layer to read from.
@@ -172,7 +161,7 @@ public class TcfReader
         return tokens;
     }
 
-    private void convertPos(JCas aJCas, TextCorpusStreamed aCorpusData, Map<String, Token> aTokens)
+    private void convertPos(JCas aJCas, TextCorpusStored aCorpusData, Map<String, Token> aTokens)
     {
         if (aCorpusData.getPosTagsLayer() == null) {
             return;
@@ -194,7 +183,7 @@ public class TcfReader
         }
     }
 
-    private void convertLemma(JCas aJCas, TextCorpusStreamed aCorpusData, Map<String, Token> aTokens)
+    private void convertLemma(JCas aJCas, TextCorpusStored aCorpusData, Map<String, Token> aTokens)
     {
         if (aCorpusData.getLemmasLayer() == null) {
             return;
@@ -217,7 +206,7 @@ public class TcfReader
 
     }
 
-    private void convertSentences(JCas aJCas, TextCorpusStreamed aCorpusData,
+    private void convertSentences(JCas aJCas, TextCorpusStored aCorpusData,
             Map<String, Token> aTokens)
     {
         if (aCorpusData.getSentencesLayer() == null) {
@@ -238,7 +227,7 @@ public class TcfReader
         }
     }
 
-    private void convertDependencies(JCas aJCas, TextCorpusStreamed aCorpusData,
+    private void convertDependencies(JCas aJCas, TextCorpusStored aCorpusData,
             Map<String, Token> aTokens)
     {
         if (aCorpusData.getDependencyParsingLayer() == null) {
@@ -301,7 +290,7 @@ public class TcfReader
         }
     }
 
-    private void convertNamedEntities(JCas aJCas, TextCorpusStreamed aCorpusData,
+    private void convertNamedEntities(JCas aJCas, TextCorpusStored aCorpusData,
             Map<String, Token> aTokens)
     {
         if (aCorpusData.getNamedEntitiesLayer() == null) {
@@ -343,7 +332,7 @@ public class TcfReader
      * @param aCorpusData
      * @param aTokens
      */
-    private void convertCoreference(JCas aJCas, TextCorpusStreamed aCorpusData,
+    private void convertCoreference(JCas aJCas, TextCorpusStored aCorpusData,
             Map<String, Token> aTokens)
     {
         if (aCorpusData.getReferencesLayer() == null) {
@@ -379,7 +368,7 @@ public class TcfReader
 
     private void storeReferencesAndTargetsInMap(Map<Integer, CoreferenceLink> aReferencesMap,
             eu.clarin.weblicht.wlfxb.tc.api.ReferencedEntity entity,
-            TextCorpusStreamed aCorpusData, Map<String, Token> aTokens, JCas aJcas)
+            TextCorpusStored aCorpusData, Map<String, Token> aTokens, JCas aJcas)
     {
         for (Reference reference : entity.getReferences()) {
             StringBuilder sbTokens = new StringBuilder();
