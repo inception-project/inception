@@ -262,6 +262,13 @@ public interface RepositoryService
      */
     List<AnnotationDocument> listAnnotationDocument();
 
+
+    /**
+     * List all annotation documents in a project.
+     * @return
+     */
+    List<AnnotationDocument> listAnnotationDocument(Project project);
+
     /**
      * List all the {@link AnnotationDocument}s, if available for a given {@link SourceDocument}.
      * Returns list of {@link AnnotationDocument}s for all {@link User}s in the {@link Project} that

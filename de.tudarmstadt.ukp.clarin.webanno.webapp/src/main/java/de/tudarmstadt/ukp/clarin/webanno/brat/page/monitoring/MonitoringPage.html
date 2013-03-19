@@ -29,7 +29,77 @@
 		</form>
 
 		<form wicket:id="monitoringDetailForm"  id="middleleft">
-		<div wicket:id="tabs" class="tabpanel"></div>
+		
+		<table style="width: 50%; margin-left:0%; border:1px solid cyan;">
+		<tr>
+			<td>Expected annotations
+			</td>
+			<td>
+			Completed annotations
+			</td>	
+		</tr>
+		<tr>
+			<td>
+			<span wicket:id="expected"></span>
+			</td>
+			<td>
+			<span wicket:id="actual"></span>
+			</td>
+		</tr>	
+	</table>
+	<br>
+	<table>
+		<tr style="color:green">
+			<td>Overall Annotation Progress</td>
+			<td>Progress by Annotation Types</td>
+		</tr>
+		<tr>
+			<td><img wicket:id="overallChart" alt="Overall Progress" /></td>
+			<td><img wicket:id="annotationChart" alt="Overall Progress" /></td>
+		</tr>
+		<tr style="color:green">
+			<td>Annotator's Progress</td>
+			<td>Projects's Progress</td>
+		</tr>
+		<tr>
+			<td> 	<!-- 	
+				<table style="height: 100%; width: 100%;">
+				<tbody>
+					<tr wicket:id="annotatorRepeator">
+						<td><span wicket:id="annotator">:</span></td>
+						<td style="border-left: 1px black solid;">
+							<div wicket:id="annotatorProgress">
+							</div>
+						</td>
+					</tr>
+				</tbody>
+				</table>  -->
+			</td>
+			<td>
+				<table style="height: 100%; width: 100%;">
+				<tbody>
+					<tr wicket:id="projectRepeator">
+						<td><span wicket:id="project">:</span></td>
+						<td style="border-left: 1px black solid;">
+							<div wicket:id="projectProgress">
+							</div>
+						</td>
+					</tr>
+				</tbody>
+				</table>
+				</td>
+		</tr>	
+	</table>
+					
+ 		<table style="height: 100%; width: 100%;">			
+					<tr>
+						<td rowspan="2">
+							<div><label class="top">Annotator's Progress</label></div>
+							<img wicket:id="annotator" alt="Annotation Progress" />
+						</td>
+					</tr>
+				</table> 
+		
 		</form>
 		</div>
 	</wicket:extend>

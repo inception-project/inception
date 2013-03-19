@@ -611,6 +611,14 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
+    public List<AnnotationDocument> listAnnotationDocument(Project aProject){
+        return entityManager
+                .createQuery("FROM AnnotationDocument WHERE project = :project",
+                        AnnotationDocument.class).setParameter("project", aProject)
+                .getResultList();
+    }
+    @Override
+    @Transactional
     public List<Project> listProjects()
     {
         return entityManager.createQuery("FROM Project", Project.class).getResultList();

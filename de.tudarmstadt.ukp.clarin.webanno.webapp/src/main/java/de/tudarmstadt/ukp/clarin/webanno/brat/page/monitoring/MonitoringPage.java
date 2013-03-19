@@ -18,7 +18,6 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.page.monitoring;
 import static org.uimafit.util.JCasUtil.select;
 
 import java.awt.Color;
-import java.awt.GradientPaint;
 import java.io.IOException;
 import java.io.Serializable;
 import java.text.DecimalFormat;
@@ -32,26 +31,16 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
-import org.apache.wicket.extensions.ajax.markup.html.tabs.AjaxTabbedPanel;
-import org.apache.wicket.extensions.markup.html.tabs.AbstractTab;
-import org.apache.wicket.extensions.markup.html.tabs.ITab;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.form.Button;
-import org.apache.wicket.markup.html.form.CheckBoxMultipleChoice;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
-import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.ListChoice;
-import org.apache.wicket.markup.html.form.upload.FileUpload;
-import org.apache.wicket.markup.html.form.upload.FileUploadField;
 import org.apache.wicket.markup.html.image.Image;
 import org.apache.wicket.markup.html.image.NonCachingImage;
 import org.apache.wicket.markup.html.list.AbstractItem;
-import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.RepeatingView;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
@@ -64,9 +53,7 @@ import org.jfree.chart.renderer.category.BarRenderer;
 import org.jfree.chart.renderer.category.StandardBarPainter;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.general.DefaultPieDataset;
-import org.jfree.ui.GradientPaintTransformType;
 import org.jfree.ui.RectangleInsets;
-import org.jfree.ui.StandardGradientPaintTransformer;
 import org.jfree.util.Rotation;
 import org.jfree.util.UnitType;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -91,7 +78,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
- *
+ * Monitoring To display different monitoring and statistics measurements tabularly and graphically.
  * @author Seid Muhie Yimam
  *
  */
@@ -114,8 +101,6 @@ public class MonitoringPage
         extends Form<SelectionModel>
     {
         private static final long serialVersionUID = -1L;
-        private Button creatProject;
-
         public ProjectSelectionForm(String id)
         {
             super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
@@ -172,6 +157,46 @@ public class MonitoringPage
                         monitoringDetailForm.setModelObject(aNewSelection);
                         monitoringDetailForm.setVisible(true);
                         ProjectSelectionForm.this.setVisible(true);
+
+                        int expected = 0;
+                        final Map<String, Integer> annotatorProgressExpected = new HashMap<String, Integer>();
+                        Project project = aNewSelection;
+
+                        if(project!=null){
+                            for(AnnotationDocument annotationDocument: projectRepository.listAnnotationDocument(project)){
+                                try {
+
+                                    JCas jCas = projectRepository.getAnnotationDocumentContent(annotationDocument);
+                                    expected = expected + MonitoringUtils.expectedAnnotations(jCas);
+                                    // Annotator's Progress
+                                    String username = annotationDocument.getUser().getUsername();
+                                    if (annotatorProgressExpected.get(username) == null) {
+                                        annotatorProgressExpected.put(username,
+                                                MonitoringUtils.expectedAnnotations(jCas));
+
+                                    }
+                                    else {
+                                        int previousExpectedValue = annotatorProgressExpected.get(username);
+                                                            annotatorProgressExpected.put(username, previousExpectedValue
+                                                + MonitoringUtils.expectedAnnotations(jCas));
+                                            }
+                                }
+                                catch (UIMAException e) {
+                                    error("Unable to get annotation document "
+                                            + ExceptionUtils.getRootCauseMessage(e));
+                                }
+                                catch (ClassNotFoundException e) {
+                                    error("Unable to get annotation document "
+                                            + ExceptionUtils.getRootCauseMessage(e));
+                                }
+                                catch (IOException e) {
+                                    error("Unable to get annotation document "
+                                            + ExceptionUtils.getRootCauseMessage(e));
+                                }
+                            }
+                            annotatorProgress.setImageResource(createProgressChart(annotatorProgressExpected, expected));
+                            annotatorProgress.setVisible(true);
+                        }
                     }
                 }
 
@@ -196,7 +221,6 @@ public class MonitoringPage
         private static final long serialVersionUID = -1L;
 
         private Project project;
-        private List<String> documents;
     }
 
     private class MonitoringDetailForm
@@ -204,87 +228,10 @@ public class MonitoringPage
     {
         private static final long serialVersionUID = -1L;
 
-        AbstractTab overallProgress;
-        AbstractTab projectProgress;
-        AbstractTab keppaStatistics;
-        AbstractTab documentProgress;
-
         public MonitoringDetailForm(String id)
         {
             super(id, new CompoundPropertyModel<Project>(new EntityModel<Project>(new Project())));
 
-            List<ITab> tabs = new ArrayList<ITab>();
-            tabs.add(overallProgress = new AbstractTab(new Model<String>("Overall Progress"))
-            {
-                private static final long serialVersionUID = 6703144434578403272L;
-
-                @Override
-                public Panel getPanel(String panelId)
-                {
-                    return new OverallProgressPanel(panelId);
-                }
-            });
-
-            tabs.add(projectProgress = new AbstractTab(new Model<String>("Project Progress"))
-            {
-                private static final long serialVersionUID = 7160734867954315366L;
-
-                @Override
-                public Panel getPanel(String panelId)
-                {
-                    return new ProjectProgressPanel(panelId);
-                }
-            });
-
-            tabs.add(documentProgress = new AbstractTab(new Model<String>("Document Progress"))
-            {
-                private static final long serialVersionUID = 1170760600317199418L;
-
-                @Override
-                public Panel getPanel(String panelId)
-                {
-                    return new DocumentProgressPanel(panelId);
-                }
-            });
-
-            tabs.add(keppaStatistics = new AbstractTab(new Model<String>("Keppa Statistics"))
-            {
-                private static final long serialVersionUID = -3205723896786674220L;
-
-                @Override
-                public Panel getPanel(String panelId)
-                {
-                    return new KeppaStaticsPanel(panelId);
-                }
-            });
-
-            add(new AjaxTabbedPanel("tabs", tabs));
-            MonitoringDetailForm.this.setMultiPart(true);
-        }
-    }
-
-    private ProjectSelectionForm projectSelectionForm;
-    private MonitoringDetailForm monitoringDetailForm;
-
-    public MonitoringPage()
-    {
-        projectSelectionForm = new ProjectSelectionForm("projectSelectionForm");
-
-        monitoringDetailForm = new MonitoringDetailForm("monitoringDetailForm");
-        // monitoringDetailForm.setVisible(false);
-
-        add(projectSelectionForm);
-        add(monitoringDetailForm);
-    }
-
-    private class OverallProgressPanel
-        extends Panel
-    {
-        private static final long serialVersionUID = 1118880151557285316L;
-
-        public OverallProgressPanel(String id)
-        {
-            super(id);
             int actual = 0;
             int expected = 0;
             int pos = 0;
@@ -292,8 +239,6 @@ public class MonitoringPage
             int dependency = 0;
             int coreference = 0;
             int coreferenceType = 0;
-            final Map<String, Integer> annotatorProgressExpected = new HashMap<String, Integer>();
-            final Map<String, Integer> annotatorProgressActual = new HashMap<String, Integer>();
             final Map<String, Integer> projectsProgressExpected = new HashMap<String, Integer>();
             final Map<String, Integer> projectsProgressActual = new HashMap<String, Integer>();
 
@@ -309,31 +254,13 @@ public class MonitoringPage
                     coreference = coreference + select(jCas, CoreferenceChain.class).size();
                     coreferenceType = coreferenceType + select(jCas, CoreferenceLink.class).size();
 
-                    // Annotator's Progress
-                    String username = annotationDocument.getUser().getUsername();
-                    if (annotatorProgressExpected.get(username) == null) {
-                        annotatorProgressExpected.put(username,
-                                MonitoringUtils.expectedAnnotations(jCas));
-                        annotatorProgressActual.put(username,
-                                MonitoringUtils.actualAnnotations(jCas));
-
-                    }
-                    else {
-                        int previousExpectedValue = annotatorProgressExpected.get(username);
-                        int previousActualValue = annotatorProgressActual.get(username);
-                        annotatorProgressExpected.put(username, previousExpectedValue
-                                + MonitoringUtils.expectedAnnotations(jCas));
-                        annotatorProgressActual.put(username,
-                                previousActualValue + MonitoringUtils.actualAnnotations(jCas));
-                    }
-
                     // Projects Progress
                     String project = annotationDocument.getProject().getName();
                     if (projectsProgressExpected.get(project) == null) {
                         projectsProgressExpected.put(project,
                                 MonitoringUtils.expectedAnnotations(jCas));
-                        projectsProgressActual.put(project,
-                                MonitoringUtils.actualAnnotations(jCas));
+                        projectsProgressActual
+                                .put(project, MonitoringUtils.actualAnnotations(jCas));
 
                     }
                     else {
@@ -384,28 +311,6 @@ public class MonitoringPage
                     createPieChart(annotationProgress), CHART_WIDTH, 140));
             add(annotationChart);
 
-            //Add overall progress by annotators
-            RepeatingView annotatorRepeator = new RepeatingView("annotatorRepeator");
-            add(annotatorRepeator);
-
-            for (final String username : annotatorProgressExpected.keySet()) {
-                AbstractItem item = new AbstractItem(annotatorRepeator.newChildId());
-
-                annotatorRepeator.add(item);
-                item.add(new Label("annotator", username));
-                item.add(new ProgressBar("annotatorProgress", new ProgressionModel()
-                {
-                    @Override
-                    protected Progression getProgression()
-                    {
-                        double value =  (double) annotatorProgressActual.get(username) / annotatorProgressExpected
-                                .get(username);
-                        return new Progression(
-                                (int)(value*100));
-                    }
-                }));
-            }
-
             // Overall progress by Projects
             RepeatingView projectRepeator = new RepeatingView("projectRepeator");
             add(projectRepeator);
@@ -420,16 +325,35 @@ public class MonitoringPage
                     @Override
                     protected Progression getProgression()
                     {
-                        double value =  (double) projectsProgressActual.get(project) / projectsProgressExpected
-                                .get(project);
-                        return new Progression(
-                                (int)(value*100));
+                        double value = (double) projectsProgressActual.get(project)
+                                / projectsProgressExpected.get(project);
+                        return new Progression((int) (value * 100));
                     }
                 }));
+
             }
 
         }
     }
+
+    private ProjectSelectionForm projectSelectionForm;
+    private MonitoringDetailForm monitoringDetailForm;
+    Image annotatorProgress;
+
+    public MonitoringPage()
+    {
+        projectSelectionForm = new ProjectSelectionForm("projectSelectionForm");
+
+        monitoringDetailForm = new MonitoringDetailForm("monitoringDetailForm");
+        // monitoringDetailForm.setVisible(false);
+
+        annotatorProgress =  new NonCachingImage("annotator");
+        annotatorProgress.setOutputMarkupPlaceholderTag(true);
+        annotatorProgress.setVisible(false);
+        add(projectSelectionForm);
+        add(monitoringDetailForm.add(annotatorProgress));
+    }
+
 
     private JFreeChart createPieChart(Map<String, Integer> chartValues)
     {
@@ -457,93 +381,32 @@ public class MonitoringPage
         return chart;
     }
 
-    private ChartImageResource createProgressChart(Map<String, Integer> barValues)
+    private ChartImageResource createProgressChart(Map<String, Integer> chartValues, int aMaxValue)
     {
-
         // fill dataset
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-        for (String chartValue : barValues.keySet()) {
-            dataset.setValue(barValues.get(chartValue), "Completeness", chartValue);
+        for (String chartValue : chartValues.keySet()) {
+            dataset.setValue(chartValues.get(chartValue), "Completion", chartValue);
         }
-
+        // create chart
         JFreeChart chart = ChartFactory.createBarChart(null, null, null, dataset,
                 PlotOrientation.HORIZONTAL, false, false, false);
 
         CategoryPlot plot = chart.getCategoryPlot();
         plot.setInsets(new RectangleInsets(UnitType.ABSOLUTE, 0, 20, 0, 20));
-        plot.getRangeAxis().setRange(0.0, 1.0);
-        ((NumberAxis) plot.getRangeAxis()).setNumberFormatOverride(new DecimalFormat("0%"));
+        plot.getRangeAxis().setRange(0.0, aMaxValue);
+        ((NumberAxis) plot.getRangeAxis()).setNumberFormatOverride(new DecimalFormat("0"));
         plot.setOutlineVisible(false);
         plot.setBackgroundPaint(null);
 
         BarRenderer renderer = new BarRenderer();
         renderer.setBarPainter(new StandardBarPainter());
         renderer.setShadowVisible(false);
-        renderer.setGradientPaintTransformer(new StandardGradientPaintTransformer(
-                GradientPaintTransformType.HORIZONTAL));
-        renderer.setSeriesPaint(0, new GradientPaint(0f, 0f, Color.RED, 0f, 0f, Color.GREEN));
+        // renderer.setGradientPaintTransformer(new StandardGradientPaintTransformer(
+        // GradientPaintTransformType.HORIZONTAL));
+        renderer.setSeriesPaint(0, Color.BLUE);
         chart.getCategoryPlot().setRenderer(renderer);
 
-        return new ChartImageResource(chart, CHART_WIDTH, 30 + (100 * 18));
+        return new ChartImageResource(chart, CHART_WIDTH, 30 + (chartValues.size() * 18));
     }
-
-    private class ProjectProgressPanel
-        extends Panel
-    {
-        private static final long serialVersionUID = -8668945427924328076L;
-        private CheckBoxMultipleChoice<User> users;
-
-        public ProjectProgressPanel(String id)
-        {
-            super(id);
-            // TODO
-        }
-    }
-
-    private class DocumentProgressPanel
-        extends Panel
-    {
-        private static final long serialVersionUID = 2116717853865353733L;
-        private ArrayList<String> documents = new ArrayList<String>();
-        private ArrayList<String> selectedDocuments = new ArrayList<String>();
-
-        private List<FileUpload> uploadedFiles;
-        private FileUploadField fileUpload;
-
-        private ArrayList<String> readableFormats;
-        private String selectedFormat;
-
-        private DropDownChoice<String> readableFormatsChoice;
-
-        @SuppressWarnings({ "unchecked", "rawtypes" })
-        public DocumentProgressPanel(String id)
-        {
-            super(id);
-            // TODO
-        }
-    };
-
-
-    private class KeppaStaticsPanel
-    extends Panel
-{
-    private static final long serialVersionUID = 2116717853865353733L;
-    private ArrayList<String> documents = new ArrayList<String>();
-    private ArrayList<String> selectedDocuments = new ArrayList<String>();
-
-    private List<FileUpload> uploadedFiles;
-    private FileUploadField fileUpload;
-
-    private ArrayList<String> readableFormats;
-    private String selectedFormat;
-
-    private DropDownChoice<String> readableFormatsChoice;
-
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    public KeppaStaticsPanel(String id)
-    {
-        super(id);
-        // TODO
-    }
-    };
 }
