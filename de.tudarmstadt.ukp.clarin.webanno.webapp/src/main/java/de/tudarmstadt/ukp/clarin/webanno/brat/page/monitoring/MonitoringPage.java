@@ -194,6 +194,8 @@ public class MonitoringPage
                                             + ExceptionUtils.getRootCauseMessage(e));
                                 }
                             }
+                            projectName.setDefaultModelObject(project.getName());
+
                             annotatorProgress.setImageResource(createProgressChart(annotatorProgressExpected, expected));
                             annotatorProgress.setVisible(true);
                         }
@@ -339,6 +341,7 @@ public class MonitoringPage
     private ProjectSelectionForm projectSelectionForm;
     private MonitoringDetailForm monitoringDetailForm;
     Image annotatorProgress;
+    private Label projectName;
 
     public MonitoringPage()
     {
@@ -351,7 +354,8 @@ public class MonitoringPage
         annotatorProgress.setOutputMarkupPlaceholderTag(true);
         annotatorProgress.setVisible(false);
         add(projectSelectionForm);
-        add(monitoringDetailForm.add(annotatorProgress));
+        projectName = new Label("projectName", "");
+        add(monitoringDetailForm.add(annotatorProgress).add(projectName));
     }
 
 
