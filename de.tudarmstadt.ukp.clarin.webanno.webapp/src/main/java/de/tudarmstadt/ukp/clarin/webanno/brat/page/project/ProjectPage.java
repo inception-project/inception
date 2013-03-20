@@ -566,12 +566,11 @@ public class ProjectPage
                     Project project = projectDetailForm.getModelObject();
 
                     if (isNotEmpty(uploadedFiles)) {
-                        for (FileUpload tcfFile : uploadedFiles) {
-                            InputStream tcfInputStream;
+                        for (FileUpload documentToUpload : uploadedFiles) {
+                            InputStream is;
                             try {
-                                tcfInputStream = tcfFile.getInputStream();
-                                String text = IOUtils.toString(tcfInputStream, "UTF-8");
-                                String fileName = tcfFile.getClientFileName();
+                                String fileName = documentToUpload.getClientFileName();
+                                File uploadFile = documentToUpload.writeToTempFile();
 
                                 // if getSourceDocument succeeded, it is a duplication!
                                 try {
@@ -594,7 +593,7 @@ public class ProjectPage
                                     document.setProject(project);
                                     document.setFormat(readableFormatsChoice.getModelObject());
                                     projectRepository.createSourceDocument(document, user);
-                                    projectRepository.uploadSourceDocument(text, document,
+                                    projectRepository.uploadSourceDocument(uploadFile, document,
                                             project.getId(), user);
 
                                 }

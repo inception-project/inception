@@ -401,7 +401,7 @@ public interface RepositoryService
      * @throws WLFormatException
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    public void uploadSourceDocument(String text, SourceDocument document, long projectId, User user)
+    public void uploadSourceDocument(File file, SourceDocument document, long projectId, User user)
         throws IOException, UIMAException, WLFormatException;
 
     /**

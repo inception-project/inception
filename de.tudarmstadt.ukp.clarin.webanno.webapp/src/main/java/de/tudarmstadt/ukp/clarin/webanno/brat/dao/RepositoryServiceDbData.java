@@ -20,7 +20,6 @@ import static org.apache.commons.io.IOUtils.copyLarge;
 import static org.uimafit.factory.AnalysisEngineFactory.createPrimitiveDescription;
 import static org.uimafit.pipeline.SimplePipeline.runPipeline;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
@@ -45,7 +44,6 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.comparator.LastModifiedFileComparator;
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.Level;
@@ -561,7 +559,7 @@ public class RepositoryServiceDbData
     {
         String guidelinePath = dir.getAbsolutePath() + PROJECT + aProject.getId() + GUIDELINE;
         FileUtils.forceMkdir(new File(guidelinePath));
-        IOUtils.copyLarge(new FileInputStream(aContent), new FileOutputStream(new File(guidelinePath + aFileName)));
+        copyLarge(new FileInputStream(aContent), new FileOutputStream(new File(guidelinePath + aFileName)));
     }
 
     @Override
@@ -767,7 +765,7 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public void uploadSourceDocument(String aText, SourceDocument aDocument, long aProjectId,
+    public void uploadSourceDocument(File aFile, SourceDocument aDocument, long aProjectId,
             User aUser)
         throws IOException
     {
@@ -780,7 +778,7 @@ public class RepositoryServiceDbData
         OutputStream os = null;
         try {
             os = new FileOutputStream(newTcfFile);
-            is = new ByteArrayInputStream(aText.getBytes("UTF-8"));
+            is = new FileInputStream(aFile);
             copyLarge(is, os);
         }
         finally {
