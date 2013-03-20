@@ -183,6 +183,13 @@ public interface RepositoryService
     File getDir();
 
     /**
+     * get the annotation guideline document from the file system
+     * @param project
+     * @return
+     */
+    File getGuideline(Project project, String fileName);
+
+    /**
      * For a given project, get the permission level of the user if it is granted
      *
      * @param aUser
@@ -210,6 +217,13 @@ public interface RepositoryService
      */
     Project getProject(String name);
 
+    /**
+     * Write this {@code content} of the guideline file in the project;
+     * @param project
+     * @return
+     * @throws IOException
+     */
+    void writeGuideline(Project project, File content, String fileName) throws IOException;
     /**
      * Get a {@link ProjectPermissions }objects where a project is member of. We need to get them,
      * for example if the associated {@link Project} is deleted, the {@link ProjectPermissions }
@@ -281,11 +295,19 @@ public interface RepositoryService
     List<AnnotationDocument> listAnnotationDocument(SourceDocument document);
 
     /**
+     * List annotation guideline document already uploaded
+     * @param project
+     * @return
+     */
+    List<String> listAnnotationGuidelineDocument(Project project);
+
+    /**
      * List all Projects. If the user logged have a ROLE_ADMIN, he can see all the projects.
      * Otherwise, a user will see projects only he is member of.
      *
      * @return
      */
+
     List<Project> listProjects();
 
     /**
@@ -314,6 +336,13 @@ public interface RepositoryService
      */
     List<User> listUsers();
 
+    /**
+     * Remove an annotation guideline document from the file system
+     * @param project
+     * @param fileName
+     * @throws IOException
+     */
+    void removeAnnotationGuideline(Project project, String fileName) throws IOException;
     /**
      * remove a user permission from the project
      *

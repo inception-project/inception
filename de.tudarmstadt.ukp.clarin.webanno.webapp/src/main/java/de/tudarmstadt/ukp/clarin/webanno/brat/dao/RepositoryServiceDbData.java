@@ -23,11 +23,13 @@ import static org.uimafit.pipeline.SimplePipeline.runPipeline;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -43,6 +45,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.comparator.LastModifiedFileComparator;
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.Level;
@@ -112,7 +115,7 @@ public class RepositoryServiceDbData
     private static final String PROJECT = "/project/";
     private static final String DOCUMENT = "/document/";
     private static final String SOURCE = "/source";
-
+    private static final String GUIDELINE = "/guideline/";
     private static final String ANNOTATION = "/annotation";
 
     @PersistenceContext
@@ -348,30 +351,34 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public boolean existsAnnotationDocument(SourceDocument aDocument, User aUser){
-        try{
-            entityManager.createQuery("FROM AnnotationDocument WHERE project = :project " +
-            		" AND document = :document AND user = :user", AnnotationDocument.class)
+    public boolean existsAnnotationDocument(SourceDocument aDocument, User aUser)
+    {
+        try {
+            entityManager
+                    .createQuery(
+                            "FROM AnnotationDocument WHERE project = :project "
+                                    + " AND document = :document AND user = :user",
+                            AnnotationDocument.class)
                     .setParameter("project", aDocument.getProject())
-                    .setParameter("document", aDocument)
-                    .setParameter("user", aUser).getSingleResult();
+                    .setParameter("document", aDocument).setParameter("user", aUser)
+                    .getSingleResult();
             return true;
         }
-        catch(NoResultException ex){
+        catch (NoResultException ex) {
             return false;
         }
     }
 
-
     @Override
     @Transactional
-    public boolean existsProject(String aName){
-        try{
+    public boolean existsProject(String aName)
+    {
+        try {
             entityManager.createQuery("FROM Project WHERE name = :name", Project.class)
                     .setParameter("name", aName).getSingleResult();
             return true;
         }
-        catch(NoResultException ex){
+        catch (NoResultException ex) {
             return false;
         }
     }
@@ -434,13 +441,10 @@ public class RepositoryServiceDbData
 
         return entityManager
                 .createQuery(
-                        "FROM AnnotationDocument WHERE document = :document AND " + "user =:user" +
-                        		" AND project = :project",
-                        AnnotationDocument.class)
-                        .setParameter("document", aDocument)
-                        .setParameter("user", aUser)
-                        .setParameter("project", aDocument.getProject())
-                        .getSingleResult();
+                        "FROM AnnotationDocument WHERE document = :document AND " + "user =:user"
+                                + " AND project = :project", AnnotationDocument.class)
+                .setParameter("document", aDocument).setParameter("user", aUser)
+                .setParameter("project", aDocument.getProject()).getSingleResult();
     }
 
     @Override
@@ -507,6 +511,10 @@ public class RepositoryServiceDbData
     }
 
     @Override
+   public  File getGuideline(Project aProject, String aFilename){
+       return new File(dir.getAbsolutePath()+PROJECT+aProject.getId()+GUIDELINE+aFilename);
+   }
+    @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public String getPermisionLevel(User aUser, Project aProject)
     {
@@ -545,6 +553,15 @@ public class RepositoryServiceDbData
     {
         return entityManager.createQuery("FROM Project WHERE name = :name", Project.class)
                 .setParameter("name", aName).getSingleResult();
+    }
+
+    @Override
+    public void writeGuideline(Project aProject, File aContent, String aFileName)
+        throws IOException
+    {
+        String guidelinePath = dir.getAbsolutePath() + PROJECT + aProject.getId() + GUIDELINE;
+        FileUtils.forceMkdir(new File(guidelinePath));
+        IOUtils.copyLarge(new FileInputStream(aContent), new FileOutputStream(new File(guidelinePath + aFileName)));
     }
 
     @Override
@@ -594,13 +611,24 @@ public class RepositoryServiceDbData
                 .getResultList();
     }
 
-    /*
-     * @Override
-     *
-     * @Transactional public String getAuthority(User aUser) { return entityManager.createQuery(
-     * "SELECT role FROM Authority where users =:users", String.class) .setParameter("users",
-     * aUser).getSingleResult(); }
-     */
+    @Override
+    public List<String> listAnnotationGuidelineDocument(Project aProject)
+    {
+        // list all guideline files
+        File[] files = new File(dir.getAbsolutePath() + PROJECT + aProject.getId() + GUIDELINE)
+                .listFiles();
+
+        // Name of the guideline files
+        List<String> annotationGuidelineFiles = new ArrayList<String>();
+        if (files != null) {
+            for (File file : files) {
+                annotationGuidelineFiles.add(file.getName());
+            }
+        }
+
+        return annotationGuidelineFiles;
+    }
+
     @Override
     @Transactional
     public List<AnnotationDocument> listAnnotationDocument()
@@ -611,12 +639,13 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public List<AnnotationDocument> listAnnotationDocument(Project aProject){
+    public List<AnnotationDocument> listAnnotationDocument(Project aProject)
+    {
         return entityManager
                 .createQuery("FROM AnnotationDocument WHERE project = :project",
-                        AnnotationDocument.class).setParameter("project", aProject)
-                .getResultList();
+                        AnnotationDocument.class).setParameter("project", aProject).getResultList();
     }
+
     @Override
     @Transactional
     public List<Project> listProjects()
@@ -687,6 +716,14 @@ public class RepositoryServiceDbData
     }
 
     @Override
+    public void removeAnnotationGuideline(Project aProject, String aFileName)
+        throws IOException
+    {
+        FileUtils.forceDelete(new File(dir.getAbsolutePath() + PROJECT + aProject.getId()
+                + GUIDELINE + aFileName));
+    }
+
+    @Override
     @Transactional
     public void removeProjectPermission(ProjectPermissions projectPermission)
         throws IOException
@@ -707,10 +744,10 @@ public class RepositoryServiceDbData
     {
 
         // remove metadata from DB
-    if(existsAnnotationDocument(aDocument, aUser)) {
-        entityManager.remove(getAnnotationDocument(aDocument, aUser));
-    }
-    entityManager.remove(aDocument);
+        if (existsAnnotationDocument(aDocument, aUser)) {
+            entityManager.remove(getAnnotationDocument(aDocument, aUser));
+        }
+        entityManager.remove(aDocument);
 
         String path = dir.getAbsolutePath() + PROJECT + aDocument.getProject().getId() + DOCUMENT
                 + aDocument.getId();

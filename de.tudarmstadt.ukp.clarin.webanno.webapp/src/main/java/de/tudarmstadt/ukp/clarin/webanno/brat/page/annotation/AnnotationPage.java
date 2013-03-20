@@ -94,8 +94,8 @@ public class AnnotationPage
                 else {
 
                     annotationLayerSelectionModal.setContent(new AnnotationLayerSelectionModalPage(
-                            annotationLayerSelectionModal.getContentId(), annotationLayerSelectionModal,
-                            annotator));
+                            annotationLayerSelectionModal.getContentId(),
+                            annotationLayerSelectionModal, annotator));
 
                     annotationLayerSelectionModal
                             .setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
@@ -104,7 +104,7 @@ public class AnnotationPage
 
                                 public void onClose(AjaxRequestTarget target)
                                 {
-                                  //  target.add(annotator);
+                                    // target.add(annotator);
                                     target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
                                 }
                             });
@@ -171,8 +171,8 @@ public class AnnotationPage
                                     annotator.getSentenceAddress(), annotator.getWindowSize());
                     if (annotator.getSentenceAddress() != nextSentenceAddress) {
                         annotator.setSentenceAddress(nextSentenceAddress);
-                         target.add(annotator);
-                      //  target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                        target.add(annotator);
+                        // target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
                     }
 
                     else {
@@ -200,7 +200,7 @@ public class AnnotationPage
                     if (annotator.getSentenceAddress() != previousSentenceAddress) {
                         annotator.setSentenceAddress(previousSentenceAddress);
                         target.add(annotator);
-                       // target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                        // target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
                     }
                     else {
                         target.appendJavaScript("alert('This is First Page!')");
@@ -222,8 +222,8 @@ public class AnnotationPage
                 if (annotator.getDocument() != null) {
                     if (annotator.getFirstSentenceAddress() != annotator.getSentenceAddress()) {
                         annotator.setSentenceAddress(annotator.getFirstSentenceAddress());
-                         target.add(annotator);
-                      //  target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                        target.add(annotator);
+                        // target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
                     }
                     else {
                         target.appendJavaScript("alert('This is first Page!')");
@@ -249,8 +249,8 @@ public class AnnotationPage
                                     annotator.getWindowSize());
                     if (lastDisplayWindowBeginingSentenceAddress != annotator.getSentenceAddress()) {
                         annotator.setSentenceAddress(lastDisplayWindowBeginingSentenceAddress);
-                         target.add(annotator);
-                      //  target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                        target.add(annotator);
+                        // target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
                     }
                     else {
                         target.appendJavaScript("alert('This is last Page!')");
@@ -261,6 +261,41 @@ public class AnnotationPage
                 }
             }
         });
+
+
+        final ModalWindow guidelineModal;
+        add(guidelineModal = new ModalWindow("guidelineModal"));
+
+        guidelineModal.setInitialWidth(550);
+        guidelineModal.setInitialHeight(450);
+        guidelineModal.setResizable(true);
+        guidelineModal.setWidthUnit("px");
+        guidelineModal.setHeightUnit("px");
+        guidelineModal.setTitle("Open Annotation Guideline, in separate window");
+
+        guidelineModal.setPageCreator(new ModalWindow.PageCreator()
+        {
+            private static final long serialVersionUID = -2827824968207807739L;
+
+            public Page createPage()
+            {
+                return new GuidelineModalWindowPage(guidelineModal, annotator.getProject());
+            }
+
+        });
+        add(new AjaxLink<Void>("showGuidelineModal")
+        {
+            private static final long serialVersionUID = 7496156015186497496L;
+
+            @Override
+            public void onClick(AjaxRequestTarget target)
+            {
+                    guidelineModal.show(target);
+
+
+            }
+        });
+
     }
 
     private JCas getJCas(Project aProject, SourceDocument aDocument)
@@ -281,8 +316,8 @@ public class AnnotationPage
             error("CAS object not found :" + ExceptionUtils.getRootCauseMessage(e));
         }
         catch (ClassNotFoundException e) {
-         error("The Class name in the properties is not found " + ":"
-                        + ExceptionUtils.getRootCauseMessage(e));
+            error("The Class name in the properties is not found " + ":"
+                    + ExceptionUtils.getRootCauseMessage(e));
         }
         return jCas;
 

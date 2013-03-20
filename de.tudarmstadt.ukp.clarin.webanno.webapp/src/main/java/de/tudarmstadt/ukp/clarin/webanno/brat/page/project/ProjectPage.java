@@ -81,7 +81,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
  * This is the main page for Project Settings. The Page has Four Panels. The
- * {@link ProjectDocumentsPanel} is used to update documents to a project. The
+ * {@link AnnotationGuideLinePanel} is used to update documents to a project. The
  * {@link ProjectDetailsPanel} used for updating Project deatils such as descriptions of a project
  * and name of the Project The {@link ProjectTagSetsPanel} is used to add {@link TagSet} and
  * {@link Tag} details to a Project as well as updating them The {@link ProjectUsersPanel} is used
@@ -266,6 +266,17 @@ public class ProjectPage
                 public Panel getPanel(String panelId)
                 {
                     return new ProjectTagSetsPanel(panelId);
+                }
+            });
+
+            tabs.add(new AbstractTab(new Model<String>("Annotation Guideline"))
+            {
+                private static final long serialVersionUID = 7887973231065189200L;
+
+                @Override
+                public Panel getPanel(String panelId)
+                {
+                    return new AnnotationGuideLinePanel(panelId);
                 }
             });
 
@@ -661,7 +672,7 @@ public class ProjectPage
                 }
             });
         }
-    };
+    }
 
     private class ProjectTagSetsPanel
         extends Panel
@@ -1237,5 +1248,107 @@ public class ProjectPage
             add(tagSetDetailForm);
             add(tagDetailForm);
         }
-    };
+    }
+
+
+    private class AnnotationGuideLinePanel
+    extends Panel
+{
+    private static final long serialVersionUID = 2116717853865353733L;
+    private ArrayList<String> documents = new ArrayList<String>();
+    private ArrayList<String> selectedDocuments = new ArrayList<String>();
+
+    private List<FileUpload> uploadedFiles;
+    private FileUploadField fileUpload;
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public AnnotationGuideLinePanel(String id)
+    {
+        super(id);
+        add(fileUpload = new FileUploadField("content", new Model()));
+
+        add(new Button("importGuideline", new ResourceModel("label"))
+        {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public void onSubmit()
+            {
+                uploadedFiles = fileUpload.getFileUploads();
+                Project project = projectDetailForm.getModelObject();
+
+                if (isNotEmpty(uploadedFiles)&& project.getId()!=0) {
+                    for (FileUpload guidelineFile : uploadedFiles) {
+
+                            try {
+                                File tempFile = guidelineFile.writeToTempFile();
+                              //  String text = IOUtils.toString(tcfInputStream, "UTF-8");
+                                String fileName = guidelineFile.getClientFileName();
+                                projectRepository.writeGuideline(project, tempFile, fileName);
+                            }
+                            catch (IOException e) {
+                                error("Unable to write guideline file "+ ExceptionUtils.getRootCauseMessage(e));
+                            }
+                    }
+                }
+                else if (isEmpty(uploadedFiles)) {
+                    error("No document is selected to upload, please select a document first");
+                    LOG.info("No document is selected to upload, please select a document first");
+                }
+                else if (project.getId() == 0) {
+                    error("Project not yet created, please save project Details!");
+                    LOG.info("Project not yet created, please save project Details!");
+                }
+
+            }
+        });
+
+        add(new ListMultipleChoice<String>("documents", new Model(selectedDocuments), documents)
+        {
+            private static final long serialVersionUID = 1L;
+
+            {
+                setChoices(new LoadableDetachableModel<List<String>>()
+                {
+                    private static final long serialVersionUID = 1L;
+
+                    @Override
+                    protected List<String> load()
+                    {
+                        Project project = projectDetailForm.getModelObject();
+                        documents.clear();
+                        if (project.getId() != 0) {
+                       documents.addAll(projectRepository.listAnnotationGuidelineDocument(project));
+                        }
+                        return documents;
+                    }
+                });
+            }
+        });
+
+        add(new Button("remove", new ResourceModel("label"))
+        {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public void onSubmit()
+            {
+                Project project = projectDetailForm.getModelObject();
+                for (String document : selectedDocuments) {
+                    try {
+
+                        projectRepository.removeAnnotationGuideline(project, document);
+                    }
+                    catch (IOException e) {
+                        error("Error while removing a document document "
+                                + ExceptionUtils.getRootCauseMessage(e));
+                        LOG.error("Error while removing a document document "
+                                + ExceptionUtils.getRootCauseMessage(e));
+                    }
+                    documents.remove(document);
+                }
+            }
+        });
+    }
+}
 }
