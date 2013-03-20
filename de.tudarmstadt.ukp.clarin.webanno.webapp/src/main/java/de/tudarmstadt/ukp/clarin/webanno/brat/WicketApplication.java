@@ -131,13 +131,13 @@ public class WicketApplication
             mountResource("/style-ui.css",
                     new CssResourceReference(Myresources.class, "client/css/style-ui.css"));
 
- /*           // mount fonts
+            // mount fonts
             mountResource("/static/fonts/Astloch-Bold.ttf",
                     new CssResourceReference(Myresources.class, "fonts/Astloch-Bold.ttf"));
             mountResource("/static/fonts/Liberation_Sans-Regular.ttf",
                     new CssResourceReference(Myresources.class, "fonts/Liberation_Sans-Regular.ttf"));
             mountResource("/static/fonts/PT_Sans-Caption-Web-Regular.ttf",
-                    new CssResourceReference(Myresources.class, "fonts/PT_Sans-Caption-Web-Regular.ttf"));*/
+                    new CssResourceReference(Myresources.class, "fonts/PT_Sans-Caption-Web-Regular.ttf"));
 
             isInitialized = true;
         }
