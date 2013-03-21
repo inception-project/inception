@@ -20,6 +20,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
@@ -335,6 +336,16 @@ public interface RepositoryService
      * @return list of users
      */
     List<User> listUsers();
+    /**
+     * Load annotation preferences such as {@link BratAnnotator#windowSize} from a property file
+     * @param username the username.
+     * @param subject the type of the setting for {@link AnnotationPage } or {@link CurationPage}.
+     * @param project the project where the user is wroking on.
+     * @return
+     * @throws IOException
+     * @throws FileNotFoundException
+     */
+    Properties loadUserSettings(String username, Project project, String subject) throws FileNotFoundException, IOException;
 
     /**
      * Remove an annotation guideline document from the file system
@@ -400,6 +411,25 @@ public interface RepositoryService
      * @throws UIMAException
      * @throws WLFormatException
      */
+
+    /**
+     * Save annotation references, such as {@link BratAnnotator#windowSize}..., in a properties file
+     * so that they are not required to configure every time they open the document.
+     *
+     * @param username
+     *            the user name
+     * @param subject
+     *            differentiate the setting, either it is for {@link AnnotationPage} or
+     *            {@link CurationPage}
+     * @param configurationObject
+     *            The Object to be saved as preference in the properties file.
+     * @param project
+     *            The project where the user is working on.
+     * @throws FileNotFoundException
+     * @throws IOException
+     */
+    <T> void saveUserSettings(String username, Project project, String subject, T configurationObject) throws FileNotFoundException, IOException;
+
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     public void uploadSourceDocument(File file, SourceDocument document, long projectId, User user)
         throws IOException, UIMAException, WLFormatException;

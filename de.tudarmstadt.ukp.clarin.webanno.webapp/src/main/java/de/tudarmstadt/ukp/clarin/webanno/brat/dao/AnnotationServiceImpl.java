@@ -113,6 +113,12 @@ public class AnnotationServiceImpl
     }
 
     @Override
+    @Transactional
+    public TagSet getTagSet(long aId){
+        return entityManager.createQuery("FROM TagSet WHERE id = :id", TagSet.class)
+                .setParameter("id", aId).getSingleResult();
+    }
+    @Override
     public List<AnnotationType> getTypes(String aName, String aType)
     {
         return entityManager

@@ -15,9 +15,13 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map.Entry;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -38,6 +42,9 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
+import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.beans.BeansException;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -77,26 +84,27 @@ public class BratAnnotator
 
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
+
     public Label numberOfPages;
     private int pageNumber = 1;
     private int totalPageNumber;
-    private ArrayList<TagSet> annotationLayers = new ArrayList<TagSet>();
     private Project project;
     private SourceDocument document;
 
     private int sentenceAddress = -1;
     private int lastSentenceAddress;
     private int firstSentenceAddress;
-    private int windowSize = 10;
-    private boolean isDisplayLemmaSelected = true;
-    private boolean scrollPage = false;
+
+    // Annotation preferences
+    private ArrayList<TagSet> annotationLayers = new ArrayList<TagSet>();
+    private int windowSize;
+    private boolean isDisplayLemmaSelected;
+    private boolean scrollPage;
     /**
      * store document and project names to compare with the current and previous document/project
      */
     private long currentDocumentId;
     private long currentprojectId;
-
-
 
     public BratAnnotator(String id, IModel<?> aModel)
     {
@@ -488,10 +496,12 @@ public class BratAnnotator
     /**
      * Set different attributes for
      * {@link BratAjaxCasController#getDocument(int, Project, SourceDocument, User, int, int, boolean, ArrayList)}
+     *
      * @throws UIMAException
      */
     @SuppressWarnings("unchecked")
-    public void setAttributesForGetDocument(String aProjectName, String aDocumentName) throws UIMAException
+    public void setAttributesForGetDocument(String aProjectName, String aDocumentName)
+        throws UIMAException
     {
 
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -502,19 +512,38 @@ public class BratAnnotator
 
         if (sentenceAddress == -1 || document.getId() != currentDocumentId
                 || project.getId() != currentprojectId) {
+
             try {
                 JCas jCas = getCas(project, user, document);
                 setSentenceAddress(BratAjaxCasUtil.getFirstSenetnceAddress(jCas));
                 setLastSentenceAddress(lastSentenceAddress = BratAjaxCasUtil
                         .getLastSenetnceAddress(jCas));
                 setFirstSentenceAddress(getSentenceAddress());
-                setAnnotationLayers((ArrayList<TagSet>) annotationService.listTagSets(project));
+                // Get preferences first from the properties file
+                try {
+                    AnnotationPreference preference = new AnnotationPreference();
+                    setAnnotationPreference(preference, username);
+                    setWindowSize(preference.getWindowSize());
+                    setScrollPage(preference.isScrollPage());
+                    setDisplayLemmaSelected(preference.isDisplayLemmaSelected());
+                    // Get tagset using the id, from the properties file
+                    for (Long id : preference.getAnnotationLayers()) {
+                        getAnnotationLayers().add(annotationService.getTagSet(id));
+                    }
+                }
+                // No setting saved yet, set default
+                catch (Exception e) {
+                    setWindowSize(10);
+                    setDisplayLemmaSelected(true);
+                    setAnnotationLayers((ArrayList<TagSet>) annotationService.listTagSets(project));
+
+                }
             }
             catch (DataRetrievalFailureException ex) {
                 throw ex;
             }
-            catch (UIMAException e) {
-                throw e;
+            catch (UIMAException ex) {
+                throw ex;
             }
         }
 
@@ -540,7 +569,8 @@ public class BratAnnotator
         }
     }
 
-    private JCas getCas(Project aProject, User user, SourceDocument aDocument) throws UIMAException
+    private JCas getCas(Project aProject, User user, SourceDocument aDocument)
+        throws UIMAException
     {
         JCas jCas = null;
         try {
@@ -655,4 +685,25 @@ public class BratAnnotator
         scrollPage = aMovePage;
     }
 
+    private void setAnnotationPreference(AnnotationPreference aPreference, String aUsername)
+        throws BeansException, FileNotFoundException, IOException
+    {
+        BeanWrapper wrapper = new BeanWrapperImpl(aPreference);
+        for (Entry<Object, Object> entry : repository.loadUserSettings(aUsername, project,
+                "annotation").entrySet()) {
+            String propertyName = entry.getKey().toString();
+            int index = propertyName.lastIndexOf(".");
+            propertyName = propertyName.substring(index + 1);
+            if (wrapper.isWritableProperty(propertyName)) {
+                List<String> value = Arrays.asList(entry.getValue().toString().replace("[", "")
+                        .replace("]", "").split(","));
+                if (value.size() > 1) {
+                    wrapper.setPropertyValue(propertyName, value);
+                }
+                else {
+                    wrapper.setPropertyValue(propertyName, entry.getValue());
+                }
+            }
+        }
+    }
 }

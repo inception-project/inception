@@ -15,10 +15,13 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.page.annotation;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -34,9 +37,11 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -82,13 +87,13 @@ public class AnnotationLayerSelectionModalPage
             super(id, new CompoundPropertyModel<AnnotationLayerDetailFormModel>(
                     new AnnotationLayerDetailFormModel()));
 
-           // Import current settings from the annotator
+            // Import current settings from the annotator
             getModelObject().numberOfSentences = annotator.getWindowSize();
             getModelObject().scrollPage = annotator.isScrollPage();
             getModelObject().displayLemma = annotator.isDisplayLemmaSelected();
 
-            for(TagSet tagSet:annotator.getAnnotationLayers()){
-            getModelObject().annotationLayers.add(tagSet);
+            for (TagSet tagSet : annotator.getAnnotationLayers()) {
+                getModelObject().annotationLayers.add(tagSet);
             }
             windowSizeField = (NumberTextField<Integer>) new NumberTextField<Integer>(
                     "numberOfSentences");
@@ -126,6 +131,32 @@ public class AnnotationLayerSelectionModalPage
                 @Override
                 protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
                 {
+                    AnnotationPreference preference = new AnnotationPreference();
+                    preference.setDisplayLemmaSelected(getModelObject().displayLemma);
+                    preference.setScrollPage(getModelObject().scrollPage);
+                    preference.setWindowSize(getModelObject().numberOfSentences);
+
+                    ArrayList<Long> layers = new ArrayList<Long>();
+
+                    for (TagSet tagset : getModelObject().annotationLayers) {
+                        layers.add(tagset.getId());
+                    }
+                    preference.setAnnotationLayers(layers);
+                    String username = SecurityContextHolder.getContext().getAuthentication()
+                            .getName();
+                    try {
+                        projectRepository.saveUserSettings(username, annotator.getProject(),
+                                "annotation", preference);
+                    }
+                    catch (FileNotFoundException e) {
+                        error("Unable to save preferences in a property file: "
+                                + ExceptionUtils.getRootCauseMessage(e));
+                    }
+                    catch (IOException e) {
+                        error("Unable to save preferences in a property file: "
+                                + ExceptionUtils.getRootCauseMessage(e));
+                    }
+
                     annotator.setDisplayLemmaSelected(getModelObject().displayLemma);
                     annotator.setScrollPage(getModelObject().scrollPage);
                     annotator.setAnnotationLayers(getModelObject().annotationLayers);
@@ -167,7 +198,8 @@ public class AnnotationLayerSelectionModalPage
         public ArrayList<TagSet> annotationLayers = new ArrayList<TagSet>();
     }
 
-    public AnnotationLayerSelectionModalPage(String aId, final ModalWindow modalWindow, BratAnnotator aAnnotator)
+    public AnnotationLayerSelectionModalPage(String aId, final ModalWindow modalWindow,
+            BratAnnotator aAnnotator)
     {
         super(aId);
         this.annotator = aAnnotator;

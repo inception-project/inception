@@ -98,6 +98,10 @@ public interface AnnotationService
     TagSet getTagSet(String tagName);
 
     /**
+     * Get Tagset by its ID
+     */
+    TagSet getTagSet(long id);
+    /**
     * Get an annotation type using its name
     */
    List<AnnotationType> getTypes(String name, String type);
