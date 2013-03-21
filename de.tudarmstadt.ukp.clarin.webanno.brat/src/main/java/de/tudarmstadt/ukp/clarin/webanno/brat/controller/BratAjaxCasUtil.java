@@ -178,17 +178,13 @@ public class BratAjaxCasUtil
                 break;
             }
             // remove double-mother dependency
-/*            else if (dependency.getGovernor().getPos().getAddress() == targetAddress
-                    && !aType.equals("ROOT")) {
-                dependencyToDelte = dependency;
-                break;
-            }
-            // remove double-mother dependency, for a ROOT one
-            else if (dependency.getGovernor().getPos().getAddress() == originAddress
-                    && aType.equals("ROOT")) {
-                dependencyToDelte = dependency;
-                break;
-            }*/
+            /*
+             * else if (dependency.getGovernor().getPos().getAddress() == targetAddress &&
+             * !aType.equals("ROOT")) { dependencyToDelte = dependency; break; } // remove
+             * double-mother dependency, for a ROOT one else if
+             * (dependency.getGovernor().getPos().getAddress() == originAddress &&
+             * aType.equals("ROOT")) { dependencyToDelte = dependency; break; }
+             */
         }
         if (modify) {
             dependencyToDelte.setDependencyType(aType);
@@ -941,6 +937,34 @@ public class BratAjaxCasUtil
             sentenceAddress++;
         }
         return sentenceAddress;
+
+    }
+
+    /**
+     * Get Sentence address for this ordinal sentence number. Used to go to specific sentence number
+     */
+    public static int getSentenceAddress(JCas aJcas, int aSentenceNumber)
+    {
+
+        int i = 1;
+        int address = 0;
+        // Negative numbers entered for page number
+        if(aSentenceNumber<1) {
+            return -2;
+        }
+        for (Sentence sentence : select(aJcas, Sentence.class)) {
+            if (i == aSentenceNumber) {
+                address = sentence.getAddress();
+                break;
+            }
+            address = sentence.getAddress();
+            i++;
+        }
+        // out of sentence boundary
+        if(aSentenceNumber>i) {
+            return -2;
+        }
+        return address;
 
     }
 

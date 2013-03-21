@@ -56,7 +56,7 @@
 		 <div style="border-style:solid;border-color: green; width: 55%; margin: auto;">
 		  <ul class="horizontal">
 		  <li>
-            <input id="collection_browser_button" type="image" src="images/drawer_open.png" tabindex="-1" title="Open Projects Browser (Tab)"/>
+            <input id="collection_browser_button" type="image" src="images/drawer_open.png" tabindex="1" title="Open Projects Browser (Tab)"/>
             </li>             	
        	                         	
        	    <li> <a wicket:id="showExportModal" style="padding-left:3em"><img src="images/document_export.png" style="width:40px;height:40px"
@@ -79,6 +79,11 @@
          		
 			 <li> <a wicket:id="showLast"style="padding-left:3em" ><img src="images/document_page_last.png" style="width:40px;height:40px"
 				title="Last Page" /> </a> </li>
+				
+			<li> <input type="number" wicket:id="gotoPageText" style="width: 50px; padding-left:3em;" /> </li>
+				
+			<li> <a wicket:id="gotoPageLink" ><img src="images/hand_point_180.png" style="width:40px;height:40px"
+				title="Goto This Page" /> </a> </li>
 		</ul>
 		</div>
     <div class="hfill" wicket:id="embedder1"></div>
