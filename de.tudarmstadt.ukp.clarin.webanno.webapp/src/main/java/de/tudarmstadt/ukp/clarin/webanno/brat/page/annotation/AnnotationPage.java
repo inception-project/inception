@@ -171,8 +171,8 @@ public class AnnotationPage
                                     annotator.getSentenceAddress(), annotator.getWindowSize());
                     if (annotator.getSentenceAddress() != nextSentenceAddress) {
                         annotator.setSentenceAddress(nextSentenceAddress);
-                        target.add(annotator);
-                        // target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                        //target.add(annotator);
+                         target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
                     }
 
                     else {
@@ -199,8 +199,8 @@ public class AnnotationPage
                                     annotator.getSentenceAddress(), annotator.getWindowSize());
                     if (annotator.getSentenceAddress() != previousSentenceAddress) {
                         annotator.setSentenceAddress(previousSentenceAddress);
-                        target.add(annotator);
-                        // target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                       // target.add(annotator);
+                         target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
                     }
                     else {
                         target.appendJavaScript("alert('This is First Page!')");
@@ -222,8 +222,8 @@ public class AnnotationPage
                 if (annotator.getDocument() != null) {
                     if (annotator.getFirstSentenceAddress() != annotator.getSentenceAddress()) {
                         annotator.setSentenceAddress(annotator.getFirstSentenceAddress());
-                        target.add(annotator);
-                        // target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                       // target.add(annotator);
+                        target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
                     }
                     else {
                         target.appendJavaScript("alert('This is first Page!')");
@@ -249,8 +249,8 @@ public class AnnotationPage
                                     annotator.getWindowSize());
                     if (lastDisplayWindowBeginingSentenceAddress != annotator.getSentenceAddress()) {
                         annotator.setSentenceAddress(lastDisplayWindowBeginingSentenceAddress);
-                        target.add(annotator);
-                        // target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                       // target.add(annotator);
+                         target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
                     }
                     else {
                         target.appendJavaScript("alert('This is last Page!')");
