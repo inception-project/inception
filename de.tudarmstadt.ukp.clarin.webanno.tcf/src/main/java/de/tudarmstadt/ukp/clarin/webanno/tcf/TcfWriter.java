@@ -19,15 +19,14 @@ import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.uimafit.util.JCasUtil.select;
 import static org.uimafit.util.JCasUtil.selectCovered;
 
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
@@ -85,8 +84,10 @@ public class TcfWriter
 
             // Get the original TCF file and preserve it
             DocumentMetaData documentMetadata = DocumentMetaData.get(aJCas);
-            docIS = new FileInputStream(StringUtils.removeStart(documentMetadata.getDocumentUri(),
-                    "file:"));
+           /* docIS = new FileInputStream(StringUtils.removeStart(documentMetadata.getDocumentUri(),
+                    "file:"));*/
+            URL filePathUrl = new URL(documentMetadata.getDocumentUri());
+            docIS = filePathUrl.openStream();
             TextCorpusStored corpus;
             try{
             corpus = casToTcfWriter(docIS, aJCas);
