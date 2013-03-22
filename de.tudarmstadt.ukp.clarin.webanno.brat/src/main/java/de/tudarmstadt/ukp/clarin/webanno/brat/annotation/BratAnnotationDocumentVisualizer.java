@@ -20,8 +20,6 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.servlet.http.HttpSession;
-
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
@@ -33,12 +31,9 @@ import org.springframework.http.converter.json.MappingJacksonHttpMessageConverte
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratSession;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.CasToBratJson;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 /**
  * Displays a BRAT visualisation and fills it with data from an {@link AnnotationDocument}. We do
@@ -140,15 +135,15 @@ public class BratAnnotationDocumentVisualizer
         tagSetNames.add(AnnotationType.NAMEDENTITY);
         tagSetNames.add(AnnotationType.COREFERENCE);
         tagSetNames.add(AnnotationType.COREFRELTYPE);
-
-        HttpSession session = BratSession.session();
-        Project project = (Project) session.getAttribute("project");
-        SourceDocument document = (SourceDocument) session.getAttribute("document");
-        int windowSize = (Integer)session.getAttribute("windowSize-" + project.getName()
-                +"-"+document.getName());
+// THE BratSession is deleted. modify BratViualizer to include windowSize in its state.
+     //   HttpSession session = BratSession.session();
+      //  Project project = (Project) session.getAttribute("project");
+   //     SourceDocument document = (SourceDocument) session.getAttribute("document");
+     //   int windowSize = (Integer)session.getAttribute("windowSize-" + project.getName()
+   //             +"-"+document.getName());
         CasToBratJson casToBratJson = new CasToBratJson(
                 BratAjaxCasUtil.getFirstSenetnceAddress(jCas),
-                BratAjaxCasUtil.getLastSenetnceAddress(jCas),windowSize, tagSetNames);
+                BratAjaxCasUtil.getLastSenetnceAddress(jCas),10, tagSetNames);
 
         casToBratJson.addTokenToResponse(jCas, response);
         casToBratJson.addSentenceToResponse(jCas, response);
