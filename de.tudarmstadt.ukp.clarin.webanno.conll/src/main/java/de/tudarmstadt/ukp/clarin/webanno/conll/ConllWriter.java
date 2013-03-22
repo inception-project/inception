@@ -38,10 +38,10 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 /**
  * Writes a specific Conll File (9 TAB separated) annotation from the CAS object. Example of output
  * file: 1 Heutzutage heutzutage ADV _ _ 2 ADV _ _ First column: token Number, in a sentence second
- * Column: the token third column: the lemma forth column: the POS fifth/sixth xolumn: Named Entity annotations
- * in BIO(the sixth column is used to encode nested Named Entity)
- * seventh column: the target token for a dependency parsing eighth column: the function of the
- * dependency parsing ninth and tenth column: Not Yet Known
+ * Column: the token third column: the lemma forth column: the POS fifth/sixth xolumn: Named Entity
+ * annotations in BIO(the sixth column is used to encode nested Named Entity) seventh column: the
+ * target token for a dependency parsing eighth column: the function of the dependency parsing ninth
+ * and tenth column: Not Yet Known
  *
  * Sentences are separated by a blank new line
  *
@@ -115,63 +115,55 @@ public class ConllWriter
             // Add named Entity to a token
             Map<String, String> tokenNamedEntityMap = new HashMap<String, String>();
             for (NamedEntity namedEntity : selectCovered(NamedEntity.class, sentence)) {
-                boolean sameChain = false; // maintain multiple span chains in BIO1 or BIO2
-            for (Token token : selectCovered(Token.class, sentence)) {
-                    if(namedEntity.getBegin()<=token.getBegin() && namedEntity.getEnd()>=token.getEnd()) {
-                        if (tokenNamedEntityMap.get("first-" + token.getAddress()) == null &!sameChain ) {
-                            tokenNamedEntityMap.put("first-" + token.getAddress(),
-                                    namedEntity.getValue());
+                boolean secondChain = false; // maintain multiple span chains in BIO1 or BIO2
+                String previopusNamedEntity1 = "O";
+                String previopusNamedEntity2 = "O";
+                for (Token token : selectCovered(Token.class, sentence)) {
+                    if (namedEntity.getBegin() <= token.getBegin()
+                            && namedEntity.getEnd() >= token.getEnd()) {
+                        if (tokenNamedEntityMap.get("first-" + token.getAddress()) == null
+                                & !secondChain) {
+                            if (previopusNamedEntity1.equals("O")) {
+                                tokenNamedEntityMap.put("first-" + token.getAddress(), "B_"
+                                        + namedEntity.getValue());
+                                previopusNamedEntity1 = "B_" + namedEntity.getValue();
+                            }
+                            else {
+                                tokenNamedEntityMap.put("first-" + token.getAddress(), "I_"
+                                        + namedEntity.getValue());
+                            }
                         }
-                        else  if (tokenNamedEntityMap.get("second-" + token.getAddress()) == null) {
-                            tokenNamedEntityMap.put("second-" + token.getAddress(),
-                                    namedEntity.getValue());
-                            sameChain = true;
+                        else if (tokenNamedEntityMap.get("second-" + token.getAddress()) == null) {
+                            if (previopusNamedEntity2.equals("O")) {
+                                tokenNamedEntityMap.put("second-" + token.getAddress(), "B_"
+                                        + namedEntity.getValue());
+                                previopusNamedEntity2 = "B_" + namedEntity.getValue();
+                            }
+                            else {
+                                tokenNamedEntityMap.put("second-" + token.getAddress(), "I_"
+                                        + namedEntity.getValue());
+                            }
+                            secondChain = true;
                         }
                     }
                 }
             }
-            String previopusNamedEntity1 = "O";
-            String previopusNamedEntity2 = "O";
+
             for (Token token : selectCovered(Token.class, sentence)) {
 
                 String lemma = token.getLemma() == null ? "_" : token.getLemma().getValue();
                 String pos = token.getPos() == null ? "_" : token.getPos().getPosValue();
                 String dependent = "_";
 
-                String firstNamedEntity =  tokenNamedEntityMap.get("first-" + token.getAddress());
-                if (firstNamedEntity==null){
-                    firstNamedEntity="O";
-                    previopusNamedEntity1 = "O";
+                String firstNamedEntity = tokenNamedEntityMap.get("first-" + token.getAddress());
+                if (firstNamedEntity == null) {
+                    firstNamedEntity = "O";
                 }
-                else if (previopusNamedEntity1.equals("O")){
-                    firstNamedEntity = "B_"+firstNamedEntity;
-                    previopusNamedEntity1 = firstNamedEntity;
-                }
-                else if(previopusNamedEntity1.substring(2).equals(firstNamedEntity)){
-                    firstNamedEntity = "I_"+firstNamedEntity;
-                    previopusNamedEntity1 = firstNamedEntity;
-                }
-                else{
-                    firstNamedEntity = "B_"+firstNamedEntity;
-                    previopusNamedEntity1 = firstNamedEntity;
-                }
+
                 // for Nested Named Entity
-                String secondNamedEntity =  tokenNamedEntityMap.get("second-" + token.getAddress());
-                if (secondNamedEntity==null){
-                    secondNamedEntity="O";
-                    previopusNamedEntity2 = "O";
-                }
-                else if (previopusNamedEntity2.equals("O")){
-                    secondNamedEntity = "B_"+secondNamedEntity;
-                    previopusNamedEntity2 = secondNamedEntity;
-                }
-                else if(previopusNamedEntity2.substring(2).equals(secondNamedEntity)){
-                    secondNamedEntity = "I_"+secondNamedEntity;
-                    previopusNamedEntity2 = secondNamedEntity;
-                }
-                else{
-                    secondNamedEntity = "B_"+secondNamedEntity;
-                    previopusNamedEntity2 = secondNamedEntity;
+                String secondNamedEntity = tokenNamedEntityMap.get("second-" + token.getAddress());
+                if (secondNamedEntity == null) {
+                    secondNamedEntity = "O";
                 }
 
                 if (dependentMap.get(token.getAddress()) != null) {
@@ -186,11 +178,13 @@ public class ConllWriter
                         && dependencyMap.get(dependentMap.get(token.getAddress())) != null
                         && j == dependencyMap.get(dependentMap.get(token.getAddress()))) {
                     conllSb.append(j + "\t" + token.getCoveredText() + "\t" + lemma + "\t" + pos
-                            + "\t" + firstNamedEntity+"\t"+secondNamedEntity+"\t" + 0 + "\t" + type + "\t_\t_\n");
+                            + "\t" + firstNamedEntity + "\t" + secondNamedEntity + "\t" + 0 + "\t"
+                            + type + "\t_\t_\n");
                 }
                 else {
                     conllSb.append(j + "\t" + token.getCoveredText() + "\t" + lemma + "\t" + pos
-                            + "\t" + firstNamedEntity+"\t"+secondNamedEntity+"\t" + dependent + "\t" + type + "\t_\t_\n");
+                            + "\t" + firstNamedEntity + "\t" + secondNamedEntity + "\t" + dependent
+                            + "\t" + type + "\t_\t_\n");
                 }
                 j++;
             }
