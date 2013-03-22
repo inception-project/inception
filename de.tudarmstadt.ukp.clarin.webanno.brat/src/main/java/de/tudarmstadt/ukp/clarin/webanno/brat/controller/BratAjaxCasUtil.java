@@ -55,6 +55,12 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.dkpro.core.tokit.BreakIteratorSegmenter;
 
+/**
+ * Contain Methods for updating CAS Objects directed from brat UI, different utility methods
+ * to process the CAS such getting the sentence address, determine page numbers,...
+ * @author Seid Muhie Yimam
+ *
+ */
 public class BratAjaxCasUtil
 {
     /**
@@ -949,7 +955,7 @@ public class BratAjaxCasUtil
         int i = 1;
         int address = 0;
         // Negative numbers entered for page number
-        if(aSentenceNumber<1) {
+        if (aSentenceNumber < 1) {
             return -2;
         }
         for (Sentence sentence : select(aJcas, Sentence.class)) {
@@ -961,7 +967,7 @@ public class BratAjaxCasUtil
             i++;
         }
         // out of sentence boundary
-        if(aSentenceNumber>i) {
+        if (aSentenceNumber > i) {
             return -2;
         }
         return address;

@@ -42,7 +42,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
-
+/**
+ * A wicket page for the Brat Annotation/Visualization page. Included components for pagination,
+ * annotation layer configuration, and Exporting document
+ * @author Seid Muhie Yimam
+ *
+ */
 public class AnnotationPage
     extends ApplicationPageBase
 {

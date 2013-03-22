@@ -29,7 +29,13 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.page.monitoring.MonitoringPage;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.project.ProjectPage;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
-
+/**
+ * A home page for WebAnno: <br> Based on the user's permission, it dispplays either {@link ProjectPage},
+ * d {@link AnnotationPage}, {@link CurationPage} or {@link monitoringPage }(since v.2.0)
+ * @author Richard Eckart de Castilho
+ * @author Seid Muhie Yimam
+ *
+ */
 public class WelcomePage
     extends ApplicationPageBase
 {

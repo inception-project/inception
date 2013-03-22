@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,7 +23,18 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
-
+/**
+ *  A persistence object for an annotation type. Currently, the types are: {@literal
+ *  'pos' as  'span',
+ *  'dependency' as 'relation',
+ *   'named entity' as 'span',
+ *   'coreference type' as 'span', and
+ *   'coreference' as 'relation'
+ *  }
+ * @author Seid Muhie Yimam
+ * @author Richard Eckart de Castilho
+ *
+ */
 @Entity
 @Table(name = "annotation_type", uniqueConstraints = { @UniqueConstraint(columnNames = { "type","name" }) })
 public class AnnotationType

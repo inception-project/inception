@@ -48,10 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 
 /**
- * The inner Class {@link AnnotationLayerDetailForm} has a constructor which receives a wicket
- * {@link ModalWindow} and add {@link CheckBoxMultipleChoice} component that holds all the
- * annotation Layers ({@link TagSet}s) in a project
- *
+ * Modal Window to configure {@link BratAnnotator#setAnnotationLayers(ArrayList), BratAnnotator#setWindowSize(int)...}
  * @author Seid Muhie Yimam
  * @author Richard Eckart de Castilho
  *
