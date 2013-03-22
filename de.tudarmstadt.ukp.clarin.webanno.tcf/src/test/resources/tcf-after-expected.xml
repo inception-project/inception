@@ -4,7 +4,10 @@
 <wl:D-Spin xmlns:ed="http://www.dspin.de/data/extdata" xmlns:lx="http://www.dspin.de/data/lexicon" xmlns:wl="http://www.dspin.de/data" xmlns:md="http://www.dspin.de/data/metadata" xmlns:tc="http://www.dspin.de/data/textcorpus" version="0.4">
     <md:MetaData/>
     <tc:TextCorpus lang="de">
-        <tc:text>Sie sind gegen den Euro , gegen Ausländer und Abtreibungen : Bei der Parlamentswahl in Finnland haben die &quot; Wahren Finnen &quot; riesige Gewinne erzielt . </tc:text>
+        <tc:text>Sie sind gegen den Euro, gegen Ausländer und Abtreibungen: Bei
+			der Parlamentswahl in Finnland haben die &quot;Wahren Finnen&quot; riesige
+			Gewinne erzielt.
+		</tc:text>
         <tc:tokens>
             <tc:token ID="t_0">Sie</tc:token>
             <tc:token ID="t_1">sind</tc:token>
@@ -34,7 +37,7 @@
             <tc:token ID="t_25">.</tc:token>
         </tc:tokens>
         <tc:sentences>
-            <tc:sentence tokenIDs="t_0 t_1 t_2 t_3 t_4 t_5 t_6 t_7 t_8 t_9 t_10 t_11 t_12 t_13 t_14 t_15 t_16 t_17 t_18 t_19 t_20 t_21 t_22 t_23 t_24 t_25"/>
+            <tc:sentence tokenIDs="t_1 t_2 t_3 t_4 t_5 t_6 t_7 t_8 t_9 t_10 t_11 t_12 t_13 t_14 t_15 t_16 t_17 t_18 t_19 t_20 t_21 t_22 t_23 t_24 t_25 t_26" ID="s1"/>
         </tc:sentences>
         <tc:lemmas>
             <tc:lemma ID="l_0" tokenIDs="t_0">Sie|sie|sie</tc:lemma>
@@ -92,10 +95,10 @@
             <tc:tag tokenIDs="t_24">VVPP</tc:tag>
             <tc:tag tokenIDs="t_25">$.</tc:tag>
         </tc:POStags>
-        <tc:references typetagset="BART" reltagset="t_uebaDZ">
+        <tc:references reltagset="TueBaDz">
             <tc:entity>
-                <tc:reference ID="rc_1" type="pro.per3" rel="cataphoric" target="rc_0" tokenIDs="t_0"/>
-                <tc:reference ID="rc_0" type="nam" tokenIDs="t_17 t_18 t_19 t_20 t_21"/>
+                <tc:reference ID="rc_2" type="pro.per3" rel="cataphoric" target="rc_3" tokenIDs="t_0"/>
+                <tc:reference ID="rc_3" type="nam" tokenIDs="t_17 t_18 t_19 t_20 t_21"/>
             </tc:entity>
         </tc:references>
     </tc:TextCorpus>
