@@ -205,233 +205,25 @@ public class BratAnnotator
                 }
 
                 else if (request.getParameterValue("action").toString().equals("getDocument")) {
-                    String collection = request.getParameterValue("collection").toString();
-                    String documentName = request.getParameterValue("document").toString();
-
-                    try {
-                        setAttributesForGetDocument(collection, documentName);
-                        result = controller.getDocument(windowSize, project, document, user,
-                                sentenceAddress, lastSentenceAddress, isDisplayLemmaSelected,
-                                annotationLayers);
-                    }
-                    catch (UIMAException e) {
-                        error("Error while Processing the CAS object " + ":"
-                                + ExceptionUtils.getRootCauseMessage(e));
-                    }
-                    catch (IOException e) {
-                        error("Error while getting/setting the annotation/source document from File "
-                                + ":" + ExceptionUtils.getRootCauseMessage(e));
-                    }
-                    catch (ClassNotFoundException e) {
-                        error("The Class name in the properties is not found " + ":"
-                                + ExceptionUtils.getRootCauseMessage(e));
-                    }
-                    catch (DataRetrievalFailureException ex) {
-                        error(ExceptionUtils.getRootCauseMessage(ex));
-                    }
+                    result = getDocument(request, user);
                 }
                 else if (request.getParameterValue("action").toString().equals("createSpan")) {
-
-                    String offsets = request.getParameterValue("offsets").toString();
-                    OffsetsList offsetList = null;
-                    try {
-                        offsetList = jsonConverter.getObjectMapper().readValue(offsets,
-                                OffsetsList.class);
-                    }
-                    catch (JsonParseException e1) {
-                        error("Inavlid Json Object sent from Brat :"
-                                + ExceptionUtils.getRootCauseMessage(e1));
-                    }
-                    catch (JsonMappingException e1) {
-                        error("Inavlid Json Object sent from Brat :"
-                                + ExceptionUtils.getRootCauseMessage(e1));
-                    }
-                    catch (IOException e1) {
-                        error("Inavlid Json Object sent from Brat :"
-                                + ExceptionUtils.getRootCauseMessage(e1));
-                    }
-                    String type = request.getParameterValue("type").toString();
-
-                    try {
-                        OffsetsList offsetLists = jsonConverter.getObjectMapper().readValue(
-                                offsets, OffsetsList.class);
-                        int start = offsetLists.get(0).getBegin();
-                        int end = offsetLists.get(0).getEnd();
-                        JCas jCas = getCas(project, user, document);
-                        int annotationOffsetStart = BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
-                                sentenceAddress) + start;
-                        int annotationOffsetEnd = BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
-                                sentenceAddress) + end;
-
-                        result = controller.createSpan(windowSize, project, document, user,
-                                sentenceAddress, lastSentenceAddress, annotationOffsetStart,
-                                annotationOffsetEnd, type, isDisplayLemmaSelected,
-                                annotationLayers, jCas, scrollPage);
-                        if (scrollPage) {
-                            setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(jCas,
-                                    sentenceAddress, annotationOffsetStart, project, document,
-                                    windowSize));
-                        }
-                    }
-                    catch (JsonParseException e) {
-                        error("Error while parsing the JSON value sent from Brat " + ":"
-                                + ExceptionUtils.getRootCauseMessage(e));
-                    }
-                    catch (JsonMappingException e) {
-                        error("Error while Mapping JSON value to OffsetsLists " + ":"
-                                + ExceptionUtils.getRootCauseMessage(e));
-                    }
-                    catch (UIMAException e) {
-                        error("Error while Processing the CAS object " + ":"
-                                + ExceptionUtils.getRootCauseMessage(e));
-                    }
-                    catch (IOException e) {
-                        error("Error while getting/setting the annotation/source document from File "
-                                + ":" + ExceptionUtils.getRootCauseMessage(e));
-                    }
-                    catch (DataRetrievalFailureException ex) {
-                        error(ExceptionUtils.getRootCauseMessage(ex));
-                    }
+                    result = createSpan(request, user);
                 }
 
                 else if (request.getParameterValue("action").toString().equals("createArc")) {
-                    String origin = request.getParameterValue("origin").toString();
-                    String target = request.getParameterValue("target").toString();
-                    String type = request.getParameterValue("type").toString();
-
-                    try {
-                        JCas jCas = getCas(project, user, document);
-                        int annotationOffsetStart = BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
-                                Integer.parseInt(origin));
-                        result = controller.createArc(windowSize, project, document, user,
-                                sentenceAddress, lastSentenceAddress, annotationOffsetStart,
-                                origin, target, type, isDisplayLemmaSelected, annotationLayers,
-                                windowSize, jCas, scrollPage);
-                        if (scrollPage) {
-                            setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(jCas,
-                                    sentenceAddress, annotationOffsetStart, project, document,
-                                    windowSize));
-                        }
-                    }
-                    catch (UIMAException e) {
-                        error("Error while Processing the CAS object " + ":"
-                                + ExceptionUtils.getRootCauseMessage(e));
-                    }
-                    catch (IOException e) {
-                        error("Error while getting/setting the annotation/source document from File "
-                                + ":" + ExceptionUtils.getRootCauseMessage(e));
-                    }
+                    result = createArc(request, user);
                 }
 
                 else if (request.getParameterValue("action").toString().equals("reverseArc")) {
-                    String origin = request.getParameterValue("origin").toString();
-                    String target = request.getParameterValue("target").toString();
-                    String type = request.getParameterValue("type").toString();
-
-                    try {
-                        JCas jCas = getCas(project, user, document);
-                        int annotationOffsetStart = BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
-                                Integer.parseInt(origin));
-
-                        String annotationType = type.substring(0,
-                                type.indexOf(AnnotationType.PREFIX) + 1);
-                        if (annotationType.equals(AnnotationType.POS_PREFIX)) {
-                            result = controller.reverseArc(windowSize, project, document, user,
-                                    sentenceAddress, lastSentenceAddress, annotationOffsetStart,
-                                    origin, target, type, isDisplayLemmaSelected, annotationLayers,
-                                    windowSize, jCas, scrollPage);
-                            if (scrollPage) {
-                                setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(jCas,
-                                        sentenceAddress, annotationOffsetStart, project, document,
-                                        windowSize));
-                            }
-                        }
-                    }
-                    catch (UIMAException e) {
-                        error("Error while Processing the CAS object " + ":"
-                                + ExceptionUtils.getRootCauseMessage(e));
-                    }
-                    catch (IOException e) {
-                        error("Error while getting/setting the annotation/source document from File "
-                                + ":" + ExceptionUtils.getRootCauseMessage(e));
-                    }
+                    result = reverseArc(request, user);
                 }
-
                 else if (request.getParameterValue("action").toString().equals("deleteSpan")) {
-                    String offsets = request.getParameterValue("offsets").toString();
-                    String type = request.getParameterValue("type").toString();
-                    String id = request.getParameterValue("id").toString();
-
-                    try {
-                        OffsetsList offsetLists = jsonConverter.getObjectMapper().readValue(
-                                offsets, OffsetsList.class);
-                        int start = offsetLists.get(0).getBegin();
-                        int end = offsetLists.get(0).getEnd();
-                        JCas jCas = getCas(project, user, document);
-                        int annotationOffsetStart = BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
-                                sentenceAddress) + start;
-                        int annotationOffsetEnd = BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
-                                sentenceAddress) + end;
-
-                        result = controller.deleteSpan(windowSize, project, document, user,
-                                sentenceAddress, lastSentenceAddress, annotationOffsetStart,
-                                annotationOffsetEnd, type, id, isDisplayLemmaSelected,
-                                annotationLayers, windowSize, jCas, scrollPage);
-                        if (scrollPage) {
-                            setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(jCas,
-                                    sentenceAddress, annotationOffsetStart, project, document,
-                                    windowSize));
-                        }
-
-                    }
-                    catch (JsonParseException e) {
-                        error("Error while parsing the JSON value sent from Brat " + ":"
-                                + ExceptionUtils.getRootCauseMessage(e));
-                    }
-                    catch (JsonMappingException e) {
-                        error("Error while Mapping JSON value to OffsetsLists " + ":"
-                                + ExceptionUtils.getRootCauseMessage(e));
-                    }
-                    catch (UIMAException e) {
-                        error("Error while Processing the CAS object " + ":"
-                                + ExceptionUtils.getRootCauseMessage(e));
-                    }
-                    catch (IOException e) {
-                        error("Error while getting/setting the annotation/source document from File "
-                                + ":" + ExceptionUtils.getRootCauseMessage(e));
-                    }
+                    result = deleteSpan(request, user);
                 }
 
                 else if (request.getParameterValue("action").toString().equals("deleteArc")) {
-
-                    String origin = request.getParameterValue("origin").toString();
-                    String target = request.getParameterValue("target").toString();
-                    String type = request.getParameterValue("type").toString();
-
-                    try {
-                        JCas jCas = getCas(project, user, document);
-                        int annotationOffsetStart = BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
-                                Integer.parseInt(origin));
-
-                        result = controller.deleteArc(windowSize, project, document, user,
-                                sentenceAddress, lastSentenceAddress, annotationOffsetStart,
-                                origin, target, type, isDisplayLemmaSelected, annotationLayers,
-                                windowSize, jCas, scrollPage);
-                        if (scrollPage) {
-                            setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(jCas,
-                                    sentenceAddress, annotationOffsetStart, project, document,
-                                    windowSize));
-                        }
-
-                    }
-                    catch (UIMAException e) {
-                        error("Error while Processing the CAS object " + ":"
-                                + ExceptionUtils.getRootCauseMessage(e));
-                    }
-                    catch (IOException e) {
-                        error("Error while getting/setting the annotation/source document from File "
-                                + ":" + ExceptionUtils.getRootCauseMessage(e));
-                    }
+                    result = deleteArc(request, user);
                 }
 
                 StringWriter out = new StringWriter();
@@ -491,6 +283,259 @@ public class BratAnnotator
         // This doesn't work with head.js because the onLoad event is fired before all the
         // JavaScript references are loaded.
         aResponse.renderOnLoadJavaScript("\n" + StringUtils.join(script, "\n"));
+    }
+
+    private Object getDocument(IRequestParameters aRequest, User aUser)
+    {
+        Object result = null;
+        BratAjaxCasController controller = new BratAjaxCasController(jsonConverter, repository,
+                annotationService);
+        String collection = aRequest.getParameterValue("collection").toString();
+        String documentName = aRequest.getParameterValue("document").toString();
+
+        try {
+            setAttributesForGetDocument(collection, documentName);
+            result = controller.getDocument(windowSize, project, document, aUser, sentenceAddress,
+                    lastSentenceAddress, isDisplayLemmaSelected, annotationLayers);
+        }
+        catch (UIMAException e) {
+            error("Error while Processing the CAS object " + ":"
+                    + ExceptionUtils.getRootCauseMessage(e));
+        }
+        catch (IOException e) {
+            error("Error while getting/setting the annotation/source document from File " + ":"
+                    + ExceptionUtils.getRootCauseMessage(e));
+        }
+        catch (ClassNotFoundException e) {
+            error("The Class name in the properties is not found " + ":"
+                    + ExceptionUtils.getRootCauseMessage(e));
+        }
+        catch (DataRetrievalFailureException ex) {
+            error(ExceptionUtils.getRootCauseMessage(ex));
+        }
+        return result;
+    }
+
+    private Object createSpan(IRequestParameters aRequest, User aUser)
+    {
+
+        Object result = null;
+        BratAjaxCasController controller = new BratAjaxCasController(jsonConverter, repository,
+                annotationService);
+        String offsets = aRequest.getParameterValue("offsets").toString();
+        OffsetsList offsetList = null;
+        try {
+            offsetList = jsonConverter.getObjectMapper().readValue(offsets, OffsetsList.class);
+        }
+        catch (JsonParseException e1) {
+            error("Inavlid Json Object sent from Brat :" + ExceptionUtils.getRootCauseMessage(e1));
+        }
+        catch (JsonMappingException e1) {
+            error("Inavlid Json Object sent from Brat :" + ExceptionUtils.getRootCauseMessage(e1));
+        }
+        catch (IOException e1) {
+            error("Inavlid Json Object sent from Brat :" + ExceptionUtils.getRootCauseMessage(e1));
+        }
+        String type = aRequest.getParameterValue("type").toString();
+
+        try {
+            OffsetsList offsetLists = jsonConverter.getObjectMapper().readValue(offsets,
+                    OffsetsList.class);
+            int start = offsetLists.get(0).getBegin();
+            int end = offsetLists.get(0).getEnd();
+            JCas jCas = getCas(project, aUser, document);
+            int annotationOffsetStart = BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
+                    sentenceAddress) + start;
+            int annotationOffsetEnd = BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
+                    sentenceAddress) + end;
+
+            result = controller.createSpan(windowSize, project, document, aUser, sentenceAddress,
+                    lastSentenceAddress, annotationOffsetStart, annotationOffsetEnd, type,
+                    isDisplayLemmaSelected, annotationLayers, jCas, scrollPage);
+            if (scrollPage) {
+                setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(jCas, sentenceAddress,
+                        annotationOffsetStart, project, document, windowSize));
+            }
+        }
+        catch (JsonParseException e) {
+            error("Error while parsing the JSON value sent from Brat " + ":"
+                    + ExceptionUtils.getRootCauseMessage(e));
+        }
+        catch (JsonMappingException e) {
+            error("Error while Mapping JSON value to OffsetsLists " + ":"
+                    + ExceptionUtils.getRootCauseMessage(e));
+        }
+        catch (UIMAException e) {
+            error("Error while Processing the CAS object " + ":"
+                    + ExceptionUtils.getRootCauseMessage(e));
+        }
+        catch (IOException e) {
+            error("Error while getting/setting the annotation/source document from File " + ":"
+                    + ExceptionUtils.getRootCauseMessage(e));
+        }
+        catch (DataRetrievalFailureException ex) {
+            error(ExceptionUtils.getRootCauseMessage(ex));
+        }
+        return result;
+    }
+
+    private Object createArc(IRequestParameters aRequest, User aUser)
+    {
+
+        Object result = null;
+        BratAjaxCasController controller = new BratAjaxCasController(jsonConverter, repository,
+                annotationService);
+
+        String origin = aRequest.getParameterValue("origin").toString();
+        String target = aRequest.getParameterValue("target").toString();
+        String type = aRequest.getParameterValue("type").toString();
+
+        try {
+            JCas jCas = getCas(project, aUser, document);
+            int annotationOffsetStart = BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
+                    Integer.parseInt(origin));
+            result = controller.createArc(windowSize, project, document, aUser, sentenceAddress,
+                    lastSentenceAddress, annotationOffsetStart, origin, target, type,
+                    isDisplayLemmaSelected, annotationLayers, windowSize, jCas, scrollPage);
+            if (scrollPage) {
+                setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(jCas, sentenceAddress,
+                        annotationOffsetStart, project, document, windowSize));
+            }
+        }
+        catch (UIMAException e) {
+            error("Error while Processing the CAS object " + ":"
+                    + ExceptionUtils.getRootCauseMessage(e));
+        }
+        catch (IOException e) {
+            error("Error while getting/setting the annotation/source document from File " + ":"
+                    + ExceptionUtils.getRootCauseMessage(e));
+        }
+        return result;
+    }
+
+    private Object reverseArc(IRequestParameters aRequest, User aUser)
+    {
+
+        Object result = null;
+        BratAjaxCasController controller = new BratAjaxCasController(jsonConverter, repository,
+                annotationService);
+
+        String origin = aRequest.getParameterValue("origin").toString();
+        String target = aRequest.getParameterValue("target").toString();
+        String type = aRequest.getParameterValue("type").toString();
+
+        try {
+            JCas jCas = getCas(project, aUser, document);
+            int annotationOffsetStart = BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
+                    Integer.parseInt(origin));
+
+            String annotationType = type.substring(0, type.indexOf(AnnotationType.PREFIX) + 1);
+            if (annotationType.equals(AnnotationType.POS_PREFIX)) {
+                result = controller.reverseArc(windowSize, project, document, aUser,
+                        sentenceAddress, lastSentenceAddress, annotationOffsetStart, origin,
+                        target, type, isDisplayLemmaSelected, annotationLayers, windowSize, jCas,
+                        scrollPage);
+                if (scrollPage) {
+                    setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(jCas,
+                            sentenceAddress, annotationOffsetStart, project, document, windowSize));
+                }
+            }
+        }
+        catch (UIMAException e) {
+            error("Error while Processing the CAS object " + ":"
+                    + ExceptionUtils.getRootCauseMessage(e));
+        }
+        catch (IOException e) {
+            error("Error while getting/setting the annotation/source document from File " + ":"
+                    + ExceptionUtils.getRootCauseMessage(e));
+        }
+        return result;
+    }
+
+    private Object deleteSpan(IRequestParameters aRequest, User aUser)
+    {
+
+        Object result = null;
+        BratAjaxCasController controller = new BratAjaxCasController(jsonConverter, repository,
+                annotationService);
+
+        String offsets = aRequest.getParameterValue("offsets").toString();
+        String type = aRequest.getParameterValue("type").toString();
+        String id = aRequest.getParameterValue("id").toString();
+
+        try {
+            OffsetsList offsetLists = jsonConverter.getObjectMapper().readValue(offsets,
+                    OffsetsList.class);
+            int start = offsetLists.get(0).getBegin();
+            int end = offsetLists.get(0).getEnd();
+            JCas jCas = getCas(project, aUser, document);
+            int annotationOffsetStart = BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
+                    sentenceAddress) + start;
+            int annotationOffsetEnd = BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
+                    sentenceAddress) + end;
+
+            result = controller.deleteSpan(windowSize, project, document, aUser, sentenceAddress,
+                    lastSentenceAddress, annotationOffsetStart, annotationOffsetEnd, type, id,
+                    isDisplayLemmaSelected, annotationLayers, windowSize, jCas, scrollPage);
+            if (scrollPage) {
+                setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(jCas, sentenceAddress,
+                        annotationOffsetStart, project, document, windowSize));
+            }
+
+        }
+        catch (JsonParseException e) {
+            error("Error while parsing the JSON value sent from Brat " + ":"
+                    + ExceptionUtils.getRootCauseMessage(e));
+        }
+        catch (JsonMappingException e) {
+            error("Error while Mapping JSON value to OffsetsLists " + ":"
+                    + ExceptionUtils.getRootCauseMessage(e));
+        }
+        catch (UIMAException e) {
+            error("Error while Processing the CAS object " + ":"
+                    + ExceptionUtils.getRootCauseMessage(e));
+        }
+        catch (IOException e) {
+            error("Error while getting/setting the annotation/source document from File " + ":"
+                    + ExceptionUtils.getRootCauseMessage(e));
+        }
+        return result;
+    }
+
+    private Object deleteArc(IRequestParameters aRequest, User aUser)
+    {
+
+        Object result = null;
+        BratAjaxCasController controller = new BratAjaxCasController(jsonConverter, repository,
+                annotationService);
+
+        String origin = aRequest.getParameterValue("origin").toString();
+        String target = aRequest.getParameterValue("target").toString();
+        String type = aRequest.getParameterValue("type").toString();
+
+        try {
+            JCas jCas = getCas(project, aUser, document);
+            int annotationOffsetStart = BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
+                    Integer.parseInt(origin));
+
+            result = controller.deleteArc(windowSize, project, document, aUser, sentenceAddress,
+                    lastSentenceAddress, annotationOffsetStart, origin, target, type,
+                    isDisplayLemmaSelected, annotationLayers, windowSize, jCas, scrollPage);
+            if (scrollPage) {
+                setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(jCas, sentenceAddress,
+                        annotationOffsetStart, project, document, windowSize));
+            }
+
+        }
+        catch (UIMAException e) {
+            error("Error while Processing the CAS object " + ":"
+                    + ExceptionUtils.getRootCauseMessage(e));
+        }
+        catch (IOException e) {
+            error("Error while getting/setting the annotation/source document from File " + ":"
+                    + ExceptionUtils.getRootCauseMessage(e));
+        }
+        return result;
     }
 
     /**
