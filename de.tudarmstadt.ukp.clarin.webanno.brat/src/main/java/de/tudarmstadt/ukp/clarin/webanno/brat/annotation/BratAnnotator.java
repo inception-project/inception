@@ -23,6 +23,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
 
+import javax.persistence.NoResultException;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
@@ -205,25 +207,36 @@ public class BratAnnotator
                 }
 
                 else if (request.getParameterValue("action").toString().equals("getDocument")) {
+                    String collection = request.getParameterValue("collection").toString();
+                    String documentName = request.getParameterValue("document").toString();
+                    if (isDocumentOpenedFirstTime(collection, documentName)) {
+                        info("Document is opened for the first time. " + "Initial conversion from <"
+                                + document.getFormat() + "> has been performed.");
+                    }
                     result = getDocument(request, user);
                 }
                 else if (request.getParameterValue("action").toString().equals("createSpan")) {
                     result = createSpan(request, user);
+                    info("Annotation ["+request.getParameterValue("type").toString()+"]has been created");
                 }
 
                 else if (request.getParameterValue("action").toString().equals("createArc")) {
                     result = createArc(request, user);
+                    info("Annotation ["+request.getParameterValue("type").toString()+"]has been created");
                 }
 
                 else if (request.getParameterValue("action").toString().equals("reverseArc")) {
                     result = reverseArc(request, user);
+                    info("Annotation ["+request.getParameterValue("type").toString()+"]has been reversed");
                 }
                 else if (request.getParameterValue("action").toString().equals("deleteSpan")) {
                     result = deleteSpan(request, user);
+                    info("Annotation ["+request.getParameterValue("type").toString()+"]has been deleted");
                 }
 
                 else if (request.getParameterValue("action").toString().equals("deleteArc")) {
                     result = deleteArc(request, user);
+                    info("Annotation ["+request.getParameterValue("type").toString()+"]has been deleted");
                 }
 
                 StringWriter out = new StringWriter();
@@ -294,7 +307,9 @@ public class BratAnnotator
         String documentName = aRequest.getParameterValue("document").toString();
 
         try {
-            setAttributesForGetDocument(collection, documentName);
+            {
+                setAttributesForGetDocument(collection, documentName);
+            }
             result = controller.getDocument(windowSize, project, document, aUser, sentenceAddress,
                     lastSentenceAddress, isDisplayLemmaSelected, annotationLayers);
         }
@@ -551,10 +566,6 @@ public class BratAnnotator
 
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = repository.getUser(username);
-
-        setProject(repository.getProject(aProjectName.replace("/", "")));
-        setDocument(repository.getSourceDocument(aDocumentName, project));
-
         if (sentenceAddress == -1 || document.getId() != currentDocumentId
                 || project.getId() != currentprojectId) {
 
@@ -614,6 +625,24 @@ public class BratAnnotator
         }
     }
 
+    boolean isDocumentOpenedFirstTime(String aCollection, String adocumentName)
+    {
+
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = repository.getUser(username);
+
+        setProject(repository.getProject(aCollection.replace("/", "")));
+        setDocument(repository.getSourceDocument(adocumentName, project));
+
+        try {
+            repository.getAnnotationDocument(document, user);
+            return false;
+        }
+        catch (NoResultException e) {
+            return true;
+        }
+    }
+
     private JCas getCas(Project aProject, User user, SourceDocument aDocument)
         throws UIMAException
     {
@@ -638,6 +667,28 @@ public class BratAnnotator
             throw ex;
         }
         return jCas;
+    }
+
+    private void setAnnotationPreference(AnnotationPreference aPreference, String aUsername)
+        throws BeansException, FileNotFoundException, IOException
+    {
+        BeanWrapper wrapper = new BeanWrapperImpl(aPreference);
+        for (Entry<Object, Object> entry : repository.loadUserSettings(aUsername, project,
+                "annotation").entrySet()) {
+            String propertyName = entry.getKey().toString();
+            int index = propertyName.lastIndexOf(".");
+            propertyName = propertyName.substring(index + 1);
+            if (wrapper.isWritableProperty(propertyName)) {
+                List<String> value = Arrays.asList(entry.getValue().toString().replace("[", "")
+                        .replace("]", "").split(","));
+                if (value.size() > 1) {
+                    wrapper.setPropertyValue(propertyName, value);
+                }
+                else {
+                    wrapper.setPropertyValue(propertyName, entry.getValue());
+                }
+            }
+        }
     }
 
     public Project getProject()
@@ -728,27 +779,5 @@ public class BratAnnotator
     public void setScrollPage(boolean aMovePage)
     {
         scrollPage = aMovePage;
-    }
-
-    private void setAnnotationPreference(AnnotationPreference aPreference, String aUsername)
-        throws BeansException, FileNotFoundException, IOException
-    {
-        BeanWrapper wrapper = new BeanWrapperImpl(aPreference);
-        for (Entry<Object, Object> entry : repository.loadUserSettings(aUsername, project,
-                "annotation").entrySet()) {
-            String propertyName = entry.getKey().toString();
-            int index = propertyName.lastIndexOf(".");
-            propertyName = propertyName.substring(index + 1);
-            if (wrapper.isWritableProperty(propertyName)) {
-                List<String> value = Arrays.asList(entry.getValue().toString().replace("[", "")
-                        .replace("]", "").split(","));
-                if (value.size() > 1) {
-                    wrapper.setPropertyValue(propertyName, value);
-                }
-                else {
-                    wrapper.setPropertyValue(propertyName, entry.getValue());
-                }
-            }
-        }
     }
 }
