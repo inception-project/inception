@@ -19,6 +19,7 @@ import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.uimafit.util.JCasUtil.select;
 import static org.uimafit.util.JCasUtil.selectCovered;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
@@ -71,7 +72,7 @@ public class ConllWriter
         OutputStream docOS = null;
         try {
             docOS = getOutputStream(aJCas, filenameSuffix);
-            IOUtils.write(convertToConnl(aJCas), docOS, encoding);
+           convertToConll(aJCas, docOS, encoding);
         }
         catch (Exception e) {
             throw new AnalysisEngineProcessException(e);
@@ -82,9 +83,9 @@ public class ConllWriter
 
     }
 
-    private String convertToConnl(JCas aJCas)
+    private void convertToConll(JCas aJCas, OutputStream aOs, String aEncoding ) throws IOException
     {
-        StringBuilder conllSb = new StringBuilder();
+      //  StringBuilder conllSb = new StringBuilder();
         for (Sentence sentence : select(aJCas, Sentence.class)) {
             // Map of token and the dependent (token address used as a Key)
             Map<Integer, Integer> dependentMap = new HashMap<Integer, Integer>();
@@ -177,20 +178,19 @@ public class ConllWriter
                 if (dependentMap.get(token.getAddress()) != null
                         && dependencyMap.get(dependentMap.get(token.getAddress())) != null
                         && j == dependencyMap.get(dependentMap.get(token.getAddress()))) {
-                    conllSb.append(j + "\t" + token.getCoveredText() + "\t" + lemma + "\t" + pos
+                    IOUtils.write(j + "\t" + token.getCoveredText() + "\t" + lemma + "\t" + pos
                             + "\t" + firstNamedEntity + "\t" + secondNamedEntity + "\t" + 0 + "\t"
-                            + type + "\t_\t_\n");
+                            + type + "\t_\t_\n", aOs, aEncoding);
                 }
                 else {
-                    conllSb.append(j + "\t" + token.getCoveredText() + "\t" + lemma + "\t" + pos
+                    IOUtils.write(j + "\t" + token.getCoveredText() + "\t" + lemma + "\t" + pos
                             + "\t" + firstNamedEntity + "\t" + secondNamedEntity + "\t" + dependent
-                            + "\t" + type + "\t_\t_\n");
+                            + "\t" + type + "\t_\t_\n",  aOs, aEncoding);
                 }
                 j++;
             }
-            conllSb.append("\n");
+            IOUtils.write("\n", aOs, aEncoding);
         }
 
-        return conllSb.toString().trim();
     }
 }
