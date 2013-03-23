@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.NoResultException;
-import javax.servlet.http.HttpSession;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -57,8 +56,6 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
-import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -318,15 +315,6 @@ public class ProjectPage
                 @Override
                 public void onSubmit()
                 {
-
-                    HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())
-                            .getContainerRequest().getSession();
-                    // Maintain already loaded project and selected Users
-                    // Hence Illegal Project modification (limited privilege, illegal project
-                    // name,...) preserves the original one
-                    Project selectedProject = (Project) session.getAttribute("project");
-                    @SuppressWarnings("unchecked")
-                    Set<User> selectedusers = (Set<User>) session.getAttribute("selectedusers");
                     Project project = projectDetailForm.getModelObject();
 
                     // If only the project is new!
@@ -362,8 +350,16 @@ public class ProjectPage
                     else {
                         // Invalid Project name, restore
                         if (!isProjectNameValid(project.getName())) {
-                            project.setName(selectedProject.getName());
-                            project.setUsers(selectedusers);
+
+                            // Maintain already loaded project and selected Users
+                            // Hence Illegal Project modification (limited privilege, illegal project
+                            // name,...) preserves the original one
+
+                            String oldProjectName = projectRepository.getProject(project.getId()).getName();
+                            List<User> selectedusers = projectRepository.listProjectUsers(project);
+
+                            project.setName(oldProjectName);
+                            project.setUsers(new HashSet<User>(selectedusers));
                             error("Project name shouldn't contain characters such as /\\*?&!$+[^]");
                             LOG.error("Project name shouldn't contain characters such as /\\*?&!$+[^]");
                         }

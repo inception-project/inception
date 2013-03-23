@@ -219,6 +219,11 @@ public interface RepositoryService
     Project getProject(String name);
 
     /**
+     * Get a project by its id.
+     */
+
+    Project getProject(long id);
+    /**
      * Write this {@code content} of the guideline file in the project;
      * @param project
      * @return
@@ -312,13 +317,19 @@ public interface RepositoryService
     List<Project> listProjects();
 
     /**
-     * list users in a project. Hence, only users in a project can annotate documents
+     * list user names in a project. Hence, only users in a project can annotate documents
      *
      * @param project
      *            The project where users are member of
      * @return returns list of {@link User}s in a project
      */
-    List<String> listProjectUsers(Project project);
+    List<String> listProjectUserNames(Project project);
+    /**
+     * List {@link User} objects in a project
+     * @param project
+     * @return
+     */
+    List<User> listProjectUsers(Project project);
 
     /**
      * List all source documents in a project. The source documents are the original TCF documents

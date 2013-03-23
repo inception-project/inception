@@ -516,9 +516,11 @@ public class RepositoryServiceDbData
     }
 
     @Override
-   public  File getGuideline(Project aProject, String aFilename){
-       return new File(dir.getAbsolutePath()+PROJECT+aProject.getId()+GUIDELINE+aFilename);
-   }
+    public File getGuideline(Project aProject, String aFilename)
+    {
+        return new File(dir.getAbsolutePath() + PROJECT + aProject.getId() + GUIDELINE + aFilename);
+    }
+
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public String getPermisionLevel(User aUser, Project aProject)
@@ -560,13 +562,20 @@ public class RepositoryServiceDbData
                 .setParameter("name", aName).getSingleResult();
     }
 
+    public Project getProject(long aId)
+    {
+        return entityManager.createQuery("FROM Project WHERE id = :id", Project.class)
+                .setParameter("id", aId).getSingleResult();
+    }
+
     @Override
     public void writeGuideline(Project aProject, File aContent, String aFileName)
         throws IOException
     {
         String guidelinePath = dir.getAbsolutePath() + PROJECT + aProject.getId() + GUIDELINE;
         FileUtils.forceMkdir(new File(guidelinePath));
-        copyLarge(new FileInputStream(aContent), new FileOutputStream(new File(guidelinePath + aFileName)));
+        copyLarge(new FileInputStream(aContent), new FileOutputStream(new File(guidelinePath
+                + aFileName)));
     }
 
     @Override
@@ -660,13 +669,22 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public List<String> listProjectUsers(Project aproject)
+    public List<String> listProjectUserNames(Project aproject)
     {
         List<String> users = entityManager
                 .createQuery(
                         "SELECT i.username FROM Project s JOIN s.users i WHERE s.id = :projectId",
                         String.class).setParameter("projectId", aproject.getId()).getResultList();
         return users;
+    }
+
+    @Override
+    @Transactional
+    public List<User> listProjectUsers(Project aproject)
+    {
+        return entityManager
+                .createQuery("SELECT i FROM Project s JOIN s.users i WHERE s.id = :projectId",
+                        User.class).setParameter("projectId", aproject.getId()).getResultList();
     }
 
     @Override

@@ -67,7 +67,7 @@ public class WelcomePage
         };
         for (Project project : projectRepository.listProjects()) {
 
-            if (projectRepository.listProjectUsers(project).contains(username)
+            if (projectRepository.listProjectUserNames(project).contains(username)
                     && ApplicationUtils.isProjectAdmin(project, projectRepository, user)) {
                 add(projectSettings);
                 projectSettingAdded = true;
@@ -99,7 +99,7 @@ public class WelcomePage
         };
         for (Project project : projectRepository.listProjects()) {
 
-            if (projectRepository.listProjectUsers(project).contains(username)
+            if (projectRepository.listProjectUserNames(project).contains(username)
                     && ApplicationUtils.isCurator(project, projectRepository, user)) {
                 add(curation);
                 curatorAdded = true;
@@ -131,7 +131,7 @@ public class WelcomePage
         boolean memberAdded = false;
         for (Project project : projectRepository.listProjects()) {
 
-            if (projectRepository.listProjectUsers(project).contains(username)
+            if (projectRepository.listProjectUserNames(project).contains(username)
                     && ApplicationUtils.isMember(project, projectRepository, user)) {
                 add(annotation);
                 memberAdded = true;
@@ -163,7 +163,7 @@ public class WelcomePage
         };
         for (Project project : projectRepository.listProjects()) {
 
-            if (projectRepository.listProjectUsers(project).contains(username)
+            if (projectRepository.listProjectUserNames(project).contains(username)
                     && ApplicationUtils.isProjectAdmin(project, projectRepository, user)) {
                 add(monitoring);
                 monitoringAdded = true;

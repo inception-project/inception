@@ -243,7 +243,7 @@ public class BratAjaxCasController
         User user = repository.getUser(username);
         if (aCollection.equals("/")) {
             for (Project projects : repository.listProjects()) {
-                if (repository.listProjectUsers(projects).contains(username)
+                if (repository.listProjectUserNames(projects).contains(username)
                         && ApplicationUtils.isMember(projects, repository, user)) {
                     info.addCollection(projects.getName());
                 }
