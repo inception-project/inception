@@ -209,34 +209,45 @@ public class BratAnnotator
                 else if (request.getParameterValue("action").toString().equals("getDocument")) {
                     String collection = request.getParameterValue("collection").toString();
                     String documentName = request.getParameterValue("document").toString();
-                    if (isDocumentOpenedFirstTime(collection, documentName)) {
-                        info("Document is opened for the first time. " + "Initial conversion from <"
-                                + document.getFormat() + "> has been performed.");
-                    }
+
+                    boolean firstTimeDocumentOpened = isDocumentOpenedFirstTime(collection,
+                            documentName);
+
                     result = getDocument(request, user);
+
+                    if (firstTimeDocumentOpened) {
+                        info("Document is opened for the first time. "
+                                + "Initial conversion from <" + document.getFormat()
+                                + "> has been performed.");
+                    }
                 }
                 else if (request.getParameterValue("action").toString().equals("createSpan")) {
                     result = createSpan(request, user);
-                    info("Annotation ["+request.getParameterValue("type").toString()+"]has been created");
+                    info("Annotation [" + request.getParameterValue("type").toString()
+                            + "]has been created");
                 }
 
                 else if (request.getParameterValue("action").toString().equals("createArc")) {
                     result = createArc(request, user);
-                    info("Annotation ["+request.getParameterValue("type").toString()+"]has been created");
+                    info("Annotation [" + request.getParameterValue("type").toString()
+                            + "]has been created");
                 }
 
                 else if (request.getParameterValue("action").toString().equals("reverseArc")) {
                     result = reverseArc(request, user);
-                    info("Annotation ["+request.getParameterValue("type").toString()+"]has been reversed");
+                    info("Annotation [" + request.getParameterValue("type").toString()
+                            + "]has been reversed");
                 }
                 else if (request.getParameterValue("action").toString().equals("deleteSpan")) {
                     result = deleteSpan(request, user);
-                    info("Annotation ["+request.getParameterValue("type").toString()+"]has been deleted");
+                    info("Annotation [" + request.getParameterValue("type").toString()
+                            + "]has been deleted");
                 }
 
                 else if (request.getParameterValue("action").toString().equals("deleteArc")) {
                     result = deleteArc(request, user);
-                    info("Annotation ["+request.getParameterValue("type").toString()+"]has been deleted");
+                    info("Annotation [" + request.getParameterValue("type").toString()
+                            + "]has been deleted");
                 }
 
                 StringWriter out = new StringWriter();
