@@ -108,6 +108,8 @@ public class BratAnnotator
     private long currentDocumentId;
     private long currentprojectId;
 
+    private transient JCas jCas;
+
     public BratAnnotator(String id, IModel<?> aModel)
     {
         super(id, aModel);
@@ -369,7 +371,7 @@ public class BratAnnotator
                     OffsetsList.class);
             int start = offsetLists.get(0).getBegin();
             int end = offsetLists.get(0).getEnd();
-            JCas jCas = getCas(project, aUser, document);
+          //  JCas jCas = getCas(project, aUser, document);
             int annotationOffsetStart = BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
                     sentenceAddress) + start;
             int annotationOffsetEnd = BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
@@ -417,7 +419,7 @@ public class BratAnnotator
         String type = aRequest.getParameterValue("type").toString();
 
         try {
-            JCas jCas = getCas(project, aUser, document);
+          //  JCas jCas = getCas(project, aUser, document);
             int annotationOffsetStart = BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
                     Integer.parseInt(origin));
             result = controller.createArc(windowSize, project, document, aUser, sentenceAddress,
@@ -451,7 +453,7 @@ public class BratAnnotator
         String type = aRequest.getParameterValue("type").toString();
 
         try {
-            JCas jCas = getCas(project, aUser, document);
+         //   JCas jCas = getCas(project, aUser, document);
             int annotationOffsetStart = BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
                     Integer.parseInt(origin));
 
@@ -494,7 +496,7 @@ public class BratAnnotator
                     OffsetsList.class);
             int start = offsetLists.get(0).getBegin();
             int end = offsetLists.get(0).getEnd();
-            JCas jCas = getCas(project, aUser, document);
+          //  JCas jCas = getCas(project, aUser, document);
             int annotationOffsetStart = BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
                     sentenceAddress) + start;
             int annotationOffsetEnd = BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
@@ -540,7 +542,7 @@ public class BratAnnotator
         String type = aRequest.getParameterValue("type").toString();
 
         try {
-            JCas jCas = getCas(project, aUser, document);
+          //  JCas jCas = getCas(project, aUser, document);
             int annotationOffsetStart = BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
                     Integer.parseInt(origin));
 
@@ -581,7 +583,7 @@ public class BratAnnotator
                 || project.getId() != currentprojectId) {
 
             try {
-                JCas jCas = getCas(project, user, document);
+                setjCas(getCas(project, user, document));
                 setSentenceAddress(BratAjaxCasUtil.getFirstSenetnceAddress(jCas));
                 setLastSentenceAddress(lastSentenceAddress = BratAjaxCasUtil
                         .getLastSenetnceAddress(jCas));
@@ -630,6 +632,7 @@ public class BratAnnotator
             setProject(repository.getProject(aProjectName.replace("/", "")));
 
             if (project.getId() != currentprojectId) {
+                annotationLayers.clear();
                 setAnnotationLayers((ArrayList<TagSet>) annotationService.listTagSets(project));
             }
             currentprojectId = project.getId();
@@ -791,4 +794,15 @@ public class BratAnnotator
     {
         scrollPage = aMovePage;
     }
+
+    public JCas getjCas()
+    {
+        return jCas;
+    }
+
+    public void setjCas(JCas aJCas)
+    {
+        jCas = aJCas;
+    }
+
 }
