@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -37,8 +37,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.security.LogoutPanel;
 
-// The @WiQueryUIPlugin annotation and that the class implements IWiQueryPlugin makes sure that the
-// JQuery stylesheet is always present. - REC 2012-02-28
+/**
+ *  The @WiQueryUIPlugin annotation and that the class implements IWiQueryPlugin makes sure that the
+ * JQuery stylesheet is always present. - REC 2012-02-28
+ * @author Richard Eckart de Castilho
+ *
+ */
 @WiQueryUIPlugin
 public abstract class ApplicationPageBase
     extends WebPage
