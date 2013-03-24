@@ -100,7 +100,7 @@ public class AnnotationPage
             @Override
             public void onClick(AjaxRequestTarget target)
             {
-                if (annotator.getProject() == null) {
+                if (annotator.bratAnnotatorModel.getProject() == null) {
                     target.appendJavaScript("alert('Please open a project first!')");
                 }
                 else {
@@ -143,8 +143,8 @@ public class AnnotationPage
 
             public Page createPage()
             {
-                return new ExportModalWindowPage(exportModal, annotator.getProject(), annotator
-                        .getDocument());
+                return new ExportModalWindowPage(exportModal, annotator.bratAnnotatorModel
+                        .getProject(), annotator.bratAnnotatorModel.getDocument());
             }
 
         });
@@ -158,17 +158,19 @@ public class AnnotationPage
                 BratAjaxCasController controller = new BratAjaxCasController(jsonConverter,
                         repository, annotationService);
                 try {
-                    annotator.setjCas(controller.getJCas(annotator.getDocument(),
-                            annotator.getProject(), annotator.getUser()));
+                    annotator.bratAnnotatorModel.setjCas(controller.getJCas(
+                            annotator.bratAnnotatorModel.getDocument(),
+                            annotator.bratAnnotatorModel.getProject(),
+                            annotator.bratAnnotatorModel.getUser()));
                 }
                 catch (UIMAException e) {
-                    error("Unable to get annotation : "+ ExceptionUtils.getRootCauseMessage(e));
+                    error("Unable to get annotation : " + ExceptionUtils.getRootCauseMessage(e));
                 }
                 catch (ClassNotFoundException e) {
-                    error("Unable to get annotation : "+ ExceptionUtils.getRootCauseMessage(e));
+                    error("Unable to get annotation : " + ExceptionUtils.getRootCauseMessage(e));
                 }
                 catch (IOException e) {
-                    error("Unable to get annotation : "+ ExceptionUtils.getRootCauseMessage(e));
+                    error("Unable to get annotation : " + ExceptionUtils.getRootCauseMessage(e));
                 }
 
             }
@@ -180,7 +182,7 @@ public class AnnotationPage
             @Override
             public void onClick(AjaxRequestTarget target)
             {
-                if (annotator.getDocument() == null) {
+                if (annotator.bratAnnotatorModel.getDocument() == null) {
                     target.appendJavaScript("alert('Please open a document first!')");
                 }
                 else {
@@ -201,13 +203,15 @@ public class AnnotationPage
             @Override
             public void onClick(AjaxRequestTarget target)
             {
-                if (annotator.getDocument() != null) {
+                if (annotator.bratAnnotatorModel.getDocument() != null) {
                     int nextSentenceAddress = BratAjaxCasUtil
                             .getNextDisplayWindowSentenceBeginAddress(
-                                    getJCas(annotator.getProject(), annotator.getDocument()),
-                                    annotator.getSentenceAddress(), annotator.getWindowSize());
-                    if (annotator.getSentenceAddress() != nextSentenceAddress) {
-                        annotator.setSentenceAddress(nextSentenceAddress);
+                                    getJCas(annotator.bratAnnotatorModel.getProject(),
+                                            annotator.bratAnnotatorModel.getDocument()),
+                                    annotator.bratAnnotatorModel.getSentenceAddress(),
+                                    annotator.bratAnnotatorModel.getWindowSize());
+                    if (annotator.bratAnnotatorModel.getSentenceAddress() != nextSentenceAddress) {
+                        annotator.bratAnnotatorModel.setSentenceAddress(nextSentenceAddress);
                         // target.add(annotator);
                         target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
                     }
@@ -229,13 +233,15 @@ public class AnnotationPage
             @Override
             public void onClick(AjaxRequestTarget target)
             {
-                if (annotator.getDocument() != null) {
+                if (annotator.bratAnnotatorModel.getDocument() != null) {
                     int previousSentenceAddress = BratAjaxCasUtil
                             .getPreviousDisplayWindowSentenceBeginAddress(
-                                    getJCas(annotator.getProject(), annotator.getDocument()),
-                                    annotator.getSentenceAddress(), annotator.getWindowSize());
-                    if (annotator.getSentenceAddress() != previousSentenceAddress) {
-                        annotator.setSentenceAddress(previousSentenceAddress);
+                                    getJCas(annotator.bratAnnotatorModel.getProject(),
+                                            annotator.bratAnnotatorModel.getDocument()),
+                                    annotator.bratAnnotatorModel.getSentenceAddress(),
+                                    annotator.bratAnnotatorModel.getWindowSize());
+                    if (annotator.bratAnnotatorModel.getSentenceAddress() != previousSentenceAddress) {
+                        annotator.bratAnnotatorModel.setSentenceAddress(previousSentenceAddress);
                         // target.add(annotator);
                         target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
                     }
@@ -256,9 +262,12 @@ public class AnnotationPage
             @Override
             public void onClick(AjaxRequestTarget target)
             {
-                if (annotator.getDocument() != null) {
-                    if (annotator.getFirstSentenceAddress() != annotator.getSentenceAddress()) {
-                        annotator.setSentenceAddress(annotator.getFirstSentenceAddress());
+                if (annotator.bratAnnotatorModel.getDocument() != null) {
+                    if (annotator.bratAnnotatorModel.getFirstSentenceAddress() != annotator.bratAnnotatorModel
+                            .getSentenceAddress()) {
+                        annotator.bratAnnotatorModel
+                                .setSentenceAddress(annotator.bratAnnotatorModel
+                                        .getFirstSentenceAddress());
                         // target.add(annotator);
                         target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
                     }
@@ -279,13 +288,16 @@ public class AnnotationPage
             @Override
             public void onClick(AjaxRequestTarget target)
             {
-                if (annotator.getDocument() != null) {
+                if (annotator.bratAnnotatorModel.getDocument() != null) {
                     int lastDisplayWindowBeginingSentenceAddress = BratAjaxCasUtil
                             .getLastDisplayWindowFirstSentenceAddress(
-                                    getJCas(annotator.getProject(), annotator.getDocument()),
-                                    annotator.getWindowSize());
-                    if (lastDisplayWindowBeginingSentenceAddress != annotator.getSentenceAddress()) {
-                        annotator.setSentenceAddress(lastDisplayWindowBeginingSentenceAddress);
+                                    getJCas(annotator.bratAnnotatorModel.getProject(),
+                                            annotator.bratAnnotatorModel.getDocument()),
+                                    annotator.bratAnnotatorModel.getWindowSize());
+                    if (lastDisplayWindowBeginingSentenceAddress != annotator.bratAnnotatorModel
+                            .getSentenceAddress()) {
+                        annotator.bratAnnotatorModel
+                                .setSentenceAddress(lastDisplayWindowBeginingSentenceAddress);
                         // target.add(annotator);
                         target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
                     }
@@ -315,7 +327,8 @@ public class AnnotationPage
 
             public Page createPage()
             {
-                return new GuidelineModalWindowPage(guidelineModal, annotator.getProject());
+                return new GuidelineModalWindowPage(guidelineModal, annotator.bratAnnotatorModel
+                        .getProject());
             }
 
         });
@@ -342,8 +355,9 @@ public class AnnotationPage
             protected void onUpdate(AjaxRequestTarget target)
             {
                 gotoPageAddress = BratAjaxCasUtil.getSentenceAddress(
-                        getJCas(annotator.getProject(), annotator.getDocument()),
-                        gotoPageTextField.getModelObject());
+                        getJCas(annotator.bratAnnotatorModel.getProject(),
+                                annotator.bratAnnotatorModel.getDocument()), gotoPageTextField
+                                .getModelObject());
 
             }
         });
@@ -358,15 +372,16 @@ public class AnnotationPage
                 if (gotoPageAddress == -2) {
                     target.appendJavaScript("alert('This sentence number is either negative or beyond the last sentence number!')");
                 }
-                else if (annotator.getDocument() != null) {
+                else if (annotator.bratAnnotatorModel.getDocument() != null) {
 
                     if (gotoPageAddress == -1) {
                         // Not Updated, default used
                         gotoPageAddress = BratAjaxCasUtil.getSentenceAddress(
-                                getJCas(annotator.getProject(), annotator.getDocument()), 10);
+                                getJCas(annotator.bratAnnotatorModel.getProject(),
+                                        annotator.bratAnnotatorModel.getDocument()), 10);
                     }
-                    if (annotator.getSentenceAddress() != gotoPageAddress) {
-                        annotator.setSentenceAddress(gotoPageAddress);
+                    if (annotator.bratAnnotatorModel.getSentenceAddress() != gotoPageAddress) {
+                        annotator.bratAnnotatorModel.setSentenceAddress(gotoPageAddress);
                         // target.add(annotator);
                         target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
                     }

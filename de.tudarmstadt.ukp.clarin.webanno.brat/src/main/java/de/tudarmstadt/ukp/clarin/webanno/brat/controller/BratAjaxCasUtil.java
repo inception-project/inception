@@ -43,7 +43,7 @@ import org.uimafit.factory.CollectionReaderFactory;
 import org.uimafit.factory.JCasFactory;
 import org.uimafit.util.JCasUtil;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
@@ -68,23 +68,23 @@ public class BratAjaxCasUtil
     /**
      * Update the CAS with new/modification of named enmity annotation
      */
-    public static void updateNamedEntity(BratAnnotator aBratAnnotator, String aType)
+    public static void updateNamedEntity(BratAnnotatorModel aBratAnnotatorModel, String aType)
     {
         boolean duplicate = false;
         boolean modify = false;
         NamedEntity namedEntityToDelete = null;
 
-        Map<Integer, Integer> offsets = offsets(aBratAnnotator.getjCas());
-        int startAndEnd[] = getTokenStart(offsets, aBratAnnotator.getAnnotationOffsetStart(),
-                aBratAnnotator.getAnnotationOffsetEnd());
+        Map<Integer, Integer> offsets = offsets(aBratAnnotatorModel.getjCas());
+        int startAndEnd[] = getTokenStart(offsets, aBratAnnotatorModel.getAnnotationOffsetStart(),
+                aBratAnnotatorModel.getAnnotationOffsetEnd());
 
-        aBratAnnotator.setAnnotationOffsetStart(startAndEnd[0]);
-        aBratAnnotator.setAnnotationOffsetEnd(startAndEnd[1]);
+        aBratAnnotatorModel.setAnnotationOffsetStart(startAndEnd[0]);
+        aBratAnnotatorModel.setAnnotationOffsetEnd(startAndEnd[1]);
 
-        for (NamedEntity namedEntity : selectCovered(aBratAnnotator.getjCas(), NamedEntity.class,
-                aBratAnnotator.getAnnotationOffsetStart(), aBratAnnotator.getAnnotationOffsetEnd())) {
-            if (namedEntity.getBegin() == aBratAnnotator.getAnnotationOffsetStart()
-                    && namedEntity.getEnd() == aBratAnnotator.getAnnotationOffsetEnd()) {
+        for (NamedEntity namedEntity : selectCovered(aBratAnnotatorModel.getjCas(), NamedEntity.class,
+                aBratAnnotatorModel.getAnnotationOffsetStart(), aBratAnnotatorModel.getAnnotationOffsetEnd())) {
+            if (namedEntity.getBegin() == aBratAnnotatorModel.getAnnotationOffsetStart()
+                    && namedEntity.getEnd() == aBratAnnotatorModel.getAnnotationOffsetEnd()) {
                 namedEntityToDelete = namedEntity;
                 duplicate = true;
                 modify = !namedEntity.getValue().equals(aType);
@@ -96,24 +96,24 @@ public class BratAjaxCasUtil
         }
         if (!duplicate) {
 
-            NamedEntity namedEntity = new NamedEntity(aBratAnnotator.getjCas(),
-                    aBratAnnotator.getAnnotationOffsetStart(),
-                    aBratAnnotator.getAnnotationOffsetEnd());
+            NamedEntity namedEntity = new NamedEntity(aBratAnnotatorModel.getjCas(),
+                    aBratAnnotatorModel.getAnnotationOffsetStart(),
+                    aBratAnnotatorModel.getAnnotationOffsetEnd());
             namedEntity.setValue(aType);
             namedEntity.addToIndexes();
         }
     }
 
-    public static void updatePos(BratAnnotator aBratAnnotator, String type)
+    public static void updatePos(BratAnnotatorModel aBratAnnotatorModel, String type)
     {
-        List<POS> pos = selectCovered(aBratAnnotator.getjCas(), POS.class, aBratAnnotator.getAnnotationOffsetStart(), aBratAnnotator.getAnnotationOffsetEnd());
+        List<POS> pos = selectCovered(aBratAnnotatorModel.getjCas(), POS.class, aBratAnnotatorModel.getAnnotationOffsetStart(), aBratAnnotatorModel.getAnnotationOffsetEnd());
         if (pos.size() == 1) {// is update POS
             pos.get(0).setPosValue(type);
         }
         else {
-            List<Token> token = selectCovered(aBratAnnotator.getjCas(), Token.class, aBratAnnotator.getAnnotationOffsetStart(), aBratAnnotator.getAnnotationOffsetEnd());
+            List<Token> token = selectCovered(aBratAnnotatorModel.getjCas(), Token.class, aBratAnnotatorModel.getAnnotationOffsetStart(), aBratAnnotatorModel.getAnnotationOffsetEnd());
             if (token.size() == 1) {// POS possible only on single token
-                POS posToAdd = new POS(aBratAnnotator.getjCas(), aBratAnnotator.getAnnotationOffsetStart(), aBratAnnotator.getAnnotationOffsetEnd());
+                POS posToAdd = new POS(aBratAnnotatorModel.getjCas(), aBratAnnotatorModel.getAnnotationOffsetStart(), aBratAnnotatorModel.getAnnotationOffsetEnd());
                 posToAdd.setPosValue(type);
                 posToAdd.addToIndexes();
                 token.get(0).setPos(posToAdd);
@@ -121,19 +121,19 @@ public class BratAjaxCasUtil
         }
     }
 
-    public static void updateCoreferenceType(BratAnnotator aBratAnnotator, String aType)
+    public static void updateCoreferenceType(BratAnnotatorModel aBratAnnotatorModel, String aType)
     {
         boolean modify = false;
         CoreferenceLink corefeTypeToAdd = null;
 
-        for (CoreferenceLink link : select(aBratAnnotator.getjCas(), CoreferenceLink.class)) {
-            if (link.getBegin() == aBratAnnotator.getAnnotationOffsetStart() && link.getEnd() == aBratAnnotator.getAnnotationOffsetEnd()) {
+        for (CoreferenceLink link : select(aBratAnnotatorModel.getjCas(), CoreferenceLink.class)) {
+            if (link.getBegin() == aBratAnnotatorModel.getAnnotationOffsetStart() && link.getEnd() == aBratAnnotatorModel.getAnnotationOffsetEnd()) {
                 corefeTypeToAdd = link;
                 modify = !link.getReferenceType().equals(aType);
                 break;
             }
             while (link.getNext() != null) {
-                if (link.getNext().getBegin() == aBratAnnotator.getAnnotationOffsetStart() && link.getNext().getEnd() == aBratAnnotator.getAnnotationOffsetEnd()) {
+                if (link.getNext().getBegin() == aBratAnnotatorModel.getAnnotationOffsetStart() && link.getNext().getEnd() == aBratAnnotatorModel.getAnnotationOffsetEnd()) {
                     corefeTypeToAdd = link.getNext();
                     modify = !link.getNext().getReferenceType().equals(aType);
                     link = link.getNext();
@@ -146,14 +146,14 @@ public class BratAjaxCasUtil
         }
         if (corefeTypeToAdd == null) {
 
-            Map<Integer, Integer> offsets = offsets(aBratAnnotator.getjCas());
+            Map<Integer, Integer> offsets = offsets(aBratAnnotatorModel.getjCas());
 
-            int startAndEnd[] = getTokenStart(offsets, aBratAnnotator.getAnnotationOffsetStart(), aBratAnnotator.getAnnotationOffsetEnd());
+            int startAndEnd[] = getTokenStart(offsets, aBratAnnotatorModel.getAnnotationOffsetStart(), aBratAnnotatorModel.getAnnotationOffsetEnd());
 
-            aBratAnnotator.setAnnotationOffsetStart(startAndEnd[0]);
-            aBratAnnotator.setAnnotationOffsetEnd(startAndEnd[1]);
+            aBratAnnotatorModel.setAnnotationOffsetStart(startAndEnd[0]);
+            aBratAnnotatorModel.setAnnotationOffsetEnd(startAndEnd[1]);
 
-            corefeTypeToAdd = new CoreferenceLink(aBratAnnotator.getjCas(), aBratAnnotator.getAnnotationOffsetStart(), aBratAnnotator.getAnnotationOffsetEnd());
+            corefeTypeToAdd = new CoreferenceLink(aBratAnnotatorModel.getjCas(), aBratAnnotatorModel.getAnnotationOffsetStart(), aBratAnnotatorModel.getAnnotationOffsetEnd());
             corefeTypeToAdd.setReferenceType(aType);
             corefeTypeToAdd.addToIndexes();
         }
@@ -163,27 +163,27 @@ public class BratAjaxCasUtil
         }
     }
 
-    public static void updateDependencyParsing(BratAnnotator aBratAnnotator, String aType)
+    public static void updateDependencyParsing(BratAnnotatorModel aBratAnnotatorModel, String aType)
     {
         boolean duplicate = false;
         boolean modify = false;
 
-        int originAddress = Integer.parseInt(aBratAnnotator.getOrigin().replaceAll("[\\D]", ""));
-        int targetAddress = Integer.parseInt(aBratAnnotator.getTarget().replaceAll("[\\D]", ""));
+        int originAddress = Integer.parseInt(aBratAnnotatorModel.getOrigin().replaceAll("[\\D]", ""));
+        int targetAddress = Integer.parseInt(aBratAnnotatorModel.getTarget().replaceAll("[\\D]", ""));
         Dependency dependencyToDelte = null;
-        Map<Integer, Token> tokens = getToken(aBratAnnotator.getjCas());
-        Map<Integer, Integer> tokenPositions = getTokenPosition(aBratAnnotator.getjCas());
+        Map<Integer, Token> tokens = getToken(aBratAnnotatorModel.getjCas());
+        Map<Integer, Integer> tokenPositions = getTokenPosition(aBratAnnotatorModel.getjCas());
 
-        int beginOffset = selectAnnotationByAddress(aBratAnnotator.getjCas(), Sentence.class,
-                aBratAnnotator.getSentenceAddress()).getBegin();
+        int beginOffset = selectAnnotationByAddress(aBratAnnotatorModel.getjCas(), Sentence.class,
+                aBratAnnotatorModel.getSentenceAddress()).getBegin();
         int endOffset = selectAnnotationByAddress(
-                aBratAnnotator.getjCas(),
+                aBratAnnotatorModel.getjCas(),
                 Sentence.class,
-                getLastSentenceAddressInDisplayWindow(aBratAnnotator.getjCas(),
-                        aBratAnnotator.getSentenceAddress(), aBratAnnotator.getWindowSize()))
+                getLastSentenceAddressInDisplayWindow(aBratAnnotatorModel.getjCas(),
+                        aBratAnnotatorModel.getSentenceAddress(), aBratAnnotatorModel.getWindowSize()))
                 .getEnd();
 
-        for (Dependency dependency : selectCovered(aBratAnnotator.getjCas(), Dependency.class,
+        for (Dependency dependency : selectCovered(aBratAnnotatorModel.getjCas(), Dependency.class,
                 beginOffset, endOffset)) {
             if (dependency.getDependent().getPos().getAddress() == originAddress
                     && dependency.getGovernor().getPos().getAddress() == targetAddress
@@ -210,7 +210,7 @@ public class BratAjaxCasUtil
                 dependencyToDelte.removeFromIndexes();
             }
             // if the type is ROOT, governor = dependent
-            Dependency dependency = new Dependency(aBratAnnotator.getjCas());
+            Dependency dependency = new Dependency(aBratAnnotatorModel.getjCas());
             dependency.setDependencyType(aType);
 
             if (aType.equals("ROOT")) {
@@ -239,20 +239,20 @@ public class BratAjaxCasUtil
     // create new CorefChain pointing to the first link in new chain
     // CASE 5: Add link at the same position as existing -> just update type
 
-    public static void updateCoreferenceRelation(BratAnnotator aBratAnnotator, String aRelation)
+    public static void updateCoreferenceRelation(BratAnnotatorModel aBratAnnotatorModel, String aRelation)
     {
         boolean modify = false;
 
-        CoreferenceLink originCoreferenceType = (CoreferenceLink) aBratAnnotator
+        CoreferenceLink originCoreferenceType = (CoreferenceLink) aBratAnnotatorModel
                 .getjCas()
                 .getLowLevelCas()
                 .ll_getFSForRef(
-                        Integer.parseInt(aBratAnnotator.getOrigin().replaceAll("[\\D]", "")));
-        CoreferenceLink targetCoreferenceType = (CoreferenceLink) aBratAnnotator
+                        Integer.parseInt(aBratAnnotatorModel.getOrigin().replaceAll("[\\D]", "")));
+        CoreferenceLink targetCoreferenceType = (CoreferenceLink) aBratAnnotatorModel
                 .getjCas()
                 .getLowLevelCas()
                 .ll_getFSForRef(
-                        Integer.parseInt(aBratAnnotator.getTarget().replaceAll("[\\D]", "")));
+                        Integer.parseInt(aBratAnnotatorModel.getTarget().replaceAll("[\\D]", "")));
 
         // Currently support only anaphoric relation
         // Inverse direction
@@ -267,11 +267,11 @@ public class BratAjaxCasUtil
         boolean found = false;
 
         // If the two links are in different chain, merge them!!!
-        boolean merge = mergeChain(aBratAnnotator.getjCas(), originCoreferenceType,
+        boolean merge = mergeChain(aBratAnnotatorModel.getjCas(), originCoreferenceType,
                 targetCoreferenceType, aRelation);
 
         if (!merge) {
-            for (CoreferenceChain chain : select(aBratAnnotator.getjCas(), CoreferenceChain.class)) {
+            for (CoreferenceChain chain : select(aBratAnnotatorModel.getjCas(), CoreferenceChain.class)) {
 
                 // CASE 2
                 if (chain.getFirst() != null && !found
@@ -360,7 +360,7 @@ public class BratAjaxCasUtil
 
                 // CASE 1
                 if (!chainExist) {
-                    CoreferenceChain chain = new CoreferenceChain(aBratAnnotator.getjCas());
+                    CoreferenceChain chain = new CoreferenceChain(aBratAnnotatorModel.getjCas());
                     chain.setFirst(originCoreferenceType);
                     originCoreferenceType.setNext(targetCoreferenceType);
                     originCoreferenceType.setReferenceRelation(aRelation);
@@ -375,7 +375,7 @@ public class BratAjaxCasUtil
         }
         // clean unconnected coreference chains
         List<CoreferenceChain> orphanChains = new ArrayList<CoreferenceChain>();
-        for (CoreferenceChain chain : select(aBratAnnotator.getjCas(), CoreferenceChain.class)) {
+        for (CoreferenceChain chain : select(aBratAnnotatorModel.getjCas(), CoreferenceChain.class)) {
             if (chain.getFirst().getNext() == null) {
                 orphanChains.add(chain);
             }
@@ -533,18 +533,18 @@ public class BratAjaxCasUtil
         removeInvalidChain(aJcas);
     }
 
-    public static void deleteCoreference(BratAnnotator aBratAnnotator, String aType)
+    public static void deleteCoreference(BratAnnotatorModel aBratAnnotatorModel, String aType)
     {
 
-        CoreferenceChain newChain = new CoreferenceChain(aBratAnnotator.getjCas());
+        CoreferenceChain newChain = new CoreferenceChain(aBratAnnotatorModel.getjCas());
         boolean found = false;
 
-        CoreferenceLink originCorefType = (CoreferenceLink) aBratAnnotator
+        CoreferenceLink originCorefType = (CoreferenceLink) aBratAnnotatorModel
                 .getjCas()
                 .getLowLevelCas()
                 .ll_getFSForRef(
-                        Integer.parseInt(aBratAnnotator.getOrigin().replaceAll("[\\D]", "")));
-        for (CoreferenceChain chain : select(aBratAnnotator.getjCas(), CoreferenceChain.class)) {
+                        Integer.parseInt(aBratAnnotatorModel.getOrigin().replaceAll("[\\D]", "")));
+        for (CoreferenceChain chain : select(aBratAnnotatorModel.getjCas(), CoreferenceChain.class)) {
             CoreferenceLink link = chain.getFirst();
 
             if (found) {
@@ -562,7 +562,7 @@ public class BratAjaxCasUtil
         }
         newChain.addToIndexes();
 
-        removeInvalidChain(aBratAnnotator.getjCas());
+        removeInvalidChain(aBratAnnotatorModel.getjCas());
 
     }
 
@@ -580,16 +580,16 @@ public class BratAjaxCasUtil
         }
     }
 
-    public static void deleteDependencyParsing(BratAnnotator aBratAnnotator, String aType)
+    public static void deleteDependencyParsing(BratAnnotatorModel aBratAnnotatorModel, String aType)
     {
 
-        int originAddress = Integer.parseInt(aBratAnnotator.getOrigin().replaceAll("[\\D]", ""));
-        int targetAddress = Integer.parseInt(aBratAnnotator.getTarget().replaceAll("[\\D]", ""));
+        int originAddress = Integer.parseInt(aBratAnnotatorModel.getOrigin().replaceAll("[\\D]", ""));
+        int targetAddress = Integer.parseInt(aBratAnnotatorModel.getTarget().replaceAll("[\\D]", ""));
 
-        Map<Integer, Integer> tokenPositions = getTokenPosition(aBratAnnotator.getjCas());
-        Dependency dependencyToDelete = new Dependency(aBratAnnotator.getjCas());
+        Map<Integer, Integer> tokenPositions = getTokenPosition(aBratAnnotatorModel.getjCas());
+        Dependency dependencyToDelete = new Dependency(aBratAnnotatorModel.getjCas());
 
-        for (Dependency dependency : select(aBratAnnotator.getjCas(), Dependency.class)) {
+        for (Dependency dependency : select(aBratAnnotatorModel.getjCas(), Dependency.class)) {
 
             if (dependency.getDependent().getBegin() == tokenPositions.get(originAddress)
                     && dependency.getGovernor().getBegin() == tokenPositions.get(targetAddress)

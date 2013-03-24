@@ -86,11 +86,11 @@ public class AnnotationLayerSelectionModalPage
                     new AnnotationLayerDetailFormModel()));
 
             // Import current settings from the annotator
-            getModelObject().numberOfSentences = annotator.getWindowSize();
-            getModelObject().scrollPage = annotator.isScrollPage();
-            getModelObject().displayLemma = annotator.isDisplayLemmaSelected();
+            getModelObject().numberOfSentences = annotator.bratAnnotatorModel.getWindowSize();
+            getModelObject().scrollPage = annotator.bratAnnotatorModel.isScrollPage();
+            getModelObject().displayLemma = annotator.bratAnnotatorModel.isDisplayLemmaSelected();
 
-            for (TagSet tagSet : annotator.getAnnotationLayers()) {
+            for (TagSet tagSet : annotator.bratAnnotatorModel.getAnnotationLayers()) {
                 getModelObject().annotationLayers.add(tagSet);
             }
             windowSizeField = (NumberTextField<Integer>) new NumberTextField<Integer>(
@@ -113,7 +113,7 @@ public class AnnotationLayerSelectionModalPage
                         @Override
                         protected List<TagSet> load()
                         {
-                            return annotationService.listTagSets(annotator.getProject());
+                            return annotationService.listTagSets(annotator.bratAnnotatorModel.getProject());
                         }
                     });
                     setChoiceRenderer(new ChoiceRenderer<TagSet>("name", "id"));
@@ -143,7 +143,7 @@ public class AnnotationLayerSelectionModalPage
                     String username = SecurityContextHolder.getContext().getAuthentication()
                             .getName();
                     try {
-                        projectRepository.saveUserSettings(username, annotator.getProject(),
+                        projectRepository.saveUserSettings(username, annotator.bratAnnotatorModel.getProject(),
                                 "annotation", preference);
                     }
                     catch (FileNotFoundException e) {
@@ -155,10 +155,10 @@ public class AnnotationLayerSelectionModalPage
                                 + ExceptionUtils.getRootCauseMessage(e));
                     }
 
-                    annotator.setDisplayLemmaSelected(getModelObject().displayLemma);
-                    annotator.setScrollPage(getModelObject().scrollPage);
-                    annotator.setAnnotationLayers(getModelObject().annotationLayers);
-                    annotator.setWindowSize(getModelObject().numberOfSentences);
+                    annotator.bratAnnotatorModel.setDisplayLemmaSelected(getModelObject().displayLemma);
+                    annotator.bratAnnotatorModel.setScrollPage(getModelObject().scrollPage);
+                    annotator.bratAnnotatorModel.setAnnotationLayers(getModelObject().annotationLayers);
+                    annotator.bratAnnotatorModel.setWindowSize(getModelObject().numberOfSentences);
                     aTarget.add(annotator);
                     modalWindow.close(aTarget);
                 }

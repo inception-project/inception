@@ -31,7 +31,7 @@ import org.apache.uima.jcas.JCas;
 import org.codehaus.jackson.JsonGenerator;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Argument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Offsets;
@@ -71,17 +71,17 @@ public class CasToBratJson
         // Nothing to Do.
     }
 
-    public CasToBratJson(BratAnnotator aBratAnnotator)
+    public CasToBratJson(BratAnnotatorModel aBratAnnotatorModel)
     {
 
-        for (TagSet tag : aBratAnnotator.getAnnotationLayers()) {
+        for (TagSet tag : aBratAnnotatorModel.getAnnotationLayers()) {
             this.annotationLayers.add(tag.getType().getName());
         }
 
-        this.currentWindowSentenceBeginAddress = aBratAnnotator.getSentenceAddress();
-        this.lastSentenceAddress = aBratAnnotator.getLastSentenceAddress();
+        this.currentWindowSentenceBeginAddress = aBratAnnotatorModel.getSentenceAddress();
+        this.lastSentenceAddress = aBratAnnotatorModel.getLastSentenceAddress();
         this.sentenceStartAddress = this.currentWindowSentenceBeginAddress;
-        this.windowSize = aBratAnnotator.getWindowSize();
+        this.windowSize = aBratAnnotatorModel.getWindowSize();
     }
 
     // for test purpose
