@@ -288,8 +288,6 @@ public class BratAjaxCasController
         throws UIMAException, IOException, ClassNotFoundException
     {
 
-        JCas jCas = aBratAnnotator.getjCas();
-
         GetDocumentResponse response = new GetDocumentResponse();
 
         // Sentence startSentence = (Sentence)

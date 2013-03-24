@@ -117,7 +117,7 @@ public class BratAnnotator
     private String target;
 
     // If Brat action is getdocument, no aut-scroll at all
-   private boolean isGetDocument;
+    private boolean isGetDocument;
 
     public BratAnnotator(String id, IModel<?> aModel)
     {
@@ -138,14 +138,8 @@ public class BratAnnotator
             @Override
             protected String load()
             {
-                String username = SecurityContextHolder.getContext().getAuthentication().getName();
-                setUser(repository.getUser(username));
-                JCas jCas = null;
                 if (document != null) {
                     try {
-                        BratAjaxCasController controller = new BratAjaxCasController(jsonConverter,
-                                repository, annotationService);
-                        jCas = controller.getJCas(document, project, user);
                         totalPageNumber = BratAjaxCasUtil.getNumberOfPages(jCas, windowSize);
 
                         // If only one page, start displaying from sentence 1
@@ -156,20 +150,6 @@ public class BratAnnotator
                                 sentenceAddress);
                         return pageNumber + " of " + totalPageNumber + " pages";
                     }
-                    catch (UIMAException e) {
-                        error("CAS object not found :" + ExceptionUtils.getRootCauseMessage(e));
-                        return "";
-                    }
-                    catch (IOException e) {
-                        error("Unable to get CAS object :" + ExceptionUtils.getRootCauseMessage(e));
-                        return "";
-                    }
-                    catch (ClassNotFoundException e) {
-                        error("The Class name in the properties is not found " + ":"
-                                + ExceptionUtils.getRootCauseMessage(e));
-                        return "";
-                    }
-
                     catch (DataRetrievalFailureException ex) {
                         error(ExceptionUtils.getRootCauseMessage(ex));
                         return "";
@@ -491,11 +471,11 @@ public class BratAnnotator
                     OffsetsList.class);
             int start = offsetLists.get(0).getBegin();
             int end = offsetLists.get(0).getEnd();
-            setAnnotationOffsetStart(BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
-                    sentenceAddress) + start);
-           setAnnotationOffsetEnd(BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
-                    sentenceAddress) + end);
-           setType(aRequest.getParameterValue("type").toString());
+            setAnnotationOffsetStart(BratAjaxCasUtil
+                    .getAnnotationBeginOffset(jCas, sentenceAddress) + start);
+            setAnnotationOffsetEnd(BratAjaxCasUtil.getAnnotationBeginOffset(jCas, sentenceAddress)
+                    + end);
+            setType(aRequest.getParameterValue("type").toString());
             result = controller.deleteSpan(this, id);
             if (scrollPage) {
                 setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(jCas, sentenceAddress,
@@ -529,13 +509,12 @@ public class BratAnnotator
         BratAjaxCasController controller = new BratAjaxCasController(jsonConverter, repository,
                 annotationService);
 
-
         try {
 
-           setOrigin(aRequest.getParameterValue("origin").toString());
-           setTarget(aRequest.getParameterValue("target").toString());
-           setType(aRequest.getParameterValue("type").toString());
-           setAnnotationOffsetStart(BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
+            setOrigin(aRequest.getParameterValue("origin").toString());
+            setTarget(aRequest.getParameterValue("target").toString());
+            setType(aRequest.getParameterValue("type").toString());
+            setAnnotationOffsetStart(BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
                     Integer.parseInt(origin)));
 
             result = controller.deleteArc(this);
@@ -567,10 +546,7 @@ public class BratAnnotator
         throws UIMAException
     {
 
-        // Incase jCas is lost, since transient, reload it
-        if(getjCas()==null){
-            setjCas(getCas(project, user, document));
-        }
+        setjCas(getCas(project, user, document));
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         if (sentenceAddress == -1 || document.getId() != currentDocumentId
                 || project.getId() != currentprojectId) {
@@ -596,7 +572,7 @@ public class BratAnnotator
                 catch (Exception e) {
                     setWindowSize(10);
                     setDisplayLemmaSelected(true);
-                    setAnnotationLayers((HashSet<TagSet>) annotationService.listTagSets(project));
+                    setAnnotationLayers(new HashSet<TagSet>(annotationService.listTagSets(project)));
 
                 }
             }

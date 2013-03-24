@@ -42,9 +42,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+
 /**
  * A wicket page for the Brat Annotation/Visualization page. Included components for pagination,
  * annotation layer configuration, and Exporting document
+ *
  * @author Seid Muhie Yimam
  *
  */
@@ -146,6 +148,31 @@ public class AnnotationPage
             }
 
         });
+        exportModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
+        {
+            private static final long serialVersionUID = 1643342179335627082L;
+
+            public void onClose(AjaxRequestTarget target)
+            {
+                // reget JCAs, transeint object lost
+                BratAjaxCasController controller = new BratAjaxCasController(jsonConverter,
+                        repository, annotationService);
+                try {
+                    annotator.setjCas(controller.getJCas(annotator.getDocument(),
+                            annotator.getProject(), annotator.getUser()));
+                }
+                catch (UIMAException e) {
+                    error("Unable to get annotation : "+ ExceptionUtils.getRootCauseMessage(e));
+                }
+                catch (ClassNotFoundException e) {
+                    error("Unable to get annotation : "+ ExceptionUtils.getRootCauseMessage(e));
+                }
+                catch (IOException e) {
+                    error("Unable to get annotation : "+ ExceptionUtils.getRootCauseMessage(e));
+                }
+
+            }
+        });
         add(new AjaxLink<Void>("showExportModal")
         {
             private static final long serialVersionUID = 7496156015186497496L;
@@ -181,8 +208,8 @@ public class AnnotationPage
                                     annotator.getSentenceAddress(), annotator.getWindowSize());
                     if (annotator.getSentenceAddress() != nextSentenceAddress) {
                         annotator.setSentenceAddress(nextSentenceAddress);
-                        //target.add(annotator);
-                         target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                        // target.add(annotator);
+                        target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
                     }
 
                     else {
@@ -209,8 +236,8 @@ public class AnnotationPage
                                     annotator.getSentenceAddress(), annotator.getWindowSize());
                     if (annotator.getSentenceAddress() != previousSentenceAddress) {
                         annotator.setSentenceAddress(previousSentenceAddress);
-                       // target.add(annotator);
-                         target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                        // target.add(annotator);
+                        target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
                     }
                     else {
                         target.appendJavaScript("alert('This is First Page!')");
@@ -232,7 +259,7 @@ public class AnnotationPage
                 if (annotator.getDocument() != null) {
                     if (annotator.getFirstSentenceAddress() != annotator.getSentenceAddress()) {
                         annotator.setSentenceAddress(annotator.getFirstSentenceAddress());
-                       // target.add(annotator);
+                        // target.add(annotator);
                         target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
                     }
                     else {
@@ -259,8 +286,8 @@ public class AnnotationPage
                                     annotator.getWindowSize());
                     if (lastDisplayWindowBeginingSentenceAddress != annotator.getSentenceAddress()) {
                         annotator.setSentenceAddress(lastDisplayWindowBeginingSentenceAddress);
-                       // target.add(annotator);
-                         target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                        // target.add(annotator);
+                        target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
                     }
                     else {
                         target.appendJavaScript("alert('This is last Page!')");
@@ -271,7 +298,6 @@ public class AnnotationPage
                 }
             }
         });
-
 
         final ModalWindow guidelineModal;
         add(guidelineModal = new ModalWindow("guidelineModal"));
@@ -300,8 +326,7 @@ public class AnnotationPage
             @Override
             public void onClick(AjaxRequestTarget target)
             {
-                    guidelineModal.show(target);
-
+                guidelineModal.show(target);
 
             }
         });
