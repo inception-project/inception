@@ -19,6 +19,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -192,7 +193,7 @@ public class AnnotationLayerSelectionModalPage
         public int numberOfSentences;
         public boolean displayLemma;
         public boolean scrollPage;
-        public ArrayList<TagSet> annotationLayers = new ArrayList<TagSet>();
+        public HashSet<TagSet> annotationLayers = new HashSet<TagSet>();
     }
 
     public AnnotationLayerSelectionModalPage(String aId, final ModalWindow modalWindow,

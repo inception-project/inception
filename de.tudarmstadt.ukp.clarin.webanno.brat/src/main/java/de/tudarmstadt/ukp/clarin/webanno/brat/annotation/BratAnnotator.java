@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
 
@@ -92,13 +93,13 @@ public class BratAnnotator
     private int totalPageNumber;
     private Project project;
     private SourceDocument document;
-
+    private User user;
     private int sentenceAddress = -1;
     private int lastSentenceAddress;
     private int firstSentenceAddress;
 
     // Annotation preferences
-    private ArrayList<TagSet> annotationLayers = new ArrayList<TagSet>();
+    private HashSet<TagSet> annotationLayers = new HashSet<TagSet>();
     private int windowSize;
     private boolean isDisplayLemmaSelected;
     private boolean scrollPage;
@@ -109,6 +110,14 @@ public class BratAnnotator
     private long currentprojectId;
 
     private transient JCas jCas;
+    private int annotationOffsetStart;
+    private int annotationOffsetEnd;
+    private String type;
+    private String origin;
+    private String target;
+
+    // If Brat action is getdocument, no aut-scroll at all
+   private boolean isGetDocument;
 
     public BratAnnotator(String id, IModel<?> aModel)
     {
@@ -130,7 +139,7 @@ public class BratAnnotator
             protected String load()
             {
                 String username = SecurityContextHolder.getContext().getAuthentication().getName();
-                User user = repository.getUser(username);
+                setUser(repository.getUser(username));
                 JCas jCas = null;
                 if (document != null) {
                     try {
@@ -183,7 +192,7 @@ public class BratAnnotator
             {
 
                 String username = SecurityContextHolder.getContext().getAuthentication().getName();
-                User user = repository.getUser(username);
+                setUser(repository.getUser(username));
 
                 final IRequestParameters request = getRequest().getPostParameters();
 
@@ -323,8 +332,9 @@ public class BratAnnotator
             {
                 setAttributesForGetDocument(collection, documentName);
             }
-            result = controller.getDocument(windowSize, project, document, aUser, sentenceAddress,
-                    lastSentenceAddress, isDisplayLemmaSelected, annotationLayers);
+            setGetDocument(true);
+            result = controller.getDocument(this);
+            setGetDocument(false);
         }
         catch (UIMAException e) {
             error("Error while Processing the CAS object " + ":"
@@ -364,22 +374,19 @@ public class BratAnnotator
         catch (IOException e1) {
             error("Inavlid Json Object sent from Brat :" + ExceptionUtils.getRootCauseMessage(e1));
         }
-        String type = aRequest.getParameterValue("type").toString();
 
         try {
             OffsetsList offsetLists = jsonConverter.getObjectMapper().readValue(offsets,
                     OffsetsList.class);
             int start = offsetLists.get(0).getBegin();
             int end = offsetLists.get(0).getEnd();
-          //  JCas jCas = getCas(project, aUser, document);
-            int annotationOffsetStart = BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
-                    sentenceAddress) + start;
-            int annotationOffsetEnd = BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
-                    sentenceAddress) + end;
+            setAnnotationOffsetStart(BratAjaxCasUtil
+                    .getAnnotationBeginOffset(jCas, sentenceAddress) + start);
+            setAnnotationOffsetEnd(BratAjaxCasUtil.getAnnotationBeginOffset(jCas, sentenceAddress)
+                    + end);
+            setType(aRequest.getParameterValue("type").toString());
 
-            result = controller.createSpan(windowSize, project, document, aUser, sentenceAddress,
-                    lastSentenceAddress, annotationOffsetStart, annotationOffsetEnd, type,
-                    isDisplayLemmaSelected, annotationLayers, jCas, scrollPage);
+            result = controller.createSpan(this);
             if (scrollPage) {
                 setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(jCas, sentenceAddress,
                         annotationOffsetStart, project, document, windowSize));
@@ -413,18 +420,13 @@ public class BratAnnotator
         Object result = null;
         BratAjaxCasController controller = new BratAjaxCasController(jsonConverter, repository,
                 annotationService);
-
-        String origin = aRequest.getParameterValue("origin").toString();
-        String target = aRequest.getParameterValue("target").toString();
-        String type = aRequest.getParameterValue("type").toString();
-
         try {
-          //  JCas jCas = getCas(project, aUser, document);
-            int annotationOffsetStart = BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
-                    Integer.parseInt(origin));
-            result = controller.createArc(windowSize, project, document, aUser, sentenceAddress,
-                    lastSentenceAddress, annotationOffsetStart, origin, target, type,
-                    isDisplayLemmaSelected, annotationLayers, windowSize, jCas, scrollPage);
+            setOrigin(aRequest.getParameterValue("origin").toString());
+            setTarget(aRequest.getParameterValue("target").toString());
+            setType(aRequest.getParameterValue("type").toString());
+            setAnnotationOffsetStart(BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
+                    Integer.parseInt(origin)));
+            result = controller.createArc(this);
             if (scrollPage) {
                 setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(jCas, sentenceAddress,
                         annotationOffsetStart, project, document, windowSize));
@@ -448,21 +450,16 @@ public class BratAnnotator
         BratAjaxCasController controller = new BratAjaxCasController(jsonConverter, repository,
                 annotationService);
 
-        String origin = aRequest.getParameterValue("origin").toString();
-        String target = aRequest.getParameterValue("target").toString();
-        String type = aRequest.getParameterValue("type").toString();
-
         try {
-         //   JCas jCas = getCas(project, aUser, document);
-            int annotationOffsetStart = BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
-                    Integer.parseInt(origin));
+            setOrigin(aRequest.getParameterValue("origin").toString());
+            setTarget(aRequest.getParameterValue("target").toString());
+            setType(aRequest.getParameterValue("type").toString());
+            setAnnotationOffsetStart(BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
+                    Integer.parseInt(origin)));
 
             String annotationType = type.substring(0, type.indexOf(AnnotationType.PREFIX) + 1);
             if (annotationType.equals(AnnotationType.POS_PREFIX)) {
-                result = controller.reverseArc(windowSize, project, document, aUser,
-                        sentenceAddress, lastSentenceAddress, annotationOffsetStart, origin,
-                        target, type, isDisplayLemmaSelected, annotationLayers, windowSize, jCas,
-                        scrollPage);
+                result = controller.reverseArc(this);
                 if (scrollPage) {
                     setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(jCas,
                             sentenceAddress, annotationOffsetStart, project, document, windowSize));
@@ -487,24 +484,19 @@ public class BratAnnotator
         BratAjaxCasController controller = new BratAjaxCasController(jsonConverter, repository,
                 annotationService);
 
-        String offsets = aRequest.getParameterValue("offsets").toString();
-        String type = aRequest.getParameterValue("type").toString();
-        String id = aRequest.getParameterValue("id").toString();
-
         try {
+            String offsets = aRequest.getParameterValue("offsets").toString();
+            String id = aRequest.getParameterValue("id").toString();
             OffsetsList offsetLists = jsonConverter.getObjectMapper().readValue(offsets,
                     OffsetsList.class);
             int start = offsetLists.get(0).getBegin();
             int end = offsetLists.get(0).getEnd();
-          //  JCas jCas = getCas(project, aUser, document);
-            int annotationOffsetStart = BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
-                    sentenceAddress) + start;
-            int annotationOffsetEnd = BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
-                    sentenceAddress) + end;
-
-            result = controller.deleteSpan(windowSize, project, document, aUser, sentenceAddress,
-                    lastSentenceAddress, annotationOffsetStart, annotationOffsetEnd, type, id,
-                    isDisplayLemmaSelected, annotationLayers, windowSize, jCas, scrollPage);
+            setAnnotationOffsetStart(BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
+                    sentenceAddress) + start);
+           setAnnotationOffsetEnd(BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
+                    sentenceAddress) + end);
+           setType(aRequest.getParameterValue("type").toString());
+            result = controller.deleteSpan(this, id);
             if (scrollPage) {
                 setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(jCas, sentenceAddress,
                         annotationOffsetStart, project, document, windowSize));
@@ -537,18 +529,16 @@ public class BratAnnotator
         BratAjaxCasController controller = new BratAjaxCasController(jsonConverter, repository,
                 annotationService);
 
-        String origin = aRequest.getParameterValue("origin").toString();
-        String target = aRequest.getParameterValue("target").toString();
-        String type = aRequest.getParameterValue("type").toString();
 
         try {
-          //  JCas jCas = getCas(project, aUser, document);
-            int annotationOffsetStart = BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
-                    Integer.parseInt(origin));
 
-            result = controller.deleteArc(windowSize, project, document, aUser, sentenceAddress,
-                    lastSentenceAddress, annotationOffsetStart, origin, target, type,
-                    isDisplayLemmaSelected, annotationLayers, windowSize, jCas, scrollPage);
+           setOrigin(aRequest.getParameterValue("origin").toString());
+           setTarget(aRequest.getParameterValue("target").toString());
+           setType(aRequest.getParameterValue("type").toString());
+           setAnnotationOffsetStart(BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
+                    Integer.parseInt(origin)));
+
+            result = controller.deleteArc(this);
             if (scrollPage) {
                 setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(jCas, sentenceAddress,
                         annotationOffsetStart, project, document, windowSize));
@@ -577,13 +567,15 @@ public class BratAnnotator
         throws UIMAException
     {
 
+        // Incase jCas is lost, since transient, reload it
+        if(getjCas()==null){
+            setjCas(getCas(project, user, document));
+        }
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = repository.getUser(username);
         if (sentenceAddress == -1 || document.getId() != currentDocumentId
                 || project.getId() != currentprojectId) {
 
             try {
-                setjCas(getCas(project, user, document));
                 setSentenceAddress(BratAjaxCasUtil.getFirstSenetnceAddress(jCas));
                 setLastSentenceAddress(lastSentenceAddress = BratAjaxCasUtil
                         .getLastSenetnceAddress(jCas));
@@ -604,14 +596,11 @@ public class BratAnnotator
                 catch (Exception e) {
                     setWindowSize(10);
                     setDisplayLemmaSelected(true);
-                    setAnnotationLayers((ArrayList<TagSet>) annotationService.listTagSets(project));
+                    setAnnotationLayers((HashSet<TagSet>) annotationService.listTagSets(project));
 
                 }
             }
             catch (DataRetrievalFailureException ex) {
-                throw ex;
-            }
-            catch (UIMAException ex) {
                 throw ex;
             }
         }
@@ -633,7 +622,7 @@ public class BratAnnotator
 
             if (project.getId() != currentprojectId) {
                 annotationLayers.clear();
-                setAnnotationLayers((ArrayList<TagSet>) annotationService.listTagSets(project));
+                setAnnotationLayers(new HashSet<TagSet>(annotationService.listTagSets(project)));
             }
             currentprojectId = project.getId();
         }
@@ -641,10 +630,6 @@ public class BratAnnotator
 
     boolean isDocumentOpenedFirstTime(String aCollection, String adocumentName)
     {
-
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = repository.getUser(username);
-
         setProject(repository.getProject(aCollection.replace("/", "")));
         setDocument(repository.getSourceDocument(adocumentName, project));
 
@@ -725,6 +710,16 @@ public class BratAnnotator
         document = aDocument;
     }
 
+    public User getUser()
+    {
+        return user;
+    }
+
+    public void setUser(User aUser)
+    {
+        user = aUser;
+    }
+
     public int getWindowSize()
     {
         return windowSize;
@@ -765,12 +760,12 @@ public class BratAnnotator
         firstSentenceAddress = aFirstSentenceAddress;
     }
 
-    public ArrayList<TagSet> getAnnotationLayers()
+    public HashSet<TagSet> getAnnotationLayers()
     {
         return annotationLayers;
     }
 
-    public void setAnnotationLayers(ArrayList<TagSet> aAnnotationLayers)
+    public void setAnnotationLayers(HashSet<TagSet> aAnnotationLayers)
     {
         annotationLayers = aAnnotationLayers;
     }
@@ -803,6 +798,66 @@ public class BratAnnotator
     public void setjCas(JCas aJCas)
     {
         jCas = aJCas;
+    }
+
+    public int getAnnotationOffsetStart()
+    {
+        return annotationOffsetStart;
+    }
+
+    public void setAnnotationOffsetStart(int aAnnotationOffsetStart)
+    {
+        annotationOffsetStart = aAnnotationOffsetStart;
+    }
+
+    public int getAnnotationOffsetEnd()
+    {
+        return annotationOffsetEnd;
+    }
+
+    public void setAnnotationOffsetEnd(int aAnnotationOffsetEnd)
+    {
+        annotationOffsetEnd = aAnnotationOffsetEnd;
+    }
+
+    public String getType()
+    {
+        return type;
+    }
+
+    public void setType(String aType)
+    {
+        type = aType;
+    }
+
+    public String getOrigin()
+    {
+        return origin;
+    }
+
+    public void setOrigin(String aOrigin)
+    {
+        origin = aOrigin;
+    }
+
+    public String getTarget()
+    {
+        return target;
+    }
+
+    public void setTarget(String aTarget)
+    {
+        target = aTarget;
+    }
+
+    public boolean isGetDocument()
+    {
+        return isGetDocument;
+    }
+
+    public void setGetDocument(boolean aIsGetDocument)
+    {
+        isGetDocument = aIsGetDocument;
     }
 
 }
