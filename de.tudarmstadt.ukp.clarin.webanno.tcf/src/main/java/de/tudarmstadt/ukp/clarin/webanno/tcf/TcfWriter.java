@@ -84,16 +84,18 @@ public class TcfWriter
 
             // Get the original TCF file and preserve it
             DocumentMetaData documentMetadata = DocumentMetaData.get(aJCas);
-           /* docIS = new FileInputStream(StringUtils.removeStart(documentMetadata.getDocumentUri(),
-                    "file:"));*/
+            /*
+             * docIS = new
+             * FileInputStream(StringUtils.removeStart(documentMetadata.getDocumentUri(), "file:"));
+             */
             URL filePathUrl = new URL(documentMetadata.getDocumentUri());
             docIS = filePathUrl.openStream();
             TextCorpusStored corpus;
-            try{
-            corpus = casToTcfWriter(docIS, aJCas);
+            try {
+                corpus = casToTcfWriter(docIS, aJCas);
             }
-            catch(WLFormatException ex){
-              corpus = casToTcfWriter(aJCas);
+            catch (WLFormatException ex) {
+                corpus = casToTcfWriter(aJCas);
             }
 
             WLData wlData = new WLData(corpus);
@@ -227,8 +229,8 @@ public class TcfWriter
             dependencyParsingLayer = aTextCorpus.createDependencyParsingLayer("tiger", false, true);
         }
 
-             for (Sentence sentence : select(aJCas, Sentence.class)) {
-                 List<eu.clarin.weblicht.wlfxb.tc.api.Dependency> deps = new ArrayList<eu.clarin.weblicht.wlfxb.tc.api.Dependency>();
+        for (Sentence sentence : select(aJCas, Sentence.class)) {
+            List<eu.clarin.weblicht.wlfxb.tc.api.Dependency> deps = new ArrayList<eu.clarin.weblicht.wlfxb.tc.api.Dependency>();
             for (Dependency d : selectCovered(Dependency.class, sentence)) {
                 eu.clarin.weblicht.wlfxb.tc.api.Dependency dependency = dependencyParsingLayer
                         .createDependency(d.getDependencyType(),
@@ -237,7 +239,7 @@ public class TcfWriter
 
                 deps.add(dependency);
             }
-            if (dependencyParsingLayer != null&&deps.size()>0) {
+            if (dependencyParsingLayer != null && deps.size() > 0) {
                 dependencyParsingLayer.addParse(deps);
             }
         }
@@ -252,20 +254,14 @@ public class TcfWriter
         }
 
         for (NamedEntity namedEntity : select(aJCas, NamedEntity.class)) {
-            int begin = namedEntity.getBegin();
-            List<eu.clarin.weblicht.wlfxb.tc.api.Token> tokens = new ArrayList<eu.clarin.weblicht.wlfxb.tc.api.Token>();
-            while (true) {
-                String token = aTokensBeginPositionMap.get(begin).getString();
-                if (begin + token.length() == namedEntity.getEnd()) {
-                    tokens.add(aTokensBeginPositionMap.get(begin));
-                    namedEntitiesLayer.addEntity(namedEntity.getValue(), tokens);
-                    break;
-                }
-                else {
-                    tokens.add(aTokensBeginPositionMap.get(begin));
-                    begin = begin + 1 + aTokensBeginPositionMap.get(begin).getString().length();
-                }
+
+            List<Token> tokensInCas = selectCovered(aJCas, Token.class, namedEntity.getBegin(),
+                    namedEntity.getEnd());
+            List<eu.clarin.weblicht.wlfxb.tc.api.Token> tokensInTcf = new ArrayList<eu.clarin.weblicht.wlfxb.tc.api.Token>();
+            for (Token token : tokensInCas) {
+                tokensInTcf.add(aTokensBeginPositionMap.get(token.getBegin()));
             }
+            namedEntitiesLayer.addEntity(namedEntity.getValue(), tokensInTcf);
         }
     }
 
