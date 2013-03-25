@@ -49,14 +49,14 @@
 	</table>
 	<br>
 	<table>
-		<tr style="color:green">
+	<!-- 	<tr style="color:green">
 			<td>Overall Annotation Progress</td>
 			<td>Progress by Annotation Types</td>
 		</tr>
 		<tr>
 			<td><img wicket:id="overallChart" alt="Overall Progress" /></td>
 			<td><img wicket:id="annotationChart" alt="Overall Progress" /></td>
-		</tr>
+		</tr>  -->
 		<tr style="color:green">
 			<td>Annotator's Progress -&gt<span wicket:id="projectName" style="color:red"></span></td>
 			<td>Projects's Progress</td>
@@ -86,6 +86,8 @@
 				</td>
 		</tr>	
 	</table>
+	<div style="color:green">Completion status of documents by users for Project-&gt <span wicket:id="projectName" style="color:red"></span></div>
+	<table wicket:id="rsTable"></table>
 	<!-- 				
  		<table style="height: 100%; width: 100%;">			
 					<tr>

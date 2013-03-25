@@ -31,6 +31,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
+import org.apache.wicket.extensions.markup.html.repeater.data.table.DefaultDataTable;
+import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
@@ -70,6 +72,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.support.EntityModel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
@@ -79,6 +82,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
  * Monitoring To display different monitoring and statistics measurements tabularly and graphically.
+ *
  * @author Seid Muhie Yimam
  *
  */
@@ -101,6 +105,7 @@ public class MonitoringPage
         extends Form<SelectionModel>
     {
         private static final long serialVersionUID = -1L;
+
         public ProjectSelectionForm(String id)
         {
             super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
@@ -158,47 +163,83 @@ public class MonitoringPage
                         monitoringDetailForm.setVisible(true);
                         ProjectSelectionForm.this.setVisible(true);
 
-                        int expected = 0;
-                        final Map<String, Integer> annotatorProgressExpected = new HashMap<String, Integer>();
+                        final Map<String, Integer> annotatorsProgress = new HashMap<String, Integer>();
                         Project project = aNewSelection;
+                        List<SourceDocument> documents = projectRepository
+                                .listSourceDocuments(project);
+                        Map<String, String> userAnnotationDocumentMap = new HashMap<String, String>();
+                        int totalDocuments = documents.size();
 
-                        if(project!=null){
-                            for(AnnotationDocument annotationDocument: projectRepository.listAnnotationDocument(project)){
-                                try {
-
-                                    JCas jCas = projectRepository.getAnnotationDocumentContent(annotationDocument);
-                                    expected = expected + MonitoringUtils.expectedAnnotations(jCas);
-                                    // Annotator's Progress
-                                    String username = annotationDocument.getUser().getUsername();
-                                    if (annotatorProgressExpected.get(username) == null) {
-                                        annotatorProgressExpected.put(username,
-                                                MonitoringUtils.expectedAnnotations(jCas));
-
-                                    }
-                                    else {
-                                        int previousExpectedValue = annotatorProgressExpected.get(username);
-                                                            annotatorProgressExpected.put(username, previousExpectedValue
-                                                + MonitoringUtils.expectedAnnotations(jCas));
-                                            }
+                        if (project != null) {
+                            for (AnnotationDocument annotationDocument : projectRepository
+                                    .listAnnotationDocument(project)) {
+                                // Annotator's Progress
+                                String username = annotationDocument.getUser().getUsername();
+                                if (annotatorsProgress.get(username) == null) {
+                                    annotatorsProgress.put(username, 1);
+                                    userAnnotationDocumentMap.put(
+                                            username + annotationDocument.getName(),
+                                            annotationDocument.getName());
                                 }
-                                catch (UIMAException e) {
-                                    error("Unable to get annotation document "
-                                            + ExceptionUtils.getRootCauseMessage(e));
+                                else {
+                                    int previousExpectedValue = annotatorsProgress.get(username);
+                                    annotatorsProgress.put(username, previousExpectedValue + 1);
+                                    userAnnotationDocumentMap.put(
+                                            username + annotationDocument.getName(),
+                                            annotationDocument.getName());
                                 }
-                                catch (ClassNotFoundException e) {
-                                    error("Unable to get annotation document "
-                                            + ExceptionUtils.getRootCauseMessage(e));
-                                }
-                                catch (IOException e) {
-                                    error("Unable to get annotation document "
-                                            + ExceptionUtils.getRootCauseMessage(e));
+                            }
+                            for (User use : projectRepository.listProjectUsers(project)) {
+                                if (annotatorsProgress.get(use.getUsername()) == null) {
+                                    annotatorsProgress.put(use.getUsername(), 0);
                                 }
                             }
                             projectName.setDefaultModelObject(project.getName());
 
-                            annotatorProgress.setImageResource(createProgressChart(annotatorProgressExpected, expected));
+                            annotatorProgress.setImageResource(createProgressChart(
+                                    annotatorsProgress, totalDocuments));
                             annotatorProgress.setVisible(true);
                         }
+
+                        List<String> documentListAsColumnHeader = new ArrayList<String>();
+                        documentListAsColumnHeader.add("Users");
+                        for (SourceDocument document : documents) {
+                            documentListAsColumnHeader.add(document.getName());
+                        }
+
+                        List<List<String>> userAnnotationDocumentLists = new ArrayList<List<String>>();
+                        for (User user : projectRepository.listProjectUsers(project)) {
+                            List<String> userAnnotationDocument = new ArrayList<String>();
+                            userAnnotationDocument.add(user.getUsername());
+                            for (SourceDocument document : documents) {
+                                if (userAnnotationDocumentMap.get(user.getUsername()
+                                        + document.getName()) == null
+                                        || !userAnnotationDocumentMap.get(
+                                                user.getUsername() + document.getName()).equals(
+                                                document.getName())) {
+                                    userAnnotationDocument.add("XX");// not annotated, later TODO
+                                                                     // not
+                                                                     // closed
+                                }
+                                else {
+                                    userAnnotationDocument.add("YY");
+                                }
+                            }
+                            userAnnotationDocumentLists.add(userAnnotationDocument);
+                        }
+
+                        UserAnnotatedDocumentProvider provider = new UserAnnotatedDocumentProvider(
+                                documentListAsColumnHeader, userAnnotationDocumentLists);
+
+                        List<IColumn<?>> columns = new ArrayList<IColumn<?>>();
+
+                        for (int i = 0; i < provider.getColumnCount(); i++) {
+                            columns.add(new DocumentColumnMetaData(provider, i));
+                        }
+                        table.remove();
+                        table = new DefaultDataTable("rsTable", columns, provider, 10);
+                        monitoringDetailForm.add(table);
+
                     }
                 }
 
@@ -241,8 +282,8 @@ public class MonitoringPage
             int dependency = 0;
             int coreference = 0;
             int coreferenceType = 0;
-            final Map<String, Integer> projectsProgressExpected = new HashMap<String, Integer>();
-            final Map<String, Integer> projectsProgressActual = new HashMap<String, Integer>();
+            // Total number of documents closed TODO
+            final Map<Project, Integer> projectsProgressPerClosedDocument = new HashMap<Project, Integer>();
 
             for (AnnotationDocument annotationDocument : projectRepository.listAnnotationDocument()) {
                 try {
@@ -257,21 +298,14 @@ public class MonitoringPage
                     coreferenceType = coreferenceType + select(jCas, CoreferenceLink.class).size();
 
                     // Projects Progress
-                    String project = annotationDocument.getProject().getName();
-                    if (projectsProgressExpected.get(project) == null) {
-                        projectsProgressExpected.put(project,
-                                MonitoringUtils.expectedAnnotations(jCas));
-                        projectsProgressActual
-                                .put(project, MonitoringUtils.actualAnnotations(jCas));
+                    Project project = annotationDocument.getProject();
+                    if (projectsProgressPerClosedDocument.get(project) == null) {
+                        projectsProgressPerClosedDocument.put(project, 1);
 
                     }
                     else {
-                        int previousExpectedValue = projectsProgressExpected.get(project);
-                        int previousActualValue = projectsProgressActual.get(project);
-                        projectsProgressExpected.put(project, previousExpectedValue
-                                + MonitoringUtils.expectedAnnotations(jCas));
-                        projectsProgressActual.put(project,
-                                previousActualValue + MonitoringUtils.actualAnnotations(jCas));
+                        int previousExpectedValue = projectsProgressPerClosedDocument.get(project);
+                        projectsProgressPerClosedDocument.put(project, previousExpectedValue + 1);
                     }
                 }
                 catch (UIMAException e) {
@@ -317,18 +351,19 @@ public class MonitoringPage
             RepeatingView projectRepeator = new RepeatingView("projectRepeator");
             add(projectRepeator);
 
-            for (final String project : projectsProgressExpected.keySet()) {
+            for (final Project project : projectsProgressPerClosedDocument.keySet()) {
                 AbstractItem item = new AbstractItem(projectRepeator.newChildId());
-
                 projectRepeator.add(item);
-                item.add(new Label("project", project));
+                final int totaldocuments = projectRepository.listProjectUsers(project).size()*
+                        projectRepository.listSourceDocuments(project).size();
+                item.add(new Label("project", project.getName()));
                 item.add(new ProgressBar("projectProgress", new ProgressionModel()
                 {
                     @Override
                     protected Progression getProgression()
                     {
-                        double value = (double) projectsProgressActual.get(project)
-                                / projectsProgressExpected.get(project);
+                        double value = (double) projectsProgressPerClosedDocument.get(project)
+                                /totaldocuments;
                         return new Progression((int) (value * 100));
                     }
                 }));
@@ -341,6 +376,7 @@ public class MonitoringPage
     private ProjectSelectionForm projectSelectionForm;
     private MonitoringDetailForm monitoringDetailForm;
     Image annotatorProgress;
+    DefaultDataTable table;
     private Label projectName;
 
     public MonitoringPage()
@@ -350,14 +386,39 @@ public class MonitoringPage
         monitoringDetailForm = new MonitoringDetailForm("monitoringDetailForm");
         // monitoringDetailForm.setVisible(false);
 
-        annotatorProgress =  new NonCachingImage("annotator");
+        annotatorProgress = new NonCachingImage("annotator");
         annotatorProgress.setOutputMarkupPlaceholderTag(true);
         annotatorProgress.setVisible(false);
         add(projectSelectionForm);
         projectName = new Label("projectName", "");
-        add(monitoringDetailForm.add(annotatorProgress).add(projectName));
-    }
 
+        Project pr = projectRepository.listProjects().get(0);
+        List<List<String>> userAnnotationDocumentLists = new ArrayList<List<String>>();
+        List<SourceDocument> dc = projectRepository.listSourceDocuments(pr);
+        for (User user : projectRepository.listProjectUsers(pr)) {
+            List<String> userAnnotationDocument = new ArrayList<String>();
+            userAnnotationDocument.add("");
+            for (int i = 0; i < dc.size(); i++) {
+                userAnnotationDocument.add("");
+            }
+            userAnnotationDocumentLists.add(userAnnotationDocument);
+        }
+        List<String> documentListAsColumnHeader = new ArrayList<String>();
+        documentListAsColumnHeader.add("Users");
+        for (SourceDocument d : dc) {
+            documentListAsColumnHeader.add(d.getName());
+        }
+        UserAnnotatedDocumentProvider prov = new UserAnnotatedDocumentProvider(
+                documentListAsColumnHeader, userAnnotationDocumentLists);
+
+        List<IColumn<?>> cols = new ArrayList<IColumn<?>>();
+
+        for (int i = 0; i < prov.getColumnCount(); i++) {
+            cols.add(new DocumentColumnMetaData(prov, i));
+        }
+        table = new DefaultDataTable("rsTable", cols, prov, 2);
+        add(monitoringDetailForm.add(annotatorProgress).add(projectName).add(table));
+    }
 
     private JFreeChart createPieChart(Map<String, Integer> chartValues)
     {
