@@ -33,6 +33,7 @@ import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
+import org.apache.wicket.behavior.SimpleAttributeModifier;
 import org.apache.wicket.markup.html.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
@@ -107,9 +108,10 @@ public class BratAnnotator
         vis = new WebMarkupContainer("vis");
         vis.setOutputMarkupId(true);
 
-        final FeedbackPanel feedbackPanel = new FeedbackPanel("bratAnnotatorfeedBackPanel");
+        final FeedbackPanel feedbackPanel = new FeedbackPanel("feedbackPanel");
         add(feedbackPanel);
         feedbackPanel.setOutputMarkupId(true);
+        feedbackPanel.add(new SimpleAttributeModifier("class", "info"));
 
         add(numberOfPages = (Label) new Label("numberOfPages", new LoadableDetachableModel()
         {

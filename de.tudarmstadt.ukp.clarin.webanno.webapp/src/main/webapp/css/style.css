@@ -201,19 +201,20 @@ ul.horizontal li div {
 /* -------------------------------------------------------------------------------------------------
  * Info panel
  */
+ /*
 .info {
 	position: relative;
 	clear: both;
-	min-height: 158px; /* 128(img) + 2*15(img-padding) */
+	min-height: 158px; 
 	max-height: 250px;
 	position: relative;
 	margin: 0.7em;
-	/*
+	
     background-color:yellow;
     border:solid black 1px;
-*/
-}
 
+}
+*/
 .biginfo {
 	min-height: 400px;
 	max-height: 400px;
@@ -407,6 +408,13 @@ div.error ul.feedbackPanel {
 	background-color: #fe8;
 	border: 1px solid #900;
 	color: #900;
+}
+
+/* color scheme on explicit info */
+div.info ul.feedbackPanel {
+	background-color: #fe8;
+	border: 1px solid #090;
+	color: #090;
 }
 /* left/right column arrangments for project/annotation settings */
 #left {
