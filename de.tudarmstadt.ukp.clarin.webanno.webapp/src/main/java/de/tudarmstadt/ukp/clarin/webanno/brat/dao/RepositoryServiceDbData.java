@@ -397,7 +397,7 @@ public class RepositoryServiceDbData
     @Override
     @Transactional
     public File exportAnnotationDocument(SourceDocument aDocument, Project aProject, User aUser,
-            Class aWriter)
+            Class aWriter, String aFileName)
         throws UIMAException, IOException, WLFormatException, ClassNotFoundException
     {
         File exportTempDir = File.createTempFile("webanno", "export");
@@ -405,21 +405,41 @@ public class RepositoryServiceDbData
         exportTempDir.mkdirs();
 
         File annotationFolder = getAnnotationFolder(getAnnotationDocument(aDocument, aUser));
-        String fileName = aUser.getUsername() + ".ser";
+        String serializedCaseFileName = aUser.getUsername() + ".ser";
 
-        CollectionReader reader = CollectionReaderFactory.createCollectionReader(
-                SerializedCasReader.class, SerializedCasReader.PARAM_PATH, annotationFolder,
-                SerializedCasReader.PARAM_PATTERNS, new String[] { "[+]" + fileName });
+        CollectionReader reader = CollectionReaderFactory
+                .createCollectionReader(SerializedCasReader.class, SerializedCasReader.PARAM_PATH,
+                        annotationFolder, SerializedCasReader.PARAM_PATTERNS, new String[] { "[+]"
+                                + serializedCaseFileName });
         if (!reader.hasNext()) {
-            throw new FileNotFoundException("Annotation file [" + fileName + "] not found in ["
-                    + annotationFolder + "]");
+            throw new FileNotFoundException("Annotation file [" + serializedCaseFileName
+                    + "] not found in [" + annotationFolder + "]");
         }
 
         AnalysisEngineDescription writer = createPrimitiveDescription(aWriter,
                 JCasFileWriter_ImplBase.PARAM_PATH, exportTempDir,
                 JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, true);
 
-        runPipeline(reader, writer);
+        CAS cas = JCasFactory.createJCas().getCas();
+        reader.getNext(cas);
+        // Get the original TCF file and preserve it
+        DocumentMetaData documentMetadata = DocumentMetaData.get(cas.getJCas());
+        // Update the source file name in case it is changed for some reason
+
+        File currentDocumentUri = new File(dir.getAbsolutePath() + PROJECT + aProject.getId()
+                + DOCUMENT + aDocument.getId() + SOURCE);
+
+        documentMetadata.setDocumentUri(new File(currentDocumentUri, aFileName).toURI().toURL()
+                .toExternalForm());
+
+        documentMetadata.setDocumentBaseUri(currentDocumentUri.toURI().toURL().toExternalForm());
+
+        documentMetadata.setCollectionId(currentDocumentUri.toURI().toURL().toExternalForm());
+
+        documentMetadata.setDocumentUri(new File(dir.getAbsolutePath() + PROJECT + aProject.getId()
+                + DOCUMENT + aDocument.getId() + SOURCE + "/" + aFileName).toURI().toURL()
+                .toExternalForm());
+        runPipeline(cas, writer);
 
         createLog(aProject, aUser).info(
                 " Exported file [" + aDocument.getName() + "] with ID [" + aDocument.getId()

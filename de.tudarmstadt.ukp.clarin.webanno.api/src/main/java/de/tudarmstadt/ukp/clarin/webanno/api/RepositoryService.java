@@ -138,7 +138,7 @@ public interface RepositoryService
      * @param user
      *            the {@link User } who annotates the document.
      */
-    File exportAnnotationDocument(SourceDocument document, Project project, User user, Class writer)
+    File exportAnnotationDocument(SourceDocument document, Project project, User user, Class writer, String fileName)
         throws FileNotFoundException, UIMAException, IOException, WLFormatException,
         ClassNotFoundException;
 

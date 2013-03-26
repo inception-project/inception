@@ -39,6 +39,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -123,7 +124,7 @@ public class ExportModalWindowPage
                                 try {
                                     downloadFile = repository.exportAnnotationDocument(document,
                                             project, user,
-                                            repository.getWritableFormats().get(selectedFormat));
+                                            repository.getWritableFormats().get(selectedFormat), fileName);
                                 }
                                 catch (FileNotFoundException e) {
                                     error("Ubable to find annotation document " + ":"
@@ -167,11 +168,13 @@ public class ExportModalWindowPage
     private ExportDetailsForm exportForm;
     private Project project;
     private SourceDocument document;
+    private String fileName;
 
-    public ExportModalWindowPage(final ModalWindow modalWindow, Project aProject, SourceDocument aDocument)
+    public ExportModalWindowPage(final ModalWindow modalWindow, BratAnnotatorModel aBratAnnotatorModel)
     {
-        this.project = aProject;
-        this.document = aDocument;
+        this.project = aBratAnnotatorModel.getProject();
+        this.document = aBratAnnotatorModel.getDocument();
+        this.fileName = aBratAnnotatorModel.getFileName();
         exportForm = new ExportDetailsForm("exportForm", modalWindow);
         add(exportForm);
     }

@@ -143,8 +143,7 @@ public class AnnotationPage
 
             public Page createPage()
             {
-                return new ExportModalWindowPage(exportModal, annotator.bratAnnotatorModel
-                        .getProject(), annotator.bratAnnotatorModel.getDocument());
+                return new ExportModalWindowPage(exportModal, annotator.bratAnnotatorModel);
             }
 
         });

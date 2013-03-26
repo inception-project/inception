@@ -31,6 +31,7 @@ public class BratAnnotatorModel implements Serializable
 
     private Project project;
     private SourceDocument document;
+    private String fileName;
     private User user;
     private int sentenceAddress = -1;
     private int lastSentenceAddress;
@@ -221,6 +222,17 @@ public class BratAnnotatorModel implements Serializable
     {
         isGetDocument = aIsGetDocument;
     }
+
+    public String getFileName()
+    {
+        return fileName;
+    }
+
+    public void setFileName(String aFileName)
+    {
+        fileName = aFileName;
+    }
+
 
 
 }
