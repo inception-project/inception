@@ -125,8 +125,8 @@ public class BratAnnotator
                     try {
                         JCas jCas = getCas(bratAnnotatorModel.getProject(),
                                 bratAnnotatorModel.getUser(), bratAnnotatorModel.getDocument());
-                        totalPageNumber = BratAjaxCasUtil.getNumberOfPages(
-                                jCas, bratAnnotatorModel.getWindowSize());
+                        totalPageNumber = BratAjaxCasUtil.getNumberOfPages(jCas,
+                                bratAnnotatorModel.getWindowSize());
 
                         // If only one page, start displaying from sentence 1
                         if (totalPageNumber == 1) {
@@ -183,8 +183,14 @@ public class BratAnnotator
                 }
                 else if (request.getParameterValue("action").toString()
                         .equals("getCollectionInformation")) {
-                    setAttributesForGetCollection(request.getParameterValue("collection")
-                            .toString());
+                    try {
+                        setAttributesForGetCollection(request.getParameterValue("collection")
+                                .toString());
+                    }
+                    catch (IOException e) {
+                        error("unable to find annotation preferences from file "
+                                + ExceptionUtils.getRootCauseMessage(e));
+                    }
                     result = controller.getCollectionInformation(
                             request.getParameterValue("collection").toString(),
                             bratAnnotatorModel.getAnnotationLayers());
@@ -559,10 +565,12 @@ public class BratAnnotator
      * {@link BratAjaxCasController#getDocument(int, Project, SourceDocument, User, int, int, boolean, ArrayList)}
      *
      * @throws UIMAException
+     * @throws IOException
      */
     @SuppressWarnings("unchecked")
-    public void setAttributesForDocument(String aProjectName, String aDocumentName, BratAnnotatorUIData aUIData)
-        throws UIMAException
+    public void setAttributesForDocument(String aProjectName, String aDocumentName,
+            BratAnnotatorUIData aUIData)
+        throws UIMAException, IOException
     {
 
         aUIData.setjCas(getCas(bratAnnotatorModel.getProject(), bratAnnotatorModel.getUser(),
@@ -578,30 +586,21 @@ public class BratAnnotator
                 bratAnnotatorModel.setLastSentenceAddress(BratAjaxCasUtil
                         .getLastSenetnceAddress(aUIData.getjCas()));
                 bratAnnotatorModel.setFirstSentenceAddress(bratAnnotatorModel.getSentenceAddress());
-                // Get preferences first from the properties file
-                try {
-                    AnnotationPreference preference = new AnnotationPreference();
-                    setAnnotationPreference(preference, username);
-                    bratAnnotatorModel.setWindowSize(preference.getWindowSize());
-                    bratAnnotatorModel.setScrollPage(preference.isScrollPage());
-                    bratAnnotatorModel.setDisplayLemmaSelected(preference.isDisplayLemmaSelected());
-                    // Get tagset using the id, from the properties file
-                    for (Long id : preference.getAnnotationLayers()) {
-                        bratAnnotatorModel.getAnnotationLayers().add(
-                                annotationService.getTagSet(id));
-                    }
-                }
-                // No setting saved yet, set default
-                catch (Exception e) {
-                    bratAnnotatorModel.setWindowSize(10);
-                    bratAnnotatorModel.setDisplayLemmaSelected(true);
-                    bratAnnotatorModel.setAnnotationLayers(new HashSet<TagSet>(annotationService
-                            .listTagSets(bratAnnotatorModel.getProject())));
 
-                }
+                AnnotationPreference preference = new AnnotationPreference();
+                setAnnotationPreference(preference, username);
             }
             catch (DataRetrievalFailureException ex) {
                 throw ex;
+            }
+            catch (BeansException e) {
+                throw e;
+            }
+            catch (FileNotFoundException e) {
+                throw e;
+            }
+            catch (IOException e) {
+                throw e;
             }
         }
 
@@ -613,16 +612,31 @@ public class BratAnnotator
     /**
      * Set different attributes for
      * {@link BratAjaxCasController#getCollectionInformation(String, ArrayList) }
+     *
+     * @throws IOException
      */
     @SuppressWarnings("unchecked")
     public void setAttributesForGetCollection(String aProjectName)
+        throws IOException
     {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
         if (!aProjectName.equals("/")) {
             bratAnnotatorModel.setProject(repository.getProject(aProjectName.replace("/", "")));
 
             if (bratAnnotatorModel.getProject().getId() != currentprojectId) {
-                bratAnnotatorModel.setAnnotationLayers(new HashSet<TagSet>(annotationService
-                        .listTagSets(bratAnnotatorModel.getProject())));
+                AnnotationPreference preference = new AnnotationPreference();
+                try {
+                    setAnnotationPreference(preference, username);
+                }
+                catch (BeansException e) {
+                    throw e;
+                }
+                catch (FileNotFoundException e) {
+                    throw e;
+                }
+                catch (IOException e) {
+                    throw e;
+                }
             }
             currentprojectId = bratAnnotatorModel.getProject().getId();
         }
@@ -675,22 +689,40 @@ public class BratAnnotator
         throws BeansException, FileNotFoundException, IOException
     {
         BeanWrapper wrapper = new BeanWrapperImpl(aPreference);
-        for (Entry<Object, Object> entry : repository.loadUserSettings(aUsername,
-                bratAnnotatorModel.getProject(), "annotation").entrySet()) {
-            String propertyName = entry.getKey().toString();
-            int index = propertyName.lastIndexOf(".");
-            propertyName = propertyName.substring(index + 1);
-            if (wrapper.isWritableProperty(propertyName)) {
-                List<String> value = Arrays.asList(entry.getValue().toString().replace("[", "")
-                        .replace("]", "").split(","));
-                if (value.size() > 1) {
-                    wrapper.setPropertyValue(propertyName, value);
-                }
-                else {
-                    wrapper.setPropertyValue(propertyName, entry.getValue());
+
+        // get project preference from file system
+        try {
+            for (Entry<Object, Object> entry : repository.loadUserSettings(aUsername,
+                    bratAnnotatorModel.getProject(), "annotation").entrySet()) {
+                String propertyName = entry.getKey().toString();
+                int index = propertyName.lastIndexOf(".");
+                propertyName = propertyName.substring(index + 1);
+                if (wrapper.isWritableProperty(propertyName)) {
+                    List<String> value = Arrays.asList(entry.getValue().toString().replace("[", "")
+                            .replace("]", "").split(","));
+                    if (value.size() > 1) {
+                        wrapper.setPropertyValue(propertyName, value);
+                    }
+                    else {
+                        wrapper.setPropertyValue(propertyName, entry.getValue());
+                    }
                 }
             }
+            bratAnnotatorModel.setWindowSize(aPreference.getWindowSize());
+            bratAnnotatorModel.setScrollPage(aPreference.isScrollPage());
+            bratAnnotatorModel.setDisplayLemmaSelected(aPreference.isDisplayLemmaSelected());
+            // Get tagset using the id, from the properties file
+            bratAnnotatorModel.getAnnotationLayers().clear();
+            for (Long id : aPreference.getAnnotationLayers()) {
+                bratAnnotatorModel.getAnnotationLayers().add(annotationService.getTagSet(id));
+            }
         }
+        // no preference found
+        catch (Exception e) {
+            bratAnnotatorModel.setAnnotationLayers(new HashSet<TagSet>(annotationService
+                    .listTagSets(bratAnnotatorModel.getProject())));
+        }
+
     }
 
 }

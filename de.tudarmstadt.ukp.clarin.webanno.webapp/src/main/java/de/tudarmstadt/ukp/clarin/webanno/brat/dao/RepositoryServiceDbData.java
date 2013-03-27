@@ -835,6 +835,13 @@ public class RepositoryServiceDbData
         FileUtils.forceMkdir(new File(propertiesPath));
         property.save(new FileOutputStream(new File(propertiesPath,
                 annotationPreferencePropertiesFileName)), null);
+
+        createLog(aProject, getUser(aUsername)).info(
+                " Saved preferences file [" + annotationPreferencePropertiesFileName
+                        + "] for project [" + aProject.getName() + "] with ID [" + aProject.getId()
+                        + "] to location: [" + propertiesPath + "]");
+        createLog(aProject, getUser(aUsername)).removeAllAppenders();
+
     }
 
     @Override
