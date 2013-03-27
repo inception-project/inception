@@ -174,7 +174,7 @@ public class ExportModalWindowPage
     {
         this.project = aBratAnnotatorModel.getProject();
         this.document = aBratAnnotatorModel.getDocument();
-        this.fileName = aBratAnnotatorModel.getFileName();
+        this.fileName = aBratAnnotatorModel.getDocument().getName();
         exportForm = new ExportDetailsForm("exportForm", modalWindow);
         add(exportForm);
     }

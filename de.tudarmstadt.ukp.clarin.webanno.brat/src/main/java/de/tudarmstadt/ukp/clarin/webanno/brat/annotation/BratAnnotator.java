@@ -660,7 +660,6 @@ public class BratAnnotator
         bratAnnotatorModel.setProject(repository.getProject(aCollection.replace("/", "")));
         bratAnnotatorModel.setDocument(repository.getSourceDocument(adocumentName,
                 bratAnnotatorModel.getProject()));
-        bratAnnotatorModel.setFileName(adocumentName);
 
         try {
             repository.getAnnotationDocument(bratAnnotatorModel.getDocument(),

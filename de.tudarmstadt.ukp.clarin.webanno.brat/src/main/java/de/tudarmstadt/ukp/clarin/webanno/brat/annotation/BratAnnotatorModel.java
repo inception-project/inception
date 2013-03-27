@@ -33,25 +33,71 @@ public class BratAnnotatorModel
 {
     private static final long serialVersionUID = 1078613192789450714L;
 
+    /**
+     * The Project the annotator working on
+     */
     private Project project;
+    /**
+     * The source document the to be annotated
+     */
     private SourceDocument document;
-    private String fileName;
-    private User user;
-    private int sentenceAddress = -1;
-    private int lastSentenceAddress;
-    private int firstSentenceAddress;
 
-    // Annotation preferences
+    /**
+     * The current user annotating the document
+     */
+    private User user;
+    /**
+     * The sentence address where the display window starts with, in its UIMA annotation
+     */
+    private int displayWindowStartSentenceAddress = -1;
+    /**
+     * The very last sentence address in its UIMA annotation
+     */
+    private int lastSentenceAddress;
+    /**
+     * The very first sentence address in its UIMA annotation
+     */
+    private int firstSentenceAddress;
+    /**
+     * The starting offset position for the current display window
+     */
+    private int annotationOffsetStart;
+    /**
+     * The end offset position for the current display window
+     */
+    private int annotationOffsetEnd;
+    /**
+     * The annotation type, span or arc value in brat annotation window
+     */
+    private String annotationType;
+    /**
+     * The id of the origin span in arc annotation
+     */
+    private String origin;
+    /**
+     * The id of target span in arc annotation
+     */
+    private String target;
+
+
+    // Annotation preferences, to be saved in a file system
+    /**
+     * The annotation layers available in the current project.
+     */
     private HashSet<TagSet> annotationLayers = new HashSet<TagSet>();
+    /**
+     * The number of sentences to be dispalyed at atime
+     */
     private int windowSize = 10;
-    private boolean isDisplayLemmaSelected;
+    /**
+     * Used to enable/disable the display of lemma layers
+     */
+    private boolean displayLemmaSelected;
+    /**
+     * Used to enable/disable auto-scrolling while annotation
+     */
     private boolean scrollPage;
 
-    private int annotationOffsetStart;
-    private int annotationOffsetEnd;
-    private String type;
-    private String origin;
-    private String target;
 
     public Project getProject()
     {
@@ -85,12 +131,12 @@ public class BratAnnotatorModel
 
     public int getSentenceAddress()
     {
-        return sentenceAddress;
+        return displayWindowStartSentenceAddress;
     }
 
     public void setSentenceAddress(int aSentenceAddress)
     {
-        sentenceAddress = aSentenceAddress;
+        displayWindowStartSentenceAddress = aSentenceAddress;
     }
 
     public int getLastSentenceAddress()
@@ -135,12 +181,12 @@ public class BratAnnotatorModel
 
     public boolean isDisplayLemmaSelected()
     {
-        return isDisplayLemmaSelected;
+        return displayLemmaSelected;
     }
 
     public void setDisplayLemmaSelected(boolean aIsDisplayLemmaSelected)
     {
-        isDisplayLemmaSelected = aIsDisplayLemmaSelected;
+        displayLemmaSelected = aIsDisplayLemmaSelected;
     }
 
     public boolean isScrollPage()
@@ -175,12 +221,12 @@ public class BratAnnotatorModel
 
     public String getType()
     {
-        return type;
+        return annotationType;
     }
 
     public void setType(String aType)
     {
-        type = aType;
+        annotationType = aType;
     }
 
     public String getOrigin()
@@ -201,16 +247,6 @@ public class BratAnnotatorModel
     public void setTarget(String aTarget)
     {
         target = aTarget;
-    }
-
-    public String getFileName()
-    {
-        return fileName;
-    }
-
-    public void setFileName(String aFileName)
-    {
-        fileName = aFileName;
     }
 
 }
