@@ -90,8 +90,8 @@ public class BratAnnotator
     private AnnotationService annotationService;
 
     public Label numberOfPages;
-    private int pageNumber = 1;
-    private int totalPageNumber;
+    private int sentenceNumber = 1;
+    private int totalNumberOfSentence;
 
     private long currentDocumentId;
     private long currentprojectId;
@@ -125,27 +125,37 @@ public class BratAnnotator
                     try {
                         JCas jCas = getCas(bratAnnotatorModel.getProject(),
                                 bratAnnotatorModel.getUser(), bratAnnotatorModel.getDocument());
-                        totalPageNumber = BratAjaxCasUtil.getNumberOfPages(jCas,
+                        totalNumberOfSentence = BratAjaxCasUtil.getNumberOfPages(jCas,
                                 bratAnnotatorModel.getWindowSize());
 
                         // If only one page, start displaying from sentence 1
-                        if (totalPageNumber == 1) {
+                        if (totalNumberOfSentence == 1) {
                             bratAnnotatorModel.setSentenceAddress(bratAnnotatorModel
                                     .getFirstSentenceAddress());
                         }
-                        pageNumber = BratAjaxCasUtil.getPageNumber(jCas,
-                                bratAnnotatorModel.getWindowSize(),
+                        sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas,
                                 bratAnnotatorModel.getSentenceAddress());
-                        return pageNumber + " of " + totalPageNumber + " pages";
+                        int firstSentenceNumber = sentenceNumber + 1;
+                        int lastSentenceNumber;
+                        if (firstSentenceNumber + bratAnnotatorModel.getWindowSize() - 1 < totalNumberOfSentence) {
+                            lastSentenceNumber = firstSentenceNumber
+                                    + bratAnnotatorModel.getWindowSize() - 1;
+                        }
+                        else {
+                            lastSentenceNumber = totalNumberOfSentence;
+                        }
+
+                        return "showing " + firstSentenceNumber + "-" + lastSentenceNumber + " of "
+                                + totalNumberOfSentence + " sentences";
                     }
                     // No need to report error, already reported in getDocument below
                     catch (DataRetrievalFailureException ex) {
-                //        error(ExceptionUtils.getRootCauseMessage(ex));
+                        // error(ExceptionUtils.getRootCauseMessage(ex));
                         return "";
                     }
                     // No need to report error, already reported in getDocument below
                     catch (UIMAException e) {
-            //            error(ExceptionUtils.getRootCauseMessage(e));
+                        // error(ExceptionUtils.getRootCauseMessage(e));
                         return "";
                     }
 

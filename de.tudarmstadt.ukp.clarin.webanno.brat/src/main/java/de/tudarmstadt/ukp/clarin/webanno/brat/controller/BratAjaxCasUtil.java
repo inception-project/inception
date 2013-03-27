@@ -919,39 +919,13 @@ public class BratAjaxCasUtil
     }
 
     /**
-     * Get the total number of pages, Number-of-sentence/window-size
+     * Get the total number of sentences
      */
     public static int getNumberOfPages(JCas aJcas, int aWindowSize)
     {
-        int numberOfPages = (int) Math.ceil((double) select(aJcas, Sentence.class).size()
-                / aWindowSize);
-        return numberOfPages;
-    }
-
-    /**
-     * determine at which page, out of the total pages, a sentence belongs.
-     */
-
-    public static int getPageNumber(JCas aJcas, int aWindowSize, int aSentenceAddress)
-    {
-        List<Integer> beginningAddresses = getDisplayWindowBeginningSentenceAddresses(aJcas,
-                aWindowSize);
-        if (aSentenceAddress >= beginningAddresses.get(beginningAddresses.size() - 1)) {
-            return beginningAddresses.size();
-        }
-        int pageNumber = 0;
-        for (int i = 0; i < beginningAddresses.size() - 1; i++) {
-            int currentAddress = beginningAddresses.get(i);
-            int nextAddress = beginningAddresses.get(i + 1);
-            if (currentAddress <= aSentenceAddress && nextAddress > aSentenceAddress) {
-                pageNumber = i + 1;
-                break;
-            }
-        }
-        return pageNumber;
+        return select(aJcas, Sentence.class).size();
 
     }
-
     /**
      * Returns the beginning address of all pages. This is used properly display<b> Page X of Y </b>
      */
