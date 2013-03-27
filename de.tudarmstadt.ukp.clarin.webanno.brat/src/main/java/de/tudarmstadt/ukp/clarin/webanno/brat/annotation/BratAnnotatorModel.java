@@ -18,14 +18,18 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 import java.io.Serializable;
 import java.util.HashSet;
 
-import org.apache.uima.jcas.JCas;
-
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
-public class BratAnnotatorModel implements Serializable
+/**
+ * Data model for the {@link BratAnnotator}
+ * @author Seid Muhie Yimam
+ *
+ */
+public class BratAnnotatorModel
+    implements Serializable
 {
     private static final long serialVersionUID = 1078613192789450714L;
 
@@ -43,15 +47,11 @@ public class BratAnnotatorModel implements Serializable
     private boolean isDisplayLemmaSelected;
     private boolean scrollPage;
 
-    private transient JCas jCas;
     private int annotationOffsetStart;
     private int annotationOffsetEnd;
     private String type;
     private String origin;
     private String target;
-
-    // If Brat action is getdocument, no aut-scroll at all
-    private boolean isGetDocument;
 
     public Project getProject()
     {
@@ -153,16 +153,6 @@ public class BratAnnotatorModel implements Serializable
         scrollPage = aScrollPage;
     }
 
-    public JCas getjCas()
-    {
-        return jCas;
-    }
-
-    public void setjCas(JCas aJCas)
-    {
-        jCas = aJCas;
-    }
-
     public int getAnnotationOffsetStart()
     {
         return annotationOffsetStart;
@@ -213,16 +203,6 @@ public class BratAnnotatorModel implements Serializable
         target = aTarget;
     }
 
-    public boolean isGetDocument()
-    {
-        return isGetDocument;
-    }
-
-    public void setGetDocument(boolean aIsGetDocument)
-    {
-        isGetDocument = aIsGetDocument;
-    }
-
     public String getFileName()
     {
         return fileName;
@@ -232,7 +212,5 @@ public class BratAnnotatorModel implements Serializable
     {
         fileName = aFileName;
     }
-
-
 
 }

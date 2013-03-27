@@ -41,6 +41,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorUIData;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Stored;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.CreateArcResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.CreateSpanResponse;
@@ -284,15 +285,13 @@ public class BratAjaxCasController
      * @throws ClassNotFoundException
      */
 
-    public GetDocumentResponse getDocument(BratAnnotatorModel aBratAnnotatorModel)
+    public GetDocumentResponse getDocument(BratAnnotatorModel aBratAnnotatorModel, BratAnnotatorUIData aUIData)
         throws UIMAException, IOException, ClassNotFoundException
     {
 
         GetDocumentResponse response = new GetDocumentResponse();
 
-        // Sentence startSentence = (Sentence)
-        // jCas.getLowLevelCas().ll_getFSForRef(aBratAnnotator.getSentenceAddress());
-        addBratResponses(response, aBratAnnotatorModel);
+        addBratResponses(response, aBratAnnotatorModel, aUIData);
 
         return response;
     }
@@ -302,7 +301,7 @@ public class BratAjaxCasController
      * constructed JSON document as a response to BRAT visualizer.
      */
 
-    public CreateSpanResponse createSpan(BratAnnotatorModel aBratAnnotatorModel)
+    public CreateSpanResponse createSpan(BratAnnotatorModel aBratAnnotatorModel, BratAnnotatorUIData aUIData)
         throws JsonParseException, JsonMappingException, IOException, UIMAException
     {
 
@@ -310,26 +309,25 @@ public class BratAjaxCasController
         String type = BratAjaxCasUtil.getType(aBratAnnotatorModel.getType());
 
         if (annotationType.equals(AnnotationType.NAMEDENTITY_PREFIX)) {
-            BratAjaxCasUtil.updateNamedEntity(aBratAnnotatorModel, type);
+            BratAjaxCasUtil.updateNamedEntity(aBratAnnotatorModel, type, aUIData);
         }
         else if (annotationType.equals(AnnotationType.POS_PREFIX)) {
-            BratAjaxCasUtil.updatePos(aBratAnnotatorModel, type);
+            BratAjaxCasUtil.updatePos(aBratAnnotatorModel, type, aUIData);
         }
         else if (annotationType.equals(AnnotationType.COREFERENCE_PREFIX)) {
-            BratAjaxCasUtil.updateCoreferenceType(aBratAnnotatorModel, type);
+            BratAjaxCasUtil.updateCoreferenceType(aBratAnnotatorModel, type, aUIData);
         }
 
         GetDocumentResponse response = new GetDocumentResponse();
 
-        addBratResponses(response, aBratAnnotatorModel);
+        addBratResponses(response, aBratAnnotatorModel, aUIData);
 
         CreateSpanResponse createSpanResponse = new CreateSpanResponse();
 
         createSpanResponse.setAnnotations(response);
 
-        repository.createAnnotationDocumentContent(
-                aBratAnnotatorModel.getjCas(),
-                repository.getAnnotationDocument(aBratAnnotatorModel.getDocument(),
+        repository.createAnnotationDocumentContent(aUIData.getjCas(), repository
+                .getAnnotationDocument(aBratAnnotatorModel.getDocument(),
                         aBratAnnotatorModel.getUser()), aBratAnnotatorModel.getUser());
         return createSpanResponse;
 
@@ -339,7 +337,7 @@ public class BratAjaxCasController
      * Creates an arc annotation between two annotated spans
      */
 
-    public CreateArcResponse createArc(BratAnnotatorModel aBratAnnotatorModel)
+    public CreateArcResponse createArc(BratAnnotatorModel aBratAnnotatorModel, BratAnnotatorUIData aUIData)
         throws UIMAException, IOException
     {
 
@@ -347,22 +345,21 @@ public class BratAjaxCasController
         String type = BratAjaxCasUtil.getType(aBratAnnotatorModel.getType());
 
         if (annotationType.equals(AnnotationType.POS_PREFIX)) {
-            BratAjaxCasUtil.updateDependencyParsing(aBratAnnotatorModel, type);
+            BratAjaxCasUtil.updateDependencyParsing(aBratAnnotatorModel, type, aUIData);
         }
         else if (annotationType.equals(AnnotationType.COREFERENCE_PREFIX)) {
-            BratAjaxCasUtil.updateCoreferenceRelation(aBratAnnotatorModel, type);
+            BratAjaxCasUtil.updateCoreferenceRelation(aBratAnnotatorModel, type, aUIData);
         }
         GetDocumentResponse response = new GetDocumentResponse();
 
-        addBratResponses(response, aBratAnnotatorModel);
+        addBratResponses(response, aBratAnnotatorModel, aUIData);
 
         CreateArcResponse createArcResponse = new CreateArcResponse();
 
         createArcResponse.setAnnotations(response);
 
-        repository.createAnnotationDocumentContent(
-                aBratAnnotatorModel.getjCas(),
-                repository.getAnnotationDocument(aBratAnnotatorModel.getDocument(),
+        repository.createAnnotationDocumentContent(aUIData.getjCas(), repository
+                .getAnnotationDocument(aBratAnnotatorModel.getDocument(),
                         aBratAnnotatorModel.getUser()), aBratAnnotatorModel.getUser());
 
         return createArcResponse;
@@ -373,7 +370,7 @@ public class BratAjaxCasController
      * reverse the direction of arc annotations, in this case, Dependency parsing
      */
 
-    public ReverseArcResponse reverseArc(BratAnnotatorModel aBratAnnotatorModel)
+    public ReverseArcResponse reverseArc(BratAnnotatorModel aBratAnnotatorModel, BratAnnotatorUIData aUIData)
         throws UIMAException, IOException
     {
 
@@ -381,24 +378,23 @@ public class BratAjaxCasController
         String type = BratAjaxCasUtil.getType(aBratAnnotatorModel.getType());
 
         if (annotationType.equals(AnnotationType.POS_PREFIX)) {
-            BratAjaxCasUtil.deleteDependencyParsing(aBratAnnotatorModel, type);
+            BratAjaxCasUtil.deleteDependencyParsing(aBratAnnotatorModel, type, aUIData);
             // Reverse directions
             String origin = aBratAnnotatorModel.getOrigin();// swap variable
             aBratAnnotatorModel.setOrigin(aBratAnnotatorModel.getTarget());
             aBratAnnotatorModel.setTarget(origin);
-            BratAjaxCasUtil.updateDependencyParsing(aBratAnnotatorModel, type);
+            BratAjaxCasUtil.updateDependencyParsing(aBratAnnotatorModel, type, aUIData);
         }
 
         GetDocumentResponse response = new GetDocumentResponse();
-        addBratResponses(response, aBratAnnotatorModel);
+        addBratResponses(response, aBratAnnotatorModel, aUIData);
 
         ReverseArcResponse createArcResponse = new ReverseArcResponse();
 
         createArcResponse.setAnnotations(response);
 
-        repository.createAnnotationDocumentContent(
-                aBratAnnotatorModel.getjCas(),
-                repository.getAnnotationDocument(aBratAnnotatorModel.getDocument(),
+        repository.createAnnotationDocumentContent(aUIData.getjCas(), repository
+                .getAnnotationDocument(aBratAnnotatorModel.getDocument(),
                         aBratAnnotatorModel.getUser()), aBratAnnotatorModel.getUser());
 
         return createArcResponse;
@@ -408,7 +404,7 @@ public class BratAjaxCasController
     /**
      * deletes a span annotation, except POS annotation
      */
-    public DeleteSpanResponse deleteSpan(BratAnnotatorModel aBratAnnotatorModel, String aId)
+    public DeleteSpanResponse deleteSpan(BratAnnotatorModel aBratAnnotatorModel, String aId, BratAnnotatorUIData aUIData)
         throws JsonParseException, JsonMappingException, IOException, UIMAException
     {
 
@@ -416,23 +412,22 @@ public class BratAjaxCasController
         String type = BratAjaxCasUtil.getType(aBratAnnotatorModel.getType());
 
         if (annotationType.equals(AnnotationType.NAMEDENTITY_PREFIX)) {
-            BratAjaxCasUtil.deleteNamedEntity(aBratAnnotatorModel.getjCas(), aId);
+            BratAjaxCasUtil.deleteNamedEntity(aUIData.getjCas(), aId);
         }
         else if (annotationType.equals(AnnotationType.COREFERENCE_PREFIX)) {
-            BratAjaxCasUtil.deleteCoreferenceType(aBratAnnotatorModel.getjCas(), aId, type,
+            BratAjaxCasUtil.deleteCoreferenceType(aUIData.getjCas(), aId, type,
                     aBratAnnotatorModel.getAnnotationOffsetStart(),
                     aBratAnnotatorModel.getAnnotationOffsetEnd());
         }
 
         GetDocumentResponse response = new GetDocumentResponse();
-        addBratResponses(response, aBratAnnotatorModel);
+        addBratResponses(response, aBratAnnotatorModel, aUIData);
         DeleteSpanResponse deleteSpanResponse = new DeleteSpanResponse();
 
         deleteSpanResponse.setAnnotations(response);
 
-        repository.createAnnotationDocumentContent(
-                aBratAnnotatorModel.getjCas(),
-                repository.getAnnotationDocument(aBratAnnotatorModel.getDocument(),
+        repository.createAnnotationDocumentContent(aUIData.getjCas(), repository
+                .getAnnotationDocument(aBratAnnotatorModel.getDocument(),
                         aBratAnnotatorModel.getUser()), aBratAnnotatorModel.getUser());
 
         return deleteSpanResponse;
@@ -442,7 +437,7 @@ public class BratAjaxCasController
     /**
      * deletes an arc between the origin and target spans
      */
-    public DeleteArcResponse deleteArc(BratAnnotatorModel aBratAnnotatorModel)
+    public DeleteArcResponse deleteArc(BratAnnotatorModel aBratAnnotatorModel, BratAnnotatorUIData aUIData)
         throws UIMAException, IOException
     {
 
@@ -450,22 +445,21 @@ public class BratAjaxCasController
         String type = BratAjaxCasUtil.getType(aBratAnnotatorModel.getType());
 
         if (annotationType.equals(AnnotationType.POS_PREFIX)) {
-            BratAjaxCasUtil.deleteDependencyParsing(aBratAnnotatorModel, type);
+            BratAjaxCasUtil.deleteDependencyParsing(aBratAnnotatorModel, type, aUIData);
         }
         else if (annotationType.equals(AnnotationType.COREFERENCE_PREFIX)) {
-            BratAjaxCasUtil.deleteCoreference(aBratAnnotatorModel, type);
+            BratAjaxCasUtil.deleteCoreference(aBratAnnotatorModel, type, aUIData);
         }
 
         GetDocumentResponse response = new GetDocumentResponse();
-        addBratResponses(response, aBratAnnotatorModel);
+        addBratResponses(response, aBratAnnotatorModel, aUIData);
 
         DeleteArcResponse deleteArcResponse = new DeleteArcResponse();
 
         deleteArcResponse.setAnnotations(response);
 
-        repository.createAnnotationDocumentContent(
-                aBratAnnotatorModel.getjCas(),
-                repository.getAnnotationDocument(aBratAnnotatorModel.getDocument(),
+        repository.createAnnotationDocumentContent(aUIData.getjCas(), repository
+                .getAnnotationDocument(aBratAnnotatorModel.getDocument(),
                         aBratAnnotatorModel.getUser()), aBratAnnotatorModel.getUser());
 
         return deleteArcResponse;
@@ -475,31 +469,33 @@ public class BratAjaxCasController
     /**
      * wrap JSON responses to BRAT visualizer
      */
-    private void addBratResponses(GetDocumentResponse aResponse, BratAnnotatorModel aBratAnnotatorModel)
+    private void addBratResponses(GetDocumentResponse aResponse,
+            BratAnnotatorModel aBratAnnotatorModel, BratAnnotatorUIData aUIData)
     {
         /*
          * if (aMovePage) { aSentenceAddress = BratAjaxCasUtil.getSentenceBeginAddress(aJCas,
          * aSentenceAddress, aStart, aProject, aDocument, aWindowSize); }
          */
         // If auto-scroll is enabled it is annotation modification
-        if (aBratAnnotatorModel.isScrollPage() && !aBratAnnotatorModel.isGetDocument()) {
+        if (aBratAnnotatorModel.isScrollPage() && !aUIData.isGetDocument()) {
             aBratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(
-                    aBratAnnotatorModel.getjCas(), aBratAnnotatorModel.getSentenceAddress(),
-                    aBratAnnotatorModel.getAnnotationOffsetStart(), aBratAnnotatorModel.getProject(),
-                    aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getWindowSize()));
+                    aUIData.getjCas(), aBratAnnotatorModel.getSentenceAddress(),
+                    aBratAnnotatorModel.getAnnotationOffsetStart(),
+                    aBratAnnotatorModel.getProject(), aBratAnnotatorModel.getDocument(),
+                    aBratAnnotatorModel.getWindowSize()));
         }
         CasToBratJson casToBratJson = new CasToBratJson(aBratAnnotatorModel);
 
-        casToBratJson.addTokenToResponse(aBratAnnotatorModel.getjCas(), aResponse);
-        casToBratJson.addSentenceToResponse(aBratAnnotatorModel.getjCas(), aResponse);
-        casToBratJson.addPosToResponse(aBratAnnotatorModel.getjCas(), aResponse);
-        casToBratJson.addCorefTypeToResponse(aBratAnnotatorModel.getjCas(), aResponse);
+        casToBratJson.addTokenToResponse(aUIData.getjCas(), aResponse);
+        casToBratJson.addSentenceToResponse(aUIData.getjCas(), aResponse);
+        casToBratJson.addPosToResponse(aUIData.getjCas(), aResponse);
+        casToBratJson.addCorefTypeToResponse(aUIData.getjCas(), aResponse);
         if (aBratAnnotatorModel.isDisplayLemmaSelected()) {
-            casToBratJson.addLemmaToResponse(aBratAnnotatorModel.getjCas(), aResponse);
+            casToBratJson.addLemmaToResponse(aUIData.getjCas(), aResponse);
         }
-        casToBratJson.addNamedEntityToResponse(aBratAnnotatorModel.getjCas(), aResponse);
-        casToBratJson.addDependencyParsingToResponse(aBratAnnotatorModel.getjCas(), aResponse);
-        casToBratJson.addCoreferenceToResponse(aBratAnnotatorModel.getjCas(), aResponse);
+        casToBratJson.addNamedEntityToResponse(aUIData.getjCas(), aResponse);
+        casToBratJson.addDependencyParsingToResponse(aUIData.getjCas(), aResponse);
+        casToBratJson.addCoreferenceToResponse(aUIData.getjCas(), aResponse);
     }
 
     /**

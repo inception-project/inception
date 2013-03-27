@@ -147,33 +147,6 @@ public class AnnotationPage
             }
 
         });
-        exportModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
-        {
-            private static final long serialVersionUID = 1643342179335627082L;
-
-            public void onClose(AjaxRequestTarget target)
-            {
-                // reget JCAs, transeint object lost
-                BratAjaxCasController controller = new BratAjaxCasController(jsonConverter,
-                        repository, annotationService);
-                try {
-                    annotator.bratAnnotatorModel.setjCas(controller.getJCas(
-                            annotator.bratAnnotatorModel.getDocument(),
-                            annotator.bratAnnotatorModel.getProject(),
-                            annotator.bratAnnotatorModel.getUser()));
-                }
-                catch (UIMAException e) {
-                    error("Unable to get annotation : " + ExceptionUtils.getRootCauseMessage(e));
-                }
-                catch (ClassNotFoundException e) {
-                    error("Unable to get annotation : " + ExceptionUtils.getRootCauseMessage(e));
-                }
-                catch (IOException e) {
-                    error("Unable to get annotation : " + ExceptionUtils.getRootCauseMessage(e));
-                }
-
-            }
-        });
         add(new AjaxLink<Void>("showExportModal")
         {
             private static final long serialVersionUID = 7496156015186497496L;
