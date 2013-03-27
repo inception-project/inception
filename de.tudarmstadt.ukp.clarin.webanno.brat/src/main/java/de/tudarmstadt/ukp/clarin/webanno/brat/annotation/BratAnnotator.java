@@ -18,6 +18,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -710,10 +711,14 @@ public class BratAnnotator
                 int index = propertyName.lastIndexOf(".");
                 propertyName = propertyName.substring(index + 1);
                 if (wrapper.isWritableProperty(propertyName)) {
-                    List<String> value = Arrays.asList(entry.getValue().toString().replace("[", "")
-                            .replace("]", "").split(","));
-                    if (value.size() > 1) {
-                        wrapper.setPropertyValue(propertyName, value);
+
+                    if (AnnotationPreference.class.getDeclaredField(propertyName).getGenericType()
+                            instanceof ParameterizedType) {
+                        List<String> value = Arrays.asList(StringUtils.replaceChars(
+                                entry.getValue().toString(), "[]", "").split(","));
+                        if (!value.get(0).equals("")) {
+                            wrapper.setPropertyValue(propertyName, value);
+                        }
                     }
                     else {
                         wrapper.setPropertyValue(propertyName, entry.getValue());
@@ -725,8 +730,10 @@ public class BratAnnotator
             bratAnnotatorModel.setDisplayLemmaSelected(aPreference.isDisplayLemmaSelected());
             // Get tagset using the id, from the properties file
             bratAnnotatorModel.getAnnotationLayers().clear();
-            for (Long id : aPreference.getAnnotationLayers()) {
-                bratAnnotatorModel.getAnnotationLayers().add(annotationService.getTagSet(id));
+            if (aPreference.getAnnotationLayers() != null) {
+                for (Long id : aPreference.getAnnotationLayers()) {
+                    bratAnnotatorModel.getAnnotationLayers().add(annotationService.getTagSet(id));
+                }
             }
         }
         // no preference found
