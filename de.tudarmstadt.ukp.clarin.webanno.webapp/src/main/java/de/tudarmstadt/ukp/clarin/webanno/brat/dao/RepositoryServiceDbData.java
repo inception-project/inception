@@ -69,7 +69,6 @@ import org.uimafit.factory.JCasFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -483,41 +482,30 @@ public class RepositoryServiceDbData
 
             String file = aAnnotationDocument.getUser().getUsername() + ".ser";
 
-            // if the annotation file has been deleted, for some reason, recreate it
-            if (!new File(annotationFolder, file).exists()) {
+            try {
+                CAS cas = JCasFactory.createJCas().getCas();
+                CollectionReader reader = CollectionReaderFactory.createCollectionReader(
+                        SerializedCasReader.class, SerializedCasReader.PARAM_PATH,
+                        annotationFolder, SerializedCasReader.PARAM_PATTERNS, new String[] { "[+]"
+                                + file });
+                if (!reader.hasNext()) {
+                    throw new FileNotFoundException("Annotation file [" + file + "] not found in ["
+                            + annotationFolder + "]. Report the incident to the Project Administrator");
+                }
+                reader.getNext(cas);
 
-                JCas jCas = BratAjaxCasUtil.getJCasFromFile(
-                        getSourceDocumentContent(aAnnotationDocument.getProject(),
-                                aAnnotationDocument.getDocument()),
-                        getReadableFormats().get(aAnnotationDocument.getDocument().getFormat()));
-                return jCas;
+                return cas.getJCas();
             }
-            else {
-                try {
-                    CAS cas = JCasFactory.createJCas().getCas();
-                    CollectionReader reader = CollectionReaderFactory.createCollectionReader(
-                            SerializedCasReader.class, SerializedCasReader.PARAM_PATH,
-                            annotationFolder, SerializedCasReader.PARAM_PATTERNS,
-                            new String[] { "[+]" + file });
-                    if (!reader.hasNext()) {
-                        throw new FileNotFoundException("Annotation file [" + file
-                                + "] not found in [" + annotationFolder + "]");
-                    }
-                    reader.getNext(cas);
-
-                    return cas.getJCas();
-                }
-                catch (IOException e) {
-                    throw new DataRetrievalFailureException("Unable to parse annotation", e);
-                }
-                catch (UIMAException e) {
-                    throw new DataRetrievalFailureException("Unable to parse annotation", e);
-                }
-                /*
-                 * catch (SAXException e) { throw new
-                 * DataRetrievalFailureException("Unable to parse annotation", e); }
-                 */
+            catch (IOException e) {
+                throw new DataRetrievalFailureException("Unable to parse annotation", e);
             }
+            catch (UIMAException e) {
+                throw new DataRetrievalFailureException("Unable to parse annotation", e);
+            }
+            /*
+             * catch (SAXException e) { throw new
+             * DataRetrievalFailureException("Unable to parse annotation", e); }
+             */
         }
     }
 

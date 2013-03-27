@@ -138,12 +138,14 @@ public class BratAnnotator
                                 bratAnnotatorModel.getSentenceAddress());
                         return pageNumber + " of " + totalPageNumber + " pages";
                     }
+                    // No need to report error, already reported in getDocument below
                     catch (DataRetrievalFailureException ex) {
-                        error(ExceptionUtils.getRootCauseMessage(ex));
+                //        error(ExceptionUtils.getRootCauseMessage(ex));
                         return "";
                     }
+                    // No need to report error, already reported in getDocument below
                     catch (UIMAException e) {
-                        error(ExceptionUtils.getRootCauseMessage(e));
+            //            error(ExceptionUtils.getRootCauseMessage(e));
                         return "";
                     }
 
