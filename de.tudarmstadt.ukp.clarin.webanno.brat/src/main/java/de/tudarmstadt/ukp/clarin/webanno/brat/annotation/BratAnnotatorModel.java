@@ -43,7 +43,7 @@ public class BratAnnotatorModel
 
     // Annotation preferences
     private HashSet<TagSet> annotationLayers = new HashSet<TagSet>();
-    private int windowSize;
+    private int windowSize = 10;
     private boolean isDisplayLemmaSelected;
     private boolean scrollPage;
 
