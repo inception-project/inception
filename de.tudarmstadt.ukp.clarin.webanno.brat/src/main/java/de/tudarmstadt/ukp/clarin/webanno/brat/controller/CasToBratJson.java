@@ -88,7 +88,7 @@ public class CasToBratJson
     public CasToBratJson(int aFirstSentenceAddress, int aLastSentenceAddress, int awindowSize,
             List<String> aAnnotationLayers)
     {
-        this.annotationLayers = (HashSet<String>) aAnnotationLayers;
+        this.annotationLayers = new HashSet<String> (aAnnotationLayers);
         this.currentWindowSentenceBeginAddress = aFirstSentenceAddress;
         this.lastSentenceAddress = aLastSentenceAddress;
         this.sentenceStartAddress = this.currentWindowSentenceBeginAddress;
