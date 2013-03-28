@@ -226,9 +226,17 @@ public class BratAnnotator
                     }
                 }
                 else if (request.getParameterValue("action").toString().equals("createSpan")) {
-                    result = createSpan(request, bratAnnotatorModel.getUser(), uIData);
-                    info("Annotation [" + request.getParameterValue("type").toString()
-                            + "]has been created");
+                    try {
+                        result = createSpan(request, bratAnnotatorModel.getUser(), uIData);
+                        info("Annotation [" + request.getParameterValue("type").toString()
+                                + "]has been created");
+                    }
+
+                    catch (Exception e) {
+                        info(e);
+                        result = getDocument(request, bratAnnotatorModel.getUser(), uIData);
+                    }
+
                 }
 
                 else if (request.getParameterValue("action").toString().equals("createArc")) {
@@ -347,7 +355,7 @@ public class BratAnnotator
         return result;
     }
 
-    private Object createSpan(IRequestParameters aRequest, User aUser, BratAnnotatorUIData aUIData)
+    private Object createSpan(IRequestParameters aRequest, User aUser, BratAnnotatorUIData aUIData) throws Exception
     {
 
         Object result = null;
@@ -381,6 +389,12 @@ public class BratAnnotator
                     aUIData.getjCas(), bratAnnotatorModel.getSentenceAddress()) + end);
             bratAnnotatorModel.setType(aRequest.getParameterValue("type").toString());
 
+            if (!BratAjaxCasUtil.offsetsInOneSentences(aUIData.getjCas(),
+                    bratAnnotatorModel.getAnnotationOffsetStart(),
+                    bratAnnotatorModel.getAnnotationOffsetEnd())) {
+                throw new Exception(
+                        "Annotation coveres multiple sentence, Limit your annotation to single sentence");
+            }
             result = controller.createSpan(bratAnnotatorModel, aUIData);
             if (bratAnnotatorModel.isScrollPage()) {
                 bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(
@@ -711,8 +725,7 @@ public class BratAnnotator
                 propertyName = propertyName.substring(index + 1);
                 if (wrapper.isWritableProperty(propertyName)) {
 
-                    if (AnnotationPreference.class.getDeclaredField(propertyName).getGenericType()
-                            instanceof ParameterizedType) {
+                    if (AnnotationPreference.class.getDeclaredField(propertyName).getGenericType() instanceof ParameterizedType) {
                         List<String> value = Arrays.asList(StringUtils.replaceChars(
                                 entry.getValue().toString(), "[]", "").split(","));
                         if (!value.get(0).equals("")) {

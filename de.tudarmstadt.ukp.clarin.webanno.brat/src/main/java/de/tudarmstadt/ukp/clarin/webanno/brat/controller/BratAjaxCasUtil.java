@@ -990,6 +990,9 @@ public class BratAjaxCasUtil
 
     }
 
+    /**
+     * Get CAS object for the first time, from the source document using the provided reader
+     */
     public static JCas getJCasFromFile(File aFile, Class aReader)
         throws UIMAException, IOException
     {
@@ -1012,6 +1015,11 @@ public class BratAjaxCasUtil
         return jCas;
     }
 
+    /**
+     * Get the annotation type, using the request sent from brat.
+     * If the request have type POS_NN, the the annotation type is POS
+     * @param aType the type sent from brat annotation as request while annotating
+     */
     public static String getAnnotationType(String aType)
     {
         String annotationType;
@@ -1024,6 +1032,12 @@ public class BratAjaxCasUtil
         return annotationType;
     }
 
+    /**
+     * Get the actual value of the annotation type (arc or span value)
+    * If the request have type POS_NN, the the actual annotation value is NN
+     * @param aType the type sent from brat annotation as request while annotating
+     * @return
+     */
     public static String getType(String aType)
     {
         String type;
@@ -1034,5 +1048,20 @@ public class BratAjaxCasUtil
             type = aType.substring(aType.indexOf(AnnotationType.PREFIX) + 1);
         }
         return type;
+    }
+    /**
+     * Check if the start/end offsets of an annotation belongs to the same sentence.
+     * @return
+     */
+
+    public static boolean offsetsInOneSentences(JCas aJcas, int aStartOffset, int aEndOffset){
+
+        for(Sentence sentence:select(aJcas, Sentence.class)){
+            if((sentence.getBegin()<=aStartOffset && sentence.getEnd()>aStartOffset) &&
+                    aEndOffset<=sentence.getEnd()){
+                return true;
+            }
+        }
+        return false;
     }
 }
