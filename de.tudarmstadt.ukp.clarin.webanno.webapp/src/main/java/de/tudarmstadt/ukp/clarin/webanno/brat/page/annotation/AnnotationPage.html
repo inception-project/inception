@@ -44,21 +44,27 @@
     </script>
     <img id="spinner" src="static/img/spinner.gif"/>
     <div id="messagepullup" class="messages" style="display: none"/>
-
     <div id="commentpopup"/>
         <div id="document_name">
           <input readonly="readonly"/>
         </div>
+
         <!-- <span id="document_ctime"/> -->         
 		  <div wicket:id=annotationLayerModal></div>
 		  <div wicket:id=exportModal></div>
-		   <div wicket:id=guidelineModal></div> 
+		  <div wicket:id=guidelineModal></div> 
+		   <div wicket:id=openDocumentsModal></div> 
 		 <div style="border-style:solid;border-color: green; width: 55%; margin: auto;">
 		  <ul class="horizontal">
-		  <li>
+		<!--   <li>
+		  	
             <input id="collection_browser_button" type="image" src="images/drawer_open.png" tabindex="1" title="Open Projects Browser (Tab)"/>
-            </li>             	
-       	                         	
+            </li>   
+            
+           <li> <a wicket:id="test" style="padding-left:3em"><img src="images/document_export.png" style="width:40px;height:40px"
+					title="Test documnet load" /> </a>  </li>     -->      	
+       	    <li> <a wicket:id="showOpenDocumentModal" style="padding-left:3em"><img src="images/drawer_open.png" style="width:40px;height:40px"
+					title="Open Document" /> </a>  </li>                  	
        	    <li> <a wicket:id="showExportModal" style="padding-left:3em"><img src="images/document_export.png" style="width:40px;height:40px"
 					title="Export Annotation Document" /> </a>  </li>
 					
@@ -87,30 +93,6 @@
 		</ul>
 		</div>
     <div class="hfill" wicket:id="embedder1"></div>
-    <!-- Data dialog -->
-    <form id="data_form" class="dialog" title="Data">
-      <!-- Data dialog export section -->
-      <fieldset class="small-buttons">
-        <legend>Export</legend>
-        <div id="document_visualization" class="optionRow">
-          <span class="optionLabel"></span>
-          <span id="stored_file_spinner" class="ui-button ui-widget ui-corner-all ui-state-default ui-button-text-only">
-            <span class="ui-button-text">
-              <img style="vertical-align:bottom" height="18" 
-                   src="static/img/spinner.gif"/>
-            </span>
-          </span>
-          <span id="download_stored"/>
-        </div>
-      </fieldset>
-    </form>
-    
-    <!-- More collection information dialog -->
-    <form id="more_information_dialog" class="dialog" title="Collection information">
-      <fieldset>
-        <textarea id="more_info_readme" readonly="readonly" class="borderless"/>
-      </fieldset>
-    </form>
 
     <!-- Span dialog (view+edit) -->
     <form id="span_form" class="dialog" title="Span">
@@ -191,13 +173,6 @@
  -->
     </form>
 
-    <!-- Split span annotation dialog -->
-    <form id="split_form" class="dialog" title="Split the Span">
-      <fieldset>
-        <legend>Split Roles</legend>
-        <div id="split_roles" class="scroll_fset"/>
-      </fieldset>
-    </form>
     <!-- Browser dialog -->
     <form id="collection_browser" class="dialog" title="Open">
       <fieldset>

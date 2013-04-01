@@ -37,6 +37,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.dialog.OpenPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -56,6 +57,7 @@ public class AnnotationPage
     private static final long serialVersionUID = 1378872465851908515L;
 
     private BratAnnotator annotator;
+    private OpenDocumentModel openDataMOdel;
 
     @SpringBean(name = "jsonConverter")
     private MappingJacksonHttpMessageConverter jsonConverter;
@@ -74,17 +76,59 @@ public class AnnotationPage
 
     public AnnotationPage()
     {
-
+        openDataMOdel = new OpenDocumentModel();
         annotator = new BratAnnotator("embedder1", new Model<AnnotationDocument>());
         annotator.setOutputMarkupId(true);
 
         add(annotator);
 
         // Add a dialog panel to select annotation layers, window size and display lemma option
+
+        final ModalWindow openDocumentsModal;
+        add(openDocumentsModal = new ModalWindow("openDocumentsModal"));
+        openDocumentsModal.setOutputMarkupId(true);
+
+        openDocumentsModal.setInitialWidth(290);
+        openDocumentsModal.setInitialHeight(250);
+        openDocumentsModal.setResizable(true);
+        openDocumentsModal.setWidthUnit("px");
+        openDocumentsModal.setHeightUnit("px");
+        openDocumentsModal.setTitle("Open document");
+
+        add(new AjaxLink<Void>("showOpenDocumentModal")
+        {
+            private static final long serialVersionUID = 7496156015186497496L;
+
+            @Override
+            public void onClick(AjaxRequestTarget target)
+            {
+                openDocumentsModal.setContent(new OpenPanel(
+                        openDocumentsModal.getContentId(),openDataMOdel,
+                        openDocumentsModal));
+                openDocumentsModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
+                {
+                    private static final long serialVersionUID = -1746088901018629567L;
+
+                    public void onClose(AjaxRequestTarget target)
+                    {
+                        if(openDataMOdel.getProject() != null &&
+                                openDataMOdel.getDocument() !=null ){
+                        String collection = "#"+openDataMOdel.getProject().getName()+"/";
+                        String doc = openDataMOdel.getDocument().getName();
+                        target.appendJavaScript("window.location='annotation.html" + collection + doc
+                                + "';");
+                        }
+                    }
+                });
+                target.appendJavaScript("Wicket.Window.unloadConfirmation = false;");
+                openDocumentsModal.show(target);
+            }
+        });
+
+        // dialog window to select annotation layer preferences
         final ModalWindow annotationLayerSelectionModal;
         add(annotationLayerSelectionModal = new ModalWindow("annotationLayerModal"));
         annotationLayerSelectionModal.setOutputMarkupId(true);
-
         annotationLayerSelectionModal.setInitialWidth(440);
         annotationLayerSelectionModal.setInitialHeight(250);
         annotationLayerSelectionModal.setResizable(true);
@@ -364,6 +408,20 @@ public class AnnotationPage
                 else {
                     target.appendJavaScript("alert('Please open a document first!')");
                 }
+            }
+        });
+
+        add(new AjaxLink<Void>("test")
+        {
+            private static final long serialVersionUID = 7496156015186497496L;
+
+            @Override
+            public void onClick(AjaxRequestTarget target)
+            {
+                String collection = "#NER Pilot/";
+                String doc = "acmilan.tcf";
+                target.appendJavaScript("window.location='annotation.html" + collection + doc
+                        + "';");
             }
         });
     }

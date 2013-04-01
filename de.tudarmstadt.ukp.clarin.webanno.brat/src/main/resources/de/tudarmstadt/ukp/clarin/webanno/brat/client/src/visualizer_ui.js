@@ -838,6 +838,7 @@ var VisualizerUI = (function($, window, undefined) {
         setTimeout(function() {
           $('#document_input').focus().select();
         }, 0);
+         fileBrowser.dialog('close');
       }; // end showFileBrowser()
       $('#collection_browser_button').click(function(evt) {
         dispatcher.post('clearSearch');
