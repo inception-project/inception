@@ -41,6 +41,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.annotation.OpenDocumentModel;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -72,11 +73,18 @@ public class OpenPanel
 
     private ListChoice<SourceDocument> documents;
     private OpenDocumentModel openDataModel;
+
+    private String username;
+    private User user;
+
     List<Project> allowedProject = new ArrayList<Project>();
 
     public OpenPanel(String aId, OpenDocumentModel aOpenDataModel, ModalWindow aModalWindow)
     {
         super(aId);
+        username = SecurityContextHolder.getContext().getAuthentication().getName();
+        user = projectRepository.getUser(username);
+
         selectedProject = getAllowedProjects().get(0);
         if (projectRepository.listSourceDocuments(selectedProject).size() > 0) {
             selectedDocument = projectRepository.listSourceDocuments(selectedProject).get(0);
@@ -165,9 +173,6 @@ public class OpenPanel
 
         List<Project> aAllowedProject = new ArrayList<Project>();
 
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = projectRepository.getUser(username);
-
         for (Project projects : projectRepository.listProjects()) {
             if (projectRepository.listProjectUserNames(projects).contains(username)
                     && ApplicationUtils.isMember(projects, projectRepository, user)) {
@@ -230,7 +235,20 @@ public class OpenPanel
                         protected List<SourceDocument> load()
                         {
                             if (selectedProject != null) {
-                                return projectRepository.listSourceDocuments(selectedProject);
+                                List<SourceDocument> allDocuments = projectRepository
+                                        .listSourceDocuments(selectedProject);
+                                // documents not yet closed (FINISHED)
+                                List<String> finishedAnnotationDocuments = projectRepository
+                                        .listFinishedAnnotationDocuments(selectedProject, user,
+                                                AnnotationDocumentState.FINISHED);
+
+                                List<SourceDocument> openDocuments = new ArrayList<SourceDocument>();
+                                for (SourceDocument document : allDocuments) {
+                                 if(!finishedAnnotationDocuments.contains(document.getName())){
+                                     openDocuments.add(document);
+                                 }
+                                }
+                                return openDocuments;
                             }
                             else {
                                 return new ArrayList<SourceDocument>();

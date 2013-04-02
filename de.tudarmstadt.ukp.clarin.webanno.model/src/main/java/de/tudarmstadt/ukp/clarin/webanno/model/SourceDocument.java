@@ -19,6 +19,8 @@ import java.io.Serializable;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -52,7 +54,9 @@ public class SourceDocument
 
     private String format;
 
-    private String state = WorkFlowStates.NEW;
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private SourceDocumentState state = SourceDocumentState.NEW;
 
     public long getId()
     {
@@ -94,12 +98,12 @@ public class SourceDocument
         format = aFormat;
     }
 
-    public String getState()
+    public SourceDocumentState getState()
     {
         return state;
     }
 
-    public void setState(String aState)
+    public void setState(SourceDocumentState aState)
     {
         state = aState;
     }

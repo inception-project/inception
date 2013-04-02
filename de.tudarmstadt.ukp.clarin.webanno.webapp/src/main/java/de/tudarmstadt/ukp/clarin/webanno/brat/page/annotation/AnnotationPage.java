@@ -41,10 +41,10 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.dialog.OpenPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.model.WorkFlowStates;
 
 /**
  * A wicket page for the Brat Annotation/Visualization page. Included components for pagination,
@@ -417,15 +417,19 @@ public class AnnotationPage
             @Override
             public void onClick()
             {
-                if(annotator.bratAnnotatorModel.getDocument()==null) {
+                if (annotator.bratAnnotatorModel.getDocument() == null) {
                     error("No document is opened. Please open a document first!");
                 }
-                else{
-                String username = SecurityContextHolder.getContext().getAuthentication().getName();
+                else {
+                    String username = SecurityContextHolder.getContext().getAuthentication()
+                            .getName();
 
-                User user = repository.getUser(username);
-                repository.getAnnotationDocument(annotator.bratAnnotatorModel.getDocument(), user)
-                        .setState(WorkFlowStates.ANNOTATION_FINISHED);
+                    User user = repository.getUser(username);
+                    repository
+                            .getAnnotationDocument(annotator.bratAnnotatorModel.getDocument(), user)
+                            .setState(
+                                    AnnotationDocumentStateTransition
+                                            .transition(AnnotationDocumentStateTransition.ANNOTATIONINPROGRESSTOANNOTATIONFINISHED));
                 }
             }
         };

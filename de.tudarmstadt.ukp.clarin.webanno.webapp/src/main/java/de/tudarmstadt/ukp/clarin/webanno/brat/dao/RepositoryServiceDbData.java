@@ -70,6 +70,7 @@ import org.uimafit.factory.JCasFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermissions;
@@ -490,7 +491,8 @@ public class RepositoryServiceDbData
                                 + file });
                 if (!reader.hasNext()) {
                     throw new FileNotFoundException("Annotation file [" + file + "] not found in ["
-                            + annotationFolder + "]. Report the incident to the Project Administrator");
+                            + annotationFolder
+                            + "]. Report the incident to the Project Administrator");
                 }
                 reader.getNext(cas);
 
@@ -666,6 +668,20 @@ public class RepositoryServiceDbData
         return entityManager
                 .createQuery("FROM AnnotationDocument WHERE project = :project",
                         AnnotationDocument.class).setParameter("project", aProject).getResultList();
+    }
+
+    @Override
+    @Transactional
+    public List<String> listFinishedAnnotationDocuments(Project aProject, User aUser,
+            AnnotationDocumentState aState)
+    {
+        return entityManager
+                .createQuery(
+                        "SELECT name FROM AnnotationDocument WHERE project = :project AND "
+                                + "user =:user AND state =:state", String.class)
+                .setParameter("project", aProject).setParameter("user", aUser)
+                .setParameter("state", aState).getResultList();
+
     }
 
     @Override

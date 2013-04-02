@@ -27,6 +27,7 @@ import org.apache.uima.jcas.JCas;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermissions;
@@ -113,20 +114,22 @@ public interface RepositoryService
         throws IOException;
 
     /**
-     * A Method that checks if there is already an annotation document created for
-     * the source code
+     * A Method that checks if there is already an annotation document created for the source code
+     *
      * @param annotationDocument
      * @return
      */
     boolean existsAnnotationDocument(SourceDocument document, User user);
+
     /**
-     * A method that check is a project exists with the same name already.
-     * getSingleResult() fails if the project is not created, hence existProject
-     * returns false.
+     * A method that check is a project exists with the same name already. getSingleResult() fails
+     * if the project is not created, hence existProject returns false.
+     *
      * @param name
      * @return
      */
     boolean existsProject(String name);
+
     /**
      * Exports an {@link AnnotationDocument } CAS Object as TCF/TXT/XMI... file formats.
      *
@@ -138,7 +141,8 @@ public interface RepositoryService
      * @param user
      *            the {@link User } who annotates the document.
      */
-    File exportAnnotationDocument(SourceDocument document, Project project, User user, Class writer, String fileName)
+    File exportAnnotationDocument(SourceDocument document, Project project, User user,
+            Class writer, String fileName)
         throws FileNotFoundException, UIMAException, IOException, WLFormatException,
         ClassNotFoundException;
 
@@ -185,6 +189,7 @@ public interface RepositoryService
 
     /**
      * get the annotation guideline document from the file system
+     *
      * @param project
      * @return
      */
@@ -223,13 +228,17 @@ public interface RepositoryService
      */
 
     Project getProject(long id);
+
     /**
      * Write this {@code content} of the guideline file in the project;
+     *
      * @param project
      * @return
      * @throws IOException
      */
-    void writeGuideline(Project project, File content, String fileName) throws IOException;
+    void writeGuideline(Project project, File content, String fileName)
+        throws IOException;
+
     /**
      * Get a {@link ProjectPermissions }objects where a project is member of. We need to get them,
      * for example if the associated {@link Project} is deleted, the {@link ProjectPermissions }
@@ -278,13 +287,14 @@ public interface RepositoryService
 
     /**
      * List all annotation documents in the system.
+     *
      * @return
      */
     List<AnnotationDocument> listAnnotationDocument();
 
-
     /**
      * List all annotation documents in a project.
+     *
      * @return
      */
     List<AnnotationDocument> listAnnotationDocument(Project project);
@@ -302,10 +312,28 @@ public interface RepositoryService
 
     /**
      * List annotation guideline document already uploaded
+     *
      * @param project
      * @return
      */
     List<String> listAnnotationGuidelineDocument(Project project);
+
+    /**
+     * List annotation documents in a project already marked as
+     * {@link AnnotationDocumentState#FINISHED}
+     *
+     * @param project
+     *            the project the annotator is working on
+     * @param user
+     *            the annotator
+     * @param state
+     *            TODO
+     * @return list of {@link AnnotationDocument}s marked as
+     *         {@link AnnotationDocumentState#FINISHED}
+     */
+
+    List<String> listFinishedAnnotationDocuments(Project project, User user,
+            AnnotationDocumentState state);
 
     /**
      * List all Projects. If the user logged have a ROLE_ADMIN, he can see all the projects.
@@ -324,8 +352,10 @@ public interface RepositoryService
      * @return returns list of {@link User}s in a project
      */
     List<String> listProjectUserNames(Project project);
+
     /**
      * List {@link User} objects in a project
+     *
      * @param project
      * @return
      */
@@ -347,24 +377,33 @@ public interface RepositoryService
      * @return list of users
      */
     List<User> listUsers();
+
     /**
      * Load annotation preferences such as {@link BratAnnotator#windowSize} from a property file
-     * @param username the username.
-     * @param subject the type of the setting for {@link AnnotationPage } or {@link CurationPage}.
-     * @param project the project where the user is wroking on.
+     *
+     * @param username
+     *            the username.
+     * @param subject
+     *            the type of the setting for {@link AnnotationPage } or {@link CurationPage}.
+     * @param project
+     *            the project where the user is wroking on.
      * @return
      * @throws IOException
      * @throws FileNotFoundException
      */
-    Properties loadUserSettings(String username, Project project, String subject) throws FileNotFoundException, IOException;
+    Properties loadUserSettings(String username, Project project, String subject)
+        throws FileNotFoundException, IOException;
 
     /**
      * Remove an annotation guideline document from the file system
+     *
      * @param project
      * @param fileName
      * @throws IOException
      */
-    void removeAnnotationGuideline(Project project, String fileName) throws IOException;
+    void removeAnnotationGuideline(Project project, String fileName)
+        throws IOException;
+
     /**
      * remove a user permission from the project
      *
@@ -439,7 +478,9 @@ public interface RepositoryService
      * @throws FileNotFoundException
      * @throws IOException
      */
-    <T> void saveUserSettings(String username, Project project, String subject, T configurationObject) throws FileNotFoundException, IOException;
+    <T> void saveUserSettings(String username, Project project, String subject,
+            T configurationObject)
+        throws FileNotFoundException, IOException;
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     public void uploadSourceDocument(File file, SourceDocument document, long projectId, User user)

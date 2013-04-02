@@ -19,6 +19,8 @@ import java.io.Serializable;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -59,7 +61,9 @@ public class AnnotationDocument
     @JoinColumn(name = "document")
     private SourceDocument document;
 
-    private String state = WorkFlowStates.NEW;
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private AnnotationDocumentState state = AnnotationDocumentState.INPROGRESS;
 
     public SourceDocument getDocument()
     {
@@ -111,14 +115,15 @@ public class AnnotationDocument
         user = aUser;
     }
 
-    public String getState()
+    public AnnotationDocumentState getState()
     {
         return state;
     }
 
-    public void setState(String aState)
+    public void setState(AnnotationDocumentState aState)
     {
         state = aState;
     }
+
 
 }

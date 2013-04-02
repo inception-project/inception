@@ -58,10 +58,10 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.WhoamiResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.model.WorkFlowStates;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
@@ -286,7 +286,8 @@ public class BratAjaxCasController
      * @throws ClassNotFoundException
      */
 
-    public GetDocumentResponse getDocument(BratAnnotatorModel aBratAnnotatorModel, BratAnnotatorUIData aUIData)
+    public GetDocumentResponse getDocument(BratAnnotatorModel aBratAnnotatorModel,
+            BratAnnotatorUIData aUIData)
         throws UIMAException, IOException, ClassNotFoundException
     {
 
@@ -302,7 +303,8 @@ public class BratAjaxCasController
      * constructed JSON document as a response to BRAT visualizer.
      */
 
-    public CreateSpanResponse createSpan(BratAnnotatorModel aBratAnnotatorModel, BratAnnotatorUIData aUIData)
+    public CreateSpanResponse createSpan(BratAnnotatorModel aBratAnnotatorModel,
+            BratAnnotatorUIData aUIData)
         throws JsonParseException, JsonMappingException, IOException, UIMAException
     {
 
@@ -338,7 +340,8 @@ public class BratAjaxCasController
      * Creates an arc annotation between two annotated spans
      */
 
-    public CreateArcResponse createArc(BratAnnotatorModel aBratAnnotatorModel, BratAnnotatorUIData aUIData)
+    public CreateArcResponse createArc(BratAnnotatorModel aBratAnnotatorModel,
+            BratAnnotatorUIData aUIData)
         throws UIMAException, IOException
     {
 
@@ -371,7 +374,8 @@ public class BratAjaxCasController
      * reverse the direction of arc annotations, in this case, Dependency parsing
      */
 
-    public ReverseArcResponse reverseArc(BratAnnotatorModel aBratAnnotatorModel, BratAnnotatorUIData aUIData)
+    public ReverseArcResponse reverseArc(BratAnnotatorModel aBratAnnotatorModel,
+            BratAnnotatorUIData aUIData)
         throws UIMAException, IOException
     {
 
@@ -405,7 +409,8 @@ public class BratAjaxCasController
     /**
      * deletes a span annotation, except POS annotation
      */
-    public DeleteSpanResponse deleteSpan(BratAnnotatorModel aBratAnnotatorModel, String aId, BratAnnotatorUIData aUIData)
+    public DeleteSpanResponse deleteSpan(BratAnnotatorModel aBratAnnotatorModel, String aId,
+            BratAnnotatorUIData aUIData)
         throws JsonParseException, JsonMappingException, IOException, UIMAException
     {
 
@@ -438,7 +443,8 @@ public class BratAjaxCasController
     /**
      * deletes an arc between the origin and target spans
      */
-    public DeleteArcResponse deleteArc(BratAnnotatorModel aBratAnnotatorModel, BratAnnotatorUIData aUIData)
+    public DeleteArcResponse deleteArc(BratAnnotatorModel aBratAnnotatorModel,
+            BratAnnotatorUIData aUIData)
         throws UIMAException, IOException
     {
 
@@ -519,7 +525,8 @@ public class BratAjaxCasController
         // it is new, create it and get CAS object
         catch (NoResultException ex) {
             // change the state of the source document to inprogress
-            aDocument.setState(WorkFlowStates.ANNOTATION_IN_PROGRESS);
+            aDocument.setState(SourceDocumentStateTransition
+                    .transition(SourceDocumentStateTransition.NEWTOANNOTATIONINPROGRESS));
             annotationDocument = new AnnotationDocument();
             annotationDocument.setDocument(aDocument);
             annotationDocument.setName(aDocument.getName());
