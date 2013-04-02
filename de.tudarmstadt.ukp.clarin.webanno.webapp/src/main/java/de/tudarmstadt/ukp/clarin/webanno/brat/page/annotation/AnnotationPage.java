@@ -27,6 +27,7 @@ import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.link.DownloadLink;
+import org.apache.wicket.markup.html.link.Link;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
@@ -43,6 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.model.WorkFlowStates;
 
 /**
  * A wicket page for the Brat Annotation/Visualization page. Included components for pagination,
@@ -102,21 +104,20 @@ public class AnnotationPage
             @Override
             public void onClick(AjaxRequestTarget target)
             {
-                openDocumentsModal.setContent(new OpenPanel(
-                        openDocumentsModal.getContentId(),openDataMOdel,
-                        openDocumentsModal));
+                openDocumentsModal.setContent(new OpenPanel(openDocumentsModal.getContentId(),
+                        openDataMOdel, openDocumentsModal));
                 openDocumentsModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
                 {
                     private static final long serialVersionUID = -1746088901018629567L;
 
                     public void onClose(AjaxRequestTarget target)
                     {
-                        if(openDataMOdel.getProject() != null &&
-                                openDataMOdel.getDocument() !=null ){
-                        String collection = "#"+openDataMOdel.getProject().getName()+"/";
-                        String doc = openDataMOdel.getDocument().getName();
-                        target.appendJavaScript("window.location='annotation.html" + collection + doc
-                                + "';");
+                        if (openDataMOdel.getProject() != null
+                                && openDataMOdel.getDocument() != null) {
+                            String collection = "#" + openDataMOdel.getProject().getName() + "/";
+                            String doc = openDataMOdel.getDocument().getName();
+                            target.appendJavaScript("window.location='annotation.html" + collection
+                                    + doc + "';");
                         }
                     }
                 });
@@ -410,6 +411,26 @@ public class AnnotationPage
                 }
             }
         });
+
+        Link finishedLink = new Link("finishAnnotation")
+        {
+            @Override
+            public void onClick()
+            {
+                if(annotator.bratAnnotatorModel.getDocument()==null) {
+                    error("No document is opened. Please open a document first!");
+                }
+                else{
+                String username = SecurityContextHolder.getContext().getAuthentication().getName();
+
+                User user = repository.getUser(username);
+                repository.getAnnotationDocument(annotator.bratAnnotatorModel.getDocument(), user)
+                        .setState(WorkFlowStates.ANNOTATION_FINISHED);
+                }
+            }
+        };
+        finishedLink.add(new JavascriptEventConfirmation("onclick", "are you sure?"));
+        add(finishedLink);
 
         add(new AjaxLink<Void>("test")
         {

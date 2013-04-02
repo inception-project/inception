@@ -52,6 +52,8 @@ public class SourceDocument
 
     private String format;
 
+    private String state = WorkFlowStates.NEW;
+
     public long getId()
     {
         return id;
@@ -91,5 +93,16 @@ public class SourceDocument
     {
         format = aFormat;
     }
+
+    public String getState()
+    {
+        return state;
+    }
+
+    public void setState(String aState)
+    {
+        state = aState;
+    }
+
 
 }

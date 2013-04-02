@@ -59,6 +59,8 @@ public class AnnotationDocument
     @JoinColumn(name = "document")
     private SourceDocument document;
 
+    private String state = WorkFlowStates.NEW;
+
     public SourceDocument getDocument()
     {
         return document;
@@ -107,6 +109,16 @@ public class AnnotationDocument
     public void setUser(User aUser)
     {
         user = aUser;
+    }
+
+    public String getState()
+    {
+        return state;
+    }
+
+    public void setState(String aState)
+    {
+        state = aState;
     }
 
 }

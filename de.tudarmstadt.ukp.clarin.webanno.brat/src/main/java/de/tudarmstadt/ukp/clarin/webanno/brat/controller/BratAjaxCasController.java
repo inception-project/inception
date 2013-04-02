@@ -61,6 +61,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.model.WorkFlowStates;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
@@ -517,6 +518,8 @@ public class BratAjaxCasController
         }
         // it is new, create it and get CAS object
         catch (NoResultException ex) {
+            // change the state of the source document to inprogress
+            aDocument.setState(WorkFlowStates.ANNOTATION_IN_PROGRESS);
             annotationDocument = new AnnotationDocument();
             annotationDocument.setDocument(aDocument);
             annotationDocument.setName(aDocument.getName());
