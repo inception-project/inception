@@ -2235,7 +2235,7 @@ var VisualizerUI = (function($, window, undefined) {
           on('dblclick', onDblClick).
           on('touchstart', onTouchStart).
           on('touchend', onTouchEnd).
-          on('resize', onResize).
+         // on('resize', onResize).
           on('searchResultsReceived', searchResultsReceived).
           on('clearSearch', clearSearch).
           on('clearSVG', showNoDocMessage).
