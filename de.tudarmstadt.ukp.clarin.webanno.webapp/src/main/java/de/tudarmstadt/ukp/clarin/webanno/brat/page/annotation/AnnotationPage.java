@@ -25,6 +25,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
+import org.apache.wicket.markup.html.IHeaderResponse;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.link.DownloadLink;
 import org.apache.wicket.markup.html.link.Link;
@@ -76,6 +77,9 @@ public class AnnotationPage
     private NumberTextField<Integer> gotoPageTextField;
     private int gotoPageAddress = -1;
 
+    // Open the dialog window on first load
+    boolean firstLoad = true;
+
     public AnnotationPage()
     {
         openDataMOdel = new OpenDocumentModel();
@@ -115,17 +119,32 @@ public class AnnotationPage
                         if (openDataMOdel.getProject() != null
                                 && openDataMOdel.getDocument() != null) {
                             String collection = "#" + openDataMOdel.getProject().getName() + "/";
-                            String doc = openDataMOdel.getDocument().getName();
-                            target.appendJavaScript("window.location='annotation.html" + collection
-                                    + doc + "';");
+                            String document = openDataMOdel.getDocument().getName();
+
+                            /*
+                             * String coll ="$('#collection_input').val("+collection+");"; String
+                             * doc =" $('#document_input').val("+document+");";
+                             *
+                             *
+                             *
+                             * target.appendJavaScript(
+                             * "dispatcher.post('ajax', [{action: 'getDocument'," +
+                             * "'collection': "+collection+",'document': "+document+",}, " +
+                             * "'renderData', {'collection': "+collection+"," +
+                             * " 'document': "+document+"}])"); target.add(annotator);
+                             * target.appendJavaScript
+                             * ("dispatcher.post('startedRendering', ["+collection
+                             * +", "+document+", {}]);");
+                             */
+                            target.appendJavaScript("window.location.hash = '" + collection
+                                    + document + "';");
                         }
                     }
                 });
-                target.appendJavaScript("Wicket.Window.unloadConfirmation = false;");
+                // target.appendJavaScript("Wicket.Window.unloadConfirmation = false;");
                 openDocumentsModal.show(target);
             }
         });
-
         // dialog window to select annotation layer preferences
         final ModalWindow annotationLayerSelectionModal;
         add(annotationLayerSelectionModal = new ModalWindow("annotationLayerModal"));
@@ -433,22 +452,20 @@ public class AnnotationPage
                 }
             }
         };
-        finishedLink.add(new JavascriptEventConfirmation("onclick", "are you sure?"));
+        finishedLink.add(new JavascriptEventConfirmation("onclick",
+                "Are you sure you want to finish annotating this document?"));
         add(finishedLink);
+    }
 
-        add(new AjaxLink<Void>("test")
-        {
-            private static final long serialVersionUID = 7496156015186497496L;
-
-            @Override
-            public void onClick(AjaxRequestTarget target)
-            {
-                String collection = "#NER Pilot/";
-                String doc = "acmilan.tcf";
-                target.appendJavaScript("window.location='annotation.html" + collection + doc
-                        + "';");
-            }
-        });
+    @Override
+    public void renderHead(IHeaderResponse response)
+    {
+        String jQueryString = "";
+        if (firstLoad) {
+            jQueryString += "jQuery('#showOpenDocumentModal').trigger('click');";
+            firstLoad = false;
+        }
+        response.renderOnLoadJavaScript(jQueryString);
     }
 
     private JCas getJCas(Project aProject, SourceDocument aDocument)
