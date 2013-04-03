@@ -152,7 +152,7 @@ public class OpenPanel
                     aTarget.add(documents.setOutputMarkupId(true));
                 }
             }).add(new SimpleAttributeModifier("style",
-                    "color:green; font-weight:bold;background-color:white;"));
+                    "color:green; font-weight:bold;background-color:white; width:150px"));
 
             /*
              * add(new StaticImage("icon", new
@@ -266,6 +266,7 @@ public class OpenPanel
                 }
             });
             documents.setOutputMarkupId(true);
+            documents.setMaxRows(10);
             documents.add(new OnChangeAjaxBehavior()
             {
 
@@ -275,7 +276,7 @@ public class OpenPanel
                     selectedDocument = getModelObject().document;
                 }
             }).add(new SimpleAttributeModifier("style",
-                    "color:black; font-weight:bold;background-color:#a0c0df;"));
+                    "color:black; font-weight:bold;width:150px"));
 
         }
     }

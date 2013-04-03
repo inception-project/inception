@@ -8,7 +8,7 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
   <wicket:panel>
-    <table class="hfill">
+    <table>
       <tr style="color:blue; font-weight:bold;">
         <td>
           Projects:
@@ -17,16 +17,16 @@
           Documents:
         </td>
       </tr>
-      <tr>
+      <tr VALIGN=TOP >
       <td>
-        <form wicket:id="projectSelectionForm">
-                <select wicket:id="project" >
+        <form wicket:id="projectSelectionForm" >
+                <select wicket:id="project">
                 </select>
         </form>
         </td>
         <td>
-          <form wicket:id="documentSelectionForm" >
-            <select  wicket:id="document" >
+          <form wicket:id="documentSelectionForm">
+            <select  wicket:id="document">
             </select>
           </form>
         </td>
