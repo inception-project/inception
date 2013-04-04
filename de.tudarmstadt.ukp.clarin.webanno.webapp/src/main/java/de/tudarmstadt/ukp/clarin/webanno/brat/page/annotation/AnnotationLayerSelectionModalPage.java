@@ -89,6 +89,7 @@ public class AnnotationLayerSelectionModalPage
             getModelObject().numberOfSentences = annotator.bratAnnotatorModel.getWindowSize();
             getModelObject().scrollPage = annotator.bratAnnotatorModel.isScrollPage();
             getModelObject().displayLemma = annotator.bratAnnotatorModel.isDisplayLemmaSelected();
+            getModelObject().reverseDependencyDirection = annotator.bratAnnotatorModel.isReverseDependencyDirection();
 
             for (TagSet tagSet : annotator.bratAnnotatorModel.getAnnotationLayers()) {
                 getModelObject().annotationLayers.add(tagSet);
@@ -119,8 +120,10 @@ public class AnnotationLayerSelectionModalPage
                     setChoiceRenderer(new ChoiceRenderer<TagSet>("name", "id"));
                 }
             });
-            // add a Checkbox to enable/disable automatic page navigations while annotating
+            // Add a Checkbox to enable/disable automatic page navigations while annotating
             add(new CheckBox("scrollPage"));
+            // Add check box to enable/disable arc directions of dependency parsing
+            add(new CheckBox("reverseDependencyDirection"));
 
             add(new AjaxSubmitLink("saveButton")
             {
@@ -159,6 +162,7 @@ public class AnnotationLayerSelectionModalPage
                     annotator.bratAnnotatorModel.setScrollPage(getModelObject().scrollPage);
                     annotator.bratAnnotatorModel.setAnnotationLayers(getModelObject().annotationLayers);
                     annotator.bratAnnotatorModel.setWindowSize(getModelObject().numberOfSentences);
+                    annotator.bratAnnotatorModel.setReverseDependencyDirection(getModelObject().reverseDependencyDirection);
                     aTarget.add(annotator);
                     modalWindow.close(aTarget);
                 }
@@ -193,6 +197,7 @@ public class AnnotationLayerSelectionModalPage
         public int numberOfSentences;
         public boolean displayLemma;
         public boolean scrollPage;
+        public boolean reverseDependencyDirection;
         public HashSet<TagSet> annotationLayers = new HashSet<TagSet>();
     }
 

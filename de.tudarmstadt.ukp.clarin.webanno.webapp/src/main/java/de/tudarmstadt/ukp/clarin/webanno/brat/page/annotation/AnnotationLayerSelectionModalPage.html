@@ -18,8 +18,8 @@
 	<form wicket:id="tagSelectionForm">
 		<table>
 			<tr>
-				<td><label >Annotation Layers:</label></td>
-				<td><span  wicket:id="annotationLayers"></span></td>
+				<td><label>Annotation Layers:</label></td>
+				<td><span wicket:id="annotationLayers"></span></td>
 			</tr>
 			<tr>
 				<td><label> Number of Sentences: </label></td>
@@ -36,6 +36,11 @@
 				<td>auto-scroll document while annotating</td>
 				<td><input type="checkbox" wicket:id="scrollPage" /></td>
 			</tr>
+			<tr>
+				<td>Reverse arc direction for dependency annotation</td>
+				<td><input type="checkbox" wicket:id="reverseDependencyDirection" /></td>
+			</tr>
+			
 		</table>
 		<div class="buttons">
 			<button wicket:id="saveButton">Save</button>

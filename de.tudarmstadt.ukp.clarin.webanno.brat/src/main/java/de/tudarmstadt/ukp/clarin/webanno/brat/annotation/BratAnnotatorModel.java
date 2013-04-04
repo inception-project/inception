@@ -25,6 +25,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
  * Data model for the {@link BratAnnotator}
+ *
  * @author Seid Muhie Yimam
  *
  */
@@ -79,7 +80,6 @@ public class BratAnnotatorModel
      */
     private String target;
 
-
     // Annotation preferences, to be saved in a file system
     /**
      * The annotation layers available in the current project.
@@ -98,6 +98,10 @@ public class BratAnnotatorModel
      */
     private boolean scrollPage;
 
+    /**
+     * Draw arc from dependent to governor, if true, otherwise in the reverse direction
+     */
+    private boolean reverseDependencyDirection;
 
     public Project getProject()
     {
@@ -248,5 +252,17 @@ public class BratAnnotatorModel
     {
         target = aTarget;
     }
+
+    public boolean isReverseDependencyDirection()
+    {
+        return reverseDependencyDirection;
+    }
+
+    public void setReverseDependencyDirection(boolean aReverseDependencyDirection)
+    {
+        reverseDependencyDirection = aReverseDependencyDirection;
+    }
+
+
 
 }
