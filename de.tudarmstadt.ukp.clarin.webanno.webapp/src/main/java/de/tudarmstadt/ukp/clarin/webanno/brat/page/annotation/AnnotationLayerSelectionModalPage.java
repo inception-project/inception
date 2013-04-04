@@ -136,6 +136,7 @@ public class AnnotationLayerSelectionModalPage
                     preference.setDisplayLemmaSelected(getModelObject().displayLemma);
                     preference.setScrollPage(getModelObject().scrollPage);
                     preference.setWindowSize(getModelObject().numberOfSentences);
+                    preference.setReverseDependencyDirection(getModelObject().reverseDependencyDirection);
 
                     ArrayList<Long> layers = new ArrayList<Long>();
 

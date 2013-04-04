@@ -59,7 +59,7 @@ public class CasToBratJson
      * Number of sentences to display on BRAT UI at a time
      */
     int windowSize;
-
+    boolean reverseDependencyDirection;
     HashSet<String> annotationLayers = new HashSet<String>();
     int currentWindowSentenceBeginAddress;
     int lastSentenceAddress;
@@ -82,13 +82,14 @@ public class CasToBratJson
         this.lastSentenceAddress = aBratAnnotatorModel.getLastSentenceAddress();
         this.sentenceStartAddress = this.currentWindowSentenceBeginAddress;
         this.windowSize = aBratAnnotatorModel.getWindowSize();
+        this.reverseDependencyDirection = aBratAnnotatorModel.isReverseDependencyDirection();
     }
 
     // for test purpose
     public CasToBratJson(int aFirstSentenceAddress, int aLastSentenceAddress, int awindowSize,
             List<String> aAnnotationLayers)
     {
-        this.annotationLayers = new HashSet<String> (aAnnotationLayers);
+        this.annotationLayers = new HashSet<String>(aAnnotationLayers);
         this.currentWindowSentenceBeginAddress = aFirstSentenceAddress;
         this.lastSentenceAddress = aLastSentenceAddress;
         this.sentenceStartAddress = this.currentWindowSentenceBeginAddress;
@@ -228,12 +229,11 @@ public class CasToBratJson
                     for (Dependency dependency : selectCovered(aJcas, Dependency.class,
                             sentence.getBegin(), sentence.getEnd())) {
 
-                        List<Argument> argumentList = asList(new Argument("Arg1", dependency
-                                .getDependent().getPos().getAddress()), new Argument("Arg2",
-                                dependency.getGovernor().getPos().getAddress()));
+                        List<Argument> argumentList = getArgument(dependency);
 
-                        aResponse.addRelation(new Relation(dependency.getAddress(),  AnnotationType.POS_PREFIX + dependency
-                                .getDependencyType(), argumentList));
+                        aResponse.addRelation(new Relation(dependency.getAddress(),
+                                AnnotationType.POS_PREFIX + dependency.getDependencyType(),
+                                argumentList));
                     }
                     break;
                 }
@@ -241,12 +241,11 @@ public class CasToBratJson
                 for (Dependency dependency : selectCovered(aJcas, Dependency.class,
                         sentence.getBegin(), sentence.getEnd())) {
 
-                    List<Argument> argumentList = asList(new Argument("Arg1", dependency
-                            .getDependent().getPos().getAddress()), new Argument("Arg2", dependency
-                            .getGovernor().getPos().getAddress()));
+                    List<Argument> argumentList = getArgument(dependency);
 
-                    aResponse.addRelation(new Relation(dependency.getAddress(),  AnnotationType.POS_PREFIX + dependency
-                            .getDependencyType(), argumentList));
+                    aResponse.addRelation(new Relation(dependency.getAddress(),
+                            AnnotationType.POS_PREFIX + dependency.getDependencyType(),
+                            argumentList));
                 }
                 i = BratAjaxCasUtil.getFollowingSentenceAddress(aJcas, i);
             }
@@ -322,8 +321,9 @@ public class CasToBratJson
                             argumentList.add(new Argument("Arg1", link.getAddress()));
                             argumentList.add(new Argument("Arg2", +link.getAddress()));
 
-                            aResponse.addRelation(new Relation(link.getAddress(), i+AnnotationType.COREFERENCE_PREFIX + link
-                                    .getReferenceRelation(), argumentList));
+                            aResponse.addRelation(new Relation(link.getAddress(), i
+                                    + AnnotationType.COREFERENCE_PREFIX
+                                    + link.getReferenceRelation(), argumentList));
                             link = link.getNext();
                             continue;
                         }
@@ -335,15 +335,16 @@ public class CasToBratJson
                             argumentList.add(new Argument("Arg1", link.getAddress()));
                             argumentList.add(new Argument("Arg2", +nextLink.getAddress()));
 
-                            aResponse.addRelation(new Relation(link.getAddress(),  i+AnnotationType.COREFERENCE_PREFIX + link
-                                    .getReferenceRelation(), argumentList));
+                            aResponse.addRelation(new Relation(link.getAddress(), i
+                                    + AnnotationType.COREFERENCE_PREFIX
+                                    + link.getReferenceRelation(), argumentList));
                         }
                     }
                     link = link.getNext();
                 }
                 i++;
-                if(i>12) {
-                    i=1;
+                if (i > 12) {
+                    i = 1;
                 }
             }
         }
@@ -382,6 +383,18 @@ public class CasToBratJson
                 i = BratAjaxCasUtil.getFollowingSentenceAddress(aJcas, i);
             }
 
+        }
+    }
+
+    private List<Argument> getArgument(Dependency aDependency)
+    {
+        if (reverseDependencyDirection) {
+            return asList(new Argument("Arg1", aDependency.getGovernor().getPos().getAddress()),
+                    new Argument("Arg2", aDependency.getDependent().getPos().getAddress()));
+        }
+        else {
+            return asList(new Argument("Arg1", aDependency.getDependent().getPos().getAddress()),
+                    new Argument("Arg2", aDependency.getGovernor().getPos().getAddress()));
         }
     }
 

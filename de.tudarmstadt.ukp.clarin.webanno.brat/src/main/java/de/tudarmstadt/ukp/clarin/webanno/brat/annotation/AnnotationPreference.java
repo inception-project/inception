@@ -31,6 +31,7 @@ public class AnnotationPreference
     private int windowSize;
     private boolean displayLemmaSelected;
     private boolean scrollPage;
+    private boolean reverseDependencyDirection;
 
     public ArrayList<Long> getAnnotationLayers()
     {
@@ -71,4 +72,15 @@ public class AnnotationPreference
     {
         scrollPage = aScrollPage;
     }
+
+    public boolean isReverseDependencyDirection()
+    {
+        return reverseDependencyDirection;
+    }
+
+    public void setReverseDependencyDirection(boolean aReverseDependencyDirection)
+    {
+        reverseDependencyDirection = aReverseDependencyDirection;
+    }
+
 }

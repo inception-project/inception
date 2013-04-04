@@ -739,6 +739,7 @@ public class BratAnnotator
             }
             bratAnnotatorModel.setWindowSize(aPreference.getWindowSize());
             bratAnnotatorModel.setScrollPage(aPreference.isScrollPage());
+            bratAnnotatorModel.setReverseDependencyDirection(aPreference.isReverseDependencyDirection());
             bratAnnotatorModel.setDisplayLemmaSelected(aPreference.isDisplayLemmaSelected());
             // Get tagset using the id, from the properties file
             bratAnnotatorModel.getAnnotationLayers().clear();
