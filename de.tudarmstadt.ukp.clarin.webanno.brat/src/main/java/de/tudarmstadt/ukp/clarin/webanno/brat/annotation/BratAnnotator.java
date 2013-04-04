@@ -314,7 +314,8 @@ public class BratAnnotator
                 + "var visualizerUI = new VisualizerUI(dispatcher, visualizer.svg);"
                 + "var annotatorUI = new AnnotatorUI(dispatcher, visualizer.svg);"
                 + "var spinner = new Spinner(dispatcher, '#spinner');"
-                + "var logger = new AnnotationLog(dispatcher);" + " dispatcher.post('init');" };
+                + "var logger = new AnnotationLog(dispatcher);"
+                + "dispatcher.post('init');" };
 
         // This doesn't work with head.js because the onLoad event is fired before all the
         // JavaScript references are loaded.
@@ -355,7 +356,8 @@ public class BratAnnotator
         return result;
     }
 
-    private Object createSpan(IRequestParameters aRequest, User aUser, BratAnnotatorUIData aUIData) throws Exception
+    private Object createSpan(IRequestParameters aRequest, User aUser, BratAnnotatorUIData aUIData)
+        throws Exception
     {
 
         Object result = null;
@@ -739,7 +741,6 @@ public class BratAnnotator
             }
             bratAnnotatorModel.setWindowSize(aPreference.getWindowSize());
             bratAnnotatorModel.setScrollPage(aPreference.isScrollPage());
-            bratAnnotatorModel.setReverseDependencyDirection(aPreference.isReverseDependencyDirection());
             bratAnnotatorModel.setDisplayLemmaSelected(aPreference.isDisplayLemmaSelected());
             // Get tagset using the id, from the properties file
             bratAnnotatorModel.getAnnotationLayers().clear();

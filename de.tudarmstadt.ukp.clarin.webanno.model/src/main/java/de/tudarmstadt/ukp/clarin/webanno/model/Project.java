@@ -27,8 +27,10 @@ import javax.persistence.Lob;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+
 /**
  * A persistence object for a Project.
+ *
  * @author Seid Muhie Yimam
  *
  */
@@ -52,6 +54,7 @@ public class Project
     @ManyToMany
     private Set<User> users = new HashSet<User>();
 
+    private boolean reverseDependencyDirection;
 
     public Project()
     {
@@ -86,6 +89,16 @@ public class Project
     public void setUsers(Set<User> aUsers)
     {
         users = aUsers;
+    }
+
+    public boolean isReverseDependencyDirection()
+    {
+        return reverseDependencyDirection;
+    }
+
+    public void setReverseDependencyDirection(boolean aReverseDependencyDirection)
+    {
+        reverseDependencyDirection = aReverseDependencyDirection;
     }
 
     @Override

@@ -185,10 +185,21 @@ public class BratAjaxCasUtil
         boolean duplicate = false;
         boolean modify = false;
 
-        int originAddress = Integer.parseInt(aBratAnnotatorModel.getOrigin()
+        int originAddress;
+        int targetAddress;
+
+        if(aBratAnnotatorModel.getProject().isReverseDependencyDirection()){
+            originAddress = Integer.parseInt(aBratAnnotatorModel.getTarget()
+                    .replaceAll("[\\D]", ""));
+            targetAddress = Integer.parseInt(aBratAnnotatorModel.getOrigin()
+                    .replaceAll("[\\D]", ""));
+        }
+        else{
+        originAddress = Integer.parseInt(aBratAnnotatorModel.getOrigin()
                 .replaceAll("[\\D]", ""));
-        int targetAddress = Integer.parseInt(aBratAnnotatorModel.getTarget()
+        targetAddress = Integer.parseInt(aBratAnnotatorModel.getTarget()
                 .replaceAll("[\\D]", ""));
+        }
         Dependency dependencyToDelte = null;
         Map<Integer, Token> tokens = getToken(aUIData.getjCas());
         Map<Integer, Integer> tokenPositions = getTokenPosition(aUIData.getjCas());
@@ -605,10 +616,21 @@ public class BratAjaxCasUtil
             String aType, BratAnnotatorUIData aUIData)
     {
 
-        int originAddress = Integer.parseInt(aBratAnnotatorModel.getOrigin()
+        int originAddress;
+        int targetAddress;
+
+        if(aBratAnnotatorModel.getProject().isReverseDependencyDirection()){
+            originAddress = Integer.parseInt(aBratAnnotatorModel.getTarget()
+                    .replaceAll("[\\D]", ""));
+            targetAddress = Integer.parseInt(aBratAnnotatorModel.getOrigin()
+                    .replaceAll("[\\D]", ""));
+        }
+        else{
+        originAddress = Integer.parseInt(aBratAnnotatorModel.getOrigin()
                 .replaceAll("[\\D]", ""));
-        int targetAddress = Integer.parseInt(aBratAnnotatorModel.getTarget()
+        targetAddress = Integer.parseInt(aBratAnnotatorModel.getTarget()
                 .replaceAll("[\\D]", ""));
+        }
 
         Map<Integer, Integer> tokenPositions = getTokenPosition(aUIData.getjCas());
         Dependency dependencyToDelete = new Dependency(aUIData.getjCas());

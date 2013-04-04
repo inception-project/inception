@@ -290,6 +290,10 @@ public class BratAjaxCasController
             BratAnnotatorUIData aUIData)
         throws UIMAException, IOException, ClassNotFoundException
     {
+        LOG.info("AJAX-RPC: getDocument");
+
+        LOG.info("Collection: " + aBratAnnotatorModel.getDocument().getName());
+
 
         GetDocumentResponse response = new GetDocumentResponse();
 

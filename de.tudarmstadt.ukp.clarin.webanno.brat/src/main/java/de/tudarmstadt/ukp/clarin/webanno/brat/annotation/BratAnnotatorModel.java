@@ -98,11 +98,6 @@ public class BratAnnotatorModel
      */
     private boolean scrollPage;
 
-    /**
-     * Draw arc from dependent to governor, if true, otherwise in the reverse direction
-     */
-    private boolean reverseDependencyDirection;
-
     public Project getProject()
     {
         return project;
@@ -252,17 +247,5 @@ public class BratAnnotatorModel
     {
         target = aTarget;
     }
-
-    public boolean isReverseDependencyDirection()
-    {
-        return reverseDependencyDirection;
-    }
-
-    public void setReverseDependencyDirection(boolean aReverseDependencyDirection)
-    {
-        reverseDependencyDirection = aReverseDependencyDirection;
-    }
-
-
 
 }

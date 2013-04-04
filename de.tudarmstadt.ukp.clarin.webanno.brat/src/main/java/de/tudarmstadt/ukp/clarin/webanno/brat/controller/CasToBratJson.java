@@ -82,7 +82,7 @@ public class CasToBratJson
         this.lastSentenceAddress = aBratAnnotatorModel.getLastSentenceAddress();
         this.sentenceStartAddress = this.currentWindowSentenceBeginAddress;
         this.windowSize = aBratAnnotatorModel.getWindowSize();
-        this.reverseDependencyDirection = aBratAnnotatorModel.isReverseDependencyDirection();
+        this.reverseDependencyDirection = aBratAnnotatorModel.getProject().isReverseDependencyDirection();
     }
 
     // for test purpose

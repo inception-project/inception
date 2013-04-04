@@ -89,7 +89,6 @@ public class AnnotationLayerSelectionModalPage
             getModelObject().numberOfSentences = annotator.bratAnnotatorModel.getWindowSize();
             getModelObject().scrollPage = annotator.bratAnnotatorModel.isScrollPage();
             getModelObject().displayLemma = annotator.bratAnnotatorModel.isDisplayLemmaSelected();
-            getModelObject().reverseDependencyDirection = annotator.bratAnnotatorModel.isReverseDependencyDirection();
 
             for (TagSet tagSet : annotator.bratAnnotatorModel.getAnnotationLayers()) {
                 getModelObject().annotationLayers.add(tagSet);
@@ -122,8 +121,6 @@ public class AnnotationLayerSelectionModalPage
             });
             // Add a Checkbox to enable/disable automatic page navigations while annotating
             add(new CheckBox("scrollPage"));
-            // Add check box to enable/disable arc directions of dependency parsing
-            add(new CheckBox("reverseDependencyDirection"));
 
             add(new AjaxSubmitLink("saveButton")
             {
@@ -136,7 +133,6 @@ public class AnnotationLayerSelectionModalPage
                     preference.setDisplayLemmaSelected(getModelObject().displayLemma);
                     preference.setScrollPage(getModelObject().scrollPage);
                     preference.setWindowSize(getModelObject().numberOfSentences);
-                    preference.setReverseDependencyDirection(getModelObject().reverseDependencyDirection);
 
                     ArrayList<Long> layers = new ArrayList<Long>();
 
@@ -163,7 +159,6 @@ public class AnnotationLayerSelectionModalPage
                     annotator.bratAnnotatorModel.setScrollPage(getModelObject().scrollPage);
                     annotator.bratAnnotatorModel.setAnnotationLayers(getModelObject().annotationLayers);
                     annotator.bratAnnotatorModel.setWindowSize(getModelObject().numberOfSentences);
-                    annotator.bratAnnotatorModel.setReverseDependencyDirection(getModelObject().reverseDependencyDirection);
                     aTarget.add(annotator);
                     modalWindow.close(aTarget);
                 }
