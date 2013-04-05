@@ -21,6 +21,7 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Page;
+import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
@@ -41,6 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.dialog.OpenPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.brat.page.welcome.WelcomePage;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -138,6 +140,11 @@ public class AnnotationPage
                              */
                             target.appendJavaScript("window.location.hash = '" + collection
                                     + document + "';");
+                        }
+                        else {
+                            // A hack, the dialog opens for the first time, and if no document is selected
+                            // window will be "blind down". SOmething in the brat js causes this!
+                            setResponsePage(WelcomePage.class);
                         }
                     }
                 });
@@ -449,6 +456,20 @@ public class AnnotationPage
                             .setState(
                                     AnnotationDocumentStateTransition
                                             .transition(AnnotationDocumentStateTransition.ANNOTATIONINPROGRESSTOANNOTATIONFINISHED));
+                    getPage().add(new AjaxEventBehavior("onchange")
+                    {
+
+                        private static final long serialVersionUID = 1L;
+
+                        @Override
+                        protected void onEvent(final AjaxRequestTarget aTarget)
+                        {
+                            aTarget.appendJavaScript("window.location.hash = '"
+                                    + annotator.bratAnnotatorModel.getProject().getName()
+                                    + annotator.bratAnnotatorModel.getDocument().getName() + "';");
+                        }
+                    });
+
                 }
             }
         };

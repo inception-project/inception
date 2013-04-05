@@ -87,9 +87,7 @@ public class OpenPanel
         user = projectRepository.getUser(username);
 
         selectedProject = getAllowedProjects().get(0);
-        if (projectRepository.listSourceDocuments(selectedProject).size() > 0) {
-            selectedDocument = projectRepository.listSourceDocuments(selectedProject).get(0);
-        }
+
         this.openDataModel = aOpenDataModel;
         projectSelectionForm = new ProjectSelectionForm("projectSelectionForm");
         documentSelectionForm = new DocumentSelectionForm("documentSelectionForm", aModalWindow);
@@ -245,9 +243,9 @@ public class OpenPanel
 
                                 List<SourceDocument> openDocuments = new ArrayList<SourceDocument>();
                                 for (SourceDocument document : allDocuments) {
-                                 if(!finishedAnnotationDocuments.contains(document.getName())){
-                                     openDocuments.add(document);
-                                 }
+                                    if (!finishedAnnotationDocuments.contains(document.getName())) {
+                                        openDocuments.add(document);
+                                    }
                                 }
                                 return openDocuments;
                             }
@@ -268,27 +266,32 @@ public class OpenPanel
             });
             documents.setOutputMarkupId(true);
             documents.setMaxRows(10);
-            documents.add(new OnChangeAjaxBehavior()
-            {
-                private static final long serialVersionUID = 1L;
+            documents
+                    .add(new OnChangeAjaxBehavior()
+                    {
+                        private static final long serialVersionUID = 1L;
 
-                @Override
-                protected void onUpdate(AjaxRequestTarget aTarget)
-                {
-                    selectedDocument = getModelObject().document;
-                }
-            }).add(new AjaxEventBehavior("ondblclick") {
+                        @Override
+                        protected void onUpdate(AjaxRequestTarget aTarget)
+                        {
+                            selectedDocument = getModelObject().document;
+                        }
+                    })
+                    .add(new AjaxEventBehavior("ondblclick")
+                    {
 
-                private static final long serialVersionUID = 1L;
+                        private static final long serialVersionUID = 1L;
 
-                @Override
-                protected void onEvent(final AjaxRequestTarget aTarget) {
-                    openDataModel.setProject(selectedProject);
-                    openDataModel.setDocument(selectedDocument);
-                    modalWindow.close(aTarget);
-                 }
-            }).add(new SimpleAttributeModifier("style",
-                    "color:black; font-weight:bold;width:150px"));
+                        @Override
+                        protected void onEvent(final AjaxRequestTarget aTarget)
+                        {
+                            openDataModel.setProject(selectedProject);
+                            openDataModel.setDocument(selectedDocument);
+                            modalWindow.close(aTarget);
+                        }
+                    })
+                    .add(new SimpleAttributeModifier("style",
+                            "color:black; font-weight:bold;width:150px"));
         }
     }
 
@@ -335,6 +338,7 @@ public class OpenPanel
                     projectSelectionForm.detach();
                     documentSelectionForm.detach();
                     modalWindow.close(aTarget);
+
                 }
             });
         }
