@@ -270,7 +270,6 @@ public class OpenPanel
             documents.setMaxRows(10);
             documents.add(new OnChangeAjaxBehavior()
             {
-
                 private static final long serialVersionUID = 1L;
 
                 @Override
@@ -284,14 +283,12 @@ public class OpenPanel
 
                 @Override
                 protected void onEvent(final AjaxRequestTarget aTarget) {
-                    selectedDocument = getModelObject().document;
+                    openDataModel.setProject(selectedProject);
+                    openDataModel.setDocument(selectedDocument);
                     modalWindow.close(aTarget);
-
                  }
             }).add(new SimpleAttributeModifier("style",
                     "color:black; font-weight:bold;width:150px"));
-;
-
         }
     }
 
@@ -317,7 +314,6 @@ public class OpenPanel
                     else {
                         openDataModel.setProject(selectedProject);
                         openDataModel.setDocument(selectedDocument);
-                        aTarget.prependJavaScript("Wicket.Window.unloadConfirmation = false;");
                         modalWindow.close(aTarget);
                     }
                 }
