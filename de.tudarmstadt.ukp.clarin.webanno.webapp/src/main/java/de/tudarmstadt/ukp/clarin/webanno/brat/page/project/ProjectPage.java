@@ -319,11 +319,18 @@ public class ProjectPage
                 public void onSubmit()
                 {
                     Project project = projectDetailForm.getModelObject();
-
+                    boolean projectExist = false;
+                    try {
+                        projectRepository.existsProject(project.getName());
+                    }
+                    catch (Exception e) {
+                        error("Another project with name [" + project.getName() + "] exists!" + ExceptionUtils.getRootCauseMessage(e));
+                        projectExist = true;
+                    }
                     // If only the project is new!
-                    if (project.getId() == 0) {
+                    if (project.getId() == 0 &&!projectExist) {
                         // Check if the project with this name already exist
-                        if(projectRepository.existsProject(project.getName())){
+                        if (projectRepository.existsProject(project.getName())) {
                             error("Project with this name already exist !");
                             LOG.error("Project with this name already exist !");
                         }
@@ -348,17 +355,18 @@ public class ProjectPage
                             LOG.error("Project name shouldn't contain characters such as /\\*?&!$+[^]");
                         }
                     }
-
                     // This is updating Project details
                     else {
                         // Invalid Project name, restore
-                        if (!isProjectNameValid(project.getName())) {
+                        if (!isProjectNameValid(project.getName())&&!projectExist) {
 
                             // Maintain already loaded project and selected Users
-                            // Hence Illegal Project modification (limited privilege, illegal project
+                            // Hence Illegal Project modification (limited privilege, illegal
+                            // project
                             // name,...) preserves the original one
 
-                            String oldProjectName = projectRepository.getProject(project.getId()).getName();
+                            String oldProjectName = projectRepository.getProject(project.getId())
+                                    .getName();
                             List<User> selectedusers = projectRepository.listProjectUsers(project);
 
                             project.setName(oldProjectName);
@@ -1248,105 +1256,106 @@ public class ProjectPage
         }
     }
 
-
     private class AnnotationGuideLinePanel
-    extends Panel
-{
-    private static final long serialVersionUID = 2116717853865353733L;
-    private ArrayList<String> documents = new ArrayList<String>();
-    private ArrayList<String> selectedDocuments = new ArrayList<String>();
-
-    private List<FileUpload> uploadedFiles;
-    private FileUploadField fileUpload;
-
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    public AnnotationGuideLinePanel(String id)
+        extends Panel
     {
-        super(id);
-        add(fileUpload = new FileUploadField("content", new Model()));
+        private static final long serialVersionUID = 2116717853865353733L;
+        private ArrayList<String> documents = new ArrayList<String>();
+        private ArrayList<String> selectedDocuments = new ArrayList<String>();
 
-        add(new Button("importGuideline", new ResourceModel("label"))
+        private List<FileUpload> uploadedFiles;
+        private FileUploadField fileUpload;
+
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        public AnnotationGuideLinePanel(String id)
         {
-            private static final long serialVersionUID = 1L;
+            super(id);
+            add(fileUpload = new FileUploadField("content", new Model()));
 
-            @Override
-            public void onSubmit()
+            add(new Button("importGuideline", new ResourceModel("label"))
             {
-                uploadedFiles = fileUpload.getFileUploads();
-                Project project = projectDetailForm.getModelObject();
+                private static final long serialVersionUID = 1L;
 
-                if (isNotEmpty(uploadedFiles)&& project.getId()!=0) {
-                    for (FileUpload guidelineFile : uploadedFiles) {
+                @Override
+                public void onSubmit()
+                {
+                    uploadedFiles = fileUpload.getFileUploads();
+                    Project project = projectDetailForm.getModelObject();
+
+                    if (isNotEmpty(uploadedFiles) && project.getId() != 0) {
+                        for (FileUpload guidelineFile : uploadedFiles) {
 
                             try {
                                 File tempFile = guidelineFile.writeToTempFile();
-                              //  String text = IOUtils.toString(tcfInputStream, "UTF-8");
+                                // String text = IOUtils.toString(tcfInputStream, "UTF-8");
                                 String fileName = guidelineFile.getClientFileName();
                                 projectRepository.writeGuideline(project, tempFile, fileName);
                             }
                             catch (IOException e) {
-                                error("Unable to write guideline file "+ ExceptionUtils.getRootCauseMessage(e));
+                                error("Unable to write guideline file "
+                                        + ExceptionUtils.getRootCauseMessage(e));
                             }
-                    }
-                }
-                else if (isEmpty(uploadedFiles)) {
-                    error("No document is selected to upload, please select a document first");
-                    LOG.info("No document is selected to upload, please select a document first");
-                }
-                else if (project.getId() == 0) {
-                    error("Project not yet created, please save project Details!");
-                    LOG.info("Project not yet created, please save project Details!");
-                }
-
-            }
-        });
-
-        add(new ListMultipleChoice<String>("documents", new Model(selectedDocuments), documents)
-        {
-            private static final long serialVersionUID = 1L;
-
-            {
-                setChoices(new LoadableDetachableModel<List<String>>()
-                {
-                    private static final long serialVersionUID = 1L;
-
-                    @Override
-                    protected List<String> load()
-                    {
-                        Project project = projectDetailForm.getModelObject();
-                        documents.clear();
-                        if (project.getId() != 0) {
-                       documents.addAll(projectRepository.listAnnotationGuidelineDocument(project));
                         }
-                        return documents;
                     }
-                });
-            }
-        });
-
-        add(new Button("remove", new ResourceModel("label"))
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void onSubmit()
-            {
-                Project project = projectDetailForm.getModelObject();
-                for (String document : selectedDocuments) {
-                    try {
-
-                        projectRepository.removeAnnotationGuideline(project, document);
+                    else if (isEmpty(uploadedFiles)) {
+                        error("No document is selected to upload, please select a document first");
+                        LOG.info("No document is selected to upload, please select a document first");
                     }
-                    catch (IOException e) {
-                        error("Error while removing a document document "
-                                + ExceptionUtils.getRootCauseMessage(e));
-                        LOG.error("Error while removing a document document "
-                                + ExceptionUtils.getRootCauseMessage(e));
+                    else if (project.getId() == 0) {
+                        error("Project not yet created, please save project Details!");
+                        LOG.info("Project not yet created, please save project Details!");
                     }
-                    documents.remove(document);
+
                 }
-            }
-        });
+            });
+
+            add(new ListMultipleChoice<String>("documents", new Model(selectedDocuments), documents)
+            {
+                private static final long serialVersionUID = 1L;
+
+                {
+                    setChoices(new LoadableDetachableModel<List<String>>()
+                    {
+                        private static final long serialVersionUID = 1L;
+
+                        @Override
+                        protected List<String> load()
+                        {
+                            Project project = projectDetailForm.getModelObject();
+                            documents.clear();
+                            if (project.getId() != 0) {
+                                documents.addAll(projectRepository
+                                        .listAnnotationGuidelineDocument(project));
+                            }
+                            return documents;
+                        }
+                    });
+                }
+            });
+
+            add(new Button("remove", new ResourceModel("label"))
+            {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public void onSubmit()
+                {
+                    Project project = projectDetailForm.getModelObject();
+                    for (String document : selectedDocuments) {
+                        try {
+
+                            projectRepository.removeAnnotationGuideline(project, document);
+                        }
+                        catch (IOException e) {
+                            error("Error while removing a document document "
+                                    + ExceptionUtils.getRootCauseMessage(e));
+                            LOG.error("Error while removing a document document "
+                                    + ExceptionUtils.getRootCauseMessage(e));
+                        }
+                        documents.remove(document);
+                    }
+                }
+            });
+        }
     }
-}
 }
