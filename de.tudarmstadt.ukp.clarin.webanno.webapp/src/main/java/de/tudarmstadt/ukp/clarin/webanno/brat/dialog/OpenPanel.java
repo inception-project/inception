@@ -20,6 +20,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
@@ -91,7 +92,7 @@ public class OpenPanel
         }
         this.openDataModel = aOpenDataModel;
         projectSelectionForm = new ProjectSelectionForm("projectSelectionForm");
-        documentSelectionForm = new DocumentSelectionForm("documentSelectionForm");
+        documentSelectionForm = new DocumentSelectionForm("documentSelectionForm", aModalWindow);
         buttonsForm = new ButtonsForm("buttonsForm", aModalWindow);
 
         add(buttonsForm);
@@ -217,7 +218,7 @@ public class OpenPanel
     {
         private static final long serialVersionUID = -1L;
 
-        public DocumentSelectionForm(String id)
+        public DocumentSelectionForm(String id, final ModalWindow modalWindow)
         {
             // super(id);
             super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
@@ -270,13 +271,26 @@ public class OpenPanel
             documents.add(new OnChangeAjaxBehavior()
             {
 
+                private static final long serialVersionUID = 1L;
+
                 @Override
                 protected void onUpdate(AjaxRequestTarget aTarget)
                 {
                     selectedDocument = getModelObject().document;
                 }
+            }).add(new AjaxEventBehavior("ondblclick") {
+
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                protected void onEvent(final AjaxRequestTarget aTarget) {
+                    selectedDocument = getModelObject().document;
+                    modalWindow.close(aTarget);
+
+                 }
             }).add(new SimpleAttributeModifier("style",
                     "color:black; font-weight:bold;width:150px"));
+;
 
         }
     }
