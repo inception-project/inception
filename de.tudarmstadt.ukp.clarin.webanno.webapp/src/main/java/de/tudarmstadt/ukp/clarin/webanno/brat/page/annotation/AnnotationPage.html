@@ -57,13 +57,7 @@
 		 <div style="border-top:3px solid green; border-bottom: 3px solid green; 
 		  margin: 0px auto;text-align: center;">
 		  <ul class="horizontal">
-		<!--   <li>
-		  	
-            <input id="collection_browser_button" type="image" src="images/drawer_open.png" tabindex="1" title="Open Projects Browser (Tab)"/>
-            </li>   
-            
-           <li> <a wicket:id="test" style="padding-left:3em"><img src="images/document_export.png" style="width:40px;height:40px"
-					title="Test documnet load" /> </a>  </li>     -->      	
+		      	
        	    <li> <a wicket:id="showOpenDocumentModal" id="showOpenDocumentModal" style="padding-left:3em display: none;"><img src="images/drawer_open.png" style="width:40px;height:40px"
 					title="Open Document" /> </a>  </li>                  	
        	    <li> <a wicket:id="showExportModal" style="padding-left:3em"><img src="images/document_export.png" style="width:40px;height:40px"
@@ -142,15 +136,6 @@
                  value="&#x2715;" title="Clear normalization"/>
         </div>
       </fieldset>
-      <!-- Span dialog notes
-      <fieldset>
-        <legend>Notes</legend>
-        <div id="notes_container">
-          <input id="span_notes" class="borderless"/>
-          <input id="clear_notes_button" type="button" 
-                 value="&#x2715;" title="Clear notes"/>
-        </div>
-      </fieldset>  -->
     </form>
     <!-- Arc dialog -->
     <form id="arc_form" class="dialog" title="Arc">
@@ -171,55 +156,9 @@
           <div class="scroller"/>
         </fieldset>
       </div>
-<!-- 
-      <fieldset id="arc_notes_fieldset">
-        <legend>Notes</legend>
-        <input id="arc_notes" class="borderless"/>
-      </fieldset>
- -->
+      
     </form>
 
-    <!-- Browser dialog -->
-    <form id="collection_browser" class="dialog" title="Open">
-      <fieldset>
-        <legend>Project</legend>
-        <input id="collection_input" readonly="readonly" placeholder="Document" class="borderless"/>
-      </fieldset>
-      <fieldset>
-        <legend>Project Information</legend>
-        <div id="readme_container">
-          <input id="readme" readonly="readonly" class="borderless"/>
-          <input id="more_readme_button" type="button" value="More..." title="Show full collection information text"/>
-        </div>
-      </fieldset>
-      <fieldset>
-        <legend>Document</legend>
-        <input id="document_input" placeholder="Document" class="borderless"/>
-      </fieldset>
-      <table id="document_select" class="ui-widget unselectable">
-        <thead class="ui-widget-header"/>
-        <tbody class="ui-widget-content"/>
-      </table>
-    </form>
-    <!-- Normalization DB search dialog -->
-    <form id="norm_search_dialog" class="dialog" title="Search">
-      <fieldset>
-        <legend>Query</legend>
-        <div id="norm_search_container">
-          <input id="norm_search_query" placeholder="Query string" class="borderless"/>
-          <input id="norm_search_button" type="button" value="Search"/>
-        </div>
-      </fieldset>
-      <fieldset>
-        <legend>ID</legend>
-        <input id="norm_search_id" placeholder="Identifier" class="borderless" readonly="readonly"/>
-      </fieldset>
-      <table id="norm_search_result_select" class="ui-widget unselectable">
-        <thead class="ui-widget-header"/>
-        <tbody class="ui-widget-content"/>
-      </table>
-    </form>
-    <!-- Spinner -->
     <div id="waiter" class="dialog" title="Please wait">
       <img src="static/img/spinner.gif"/>
     </div>

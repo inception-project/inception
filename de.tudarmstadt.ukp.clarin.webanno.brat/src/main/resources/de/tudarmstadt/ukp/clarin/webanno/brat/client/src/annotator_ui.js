@@ -638,9 +638,6 @@ var AnnotatorUI = (function($, window, undefined) {
 
         $('#span_selected').text(spanText);
         var encodedText = encodeURIComponent(spanText);       
-        $.each(searchConfig, function(searchNo, search) {
-          $('#span_'+search[0]).attr('href', search[1].replace('%s', encodedText));
-        });
 
         // enable all inputs by default (see setSpanTypeSelectability)
         $('#span_form input:not([unused])').removeAttr('disabled');
@@ -1067,43 +1064,7 @@ var AnnotatorUI = (function($, window, undefined) {
       // nice-looking select for normalization
       $('#span_norm_db').addClass('ui-widget ui-state-default ui-button-text');
 
-      var normSearchDialog = $('#norm_search_dialog');
-      initForm(normSearchDialog, {
-          width: 800,
-          width: 600,
-          resizable: true,
-          alsoResize: '#norm_search_result_select',
-          open: function(evt) {
-            keymap = {};
-          },
-          close: function(evt) {
-            // assume that we always want to return to the span dialog
-            // on normalization dialog close
-            dispatcher.post('showForm', [spanForm]);
-          },
-      });
-      $('#norm_search_query').autocomplete({
-        source: function(request, callback) {
-          var query = $.ui.autocomplete.escapeRegex(request.term);
-          var pattern = new RegExp('\\b' + query, 'i');
-          callback($.grep(lastNormSearches, function(search) {
-            return pattern.test(search.value) || pattern.test(search.id);
-          }));
-        },
-        minLength: 0,
-        select: function(evt, ui) {
-          evt.stopPropagation();
-          normSubmit(ui.item.id, ui.item.value);
-        },
-        focus: function(evt, ui) {
-          // do nothing
-        },
-      }).data('autocomplete')._renderItem = function($ul, item) {
-        return $('<li></li>').
-          data('item.autocomplete', item).
-          append('<a>' + Util.escapeHTML(item.value) + '<div class="autocomplete-id">' + Util.escapeHTML(item.id) + "</div></a>").
-          appendTo($ul);
-      };
+
       var normSubmit = function(selectedId, selectedTxt) {
         // we got a value; act if it was a submit
         $('#span_norm_id').val(selectedId);
@@ -1111,141 +1072,9 @@ var AnnotatorUI = (function($, window, undefined) {
         oldSpanNormIdValue = selectedId;
         $('#span_norm_txt').val(selectedTxt);
         updateNormalizationRefLink();
-        // update history
-        var nextLastNormSearches = [
-          {
-            value: selectedTxt,
-            id: selectedId,
-          },
-        ];
-        $.each(lastNormSearches, function(searchNo, search) {
-          if (search.id != selectedId || search.value != selectedTxt) {
-            nextLastNormSearches.push(search);
-          }
-        });
-        lastNormSearches = nextLastNormSearches;
-        lastNormSearches.slice(0, maxNormSearchHistory);
-        // Switch dialogs. NOTE: assuming we closed the spanForm when
-        // bringing up the normSearchDialog.
-        normSearchDialog.dialog('close');
+
       };
-      var normSearchSubmit = function(evt) {
-        if (normSearchSubmittable) {
-          var selectedId = $('#norm_search_id').val(); 
-          var selectedTxt = $('#norm_search_query').val();
 
-          normSubmit(selectedId, selectedTxt);
-        } else {
-          performNormSearch();
-        }
-        return false;
-      }
-      var normSearchSubmittable = false;
-      var setNormSearchSubmit = function(enable) {
-        $('#norm_search_dialog-ok').button(enable ? 'enable' : 'disable');
-        normSearchSubmittable = enable;
-      };
-      normSearchDialog.submit(normSearchSubmit);
-      var chooseNormId = function(evt) {
-        var $element = $(evt.target).closest('tr');
-        $('#norm_search_result_select tr').removeClass('selected');
-        $element.addClass('selected');
-        $('#norm_search_query').val($element.attr('data-txt'));
-        $('#norm_search_id').val($element.attr('data-id'));
-        setNormSearchSubmit(true);
-      }
-      var chooseNormIdAndSubmit = function(evt) {
-        chooseNormId(evt);
-        normSearchSubmit(evt);
-      }
-      var setSpanNormSearchResults = function(response) {
-        if (response.exception) {
-          // TODO: better response to failure
-          dispatcher.post('messages', [[['Lookup error', 'warning', -1]]]);
-          return false;
-        }
-
-        if (response.items.length == 0) {
-          // no results
-          $('#norm_search_result_select thead').empty();
-          $('#norm_search_result_select tbody').empty();
-          dispatcher.post('messages', [[['No matches to search.', 'comment']]]);
-          return false;
-        }
-
-        // TODO: avoid code duplication with showFileBrowser()
-
-        var html = ['<tr>'];
-        $.each(response.header, function(headNo, head) {
-          html.push('<th>' + Util.escapeHTML(head[0]) + '</th>');
-        });
-        html.push('</tr>');
-        $('#norm_search_result_select thead').html(html.join(''));
-
-        html = [];
-        var len = response.header.length;
-        $.each(response.items, function(itemNo, item) {
-          // NOTE: assuming ID is always the first datum in the item
-          // and that the preferred text is always the second
-          // TODO: Util.escapeQuotes would be expected to be
-          // sufficient here, but that appears to give "DOM Exception
-          // 11" in cases (try e.g. $x.html('<p a="A&B"/>'). Why? Is
-          // this workaround OK?
-          html.push('<tr'+
-                    ' data-id="'+Util.escapeHTMLandQuotes(item[0])+'"'+
-                    ' data-txt="'+Util.escapeHTMLandQuotes(item[1])+'"'+
-                    '>');
-          for (var i=0; i<len; i++) {
-            html.push('<td>' + Util.escapeHTML(item[i]) + '</td>');
-          }
-          html.push('</tr>');
-        });
-        $('#norm_search_result_select tbody').html(html.join(''));
-
-        $('#norm_search_result_select tbody').find('tr').
-            click(chooseNormId).
-            dblclick(chooseNormIdAndSubmit);
-
-        // TODO: sorting on click on header (see showFileBrowser())
-      }
-      var performNormSearch = function() {
-        var val = $('#norm_search_query').val();
-        var db = $('#span_norm_db').val();
-        dispatcher.post('ajax', [ {
-                        action: 'normSearch',
-                        database: db,
-                        name: val,
-                        collection: coll}, 'normSearchResult']);
-      }
-      $('#norm_search_button').click(performNormSearch);
-      $('#norm_search_query').focus(function() {
-        setNormSearchSubmit(false);
-      });
-      var showNormSearchDialog = function() {
-        // if we already have non-empty ID and normalized string,
-        // use these as default; otherwise take default search string
-        // from annotated span and clear ID entry
-        if (!$('#span_norm_id').val().match(/^\s*$/) &&
-            !$('#span_norm_txt').val().match(/^\s*$/)) {
-          $('#norm_search_id').val($('#span_norm_id').val());
-          $('#norm_search_query').val($('#span_norm_txt').val());
-        } else {
-          $('#norm_search_id').val('');
-          $('#norm_search_query').val($('#span_selected').text());
-        }
-        // blank the table
-        $('#norm_search_result_select thead').empty();
-        $('#norm_search_result_select tbody').empty();        
-        // TODO: support for two (or more) dialogs open at the same time
-        // so we don't need to hide this before showing normSearchDialog
-        dispatcher.post('hideForm');
-        $('#norm_search_button').val('Search ' + $('#span_norm_db').val());
-        setNormSearchSubmit(false);
-        dispatcher.post('showForm', [normSearchDialog]);
-        $('#norm_search_query').focus().select();
-      }
-      $('#span_norm_txt').click(showNormSearchDialog);
-      $('#norm_search_button').button();
 
       var arcFormSubmitRadio = function(evt) {
         // TODO: check for confirm_mode?
@@ -1938,30 +1767,7 @@ var AnnotatorUI = (function($, window, undefined) {
         addAttributeTypesToDiv($eveattrs, eventAttributeTypes, 'event');
 
         // fill search options in span dialog
-        searchConfig = response.search_config;
-        var $searchlinks  = $('#span_search_links').empty();
-        var $searchlinks2 = $('#viewspan_search_links').empty();
-        var firstLink=true;
-        var linkFilled=false;
-        if (searchConfig) {
-          $.each(searchConfig, function(searchNo, search) {
-            if (!firstLink) {
-              $searchlinks.append(',\n')
-              $searchlinks2.append(',\n')
-            }
-            firstLink=false;
-            $searchlinks.append('<a target="_blank" id="span_'+search[0]+'" href="#">'+search[0]+'</a>');
-            $searchlinks2.append('<a target="_blank" id="viewspan_'+search[0]+'" href="#">'+search[0]+'</a>');
-            linkFilled=true;
-          });
-        }
-        if (linkFilled) {
-          $('#span_search_fieldset').show();
-          $('#viewspan_search_fieldset').show();
-        } else {
-          $('#span_search_fieldset').hide();
-          $('#viewspan_search_fieldset').hide();
-        }
+
 
         spanForm.find('#entity_types input:radio').click(spanFormSubmitRadio);
         spanForm.find('#event_types input:radio').click(spanFormSubmitRadio);
@@ -2495,60 +2301,10 @@ var AnnotatorUI = (function($, window, undefined) {
 
       /* BEGIN delete button - related */
 
-      $('#delete_document_button').click(function() {
-        if (!doc) {
-          dispatcher.post('messages', [[['No document selected', 'error']]]);
-          return false;
-        }
-        if (!confirm('Are you sure you want to permanently remove this document and its annotations from the collection? This action cannot be undone.')) {
-          return;
-        }
-        var delOptions = {
-          action: 'deleteDocument',
-          collection: coll,
-          'document': doc
-        }
-        dispatcher.post('ajax', [delOptions, 'docDeleted']);
-      });
 
-      $('#delete_collection_button').click(function() {
-        if (!coll) {
-          dispatcher.post('messages', [[['No collection selected', 'error']]]);
-          return false;
-        }
-        if (!confirm('Are you sure you want to permanently REMOVE the ENTIRE COLLECTION '+coll+', including all its documents and their annotations?  This action CANNOT BE UNDONE.')) {
-          return;
-        }
-        var delOptions = {
-          action: 'deleteCollection',
-          collection: coll,
-        }
-        dispatcher.post('ajax', [delOptions, 'collDeleted']);
-      });
 
       /* END delete button - related */
 
-      $('#undo_button').click(function() {
-        if (coll && doc) {
-          if (undoStack.length > 0) {
-            var storedUndo = undoStack.pop();
-            var collection = storedUndo[0];
-            var dok = storedUndo[1];
-            var token = storedUndo[2];
-            var options = {
-              'action': 'undo',
-              'collection': collection,
-              'document': dok,
-              'token': token
-            }
-            dispatcher.post('ajax', [options, 'edited']);
-          } else {
-            dispatcher.post('messages', [[['No action to be undone', 'error']]]);
-          }
-        } else {
-          dispatcher.post('messages', [[['No document loaded, can not undo changes', 'error']]]);
-        }
-      });
 
 
       var preventDefault = function(evt) {
@@ -2622,8 +2378,7 @@ var AnnotatorUI = (function($, window, undefined) {
           on('mousemove', onMouseMove).
           on('annotationSpeed', setAnnotationSpeed).
           on('suggestedSpanTypes', receivedSuggestedSpanTypes).
-          on('normGetNameResult', setSpanNormText).
-          on('normSearchResult', setSpanNormSearchResults);
+          on('normGetNameResult', setSpanNormText);
     };
 
     return AnnotatorUI;
