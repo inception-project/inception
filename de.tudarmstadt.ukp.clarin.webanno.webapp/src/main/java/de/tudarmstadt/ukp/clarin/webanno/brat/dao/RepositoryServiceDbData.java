@@ -142,8 +142,12 @@ public class RepositoryServiceDbData
     @Transactional
     public void createAnnotationDocument(AnnotationDocument aAnnotationDocument)
     {
-
-        entityManager.persist(aAnnotationDocument);
+        if (aAnnotationDocument.getId() < 0) {
+            entityManager.persist(aAnnotationDocument);
+        }
+        else {
+            entityManager.merge(aAnnotationDocument);
+        }
     }
 
     /**
