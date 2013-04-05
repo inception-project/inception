@@ -41,8 +41,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
-import de.tudarmstadt.ukp.clarin.webanno.brat.page.annotation.OpenDocumentModel;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -236,7 +234,7 @@ public class OpenPanel
                             if (selectedProject != null) {
                                 List<SourceDocument> allDocuments = projectRepository
                                         .listSourceDocuments(selectedProject);
-                                // documents not yet closed (FINISHED)
+/*                                // documents not yet closed (FINISHED)
                                 List<String> finishedAnnotationDocuments = projectRepository
                                         .listFinishedAnnotationDocuments(selectedProject, user,
                                                 AnnotationDocumentState.FINISHED);
@@ -247,7 +245,8 @@ public class OpenPanel
                                         openDocuments.add(document);
                                     }
                                 }
-                                return openDocuments;
+                                return openDocuments;*/
+                                return allDocuments;
                             }
                             else {
                                 return new ArrayList<SourceDocument>();

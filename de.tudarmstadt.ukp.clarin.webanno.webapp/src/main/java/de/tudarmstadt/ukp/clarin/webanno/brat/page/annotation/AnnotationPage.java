@@ -21,7 +21,6 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Page;
-import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
@@ -29,7 +28,6 @@ import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.IHeaderResponse;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.link.DownloadLink;
-import org.apache.wicket.markup.html.link.Link;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
@@ -40,11 +38,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.dialog.OpenDocumentModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.dialog.OpenPanel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.dialog.YesNoDialog;
+import de.tudarmstadt.ukp.clarin.webanno.brat.dialog.YesNoModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.welcome.WelcomePage;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -62,7 +62,9 @@ public class AnnotationPage
     private static final long serialVersionUID = 1378872465851908515L;
 
     private BratAnnotator annotator;
+
     private OpenDocumentModel openDataMOdel;
+    private YesNoModel yesNoModel;
 
     @SpringBean(name = "jsonConverter")
     private MappingJacksonHttpMessageConverter jsonConverter;
@@ -85,6 +87,8 @@ public class AnnotationPage
     public AnnotationPage()
     {
         openDataMOdel = new OpenDocumentModel();
+        yesNoModel = new YesNoModel();
+
         annotator = new BratAnnotator("embedder1", new Model<AnnotationDocument>());
         annotator.setOutputMarkupId(true);
 
@@ -142,7 +146,8 @@ public class AnnotationPage
                                     + document + "';");
                         }
                         else {
-                            // A hack, the dialog opens for the first time, and if no document is selected
+                            // A hack, the dialog opens for the first time, and if no document is
+                            // selected
                             // window will be "blind down". SOmething in the brat js causes this!
                             setResponsePage(WelcomePage.class);
                         }
@@ -438,44 +443,29 @@ public class AnnotationPage
             }
         });
 
-        Link finishedLink = new Link("finishAnnotation")
+        final ModalWindow yesNoModal;
+        add(yesNoModal = new ModalWindow("yesNoModal"));
+        yesNoModal.setOutputMarkupId(true);
+
+        yesNoModal.setInitialWidth(400);
+        yesNoModal.setInitialHeight(50);
+        yesNoModal.setResizable(true);
+        yesNoModal.setWidthUnit("px");
+        yesNoModal.setHeightUnit("px");
+        yesNoModal.setTitle("Are you sure you want to finish annotating?");
+
+        add(new AjaxLink<Void>("showYesNoModal")
         {
+            private static final long serialVersionUID = 7496156015186497496L;
+
             @Override
-            public void onClick()
+            public void onClick(AjaxRequestTarget target)
             {
-                if (annotator.bratAnnotatorModel.getDocument() == null) {
-                    error("No document is opened. Please open a document first!");
-                }
-                else {
-                    String username = SecurityContextHolder.getContext().getAuthentication()
-                            .getName();
-
-                    User user = repository.getUser(username);
-                    repository
-                            .getAnnotationDocument(annotator.bratAnnotatorModel.getDocument(), user)
-                            .setState(
-                                    AnnotationDocumentStateTransition
-                                            .transition(AnnotationDocumentStateTransition.ANNOTATIONINPROGRESSTOANNOTATIONFINISHED));
-                    getPage().add(new AjaxEventBehavior("onchange")
-                    {
-
-                        private static final long serialVersionUID = 1L;
-
-                        @Override
-                        protected void onEvent(final AjaxRequestTarget aTarget)
-                        {
-                            aTarget.appendJavaScript("window.location.hash = '"
-                                    + annotator.bratAnnotatorModel.getProject().getName()
-                                    + annotator.bratAnnotatorModel.getDocument().getName() + "';");
-                        }
-                    });
-
-                }
+                yesNoModal.setContent(new YesNoDialog(yesNoModal.getContentId(), openDataMOdel,
+                        yesNoModal));
+                yesNoModal.show(target);
             }
-        };
-        finishedLink.add(new JavascriptEventConfirmation("onclick",
-                "Are you sure you want to finish annotating this document?"));
-        add(finishedLink);
+        });
     }
 
     @Override

@@ -60,6 +60,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.OffsetsList;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -207,6 +208,7 @@ public class BratAnnotator
                     result = controller.getCollectionInformation(
                             request.getParameterValue("collection").toString(),
                             bratAnnotatorModel.getAnnotationLayers());
+
                 }
 
                 else if (request.getParameterValue("action").toString().equals("getDocument")) {
@@ -227,9 +229,15 @@ public class BratAnnotator
                 }
                 else if (request.getParameterValue("action").toString().equals("createSpan")) {
                     try {
+                        if(!isDocumentFinished()) {
                         result = createSpan(request, bratAnnotatorModel.getUser(), uIData);
                         info("Annotation [" + request.getParameterValue("type").toString()
                                 + "]has been created");
+                        }
+                        else{
+                            error("This document is already closed. Please ask admin to re-open");
+                            result = getDocument(request, bratAnnotatorModel.getUser(), uIData);
+                        }
                     }
 
                     catch (Exception e) {
@@ -240,26 +248,50 @@ public class BratAnnotator
                 }
 
                 else if (request.getParameterValue("action").toString().equals("createArc")) {
-                    result = createArc(request, bratAnnotatorModel.getUser(), uIData);
+                    if(!isDocumentFinished()){
+                        result = createArc(request, bratAnnotatorModel.getUser(), uIData);
                     info("Annotation [" + request.getParameterValue("type").toString()
                             + "]has been created");
+                    }
+                    else{
+                        error("This document is already closed. Please ask admin to re-open");
+                        result = getDocument(request, bratAnnotatorModel.getUser(), uIData);
+                    }
                 }
 
                 else if (request.getParameterValue("action").toString().equals("reverseArc")) {
+                    if(!isDocumentFinished()){
                     result = reverseArc(request, bratAnnotatorModel.getUser(), uIData);
                     info("Annotation [" + request.getParameterValue("type").toString()
                             + "]has been reversed");
+                    }
+                    else{
+                        error("This document is already closed. Please ask admin to re-open");
+                        result = getDocument(request, bratAnnotatorModel.getUser(), uIData);
+                    }
                 }
                 else if (request.getParameterValue("action").toString().equals("deleteSpan")) {
+                    if(!isDocumentFinished()){
                     result = deleteSpan(request, bratAnnotatorModel.getUser(), uIData);
                     info("Annotation [" + request.getParameterValue("type").toString()
                             + "]has been deleted");
+                    }
+                    else{
+                        error("This document is already closed. Please ask admin to re-open");
+                        result = getDocument(request, bratAnnotatorModel.getUser(), uIData);
+                    }
                 }
 
                 else if (request.getParameterValue("action").toString().equals("deleteArc")) {
+                    if(!isDocumentFinished()){
                     result = deleteArc(request, bratAnnotatorModel.getUser(), uIData);
                     info("Annotation [" + request.getParameterValue("type").toString()
                             + "]has been deleted");
+                    }
+                    else{
+                        error("This document is already closed. Please ask admin to re-open");
+                        result = getDocument(request, bratAnnotatorModel.getUser(), uIData);
+                    }
                 }
 
                 StringWriter out = new StringWriter();
@@ -314,8 +346,7 @@ public class BratAnnotator
                 + "var visualizerUI = new VisualizerUI(dispatcher, visualizer.svg);"
                 + "var annotatorUI = new AnnotatorUI(dispatcher, visualizer.svg);"
                 + "var spinner = new Spinner(dispatcher, '#spinner');"
-                + "var logger = new AnnotationLog(dispatcher);"
-                + "dispatcher.post('init');" };
+                + "var logger = new AnnotationLog(dispatcher);" + "dispatcher.post('init');" };
 
         // This doesn't work with head.js because the onLoad event is fired before all the
         // JavaScript references are loaded.
@@ -758,4 +789,21 @@ public class BratAnnotator
 
     }
 
+    private boolean isDocumentFinished(){
+        // if annotationDocument is finished, disable editing
+        boolean finished = false;
+        try {
+            if (repository
+                    .getAnnotationDocument(bratAnnotatorModel.getDocument(),
+                            bratAnnotatorModel.getUser()).getState()
+                    .equals(AnnotationDocumentState.FINISHED)) {
+                finished = true;
+            }
+        }
+        catch (Exception e) {
+            finished = false;
+        }
+
+        return finished;
+    }
 }
