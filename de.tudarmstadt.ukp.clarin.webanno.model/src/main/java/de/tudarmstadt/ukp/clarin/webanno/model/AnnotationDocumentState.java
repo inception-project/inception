@@ -24,6 +24,11 @@ package de.tudarmstadt.ukp.clarin.webanno.model;
 public enum AnnotationDocumentState
 {
     /**
+     * For every source document, there will be a NEW annotation document, untill the user start
+     * annotating it.
+     */
+    NEW,
+    /**
      *
      * annotation document has been created for this document for this annotator
      */
