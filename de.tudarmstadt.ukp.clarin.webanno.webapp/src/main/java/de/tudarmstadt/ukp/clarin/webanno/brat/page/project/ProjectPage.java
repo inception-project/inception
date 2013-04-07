@@ -35,6 +35,8 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.wicket.Component;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
 import org.apache.wicket.authroles.authorization.strategies.role.metadata.MetaDataRoleAuthorizationStrategy;
 import org.apache.wicket.extensions.ajax.markup.html.tabs.AjaxTabbedPanel;
 import org.apache.wicket.extensions.markup.html.tabs.AbstractTab;
@@ -1228,13 +1230,14 @@ public class ProjectPage
             extends Form<SelectionModel>
         {
             private static final long serialVersionUID = -1L;
-
+            private Tag selectedTag;
+            private ListChoice<Tag> tags;
             public TagSelectionForm(String id)
             {
                 // super(id);
                 super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
 
-                add(new ListChoice<Tag>("tag")
+                add(tags = new ListChoice<Tag>("tag")
                 {
                     private static final long serialVersionUID = 1L;
 
@@ -1252,29 +1255,24 @@ public class ProjectPage
                         });
                         setChoiceRenderer(new ChoiceRenderer<Tag>("name", "id"));
                         setNullValid(false);
-                    }
 
-                    @Override
-                    protected void onSelectionChanged(Tag aNewSelection)
-                    {
-                        if (aNewSelection != null) {
-                            // TagSelectionForm.this.getModelObject().tag = new Tag();
-                            tagDetailForm.setModelObject(aNewSelection);
-                        }
                     }
-
-                    @Override
-                    protected boolean wantOnSelectionChangedNotifications()
-                    {
-                        return true;
-                    }
-
                     @Override
                     protected CharSequence getDefaultChoice(String aSelectedValue)
                     {
                         return "";
                     }
                 });
+                tags.add(new OnChangeAjaxBehavior()
+                    {
+                        private static final long serialVersionUID = 7492425689121761943L;
+                        @Override
+                        protected void onUpdate(AjaxRequestTarget aTarget)
+                        {
+                            tagDetailForm.setModelObject(getModelObject().tag);
+                            aTarget.add(tagDetailForm.setOutputMarkupId(true));
+                        }
+                    }).setOutputMarkupId(true);
             }
         }
 
