@@ -616,9 +616,9 @@ public class ProjectPage
 
                     if (isNotEmpty(uploadedFiles)) {
                         for (FileUpload documentToUpload : uploadedFiles) {
-                            InputStream is;
+                            String fileName = documentToUpload.getClientFileName();
+
                             try {
-                                String fileName = documentToUpload.getClientFileName();
                                 File uploadFile = documentToUpload.writeToTempFile();
 
                                 // if getSourceDocument succeeded, it is a duplication!
@@ -653,6 +653,7 @@ public class ProjectPage
                                 LOG.error("Error uploading document "
                                         + ExceptionUtils.getRootCauseMessage(e));
                             }
+                            info("File ["+ fileName +"] is written successfully!" );
                         }
                     }
                     else if (isEmpty(uploadedFiles)) {
