@@ -121,6 +121,7 @@ public class ProjectPage
                 {
                     ProjectSelectionForm.this.getModelObject().project = null;
                     projectDetailForm.setModelObject(new Project());
+                    createProject = true;
                     projectDetailForm.setVisible(true);
                     ProjectSelectionForm.this.setVisible(true);
                 }
@@ -178,6 +179,7 @@ public class ProjectPage
                 protected void onSelectionChanged(Project aNewSelection)
                 {
                     if (aNewSelection != null) {
+                        createProject = false;
                         projectDetailForm.setModelObject(aNewSelection);
                         projectDetailForm.setVisible(true);
                         ProjectSelectionForm.this.setVisible(true);
@@ -232,6 +234,11 @@ public class ProjectPage
                 {
                     return new ProjectDetailsPanel(panelId);
                 }
+                @Override
+                public boolean isVisible(){
+                 return true;
+
+                }
             });
 
             tabs.add(users = new AbstractTab(new Model<String>("Project Users"))
@@ -242,6 +249,14 @@ public class ProjectPage
                 public Panel getPanel(String panelId)
                 {
                     return new ProjectUsersPanel(panelId);
+                }
+                @Override
+                public boolean isVisible(){
+                 if(createProject) {
+                    return false;
+                }
+                 return true;
+
                 }
             });
 
@@ -254,6 +269,14 @@ public class ProjectPage
                 {
                     return new ProjectDocumentsPanel(panelId);
                 }
+                @Override
+                public boolean isVisible(){
+                 if(createProject) {
+                    return false;
+                }
+                 return true;
+
+                }
             });
 
             tabs.add(tagSets = new AbstractTab(new Model<String>("Project TagSets"))
@@ -264,6 +287,14 @@ public class ProjectPage
                 public Panel getPanel(String panelId)
                 {
                     return new ProjectTagSetsPanel(panelId);
+                }
+                @Override
+                public boolean isVisible(){
+                 if(createProject) {
+                    return false;
+                }
+                 return true;
+
                 }
             });
 
@@ -276,6 +307,14 @@ public class ProjectPage
                 {
                     return new AnnotationGuideLinePanel(panelId);
                 }
+                @Override
+                public boolean isVisible(){
+                 if(createProject) {
+                    return false;
+                }
+                 return true;
+
+                }
             });
 
             add(new AjaxTabbedPanel("tabs", tabs));
@@ -285,6 +324,8 @@ public class ProjectPage
 
     private ProjectSelectionForm projectSelectionForm;
     private ProjectDetailForm projectDetailForm;
+    // Fix for Issue "refresh for "new project" in project configuration (Bug #141) "
+    boolean createProject = false;
 
     public ProjectPage()
     {
@@ -375,6 +416,7 @@ public class ProjectPage
                             LOG.error("Project name shouldn't contain characters such as /\\*?&!$+[^]");
                         }
                     }
+                    createProject = false;
                 }
             });
             add(new Button("remove", new ResourceModel("label"))
