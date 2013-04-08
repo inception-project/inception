@@ -83,8 +83,9 @@ public class OpenPanel
         super(aId);
         username = SecurityContextHolder.getContext().getAuthentication().getName();
         user = projectRepository.getUser(username);
-
-        selectedProject = getAllowedProjects().get(0);
+        if (getAllowedProjects().size() > 0) {
+            selectedProject = getAllowedProjects().get(0);
+        }
 
         this.openDataModel = aOpenDataModel;
         projectSelectionForm = new ProjectSelectionForm("projectSelectionForm");
@@ -234,18 +235,6 @@ public class OpenPanel
                             if (selectedProject != null) {
                                 List<SourceDocument> allDocuments = projectRepository
                                         .listSourceDocuments(selectedProject);
-/*                                // documents not yet closed (FINISHED)
-                                List<String> finishedAnnotationDocuments = projectRepository
-                                        .listFinishedAnnotationDocuments(selectedProject, user,
-                                                AnnotationDocumentState.FINISHED);
-
-                                List<SourceDocument> openDocuments = new ArrayList<SourceDocument>();
-                                for (SourceDocument document : allDocuments) {
-                                    if (!finishedAnnotationDocuments.contains(document.getName())) {
-                                        openDocuments.add(document);
-                                    }
-                                }
-                                return openDocuments;*/
                                 return allDocuments;
                             }
                             else {
@@ -308,10 +297,10 @@ public class OpenPanel
                 protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
                 {
                     if (selectedProject == null) {
-                        error("No project is selected!"); // If there is no project at all
+                        aTarget.appendJavaScript("alert('No project is selected!')"); // If there is no project at all
                     }
                     else if (selectedDocument == null) {
-                        error("Please select a document for project: " + selectedProject.getName());
+                        aTarget.appendJavaScript("alert('Please select a document for project: " + selectedProject.getName()+"')");
                     }
                     else {
                         openDataModel.setProject(selectedProject);
