@@ -41,7 +41,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.dialog.OpenDocumentModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.dialog.OpenPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.dialog.YesNoDialog;
-import de.tudarmstadt.ukp.clarin.webanno.brat.dialog.YesNoModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.welcome.WelcomePage;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -64,8 +63,6 @@ public class AnnotationPage
     private BratAnnotator annotator;
 
     private OpenDocumentModel openDataMOdel;
-    private YesNoModel yesNoModel;
-
     @SpringBean(name = "jsonConverter")
     private MappingJacksonHttpMessageConverter jsonConverter;
 
@@ -87,7 +84,6 @@ public class AnnotationPage
     public AnnotationPage()
     {
         openDataMOdel = new OpenDocumentModel();
-        yesNoModel = new YesNoModel();
 
         annotator = new BratAnnotator("embedder1", new Model<AnnotationDocument>());
         annotator.setOutputMarkupId(true);
