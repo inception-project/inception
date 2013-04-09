@@ -16,6 +16,9 @@
 
 package de.tudarmstadt.ukp.clarin.webanno.brat.dialog;
 
+import java.io.IOException;
+
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
@@ -27,7 +30,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
@@ -85,9 +90,37 @@ public class YesNoDialog
                     annotationDocument
                             .setState(AnnotationDocumentStateTransition
                                     .transition(AnnotationDocumentStateTransition.ANNOTATIONINPROGRESSTOANNOTATIONFINISHED));
-                  // manually update state change!! No idea why it is not updated in the DB with out calling
+                    // manually update state change!! No idea why it is not updated in the DB with
+                    // out calling
                     // createAnnotationDocument(...)
                     repository.createAnnotationDocument(annotationDocument);
+
+                    // check if other users are also finished annotation, hence
+                    // change source document state to FINISHED
+                    boolean othersFinished = true;
+                    for (User annotationUser : repository.listProjectUsers(openDocumentModel
+                            .getProject())) {
+                        if (repository.existsAnnotationDocument(openDocumentModel.getDocument(),
+                                annotationUser)) {
+                            if (!repository
+                                    .getAnnotationDocument(openDocumentModel.getDocument(),
+                                            annotationUser).getState()
+                                    .equals(AnnotationDocumentState.FINISHED)) {
+                                othersFinished = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    if(othersFinished){
+                        openDocumentModel.getDocument().setState(SourceDocumentState.ANNOTATION_FINISHED);
+                        try {
+                            repository.createSourceDocument(openDocumentModel.getDocument(), user);
+                        }
+                        catch (IOException e) {
+                         error("Unable to update source file "+ ExceptionUtils.getRootCauseMessage(e));
+                        }
+                    }
 
                     modalWindow.close(aTarget);
                 }

@@ -142,7 +142,7 @@ public class RepositoryServiceDbData
     @Transactional
     public void createAnnotationDocument(AnnotationDocument aAnnotationDocument)
     {
-        if (aAnnotationDocument.getId() < 0) {
+        if (aAnnotationDocument.getId() == 0) {
             entityManager.persist(aAnnotationDocument);
         }
         else {
@@ -354,8 +354,13 @@ public class RepositoryServiceDbData
     public void createSourceDocument(SourceDocument aDocument, User aUser)
         throws IOException
     {
+        if(aDocument.getId() == 0) {
+            entityManager.persist(aDocument);
+        }
+        else {
+            entityManager.merge(aDocument);
+        }
 
-        entityManager.persist(aDocument);
     }
 
     @Override

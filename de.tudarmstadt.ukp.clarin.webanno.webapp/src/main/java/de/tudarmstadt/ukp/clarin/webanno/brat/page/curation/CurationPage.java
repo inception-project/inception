@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,35 +15,28 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.page.curation;
 
-
-import java.util.List;
-
-import javax.persistence.NoResultException;
-
-import org.apache.commons.lang.math.RandomUtils;
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
+import org.apache.wicket.markup.html.IHeaderResponse;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationDocumentVisualizer;
+import de.tudarmstadt.ukp.clarin.webanno.brat.dialog.OpenDocumentModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.dialog.OpenPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.component.model.CurationBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.component.model.CurationContainer;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 
 /**
  *
- * @author Andreas Straninger
- * This is the main class for the curation page. It contains an
- * interface which displays differences between user annotations
- * for a specific document. The interface provides a tool for
- * merging these annotations and storing them as a new annotation.
+ * @author Andreas Straninger This is the main class for the curation page. It contains an interface
+ *         which displays differences between user annotations for a specific document. The
+ *         interface provides a tool for merging these annotations and storing them as a new
+ *         annotation.
  */
 public class CurationPage
     extends ApplicationPageBase
@@ -60,70 +53,94 @@ public class CurationPage
 
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
+    private CurationPanel curationPanel;
+    private OpenDocumentModel openDataMOdel;
+
+    private CurationContainer curationContainer;
+
+    // Open the dialog window on first load
+    boolean firstLoad = true;
 
     public CurationPage()
     {
+        openDataMOdel = new OpenDocumentModel();
 
-        // do it if the user is an admin or a curator
-    	// get first sourceDocument from project repository
-    	// TODO integrate open dialog
-    	List<Project> projects = repository.listProjects();
-    	SourceDocument sourceDocument = null;
-    	for (Project project : projects) {
-    	    if(isAllowed(project) && project.getName().equals("NER_V1")) {
-			List<SourceDocument> sourceDocuments = repository.listSourceDocuments(project);
-				for (SourceDocument sourceDocument2 : sourceDocuments) {
-					if(sourceDocument2.getName().equals("NER_deu_blocks0K2-ab.tcf")) {
-						sourceDocument = sourceDocument2;
-						break;
-					}
-				}
-				if(sourceDocument != null) {
-					break;
-				}
-    	    }
-		}
-    	
+        curationContainer = new CurationContainer();
+        curationPanel = new CurationPanel("curationPanel", curationContainer);
+        curationPanel.setOutputMarkupId(true);
+        add(curationPanel);
 
-    	// transform jcas to objects for wicket components
-    	CurationBuilder builder = new CurationBuilder(repository);
-    	CurationContainer curationContainer = builder.buildCurationContainer(sourceDocument);
-    	curationContainer.setSourceDocument(sourceDocument);
-//        getSession().setAttribute("dummy", curationContainer);
+        final ModalWindow openDocumentsModal;
+        add(openDocumentsModal = new ModalWindow("openDocumentsModal"));
+        openDocumentsModal.setOutputMarkupId(true);
 
-    	// add panel
-        add(new CurationPanel("curationPanel", curationContainer));
+        openDocumentsModal.setInitialWidth(350);
+        openDocumentsModal.setInitialHeight(250);
+        openDocumentsModal.setResizable(true);
+        openDocumentsModal.setWidthUnit("px");
+        openDocumentsModal.setHeightUnit("px");
+        openDocumentsModal.setTitle("Open document");
+
+        add(new AjaxLink<Void>("showOpenDocumentModal")
+        {
+            private static final long serialVersionUID = 7496156015186497496L;
+
+            @Override
+            public void onClick(AjaxRequestTarget target)
+            {
+                openDocumentsModal.setContent(new OpenPanel(openDocumentsModal.getContentId(),
+                        openDataMOdel, openDocumentsModal));
+                openDocumentsModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
+                {
+                    private static final long serialVersionUID = -1746088901018629567L;
+
+                    public void onClose(AjaxRequestTarget target)
+                    {
+                        if (openDataMOdel.getProject() != null
+                                && openDataMOdel.getDocument() != null
+                                &&openDataMOdel.getDocument().getState().toString().equals(
+                                        SourceDocumentState.ANNOTATION_FINISHED.toString()) ) {
+
+                            // transform jcas to objects for wicket components
+                            CurationBuilder builder = new CurationBuilder(repository);
+                            curationContainer = builder.buildCurationContainer(openDataMOdel
+                                    .getDocument());
+                            curationContainer.setSourceDocument(openDataMOdel.getDocument());
+                            updatePanel(curationContainer);
+                            // target.add(curationPanel) should work!
+                            target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+
+                          //  target.add(curationPanel);
+                        }
+                        else {
+                            target.appendJavaScript("alert('Annotation in progress!')");
+                        }
+                    }
+                });
+                openDocumentsModal.show(target);
+            }
+        });
 
     }
 
-    /**
-     * Fetch a random annotation document for visualization
-     */
-    public boolean isAllowed(Project aProject)
+    // Update the curation panel.
+    private void updatePanel( CurationContainer aCurationContainer) {
+        // remove old panel, create new one, add it
+        remove(curationPanel);
+       curationPanel = new CurationPanel("curationPanel", aCurationContainer);
+        curationPanel.setOutputMarkupId(true);
+        add(curationPanel);
+  }
+
+
+    @Override
+    public void renderHead(IHeaderResponse response)
     {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = repository.getUser(username);
-        boolean roleAdmin = false;
-        List<Authority> authorities = repository.getAuthorities(user);
-        for (Authority authority : authorities) {
-            if (authority.getRole().equals("ROLE_ADMIN")) {
-                roleAdmin = true;
-                break;
-            }
+        String jQueryString = "";
+        if (firstLoad) {
+            jQueryString += "jQuery('#showOpenDocumentModal').trigger('click');";
+            firstLoad = false;
         }
-
-        boolean admin = false;
-        if (!roleAdmin) {
-            try {
-                if (repository.getPermisionLevel(user, aProject).equals("curator")) {
-                    admin = true;
-                }
-            }
-            catch (NoResultException ex) {
-                error("No permision is given to this user " + ex);
-            }
-        }
-
-        return (admin || roleAdmin);
+        response.renderOnLoadJavaScript(jQueryString);
     }
 }
