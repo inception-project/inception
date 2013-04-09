@@ -34,6 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.component.model.CurationBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.component.model.CurationContainer;
+import de.tudarmstadt.ukp.clarin.webanno.brat.page.welcome.WelcomePage;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Subject;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -61,7 +62,7 @@ public class CurationPage
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
     private CurationPanel curationPanel;
-    private OpenDocumentModel openDataMOdel;
+    private OpenDocumentModel openDataModel;
 
     private CurationContainer curationContainer;
 
@@ -70,7 +71,7 @@ public class CurationPage
 
     public CurationPage()
     {
-        openDataMOdel = new OpenDocumentModel();
+        openDataModel = new OpenDocumentModel();
 
         curationContainer = new CurationContainer();
         curationPanel = new CurationPanel("curationPanel", curationContainer);
@@ -93,10 +94,10 @@ public class CurationPage
             private static final long serialVersionUID = 7496156015186497496L;
 
             @Override
-            public void onClick(AjaxRequestTarget target)
+            public void onClick(AjaxRequestTarget aTarget)
             {
                 openDocumentsModal.setContent(new OpenPanel(openDocumentsModal.getContentId(),
-                        openDataMOdel, openDocumentsModal));
+                        openDataModel, openDocumentsModal));
                 openDocumentsModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
                 {
                     private static final long serialVersionUID = -1746088901018629567L;
@@ -108,18 +109,18 @@ public class CurationPage
 
                         User user = repository.getUser(username);
 
-                        if (openDataMOdel.getProject() != null
-                                && openDataMOdel.getDocument() != null
-                                && (openDataMOdel.getDocument().getState()
-                                        .equals(SourceDocumentState.ANNOTATION_FINISHED) || openDataMOdel
+                        if (openDataModel.getProject() != null
+                                && openDataModel.getDocument() != null
+                                && (openDataModel.getDocument().getState()
+                                        .equals(SourceDocumentState.ANNOTATION_FINISHED) || openDataModel
                                         .getDocument().getState()
                                         .equals(SourceDocumentState.CURATION_INPROGRESS))) {
 
                             // Update source document state to CURRATION_INPROGRESS
-                            openDataMOdel.getDocument().setState(
+                            openDataModel.getDocument().setState(
                                     SourceDocumentState.CURATION_INPROGRESS);
                             try {
-                                repository.createSourceDocument(openDataMOdel.getDocument(), user);
+                                repository.createSourceDocument(openDataModel.getDocument(), user);
                             }
                             catch (IOException e) {
                                 error("Unable to update source document "
@@ -127,26 +128,30 @@ public class CurationPage
                             }
                             // transform jcas to objects for wicket components
                             CurationBuilder builder = new CurationBuilder(repository);
-                            curationContainer = builder.buildCurationContainer(openDataMOdel
+                            curationContainer = builder.buildCurationContainer(openDataModel
                                     .getDocument());
-                            curationContainer.setSourceDocument(openDataMOdel.getDocument());
+                            curationContainer.setSourceDocument(openDataModel.getDocument());
                             updatePanel(curationContainer);
                             // target.add(curationPanel) should work!
                             target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
 
-                            // target.add(curationPanel);
                         }
-                        else if (openDataMOdel.getDocument() != null
-                                && openDataMOdel.getDocument().getState()
+                        else if (openDataModel.getDocument() != null
+                                && openDataModel.getDocument().getState()
                                         .equals(SourceDocumentState.CURATION_FINISHED)) {
                             target.appendJavaScript("alert('Curation Has been closed. Ask admin to re-open!')");
+                            openDocumentsModal.show(target);
+                        }
+                        else if(openDataModel.getDocument()==null){
+                            setResponsePage(WelcomePage.class);
                         }
                         else {
-                            target.appendJavaScript("alert('Annotation in progress!')");
+                            target.appendJavaScript("alert('Annotation in progress for document ["+openDataModel.getDocument().getName()+"]')");
+                            openDocumentsModal.show(target);
                         }
                     }
                 });
-                openDocumentsModal.show(target);
+                openDocumentsModal.show(aTarget);
             }
         });
 
@@ -168,7 +173,7 @@ public class CurationPage
             @Override
             public void onClick(AjaxRequestTarget target)
             {
-                yesNoModal.setContent(new YesNoDialog(yesNoModal.getContentId(), openDataMOdel,
+                yesNoModal.setContent(new YesNoDialog(yesNoModal.getContentId(), openDataModel,
                         yesNoModal, Subject.curation));
                 yesNoModal.show(target);
             }
