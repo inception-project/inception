@@ -15,11 +15,15 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.page.curation;
 
+import java.io.IOException;
+
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.IHeaderResponse;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationDocumentVisualizer;
@@ -30,6 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.component.CurationPa
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.component.model.CurationBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
  *
@@ -96,11 +101,28 @@ public class CurationPage
 
                     public void onClose(AjaxRequestTarget target)
                     {
+                        String username = SecurityContextHolder.getContext().getAuthentication()
+                                .getName();
+
+                        User user = repository.getUser(username);
+
                         if (openDataMOdel.getProject() != null
                                 && openDataMOdel.getDocument() != null
-                                &&openDataMOdel.getDocument().getState().toString().equals(
-                                        SourceDocumentState.ANNOTATION_FINISHED.toString()) ) {
+                                && (openDataMOdel.getDocument().getState().toString()
+                                        .equals(SourceDocumentState.ANNOTATION_FINISHED.toString()) || openDataMOdel
+                                        .getDocument().getState().toString()
+                                        .equals(SourceDocumentState.CURATION_INPROGRESS.toString()))) {
 
+                            // Update source document state to CURRATION_INPROGRESS
+                            openDataMOdel.getDocument().setState(
+                                    SourceDocumentState.CURATION_INPROGRESS);
+                            try {
+                                repository.createSourceDocument(openDataMOdel.getDocument(), user);
+                            }
+                            catch (IOException e) {
+                                error("Unable to update source document "
+                                        + ExceptionUtils.getRootCauseMessage(e));
+                            }
                             // transform jcas to objects for wicket components
                             CurationBuilder builder = new CurationBuilder(repository);
                             curationContainer = builder.buildCurationContainer(openDataMOdel
@@ -110,7 +132,7 @@ public class CurationPage
                             // target.add(curationPanel) should work!
                             target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
 
-                          //  target.add(curationPanel);
+                            // target.add(curationPanel);
                         }
                         else {
                             target.appendJavaScript("alert('Annotation in progress!')");
@@ -124,14 +146,14 @@ public class CurationPage
     }
 
     // Update the curation panel.
-    private void updatePanel( CurationContainer aCurationContainer) {
+    private void updatePanel(CurationContainer aCurationContainer)
+    {
         // remove old panel, create new one, add it
         remove(curationPanel);
-       curationPanel = new CurationPanel("curationPanel", aCurationContainer);
+        curationPanel = new CurationPanel("curationPanel", aCurationContainer);
         curationPanel.setOutputMarkupId(true);
         add(curationPanel);
-  }
-
+    }
 
     @Override
     public void renderHead(IHeaderResponse response)

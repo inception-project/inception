@@ -114,7 +114,7 @@ public interface RepositoryService
         throws IOException;
 
     /**
-     * A Method that checks if there is already an annotation document created for the source code
+     * A Method that checks if there is already an annotation document created for the source document
      *
      * @param annotationDocument
      * @return
@@ -309,6 +309,13 @@ public interface RepositoryService
      * @return {@link AnnotationDocument}
      */
     List<AnnotationDocument> listAnnotationDocument(SourceDocument document);
+
+    /**
+     * List all annotation documents in the state <b>INPROGRESS</b>
+     * @param document
+     * @return
+     */
+  //  List<AnnotationDocument> listAnnotationDocumentInProgress(SourceDocument document);
 
     /**
      * List annotation guideline document already uploaded
