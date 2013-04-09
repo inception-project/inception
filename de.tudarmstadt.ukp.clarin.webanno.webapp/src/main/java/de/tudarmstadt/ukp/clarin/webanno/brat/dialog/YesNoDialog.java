@@ -33,6 +33,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.Subject;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
@@ -54,11 +55,12 @@ public class YesNoDialog
 
     private OpenDocumentModel openDocumentModel;
 
-    public YesNoDialog(String aId, OpenDocumentModel aOpenDocumentModel, ModalWindow aModalWindow)
+    public YesNoDialog(String aId, OpenDocumentModel aOpenDocumentModel, ModalWindow aModalWindow,
+            Subject aSubject)
     {
         super(aId);
         this.openDocumentModel = aOpenDocumentModel;
-        yesNoButtonsForm = new YesNoButtonsForm("yesNoButtonsForm", aModalWindow);
+        yesNoButtonsForm = new YesNoButtonsForm("yesNoButtonsForm", aModalWindow, aSubject);
         add(yesNoButtonsForm);
     }
 
@@ -67,7 +69,7 @@ public class YesNoDialog
     {
         private static final long serialVersionUID = -5659356972501634268L;
 
-        public YesNoButtonsForm(String id, final ModalWindow modalWindow)
+        public YesNoButtonsForm(String id, final ModalWindow modalWindow, final Subject aSubject)
         {
             super(id);
             add(new AjaxSubmitLink("yesButton")
@@ -84,41 +86,60 @@ public class YesNoDialog
 
                     User user = repository.getUser(username);
 
-                    AnnotationDocument annotationDocument = repository.getAnnotationDocument(
-                            openDocumentModel.getDocument(), user);
+                    if (aSubject.equals(Subject.annotation)) {
+                        AnnotationDocument annotationDocument = repository.getAnnotationDocument(
+                                openDocumentModel.getDocument(), user);
 
-                    annotationDocument
-                            .setState(AnnotationDocumentStateTransition
-                                    .transition(AnnotationDocumentStateTransition.ANNOTATIONINPROGRESSTOANNOTATIONFINISHED));
-                    // manually update state change!! No idea why it is not updated in the DB with
-                    // out calling
-                    // createAnnotationDocument(...)
-                    repository.createAnnotationDocument(annotationDocument);
+                        annotationDocument
+                                .setState(AnnotationDocumentStateTransition
+                                        .transition(AnnotationDocumentStateTransition.ANNOTATIONINPROGRESSTOANNOTATIONFINISHED));
+                        // manually update state change!! No idea why it is not updated in the DB
+                        // with
+                        // out calling
+                        // createAnnotationDocument(...)
+                        repository.createAnnotationDocument(annotationDocument);
 
-                    // check if other users are also finished annotation, hence
-                    // change source document state to FINISHED
-                    boolean othersFinished = true;
-                    for (User annotationUser : repository.listProjectUsers(openDocumentModel
-                            .getProject())) {
-                        if (repository.existsAnnotationDocument(openDocumentModel.getDocument(),
-                                annotationUser)) {
-                            if (!repository
-                                    .getAnnotationDocument(openDocumentModel.getDocument(),
-                                            annotationUser).getState()
-                                    .equals(AnnotationDocumentState.FINISHED)) {
-                                othersFinished = false;
-                                break;
+                        // check if other users are also finished annotation, hence
+                        // change source document state to FINISHED
+                        boolean othersFinished = true;
+                        for (User annotationUser : repository.listProjectUsers(openDocumentModel
+                                .getProject())) {
+                            if (repository.existsAnnotationDocument(
+                                    openDocumentModel.getDocument(), annotationUser)) {
+                                if (!repository
+                                        .getAnnotationDocument(openDocumentModel.getDocument(),
+                                                annotationUser).getState()
+                                        .equals(AnnotationDocumentState.FINISHED)) {
+                                    othersFinished = false;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (othersFinished) {
+                            openDocumentModel.getDocument().setState(
+                                    SourceDocumentState.ANNOTATION_FINISHED);
+                            try {
+                                repository.createSourceDocument(openDocumentModel.getDocument(),
+                                        user);
+                            }
+                            catch (IOException e) {
+                                error("Unable to update source file "
+                                        + ExceptionUtils.getRootCauseMessage(e));
                             }
                         }
                     }
+                    else {
 
-                    if(othersFinished){
-                        openDocumentModel.getDocument().setState(SourceDocumentState.ANNOTATION_FINISHED);
+                        openDocumentModel.getDocument().setState(
+                                SourceDocumentState.CURATION_FINISHED);
                         try {
                             repository.createSourceDocument(openDocumentModel.getDocument(), user);
                         }
                         catch (IOException e) {
-                         error("Unable to update source file "+ ExceptionUtils.getRootCauseMessage(e));
+                            error("Unable to update source file "
+                                    + ExceptionUtils.getRootCauseMessage(e));
+
                         }
                     }
 

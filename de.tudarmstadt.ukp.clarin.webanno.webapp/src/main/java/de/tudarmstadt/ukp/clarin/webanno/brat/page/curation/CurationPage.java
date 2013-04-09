@@ -29,11 +29,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationDocumentVisualizer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.dialog.OpenDocumentModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.dialog.OpenPanel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.dialog.YesNoDialog;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.component.model.CurationBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.Subject;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
@@ -108,10 +110,10 @@ public class CurationPage
 
                         if (openDataMOdel.getProject() != null
                                 && openDataMOdel.getDocument() != null
-                                && (openDataMOdel.getDocument().getState().toString()
-                                        .equals(SourceDocumentState.ANNOTATION_FINISHED.toString()) || openDataMOdel
-                                        .getDocument().getState().toString()
-                                        .equals(SourceDocumentState.CURATION_INPROGRESS.toString()))) {
+                                && (openDataMOdel.getDocument().getState()
+                                        .equals(SourceDocumentState.ANNOTATION_FINISHED) || openDataMOdel
+                                        .getDocument().getState()
+                                        .equals(SourceDocumentState.CURATION_INPROGRESS))) {
 
                             // Update source document state to CURRATION_INPROGRESS
                             openDataMOdel.getDocument().setState(
@@ -134,6 +136,11 @@ public class CurationPage
 
                             // target.add(curationPanel);
                         }
+                        else if (openDataMOdel.getDocument() != null
+                                && openDataMOdel.getDocument().getState()
+                                        .equals(SourceDocumentState.CURATION_FINISHED)) {
+                            target.appendJavaScript("alert('Curation Has been closed. Ask admin to re-open!')");
+                        }
                         else {
                             target.appendJavaScript("alert('Annotation in progress!')");
                         }
@@ -143,6 +150,29 @@ public class CurationPage
             }
         });
 
+        final ModalWindow yesNoModal;
+        add(yesNoModal = new ModalWindow("yesNoModal"));
+        yesNoModal.setOutputMarkupId(true);
+
+        yesNoModal.setInitialWidth(400);
+        yesNoModal.setInitialHeight(50);
+        yesNoModal.setResizable(true);
+        yesNoModal.setWidthUnit("px");
+        yesNoModal.setHeightUnit("px");
+        yesNoModal.setTitle("Are you sure you want to finish curating?");
+
+        add(new AjaxLink<Void>("showYesNoModal")
+        {
+            private static final long serialVersionUID = 7496156015186497496L;
+
+            @Override
+            public void onClick(AjaxRequestTarget target)
+            {
+                yesNoModal.setContent(new YesNoDialog(yesNoModal.getContentId(), openDataMOdel,
+                        yesNoModal, Subject.curation));
+                yesNoModal.show(target);
+            }
+        });
     }
 
     // Update the curation panel.

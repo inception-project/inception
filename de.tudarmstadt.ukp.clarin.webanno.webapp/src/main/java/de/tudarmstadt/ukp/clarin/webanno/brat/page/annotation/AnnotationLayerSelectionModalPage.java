@@ -46,6 +46,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.Subject;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 
 /**
@@ -144,7 +145,7 @@ public class AnnotationLayerSelectionModalPage
                             .getName();
                     try {
                         projectRepository.saveUserSettings(username, annotator.bratAnnotatorModel.getProject(),
-                                "annotation", preference);
+                                Subject.annotation, preference);
                     }
                     catch (FileNotFoundException e) {
                         error("Unable to save preferences in a property file: "

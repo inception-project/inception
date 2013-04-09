@@ -46,6 +46,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.page.welcome.WelcomePage;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.Subject;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
@@ -458,7 +459,7 @@ public class AnnotationPage
             public void onClick(AjaxRequestTarget target)
             {
                 yesNoModal.setContent(new YesNoDialog(yesNoModal.getContentId(), openDataMOdel,
-                        yesNoModal));
+                        yesNoModal, Subject.annotation));
                 yesNoModal.show(target);
             }
         });
