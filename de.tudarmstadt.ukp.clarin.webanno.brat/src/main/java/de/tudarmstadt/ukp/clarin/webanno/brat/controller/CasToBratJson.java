@@ -82,7 +82,8 @@ public class CasToBratJson
         this.lastSentenceAddress = aBratAnnotatorModel.getLastSentenceAddress();
         this.sentenceStartAddress = this.currentWindowSentenceBeginAddress;
         this.windowSize = aBratAnnotatorModel.getWindowSize();
-        this.reverseDependencyDirection = aBratAnnotatorModel.getProject().isReverseDependencyDirection();
+        this.reverseDependencyDirection = aBratAnnotatorModel.getProject()
+                .isReverseDependencyDirection();
     }
 
     // for test purpose
@@ -187,31 +188,10 @@ public class CasToBratJson
 
     public void addPosToResponse(JCas aJcas, GetDocumentResponse aResponse)
     {
-        Sentence sentenceAddress = (Sentence) aJcas.getLowLevelCas().ll_getFSForRef(
-                currentWindowSentenceBeginAddress);
-        int current = sentenceAddress.getBegin();
-        int i = currentWindowSentenceBeginAddress;
-        Sentence sentence = null;
-
         if (annotationLayers.contains(AnnotationType.POS)) {
-            for (int j = 0; j < windowSize; j++) {
-                if (i >= lastSentenceAddress) {
-                    sentence = (Sentence) aJcas.getLowLevelCas().ll_getFSForRef(i);
-                    for (POS pos : selectCovered(POS.class, sentence)) {
-                        aResponse.addEntity(new Entity(pos.getAddress(), AnnotationType.POS_PREFIX
-                                + pos.getPosValue(), asList(new Offsets(pos.getBegin() - current,
-                                pos.getEnd() - current))));
-                    }
-                    break;
-                }
-                sentence = (Sentence) aJcas.getLowLevelCas().ll_getFSForRef(i);
-                for (POS pos : selectCovered(POS.class, sentence)) {
-                    aResponse.addEntity(new Entity(pos.getAddress(), AnnotationType.POS_PREFIX
-                            + pos.getPosValue(), asList(new Offsets(pos.getBegin() - current, pos
-                            .getEnd() - current))));
-                }
-                i = BratAjaxCasUtil.getFollowingSentenceAddress(aJcas, i);
-            }
+            SpanCasToBrat.addSpanAnnotationToResponse(aJcas, aResponse,
+                    currentWindowSentenceBeginAddress, windowSize, lastSentenceAddress,
+                    annotationLayers, POS.class, AnnotationType.POS_PREFIX);
         }
     }
 
@@ -353,36 +333,11 @@ public class CasToBratJson
     public void addNamedEntityToResponse(JCas aJcas, GetDocumentResponse aResponse)
     {
 
-        Sentence sentenceAddress = (Sentence) aJcas.getLowLevelCas().ll_getFSForRef(
-                currentWindowSentenceBeginAddress);
-        int current = sentenceAddress.getBegin();
-        int i = currentWindowSentenceBeginAddress;
-        Sentence sentence = null;
 
         if (annotationLayers.contains(AnnotationType.NAMEDENTITY)) {
-            for (int j = 0; j < windowSize; j++) {
-                if (i >= lastSentenceAddress) {
-                    sentence = (Sentence) aJcas.getLowLevelCas().ll_getFSForRef(i);
-                    for (NamedEntity ne : selectCovered(NamedEntity.class, sentence)) {
-
-                        aResponse
-                                .addEntity(new Entity(ne.getAddress(),
-                                        AnnotationType.NAMEDENTITY_PREFIX + ne.getValue(),
-                                        asList(new Offsets(ne.getBegin() - current, ne.getEnd()
-                                                - current))));
-                    }
-                    break;
-                }
-                sentence = (Sentence) aJcas.getLowLevelCas().ll_getFSForRef(i);
-                for (NamedEntity ne : selectCovered(NamedEntity.class, sentence)) {
-
-                    aResponse.addEntity(new Entity(ne.getAddress(),
-                            AnnotationType.NAMEDENTITY_PREFIX + ne.getValue(), asList(new Offsets(
-                                    ne.getBegin() - current, ne.getEnd() - current))));
-                }
-                i = BratAjaxCasUtil.getFollowingSentenceAddress(aJcas, i);
-            }
-
+            SpanCasToBrat.addSpanAnnotationToResponse(aJcas, aResponse,
+                    currentWindowSentenceBeginAddress, windowSize, lastSentenceAddress,
+                    annotationLayers, NamedEntity.class, AnnotationType.NAMEDENTITY_PREFIX);
         }
     }
 
