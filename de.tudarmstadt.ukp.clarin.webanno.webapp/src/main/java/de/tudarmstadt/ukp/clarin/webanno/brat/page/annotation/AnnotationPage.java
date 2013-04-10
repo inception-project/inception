@@ -112,7 +112,7 @@ public class AnnotationPage
             public void onClick(AjaxRequestTarget target)
             {
                 openDocumentsModal.setContent(new OpenPanel(openDocumentsModal.getContentId(),
-                        openDataMOdel, openDocumentsModal));
+                        openDataMOdel, openDocumentsModal, Subject.annotation));
                 openDocumentsModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
                 {
                     private static final long serialVersionUID = -1746088901018629567L;

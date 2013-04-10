@@ -43,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.Subject;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
@@ -76,11 +77,16 @@ public class OpenPanel
     private String username;
     private User user;
 
+    // Dialog is for annotation or curation
+
+    private Subject subject;
+
     List<Project> allowedProject = new ArrayList<Project>();
 
-    public OpenPanel(String aId, OpenDocumentModel aOpenDataModel, ModalWindow aModalWindow)
+    public OpenPanel(String aId, OpenDocumentModel aOpenDataModel, ModalWindow aModalWindow, Subject aSubject)
     {
         super(aId);
+        this.subject = aSubject;
         username = SecurityContextHolder.getContext().getAuthentication().getName();
         user = projectRepository.getUser(username);
         if (getAllowedProjects().size() > 0) {
@@ -325,6 +331,10 @@ public class OpenPanel
                 {
                     projectSelectionForm.detach();
                     documentSelectionForm.detach();
+                    if(subject.equals(Subject.curation))
+                     {
+                        openDataModel.setDocument(null); // on cancel, go welcomePage
+                    }
                     modalWindow.close(aTarget);
 
                 }

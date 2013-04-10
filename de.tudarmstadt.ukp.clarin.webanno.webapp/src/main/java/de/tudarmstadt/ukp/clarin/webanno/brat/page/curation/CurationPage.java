@@ -97,7 +97,7 @@ public class CurationPage
             public void onClick(AjaxRequestTarget aTarget)
             {
                 openDocumentsModal.setContent(new OpenPanel(openDocumentsModal.getContentId(),
-                        openDataModel, openDocumentsModal));
+                        openDataModel, openDocumentsModal, Subject.curation));
                 openDocumentsModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
                 {
                     private static final long serialVersionUID = -1746088901018629567L;
@@ -140,14 +140,12 @@ public class CurationPage
                                 && openDataModel.getDocument().getState()
                                         .equals(SourceDocumentState.CURATION_FINISHED)) {
                             target.appendJavaScript("alert('Curation Has been closed. Ask admin to re-open!')");
-                            openDocumentsModal.show(target);
                         }
                         else if(openDataModel.getDocument()==null){
                             setResponsePage(WelcomePage.class);
                         }
                         else {
                             target.appendJavaScript("alert('Annotation in progress for document ["+openDataModel.getDocument().getName()+"]')");
-                            openDocumentsModal.show(target);
                         }
                     }
                 });
