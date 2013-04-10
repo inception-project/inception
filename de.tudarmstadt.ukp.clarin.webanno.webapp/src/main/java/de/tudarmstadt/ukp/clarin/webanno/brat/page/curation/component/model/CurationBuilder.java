@@ -32,6 +32,7 @@ import org.apache.uima.jcas.JCas;
 import org.uimafit.util.CasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.AnnotationOption;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -78,7 +79,6 @@ public class CurationBuilder {
 			}
 			
 			JCas firstJCas = null;
-			Map<String, CAS> casMap = new HashMap<String, CAS>();
 			Map<String, JCas> jCases = new HashMap<String, JCas>();
 			for (AnnotationDocument annotationDocument : annotationDocuments) {
 				try {
@@ -89,31 +89,29 @@ public class CurationBuilder {
 						firstJCas = jCas;
 					}
 					jCases.put(username, jCas);
-					casMap.put(annotationDocument.getUser().getUsername(), jCas.getCas());
 				} catch (Exception e) {
 					LOG.info("Skipping document due to exception ["+annotationDocument+"]", e);
 				}
 			}
 			List<Type> entryTypes = new LinkedList<Type>();
-	    	entryTypes.add(CasUtil.getType(firstJCas.getCas(), Token.class));
+	    	//entryTypes.add(CasUtil.getType(firstJCas.getCas(), Token.class));
 	    	entryTypes.add(CasUtil.getType(firstJCas.getCas(), NamedEntity.class));
 			
 			for (Integer begin : segmentBeginEnd.keySet()) {
 				Integer end = segmentBeginEnd.get(begin);
 				
-		    	Map<String, Set<FeatureStructure>> diffResult = null;
+		    	List<AnnotationOption> annotationOptions = null;
 				try {
-					diffResult = CasDiff.doDiff(entryTypes, casMap, begin, end);
+					annotationOptions = CasDiff.doDiff(entryTypes, jCases, begin, end);
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				
 				Boolean hasDiff = false;
-				for (Set<FeatureStructure> featureStructures : diffResult.values()) {
-					if (!featureStructures.isEmpty()) {
+				for (AnnotationOption annotationOption : annotationOptions) {
+					if (annotationOption.getAnnotationSelections().size() > 1) {
 						hasDiff = true;
-						break;
 					}
 				}
 				

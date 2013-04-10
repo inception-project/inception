@@ -58,6 +58,8 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.CasToBratJson;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.AnnotationOption;
+import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.component.model.AnnotationState;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.component.model.BratCurationVisualizer;
@@ -95,7 +97,9 @@ public class CurationPanel extends Panel {
      * Map for tracking curated spans. Key contains the address of the span,
      * the value contains the username from which the span has been selected
      */
-    private Map<Integer, String> changes = new HashMap<Integer, String>();
+    private Set<AnnotationSelection> changes = new HashSet<AnnotationSelection>();
+    
+    private Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress = new HashMap<String, Map<Integer,AnnotationSelection>>();
 
     private ListView<CurationUserSegment2> curationListView;
 
@@ -141,15 +145,31 @@ public class CurationPanel extends Panel {
             protected void populateItem(ListItem<CurationUserSegment2> item2) {
     	    	final CurationUserSegment2 curationUserSegment = item2.getModelObject();
     	    	BratCurationVisualizer curationVisualizer = new BratCurationVisualizer("sentence", new Model<CurationUserSegment2>(curationUserSegment)) {
+    	    		/**
+    	    		 * Method is called, if user has clicked on a span for merge
+    	    		 */
 					@Override
 					protected void onMerge(AjaxRequestTarget aTarget) {
 		                final IRequestParameters request = getRequest().getPostParameters();
 
 		                StringValue action = request.getParameterValue("action");
 		                if (!action.isEmpty() && action.toString().equals("selectSpanForMerge")) {
+		                	// add span for merge
+		                	String username = curationUserSegment.getUsername();
 		                    Integer address = request.getParameterValue("id").toInteger();
-		                    String username = curationUserSegment.getUsername();
-		                    changes.put(address, username);
+		                    AnnotationSelection annotationSelection = annotationSelectionByUsernameAndAddress.get(username).get(address);
+		                    
+		                    boolean addAnnotationSelection = !changes.contains(annotationSelection);
+		                    
+		                    // remove old annotation selections (if present)
+		                    for (AnnotationSelection as : annotationSelection.getAnnotationOption().getAnnotationSelections()) {
+								changes.remove(as);
+							}
+		                    
+		                    // add new annotation selection
+		                    if(addAnnotationSelection) {
+		                    	changes.add(annotationSelection);
+		                    }
 		                }
 
 		                System.out.println(changes);
@@ -206,9 +226,9 @@ public class CurationPanel extends Panel {
 	protected void updateRightSide(AjaxRequestTarget target, MarkupContainer parent, CurationContainer curationContainer) {
 		SourceDocument sourceDocument = curationContainer.getSourceDocument();
 		List<AnnotationDocument> annotationDocuments = repository.listAnnotationDocument(sourceDocument);
-		Map<String, CAS> casMap = new HashMap<String, CAS>();
 		Map<String, JCas> jCases = new HashMap<String, JCas>();
-		AnnotationDocument firstAnnotationDocument = null;
+		AnnotationDocument mergeAnnotationDocument = null;
+		String mergeAnnotationDocumentUsername = null;
 
 		// get cases from repository
 		for (AnnotationDocument annotationDocument : annotationDocuments) {
@@ -216,8 +236,11 @@ public class CurationPanel extends Panel {
 				JCas jCas = repository.getAnnotationDocumentContent(annotationDocument);
 				String username = annotationDocument.getUser().getUsername();
 				jCases.put(username, jCas);
-				casMap.put(username, jCas.getCas());
-				firstAnnotationDocument = annotationDocument;
+				mergeAnnotationDocument = annotationDocument;
+				mergeAnnotationDocumentUsername = username;
+				
+				// cleanup annotationSelections
+				annotationSelectionByUsernameAndAddress.put(username, new HashMap<Integer, AnnotationSelection>());
 			} catch (Exception e) {
 				LOG.error("Unable to load document ["+annotationDocument+"]", e);
 				error("Unable to load document ["+annotationDocument+"]: "+ExceptionUtils.getRootCauseMessage(e));
@@ -225,58 +248,86 @@ public class CurationPanel extends Panel {
 		}
 
 		// create cas for merge panel
+		int numUsers = jCases.size();
 		JCas mergeJCas = null;
 		try {
-			mergeJCas = repository.getAnnotationDocumentContent(firstAnnotationDocument);
+			mergeJCas = repository.getAnnotationDocumentContent(mergeAnnotationDocument);
 		} catch (Exception e) {
-			LOG.error("Unable to load document ["+firstAnnotationDocument+"]", e);
-			error("Unable to load document ["+firstAnnotationDocument+"]: "+ExceptionUtils.getRootCauseMessage(e));
+			LOG.error("Unable to load document ["+mergeAnnotationDocument+"]", e);
+			error("Unable to load document ["+mergeAnnotationDocument+"]: "+ExceptionUtils.getRootCauseMessage(e));
 		}
-		casMap.put("", mergeJCas.getCas());
 
 		// get differing feature structures
     	List<Type> entryTypes = new LinkedList<Type>();
-    	entryTypes.add(CasUtil.getType(mergeJCas.getCas(), Token.class));
+    	//entryTypes.add(CasUtil.getType(mergeJCas.getCas(), Token.class));
     	entryTypes.add(CasUtil.getType(mergeJCas.getCas(), NamedEntity.class));
-    	Map<String, Set<FeatureStructure>> diffResult = null;
+    	List<AnnotationOption> annotationOptions = null;
 		try {
-			diffResult = CasDiff.doDiff(entryTypes, casMap, curationSegment.getBegin(), curationSegment.getEnd());
+			annotationOptions = CasDiff.doDiff(entryTypes, jCases, curationSegment.getBegin(), curationSegment.getEnd());
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
+		// fill lookup variable for annotation selections and cleanup mergeJCas
+		for (AnnotationOption annotationOption : annotationOptions) {
+			// remove the featureStructure if more than 1 annotationSelection exists per annotationOption
+			boolean removeFS = annotationOption.getAnnotationSelections().size() > 1;
+			if(annotationOption.getAnnotationSelections().size() == 1) {
+				removeFS = annotationOption.getAnnotationSelections().get(0).getAddressByUsername().size() < numUsers;
+			}
+			for (AnnotationSelection annotationSelection : annotationOption.getAnnotationSelections()) {
+				for (String username : annotationSelection.getAddressByUsername().keySet()) {
+					Integer address = annotationSelection.getAddressByUsername().get(username);
+					annotationSelectionByUsernameAndAddress.get(username).put(address, annotationSelection);
+					
+					// removing disagreeing feature structures in mergeJCas
+					if(removeFS && username.equals(mergeAnnotationDocumentUsername) && address != null) {
+						FeatureStructure fs = mergeJCas.getLowLevelCas().ll_getFSForRef(address);
+						if(!(fs instanceof Token)) {
+							mergeJCas.getCas().removeFsFromIndexes(fs);
+						}
+					}
+					
+				}
+			}
+		}
+		
+		// add clicked spans to mergeJCas
+		for (AnnotationSelection change : changes) {
+			String username = null;
+			Integer address = null;
+			for (String aUsername : change.getAddressByUsername().keySet()) {
+				username = aUsername;
+				address = change.getAddressByUsername().get(username);
+				break;
+			}
+			JCas sourceJCas = jCases.get(username);
+			CasCopier copier = new CasCopier(sourceJCas.getCas(), mergeJCas.getCas());
+			FeatureStructure fsSource = sourceJCas.getLowLevelCas().ll_getFSForRef(address);
+			FeatureStructure fsCopy = copier.copyFs(fsSource);
+			mergeJCas.getCas().addFsToIndexes(fsCopy);
+		}
+
 		List<CurationUserSegment2> sentences = new LinkedList<CurationUserSegment2>();
-		Set<Integer> addressesDisagree = new HashSet<Integer>();
-		Set<Integer> addressesUse = new HashSet<Integer>();
-		Set<Integer> addressesDoNotUse = new HashSet<Integer>();
-		Map<String, Map<Integer, FeatureStructure>> differingFsByUsernameAndAddress = new HashMap<String, Map<Integer,FeatureStructure>>();
+		
 		boolean hasDiff = false;
 		for (String username : jCases.keySet()) {
-			differingFsByUsernameAndAddress.put(username, new HashMap<Integer, FeatureStructure>());
+			Map<Integer, AnnotationSelection> annotationSelectionByAddress = new HashMap<Integer, AnnotationSelection>();
+			for (AnnotationOption annotationOption : annotationOptions) {
+				for (AnnotationSelection annotationSelection : annotationOption.getAnnotationSelections()) {
+					if(annotationSelection.getAddressByUsername().containsKey(username)) {
+						Integer address = annotationSelection.getAddressByUsername().get(username);
+						annotationSelectionByAddress.put(address, annotationSelection);
+					}
+				}
+			}
 			JCas jCas = jCases.get(username);
 
 			GetDocumentResponse response = this.getDocumentResponse(jCas);
 
-			for(FeatureStructure fs : diffResult.get(username)) {
-				Integer address = jCas.getLowLevelCas().ll_getFSRef(fs);
-				if (!(fs instanceof Token)) {
-					if(changes.containsKey(address)) {
-						if(changes.get(address).equals(username)) {
-							addressesUse.add(address);
-						} else {
-							addressesDoNotUse.add(address);
-						}
-					} else {
-						addressesDisagree.add(address);
-						hasDiff = true;
-					}
-				}
-				differingFsByUsernameAndAddress.get(username).put(address, fs);
-			}
-
 			CurationUserSegment2 curationUserSegment2 = new CurationUserSegment2();
-			curationUserSegment2.setCollectionData(getStringCollectionData(response, jCas, addressesDisagree, addressesUse, addressesDoNotUse, username));
+			curationUserSegment2.setCollectionData(getStringCollectionData(response, jCas, annotationSelectionByAddress, username, numUsers));
 			curationUserSegment2.setDocumentResponse(getStringDocumentResponse(response));
 			curationUserSegment2.setUsername(username);
 
@@ -285,22 +336,6 @@ public class CurationPanel extends Panel {
 		if(!hasDiff && curationSegment.getSentenceState().equals(SentenceState.DISAGREE)) {
 			curationSegment.setSentenceState(SentenceState.RESOLVED);
 			textListView.setModelObject(curationContainer.getCurationSegments());
-		}
-
-		for (FeatureStructure fs : diffResult.get("")) {
-        	int address = mergeJCas.getLowLevelCas().ll_getFSRef(fs);
-        	// do not remove differing token because it may contain annotations, where all anotators agree
-			if(!(fs instanceof Token)) {
-				mergeJCas.getCas().removeFsFromIndexes(fs);
-			}
-			if(changes.containsKey(address)) {
-				// copy token
-				String username = changes.get(address);
-				CAS sourceCas = casMap.get(username);
-				CasCopier copier = new CasCopier(sourceCas, mergeJCas.getCas());
-				FeatureStructure fsCopy = copier.copyFs(differingFsByUsernameAndAddress.get(username).get(address));
-				mergeJCas.getCas().addFsToIndexes(fsCopy);
-			}
 		}
 
 		// update sentence list on the right side
@@ -384,31 +419,45 @@ public class CurationPanel extends Panel {
 	}
 
 	private String getStringCollectionData(GetDocumentResponse response,
-			JCas jCas, Set<Integer> addressesDisagree, Set<Integer> addressesUse, Set<Integer> addressesDoNotUse, String username) {
+			JCas jCas,
+			Map<Integer, AnnotationSelection> annotationSelectionByAddress,
+			String username, int numUsers) {
 		Map<String, Map<String, Object>> entityTypes = new HashMap<String, Map<String,Object>>();
 
         for (Entity entity : response.getEntities()) {
         	// check if either address of entity has no changes ...
         	// ... or if entity has already been clicked on
-        	if(addressesDisagree.contains(entity.getId())) {
-        		entityTypes.put(entity.getType(), getEntity(entity.getType(), entity.getType(), AnnotationState.DISAGREE));
-        	} else if(addressesUse.contains(entity.getId())) {
-        			entityTypes.put(entity.getType(), getEntity(entity.getType(), entity.getType(), AnnotationState.USE));
-            		String label = entity.getType();
-            		String type = entity.getType()+"_(USE)";
-            		entity.setType(type);
-            		entityTypes.put(type, getEntity(type, label, AnnotationState.USE));
-        	} else if(addressesDoNotUse.contains(entity.getId())) {
-        		entityTypes.put(entity.getType(), getEntity(entity.getType(), entity.getType(), AnnotationState.DO_NOT_USE));
-        		String label = entity.getType();
-        		String type = entity.getType()+"_(DO_NOT_USE)";
-        		entity.setType(type);
-        		entityTypes.put(type, getEntity(type, label, AnnotationState.DO_NOT_USE));
-        	} else {
+        	int address = entity.getId();
+        	AnnotationSelection annotationSelection = annotationSelectionByAddress.get(address);
+        	if(annotationSelection.getAddressByUsername().size() == numUsers) {
         		String label = entity.getType();
         		String type = entity.getType()+"_(AGREE)";
         		entity.setType(type);
         		entityTypes.put(type, getEntity(type, label, AnnotationState.AGREE));
+        		
+        	} else if(changes.contains(annotationSelection)) {
+    			entityTypes.put(entity.getType(), getEntity(entity.getType(), entity.getType(), AnnotationState.USE));
+        		String label = entity.getType();
+        		String type = entity.getType()+"_(USE)";
+        		entity.setType(type);
+        		entityTypes.put(type, getEntity(type, label, AnnotationState.USE));
+        	} else {
+        		boolean doNotUse = false;
+        		for (AnnotationSelection otherAnnotationSelection : annotationSelection.getAnnotationOption().getAnnotationSelections()) {
+					if(changes.contains(otherAnnotationSelection)) {
+						doNotUse = true;
+						break;
+					}
+				}
+        		if(doNotUse) {
+        			entityTypes.put(entity.getType(), getEntity(entity.getType(), entity.getType(), AnnotationState.DO_NOT_USE));
+        			String label = entity.getType();
+        			String type = entity.getType()+"_(DO_NOT_USE)";
+        			entity.setType(type);
+        			entityTypes.put(type, getEntity(type, label, AnnotationState.DO_NOT_USE));
+        		} else {
+        			entityTypes.put(entity.getType(), getEntity(entity.getType(), entity.getType(), AnnotationState.DISAGREE));
+        		}
         	}
 		}
 
