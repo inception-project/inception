@@ -162,6 +162,9 @@ public class BratAnnotator
                         // error(ExceptionUtils.getRootCauseMessage(e));
                         return "";
                     }
+                    catch (IOException e) {
+                        return "";
+                    }
 
                 }
                 else {
@@ -721,7 +724,7 @@ public class BratAnnotator
     }
 
     private JCas getCas(Project aProject, User user, SourceDocument aDocument)
-        throws UIMAException
+        throws UIMAException, IOException
     {
         JCas jCas = null;
         try {
@@ -735,6 +738,7 @@ public class BratAnnotator
         }
         catch (IOException e) {
             error("Unable to read CAS object: " + ExceptionUtils.getRootCauseMessage(e));
+            throw e;
         }
         catch (ClassNotFoundException e) {
             error("The Class name in the properties is not found " + ":"
