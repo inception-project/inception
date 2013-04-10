@@ -159,31 +159,9 @@ public class CasToBratJson
 
     public void addLemmaToResponse(JCas aJcas, GetDocumentResponse aResponse)
     {
-
-        Sentence sentenceAddress = (Sentence) aJcas.getLowLevelCas().ll_getFSForRef(
-                currentWindowSentenceBeginAddress);
-        int current = sentenceAddress.getBegin();
-        int i = currentWindowSentenceBeginAddress;
-        Sentence sentence = null;
-
-        for (int j = 0; j < windowSize; j++) {
-            if (i >= lastSentenceAddress) {
-                sentence = (Sentence) aJcas.getLowLevelCas().ll_getFSForRef(i);
-                for (Lemma lemma : selectCovered(Lemma.class, sentence)) {
-                    aResponse
-                            .addEntity(new Entity(lemma.getAddress(), lemma.getValue(),
-                                    asList(new Offsets(lemma.getBegin() - current, lemma.getEnd()
-                                            - current))));
-                }
-                break;
-            }
-            sentence = (Sentence) aJcas.getLowLevelCas().ll_getFSForRef(i);
-            for (Lemma lemma : selectCovered(Lemma.class, sentence)) {
-                aResponse.addEntity(new Entity(lemma.getAddress(), lemma.getValue(),
-                        asList(new Offsets(lemma.getBegin() - current, lemma.getEnd() - current))));
-            }
-            i = BratAjaxCasUtil.getFollowingSentenceAddress(aJcas, i);
-        }
+            SpanCasToBrat.addSpanAnnotationToResponse(aJcas, aResponse,
+                    currentWindowSentenceBeginAddress, windowSize, lastSentenceAddress,
+                    annotationLayers, Lemma.class, AnnotationType.LEMMA);
     }
 
     public void addPosToResponse(JCas aJcas, GetDocumentResponse aResponse)
@@ -332,7 +310,6 @@ public class CasToBratJson
 
     public void addNamedEntityToResponse(JCas aJcas, GetDocumentResponse aResponse)
     {
-
 
         if (annotationLayers.contains(AnnotationType.NAMEDENTITY)) {
             SpanCasToBrat.addSpanAnnotationToResponse(aJcas, aResponse,

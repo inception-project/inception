@@ -28,6 +28,7 @@ public class AnnotationType
     public static final String DEPENDENCY = "dependency";
     public static final String COREFERENCE = "coreference";
     public static final String COREFRELTYPE = "coreference type";
+    public static final String LEMMA = "lemma";
 
     // USed for span annotation hierarchy, as parent name.
     // This is, in brat terminology, unused entity type.

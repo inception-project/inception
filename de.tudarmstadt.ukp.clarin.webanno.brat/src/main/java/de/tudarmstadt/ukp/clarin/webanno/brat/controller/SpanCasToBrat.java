@@ -28,10 +28,13 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
- * populate the {@link GetDocumentResponse} for span annotations ({@link POS}, {@link NamedEntity} ...
+ * populate the {@link GetDocumentResponse} for span annotations ({@link POS}, {@link NamedEntity}
+ * ...
+ *
  * @author Seid Muhie Yimam
  *
  */
@@ -40,7 +43,7 @@ public class SpanCasToBrat
 
     public static <T extends Annotation> void addSpanAnnotationToResponse(JCas aJcas,
             GetDocumentResponse aResponse, int aBeginAddress, int aWindowSize, int aLastAddress,
-            HashSet<String> annotationLayers, Class<T> clazz, String aAnnotationType )
+            HashSet<String> annotationLayers, Class<T> aAnnotationClass, String aAnnotationType)
     {
         Sentence sentenceAddress = (Sentence) aJcas.getLowLevelCas().ll_getFSForRef(aBeginAddress);
         int current = sentenceAddress.getBegin();
@@ -50,34 +53,32 @@ public class SpanCasToBrat
         for (int j = 0; j < aWindowSize; j++) {
             if (i >= aLastAddress) {
                 sentence = (Sentence) aJcas.getLowLevelCas().ll_getFSForRef(i);
-                for (T annotation : selectCovered(clazz, sentence)) {
-                    String value = "";
-                    if(aAnnotationType.equals(AnnotationType.POS_PREFIX)) {
-                        value = ((POS) annotation).getPosValue();
-                    }
-                    else  if(aAnnotationType.equals(AnnotationType.NAMEDENTITY_PREFIX)) {
-                        value = ((NamedEntity) annotation).getValue();
-                    }
-                    aResponse.addEntity(new Entity(annotation.getAddress(),
-                            aAnnotationType + value, asList(new Offsets(annotation
-                                    .getBegin() - current, annotation.getEnd() - current))));
-                }
+                updateResponse(aAnnotationClass, sentence, aAnnotationType, aResponse, current);
                 break;
             }
             sentence = (Sentence) aJcas.getLowLevelCas().ll_getFSForRef(i);
-            for (T annotation : selectCovered(clazz, sentence)) {
-                String value = "";
-                if(aAnnotationType.equals(AnnotationType.POS_PREFIX)) {
-                    value = ((POS) annotation).getPosValue();
-                }
-                else  if(aAnnotationType.equals(AnnotationType.NAMEDENTITY_PREFIX)) {
-                    value = ((NamedEntity) annotation).getValue();
-                }
-                aResponse.addEntity(new Entity(annotation.getAddress(),
-                        aAnnotationType + value, asList(new Offsets(annotation
-                                .getBegin() - current, annotation.getEnd() - current))));
-            }
+            updateResponse(aAnnotationClass, sentence, aAnnotationType, aResponse, current);
             i = BratAjaxCasUtil.getFollowingSentenceAddress(aJcas, i);
+        }
+    }
+
+    private static <T extends Annotation> void updateResponse(Class<T> aAnnotationClass, Sentence aSentence,
+            String aAnnotationType, GetDocumentResponse aResponse, int aCurrent)
+    {
+        for (T annotation : selectCovered(aAnnotationClass, aSentence)) {
+            String value = "";
+            if (aAnnotationType.equals(AnnotationType.POS_PREFIX)) {
+                value = ((POS) annotation).getPosValue();
+            }
+            else if (aAnnotationType.equals(AnnotationType.NAMEDENTITY_PREFIX)) {
+                value = ((NamedEntity) annotation).getValue();
+            }
+            else if (aAnnotationType.equals(AnnotationType.LEMMA)) {
+                value = ((Lemma) annotation).getValue();
+            }
+            aResponse.addEntity(new Entity(annotation.getAddress(), aAnnotationType + value,
+                    asList(new Offsets(annotation.getBegin() - aCurrent, annotation.getEnd()
+                            - aCurrent))));
         }
     }
 }
