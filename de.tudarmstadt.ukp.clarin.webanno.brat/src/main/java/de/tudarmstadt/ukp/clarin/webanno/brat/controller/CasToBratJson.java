@@ -160,7 +160,7 @@ public class CasToBratJson
     public void addLemmaToResponse(JCas aJcas, GetDocumentResponse aResponse)
     {
         String featureName = "value";
-        SpanCasToBrat.addSpanAnnotationToResponse(aJcas, aResponse,
+        CasSpanToBrat.addSpanAnnotationToResponse(aJcas, aResponse,
                 currentWindowSentenceBeginAddress, windowSize, lastSentenceAddress,
                 Lemma.class.getName(), "", featureName);
     }
@@ -169,7 +169,7 @@ public class CasToBratJson
     {
         String featureName = "PosValue";
         if (annotationLayers.contains(AnnotationType.POS)) {
-            SpanCasToBrat.addSpanAnnotationToResponse(aJcas, aResponse,
+            CasSpanToBrat.addSpanAnnotationToResponse(aJcas, aResponse,
                     currentWindowSentenceBeginAddress, windowSize, lastSentenceAddress,
                     POS.class.getName(), AnnotationType.POS_PREFIX, featureName);
         }
@@ -315,7 +315,7 @@ public class CasToBratJson
     {
         String featureName = "value";
         if (annotationLayers.contains(AnnotationType.NAMEDENTITY)) {
-            SpanCasToBrat
+            CasSpanToBrat
                     .addSpanAnnotationToResponse(aJcas, aResponse,
                             currentWindowSentenceBeginAddress, windowSize, lastSentenceAddress,
                              NamedEntity.class.getName(),

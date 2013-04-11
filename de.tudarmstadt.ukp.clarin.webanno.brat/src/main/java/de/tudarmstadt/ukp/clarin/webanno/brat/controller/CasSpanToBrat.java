@@ -38,7 +38,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
  * @author Seid Muhie Yimam
  *
  */
-public class SpanCasToBrat
+public class CasSpanToBrat
 {
 
     public static void addSpanAnnotationToResponse(JCas aJcas, GetDocumentResponse aResponse,
