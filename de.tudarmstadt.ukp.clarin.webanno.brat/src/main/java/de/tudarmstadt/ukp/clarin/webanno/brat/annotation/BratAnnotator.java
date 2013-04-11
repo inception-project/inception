@@ -116,6 +116,7 @@ public class BratAnnotator
         add(feedbackPanel);
         feedbackPanel.setOutputMarkupId(true);
         feedbackPanel.add(new SimpleAttributeModifier("class", "info"));
+        feedbackPanel.add(new SimpleAttributeModifier("class", "error"));
 
         add(numberOfPages = (Label) new Label("numberOfPages", new LoadableDetachableModel()
         {
