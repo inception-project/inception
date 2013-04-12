@@ -197,15 +197,15 @@ public interface RepositoryService
     File getGuideline(Project project, String fileName);
 
     /**
-     * For a given project, get the permission level of the user if it is granted
+     * For a given project, get the permission level(s) of the user if it is granted
      *
      * @param aUser
      *            the user, if already assigned in that project
      * @param aProject
      *            the project to be examined
-     * @return
+     * @return list of {@link ProjectPermissions#getLevel()}
      */
-    String getPermisionLevel(User user, Project project);
+    List<String> getPermisionLevel(User user, Project project);
 
     /**
      * get a permission object where a user is granted permission/permissions;

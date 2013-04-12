@@ -94,8 +94,9 @@ public class ApplicationUtils
 
         boolean projectAdmin = false;
         if (!roleAdmin) {
+            List<String> permissionLevels = aProjectRepository.getPermisionLevel(aUser, aProject);
             try {
-                if (aProjectRepository.getPermisionLevel(aUser, aProject).equals("admin")) {
+                if (permissionLevels.contains("admin")) {
                     projectAdmin = true;
                 }
             }
@@ -127,8 +128,9 @@ public class ApplicationUtils
 
         boolean curator = false;
         if (!roleAdmin) {
+            List<String> permissionLevels = aProjectRepository.getPermisionLevel(aUser, aProject);
             try {
-                if (aProjectRepository.getPermisionLevel(aUser, aProject).equals("curator")) {
+                if (permissionLevels.contains("curator")) {
                     curator = true;
                 }
             }
@@ -147,10 +149,10 @@ public class ApplicationUtils
      * @return
      */
     public static boolean isMember(Project aProject, RepositoryService aProjectRepository,
-            User aUSer)
+            User aUser)
     {
         boolean roleAdmin = false;
-        List<Authority> authorities = aProjectRepository.getAuthorities(aUSer);
+        List<Authority> authorities = aProjectRepository.getAuthorities(aUser);
         for (Authority authority : authorities) {
             if (authority.getRole().equals("ROLE_ADMIN")) {
                 roleAdmin = true;
@@ -160,8 +162,9 @@ public class ApplicationUtils
 
         boolean member = false;
         if (!roleAdmin) {
+            List<String> permissionLevels = aProjectRepository.getPermisionLevel(aUser, aProject);
             try {
-                if (aProjectRepository.getPermisionLevel(aUSer, aProject).equals("user")) {
+                if (permissionLevels.contains("user")) {
                     member = true;
                 }
             }

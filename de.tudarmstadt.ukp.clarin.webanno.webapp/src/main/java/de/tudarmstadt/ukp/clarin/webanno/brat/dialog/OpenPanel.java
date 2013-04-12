@@ -89,8 +89,8 @@ public class OpenPanel
         this.subject = aSubject;
         username = SecurityContextHolder.getContext().getAuthentication().getName();
         user = projectRepository.getUser(username);
-        if (getAllowedProjects().size() > 0) {
-            selectedProject = getAllowedProjects().get(0);
+        if (getAllowedProjects(aSubject).size() > 0) {
+            selectedProject = getAllowedProjects(aSubject).get(0);
         }
 
         this.openDataModel = aOpenDataModel;
@@ -128,7 +128,7 @@ public class OpenPanel
                         protected List<Project> load()
                         {
 
-                            return getAllowedProjects();
+                            return getAllowedProjects(subject);
                         }
                     });
                     setChoiceRenderer(new ChoiceRenderer<Project>("name"));
@@ -172,18 +172,29 @@ public class OpenPanel
         }
     }
 
-    public List<Project> getAllowedProjects()
+    public List<Project> getAllowedProjects(Subject aSubject)
     {
 
-        List<Project> aAllowedProject = new ArrayList<Project>();
+        List<Project> allowedProject = new ArrayList<Project>();
 
+        if(aSubject.equals(subject.annotation)){
         for (Project projects : projectRepository.listProjects()) {
             if (projectRepository.listProjectUserNames(projects).contains(username)
                     && ApplicationUtils.isMember(projects, projectRepository, user)) {
-                aAllowedProject.add(projects);
+                allowedProject.add(projects);
             }
         }
-        return aAllowedProject;
+        }
+        else if(aSubject.equals(subject.curation)){
+            for (Project projects : projectRepository.listProjects()) {
+                if (projectRepository.listProjectUserNames(projects).contains(username)
+                        && ApplicationUtils.isCurator(projects, projectRepository, user)) {
+                    allowedProject.add(projects);
+                }
+            }
+        }
+
+        return allowedProject;
     }
 
     public class StaticImage

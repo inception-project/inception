@@ -543,13 +543,13 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public String getPermisionLevel(User aUser, Project aProject)
+    public List<String> getPermisionLevel(User aUser, Project aProject)
     {
         return entityManager
                 .createQuery(
                         "Select level FROM ProjectPermissions WHERE user =:user AND "
                                 + "project =:project", String.class).setParameter("user", aUser)
-                .setParameter("project", aProject).getSingleResult();
+                .setParameter("project", aProject).getResultList();
     }
 
     @Override
@@ -582,6 +582,7 @@ public class RepositoryServiceDbData
                 .setParameter("name", aName).getSingleResult();
     }
 
+    @Override
     public Project getProject(long aId)
     {
         return entityManager.createQuery("FROM Project WHERE id = :id", Project.class)
