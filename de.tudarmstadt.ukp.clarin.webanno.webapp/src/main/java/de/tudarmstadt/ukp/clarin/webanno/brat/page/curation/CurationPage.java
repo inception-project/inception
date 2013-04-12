@@ -102,20 +102,21 @@ public class CurationPage
                 {
                     private static final long serialVersionUID = -1746088901018629567L;
 
+                    @Override
                     public void onClose(AjaxRequestTarget target)
                     {
                         String username = SecurityContextHolder.getContext().getAuthentication()
                                 .getName();
 
                         User user = repository.getUser(username);
-
-                        if (openDataModel.getProject() != null
-                                && openDataModel.getDocument() != null
-                                && (openDataModel.getDocument().getState()
-                                        .equals(SourceDocumentState.ANNOTATION_FINISHED) || openDataModel
-                                        .getDocument().getState()
-                                        .equals(SourceDocumentState.CURATION_INPROGRESS))) {
-
+                        // If this source document has at least one annotation document "FINISHED",
+                        // and curation not yet
+                        // finished on it
+                        if (openDataModel.getDocument() != null
+                                && repository.isAnnotationFinished(openDataModel.getDocument(),
+                                        openDataModel.getProject())
+                                && !openDataModel.getDocument().getState()
+                                        .equals(SourceDocumentState.CURATION_FINISHED)) {
                             // Update source document state to CURRATION_INPROGRESS
                             openDataModel.getDocument().setState(
                                     SourceDocumentState.CURATION_INPROGRESS);
@@ -141,11 +142,12 @@ public class CurationPage
                                         .equals(SourceDocumentState.CURATION_FINISHED)) {
                             target.appendJavaScript("alert('Curation Has been closed. Ask admin to re-open!')");
                         }
-                        else if(openDataModel.getDocument()==null){
+                        else if (openDataModel.getDocument() == null) {
                             setResponsePage(WelcomePage.class);
                         }
                         else {
-                            target.appendJavaScript("alert('Annotation in progress for document ["+openDataModel.getDocument().getName()+"]')");
+                            target.appendJavaScript("alert('Annotation in progress for document ["
+                                    + openDataModel.getDocument().getName() + "]')");
                         }
                     }
                 });

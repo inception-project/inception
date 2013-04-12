@@ -355,7 +355,7 @@ public class RepositoryServiceDbData
     public void createSourceDocument(SourceDocument aDocument, User aUser)
         throws IOException
     {
-        if(aDocument.getId() == 0) {
+        if (aDocument.getId() == 0) {
             entityManager.persist(aDocument);
         }
         else {
@@ -634,6 +634,28 @@ public class RepositoryServiceDbData
     {
         return entityManager.createQuery("FROM User WHERE username =:username", User.class)
                 .setParameter("username", aUsername).getSingleResult();
+    }
+
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public boolean isAnnotationFinished(SourceDocument aDocument, Project aProject)
+    {
+
+        List<AnnotationDocument> annotationDocuments = entityManager
+                .createQuery(
+                        "FROM AnnotationDocument WHERE document = :document AND "
+                                + "project = :project", AnnotationDocument.class)
+                .setParameter("document", aDocument).setParameter("project", aProject)
+                .getResultList();
+        for (AnnotationDocument annotationDocument : annotationDocuments) {
+            if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        return false;
     }
 
     @Override
