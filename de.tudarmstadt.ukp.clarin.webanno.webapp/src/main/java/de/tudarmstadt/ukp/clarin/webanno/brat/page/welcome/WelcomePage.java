@@ -27,7 +27,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.page.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.CurationPage;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.monitoring.MonitoringPage;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.project.ProjectPage;
-import de.tudarmstadt.ukp.clarin.webanno.brat.page.user.UserManagement;
+import de.tudarmstadt.ukp.clarin.webanno.brat.page.user.UserManagementPage;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 /**
@@ -192,7 +192,7 @@ public class WelcomePage
             @Override
             public void onClick(AjaxRequestTarget target)
             {
-                setResponsePage(UserManagement.class);
+                setResponsePage(UserManagementPage.class);
             }
         };
         for (Project project : projectRepository.listProjects()) {

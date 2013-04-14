@@ -8,32 +8,32 @@
 -->
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
  <wicket:extend>
-    <table  align="left">
+    <table  align="center" widht="60%" border-top="2" bordercolor="green">
       <tr style="color:blue; font-weight:bold;">
-        <td>
+        <td width="30%">
           Projects:
         </td>
-        <td>
-          Documents:
+        <td width="30%">
+          Users:
         </td>
-        <td>
-          Permisions
+       <td width="30%">
+          Permission Levels:
         </td>
       </tr>
       <tr VALIGN=TOP >
-        <td>
+         <td width="30%">
           <form wicket:id="projectSelectionForm" >
             <select wicket:id="project">
             </select>
           </form>
         </td>
-        <td>
-          <form wicket:id="userSelectionForm">
-            <select  wicket:id="user">
+         <td width="30%">
+          <form wicket:id="userSelectionForm" style="width:100%">
+            <select  wicket:id="user" style="width:100%">
             </select>
           </form>
         </td>
-        <td>
+         <td width="30%">
           <form wicket:id="permissionLevelsForm">
             <span   wicket:id="level">
             </span>

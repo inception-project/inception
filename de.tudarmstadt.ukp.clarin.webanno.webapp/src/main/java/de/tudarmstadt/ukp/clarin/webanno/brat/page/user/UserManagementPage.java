@@ -51,7 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
  * @author Seid Muhie Yimam
  *
  */
-public class UserManagement
+public class UserManagementPage
     extends SettingsPageBase
 {
     private static final long serialVersionUID = 1299869948010875439L;
@@ -76,7 +76,7 @@ public class UserManagement
     public ArrayList<String> levels = new ArrayList<String>();
     List<Project> allowedProject = new ArrayList<Project>();
 
-    public UserManagement()
+    public UserManagementPage()
     {
         username = SecurityContextHolder.getContext().getAuthentication().getName();
         user = projectRepository.getUser(username);
@@ -135,7 +135,7 @@ public class UserManagement
                 }
             });
             projects.setOutputMarkupId(true);
-            projects.setMaxRows(10);
+            projects.setMaxRows(15);
             projects.add(new OnChangeAjaxBehavior()
             {
 
@@ -147,7 +147,7 @@ public class UserManagement
                     aTarget.add(users.setOutputMarkupId(true));
                 }
             }).add(new SimpleAttributeModifier("style",
-                    "color:green; font-weight:bold;background-color:white; width:150px"));
+                    "color:green; font-weight:bold;background-color:white; width:100%"));
         }
     }
 
@@ -218,7 +218,9 @@ public class UserManagement
                     return "";
                 }
             });
-            users.setOutputMarkupId(true);
+            users.setOutputMarkupId(true).add(new SimpleAttributeModifier("style",
+                    "width:100%"));
+            users.setMaxRows(15);
         }
     }
 
