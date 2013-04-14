@@ -27,6 +27,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.page.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.CurationPage;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.monitoring.MonitoringPage;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.project.ProjectPage;
+import de.tudarmstadt.ukp.clarin.webanno.brat.page.user.UserManagement;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 /**
@@ -46,6 +47,7 @@ public class WelcomePage
     AjaxLink curation;
     AjaxLink annotation;
     AjaxLink monitoring;
+    AjaxLink usremanagement;
 
     public WelcomePage()
     {
@@ -177,6 +179,38 @@ public class WelcomePage
 
             add(monitoring);
             monitoring.setVisible(false);
+
+        }
+
+        // adding user management page
+
+        boolean usreManagementAdded = false;
+        usremanagement = new AjaxLink<Void>("usremanagement")
+        {
+            private static final long serialVersionUID = 7496156015186497496L;
+
+            @Override
+            public void onClick(AjaxRequestTarget target)
+            {
+                setResponsePage(UserManagement.class);
+            }
+        };
+        for (Project project : projectRepository.listProjects()) {
+
+            if (projectRepository.listProjectUserNames(project).contains(username)
+                    && ApplicationUtils.isProjectAdmin(project, projectRepository, user)) {
+                add(usremanagement);
+                usreManagementAdded = true;
+                break;
+            }
+        }
+        if(ApplicationUtils.isSuperAdmin(projectRepository, user) && !usreManagementAdded){
+            add(usremanagement);
+        }
+        else if (!usreManagementAdded) {
+
+            add(usremanagement);
+            usremanagement.setVisible(false);
 
         }
     }

@@ -73,7 +73,6 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSets;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermissions;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -210,6 +209,7 @@ public class ProjectPage
 
         private Project project;
         private List<String> documents;
+        private List<String> permissionLevels;
     }
 
     private class ProjectDetailForm
@@ -236,14 +236,16 @@ public class ProjectPage
                 {
                     return new ProjectDetailsPanel(panelId);
                 }
+
                 @Override
-                public boolean isVisible(){
-                 return true;
+                public boolean isVisible()
+                {
+                    return true;
 
                 }
             });
 
-            tabs.add(users = new AbstractTab(new Model<String>("Project Users"))
+           tabs.add(users = new AbstractTab(new Model<String>("Project Users"))
             {
                 private static final long serialVersionUID = 7160734867954315366L;
 
@@ -252,12 +254,14 @@ public class ProjectPage
                 {
                     return new ProjectUsersPanel(panelId);
                 }
+
                 @Override
-                public boolean isVisible(){
-                 if(createProject) {
-                    return false;
-                }
-                 return true;
+                public boolean isVisible()
+                {
+                    if (createProject) {
+                        return false;
+                    }
+                    return true;
 
                 }
             });
@@ -271,12 +275,14 @@ public class ProjectPage
                 {
                     return new ProjectDocumentsPanel(panelId);
                 }
+
                 @Override
-                public boolean isVisible(){
-                 if(createProject) {
-                    return false;
-                }
-                 return true;
+                public boolean isVisible()
+                {
+                    if (createProject) {
+                        return false;
+                    }
+                    return true;
 
                 }
             });
@@ -290,12 +296,14 @@ public class ProjectPage
                 {
                     return new ProjectTagSetsPanel(panelId);
                 }
+
                 @Override
-                public boolean isVisible(){
-                 if(createProject) {
-                    return false;
-                }
-                 return true;
+                public boolean isVisible()
+                {
+                    if (createProject) {
+                        return false;
+                    }
+                    return true;
 
                 }
             });
@@ -309,12 +317,14 @@ public class ProjectPage
                 {
                     return new AnnotationGuideLinePanel(panelId);
                 }
+
                 @Override
-                public boolean isVisible(){
-                 if(createProject) {
-                    return false;
-                }
-                 return true;
+                public boolean isVisible()
+                {
+                    if (createProject) {
+                        return false;
+                    }
+                    return true;
 
                 }
             });
@@ -367,11 +377,12 @@ public class ProjectPage
                         projectRepository.existsProject(project.getName());
                     }
                     catch (Exception e) {
-                        error("Another project with name [" + project.getName() + "] exists!" + ExceptionUtils.getRootCauseMessage(e));
+                        error("Another project with name [" + project.getName() + "] exists!"
+                                + ExceptionUtils.getRootCauseMessage(e));
                         projectExist = true;
                     }
                     // If only the project is new!
-                    if (project.getId() == 0 &&!projectExist) {
+                    if (project.getId() == 0 && !projectExist) {
                         // Check if the project with this name already exist
                         if (projectRepository.existsProject(project.getName())) {
                             error("Project with this name already exist !");
@@ -401,7 +412,7 @@ public class ProjectPage
                     // This is updating Project details
                     else {
                         // Invalid Project name, restore
-                        if (!isProjectNameValid(project.getName())&&!projectExist) {
+                        if (!isProjectNameValid(project.getName()) && !projectExist) {
 
                             // Maintain already loaded project and selected Users
                             // Hence Illegal Project modification (limited privilege, illegal
@@ -479,6 +490,8 @@ public class ProjectPage
     {
         private static final long serialVersionUID = -8668945427924328076L;
         private CheckBoxMultipleChoice<User> users;
+        private ArrayList<String> permissionLevelSelect = new ArrayList<String>();
+        CheckBoxMultipleChoice<String> permissionLevels;
 
         public ProjectUsersPanel(String id)
         {
@@ -495,69 +508,36 @@ public class ProjectPage
                         }
                     }, new ChoiceRenderer<User>("username", "username")).setRequired(true));
 
+/*            RepeatingView permissionLevelsRepeater = new RepeatingView("permissionLevelsRepeater");
+            add(permissionLevelsRepeater);
+            //permissionLevelSelect.add(PermisionLevels.user.name());
+            for (User user : projectRepository.listUsers()) {
+                AbstractItem item = new AbstractItem(permissionLevelsRepeater.newChildId());
+                permissionLevelsRepeater.add(item);
+
+            permissionLevels = new CheckBoxMultipleChoice<String>(
+                        "permissionLevels", new Model(permissionLevelSelect),
+                        Arrays.asList(new String[] { PermisionLevels.admin.name(),
+                                PermisionLevels.curator.name(), PermisionLevels.user.name() }));
+                permissionLevels.setSuffix("");
+                item.add(permissionLevels);
+            }*/
+
             add(new Button("add", new ResourceModel("label"))
             {
-
                 private static final long serialVersionUID = 1L;
 
                 @Override
                 public void onSubmit()
                 {
                     Project project = projectDetailForm.getModelObject();
-
                     Set<User> users = project.getUsers();
                     if (project.getId() != 0) {
                         project.setUsers(users);
                         info(users.size() + " users are added");
-
-                        // This is a temporary solution, to set default permission level as
-                        // user(annotator)
-                        for (User user : users) {
-                            List<String> permisionLevels = projectRepository
-                                    .listProjectPermisionLevels(user, project);
-                            if (permisionLevels.size() == 0) {
-                                ProjectPermissions permission = new ProjectPermissions();
-                                permission.setLevel("user");
-                                permission.setProject(project);
-                                permission.setUser(user);
-                                try {
-                                    projectRepository.createProjectPermission(permission);
-                                }
-                                catch (IOException e) {
-                                    error("Unable to create log file "
-                                            + ExceptionUtils.getRootCauseMessage(e));
-                                }
-                            }
-                        }
                         List<String> addedUsers = new ArrayList<String>();
                         for (User selectedUser : users) {
                             addedUsers.add(selectedUser.getUsername());
-                        }
-
-                        // remove user permission if user is removed (checkBox unchecked)
-                        for (User user : projectRepository.listUsers()) {
-
-                            if (!addedUsers.contains(user.getUsername())) {
-                                // User previously have a permission for this project, but removed
-                                // now
-                                if (projectRepository.listProjectPermisionLevels(user, project)
-                                        .size() > 0) {
-                                    // Admins should be removed manually, for the time being
-                                    if (!projectRepository.getPermisionLevel(user, project).equals(
-                                            "admin")) {
-                                        try {
-                                            projectRepository
-                                                    .removeProjectPermission(projectRepository
-                                                            .getProjectPermission(user, project));
-                                        }
-                                        catch (IOException e) {
-                                            error("Unable to create log file "
-                                                    + ExceptionUtils.getRootCauseMessage(e));
-                                        }
-                                    }
-
-                                }
-                            }
                         }
                     }
                     else if (project.getId() == 0) {
@@ -606,7 +586,10 @@ public class ProjectPage
 
             add(readableFormatsChoice = new DropDownChoice<String>("readableFormats", new Model(
                     selectedFormat), readableFormats));
-            add(new Button("import", new ResourceModel("label"))
+
+
+
+           add(new Button("import", new ResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;
 
@@ -655,7 +638,7 @@ public class ProjectPage
                                 LOG.error("Error uploading document "
                                         + ExceptionUtils.getRootCauseMessage(e));
                             }
-                            info("File ["+ fileName +"] is written successfully!" );
+                            info("File [" + fileName + "] is written successfully!");
                         }
                     }
                     else if (isEmpty(uploadedFiles)) {
@@ -1232,6 +1215,7 @@ public class ProjectPage
             private static final long serialVersionUID = -1L;
             private Tag selectedTag;
             private ListChoice<Tag> tags;
+
             public TagSelectionForm(String id)
             {
                 // super(id);
@@ -1257,6 +1241,7 @@ public class ProjectPage
                         setNullValid(false);
 
                     }
+
                     @Override
                     protected CharSequence getDefaultChoice(String aSelectedValue)
                     {
@@ -1264,15 +1249,16 @@ public class ProjectPage
                     }
                 });
                 tags.add(new OnChangeAjaxBehavior()
+                {
+                    private static final long serialVersionUID = 7492425689121761943L;
+
+                    @Override
+                    protected void onUpdate(AjaxRequestTarget aTarget)
                     {
-                        private static final long serialVersionUID = 7492425689121761943L;
-                        @Override
-                        protected void onUpdate(AjaxRequestTarget aTarget)
-                        {
-                            tagDetailForm.setModelObject(getModelObject().tag);
-                            aTarget.add(tagDetailForm.setOutputMarkupId(true));
-                        }
-                    }).setOutputMarkupId(true);
+                        tagDetailForm.setModelObject(getModelObject().tag);
+                        aTarget.add(tagDetailForm.setOutputMarkupId(true));
+                    }
+                }).setOutputMarkupId(true);
             }
         }
 
