@@ -16,15 +16,16 @@
 package de.tudarmstadt.ukp.clarin.webanno.model;
 
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
 /**
  * A persistence object for project permission. A user can have one or multiple permissions on a project.
  * Project permissions include {@code admin}, {@code user} for (annotator) and {@code curator}
@@ -32,8 +33,9 @@ import javax.persistence.UniqueConstraint;
  *
  */
 @Entity
-@Table(name = "project_permissions", uniqueConstraints = { @UniqueConstraint(columnNames = {
-        "user", "level", "project" }) })
+@Table(name = "project_permissions")
+/*@Table(name = "project_permissions", uniqueConstraints = { @UniqueConstraint(columnNames = {
+        "user", "level", "project" }) })*/
 public class ProjectPermissions
     implements Serializable
 {
@@ -43,8 +45,9 @@ public class ProjectPermissions
     @GeneratedValue
     private long id;
 
-    @Column(nullable = false)
-    private String level;
+    @ManyToMany
+    @JoinColumn(name = "level")
+    private Set<Permissions> level = new HashSet<Permissions>();
 
     @ManyToOne
     @JoinColumn(name = "user")
@@ -64,14 +67,14 @@ public class ProjectPermissions
         id = aId;
     }
 
-    public String getLevel()
+    public Set<Permissions> getLevel()
     {
         return level;
     }
 
-    public void setLevel(String aLevel)
+    public void setLevel(Set<Permissions> level)
     {
-        level = aLevel;
+        this.level = level;
     }
 
     public User getUser()
