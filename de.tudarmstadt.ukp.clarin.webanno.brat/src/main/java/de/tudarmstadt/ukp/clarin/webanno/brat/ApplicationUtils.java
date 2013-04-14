@@ -27,7 +27,10 @@ import org.apache.commons.logging.LogFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
+import de.tudarmstadt.ukp.clarin.webanno.model.PermisionLevels;
+import de.tudarmstadt.ukp.clarin.webanno.model.Permissions;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermissions;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 public class ApplicationUtils
@@ -94,11 +97,15 @@ public class ApplicationUtils
 
         boolean projectAdmin = false;
         if (!roleAdmin) {
-            List<String> permissionLevels = aProjectRepository.getPermisionLevel(aUser, aProject);
+
             try {
-                if (permissionLevels.contains("admin")) {
-                    projectAdmin = true;
-                }
+                ProjectPermissions permissionLevels = aProjectRepository.getPermisionLevel(aUser, aProject);
+                    for(Permissions level:permissionLevels.getLevel()) {
+                        if (level.getLevel().equals(PermisionLevels.admin.name())) {
+                            projectAdmin = true;
+                            break;
+                        }
+                    }
             }
             catch (NoResultException ex) {
                 LOG.info("No permision is given to this user " + ex);
@@ -128,11 +135,14 @@ public class ApplicationUtils
 
         boolean curator = false;
         if (!roleAdmin) {
-            List<String> permissionLevels = aProjectRepository.getPermisionLevel(aUser, aProject);
             try {
-                if (permissionLevels.contains("curator")) {
-                    curator = true;
-                }
+                ProjectPermissions permissionLevels = aProjectRepository.getPermisionLevel(aUser, aProject);
+                    for(Permissions level:permissionLevels.getLevel()) {
+                        if (level.getLevel().equals(PermisionLevels.curator.name())) {
+                            curator = true;
+                            break;
+                        }
+                    }
             }
             catch (NoResultException ex) {
                 LOG.info("No permision is given to this user " + ex);
@@ -162,11 +172,14 @@ public class ApplicationUtils
 
         boolean member = false;
         if (!roleAdmin) {
-            List<String> permissionLevels = aProjectRepository.getPermisionLevel(aUser, aProject);
             try {
-                if (permissionLevels.contains("user")) {
-                    member = true;
-                }
+                ProjectPermissions permissionLevels = aProjectRepository.getPermisionLevel(aUser, aProject);
+                    for(Permissions level:permissionLevels.getLevel()) {
+                        if (level.getLevel().equals(PermisionLevels.user.name())) {
+                            member = true;
+                            break;
+                        }
+                    }
             }
             catch (NoResultException ex) {
                 LOG.info("No permision is given to this user " + ex);

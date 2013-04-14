@@ -29,6 +29,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
+import de.tudarmstadt.ukp.clarin.webanno.model.PermisionLevels;
+import de.tudarmstadt.ukp.clarin.webanno.model.Permissions;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermissions;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -115,7 +117,8 @@ public interface RepositoryService
         throws IOException;
 
     /**
-     * A Method that checks if there is already an annotation document created for the source document
+     * A Method that checks if there is already an annotation document created for the source
+     * document
      *
      * @param annotationDocument
      * @return
@@ -197,6 +200,22 @@ public interface RepositoryService
     File getGuideline(Project project, String fileName);
 
     /**
+     * List all the levels created. These will be user, curator, and admin as indicated
+     * {@link PermisionLevels#curator} ...
+     *
+     * @return
+     */
+    List<Permissions> listLevels();
+
+    /**
+     * Get permission level obeject
+     * @param aLevel
+     * @return
+     */
+    Permissions getPermissionLevel(String level);
+
+
+    /**
      * For a given project, get the permission level(s) of the user if it is granted
      *
      * @param aUser
@@ -205,7 +224,7 @@ public interface RepositoryService
      *            the project to be examined
      * @return list of {@link ProjectPermissions#getLevel()}
      */
-    List<String> getPermisionLevel(User user, Project project);
+    ProjectPermissions getPermisionLevel(User user, Project project);
 
     /**
      * get a permission object where a user is granted permission/permissions;
@@ -288,10 +307,13 @@ public interface RepositoryService
 
     /**
      * Check if at least one annotation document Finished.
-     * @param annotationDocument the Annotation document to be checked.
+     *
+     * @param annotationDocument
+     *            the Annotation document to be checked.
      * @return {@link Boolean}
      */
     boolean isAnnotationFinished(SourceDocument document, Project project);
+
     /**
      * List all annotation documents in the system.
      *
@@ -319,10 +341,11 @@ public interface RepositoryService
 
     /**
      * List all annotation documents in the state <b>INPROGRESS</b>
+     *
      * @param document
      * @return
      */
-  //  List<AnnotationDocument> listAnnotationDocumentInProgress(SourceDocument document);
+    // List<AnnotationDocument> listAnnotationDocumentInProgress(SourceDocument document);
 
     /**
      * List annotation guideline document already uploaded
@@ -405,7 +428,7 @@ public interface RepositoryService
      * @throws IOException
      * @throws FileNotFoundException
      */
-    Properties loadUserSettings(String username, Project project,  Subject aSubject)
+    Properties loadUserSettings(String username, Project project, Subject aSubject)
         throws FileNotFoundException, IOException;
 
     /**
@@ -525,6 +548,6 @@ public interface RepositoryService
      *
      * @return
      */
-    List<String> listProjectPermisionLevels(User user, Project project);
+    List<ProjectPermissions> listProjectPermisionLevels(User user, Project project);
 
 }

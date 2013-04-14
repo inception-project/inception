@@ -72,6 +72,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
+import de.tudarmstadt.ukp.clarin.webanno.model.Permissions;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermissions;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -543,23 +544,35 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public List<String> getPermisionLevel(User aUser, Project aProject)
+    public ProjectPermissions getPermisionLevel(User aUser, Project aProject)
     {
         return entityManager
                 .createQuery(
-                        "Select level FROM ProjectPermissions WHERE user =:user AND "
-                                + "project =:project", String.class).setParameter("user", aUser)
-                .setParameter("project", aProject).getResultList();
+                        "FROM ProjectPermissions WHERE user =:user AND "
+                                + "project =:project", ProjectPermissions.class).setParameter("user", aUser)
+                .setParameter("project", aProject).getSingleResult();
+    }
+    @Override
+    @Transactional
+   public List<Permissions> listLevels(){
+        return entityManager.createQuery("FROM Permissions", Permissions.class).getResultList();
     }
 
     @Override
+    public Permissions getPermissionLevel(String aLevel){
+        return entityManager.createQuery("FROM Permissions where level =:level",
+                Permissions.class)
+                .setParameter("level", aLevel).getSingleResult();
+    }
+    @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public List<String> listProjectPermisionLevels(User aUser, Project aProject)
+    @SuppressWarnings("unchecked")
+    public List<ProjectPermissions> listProjectPermisionLevels(User aUser, Project aProject)
     {
         return entityManager
                 .createQuery(
-                        "Select level FROM ProjectPermissions WHERE user =:user AND "
-                                + "project =:project", String.class).setParameter("user", aUser)
+                        "FROM ProjectPermissions WHERE user =:user AND "
+                                + "project =:project", ProjectPermissions.class).setParameter("user", aUser)
                 .setParameter("project", aProject).getResultList();
     }
 
