@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.NoResultException;
 
@@ -268,6 +269,7 @@ public class UserManagementPage
                             permissions = new ProjectPermissions();
                             permissions.setProject(selectedProject);
                             permissions.setUser(selectedUser);
+                            permissions.setLevel((Set<Permissions>) permissionLevels.getModelObject());
                             try {
                                 projectRepository.createProjectPermission(permissions);
                             }
