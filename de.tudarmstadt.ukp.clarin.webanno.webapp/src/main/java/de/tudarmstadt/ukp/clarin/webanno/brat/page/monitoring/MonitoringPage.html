@@ -1,105 +1,110 @@
-<!-- Copyright 2012
-# 
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-# 
-#   http://www.apache.org/licenses/LICENSE-2.0
-# 
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# -->
-<html
-	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-<body>
-	<wicket:extend>
-	<div style="position: relative; top: 0px;">
-		<form wicket:id="projectSelectionForm" id="left">
-			<fieldset class="ui-widget-content ui-corner-all centering">
-				<div>
-					<label class="top">Projects:</label>
-				</div>
-				<div>
-					<select class="hfill" wicket:id="project" ></select>
-				</div>
-			</fieldset>
-		</form>
+<!--
+  Copyright 2012# # Licensed under the Apache License, Version 2.0 (the "License"); # you may not use this file except
+  in compliance with the License. # You may obtain a copy of the License at # #
+  http://www.apache.org/licenses/LICENSE-2.0 # # Unless required by applicable law or agreed to in writing, software #
+  distributed under the License is distributed on an "AS IS" BASIS, # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+  either express or implied. # See the License for the specific language governing permissions and # limitations under
+  the License. #
+-->
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+  <body>
+    <wicket:extend>
+      <div style="position: relative; top: 0px;">
+        <form wicket:id="projectSelectionForm" id="left">
+          <fieldset class="ui-widget-content ui-corner-all centering">
+            <div>
+              <label class="top">
+                Projects:
+              </label>
+            </div>
+            <div>
+              <select class="hfill" wicket:id="project" >
+              </select>
+            </div>
+          </fieldset>
+        </form>
 
-		<form wicket:id="monitoringDetailForm"  id="middleleft">
-		
-		<table style="width: 50%; margin-left:0%; border:1px solid cyan;">
-		<tr>
-			<td>Expected annotations
-			</td>
-			<td>
-			Completed annotations
-			</td>	
-		</tr>
-		<tr>
-			<td>
-			<span wicket:id="expected"></span>
-			</td>
-			<td>
-			<span wicket:id="actual"></span>
-			</td>
-		</tr>	
-	</table>
-	<br>
-	<table>
-	<!-- 	<tr style="color:green">
-			<td>Overall Annotation Progress</td>
-			<td>Progress by Annotation Types</td>
-		</tr>
-		<tr>
-			<td><img wicket:id="overallChart" alt="Overall Progress" /></td>
-			<td><img wicket:id="annotationChart" alt="Overall Progress" /></td>
-		</tr>  -->
-		<tr style="color:green">
-			<td>Annotator's Progress -&gt<span wicket:id="projectName" style="color:red"></span></td>
-			<td>Projects's Progress</td>
-		</tr>
-		<tr>
-			<td> 	
-				<table style="height: 100%; width: 100%;">			
-					<tr>
-						<td rowspan="2">
-							<img wicket:id="annotator" alt="Annotation Progress" />
-						</td>
-					</tr>
-				</table> 
-			</td>
-			<td>
-				<table style="height: 100%; width: 100%;">
-				<tbody>
-					<tr wicket:id="projectRepeator">
-						<td><span wicket:id="project">:</span></td>
-						<td style="border-left: 1px black solid;">
-							<div wicket:id="projectProgress">
-							</div>
-						</td>
-					</tr>
-				</tbody>
-				</table>
-				</td>
-		</tr>	
-	</table>
-	<div style="color:green">Completion status of documents by users for Project-&gt <span wicket:id="projectName" style="color:red"></span></div>
-	<table wicket:id="rsTable"></table>
-	<!-- 				
- 		<table style="height: 100%; width: 100%;">			
-					<tr>
-						<td rowspan="2">
-							<div><label class="top">Annotator's Progress</label></div>
-							<img wicket:id="annotator" alt="Annotation Progress" />
-						</td>
-					</tr>
-				</table> 
-		 -->
-		</form>
-		</div>
-	</wicket:extend>
-</body>
+        <form wicket:id="monitoringDetailForm"  id="middleleft">
+
+          <table style="width: 50%; margin-left:0%; border:1px solid cyan;">
+            <tr>
+              <td>
+                Expected annotations
+              </td>
+              <td>
+                Completed annotations
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span wicket:id="expected">
+                </span>
+              </td>
+              <td>
+                <span wicket:id="actual">
+                </span>
+              </td>
+            </tr>
+          </table>
+          <br>
+          <table>
+            <!--
+              <tr style="color:green"> <td>Overall Annotation Progress</td> <td>Progress by Annotation Types</td> </tr>
+              <tr> <td><img wicket:id="overallChart" alt="Overall Progress" /></td> <td><img wicket:id="annotationChart"
+              alt="Overall Progress" /></td> </tr>
+            -->
+            <tr style="color:green">
+              <td>
+                Annotator's Progress -&gt
+                <span wicket:id="projectName" style="color:red">
+                </span>
+              </td>
+              <td>
+                Projects's Progress
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <table style="height: 100%; width: 100%;">
+                  <tr>
+                    <td rowspan="2">
+                      <img wicket:id="annotator" alt="Annotation Progress" />
+                    </td>
+                  </tr>
+                </table>
+              </td>
+              <td>
+                <table style="height: 100%; width: 100%;">
+                  <tbody>
+                    <tr wicket:id="projectRepeator">
+                      <td>
+                        <span wicket:id="project">
+                          :
+                        </span>
+                      </td>
+                      <td style="border-left: 1px black solid;">
+                        <div wicket:id="projectProgress">
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+          </table>
+          <div style="color:green">
+            Completion status of documents by users for Project-&gt
+            <span wicket:id="projectName" style="color:red">
+            </span>
+          </div>
+          <table wicket:id="rsTable">
+          </table>
+          <!--
+            <table style="height: 100%; width: 100%;"> <tr> <td rowspan="2"> <div><label class="top">Annotator's
+            Progress</label></div> <img wicket:id="annotator" alt="Annotation Progress" /> </td> </tr> </table>
+          -->
+        </form>
+      </div>
+    </wicket:extend>
+  </body>
 </html>
