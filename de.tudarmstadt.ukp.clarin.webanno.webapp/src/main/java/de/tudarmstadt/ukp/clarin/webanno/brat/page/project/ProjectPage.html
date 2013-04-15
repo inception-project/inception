@@ -1,47 +1,43 @@
-<!-- Copyright 2012
-# 
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-# 
-#   http://www.apache.org/licenses/LICENSE-2.0
-# 
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# -->
-<html
-	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-<body>
-	<wicket:extend>
-	<div style="position: relative; top: 0px;">
-		<form wicket:id="projectSelectionForm" id="left">
-			<fieldset class="ui-widget-content ui-corner-all centering">
-				<div>
-					<label class="top">Projects:</label>
-				</div>
-				<div>
-					<select class="hfill" wicket:id="project" ></select>
-				</div>
-				<div class="buttons">
-					<input type="submit" wicket:id="create" />
-				</div>
-			</fieldset>
-		</form>
+<!--
+  Copyright 2012# # Licensed under the Apache License, Version 2.0 (the "License"); # you may not use this file except
+  in compliance with the License. # You may obtain a copy of the License at # #
+  http://www.apache.org/licenses/LICENSE-2.0 # # Unless required by applicable law or agreed to in writing, software #
+  distributed under the License is distributed on an "AS IS" BASIS, # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+  either express or implied. # See the License for the specific language governing permissions and # limitations under
+  the License. #
+-->
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 
-		<form wicket:id="projectDetailForm"  id="middleleft">
-		<div wicket:id="tabs" class="tabpanel"></div>
-		</form>
+  <body>
+    <wicket:extend>
+      <div style="position: relative; top: 0px;">
+        <form wicket:id="projectSelectionForm" id="left">
+          <fieldset class="ui-widget-content ui-corner-all centering">
+            <div>
+              <label class="top">
+                Projects:
+              </label>
+            </div>
+            <div>
+              <select class="hfill" wicket:id="project" >
+              </select>
+            </div>
+            <div class="buttons">
+              <input type="submit" wicket:id="create" />
+            </div>
+          </fieldset>
+        </form>
 
-	<!--
-		<form wicket:id="backForm" class="vfill" style="margin: 15px">
-			<div class="buttons">
-				<input type="submit" wicket:id="back" />
-			</div>
-		</form>  -->
-		</div>
-	</wicket:extend>
-</body>
+        <form wicket:id="projectDetailForm"  id="middleleft">
+          <div wicket:id="tabs" class="tabpanel">
+          </div>
+        </form>
+
+        <!--
+          <form wicket:id="backForm" class="vfill" style="margin: 15px"> <div class="buttons"> <input type="submit"
+          wicket:id="back" /> </div> </form>
+        -->
+      </div>
+    </wicket:extend>
+  </body>
 </html>
