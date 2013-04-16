@@ -317,13 +317,13 @@ public class BratAjaxCasController
         boolean multipleSpan = true;
         if (annotationType.equals(AnnotationType.NAMEDENTITY_PREFIX)) {
             // BratAjaxCasUtil.updateNamedEntity(aBratAnnotatorModel, type, aUIData);
-            BratSpanToCas.addSpanAnnotationToCas(aBratAnnotatorModel, type, aUIData,
+            SpanAdapter.addSpanAnnotationToCas(aBratAnnotatorModel, type, aUIData,
                     NamedEntity.class.getName(), "value", multipleSpan);
         }
         else if (annotationType.equals(AnnotationType.POS_PREFIX)) {
-           // BratAjaxCasUtil.updatePos(aBratAnnotatorModel, type, aUIData);
-            BratSpanToCas.addSpanAnnotationToCas(aBratAnnotatorModel, type, aUIData,
-                    POS.class.getName(), "PosValue",false);
+            // BratAjaxCasUtil.updatePos(aBratAnnotatorModel, type, aUIData);
+            SpanAdapter.addSpanAnnotationToCas(aBratAnnotatorModel, type, aUIData,
+                    POS.class.getName(), "PosValue", false);
         }
         else if (annotationType.equals(AnnotationType.COREFERENCE_PREFIX)) {
             BratAjaxCasUtil.updateCoreferenceType(aBratAnnotatorModel, type, aUIData);

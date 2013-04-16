@@ -160,7 +160,7 @@ public class CasToBratJson
     public void addLemmaToResponse(JCas aJcas, GetDocumentResponse aResponse)
     {
         String featureName = "value";
-        CasSpanToBrat.addSpanAnnotationToResponse(aJcas, aResponse,
+        SpanAdapter.addSpanAnnotationToResponse(aJcas, aResponse,
                 currentWindowSentenceBeginAddress, windowSize, lastSentenceAddress,
                 Lemma.class.getName(), "", featureName);
     }
@@ -169,7 +169,7 @@ public class CasToBratJson
     {
         String featureName = "PosValue";
         if (annotationLayers.contains(AnnotationType.POS)) {
-            CasSpanToBrat.addSpanAnnotationToResponse(aJcas, aResponse,
+            SpanAdapter.addSpanAnnotationToResponse(aJcas, aResponse,
                     currentWindowSentenceBeginAddress, windowSize, lastSentenceAddress,
                     POS.class.getName(), AnnotationType.POS_PREFIX, featureName);
         }
@@ -191,10 +191,9 @@ public class CasToBratJson
 
                         List<Argument> argumentList = getArgument(dependency);
 
-                        aResponse
-                                .addRelation(new Relation(dependency.getAddress(),
-                                        AnnotationType.POS_PREFIX
-                                                + dependency.getDependencyType(), argumentList));
+                        aResponse.addRelation(new Relation(dependency.getAddress(),
+                                AnnotationType.POS_PREFIX + dependency.getDependencyType(),
+                                argumentList));
                     }
                     break;
                 }
@@ -230,9 +229,9 @@ public class CasToBratJson
                     for (CoreferenceLink link : selectCovered(CoreferenceLink.class, sentence)) {
 
                         aResponse.addEntity(new Entity(link.getAddress(),
-                                AnnotationType.COREFERENCE_PREFIX
-                                        + link.getReferenceType(), asList(new Offsets(link
-                                        .getBegin() - current, link.getEnd() - current))));
+                                AnnotationType.COREFERENCE_PREFIX + link.getReferenceType(),
+                                asList(new Offsets(link.getBegin() - current, link.getEnd()
+                                        - current))));
                     }
                     break;
                 }
@@ -242,9 +241,9 @@ public class CasToBratJson
                     int end = link.getEnd();
                     if (sentence.getBegin() <= begin && sentence.getEnd() >= end) {
                         aResponse.addEntity(new Entity(link.getAddress(),
-                                AnnotationType.COREFERENCE_PREFIX
-                                        + link.getReferenceType(), asList(new Offsets(link
-                                        .getBegin() - current, link.getEnd() - current))));
+                                AnnotationType.COREFERENCE_PREFIX + link.getReferenceType(),
+                                asList(new Offsets(link.getBegin() - current, link.getEnd()
+                                        - current))));
                     }
                 }
                 i = BratAjaxCasUtil.getFollowingSentenceAddress(aJcas, i);
@@ -315,11 +314,9 @@ public class CasToBratJson
     {
         String featureName = "value";
         if (annotationLayers.contains(AnnotationType.NAMEDENTITY)) {
-            CasSpanToBrat
-                    .addSpanAnnotationToResponse(aJcas, aResponse,
-                            currentWindowSentenceBeginAddress, windowSize, lastSentenceAddress,
-                             NamedEntity.class.getName(),
-                            AnnotationType.NAMEDENTITY_PREFIX, featureName);
+            SpanAdapter.addSpanAnnotationToResponse(aJcas, aResponse,
+                    currentWindowSentenceBeginAddress, windowSize, lastSentenceAddress,
+                    NamedEntity.class.getName(), AnnotationType.NAMEDENTITY_PREFIX, featureName);
         }
     }
 
