@@ -27,8 +27,7 @@ import org.apache.commons.logging.LogFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
-import de.tudarmstadt.ukp.clarin.webanno.model.PermisionLevels;
-import de.tudarmstadt.ukp.clarin.webanno.model.Permissions;
+import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevels;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermissions;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -100,8 +99,8 @@ public class ApplicationUtils
 
             try {
                 ProjectPermissions permissionLevels = aProjectRepository.getPermisionLevel(aUser, aProject);
-                    for(Permissions level:permissionLevels.getLevel()) {
-                        if (level.getLevel().equals(PermisionLevels.admin.name())) {
+                    for(String role:permissionLevels.getLevel()) {
+                        if (role.equals(PermissionLevels.admin.name())) {
                             projectAdmin = true;
                             break;
                         }
@@ -137,8 +136,8 @@ public class ApplicationUtils
         if (!roleAdmin) {
             try {
                 ProjectPermissions permissionLevels = aProjectRepository.getPermisionLevel(aUser, aProject);
-                    for(Permissions level:permissionLevels.getLevel()) {
-                        if (level.getLevel().equals(PermisionLevels.curator.name())) {
+                    for(String role:permissionLevels.getLevel()) {
+                        if (role.equals(PermissionLevels.curator.name())) {
                             curator = true;
                             break;
                         }
@@ -174,8 +173,8 @@ public class ApplicationUtils
         if (!roleAdmin) {
             try {
                 ProjectPermissions permissionLevels = aProjectRepository.getPermisionLevel(aUser, aProject);
-                    for(Permissions level:permissionLevels.getLevel()) {
-                        if (level.getLevel().equals(PermisionLevels.user.name())) {
+                    for(String role:permissionLevels.getLevel()) {
+                        if (role.equals(PermissionLevels.user.name())) {
                             member = true;
                             break;
                         }

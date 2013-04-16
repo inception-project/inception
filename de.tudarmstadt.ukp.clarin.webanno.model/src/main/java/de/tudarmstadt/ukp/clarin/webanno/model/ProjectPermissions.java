@@ -19,11 +19,11 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 /**
@@ -45,9 +45,8 @@ public class ProjectPermissions
     @GeneratedValue
     private long id;
 
-    @ManyToMany
-    @JoinColumn(name = "level")
-    private Set<Permissions> level = new HashSet<Permissions>();
+    @ElementCollection
+    private Set<String> level = new HashSet<String>();
 
     @ManyToOne
     @JoinColumn(name = "user")
@@ -67,12 +66,12 @@ public class ProjectPermissions
         id = aId;
     }
 
-    public Set<Permissions> getLevel()
+    public Set<String> getLevel()
     {
         return level;
     }
 
-    public void setLevel(Set<Permissions> level)
+    public void setLevel(Set<String> level)
     {
         this.level = level;
     }

@@ -23,7 +23,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,9 +40,11 @@ import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
 import org.apache.wicket.authroles.authorization.strategies.role.metadata.MetaDataRoleAuthorizationStrategy;
+import org.apache.wicket.behavior.SimpleAttributeModifier;
 import org.apache.wicket.extensions.ajax.markup.html.tabs.AjaxTabbedPanel;
 import org.apache.wicket.extensions.markup.html.tabs.AbstractTab;
 import org.apache.wicket.extensions.markup.html.tabs.ITab;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.CheckBoxMultipleChoice;
@@ -55,7 +59,10 @@ import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.form.upload.FileUploadField;
 import org.apache.wicket.markup.html.link.DownloadLink;
 import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.markup.repeater.Item;
+import org.apache.wicket.markup.repeater.RefreshingView;
 import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
@@ -72,7 +79,9 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSetContent;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSets;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
+import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevels;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermissions;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -210,6 +219,7 @@ public class ProjectPage
         private Project project;
         private List<String> documents;
         private List<String> permissionLevels;
+        private User user;
     }
 
     private class ProjectDetailForm
@@ -245,7 +255,7 @@ public class ProjectPage
                 }
             });
 
-           tabs.add(users = new AbstractTab(new Model<String>("Project Users"))
+            tabs.add(users = new AbstractTab(new Model<String>("Project Users"))
             {
                 private static final long serialVersionUID = 7160734867954315366L;
 
@@ -488,65 +498,312 @@ public class ProjectPage
     private class ProjectUsersPanel
         extends Panel
     {
-        private static final long serialVersionUID = -8668945427924328076L;
-        private CheckBoxMultipleChoice<User> users;
-        private ArrayList<String> permissionLevelSelect = new ArrayList<String>();
-        CheckBoxMultipleChoice<String> permissionLevels;
+        private class UserSelectionForm
+            extends Form<SelectionModel>
+        {
+            private static final long serialVersionUID = -1L;
+
+            public UserSelectionForm(String id)
+            {
+                super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
+
+                add(users = new ListChoice<User>("user")
+                {
+                    private static final long serialVersionUID = 1L;
+
+                    {
+                        setChoices(new LoadableDetachableModel<List<User>>()
+                        {
+                            private static final long serialVersionUID = 1L;
+
+                            @Override
+                            protected List<User> load()
+                            {
+                                return projectRepository.listProjectUsers(projectDetailForm
+                                        .getModelObject());
+                            }
+                        });
+                        setChoiceRenderer(new ChoiceRenderer<User>("username"));
+                        setNullValid(false);
+                    }
+
+                    @Override
+                    protected void onSelectionChanged(User aNewSelection)
+                    {
+                        if (aNewSelection != null) {
+                            selectedUser = aNewSelection;
+
+                        }
+                    }
+
+                    @Override
+                    protected boolean wantOnSelectionChangedNotifications()
+                    {
+                        return true;
+                    }
+
+                    @Override
+                    protected CharSequence getDefaultChoice(String aSelectedValue)
+                    {
+                        return "";
+                    }
+                });
+                users.setOutputMarkupId(true).add(
+                        new SimpleAttributeModifier("style", "width:100%"));
+                users.setMaxRows(15);
+
+                add(new Button("addUser", new ResourceModel("label"))
+                {
+                    private static final long serialVersionUID = 1L;
+
+                    @Override
+                    public void onSubmit()
+                    {
+                        usersForm.setVisible(true);
+
+                    }
+                });
+
+                add(new Button("addRole", new ResourceModel("label"))
+                {
+                    private static final long serialVersionUID = 1L;
+
+                    @Override
+                    public void onSubmit()
+                    {
+                        if (selectedUser != null) {
+                            rolesForm.setVisible(true);
+                        }
+
+                    }
+                });
+
+            }
+        }
+
+        public class Role
+            implements Serializable
+        {
+
+            private String role;
+
+            public String getRole()
+            {
+                return role;
+            }
+
+            public void setRole(String role)
+            {
+                this.role = role;
+            }
+        }
+
+        private class RoleSelectionModel
+            implements Serializable
+        {
+            public Role role;
+            public List<Role> roles;
+        }
+
+        private class PermisionLevelsForm
+            extends Form<String>
+        {
+            private static final long serialVersionUID = -1L;
+
+            public PermisionLevelsForm(String id)
+            {
+                super(id);
+                permissionLevelsRepeater = new RefreshingView("permissionLevelsRepeater")
+                {
+                    @Override
+                    protected Iterator getItemModels()
+                    {
+                        List<IModel> models = new ArrayList<IModel>();
+                        for (User user : projectRepository.listProjectUsers(projectDetailForm
+                                .getModelObject())) {
+                            models.add(new Model(getRole(user, projectDetailForm.getModelObject())));
+                        }
+                        return models.iterator();
+                    }
+
+                    @Override
+                    protected void populateItem(Item item)
+                    {
+                        item.add(new Label("roles", item.getModel()));
+                    }
+                };
+                add(permissionLevelsRepeater);
+            }
+        }
+
+        private class RolesForm
+            extends Form<RoleSelectionModel>
+        {
+            private static final long serialVersionUID = -1L;
+
+            ArrayList<Role> selectedRoles = new ArrayList<Role>();
+
+            public RolesForm(String id)
+            {
+                super(id, new CompoundPropertyModel<RoleSelectionModel>(new RoleSelectionModel()));
+              // Show Selected role in the RolesForm
+                if (selectedUser != null) {
+                    ProjectPermissions projectPermissions = projectRepository.getPermisionLevel(
+                            selectedUser, projectDetailForm.getModelObject());
+                    for(String selectedRole:projectPermissions.getLevel()){
+                        Role role = new Role();
+                        role.setRole(selectedRole);
+                        selectedRoles.add(role);
+                    }
+                }
+                add(permissionLevels = new CheckBoxMultipleChoice<Role>("roles",new Model(selectedRoles))
+                {
+                    private static final long serialVersionUID = 1L;
+
+                    {
+                        setChoices(new LoadableDetachableModel<List<Role>>()
+                        {
+                            private static final long serialVersionUID = 1L;
+
+                            @Override
+                            protected List<Role> load()
+                            {
+                                List<Role> roles = new ArrayList<Role>();
+
+                                for (String role : Arrays.asList(new String[] {
+                                        PermissionLevels.admin.name(),
+                                        PermissionLevels.curator.name(),
+                                        PermissionLevels.user.name() })) {
+                                    Role newRole = new Role();
+                                    newRole.setRole(role);
+                                    roles.add(newRole);
+                                }
+                                return roles;
+                            }
+                        });
+                        setChoiceRenderer(new ChoiceRenderer<Role>("role"));
+                    }
+                });
+                permissionLevels.setOutputMarkupId(true);
+                add(new Button("update", new ResourceModel("label"))
+                {
+                    private static final long serialVersionUID = 1L;
+
+                    @Override
+                    public void onSubmit()
+                    {
+                        if (selectedUser != null) {
+                            List<ProjectPermissions> projectPermissions = projectRepository
+                                    .listProjectPermisionLevels(selectedUser,
+                                            projectDetailForm.getModelObject());
+                            if (projectPermissions.size() == 0) {
+                                ProjectPermissions permissions = new ProjectPermissions();
+                                permissions.setProject(projectDetailForm.getModelObject());
+                                permissions.setUser(selectedUser);
+                                Set<String> roles = new HashSet<String>();
+                                for (Role role : RolesForm.this.getModelObject().roles) {
+                                    roles.add(role.getRole());
+                                }
+                                permissions.setLevel(roles);
+                                try {
+                                    projectRepository.createProjectPermission(permissions);
+                                }
+                                catch (IOException ex) {
+                                    error("Unabel to cretae project permissions"
+                                            + ExceptionUtils.getRootCauseMessage(ex));
+                                }
+                            }
+                            else {
+                                ProjectPermissions permissions = projectPermissions.get(0);
+                                Set<String> roles = new HashSet<String>();
+                                for (Role role : RolesForm.this.getModelObject().roles) {
+                                    roles.add(role.getRole());
+                                }
+                                permissions.setLevel(roles);
+                            }
+                        }
+                        RolesForm.this.setVisible(false);
+                    }
+                });
+            }
+        }
+
+        private class UsersForm
+            extends Form<RoleSelectionModel>
+        {
+            private static final long serialVersionUID = -1L;
+
+            public UsersForm(String id)
+            {
+                super(id);
+                add(new CheckBoxMultipleChoice<User>("users",
+                        new LoadableDetachableModel<List<User>>()
+                        {
+                            private static final long serialVersionUID = 1L;
+
+                            @Override
+                            protected List<User> load()
+                            {
+                                return projectRepository.listUsers();
+                            }
+                        }, new ChoiceRenderer<User>("username", "username")).setRequired(true));
+
+                add(new Button("add")
+                {
+                    private static final long serialVersionUID = 1L;
+
+                    @Override
+                    public void onSubmit()
+                    {
+                        // Modify projectPermissions table, in case a user is removed TODO
+                        UsersForm.this.setVisible(false);
+                    }
+                });
+            }
+        }
+
+        public String getRole(User userName, Project project)
+        {
+            List<ProjectPermissions> projectPermissions = projectRepository
+                    .listProjectPermisionLevels(userName, project);
+            String roles = "";
+            if (projectPermissions.size() > 0) {
+                for (String role : projectPermissions.get(0).getLevel()) {
+                    roles = roles + " " + role;
+                }
+            }
+            return "-->" + roles.trim().replace(" ", ",");
+        }
+
+        // The first document in the project // auto selected in the first time.
+        private User selectedUser;
+
+        private ListChoice<User> users;
+        private RefreshingView permissionLevelsRepeater;
+        private CheckBoxMultipleChoice<Role> permissionLevels;
+
+        private UserSelectionForm userSelectionForm;
+        private PermisionLevelsForm permissionLevelsForm;
+        private RolesForm rolesForm;
+        private UsersForm usersForm;
 
         public ProjectUsersPanel(String id)
         {
             super(id);
-            add(users = (CheckBoxMultipleChoice<User>) new CheckBoxMultipleChoice<User>("users",
-                    new LoadableDetachableModel<List<User>>()
-                    {
-                        private static final long serialVersionUID = 1L;
+            userSelectionForm = new UserSelectionForm("userSelectionForm");
+            permissionLevelsForm = new PermisionLevelsForm("permissionLevelsForm");
+            permissionLevelsForm.setOutputMarkupId(true);
 
-                        @Override
-                        protected List<User> load()
-                        {
-                            return projectRepository.listUsers();
-                        }
-                    }, new ChoiceRenderer<User>("username", "username")).setRequired(true));
+            rolesForm = new RolesForm("rolesForm");
+            rolesForm.setVisible(false);
 
-/*            RepeatingView permissionLevelsRepeater = new RepeatingView("permissionLevelsRepeater");
-            add(permissionLevelsRepeater);
-            //permissionLevelSelect.add(PermisionLevels.user.name());
-            for (User user : projectRepository.listUsers()) {
-                AbstractItem item = new AbstractItem(permissionLevelsRepeater.newChildId());
-                permissionLevelsRepeater.add(item);
+            usersForm = new UsersForm("usersForm");
+            usersForm.setVisible(false);
 
-            permissionLevels = new CheckBoxMultipleChoice<String>(
-                        "permissionLevels", new Model(permissionLevelSelect),
-                        Arrays.asList(new String[] { PermisionLevels.admin.name(),
-                                PermisionLevels.curator.name(), PermisionLevels.user.name() }));
-                permissionLevels.setSuffix("");
-                item.add(permissionLevels);
-            }*/
-
-            add(new Button("add", new ResourceModel("label"))
-            {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                public void onSubmit()
-                {
-                    Project project = projectDetailForm.getModelObject();
-                    Set<User> users = project.getUsers();
-                    if (project.getId() != 0) {
-                        project.setUsers(users);
-                        info(users.size() + " users are added");
-                        List<String> addedUsers = new ArrayList<String>();
-                        for (User selectedUser : users) {
-                            addedUsers.add(selectedUser.getUsername());
-                        }
-                    }
-                    else if (project.getId() == 0) {
-                        error("Project not yet created!");
-                        users.clear(); // reset selection
-                    }
-
-                }
-            });
+            add(userSelectionForm);
+            add(permissionLevelsForm);
+            add(rolesForm);
+            add(usersForm);
         }
     }
 
@@ -587,9 +844,7 @@ public class ProjectPage
             add(readableFormatsChoice = new DropDownChoice<String>("readableFormats", new Model(
                     selectedFormat), readableFormats));
 
-
-
-           add(new Button("import", new ResourceModel("label"))
+            add(new Button("import", new ResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;
 

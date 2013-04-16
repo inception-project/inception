@@ -29,8 +29,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
-import de.tudarmstadt.ukp.clarin.webanno.model.PermisionLevels;
-import de.tudarmstadt.ukp.clarin.webanno.model.Permissions;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermissions;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -198,22 +196,6 @@ public interface RepositoryService
      * @return
      */
     File getGuideline(Project project, String fileName);
-
-    /**
-     * List all the levels created. These will be user, curator, and admin as indicated
-     * {@link PermisionLevels#curator} ...
-     *
-     * @return
-     */
-    List<Permissions> listLevels();
-
-    /**
-     * Get permission level obeject
-     * @param aLevel
-     * @return
-     */
-    Permissions getPermissionLevel(String level);
-
 
     /**
      * For a given project, get the permission level(s) of the user if it is granted

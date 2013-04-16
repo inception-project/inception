@@ -27,7 +27,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.page.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.CurationPage;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.monitoring.MonitoringPage;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.project.ProjectPage;
-import de.tudarmstadt.ukp.clarin.webanno.brat.page.user.UserManagementPage;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 /**
@@ -183,7 +182,7 @@ public class WelcomePage
         }
 
         // adding user management page
-
+/*
         boolean usreManagementAdded = false;
         usremanagement = new AjaxLink<Void>("usremanagement")
         {
@@ -212,7 +211,7 @@ public class WelcomePage
             add(usremanagement);
             usremanagement.setVisible(false);
 
-        }
+        }*/
     }
 
     private static final long serialVersionUID = -530084892002620197L;

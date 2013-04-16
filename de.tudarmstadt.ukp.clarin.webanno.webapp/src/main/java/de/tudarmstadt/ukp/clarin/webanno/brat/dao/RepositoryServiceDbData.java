@@ -72,7 +72,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
-import de.tudarmstadt.ukp.clarin.webanno.model.Permissions;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermissions;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -552,18 +551,7 @@ public class RepositoryServiceDbData
                                 + "project =:project", ProjectPermissions.class).setParameter("user", aUser)
                 .setParameter("project", aProject).getSingleResult();
     }
-    @Override
-    @Transactional
-   public List<Permissions> listLevels(){
-        return entityManager.createQuery("FROM Permissions", Permissions.class).getResultList();
-    }
 
-    @Override
-    public Permissions getPermissionLevel(String aLevel){
-        return entityManager.createQuery("FROM Permissions where level =:level",
-                Permissions.class)
-                .setParameter("level", aLevel).getSingleResult();
-    }
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     @SuppressWarnings("unchecked")
