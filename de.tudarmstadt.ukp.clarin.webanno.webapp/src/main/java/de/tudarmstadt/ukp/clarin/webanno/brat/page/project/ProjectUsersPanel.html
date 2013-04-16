@@ -32,13 +32,13 @@
                 Add Users
               </button>
               <button wicket:id="addRole">
-                Update Roles
+                Update Permissions
               </button>
             </form>
           </td>
           <td width="50%" >
-            <form wicket:id="permissionLevelsForm">
-              <div wicket:id="permissionLevelsRepeater">
+            <form wicket:id="selectedPermissionLevelsForm">
+              <div wicket:id="selectedPermissionLevelsRepeater">
                 <span   wicket:id="roles">
                 </span>
               </div>
@@ -47,7 +47,7 @@
         </tr>
         <tr ALIGN=LEFT>
           <td>
-            <form wicket:id="usersForm" style="width:100%">
+            <form wicket:id="userDetailForm" style="width:100%">
               <span  wicket:id="users" style="width:100%">
               </span>
               <button wicket:id="add">
@@ -56,8 +56,8 @@
             </form>
           </td>
           <td>
-            <form wicket:id="rolesForm" style="width:100%">
-              <span  wicket:id="roles" style="width:100%">
+            <form wicket:id="permissionLevelDetailForm" style="width:100%">
+              <span  wicket:id="permissionLevels" style="width:100%">
               </span>
               <button wicket:id="update">
                 Update
