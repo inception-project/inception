@@ -53,7 +53,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
  * @author Seid Muhie Yimam
  *
  */
-public class OpenPanel
+public class OpenModalWindowPanel
     extends Panel
 {
     private static final long serialVersionUID = 1299869948010875439L;
@@ -83,7 +83,7 @@ public class OpenPanel
 
     List<Project> allowedProject = new ArrayList<Project>();
 
-    public OpenPanel(String aId, OpenDocumentModel aOpenDataModel, ModalWindow aModalWindow, Subject aSubject)
+    public OpenModalWindowPanel(String aId, OpenDocumentModel aOpenDataModel, ModalWindow aModalWindow, Subject aSubject)
     {
         super(aId);
         this.subject = aSubject;

@@ -42,7 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
  * @author Seid Muhie Yimam
  *
  */
-public class YesNoDialog
+public class YesNoModalPanel
     extends Panel
 {
 
@@ -55,7 +55,7 @@ public class YesNoDialog
 
     private OpenDocumentModel openDocumentModel;
 
-    public YesNoDialog(String aId, OpenDocumentModel aOpenDocumentModel, ModalWindow aModalWindow,
+    public YesNoModalPanel(String aId, OpenDocumentModel aOpenDocumentModel, ModalWindow aModalWindow,
             Subject aSubject)
     {
         super(aId);

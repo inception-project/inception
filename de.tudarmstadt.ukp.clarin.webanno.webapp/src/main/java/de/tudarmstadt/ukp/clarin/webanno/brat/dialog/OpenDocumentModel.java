@@ -21,7 +21,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 /**
- * Data model representing the opened document from the {@link OpenPanel} open dialog window
+ * Data model representing the opened document from the {@link OpenModalWindowPanel} open dialog window
  *
  * @author Seid Muhie Yimam
  *

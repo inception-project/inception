@@ -28,8 +28,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationDocumentVisualizer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.dialog.OpenDocumentModel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.dialog.OpenPanel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.dialog.YesNoDialog;
+import de.tudarmstadt.ukp.clarin.webanno.brat.dialog.OpenModalWindowPanel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.dialog.YesNoModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.component.model.CurationBuilder;
@@ -96,7 +96,7 @@ public class CurationPage
             @Override
             public void onClick(AjaxRequestTarget aTarget)
             {
-                openDocumentsModal.setContent(new OpenPanel(openDocumentsModal.getContentId(),
+                openDocumentsModal.setContent(new OpenModalWindowPanel(openDocumentsModal.getContentId(),
                         openDataModel, openDocumentsModal, Subject.curation));
                 openDocumentsModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
                 {
@@ -173,7 +173,7 @@ public class CurationPage
             @Override
             public void onClick(AjaxRequestTarget target)
             {
-                yesNoModal.setContent(new YesNoDialog(yesNoModal.getContentId(), openDataModel,
+                yesNoModal.setContent(new YesNoModalPanel(yesNoModal.getContentId(), openDataModel,
                         yesNoModal, Subject.curation));
                 yesNoModal.show(target);
             }

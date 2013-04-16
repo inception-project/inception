@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package de.tudarmstadt.ukp.clarin.webanno.brat.page.annotation;
+package de.tudarmstadt.ukp.clarin.webanno.brat.dialog;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -55,12 +55,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
  * @author Richard Eckart de Castilho
  *
  */
-public class AnnotationLayerSelectionModalPage
+public class AnnotationPreferenceModalPanel
     extends Panel
 {
     private static final long serialVersionUID = -2102136855109258306L;
 
-    private static final Log LOG = LogFactory.getLog(AnnotationLayerSelectionModalPage.class);
+    private static final Log LOG = LogFactory.getLog(AnnotationPreferenceModalPanel.class);
 
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
@@ -198,7 +198,7 @@ public class AnnotationLayerSelectionModalPage
         public HashSet<TagSet> annotationLayers = new HashSet<TagSet>();
     }
 
-    public AnnotationLayerSelectionModalPage(String aId, final ModalWindow modalWindow,
+    public AnnotationPreferenceModalPanel(String aId, final ModalWindow modalWindow,
             BratAnnotator aAnnotator)
     {
         super(aId);

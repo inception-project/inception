@@ -38,9 +38,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.dialog.AnnotationPreferenceModalPanel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.dialog.ExportModalWindowPage;
+import de.tudarmstadt.ukp.clarin.webanno.brat.dialog.GuidelineModalWindowPage;
 import de.tudarmstadt.ukp.clarin.webanno.brat.dialog.OpenDocumentModel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.dialog.OpenPanel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.dialog.YesNoDialog;
+import de.tudarmstadt.ukp.clarin.webanno.brat.dialog.OpenModalWindowPanel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.dialog.YesNoModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.welcome.WelcomePage;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -111,7 +114,7 @@ public class AnnotationPage
             @Override
             public void onClick(AjaxRequestTarget target)
             {
-                openDocumentsModal.setContent(new OpenPanel(openDocumentsModal.getContentId(),
+                openDocumentsModal.setContent(new OpenModalWindowPanel(openDocumentsModal.getContentId(),
                         openDataMOdel, openDocumentsModal, Subject.annotation));
                 openDocumentsModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
                 {
@@ -178,7 +181,7 @@ public class AnnotationPage
                 }
                 else {
 
-                    annotationLayerSelectionModal.setContent(new AnnotationLayerSelectionModalPage(
+                    annotationLayerSelectionModal.setContent(new AnnotationPreferenceModalPanel(
                             annotationLayerSelectionModal.getContentId(),
                             annotationLayerSelectionModal, annotator));
 
@@ -458,7 +461,7 @@ public class AnnotationPage
             @Override
             public void onClick(AjaxRequestTarget target)
             {
-                yesNoModal.setContent(new YesNoDialog(yesNoModal.getContentId(), openDataMOdel,
+                yesNoModal.setContent(new YesNoModalPanel(yesNoModal.getContentId(), openDataMOdel,
                         yesNoModal, Subject.annotation));
                 yesNoModal.show(target);
             }
