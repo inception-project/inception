@@ -17,7 +17,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.component.model;
 
 public enum AnnotationState
 {
-	AGREE("#eeeeee"), DISAGREE("#7fa2ff"), USE("#7fffa2"), DO_NOT_USE("#ff7fa2");
+	AGREE("#eeeeee"), DISAGREE("#7fa2ff"), USE("#7fffa2"), DO_NOT_USE("#ff7fa2"), NOT_SUPPORTED("#111111");
 
 	private String colorCode;
 

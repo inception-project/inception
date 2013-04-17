@@ -33,11 +33,15 @@ import org.uimafit.util.CasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.AnnotationOption;
+import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
@@ -55,6 +59,7 @@ public class CurationBuilder {
 		CurationContainer curationContainer = new CurationContainer();
 			// initialize Variables
 			Map<Integer, Integer> segmentBeginEnd = new HashMap<Integer, Integer>();
+			Map<Integer, Integer> segmentNumber = new HashMap<Integer, Integer>();
 			Map<Integer, String> segmentText = new HashMap<Integer, String>();
 			Map<Integer, Integer> segmentAdress = new HashMap<Integer, Integer>();
 			// get annotation documents
@@ -66,9 +71,12 @@ public class CurationBuilder {
 					jcas = repository
 							.getAnnotationDocumentContent(annotationDocument);
 					// enumerate Sentences
+					int sentenceNumber = 0;
 					for (Sentence sentence : select(jcas, Sentence.class)) {
+						sentenceNumber += 1;
 						segmentBeginEnd.put(sentence.getBegin(), sentence.getEnd());
 						segmentText.put(sentence.getBegin(), sentence.getCoveredText().toString());
+						segmentNumber.put(sentence.getBegin(), sentenceNumber);
 						segmentAdress.put(sentence.getBegin(), sentence.getAddress());
 						// store tokens
 					}
@@ -95,8 +103,15 @@ public class CurationBuilder {
 			}
 			List<Type> entryTypes = new LinkedList<Type>();
 	    	//entryTypes.add(CasUtil.getType(firstJCas.getCas(), Token.class));
-	    	entryTypes.add(CasUtil.getType(firstJCas.getCas(), NamedEntity.class));
+			//entryTypes.add(CasUtil.getType(firstJCas.getCas(), Sentence.class));
+			entryTypes.add(CasUtil.getType(firstJCas.getCas(), POS.class));
+			entryTypes.add(CasUtil.getType(firstJCas.getCas(), CoreferenceLink.class));
+			entryTypes.add(CasUtil.getType(firstJCas.getCas(), Lemma.class));
+			entryTypes.add(CasUtil.getType(firstJCas.getCas(), NamedEntity.class));
+			// TODO arc types
 			
+	    	int numUsers = jCases.size();
+	    	
 			for (Integer begin : segmentBeginEnd.keySet()) {
 				Integer end = segmentBeginEnd.get(begin);
 				
@@ -110,8 +125,14 @@ public class CurationBuilder {
 				
 				Boolean hasDiff = false;
 				for (AnnotationOption annotationOption : annotationOptions) {
-					if (annotationOption.getAnnotationSelections().size() > 1) {
+					List<AnnotationSelection> annotationSelections = annotationOption.getAnnotationSelections();
+					if (annotationSelections.size() > 1) {
 						hasDiff = true;
+					} else if(annotationSelections.size() == 1) {
+						AnnotationSelection annotationSelection = annotationSelections.get(0);
+						if(annotationSelection.getAddressByUsername().size() < numUsers) {
+							hasDiff = true;
+						}
 					}
 				}
 				
@@ -123,7 +144,8 @@ public class CurationBuilder {
 				} else {
 					curationSegment.setSentenceState(SentenceState.AGREE);
 				}
-				curationSegment.setText(segmentText.get(begin));
+				String text = "(" + segmentNumber.get(begin).toString() + ") " + segmentText.get(begin);
+				curationSegment.setText(text);
 				curationSegment.setSentenceAddress(segmentAdress.get(begin));
 				curationContainer.getCurationSegmentByBegin().put(begin, curationSegment);
 			}

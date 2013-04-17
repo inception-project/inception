@@ -648,15 +648,16 @@ public class RepositoryServiceDbData
                                 + "project = :project", AnnotationDocument.class)
                 .setParameter("document", aDocument).setParameter("project", aProject)
                 .getResultList();
+        boolean isFinished = true;
+        boolean hasDocuments = false;
         for (AnnotationDocument annotationDocument : annotationDocuments) {
-            if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
-                return true;
-            }
-            else {
-                return false;
+        	hasDocuments = true;
+            if (!annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
+                isFinished = false;
             }
         }
-        return false;
+        //return hasDocuments && isFinished;
+        return hasDocuments; // TODO remove to enable workflow
     }
 
     @Override

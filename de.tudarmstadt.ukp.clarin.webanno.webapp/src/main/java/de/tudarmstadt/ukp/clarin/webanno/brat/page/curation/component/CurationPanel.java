@@ -69,7 +69,10 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.component.model.Cura
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.component.model.SentenceState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
@@ -159,16 +162,18 @@ public class CurationPanel extends Panel {
 		                    Integer address = request.getParameterValue("id").toInteger();
 		                    AnnotationSelection annotationSelection = annotationSelectionByUsernameAndAddress.get(username).get(address);
 		                    
-		                    boolean addAnnotationSelection = !changes.contains(annotationSelection);
-		                    
-		                    // remove old annotation selections (if present)
-		                    for (AnnotationSelection as : annotationSelection.getAnnotationOption().getAnnotationSelections()) {
-								changes.remove(as);
-							}
-		                    
-		                    // add new annotation selection
-		                    if(addAnnotationSelection) {
-		                    	changes.add(annotationSelection);
+		                    if(annotationSelection != null) {
+		                    	boolean addAnnotationSelection = !changes.contains(annotationSelection);
+		                    	
+		                    	// remove old annotation selections (if present)
+		                    	for (AnnotationSelection as : annotationSelection.getAnnotationOption().getAnnotationSelections()) {
+		                    		changes.remove(as);
+		                    	}
+		                    	
+		                    	// add new annotation selection
+		                    	if(addAnnotationSelection) {
+		                    		changes.add(annotationSelection);
+		                    	}
 		                    }
 		                }
 
@@ -184,7 +189,7 @@ public class CurationPanel extends Panel {
     	};
     	curationListView.setOutputMarkupId(true);
 
-    	MergePanel mergePanel = new MergePanel("mergeView", "Merge View Dummy...");
+    	MergePanel mergePanel = new MergePanel("mergeView", "Click on a sentence to view differences...");
     	outer.add(mergePanel);
 
     	outer.add(curationListView);
@@ -260,7 +265,12 @@ public class CurationPanel extends Panel {
 		// get differing feature structures
     	List<Type> entryTypes = new LinkedList<Type>();
     	//entryTypes.add(CasUtil.getType(mergeJCas.getCas(), Token.class));
-    	entryTypes.add(CasUtil.getType(mergeJCas.getCas(), NamedEntity.class));
+		//entryTypes.add(CasUtil.getType(mergeJCas.getCas(), Sentence.class));
+		entryTypes.add(CasUtil.getType(mergeJCas.getCas(), POS.class));
+		entryTypes.add(CasUtil.getType(mergeJCas.getCas(), CoreferenceLink.class));
+		entryTypes.add(CasUtil.getType(mergeJCas.getCas(), Lemma.class));
+		entryTypes.add(CasUtil.getType(mergeJCas.getCas(), NamedEntity.class));
+		// TODO arc types
     	List<AnnotationOption> annotationOptions = null;
 		try {
 			annotationOptions = CasDiff.doDiff(entryTypes, jCases, curationSegment.getBegin(), curationSegment.getEnd());
@@ -429,12 +439,16 @@ public class CurationPanel extends Panel {
         	// ... or if entity has already been clicked on
         	int address = entity.getId();
         	AnnotationSelection annotationSelection = annotationSelectionByAddress.get(address);
-        	if(annotationSelection.getAddressByUsername().size() == numUsers) {
+        	if(annotationSelection == null) {
+        		String label = entity.getType();
+        		String type = entity.getType()+"_(NOT_SUPPORTED)";
+        		entity.setType(type);
+        		entityTypes.put(type, getEntity(type, label, AnnotationState.NOT_SUPPORTED));
+        	} else if(annotationSelection.getAddressByUsername().size() == numUsers) {
         		String label = entity.getType();
         		String type = entity.getType()+"_(AGREE)";
         		entity.setType(type);
         		entityTypes.put(type, getEntity(type, label, AnnotationState.AGREE));
-        		
         	} else if(changes.contains(annotationSelection)) {
     			entityTypes.put(entity.getType(), getEntity(entity.getType(), entity.getType(), AnnotationState.USE));
         		String label = entity.getType();
