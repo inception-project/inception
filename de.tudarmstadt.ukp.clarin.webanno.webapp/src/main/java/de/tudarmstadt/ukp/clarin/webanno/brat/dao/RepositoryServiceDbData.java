@@ -32,6 +32,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -72,8 +73,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
+import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermissions;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Subject;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -339,7 +341,7 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public void createProjectPermission(ProjectPermissions aPermission)
+    public void createProjectPermission(ProjectPermission aPermission)
         throws IOException
     {
         entityManager.persist(aPermission);
@@ -391,6 +393,41 @@ public class RepositoryServiceDbData
         try {
             entityManager.createQuery("FROM Project WHERE name = :name", Project.class)
                     .setParameter("name", aName).getSingleResult();
+            return true;
+        }
+        catch (NoResultException ex) {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean existProjectPermission(User aUser, Project aProject)
+    {
+        try {
+            entityManager
+                    .createQuery(
+                            "FROM ProjectPermission WHERE user = :user AND " + "project =:project",
+                            ProjectPermission.class).setParameter("user", aUser)
+                    .setParameter("project", aProject).getResultList();
+            return true;
+        }
+        catch (NoResultException ex) {
+            return false;
+        }
+    }
+
+    @Override
+    @Transactional
+    public boolean existProjectPermissionLevel(User aUser, Project aProject, PermissionLevel aLevel)
+    {
+        try {
+            entityManager
+                    .createQuery(
+                            "FROM ProjectPermission WHERE user = :user AND "
+                                    + "project =:project AND level =:level",
+                            ProjectPermission.class).setParameter("user", aUser)
+                    .setParameter("project", aProject).setParameter("level", aLevel)
+                    .getSingleResult();
             return true;
         }
         catch (NoResultException ex) {
@@ -543,35 +580,44 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public ProjectPermissions getPermisionLevel(User aUser, Project aProject)
+    public ProjectPermission getPermisionLevel(User aUser, Project aProject)
     {
         return entityManager
-                .createQuery(
-                        "FROM ProjectPermissions WHERE user =:user AND "
-                                + "project =:project", ProjectPermissions.class).setParameter("user", aUser)
+                .createQuery("FROM ProjectPermission WHERE user =:user AND " + "project =:project",
+                        ProjectPermission.class).setParameter("user", aUser)
                 .setParameter("project", aProject).getSingleResult();
     }
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     @SuppressWarnings("unchecked")
-    public List<ProjectPermissions> listProjectPermisionLevels(User aUser, Project aProject)
+    public List<ProjectPermission> listProjectPermisionLevel(User aUser, Project aProject)
     {
         return entityManager
-                .createQuery(
-                        "FROM ProjectPermissions WHERE user =:user AND "
-                                + "project =:project", ProjectPermissions.class).setParameter("user", aUser)
+                .createQuery("FROM ProjectPermission WHERE user =:user AND " + "project =:project",
+                        ProjectPermission.class).setParameter("user", aUser)
                 .setParameter("project", aProject).getResultList();
     }
 
     @Override
+    public Set<User> listProjectUsersWithPermissions(Project aProject)
+    {
+
+        List<User> userList = entityManager
+                .createQuery("SELECT user FROM ProjectPermission WHERE " + "project =:project",
+                        User.class).setParameter("project", aProject).getResultList();
+        Set<User> Users = new HashSet<User>(userList);
+
+        return Users;
+    }
+
+    @Override
     @Transactional
-    public ProjectPermissions getProjectPermission(User aUser, Project aProject)
+    public ProjectPermission getProjectPermission(User aUser, Project aProject)
     {
         return entityManager
-                .createQuery(
-                        "FROM ProjectPermissions WHERE user =:user AND " + "project =:project",
-                        ProjectPermissions.class).setParameter("user", aUser)
+                .createQuery("FROM ProjectPermission WHERE user =:user AND " + "project =:project",
+                        ProjectPermission.class).setParameter("user", aUser)
                 .setParameter("project", aProject).getSingleResult();
     }
 
@@ -602,11 +648,11 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public List<ProjectPermissions> getProjectPermisions(Project aProject)
+    public List<ProjectPermission> getProjectPermisions(Project aProject)
     {
         return entityManager
-                .createQuery("FROM ProjectPermissions WHERE project =:project",
-                        ProjectPermissions.class).setParameter("project", aProject).getResultList();
+                .createQuery("FROM ProjectPermission WHERE project =:project",
+                        ProjectPermission.class).setParameter("project", aProject).getResultList();
     }
 
     @Override
@@ -797,7 +843,7 @@ public class RepositoryServiceDbData
                     "Project directory to be deleted was not found: [" + path + "]. Ignoring.");
         }
 
-        for (ProjectPermissions permisions : getProjectPermisions(aProject)) {
+        for (ProjectPermission permisions : getProjectPermisions(aProject)) {
             entityManager.remove(permisions);
         }
         // remove metadata from DB
@@ -818,7 +864,7 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public void removeProjectPermission(ProjectPermissions projectPermission)
+    public void removeProjectPermission(ProjectPermission projectPermission)
         throws IOException
     {
         entityManager.remove(projectPermission);

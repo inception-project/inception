@@ -178,18 +178,18 @@ public class OpenModalWindowPanel
         List<Project> allowedProject = new ArrayList<Project>();
 
         if(aSubject.equals(subject.annotation)){
-        for (Project projects : projectRepository.listProjects()) {
-            if (projectRepository.listProjectUserNames(projects).contains(username)
-                    && ApplicationUtils.isMember(projects, projectRepository, user)) {
-                allowedProject.add(projects);
+        for (Project project : projectRepository.listProjects()) {
+            if (projectRepository.existProjectPermission(user, project)
+                    && ApplicationUtils.isMember(project, projectRepository, user)) {
+                allowedProject.add(project);
             }
         }
         }
         else if(aSubject.equals(subject.curation)){
-            for (Project projects : projectRepository.listProjects()) {
-                if (projectRepository.listProjectUserNames(projects).contains(username)
-                        && ApplicationUtils.isCurator(projects, projectRepository, user)) {
-                    allowedProject.add(projects);
+            for (Project project : projectRepository.listProjects()) {
+                if (projectRepository.existProjectPermission(user, project)
+                        && ApplicationUtils.isCurator(project, projectRepository, user)) {
+                    allowedProject.add(project);
                 }
             }
         }

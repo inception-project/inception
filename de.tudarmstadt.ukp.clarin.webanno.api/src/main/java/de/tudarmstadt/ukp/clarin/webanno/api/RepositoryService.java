@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
@@ -29,8 +30,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
+import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermissions;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Subject;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -95,7 +97,7 @@ public interface RepositoryService
      * @throws IOException
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void createProjectPermission(ProjectPermissions permission)
+    void createProjectPermission(ProjectPermission permission)
         throws IOException;
 
     /**
@@ -131,7 +133,16 @@ public interface RepositoryService
      * @return
      */
     boolean existsProject(String name);
-
+    /**
+     * Check if a user have at least one {@link PermissionLevel } for this {@link Project}
+     * @return
+     */
+    boolean existProjectPermission(User user, Project project);
+    /**
+     * Check if there is already a {@link PermissionLevel} on a given {@link Project} for a given {@link User}
+     * @return
+     */
+    boolean existProjectPermissionLevel(User user, Project project, PermissionLevel level);
     /**
      * Exports an {@link AnnotationDocument } CAS Object as TCF/TXT/XMI... file formats.
      *
@@ -204,16 +215,16 @@ public interface RepositoryService
      *            the user, if already assigned in that project
      * @param aProject
      *            the project to be examined
-     * @return list of {@link ProjectPermissions#getLevel()}
+     * @return list of {@link ProjectPermission#getLevel()}
      */
-    ProjectPermissions getPermisionLevel(User user, Project project);
+    ProjectPermission getPermisionLevel(User user, Project project);
 
     /**
      * get a permission object where a user is granted permission/permissions;
      *
      * @return
      */
-    ProjectPermissions getProjectPermission(User user, Project project);
+    ProjectPermission getProjectPermission(User user, Project project);
 
     /**
      * Get a {@link Project} from the database the name of the Project
@@ -242,15 +253,15 @@ public interface RepositoryService
         throws IOException;
 
     /**
-     * Get a {@link ProjectPermissions }objects where a project is member of. We need to get them,
-     * for example if the associated {@link Project} is deleted, the {@link ProjectPermissions }
+     * Get a {@link ProjectPermission }objects where a project is member of. We need to get them,
+     * for example if the associated {@link Project} is deleted, the {@link ProjectPermission }
      * objects too.
      *
      * @param project
      *            The project contained in a projectPermision
-     * @return the {@link ProjectPermissions } list to be analysed.
+     * @return the {@link ProjectPermission } list to be analysed.
      */
-    List<ProjectPermissions> getProjectPermisions(Project project);
+    List<ProjectPermission> getProjectPermisions(Project project);
 
     /**
      * Get meta data information about {@link SourceDocument} from the database. This method is
@@ -431,7 +442,7 @@ public interface RepositoryService
      * @throws IOException
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void removeProjectPermission(ProjectPermissions projectPermission)
+    void removeProjectPermission(ProjectPermission projectPermission)
         throws IOException;
 
     /**
@@ -530,6 +541,11 @@ public interface RepositoryService
      *
      * @return
      */
-    List<ProjectPermissions> listProjectPermisionLevels(User user, Project project);
+    List<ProjectPermission> listProjectPermisionLevel(User user, Project project);
+
+    /**
+     * List Users those with some {@link PermissionLevel}s in the project
+     */
+    Set<User> listProjectUsersWithPermissions(Project project);
 
 }
