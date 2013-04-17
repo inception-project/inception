@@ -33,6 +33,9 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import wicket.contrib.input.events.EventType;
+import wicket.contrib.input.events.InputBehavior;
+import wicket.contrib.input.events.key.KeyType;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
@@ -120,6 +123,7 @@ public class AnnotationPage
                 {
                     private static final long serialVersionUID = -1746088901018629567L;
 
+                    @Override
                     public void onClose(AjaxRequestTarget target)
                     {
                         if (openDataMOdel.getProject() != null
@@ -190,6 +194,7 @@ public class AnnotationPage
                             {
                                 private static final long serialVersionUID = 1643342179335627082L;
 
+                                @Override
                                 public void onClose(AjaxRequestTarget target)
                                 {
                                     // target.add(annotator);
@@ -217,6 +222,7 @@ public class AnnotationPage
         {
             private static final long serialVersionUID = -2827824968207807739L;
 
+            @Override
             public Page createPage()
             {
                 return new ExportModalWindowPage(exportModal, annotator.bratAnnotatorModel);
@@ -272,7 +278,7 @@ public class AnnotationPage
                     target.appendJavaScript("alert('Please open a document first!')");
                 }
             }
-        });
+        }.add(new InputBehavior(new KeyType[] { KeyType.Page_down }, EventType.click)));
 
         add(new AjaxLink<Void>("showPrevious")
         {
@@ -301,7 +307,7 @@ public class AnnotationPage
                     target.appendJavaScript("alert('Please open a document first!')");
                 }
             }
-        });
+        }.add(new InputBehavior(new KeyType[] { KeyType.Page_up }, EventType.click)));
 
         add(new AjaxLink<Void>("showFirst")
         {
@@ -327,7 +333,7 @@ public class AnnotationPage
                     target.appendJavaScript("alert('Please open a document first!')");
                 }
             }
-        });
+        }.add(new InputBehavior(new KeyType[] { KeyType.Home }, EventType.click)));
 
         add(new AjaxLink<Void>("showLast")
         {
@@ -357,7 +363,7 @@ public class AnnotationPage
                     target.appendJavaScript("alert('Please open a document first!')");
                 }
             }
-        });
+        }.add(new InputBehavior(new KeyType[] { KeyType.End }, EventType.click)));
 
         final ModalWindow guidelineModal;
         add(guidelineModal = new ModalWindow("guidelineModal"));
@@ -373,6 +379,7 @@ public class AnnotationPage
         {
             private static final long serialVersionUID = -2827824968207807739L;
 
+            @Override
             public Page createPage()
             {
                 return new GuidelineModalWindowPage(guidelineModal, annotator.bratAnnotatorModel
