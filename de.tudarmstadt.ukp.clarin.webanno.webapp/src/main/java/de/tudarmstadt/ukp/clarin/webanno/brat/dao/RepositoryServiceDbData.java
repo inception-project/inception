@@ -403,17 +403,20 @@ public class RepositoryServiceDbData
     @Override
     public boolean existProjectPermission(User aUser, Project aProject)
     {
-        try {
-            entityManager
-                    .createQuery(
-                            "FROM ProjectPermission WHERE user = :user AND " + "project =:project",
-                            ProjectPermission.class).setParameter("user", aUser)
-                    .setParameter("project", aProject).getResultList();
+
+        List<ProjectPermission> projectPermissions = entityManager
+                .createQuery(
+                        "FROM ProjectPermission WHERE user = :user AND " + "project =:project",
+                        ProjectPermission.class).setParameter("user", aUser)
+                .setParameter("project", aProject).getResultList();
+        // if at least one permission level exist
+        if (projectPermissions.size() > 0) {
             return true;
         }
-        catch (NoResultException ex) {
+        else {
             return false;
         }
+
     }
 
     @Override
@@ -697,12 +700,12 @@ public class RepositoryServiceDbData
         boolean isFinished = true;
         boolean hasDocuments = false;
         for (AnnotationDocument annotationDocument : annotationDocuments) {
-        	hasDocuments = true;
+            hasDocuments = true;
             if (!annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
                 isFinished = false;
             }
         }
-        //return hasDocuments && isFinished;
+        // return hasDocuments && isFinished;
         return hasDocuments; // TODO remove to enable workflow
     }
 
