@@ -84,6 +84,7 @@ public class ProjectPage
     {
         private static final long serialVersionUID = -1L;
         private Button creatProject;
+        private ListChoice<Project> projects;
 
         public ProjectSelectionForm(String id)
         {
@@ -107,7 +108,7 @@ public class ProjectPage
             MetaDataRoleAuthorizationStrategy.authorize(creatProject, Component.RENDER,
                     "ROLE_ADMIN");
 
-            add(new ListChoice<Project>("project")
+            add(projects = new ListChoice<Project>("project")
             {
                 private static final long serialVersionUID = 1L;
 
@@ -157,8 +158,15 @@ public class ProjectPage
                 {
                     if (aNewSelection != null) {
                         createProject = false;
+                        int selectedTab = projectDetailForm.allTabs.getSelectedTab();
+                        if(selectedTab<0) {
+                            selectedTab=0;
+                        }
+                        updateProjectDetailForm();
                         projectDetailForm.setModelObject(aNewSelection);
                         projectDetailForm.setVisible(true);
+                        projectDetailForm.allTabs.setSelectedTab(selectedTab);
+
                         ProjectSelectionForm.this.setVisible(true);
                     }
                 }
@@ -178,6 +186,12 @@ public class ProjectPage
         }
     }
 
+    private void updateProjectDetailForm(){
+        remove(projectDetailForm);
+        projectDetailForm = new ProjectDetailForm("projectDetailForm");
+        //projectDetailForm.ge
+        add(projectDetailForm);
+    }
     static private class SelectionModel
         implements Serializable
     {
@@ -198,6 +212,7 @@ public class ProjectPage
         AbstractTab users;
         AbstractTab tagSets;
         AbstractTab documents;
+        AjaxTabbedPanel allTabs;
 
         public ProjectDetailForm(String id)
         {
@@ -220,6 +235,7 @@ public class ProjectPage
                     return true;
 
                 }
+
             });
 
             tabs.add(users = new AbstractTab(new Model<String>("Project Users"))
@@ -306,7 +322,7 @@ public class ProjectPage
                 }
             });
 
-            add(new AjaxTabbedPanel("tabs", tabs));
+            add(allTabs = new AjaxTabbedPanel("tabs", tabs));
             ProjectDetailForm.this.setMultiPart(true);
         }
     }
