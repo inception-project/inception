@@ -11,6 +11,6 @@
 		<class>de.tudarmstadt.ukp.clarin.webanno.model.Tag</class>
 		<class>de.tudarmstadt.ukp.clarin.webanno.model.TagSet</class>
 		<class>de.tudarmstadt.ukp.clarin.webanno.model.Authority</class>
-		<class>de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermissions</class>	
+		<class>de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission</class>	
 	</persistence-unit>
 </persistence>

@@ -16,13 +16,15 @@
 package de.tudarmstadt.ukp.clarin.webanno.model;
 
 /**
- * Permission levels for a project. {@link PermissionLevels#user} is an annotator while
- * {@link PermissionLevels#admin} is a project administrator
+ * Permission levels for a project. {@link PermissionLevel#USER} is an annotator while
+ * {@link PermissionLevel#ADMIN} is a project administrator
  *
  * @author yimam
  *
  */
-public enum PermissionLevels
+public enum PermissionLevel
 {
-    user, curator, admin;
+    USER, CURATOR, ADMIN;
+    public String getName() { return this.name().toLowerCase(); }
+    public String tosString() { return this.name().toLowerCase(); }
 }

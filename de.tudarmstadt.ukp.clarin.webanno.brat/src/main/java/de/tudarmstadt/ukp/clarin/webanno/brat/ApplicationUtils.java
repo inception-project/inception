@@ -27,9 +27,9 @@ import org.apache.commons.logging.LogFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
-import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevels;
+import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermissions;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 public class ApplicationUtils
@@ -98,9 +98,9 @@ public class ApplicationUtils
         if (!roleAdmin) {
 
             try {
-                ProjectPermissions permissionLevels = aProjectRepository.getPermisionLevel(aUser, aProject);
-                    for(String role:permissionLevels.getLevel()) {
-                        if (role.equals(PermissionLevels.admin.name())) {
+                List<ProjectPermission> permissionLevels = aProjectRepository.listProjectPermisionLevel(aUser, aProject);
+                    for(ProjectPermission permissionLevel:permissionLevels) {
+                        if (permissionLevel.getLevel().equals(PermissionLevel.ADMIN.getName())) {
                             projectAdmin = true;
                             break;
                         }
@@ -134,10 +134,11 @@ public class ApplicationUtils
 
         boolean curator = false;
         if (!roleAdmin) {
+
             try {
-                ProjectPermissions permissionLevels = aProjectRepository.getPermisionLevel(aUser, aProject);
-                    for(String role:permissionLevels.getLevel()) {
-                        if (role.equals(PermissionLevels.curator.name())) {
+                List<ProjectPermission> permissionLevels = aProjectRepository.listProjectPermisionLevel(aUser, aProject);
+                    for(ProjectPermission permissionLevel:permissionLevels) {
+                        if (permissionLevel.getLevel().equals(PermissionLevel.CURATOR.getName())) {
                             curator = true;
                             break;
                         }
@@ -169,22 +170,24 @@ public class ApplicationUtils
             }
         }
 
-        boolean member = false;
+        boolean user = false;
         if (!roleAdmin) {
+
             try {
-                ProjectPermissions permissionLevels = aProjectRepository.getPermisionLevel(aUser, aProject);
-                    for(String role:permissionLevels.getLevel()) {
-                        if (role.equals(PermissionLevels.user.name())) {
-                            member = true;
+                List<ProjectPermission> permissionLevels = aProjectRepository.listProjectPermisionLevel(aUser, aProject);
+                    for(ProjectPermission permissionLevel:permissionLevels) {
+                        if (permissionLevel.getLevel().equals(PermissionLevel.USER.getName())) {
+                            user = true;
                             break;
                         }
                     }
             }
+
             catch (NoResultException ex) {
                 LOG.info("No permision is given to this user " + ex);
             }
         }
 
-        return (member || roleAdmin);
+        return (user || roleAdmin);
     }
 }
