@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.wicket.behavior.SimpleAttributeModifier;
@@ -75,6 +74,7 @@ public class ProjectUsersPanel
     {
         private static final long serialVersionUID = -1L;
 
+        List<User> userLists = new ArrayList<User>();
         public UserSelectionForm(String id)
         {
             super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
@@ -91,9 +91,9 @@ public class ProjectUsersPanel
                         @Override
                         protected List<User> load()
                         {
-                            Set<User> userSetwithPermissions = projectRepository
+                            userLists =  projectRepository
                                     .listProjectUsersWithPermissions(selectedProject.getObject());
-                            return new ArrayList<User>(userSetwithPermissions);
+                            return userLists;
                         }
                     });
                     setChoiceRenderer(new ChoiceRenderer<User>("username"));
@@ -110,7 +110,8 @@ public class ProjectUsersPanel
                         // Clear old selections
                         permissionLevelDetailForm.setModelObject(null);
                         List<ProjectPermission> projectPermissions = projectRepository
-                                .listProjectPermisionLevel(selectedUser, selectedProject.getObject());
+                                .listProjectPermisionLevel(selectedUser,
+                                        selectedProject.getObject());
                         List<PermissionLevel> levels = new ArrayList<PermissionLevel>();
                         for (ProjectPermission permission : projectPermissions) {
                             levels.add(permission.getLevel());
@@ -136,7 +137,6 @@ public class ProjectUsersPanel
             });
             users.setOutputMarkupId(true).add(new SimpleAttributeModifier("style", "width:100%"));
             users.setMaxRows(15);
-
             add(new Button("addUser", new ResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;
@@ -148,8 +148,7 @@ public class ProjectUsersPanel
 
                 }
             });
-
-            add(new Button("removeUser", new ResourceModel("label"))
+            add( new Button("removeUser", new ResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;
 
@@ -157,22 +156,23 @@ public class ProjectUsersPanel
                 public void onSubmit()
                 {
                     if (selectedUser != null) {
-                    List<ProjectPermission> projectPermissions = projectRepository
-                            .listProjectPermisionLevel(selectedUser, selectedProject.getObject());
-                    for(ProjectPermission projectPermission:projectPermissions){
-                        try {
-                            projectRepository.removeProjectPermission(projectPermission);
+                        List<ProjectPermission> projectPermissions = projectRepository
+                                .listProjectPermisionLevel(selectedUser,
+                                        selectedProject.getObject());
+                        for (ProjectPermission projectPermission : projectPermissions) {
+                            try {
+                                projectRepository.removeProjectPermission(projectPermission);
+                            }
+                            catch (IOException e) {
+                                error("Unable to remove project permission level "
+                                        + ExceptionUtils.getRootCauseMessage(e));
+                            }
                         }
-                        catch (IOException e) {
-                           error("Unable to remove project permission level "+ ExceptionUtils.getRootCauseMessage(e));
-
-                        }
-                    }
+                        userLists.remove(selectedUser);
                     }
                     else {
                         info("No user is selected to remove");
                     }
-
                 }
             });
 
@@ -199,6 +199,8 @@ public class ProjectUsersPanel
     private class SelectionModel
         implements Serializable
     {
+        private static final long serialVersionUID = 9137613222721590389L;
+
         public List<PermissionLevel> permissionLevels = new ArrayList<PermissionLevel>();
         public User user;
     }
@@ -280,7 +282,8 @@ public class ProjectUsersPanel
                 {
                     if (selectedUser != null) {
                         List<ProjectPermission> projectPermissions = projectRepository
-                                .listProjectPermisionLevel(selectedUser, selectedProject.getObject());
+                                .listProjectPermisionLevel(selectedUser,
+                                        selectedProject.getObject());
 
                         // Remove old permissionLevels
                         for (ProjectPermission ExistingProjectPermission : projectPermissions) {
@@ -360,22 +363,34 @@ public class ProjectUsersPanel
                 @Override
                 public void onSubmit()
                 {
+                    if (users.getModelObject() != null) {
+                        for (User user : users.getModelObject()) {
+                            ProjectPermission projectPermission = new ProjectPermission();
+                            projectPermission.setProject(selectedProject.getObject());
+                            projectPermission.setUser(user);
+                            projectPermission.setLevel(PermissionLevel.USER);
+                            try {
+                                projectRepository.createProjectPermission(projectPermission);
+                            }
+                            catch (IOException e) {
+                                error("Unable to write to LOG file "
+                                        + ExceptionUtils.getRootCauseMessage(e));
+                            }
+                            selectedUser = user;
+                        }
+                        SelectionModel userSelectionModel = new SelectionModel();
 
-                    for (User user : users.getModelObject()) {
-                        ProjectPermission projectPermission = new ProjectPermission();
-                        projectPermission.setProject(selectedProject.getObject());
-                        projectPermission.setUser(user);
-                        projectPermission.setLevel(PermissionLevel.USER);
-                        try {
-                            projectRepository.createProjectPermission(projectPermission);
-                        }
-                        catch (IOException e) {
-                            error("Unable to write to LOG file "
-                                    + ExceptionUtils.getRootCauseMessage(e));
-                        }
+                        userSelectionModel.user = selectedUser;
+                        userSelectionModel.permissionLevels.clear();
+                        userSelectionModel.permissionLevels.add(PermissionLevel.USER);
+
+                        userSelectionForm.setModelObject(userSelectionModel);
+                        permissionLevelDetailForm.setModelObject(userSelectionModel);
+                        UserDetailForm.this.setVisible(false);
                     }
-
-                    UserDetailForm.this.setVisible(false);
+                    else {
+                        info("No user is selected");
+                    }
                 }
             });
             add(new Button("cancel")
@@ -402,7 +417,6 @@ public class ProjectUsersPanel
         return "-->" + levels.trim().replace(" ", ",");
     }
 
-    // The first document in the project // auto selected in the first time.
     private User selectedUser;
 
     private ListChoice<User> users;

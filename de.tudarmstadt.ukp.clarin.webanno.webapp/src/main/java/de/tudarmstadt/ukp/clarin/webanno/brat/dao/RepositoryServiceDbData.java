@@ -32,7 +32,6 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -603,15 +602,12 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public Set<User> listProjectUsersWithPermissions(Project aProject)
+    public List<User> listProjectUsersWithPermissions(Project aProject)
     {
 
-        List<User> userList = entityManager
-                .createQuery("SELECT user FROM ProjectPermission WHERE " + "project =:project",
+        return entityManager
+                .createQuery("SELECT DISTINCT user FROM ProjectPermission WHERE " + "project =:project ORDER BY username ASC",
                         User.class).setParameter("project", aProject).getResultList();
-        Set<User> Users = new HashSet<User>(userList);
-
-        return Users;
     }
 
     @Override

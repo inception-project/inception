@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
@@ -546,6 +545,6 @@ public interface RepositoryService
     /**
      * List Users those with some {@link PermissionLevel}s in the project
      */
-    Set<User> listProjectUsersWithPermissions(Project project);
+    List<User> listProjectUsersWithPermissions(Project project);
 
 }
