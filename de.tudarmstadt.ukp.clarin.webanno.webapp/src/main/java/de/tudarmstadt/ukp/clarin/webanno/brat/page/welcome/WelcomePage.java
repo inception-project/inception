@@ -29,9 +29,12 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.page.monitoring.MonitoringPage;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.project.ProjectPage;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+
 /**
- * A home page for WebAnno: <br> Based on the user's permission, it dispplays either {@link ProjectPage},
- * d {@link AnnotationPage}, {@link CurationPage} or {@link monitoringPage }(since v.2.0)
+ * A home page for WebAnno: <br>
+ * Based on the user's permission, it dispplays either {@link ProjectPage}, d {@link AnnotationPage}
+ * , {@link CurationPage} or {@link monitoringPage }(since v.2.0)
+ *
  * @author Richard Eckart de Castilho
  * @author Seid Muhie Yimam
  *
@@ -68,14 +71,13 @@ public class WelcomePage
         };
         for (Project project : projectRepository.listProjects()) {
 
-            if (projectRepository.listProjectUserNames(project).contains(username)
-                    && ApplicationUtils.isProjectAdmin(project, projectRepository, user)) {
+            if (ApplicationUtils.isProjectAdmin(project, projectRepository, user)) {
                 add(projectSettings);
                 projectSettingAdded = true;
                 break;
             }
         }
-        if(ApplicationUtils.isSuperAdmin(projectRepository, user) && !projectSettingAdded){
+        if (ApplicationUtils.isSuperAdmin(projectRepository, user) && !projectSettingAdded) {
             add(projectSettings);
         }
         else if (!projectSettingAdded) {
@@ -100,15 +102,14 @@ public class WelcomePage
         };
         for (Project project : projectRepository.listProjects()) {
 
-            if (projectRepository.listProjectUserNames(project).contains(username)
-                    && ApplicationUtils.isCurator(project, projectRepository, user)) {
+            if (ApplicationUtils.isCurator(project, projectRepository, user)) {
                 add(curation);
                 curatorAdded = true;
                 break;
             }
 
         }
-        if(ApplicationUtils.isSuperAdmin(projectRepository, user) && !projectSettingAdded){
+        if (ApplicationUtils.isSuperAdmin(projectRepository, user) && !projectSettingAdded) {
             add(curation);
         }
         else if (!curatorAdded) {
@@ -132,14 +133,13 @@ public class WelcomePage
         boolean memberAdded = false;
         for (Project project : projectRepository.listProjects()) {
 
-            if (projectRepository.listProjectUserNames(project).contains(username)
-                    && ApplicationUtils.isMember(project, projectRepository, user)) {
+            if (ApplicationUtils.isMember(project, projectRepository, user)) {
                 add(annotation);
                 memberAdded = true;
                 break;
             }
         }
-        if(ApplicationUtils.isSuperAdmin(projectRepository, user) && !projectSettingAdded){
+        if (ApplicationUtils.isSuperAdmin(projectRepository, user) && !projectSettingAdded) {
             add(annotation);
         }
         else if (!memberAdded) {
@@ -171,7 +171,7 @@ public class WelcomePage
                 break;
             }
         }
-        if(ApplicationUtils.isSuperAdmin(projectRepository, user) && !monitoringAdded){
+        if (ApplicationUtils.isSuperAdmin(projectRepository, user) && !monitoringAdded) {
             add(monitoring);
         }
         else if (!monitoringAdded) {
@@ -182,36 +182,25 @@ public class WelcomePage
         }
 
         // adding user management page
-/*
-        boolean usreManagementAdded = false;
-        usremanagement = new AjaxLink<Void>("usremanagement")
-        {
-            private static final long serialVersionUID = 7496156015186497496L;
-
-            @Override
-            public void onClick(AjaxRequestTarget target)
-            {
-                setResponsePage(UserManagementPage.class);
-            }
-        };
-        for (Project project : projectRepository.listProjects()) {
-
-            if (projectRepository.listProjectUserNames(project).contains(username)
-                    && ApplicationUtils.isProjectAdmin(project, projectRepository, user)) {
-                add(usremanagement);
-                usreManagementAdded = true;
-                break;
-            }
-        }
-        if(ApplicationUtils.isSuperAdmin(projectRepository, user) && !usreManagementAdded){
-            add(usremanagement);
-        }
-        else if (!usreManagementAdded) {
-
-            add(usremanagement);
-            usremanagement.setVisible(false);
-
-        }*/
+        /*
+         * boolean usreManagementAdded = false; usremanagement = new
+         * AjaxLink<Void>("usremanagement") { private static final long serialVersionUID =
+         * 7496156015186497496L;
+         *
+         * @Override public void onClick(AjaxRequestTarget target) {
+         * setResponsePage(UserManagementPage.class); } }; for (Project project :
+         * projectRepository.listProjects()) {
+         *
+         * if (projectRepository.listProjectUserNames(project).contains(username) &&
+         * ApplicationUtils.isProjectAdmin(project, projectRepository, user)) { add(usremanagement);
+         * usreManagementAdded = true; break; } }
+         * if(ApplicationUtils.isSuperAdmin(projectRepository, user) && !usreManagementAdded){
+         * add(usremanagement); } else if (!usreManagementAdded) {
+         *
+         * add(usremanagement); usremanagement.setVisible(false);
+         *
+         * }
+         */
     }
 
     private static final long serialVersionUID = -530084892002620197L;

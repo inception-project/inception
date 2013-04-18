@@ -22,6 +22,7 @@ import java.util.StringTokenizer;
 
 import javax.persistence.NoResultException;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -100,7 +101,8 @@ public class ApplicationUtils
             try {
                 List<ProjectPermission> permissionLevels = aProjectRepository.listProjectPermisionLevel(aUser, aProject);
                     for(ProjectPermission permissionLevel:permissionLevels) {
-                        if (permissionLevel.getLevel().equals(PermissionLevel.ADMIN.getName())) {
+                        if(StringUtils.equalsIgnoreCase(permissionLevel.getLevel().getName(),
+                                PermissionLevel.ADMIN.getName())) {
                             projectAdmin = true;
                             break;
                         }
@@ -138,7 +140,8 @@ public class ApplicationUtils
             try {
                 List<ProjectPermission> permissionLevels = aProjectRepository.listProjectPermisionLevel(aUser, aProject);
                     for(ProjectPermission permissionLevel:permissionLevels) {
-                        if (permissionLevel.getLevel().equals(PermissionLevel.CURATOR.getName())) {
+                        if(StringUtils.equalsIgnoreCase(permissionLevel.getLevel().getName(),
+                                PermissionLevel.CURATOR.getName())) {
                             curator = true;
                             break;
                         }
@@ -176,7 +179,8 @@ public class ApplicationUtils
             try {
                 List<ProjectPermission> permissionLevels = aProjectRepository.listProjectPermisionLevel(aUser, aProject);
                     for(ProjectPermission permissionLevel:permissionLevels) {
-                        if (permissionLevel.getLevel().equals(PermissionLevel.USER.getName())) {
+                        if(StringUtils.equalsIgnoreCase(permissionLevel.getLevel().getName(),
+                                PermissionLevel.USER.getName())) {
                             user = true;
                             break;
                         }
