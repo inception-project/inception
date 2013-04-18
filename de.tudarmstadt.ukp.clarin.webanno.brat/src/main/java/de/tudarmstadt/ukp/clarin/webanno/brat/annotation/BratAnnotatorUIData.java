@@ -26,6 +26,28 @@ public class BratAnnotatorUIData{
     private JCas jCas;
     private boolean isGetDocument;
 
+    /**
+     * The annotation type, span or arc value in brat annotation window
+     */
+    private String annotationType;
+    /**
+     * The id of the origin span in arc annotation
+     */
+    private String origin;
+    /**
+     * The id of target span in arc annotation
+     */
+    private String target;
+
+    /**
+     * The starting offset position for the current display window
+     */
+    private int annotationOffsetStart;
+    /**
+     * The end offset position for the current display window
+     */
+    private int annotationOffsetEnd;
+
     public JCas getjCas()
     {
         return jCas;
@@ -46,4 +68,52 @@ public class BratAnnotatorUIData{
         isGetDocument = aIsGetDocument;
     }
 
+    public String getType()
+    {
+        return annotationType;
+    }
+
+    public void setType(String aType)
+    {
+        annotationType = aType;
+    }
+
+    public String getOrigin()
+    {
+        return origin;
+    }
+
+    public void setOrigin(String aOrigin)
+    {
+        origin = aOrigin;
+    }
+
+    public String getTarget()
+    {
+        return target;
+    }
+
+    public void setTarget(String aTarget)
+    {
+        target = aTarget;
+    }
+    public int getAnnotationOffsetStart()
+    {
+        return annotationOffsetStart;
+    }
+
+    public void setAnnotationOffsetStart(int aAnnotationOffsetStart)
+    {
+        annotationOffsetStart = aAnnotationOffsetStart;
+    }
+
+    public int getAnnotationOffsetEnd()
+    {
+        return annotationOffsetEnd;
+    }
+
+    public void setAnnotationOffsetEnd(int aAnnotationOffsetEnd)
+    {
+        annotationOffsetEnd = aAnnotationOffsetEnd;
+    }
 }

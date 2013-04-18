@@ -311,18 +311,18 @@ public class BratAjaxCasController
         throws JsonParseException, JsonMappingException, IOException, UIMAException
     {
 
-        String annotationType = BratAjaxCasUtil.getAnnotationType(aBratAnnotatorModel.getType());
-        String type = BratAjaxCasUtil.getType(aBratAnnotatorModel.getType());
+        String annotationType = BratAjaxCasUtil.getAnnotationType(aUIData.getType());
+        String type = BratAjaxCasUtil.getType(aUIData.getType());
 
         boolean multipleSpan = true;
         if (annotationType.equals(AnnotationType.NAMEDENTITY_PREFIX)) {
             // BratAjaxCasUtil.updateNamedEntity(aBratAnnotatorModel, type, aUIData);
-            SpanAdapter.addSpanAnnotationToCas(aBratAnnotatorModel, type, aUIData,
+            SpanAdapter.addSpanAnnotationToCas(type, aUIData,
                     NamedEntity.class.getName(), "value", multipleSpan);
         }
         else if (annotationType.equals(AnnotationType.POS_PREFIX)) {
             // BratAjaxCasUtil.updatePos(aBratAnnotatorModel, type, aUIData);
-            SpanAdapter.addSpanAnnotationToCas(aBratAnnotatorModel, type, aUIData,
+            SpanAdapter.addSpanAnnotationToCas(type, aUIData,
                     POS.class.getName(), "PosValue", false);
         }
         else if (annotationType.equals(AnnotationType.COREFERENCE_PREFIX)) {
@@ -353,8 +353,8 @@ public class BratAjaxCasController
         throws UIMAException, IOException
     {
 
-        String annotationType = BratAjaxCasUtil.getAnnotationType(aBratAnnotatorModel.getType());
-        String type = BratAjaxCasUtil.getType(aBratAnnotatorModel.getType());
+        String annotationType = BratAjaxCasUtil.getAnnotationType(aUIData.getType());
+        String type = BratAjaxCasUtil.getType(aUIData.getType());
 
         if (annotationType.equals(AnnotationType.POS_PREFIX)) {
             BratAjaxCasUtil.updateDependencyParsing(aBratAnnotatorModel, type, aUIData);
@@ -387,15 +387,15 @@ public class BratAjaxCasController
         throws UIMAException, IOException
     {
 
-        String annotationType = BratAjaxCasUtil.getAnnotationType(aBratAnnotatorModel.getType());
-        String type = BratAjaxCasUtil.getType(aBratAnnotatorModel.getType());
+        String annotationType = BratAjaxCasUtil.getAnnotationType(aUIData.getType());
+        String type = BratAjaxCasUtil.getType(aUIData.getType());
 
         if (annotationType.equals(AnnotationType.POS_PREFIX)) {
             BratAjaxCasUtil.deleteDependencyParsing(aBratAnnotatorModel, type, aUIData);
             // Reverse directions
-            String origin = aBratAnnotatorModel.getOrigin();// swap variable
-            aBratAnnotatorModel.setOrigin(aBratAnnotatorModel.getTarget());
-            aBratAnnotatorModel.setTarget(origin);
+            String origin = aUIData.getOrigin();// swap variable
+            aUIData.setOrigin(aUIData.getTarget());
+            aUIData.setTarget(origin);
             BratAjaxCasUtil.updateDependencyParsing(aBratAnnotatorModel, type, aUIData);
         }
 
@@ -422,16 +422,16 @@ public class BratAjaxCasController
         throws JsonParseException, JsonMappingException, IOException, UIMAException
     {
 
-        String annotationType = BratAjaxCasUtil.getAnnotationType(aBratAnnotatorModel.getType());
-        String type = BratAjaxCasUtil.getType(aBratAnnotatorModel.getType());
+        String annotationType = BratAjaxCasUtil.getAnnotationType(aUIData.getType());
+        String type = BratAjaxCasUtil.getType(aUIData.getType());
 
         if (annotationType.equals(AnnotationType.NAMEDENTITY_PREFIX)) {
             BratAjaxCasUtil.deleteNamedEntity(aUIData.getjCas(), aId);
         }
         else if (annotationType.equals(AnnotationType.COREFERENCE_PREFIX)) {
             BratAjaxCasUtil.deleteCoreferenceType(aUIData.getjCas(), aId, type,
-                    aBratAnnotatorModel.getAnnotationOffsetStart(),
-                    aBratAnnotatorModel.getAnnotationOffsetEnd());
+                    aUIData.getAnnotationOffsetStart(),
+                    aUIData.getAnnotationOffsetEnd());
         }
 
         GetDocumentResponse response = new GetDocumentResponse();
@@ -456,8 +456,8 @@ public class BratAjaxCasController
         throws UIMAException, IOException
     {
 
-        String annotationType = BratAjaxCasUtil.getAnnotationType(aBratAnnotatorModel.getType());
-        String type = BratAjaxCasUtil.getType(aBratAnnotatorModel.getType());
+        String annotationType = BratAjaxCasUtil.getAnnotationType(aUIData.getType());
+        String type = BratAjaxCasUtil.getType(aUIData.getType());
 
         if (annotationType.equals(AnnotationType.POS_PREFIX)) {
             BratAjaxCasUtil.deleteDependencyParsing(aBratAnnotatorModel, type, aUIData);
@@ -495,7 +495,7 @@ public class BratAjaxCasController
         if (aBratAnnotatorModel.isScrollPage() && !aUIData.isGetDocument()) {
             aBratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(
                     aUIData.getjCas(), aBratAnnotatorModel.getSentenceAddress(),
-                    aBratAnnotatorModel.getAnnotationOffsetStart(),
+                    aUIData.getAnnotationOffsetStart(),
                     aBratAnnotatorModel.getProject(), aBratAnnotatorModel.getDocument(),
                     aBratAnnotatorModel.getWindowSize()));
         }

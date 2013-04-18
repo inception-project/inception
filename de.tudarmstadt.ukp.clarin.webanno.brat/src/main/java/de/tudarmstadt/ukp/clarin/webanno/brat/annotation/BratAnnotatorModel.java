@@ -59,26 +59,7 @@ public class BratAnnotatorModel
      * The very first sentence address in its UIMA annotation
      */
     private int firstSentenceAddress;
-    /**
-     * The starting offset position for the current display window
-     */
-    private int annotationOffsetStart;
-    /**
-     * The end offset position for the current display window
-     */
-    private int annotationOffsetEnd;
-    /**
-     * The annotation type, span or arc value in brat annotation window
-     */
-    private String annotationType;
-    /**
-     * The id of the origin span in arc annotation
-     */
-    private String origin;
-    /**
-     * The id of target span in arc annotation
-     */
-    private String target;
+
 
     // Annotation preferences, to be saved in a file system
     /**
@@ -196,56 +177,6 @@ public class BratAnnotatorModel
     public void setScrollPage(boolean aScrollPage)
     {
         scrollPage = aScrollPage;
-    }
-
-    public int getAnnotationOffsetStart()
-    {
-        return annotationOffsetStart;
-    }
-
-    public void setAnnotationOffsetStart(int aAnnotationOffsetStart)
-    {
-        annotationOffsetStart = aAnnotationOffsetStart;
-    }
-
-    public int getAnnotationOffsetEnd()
-    {
-        return annotationOffsetEnd;
-    }
-
-    public void setAnnotationOffsetEnd(int aAnnotationOffsetEnd)
-    {
-        annotationOffsetEnd = aAnnotationOffsetEnd;
-    }
-
-    public String getType()
-    {
-        return annotationType;
-    }
-
-    public void setType(String aType)
-    {
-        annotationType = aType;
-    }
-
-    public String getOrigin()
-    {
-        return origin;
-    }
-
-    public void setOrigin(String aOrigin)
-    {
-        origin = aOrigin;
-    }
-
-    public String getTarget()
-    {
-        return target;
-    }
-
-    public void setTarget(String aTarget)
-    {
-        target = aTarget;
     }
 
 }

@@ -30,7 +30,6 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.uimafit.util.CasUtil;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorUIData;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Offsets;
@@ -86,25 +85,24 @@ public class SpanAdapter
     /**
      * Update the CAS with new/modification of span annotations
      */
-    public static void addSpanAnnotationToCas(BratAnnotatorModel aBratAnnotatorModel,
-            String aValue, BratAnnotatorUIData aUIData, String annotationTypeName,
+    public static void addSpanAnnotationToCas(String aValue, BratAnnotatorUIData aUIData, String annotationTypeName,
             String aFeatureName, boolean aMultipleSpan)
     {
         Map<Integer, Integer> offsets = offsets(aUIData.getjCas());
-        int startAndEnd[] = getTokenStart(offsets, aBratAnnotatorModel.getAnnotationOffsetStart(),
-                aBratAnnotatorModel.getAnnotationOffsetEnd());
+        int startAndEnd[] = getTokenStart(offsets, aUIData.getAnnotationOffsetStart(),
+                aUIData.getAnnotationOffsetEnd());
 
         if (aMultipleSpan) {
-            aBratAnnotatorModel.setAnnotationOffsetStart(startAndEnd[0]);
-            aBratAnnotatorModel.setAnnotationOffsetEnd(startAndEnd[1]);
+            aUIData.setAnnotationOffsetStart(startAndEnd[0]);
+            aUIData.setAnnotationOffsetEnd(startAndEnd[1]);
             updateCas(annotationTypeName, aUIData.getjCas().getCas(), aFeatureName,
-                    aBratAnnotatorModel.getAnnotationOffsetStart(),
-                    aBratAnnotatorModel.getAnnotationOffsetEnd(), aValue);
+                    aUIData.getAnnotationOffsetStart(),
+                    aUIData.getAnnotationOffsetEnd(), aValue);
         }
         else {
             Map<Integer, Integer> splitedTokens = getSplitedTokens(offsets,
-                    aBratAnnotatorModel.getAnnotationOffsetStart(),
-                    aBratAnnotatorModel.getAnnotationOffsetEnd());
+                    aUIData.getAnnotationOffsetStart(),
+                    aUIData.getAnnotationOffsetEnd());
             for (Integer start : splitedTokens.keySet()) {
                 updateCas(annotationTypeName, aUIData.getjCas().getCas(), aFeatureName, start,
                         splitedTokens.get(start), aValue);
