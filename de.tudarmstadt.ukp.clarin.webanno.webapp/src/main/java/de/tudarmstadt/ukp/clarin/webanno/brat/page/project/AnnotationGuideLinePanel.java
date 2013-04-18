@@ -62,13 +62,13 @@ public class AnnotationGuideLinePanel
     private List<FileUpload> uploadedFiles;
     private FileUploadField fileUpload;
 
-    private Project selectedProject;
+    private Model<Project> selectedProjectModel;
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public AnnotationGuideLinePanel(String id, Project aProject)
+    public AnnotationGuideLinePanel(String id, Model<Project> aProjectModel)
     {
         super(id);
-        this.selectedProject = aProject;
+        this.selectedProjectModel = aProjectModel;
         add(fileUpload = new FileUploadField("content", new Model()));
 
         add(new Button("importGuideline", new ResourceModel("label"))
@@ -79,7 +79,7 @@ public class AnnotationGuideLinePanel
             public void onSubmit()
             {
                 uploadedFiles = fileUpload.getFileUploads();
-                Project project = selectedProject;
+                Project project = selectedProjectModel.getObject();
 
                 if (isNotEmpty(uploadedFiles) && project.getId() != 0) {
                     for (FileUpload guidelineFile : uploadedFiles) {
@@ -118,7 +118,7 @@ public class AnnotationGuideLinePanel
                     @Override
                     protected List<String> load()
                     {
-                        Project project = selectedProject;
+                        Project project = selectedProjectModel.getObject();
                         documents.clear();
                         if (project.getId() != 0) {
                             documents.addAll(projectRepository
@@ -137,7 +137,7 @@ public class AnnotationGuideLinePanel
             @Override
             public void onSubmit()
             {
-                Project project = selectedProject;
+                Project project = selectedProjectModel.getObject();
                 for (String document : selectedDocuments) {
                     try {
 

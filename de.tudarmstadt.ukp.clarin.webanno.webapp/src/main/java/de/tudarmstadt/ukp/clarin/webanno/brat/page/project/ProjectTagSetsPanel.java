@@ -100,7 +100,7 @@ public class ProjectTagSetsPanel
                 @Override
                 public void onSubmit()
                 {
-                    if (selectedProject.getId() == 0) {
+                    if (selectedProjectModel.getObject().getId() == 0) {
                         error("Project not yet created. Please save project details first!");
                     }
                     else {
@@ -125,7 +125,7 @@ public class ProjectTagSetsPanel
                         @Override
                         protected List<TagSet> load()
                         {
-                            Project project = selectedProject;
+                            Project project = selectedProjectModel.getObject();
                             if (project.getId() != 0) {
                                 return annotationService.listTagSets(project);
                             }
@@ -183,7 +183,7 @@ public class ProjectTagSetsPanel
                 public void onSubmit()
                 {
                     uploadedFiles = fileUpload.getFileUploads();
-                    Project project = selectedProject;
+                    Project project = selectedProjectModel.getObject();
                     String username = SecurityContextHolder.getContext().getAuthentication()
                             .getName();
                     User user = projectRepository.getUser(username);
@@ -305,7 +305,7 @@ public class ProjectTagSetsPanel
                     if (tagSet.getId() == 0) {
                         try {
                             annotationService.getTagSet(tagSet.getType(),
-                                    selectedProject);
+                                    selectedProjectModel.getObject());
                             error("Only one tagset per type per project is allowed!");
                         }
                         catch (NoResultException ex) {
@@ -314,7 +314,7 @@ public class ProjectTagSetsPanel
                                     .getAuthentication().getName();
                             User user = projectRepository.getUser(username);
 
-                            tagSet.setProject(selectedProject);
+                            tagSet.setProject(selectedProjectModel.getObject());
                             try {
                                 annotationService.createTagSet(tagSet, user);
                             }
@@ -358,7 +358,7 @@ public class ProjectTagSetsPanel
                 public void onSubmit()
                 {
                     uploadedFiles = fileUpload.getFileUploads();
-                    Project project = selectedProject;
+                    Project project = selectedProjectModel.getObject();
 
                     if (isNotEmpty(uploadedFiles)) {
                         for (FileUpload tagFile : uploadedFiles) {
@@ -433,7 +433,7 @@ public class ProjectTagSetsPanel
                         error("Unable to create temporary File!!");
 
                     }
-                    if (selectedProject.getId() == 0) {
+                    if (selectedProjectModel.getObject().getId() == 0) {
                         error("Project not yet created. Please save project details first!");
                     }
                     else {
@@ -618,12 +618,12 @@ public class ProjectTagSetsPanel
     private List<FileUpload> uploadedFiles;
     private FileUploadField fileUpload;
 
-   private Project selectedProject;
+    private Model<Project> selectedProjectModel;
 
-    public ProjectTagSetsPanel(String id, Project aProject)
+    public ProjectTagSetsPanel(String id, Model<Project> aProjectModel)
     {
         super(id);
-        this.selectedProject = aProject;
+        this.selectedProjectModel = aProjectModel;
         tagSetSelectionForm = new TagSetSelectionForm("tagSetSelectionForm");
 
         tagSelectionForm = new TagSelectionForm("tagSelectionForm");

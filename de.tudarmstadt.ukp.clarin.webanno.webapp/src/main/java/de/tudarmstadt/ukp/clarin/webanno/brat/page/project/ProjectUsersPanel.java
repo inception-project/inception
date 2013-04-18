@@ -92,7 +92,7 @@ public class ProjectUsersPanel
                         protected List<User> load()
                         {
                             Set<User> userSetwithPermissions = projectRepository
-                                    .listProjectUsersWithPermissions(selectedProject);
+                                    .listProjectUsersWithPermissions(selectedProject.getObject());
                             return new ArrayList<User>(userSetwithPermissions);
                         }
                     });
@@ -110,7 +110,7 @@ public class ProjectUsersPanel
                         // Clear old selections
                         permissionLevelDetailForm.setModelObject(null);
                         List<ProjectPermission> projectPermissions = projectRepository
-                                .listProjectPermisionLevel(selectedUser, selectedProject);
+                                .listProjectPermisionLevel(selectedUser, selectedProject.getObject());
                         List<PermissionLevel> levels = new ArrayList<PermissionLevel>();
                         for (ProjectPermission permission : projectPermissions) {
                             levels.add(permission.getLevel());
@@ -158,7 +158,7 @@ public class ProjectUsersPanel
                 {
                     if (selectedUser != null) {
                     List<ProjectPermission> projectPermissions = projectRepository
-                            .listProjectPermisionLevel(selectedUser, selectedProject);
+                            .listProjectPermisionLevel(selectedUser, selectedProject.getObject());
                     for(ProjectPermission projectPermission:projectPermissions){
                         try {
                             projectRepository.removeProjectPermission(projectPermission);
@@ -219,8 +219,8 @@ public class ProjectUsersPanel
                 {
                     List<IModel> models = new ArrayList<IModel>();
                     for (User user : projectRepository
-                            .listProjectUsersWithPermissions(selectedProject)) {
-                        models.add(new Model(getPermissinLevel(user, selectedProject)));
+                            .listProjectUsersWithPermissions(selectedProject.getObject())) {
+                        models.add(new Model(getPermissinLevel(user, selectedProject.getObject())));
                     }
                     return models.iterator();
                 }
@@ -280,7 +280,7 @@ public class ProjectUsersPanel
                 {
                     if (selectedUser != null) {
                         List<ProjectPermission> projectPermissions = projectRepository
-                                .listProjectPermisionLevel(selectedUser, selectedProject);
+                                .listProjectPermisionLevel(selectedUser, selectedProject.getObject());
 
                         // Remove old permissionLevels
                         for (ProjectPermission ExistingProjectPermission : projectPermissions) {
@@ -297,11 +297,11 @@ public class ProjectUsersPanel
                         for (PermissionLevel level : PermissionLevelDetailForm.this
                                 .getModelObject().permissionLevels) {
                             if (!projectRepository.existProjectPermissionLevel(selectedUser,
-                                    selectedProject, level)) {
+                                    selectedProject.getObject(), level)) {
                                 ProjectPermission projectPermission = new ProjectPermission();
                                 projectPermission.setLevel(level);
                                 projectPermission.setUser(selectedUser);
-                                projectPermission.setProject(selectedProject);
+                                projectPermission.setProject(selectedProject.getObject());
                                 try {
                                     projectRepository.createProjectPermission(projectPermission);
                                 }
@@ -348,7 +348,7 @@ public class ProjectUsersPanel
                         {
                             List<User> allUSers = projectRepository.listUsers();
                             allUSers.removeAll(projectRepository
-                                    .listProjectUsersWithPermissions(selectedProject));
+                                    .listProjectUsersWithPermissions(selectedProject.getObject()));
                             return allUSers;
                         }
                     }, new ChoiceRenderer<User>("username", "username")));
@@ -363,7 +363,7 @@ public class ProjectUsersPanel
 
                     for (User user : users.getModelObject()) {
                         ProjectPermission projectPermission = new ProjectPermission();
-                        projectPermission.setProject(selectedProject);
+                        projectPermission.setProject(selectedProject.getObject());
                         projectPermission.setUser(user);
                         projectPermission.setLevel(PermissionLevel.USER);
                         try {
@@ -414,9 +414,9 @@ public class ProjectUsersPanel
     private PermissionLevelDetailForm permissionLevelDetailForm;
     private UserDetailForm userDetailForm;
 
-    private Project selectedProject;
+    private Model<Project> selectedProject;
 
-    public ProjectUsersPanel(String id, Project aProject)
+    public ProjectUsersPanel(String id, Model<Project> aProject)
     {
         super(id);
         this.selectedProject = aProject;

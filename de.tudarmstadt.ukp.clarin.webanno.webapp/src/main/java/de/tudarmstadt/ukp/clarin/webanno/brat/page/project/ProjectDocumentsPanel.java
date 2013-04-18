@@ -68,14 +68,14 @@ public class ProjectDocumentsPanel
 
     private ArrayList<String> readableFormats;
     private String selectedFormat;
-    private Project selectedProject;
+    private Model<Project> selectedProjectModel;
     private DropDownChoice<String> readableFormatsChoice;
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public ProjectDocumentsPanel(String id, Project aProject)
+    public ProjectDocumentsPanel(String id, Model<Project> aProjectModel)
     {
         super(id);
-        this.selectedProject = aProject;
+        this.selectedProjectModel = aProjectModel;
         try {
             readableFormats = new ArrayList<String>(projectRepository.getReadableFormats().keySet());
             selectedFormat = readableFormats.get(0);
@@ -101,7 +101,7 @@ public class ProjectDocumentsPanel
             public void onSubmit()
             {
                 uploadedFiles = fileUpload.getFileUploads();
-                Project project = selectedProject;
+                Project project = selectedProjectModel.getObject();
 
                 if (isNotEmpty(uploadedFiles)) {
                     for (FileUpload documentToUpload : uploadedFiles) {
@@ -162,7 +162,7 @@ public class ProjectDocumentsPanel
                     @Override
                     protected List<String> load()
                     {
-                        Project project = selectedProject;
+                        Project project = selectedProjectModel.getObject();
                         documents.clear();
                         if (project.getId() != 0) {
                             for (SourceDocument document : projectRepository
@@ -183,7 +183,7 @@ public class ProjectDocumentsPanel
             @Override
             public void onSubmit()
             {
-                Project project = selectedProject;
+                Project project = selectedProjectModel.getObject();
                 for (String document : selectedDocuments) {
                     try {
                         String username = SecurityContextHolder.getContext().getAuthentication()

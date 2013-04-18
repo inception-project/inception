@@ -158,15 +158,8 @@ public class ProjectPage
                 {
                     if (aNewSelection != null) {
                         createProject = false;
-                        int selectedTab = projectDetailForm.allTabs.getSelectedTab();
-                        if(selectedTab<0) {
-                            selectedTab=0;
-                        }
-                        updateProjectDetailForm();
                         projectDetailForm.setModelObject(aNewSelection);
                         projectDetailForm.setVisible(true);
-                        projectDetailForm.allTabs.setSelectedTab(selectedTab);
-
                         ProjectSelectionForm.this.setVisible(true);
                     }
                 }
@@ -186,12 +179,6 @@ public class ProjectPage
         }
     }
 
-    private void updateProjectDetailForm(){
-        remove(projectDetailForm);
-        projectDetailForm = new ProjectDetailForm("projectDetailForm");
-        //projectDetailForm.ge
-        add(projectDetailForm);
-    }
     static private class SelectionModel
         implements Serializable
     {
@@ -245,7 +232,7 @@ public class ProjectPage
                 @Override
                 public Panel getPanel(String panelId)
                 {
-                    return new ProjectUsersPanel(panelId, projectDetailForm.getModelObject());
+                    return new ProjectUsersPanel(panelId, project);
                 }
 
                 @Override
@@ -266,7 +253,7 @@ public class ProjectPage
                 @Override
                 public Panel getPanel(String panelId)
                 {
-                    return new ProjectDocumentsPanel(panelId, projectDetailForm.getModelObject());
+                    return new ProjectDocumentsPanel(panelId, project);
                 }
 
                 @Override
@@ -287,7 +274,7 @@ public class ProjectPage
                 @Override
                 public Panel getPanel(String panelId)
                 {
-                    return new ProjectTagSetsPanel(panelId, projectDetailForm.getModelObject());
+                    return new ProjectTagSetsPanel(panelId, project);
                 }
 
                 @Override
@@ -308,7 +295,7 @@ public class ProjectPage
                 @Override
                 public Panel getPanel(String panelId)
                 {
-                    return new AnnotationGuideLinePanel(panelId, projectDetailForm.getModelObject());
+                    return new AnnotationGuideLinePanel(panelId, project);
                 }
 
                 @Override
@@ -325,6 +312,20 @@ public class ProjectPage
             add(allTabs = new AjaxTabbedPanel("tabs", tabs));
             ProjectDetailForm.this.setMultiPart(true);
         }
+
+        // Update the project mode, that will be shared among TABS
+        // Better way of sharing data
+        // http://stackoverflow.com/questions/6532178/wicket-persistent-object-between-panels
+        Model<Project> project = new Model<Project>()
+        {
+            private static final long serialVersionUID = -6394439155356911110L;
+
+            @Override
+            public Project getObject()
+            {
+                return projectDetailForm.getModelObject();
+            }
+        };
     }
 
     private ProjectSelectionForm projectSelectionForm;
