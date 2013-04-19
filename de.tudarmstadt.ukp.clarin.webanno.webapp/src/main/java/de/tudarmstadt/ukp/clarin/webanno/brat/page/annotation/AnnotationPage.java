@@ -103,8 +103,8 @@ public class AnnotationPage
         add(openDocumentsModal = new ModalWindow("openDocumentsModal"));
         openDocumentsModal.setOutputMarkupId(true);
 
-        openDocumentsModal.setInitialWidth(350);
-        openDocumentsModal.setInitialHeight(250);
+        openDocumentsModal.setInitialWidth(500);
+        openDocumentsModal.setInitialHeight(300);
         openDocumentsModal.setResizable(true);
         openDocumentsModal.setWidthUnit("px");
         openDocumentsModal.setHeightUnit("px");

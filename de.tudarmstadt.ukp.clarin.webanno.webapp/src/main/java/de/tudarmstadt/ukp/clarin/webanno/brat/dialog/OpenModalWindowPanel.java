@@ -25,7 +25,6 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
-import org.apache.wicket.behavior.SimpleAttributeModifier;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.html.WebComponent;
@@ -37,6 +36,7 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.odlabs.wiquery.ui.resizable.ResizableBehavior;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
@@ -155,8 +155,7 @@ public class OpenModalWindowPanel
                     selectedDocument = null;
                     aTarget.add(documents.setOutputMarkupId(true));
                 }
-            }).add(new SimpleAttributeModifier("style",
-                    "color:green; font-weight:bold;background-color:white; width:150px"));
+            }).add(new ResizableBehavior());
 
             /*
              * add(new StaticImage("icon", new
@@ -294,9 +293,7 @@ public class OpenModalWindowPanel
                             openDataModel.setDocument(selectedDocument);
                             modalWindow.close(aTarget);
                         }
-                    })
-                    .add(new SimpleAttributeModifier("style",
-                            "color:black; font-weight:bold;width:150px"));
+                    }).add(new ResizableBehavior());
         }
     }
 
