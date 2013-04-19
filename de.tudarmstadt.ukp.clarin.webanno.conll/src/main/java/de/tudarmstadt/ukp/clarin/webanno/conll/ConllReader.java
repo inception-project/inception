@@ -189,13 +189,18 @@ public class ConllReader
             Sentence outSentence = new Sentence(aJCas);
             // Only last sentence, and no the only sentence in the document (i!=0)
             if (i == firstTokenInSentence.size() - 1 && i != 0) {
-                outSentence.setBegin(tokensStored.get("t_" + firstTokenInSentence.get(i))
-                        .getEnd());
+                outSentence.setBegin(tokensStored.get("t_" + firstTokenInSentence.get(i)).getEnd());
                 outSentence.setEnd(tokensStored.get("t_" + (tokensStored.size())).getEnd());
                 outSentence.addToIndexes();
                 break;
             }
-            if (i == 0) {
+            if (i == firstTokenInSentence.size() - 1 && i == 0) {
+                outSentence.setBegin(tokensStored.get("t_" + firstTokenInSentence.get(i))
+                        .getBegin());
+                outSentence.setEnd(tokensStored.get("t_" +(tokensStored.size())).getEnd());
+                outSentence.addToIndexes();
+            }
+            else if (i == 0) {
                 outSentence.setBegin(tokensStored.get("t_" + firstTokenInSentence.get(i))
                         .getBegin());
                 outSentence.setEnd(tokensStored.get("t_" + firstTokenInSentence.get(i + 1))
