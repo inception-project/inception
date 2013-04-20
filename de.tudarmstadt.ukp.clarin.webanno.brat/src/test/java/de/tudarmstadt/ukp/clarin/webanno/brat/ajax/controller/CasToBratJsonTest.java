@@ -38,7 +38,6 @@ import org.uimafit.factory.CollectionReaderFactory;
 import org.uimafit.factory.JCasFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.CasToBratJson;
@@ -50,9 +49,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.tcf.TcfReader;
-import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
-import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import eu.clarin.weblicht.wlfxb.io.WLFormatException;
 import eu.clarin.weblicht.wlfxb.tc.xb.TextCorpusLayerTag;
 
@@ -222,13 +218,12 @@ public class CasToBratJsonTest
 
         casToBratJson.addTokenToResponse(jCas, response, bratannotatorModel);
         casToBratJson.addSentenceToResponse(jCas, response, bratannotatorModel);
-        SpanAdapter.addSpanAnnotationToResponse(jCas, response, bratannotatorModel,
-                POS.class.getName(), AnnotationTypeConstant.POS_PREFIX, AnnotationTypeConstant.POS_FEATURENAME);
+        
+        SpanAdapter.getPosAdapter().addToBrat(jCas, response, bratannotatorModel);
         casToBratJson.addCorefTypeToResponse(jCas, response, bratannotatorModel);
-        SpanAdapter.addSpanAnnotationToResponse(jCas, response, bratannotatorModel,
-                Lemma.class.getName(), "", AnnotationTypeConstant.LEMMA_FEATURENAME);
-        SpanAdapter.addSpanAnnotationToResponse(jCas, response, bratannotatorModel,
-                NamedEntity.class.getName(), AnnotationTypeConstant.NAMEDENTITY_PREFIX, AnnotationTypeConstant.NAMEDENTITY_FEATURENAME);
+
+        SpanAdapter.getLemmaAdapter().addToBrat(jCas, response, bratannotatorModel);
+        SpanAdapter.getNamedEntityAdapter().addToBrat(jCas, response, bratannotatorModel);
         casToBratJson.addDependencyParsingToResponse(jCas, response, bratannotatorModel, false);
         casToBratJson.addCoreferenceToResponse(jCas, response, bratannotatorModel);
 

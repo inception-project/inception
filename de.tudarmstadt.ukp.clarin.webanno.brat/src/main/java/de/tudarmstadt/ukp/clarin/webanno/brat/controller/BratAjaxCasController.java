@@ -66,7 +66,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
@@ -315,16 +314,11 @@ public class BratAjaxCasController
         String annotationType = BratAjaxCasUtil.getAnnotationType(aUIData.getType());
         String type = BratAjaxCasUtil.getType(aUIData.getType());
 
-        boolean multipleSpan = true;
         if (annotationType.equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)) {
-            // BratAjaxCasUtil.updateNamedEntity(aBratAnnotatorModel, type, aUIData);
-            SpanAdapter.addSpanAnnotationToCas(type, aUIData, NamedEntity.class.getName(), "value",
-                    multipleSpan);
+            SpanAdapter.getNamedEntityAdapter().addToCas(type, aUIData);
         }
         else if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
-            // BratAjaxCasUtil.updatePos(aBratAnnotatorModel, type, aUIData);
-            SpanAdapter.addSpanAnnotationToCas(type, aUIData, POS.class.getName(), "PosValue",
-                    false);
+            SpanAdapter.getPosAdapter().addToCas(type, aUIData);
         }
         else if (annotationType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
             BratAjaxCasUtil.updateCoreferenceType(aBratAnnotatorModel, type, aUIData);
@@ -504,24 +498,20 @@ public class BratAjaxCasController
         casToBratJson.addSentenceToResponse(aUIData.getjCas(), aResponse, aBratAnnotatorModel);
 
         if (annotationLayers.contains(AnnotationTypeConstant.POS)) {
-            SpanAdapter.addSpanAnnotationToResponse(aUIData.getjCas(), aResponse,
-                    aBratAnnotatorModel, POS.class.getName(), AnnotationTypeConstant.POS_PREFIX,
-                    AnnotationTypeConstant.POS_FEATURENAME);
+            SpanAdapter.getPosAdapter().addToBrat(aUIData.getjCas(), aResponse,
+                    aBratAnnotatorModel);
         }
 
         if (annotationLayers.contains(AnnotationTypeConstant.COREFRELTYPE)) {
             casToBratJson.addCorefTypeToResponse(aUIData.getjCas(), aResponse, aBratAnnotatorModel);
         }
         if (aBratAnnotatorModel.isDisplayLemmaSelected()) {
-            SpanAdapter.addSpanAnnotationToResponse(aUIData.getjCas(), aResponse,
-                    aBratAnnotatorModel, Lemma.class.getName(), "",
-                    AnnotationTypeConstant.LEMMA_FEATURENAME);
+            SpanAdapter.getLemmaAdapter().addToBrat(aUIData.getjCas(), aResponse,
+                    aBratAnnotatorModel);
         }
         if (annotationLayers.contains(AnnotationTypeConstant.NAMEDENTITY)) {
-            SpanAdapter.addSpanAnnotationToResponse(aUIData.getjCas(), aResponse,
-                    aBratAnnotatorModel, NamedEntity.class.getName(),
-                    AnnotationTypeConstant.NAMEDENTITY_PREFIX,
-                    AnnotationTypeConstant.NAMEDENTITY_FEATURENAME);
+            SpanAdapter.getNamedEntityAdapter().addToBrat(aUIData.getjCas(), 
+            		aResponse, aBratAnnotatorModel);
         }
         if (annotationLayers.contains(AnnotationTypeConstant.DEPENDENCY)
                 && annotationLayers.contains(AnnotationTypeConstant.POS)) {

@@ -392,13 +392,10 @@ public class CurationPanel extends Panel {
 
         casToBratJson.addTokenToResponse(jCas, response, bratAnnotatorModel);
         casToBratJson.addSentenceToResponse(jCas, response, bratAnnotatorModel);
-        SpanAdapter.addSpanAnnotationToResponse(jCas, response, bratAnnotatorModel, POS.class.getName(),
-                AnnotationTypeConstant.POS_PREFIX, AnnotationTypeConstant.POS_FEATURENAME);
+        SpanAdapter.getPosAdapter().addToBrat(jCas, response, bratAnnotatorModel);
         casToBratJson.addCorefTypeToResponse(jCas, response, bratAnnotatorModel);
-        SpanAdapter.addSpanAnnotationToResponse(jCas, response, bratAnnotatorModel, Lemma.class.getName(),
-                "", AnnotationTypeConstant.LEMMA_FEATURENAME);
-        SpanAdapter.addSpanAnnotationToResponse(jCas, response, bratAnnotatorModel, NamedEntity.class.getName(),
-                AnnotationTypeConstant.NAMEDENTITY_PREFIX, AnnotationTypeConstant.NAMEDENTITY_FEATURENAME);
+        SpanAdapter.getLemmaAdapter().addToBrat(jCas, response, bratAnnotatorModel);
+        SpanAdapter.getNamedEntityAdapter().addToBrat(jCas, response, bratAnnotatorModel);
         casToBratJson.addDependencyParsingToResponse(jCas, response, bratAnnotatorModel,false);
         casToBratJson.addCoreferenceToResponse(jCas, response, bratAnnotatorModel);
 

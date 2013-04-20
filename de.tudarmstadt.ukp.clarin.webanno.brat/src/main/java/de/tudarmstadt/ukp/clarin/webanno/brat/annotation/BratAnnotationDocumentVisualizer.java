@@ -34,9 +34,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.CasToBratJson;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
-import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 
 /**
  * Displays a BRAT visualisation and fills it with data from an {@link AnnotationDocument}. We do
@@ -151,16 +148,12 @@ public class BratAnnotationDocumentVisualizer
         casToBratJson.addTokenToResponse(jCas, response, bratAnnotatorDataModel);
         casToBratJson.addSentenceToResponse(jCas, response, bratAnnotatorDataModel);
         // If POS annotation exist in CAS TODO
-        SpanAdapter.addSpanAnnotationToResponse(jCas, response, bratAnnotatorDataModel,
-                POS.class.getName(), AnnotationTypeConstant.POS_PREFIX, AnnotationTypeConstant.POS_FEATURENAME);
+        SpanAdapter.getPosAdapter().addToBrat(jCas, response, bratAnnotatorDataModel);
         casToBratJson.addCorefTypeToResponse(jCas, response, bratAnnotatorDataModel);
         // If Lemma Layer Exist in CAS TODO
-        SpanAdapter.addSpanAnnotationToResponse(jCas, response, bratAnnotatorDataModel,
-                Lemma.class.getName(), "", AnnotationTypeConstant.LEMMA_FEATURENAME);
+        SpanAdapter.getLemmaAdapter().addToBrat(jCas, response, bratAnnotatorDataModel);
         // IF Named Entity layer exist in CAS TODO
-        SpanAdapter.addSpanAnnotationToResponse(jCas, response, bratAnnotatorDataModel,
-                NamedEntity.class.getName(), AnnotationTypeConstant.NAMEDENTITY_PREFIX,
-                AnnotationTypeConstant.NAMEDENTITY_FEATURENAME);
+        SpanAdapter.getNamedEntityAdapter().addToBrat(jCas, response, bratAnnotatorDataModel);
         casToBratJson.addDependencyParsingToResponse(jCas, response, bratAnnotatorDataModel,
                 bratAnnotatorDataModel.getProject().isReverseDependencyDirection());
         casToBratJson.addCoreferenceToResponse(jCas, response, bratAnnotatorDataModel);
