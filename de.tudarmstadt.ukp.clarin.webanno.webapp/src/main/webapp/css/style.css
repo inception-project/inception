@@ -173,11 +173,19 @@ select.hfill[multiple] {
 	vertical-align: middle;
 	background-color: #4D4D4D;
 	color: yellow;
-	margin-bottom: 20px;
 }
 
 .menubar a {
 	color: yellow;
+}
+
+.actionbar {
+    text-align: center;
+    background-color: #DFDFDF;
+    vertical-align: middle;
+    box-shadow: 0px 0px 5px 5px #DFDFDF;
+    margin-top: 8px;
+    margin-bottom: 8px;
 }
 
 /* -------------------------------------------------------------------------------------------------
@@ -186,17 +194,21 @@ select.hfill[multiple] {
 
 /* Use for a horizontal list of icons */
 ul.horizontal {
-	
+	margin: 0px;
 }
 
 ul.horizontal li {
+	margin-left: 0.5em;
+	margin-right: 0.5em;
 	display: inline-block;
+	text-align: center;
 }
 
-/* Caption of the icon */
+/* Caption of the icon 
 ul.horizontal li div {
 	text-align: center;
 }
+*/
 
 /* -------------------------------------------------------------------------------------------------
  * Info panel
@@ -504,3 +516,4 @@ div.tabpanel div.tab-row a:hover {
 	text-align: center;
 	
 }
+

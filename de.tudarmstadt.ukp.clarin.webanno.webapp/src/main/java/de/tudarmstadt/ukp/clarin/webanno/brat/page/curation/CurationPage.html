@@ -6,37 +6,30 @@
   either express or implied. # See the License for the specific language governing permissions and # limitations under
   the License. #
 -->
-<html xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.5-strict.dtd">
+<html
+	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.5-strict.dtd">
 <head>
 <wicket:head>
 	<script type="text/javascript" src="client/lib/jquery.min.js"></script>
 </wicket:head>
 </head>
-  <body>
-    <wicket:extend>
-      <div wicket:id=openDocumentsModal>
-      </div>
-      <div wicket:id=yesNoModal>
-      </div>
-      <div style="border-top:3px solid green; border-bottom: 3px solid green; margin: 0px auto;text-align: center;">
-        <ul class="horizontal">
-          <li>
-          <a wicket:id="showOpenDocumentModal" id="showOpenDocumentModal" style="padding-left:3em display: none;">
-            <img src="images/drawer_open.png" style="width:40px;height:40px" title="Open Document" />
-          </a>
-        </li>
-        <li>
-        <a wicket:id="showYesNoModal" style="padding-left:3em" >
-          <img src="images/stopwatch_finish.png" style="width:40px;height:40px" title="Finish Annotation" />
-        </a>
-      </li>
-    </ul>
-  </div>
-  <div wicket:id="curationPanel" />
-  <!--
-    <a wicket:id="reload1" href="#">Load a random document...</a> <div class="hfill" wicket:id="embedder1"></div> <a
-    wicket:id="reload2" href="#">Load a random document...</a> <div class="hfill" wicket:id="embedder2"></div>
-  -->
-</wicket:extend>
+<body>
+	<wicket:extend>
+		<div wicket:id=openDocumentsModal></div>
+		<div wicket:id=yesNoModal></div>
+		<div class="actionbar">
+			<ul class="horizontal">
+				<li><a wicket:id="showOpenDocumentModal"
+					id="showOpenDocumentModal"> <img src="images/drawer_open.png"
+						title="Open" /><br />Open
+				</a></li>
+			
+				<li><a wicket:id="showYesNoModal"> <img
+						src="images/accept.png" title="Done" /><br />Done
+				</a></li>
+			</ul>
+		</div>
+		<div wicket:id="curationPanel"></div>
+	</wicket:extend>
 </body>
 </html>
