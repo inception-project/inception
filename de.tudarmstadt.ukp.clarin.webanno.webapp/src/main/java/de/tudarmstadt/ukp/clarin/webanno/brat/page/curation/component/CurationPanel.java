@@ -28,7 +28,6 @@ import java.util.Set;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.jcas.JCas;
@@ -54,8 +53,10 @@ import org.uimafit.util.CasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationType;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.CasToBratJson;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.AnnotationOption;
@@ -101,7 +102,7 @@ public class CurationPanel extends Panel {
      * the value contains the username from which the span has been selected
      */
     private Set<AnnotationSelection> changes = new HashSet<AnnotationSelection>();
-    
+
     private Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress = new HashMap<String, Map<Integer,AnnotationSelection>>();
 
     private ListView<CurationUserSegment2> curationListView;
@@ -161,15 +162,15 @@ public class CurationPanel extends Panel {
 		                	String username = curationUserSegment.getUsername();
 		                    Integer address = request.getParameterValue("id").toInteger();
 		                    AnnotationSelection annotationSelection = annotationSelectionByUsernameAndAddress.get(username).get(address);
-		                    
+
 		                    if(annotationSelection != null) {
 		                    	boolean addAnnotationSelection = !changes.contains(annotationSelection);
-		                    	
+
 		                    	// remove old annotation selections (if present)
 		                    	for (AnnotationSelection as : annotationSelection.getAnnotationOption().getAnnotationSelections()) {
 		                    		changes.remove(as);
 		                    	}
-		                    	
+
 		                    	// add new annotation selection
 		                    	if(addAnnotationSelection) {
 		                    		changes.add(annotationSelection);
@@ -243,7 +244,7 @@ public class CurationPanel extends Panel {
 				jCases.put(username, jCas);
 				mergeAnnotationDocument = annotationDocument;
 				mergeAnnotationDocumentUsername = username;
-				
+
 				// cleanup annotationSelections
 				annotationSelectionByUsernameAndAddress.put(username, new HashMap<Integer, AnnotationSelection>());
 			} catch (Exception e) {
@@ -290,7 +291,7 @@ public class CurationPanel extends Panel {
 				for (String username : annotationSelection.getAddressByUsername().keySet()) {
 					Integer address = annotationSelection.getAddressByUsername().get(username);
 					annotationSelectionByUsernameAndAddress.get(username).put(address, annotationSelection);
-					
+
 					// removing disagreeing feature structures in mergeJCas
 					if(removeFS && username.equals(mergeAnnotationDocumentUsername) && address != null) {
 						FeatureStructure fs = mergeJCas.getLowLevelCas().ll_getFSForRef(address);
@@ -298,11 +299,11 @@ public class CurationPanel extends Panel {
 							mergeJCas.getCas().removeFsFromIndexes(fs);
 						}
 					}
-					
+
 				}
 			}
 		}
-		
+
 		// add clicked spans to mergeJCas
 		for (AnnotationSelection change : changes) {
 			String username = null;
@@ -320,7 +321,7 @@ public class CurationPanel extends Panel {
 		}
 
 		List<CurationUserSegment2> sentences = new LinkedList<CurationUserSegment2>();
-		
+
 		boolean hasDiff = false;
 		for (String username : jCases.keySet()) {
 			Map<Integer, AnnotationSelection> annotationSelectionByAddress = new HashMap<Integer, AnnotationSelection>();
@@ -376,24 +377,30 @@ public class CurationPanel extends Panel {
         response.setText(jCas.getDocumentText());
 
         List<String> tagSetNames = new ArrayList<String>();
-        tagSetNames.add(AnnotationType.POS);
-        tagSetNames.add(AnnotationType.DEPENDENCY);
-        tagSetNames.add(AnnotationType.NAMEDENTITY);
-        tagSetNames.add(AnnotationType.COREFERENCE);
-        tagSetNames.add(AnnotationType.COREFRELTYPE);
+        tagSetNames.add(AnnotationTypeConstant.POS);
+        tagSetNames.add(AnnotationTypeConstant.DEPENDENCY);
+        tagSetNames.add(AnnotationTypeConstant.NAMEDENTITY);
+        tagSetNames.add(AnnotationTypeConstant.COREFERENCE);
+        tagSetNames.add(AnnotationTypeConstant.COREFRELTYPE);
 
-        CasToBratJson casToBratJson = new CasToBratJson(
-                curationSegment.getSentenceAddress(),
-                curationSegment.getSentenceAddress(),1, tagSetNames);
+        CasToBratJson casToBratJson = new CasToBratJson();
 
-        casToBratJson.addTokenToResponse(jCas, response);
-        casToBratJson.addSentenceToResponse(jCas, response);
-        casToBratJson.addPosToResponse(jCas, response);
-        casToBratJson.addCorefTypeToResponse(jCas, response);
-        casToBratJson.addLemmaToResponse(jCas, response);
-        casToBratJson.addNamedEntityToResponse(jCas, response);
-        casToBratJson.addDependencyParsingToResponse(jCas, response);
-        casToBratJson.addCoreferenceToResponse(jCas, response);
+        BratAnnotatorModel bratAnnotatorModel = new  BratAnnotatorModel();
+        bratAnnotatorModel.setSentenceAddress(curationSegment.getSentenceAddress());
+        bratAnnotatorModel.setLastSentenceAddress(curationSegment.getSentenceAddress());
+        bratAnnotatorModel.setWindowSize(1);
+
+        casToBratJson.addTokenToResponse(jCas, response, bratAnnotatorModel);
+        casToBratJson.addSentenceToResponse(jCas, response, bratAnnotatorModel);
+        SpanAdapter.addSpanAnnotationToResponse(jCas, response, bratAnnotatorModel, POS.class.getName(),
+                AnnotationTypeConstant.POS_PREFIX, AnnotationTypeConstant.POS_FEATURENAME);
+        casToBratJson.addCorefTypeToResponse(jCas, response, bratAnnotatorModel);
+        SpanAdapter.addSpanAnnotationToResponse(jCas, response, bratAnnotatorModel, Lemma.class.getName(),
+                "", AnnotationTypeConstant.LEMMA_FEATURENAME);
+        SpanAdapter.addSpanAnnotationToResponse(jCas, response, bratAnnotatorModel, NamedEntity.class.getName(),
+                AnnotationTypeConstant.NAMEDENTITY_PREFIX, AnnotationTypeConstant.NAMEDENTITY_FEATURENAME);
+        casToBratJson.addDependencyParsingToResponse(jCas, response, bratAnnotatorModel,false);
+        casToBratJson.addCoreferenceToResponse(jCas, response, bratAnnotatorModel);
 
         /*
         try {

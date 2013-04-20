@@ -30,6 +30,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.uimafit.util.CasUtil;
 
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorUIData;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Offsets;
@@ -38,7 +39,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
- * A class that is used to create Brat Span to Cas and vice-versa
+ * A class that is used to create Brat Span to CAS and vice-versa
+ *
  * @author Seid Muhie Yimam
  *
  */
@@ -46,16 +48,17 @@ public class SpanAdapter
 {
 
     public static void addSpanAnnotationToResponse(JCas aJcas, GetDocumentResponse aResponse,
-            int aBeginAddress, int aWindowSize, int aLastAddress, String annotationTypeName,
+            BratAnnotatorModel aBratAnnotatorModel, String annotationTypeName,
             String aAnnotationTypePrefix, String featureName)
     {
-        Sentence sentenceAddress = (Sentence) aJcas.getLowLevelCas().ll_getFSForRef(aBeginAddress);
+        Sentence sentenceAddress = (Sentence) aJcas.getLowLevelCas().ll_getFSForRef(
+                aBratAnnotatorModel.getSentenceAddress());
         int current = sentenceAddress.getBegin();
-        int i = aBeginAddress;
+        int i = aBratAnnotatorModel.getSentenceAddress();
         Sentence sentence = null;
 
-        for (int j = 0; j < aWindowSize; j++) {
-            if (i >= aLastAddress) {
+        for (int j = 0; j < aBratAnnotatorModel.getWindowSize(); j++) {
+            if (i >= aBratAnnotatorModel.getLastSentenceAddress()) {
                 sentence = (Sentence) aJcas.getLowLevelCas().ll_getFSForRef(i);
                 updateResponse(annotationTypeName, sentence, aAnnotationTypePrefix, aResponse,
                         current, featureName);
@@ -85,8 +88,8 @@ public class SpanAdapter
     /**
      * Update the CAS with new/modification of span annotations
      */
-    public static void addSpanAnnotationToCas(String aValue, BratAnnotatorUIData aUIData, String annotationTypeName,
-            String aFeatureName, boolean aMultipleSpan)
+    public static void addSpanAnnotationToCas(String aValue, BratAnnotatorUIData aUIData,
+            String annotationTypeName, String aFeatureName, boolean aMultipleSpan)
     {
         Map<Integer, Integer> offsets = offsets(aUIData.getjCas());
         int startAndEnd[] = getTokenStart(offsets, aUIData.getAnnotationOffsetStart(),
@@ -96,13 +99,11 @@ public class SpanAdapter
             aUIData.setAnnotationOffsetStart(startAndEnd[0]);
             aUIData.setAnnotationOffsetEnd(startAndEnd[1]);
             updateCas(annotationTypeName, aUIData.getjCas().getCas(), aFeatureName,
-                    aUIData.getAnnotationOffsetStart(),
-                    aUIData.getAnnotationOffsetEnd(), aValue);
+                    aUIData.getAnnotationOffsetStart(), aUIData.getAnnotationOffsetEnd(), aValue);
         }
         else {
             Map<Integer, Integer> splitedTokens = getSplitedTokens(offsets,
-                    aUIData.getAnnotationOffsetStart(),
-                    aUIData.getAnnotationOffsetEnd());
+                    aUIData.getAnnotationOffsetStart(), aUIData.getAnnotationOffsetEnd());
             for (Integer start : splitedTokens.keySet()) {
                 updateCas(annotationTypeName, aUIData.getjCas().getCas(), aFeatureName, start,
                         splitedTokens.get(start), aValue);

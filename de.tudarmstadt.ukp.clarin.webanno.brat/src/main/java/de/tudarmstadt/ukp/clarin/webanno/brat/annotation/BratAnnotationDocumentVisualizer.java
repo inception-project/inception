@@ -29,11 +29,14 @@ import org.codehaus.jackson.JsonGenerator;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationType;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.CasToBratJson;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
+import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 
 /**
  * Displays a BRAT visualisation and fills it with data from an {@link AnnotationDocument}. We do
@@ -119,10 +122,11 @@ public class BratAnnotationDocumentVisualizer
             return docData;
         }
         catch (IOException e) {
-           error("Unable to find annotation document " + ExceptionUtils.getRootCauseMessage(e));
+            error("Unable to find annotation document " + ExceptionUtils.getRootCauseMessage(e));
         }
         catch (ClassNotFoundException e) {
-            error("Unable to get the class name for conversion +" + ExceptionUtils.getRootCauseMessage(e));
+            error("Unable to get the class name for conversion +"
+                    + ExceptionUtils.getRootCauseMessage(e));
 
         }
         // Generate BRAT object model from CAS
@@ -130,29 +134,36 @@ public class BratAnnotationDocumentVisualizer
         response.setText(jCas.getDocumentText());
 
         List<String> tagSetNames = new ArrayList<String>();
-        tagSetNames.add(AnnotationType.POS);
-        tagSetNames.add(AnnotationType.DEPENDENCY);
-        tagSetNames.add(AnnotationType.NAMEDENTITY);
-        tagSetNames.add(AnnotationType.COREFERENCE);
-        tagSetNames.add(AnnotationType.COREFRELTYPE);
-// THE BratSession is deleted. modify BratViualizer to include windowSize in its state.
-     //   HttpSession session = BratSession.session();
-      //  Project project = (Project) session.getAttribute("project");
-   //     SourceDocument document = (SourceDocument) session.getAttribute("document");
-     //   int windowSize = (Integer)session.getAttribute("windowSize-" + project.getName()
-   //             +"-"+document.getName());
-        CasToBratJson casToBratJson = new CasToBratJson(
-                BratAjaxCasUtil.getFirstSenetnceAddress(jCas),
-                BratAjaxCasUtil.getLastSenetnceAddress(jCas),10, tagSetNames);
-
-        casToBratJson.addTokenToResponse(jCas, response);
-        casToBratJson.addSentenceToResponse(jCas, response);
-        casToBratJson.addPosToResponse(jCas, response);
-        casToBratJson.addCorefTypeToResponse(jCas, response);
-        casToBratJson.addLemmaToResponse(jCas, response);
-        casToBratJson.addNamedEntityToResponse(jCas, response);
-        casToBratJson.addDependencyParsingToResponse(jCas, response);
-        casToBratJson.addCoreferenceToResponse(jCas, response);
+        tagSetNames.add(AnnotationTypeConstant.POS);
+        tagSetNames.add(AnnotationTypeConstant.DEPENDENCY);
+        tagSetNames.add(AnnotationTypeConstant.NAMEDENTITY);
+        tagSetNames.add(AnnotationTypeConstant.COREFERENCE);
+        tagSetNames.add(AnnotationTypeConstant.COREFRELTYPE);
+        // THE BratSession is deleted. modify BratViualizer to include windowSize in its state.
+        // HttpSession session = BratSession.session();
+        // Project project = (Project) session.getAttribute("project");
+        // SourceDocument document = (SourceDocument) session.getAttribute("document");
+        // int windowSize = (Integer)session.getAttribute("windowSize-" + project.getName()
+        // +"-"+document.getName());
+        CasToBratJson casToBratJson = new CasToBratJson();
+        // TODO: If this Classe is used somewhere, get BratAnnotatorModel populated somewhere
+        BratAnnotatorModel bratAnnotatorDataModel = new BratAnnotatorModel();
+        casToBratJson.addTokenToResponse(jCas, response, bratAnnotatorDataModel);
+        casToBratJson.addSentenceToResponse(jCas, response, bratAnnotatorDataModel);
+        // If POS annotation exist in CAS TODO
+        SpanAdapter.addSpanAnnotationToResponse(jCas, response, bratAnnotatorDataModel,
+                POS.class.getName(), AnnotationTypeConstant.POS_PREFIX, AnnotationTypeConstant.POS_FEATURENAME);
+        casToBratJson.addCorefTypeToResponse(jCas, response, bratAnnotatorDataModel);
+        // If Lemma Layer Exist in CAS TODO
+        SpanAdapter.addSpanAnnotationToResponse(jCas, response, bratAnnotatorDataModel,
+                Lemma.class.getName(), "", AnnotationTypeConstant.LEMMA_FEATURENAME);
+        // IF Named Entity layer exist in CAS TODO
+        SpanAdapter.addSpanAnnotationToResponse(jCas, response, bratAnnotatorDataModel,
+                NamedEntity.class.getName(), AnnotationTypeConstant.NAMEDENTITY_PREFIX,
+                AnnotationTypeConstant.NAMEDENTITY_FEATURENAME);
+        casToBratJson.addDependencyParsingToResponse(jCas, response, bratAnnotatorDataModel,
+                bratAnnotatorDataModel.getProject().isReverseDependencyDirection());
+        casToBratJson.addCoreferenceToResponse(jCas, response, bratAnnotatorDataModel);
 
         // Serialize BRAT object model to JSON
         try {

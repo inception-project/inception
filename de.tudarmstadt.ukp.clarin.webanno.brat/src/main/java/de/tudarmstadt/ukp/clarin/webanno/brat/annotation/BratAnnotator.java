@@ -56,7 +56,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationType;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.OffsetsList;
@@ -516,8 +516,8 @@ public class BratAnnotator
                     aUIData.getjCas(), Integer.parseInt(aUIData.getOrigin())));
 
             String annotationType = aUIData.getType().substring(0,
-                    aUIData.getType().indexOf(AnnotationType.PREFIX) + 1);
-            if (annotationType.equals(AnnotationType.POS_PREFIX)) {
+                    aUIData.getType().indexOf(AnnotationTypeConstant.PREFIX) + 1);
+            if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
                 result = controller.reverseArc(bratAnnotatorModel, aUIData);
                 if (bratAnnotatorModel.isScrollPage()) {
                     bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(

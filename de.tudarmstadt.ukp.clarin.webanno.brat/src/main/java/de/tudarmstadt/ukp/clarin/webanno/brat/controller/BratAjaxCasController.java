@@ -66,6 +66,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
@@ -315,17 +316,17 @@ public class BratAjaxCasController
         String type = BratAjaxCasUtil.getType(aUIData.getType());
 
         boolean multipleSpan = true;
-        if (annotationType.equals(AnnotationType.NAMEDENTITY_PREFIX)) {
+        if (annotationType.equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)) {
             // BratAjaxCasUtil.updateNamedEntity(aBratAnnotatorModel, type, aUIData);
-            SpanAdapter.addSpanAnnotationToCas(type, aUIData,
-                    NamedEntity.class.getName(), "value", multipleSpan);
+            SpanAdapter.addSpanAnnotationToCas(type, aUIData, NamedEntity.class.getName(), "value",
+                    multipleSpan);
         }
-        else if (annotationType.equals(AnnotationType.POS_PREFIX)) {
+        else if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
             // BratAjaxCasUtil.updatePos(aBratAnnotatorModel, type, aUIData);
-            SpanAdapter.addSpanAnnotationToCas(type, aUIData,
-                    POS.class.getName(), "PosValue", false);
+            SpanAdapter.addSpanAnnotationToCas(type, aUIData, POS.class.getName(), "PosValue",
+                    false);
         }
-        else if (annotationType.equals(AnnotationType.COREFERENCE_PREFIX)) {
+        else if (annotationType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
             BratAjaxCasUtil.updateCoreferenceType(aBratAnnotatorModel, type, aUIData);
         }
 
@@ -356,10 +357,10 @@ public class BratAjaxCasController
         String annotationType = BratAjaxCasUtil.getAnnotationType(aUIData.getType());
         String type = BratAjaxCasUtil.getType(aUIData.getType());
 
-        if (annotationType.equals(AnnotationType.POS_PREFIX)) {
+        if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
             BratAjaxCasUtil.updateDependencyParsing(aBratAnnotatorModel, type, aUIData);
         }
-        else if (annotationType.equals(AnnotationType.COREFERENCE_PREFIX)) {
+        else if (annotationType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
             BratAjaxCasUtil.updateCoreferenceRelation(aBratAnnotatorModel, type, aUIData);
         }
         GetDocumentResponse response = new GetDocumentResponse();
@@ -390,7 +391,7 @@ public class BratAjaxCasController
         String annotationType = BratAjaxCasUtil.getAnnotationType(aUIData.getType());
         String type = BratAjaxCasUtil.getType(aUIData.getType());
 
-        if (annotationType.equals(AnnotationType.POS_PREFIX)) {
+        if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
             BratAjaxCasUtil.deleteDependencyParsing(aBratAnnotatorModel, type, aUIData);
             // Reverse directions
             String origin = aUIData.getOrigin();// swap variable
@@ -425,13 +426,12 @@ public class BratAjaxCasController
         String annotationType = BratAjaxCasUtil.getAnnotationType(aUIData.getType());
         String type = BratAjaxCasUtil.getType(aUIData.getType());
 
-        if (annotationType.equals(AnnotationType.NAMEDENTITY_PREFIX)) {
+        if (annotationType.equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)) {
             BratAjaxCasUtil.deleteNamedEntity(aUIData.getjCas(), aId);
         }
-        else if (annotationType.equals(AnnotationType.COREFERENCE_PREFIX)) {
+        else if (annotationType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
             BratAjaxCasUtil.deleteCoreferenceType(aUIData.getjCas(), aId, type,
-                    aUIData.getAnnotationOffsetStart(),
-                    aUIData.getAnnotationOffsetEnd());
+                    aUIData.getAnnotationOffsetStart(), aUIData.getAnnotationOffsetEnd());
         }
 
         GetDocumentResponse response = new GetDocumentResponse();
@@ -459,10 +459,10 @@ public class BratAjaxCasController
         String annotationType = BratAjaxCasUtil.getAnnotationType(aUIData.getType());
         String type = BratAjaxCasUtil.getType(aUIData.getType());
 
-        if (annotationType.equals(AnnotationType.POS_PREFIX)) {
+        if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
             BratAjaxCasUtil.deleteDependencyParsing(aBratAnnotatorModel, type, aUIData);
         }
-        else if (annotationType.equals(AnnotationType.COREFERENCE_PREFIX)) {
+        else if (annotationType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
             BratAjaxCasUtil.deleteCoreference(aBratAnnotatorModel, type, aUIData);
         }
 
@@ -487,30 +487,53 @@ public class BratAjaxCasController
     private void addBratResponses(GetDocumentResponse aResponse,
             BratAnnotatorModel aBratAnnotatorModel, BratAnnotatorUIData aUIData)
     {
-        /*
-         * if (aMovePage) { aSentenceAddress = BratAjaxCasUtil.getSentenceBeginAddress(aJCas,
-         * aSentenceAddress, aStart, aProject, aDocument, aWindowSize); }
-         */
-        // If auto-scroll is enabled it is annotation modification
+        List<String> annotationLayers = new ArrayList<String>();
+        for (TagSet tag : aBratAnnotatorModel.getAnnotationLayers()) {
+            annotationLayers.add(tag.getType().getName());
+        }
+
         if (aBratAnnotatorModel.isScrollPage() && !aUIData.isGetDocument()) {
             aBratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(
                     aUIData.getjCas(), aBratAnnotatorModel.getSentenceAddress(),
-                    aUIData.getAnnotationOffsetStart(),
-                    aBratAnnotatorModel.getProject(), aBratAnnotatorModel.getDocument(),
-                    aBratAnnotatorModel.getWindowSize()));
+                    aUIData.getAnnotationOffsetStart(), aBratAnnotatorModel.getProject(),
+                    aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getWindowSize()));
         }
-        CasToBratJson casToBratJson = new CasToBratJson(aBratAnnotatorModel);
+        CasToBratJson casToBratJson = new CasToBratJson();
 
-        casToBratJson.addTokenToResponse(aUIData.getjCas(), aResponse);
-        casToBratJson.addSentenceToResponse(aUIData.getjCas(), aResponse);
-        casToBratJson.addPosToResponse(aUIData.getjCas(), aResponse);
-        casToBratJson.addCorefTypeToResponse(aUIData.getjCas(), aResponse);
-        if (aBratAnnotatorModel.isDisplayLemmaSelected()) {
-            casToBratJson.addLemmaToResponse(aUIData.getjCas(), aResponse);
+        casToBratJson.addTokenToResponse(aUIData.getjCas(), aResponse, aBratAnnotatorModel);
+        casToBratJson.addSentenceToResponse(aUIData.getjCas(), aResponse, aBratAnnotatorModel);
+
+        if (annotationLayers.contains(AnnotationTypeConstant.POS)) {
+            SpanAdapter.addSpanAnnotationToResponse(aUIData.getjCas(), aResponse,
+                    aBratAnnotatorModel, POS.class.getName(), AnnotationTypeConstant.POS_PREFIX,
+                    AnnotationTypeConstant.POS_FEATURENAME);
         }
-        casToBratJson.addNamedEntityToResponse(aUIData.getjCas(), aResponse);
-        casToBratJson.addDependencyParsingToResponse(aUIData.getjCas(), aResponse);
-        casToBratJson.addCoreferenceToResponse(aUIData.getjCas(), aResponse);
+
+        if (annotationLayers.contains(AnnotationTypeConstant.COREFRELTYPE)) {
+            casToBratJson.addCorefTypeToResponse(aUIData.getjCas(), aResponse, aBratAnnotatorModel);
+        }
+        if (aBratAnnotatorModel.isDisplayLemmaSelected()) {
+            SpanAdapter.addSpanAnnotationToResponse(aUIData.getjCas(), aResponse,
+                    aBratAnnotatorModel, Lemma.class.getName(), "",
+                    AnnotationTypeConstant.LEMMA_FEATURENAME);
+        }
+        if (annotationLayers.contains(AnnotationTypeConstant.NAMEDENTITY)) {
+            SpanAdapter.addSpanAnnotationToResponse(aUIData.getjCas(), aResponse,
+                    aBratAnnotatorModel, NamedEntity.class.getName(),
+                    AnnotationTypeConstant.NAMEDENTITY_PREFIX,
+                    AnnotationTypeConstant.NAMEDENTITY_FEATURENAME);
+        }
+        if (annotationLayers.contains(AnnotationTypeConstant.DEPENDENCY)
+                && annotationLayers.contains(AnnotationTypeConstant.POS)) {
+            casToBratJson.addDependencyParsingToResponse(aUIData.getjCas(), aResponse,
+                    aBratAnnotatorModel, aBratAnnotatorModel.getProject()
+                            .isReverseDependencyDirection());
+        }
+        if (annotationLayers.contains(AnnotationTypeConstant.COREFERENCE)
+                && annotationLayers.contains(AnnotationTypeConstant.COREFRELTYPE)) {
+            casToBratJson.addCoreferenceToResponse(aUIData.getjCas(), aResponse,
+                    aBratAnnotatorModel);
+        }
     }
 
     /**

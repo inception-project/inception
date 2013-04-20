@@ -66,19 +66,19 @@ public class BratAjaxConfiguration
         List<String> coreference = new ArrayList<String>();
 
         for (Tag tag : aTags) {
-            if (tag.getTagSet().getType().getName().equals(AnnotationType.POS)) {
+            if (tag.getTagSet().getType().getName().equals(AnnotationTypeConstant.POS)) {
                 poses.add(tag.getName());
             }
-            else if (tag.getTagSet().getType().getName().equals(AnnotationType.DEPENDENCY)) {
+            else if (tag.getTagSet().getType().getName().equals(AnnotationTypeConstant.DEPENDENCY)) {
                 dependency.add(tag.getName());
             }
-            else if (tag.getTagSet().getType().getName().equals(AnnotationType.NAMEDENTITY)) {
+            else if (tag.getTagSet().getType().getName().equals(AnnotationTypeConstant.NAMEDENTITY)) {
                 namedEntity.add(tag.getName());
             }
-            else if (tag.getTagSet().getType().getName().equals(AnnotationType.COREFRELTYPE)) {
+            else if (tag.getTagSet().getType().getName().equals(AnnotationTypeConstant.COREFRELTYPE)) {
                 corefRelType.add(tag.getName());
             }
-            else if (tag.getTagSet().getType().getName().equals(AnnotationType.COREFERENCE)) {
+            else if (tag.getTagSet().getType().getName().equals(AnnotationTypeConstant.COREFERENCE)) {
                 coreference.add(tag.getName());
             }
 
@@ -90,9 +90,9 @@ public class BratAjaxConfiguration
         Collections.sort(coreference);
         Collections.sort(corefRelType);
 
-        List<EntityType> posChildren = getChildren(AnnotationType.POS_PREFIX, poses, dependency,
+        List<EntityType> posChildren = getChildren(AnnotationTypeConstant.POS_PREFIX, poses, dependency,
                 "red", "yellow", "blue", "green");
-        EntityType posType = new EntityType(AnnotationType.POS_PARENT, AnnotationType.POS_PARENT,
+        EntityType posType = new EntityType(AnnotationTypeConstant.POS_PARENT, AnnotationTypeConstant.POS_PARENT,
                 true, "", "red", "blue", "blue", new ArrayList<String>(), posChildren,
                 new ArrayList<String>(), new ArrayList<RelationType>());
 
@@ -102,10 +102,10 @@ public class BratAjaxConfiguration
 
 
 
-            List<EntityType> corefChildren = getChildren(AnnotationType.COREFERENCE_PREFIX,
+            List<EntityType> corefChildren = getChildren(AnnotationTypeConstant.COREFERENCE_PREFIX,
                     corefRelType, coreference, "red", "blue", "blue", "");
-            EntityType corefType = new EntityType(AnnotationType.COREFERENCE_PARENT,
-                    AnnotationType.COREFERENCE_PARENT, true, "", "red", "blue", "blue",
+            EntityType corefType = new EntityType(AnnotationTypeConstant.COREFERENCE_PARENT,
+                    AnnotationTypeConstant.COREFERENCE_PARENT, true, "", "red", "blue", "blue",
                     new ArrayList<String>(), corefChildren, new ArrayList<String>(),
                     new ArrayList<RelationType>());
             if (corefRelType.size() > 0) {
@@ -113,10 +113,10 @@ public class BratAjaxConfiguration
             }
 
 
-        List<EntityType> neChildren = getChildren(AnnotationType.NAMEDENTITY_PREFIX, namedEntity,
+        List<EntityType> neChildren = getChildren(AnnotationTypeConstant.NAMEDENTITY_PREFIX, namedEntity,
                 new ArrayList<String>(), "black", "cyan", "green", "");
-        EntityType neEntityType = new EntityType(AnnotationType.NAMEDENTITY_PARENT,
-                AnnotationType.NAMEDENTITY_PARENT, true, "", "black", "cyan", "green",
+        EntityType neEntityType = new EntityType(AnnotationTypeConstant.NAMEDENTITY_PARENT,
+                AnnotationTypeConstant.NAMEDENTITY_PARENT, true, "", "black", "cyan", "green",
                 new ArrayList<String>(), neChildren, new ArrayList<String>(),
                 new ArrayList<RelationType>());
 
@@ -160,7 +160,7 @@ public class BratAjaxConfiguration
                 String arcLabels = arcTypesResultIterator.next();
 
                 // 12 classes of colors to differentiate Co-reference chains
-                if(aPrefix.equals(AnnotationType.COREFERENCE_PREFIX)){
+                if(aPrefix.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)){
 
                 String[] colors = new String[] { "#00FF00", "#0000A0", "#FF0000", "#800080 ", "#F000FF",
                       "#00FFFF ", "#FF00FF ", "#8D38C9", "#8D38C9", "#736AFF", "#C11B17", "#800000" };

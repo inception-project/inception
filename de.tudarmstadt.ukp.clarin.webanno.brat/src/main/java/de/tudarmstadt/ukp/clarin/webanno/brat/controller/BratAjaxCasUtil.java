@@ -1064,10 +1064,10 @@ public class BratAjaxCasUtil
     {
         String type;
         if (Character.isDigit(aType.charAt(0))) {
-            type = aType.substring(aType.indexOf(AnnotationType.PREFIX) + 1);
+            type = aType.substring(aType.indexOf(AnnotationTypeConstant.PREFIX) + 1);
         }
         else {
-            type = aType.substring(aType.indexOf(AnnotationType.PREFIX) + 1);
+            type = aType.substring(aType.indexOf(AnnotationTypeConstant.PREFIX) + 1);
         }
         return type;
     }

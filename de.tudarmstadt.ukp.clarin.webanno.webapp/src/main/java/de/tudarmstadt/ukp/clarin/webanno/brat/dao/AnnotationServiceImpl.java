@@ -233,7 +233,7 @@ public class AnnotationServiceImpl
                 "Nichtwort, Sonderzeichen enthaltend \nBsp:3:7, H2O, D2XW3", "--" };
 
         initializeType(
-                de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationType.POS,
+                de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.POS,
                 "Stuttgart-Tübingen-Tag-Set \nGerman Part of Speech tagset"
                         + "STTS Tag Table (1995/1999): "
                         + "http://www.ims.uni-stuttgart.de/projekte/corplex/TagSets/stts-table.html",
@@ -247,10 +247,10 @@ public class AnnotationServiceImpl
                 "SUBJC3", "SUBJI", "SUBJI2", "CP", "PD", "RE", "CD", "DA", "SVP", "OP", "MO", "JU",
                 "CVC", "NG", "SB", "SBP", "AG", "PM", "OCRC", "OG", "SUBJI3", "VOK", "ZEIT", "$",
                 "--", "OC", "OA", "MNR", "NK", "RC", "EP", "CC", "CM", "UC", "AC", "PNC" };
-        initializeType(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationType.DEPENDENCY, "Dependency annotation", "relation",
+        initializeType(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.DEPENDENCY, "Dependency annotation", "relation",
                 "Tiger", "de", depTags, depTags, aProject, aUser);
 
-        initializeType(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationType.NAMEDENTITY, "Named Entity annotation", "span",
+        initializeType(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.NAMEDENTITY, "Named Entity annotation", "span",
                 "NER_WebAnno", "de", new String[] { "PER", "PERderiv", "PERpart", "LOC",
                         "LOCderiv", "LOCpart", "ORG", "ORGderiv", "ORGpart", "OTH", "OTHderiv",
                         "OTHpart" }, new String[] { "Person", "Person derivative",
@@ -260,10 +260,10 @@ public class AnnotationServiceImpl
                         "Other: Every name that is not a location, person or organisation",
                         "Other derivative", "Hyphenated part  is Other" }, aProject, aUser);
 
-        initializeType(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationType.COREFRELTYPE, "coreference type annotation", "span",
+        initializeType(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.COREFRELTYPE, "coreference type annotation", "span",
                 "BART", "de", new String[] { "nam" }, new String[] { "nam" }, aProject, aUser);
 
-        initializeType(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationType.COREFERENCE, "coreference annotation", "relation",
+        initializeType(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.COREFERENCE, "coreference annotation", "relation",
                 "TuebaDZ", "de", new String[] { "anaphoric" }, new String[] { "anaphoric" },
                 aProject, aUser);
     }

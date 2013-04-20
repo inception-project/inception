@@ -37,15 +37,22 @@ import org.springframework.http.converter.json.MappingJacksonHttpMessageConverte
 import org.uimafit.factory.CollectionReaderFactory;
 import org.uimafit.factory.JCasFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.CasToBratJson;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.tcf.TcfReader;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
+import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import eu.clarin.weblicht.wlfxb.io.WLFormatException;
 import eu.clarin.weblicht.wlfxb.tc.xb.TextCorpusLayerTag;
 
@@ -120,11 +127,15 @@ public class CasToBratJsonTest
         collectionInformation.setSearchConfig(new ArrayList<String[]>());
 
         List<String> tagSetNames = new ArrayList<String>();
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationType.POS);
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationType.DEPENDENCY);
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationType.NAMEDENTITY);
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationType.COREFERENCE);
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationType.COREFRELTYPE);
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.POS);
+        tagSetNames
+                .add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.DEPENDENCY);
+        tagSetNames
+                .add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.NAMEDENTITY);
+        tagSetNames
+                .add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.COREFERENCE);
+        tagSetNames
+                .add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.COREFRELTYPE);
 
         CasToBratJson casToBratJson = new CasToBratJson();
 
@@ -161,19 +172,19 @@ public class CasToBratJsonTest
         InputStream is = null;
         JCas jCas = null;
         try {
-           // is = new FileInputStream("src/test/resources/tcf04-karin-wl.xml");
+            // is = new FileInputStream("src/test/resources/tcf04-karin-wl.xml");
             String path = "src/test/resources/";
             String file = "tcf04-karin-wl.xml";
             CAS cas = JCasFactory.createJCas().getCas();
-            CollectionReader reader = CollectionReaderFactory.createCollectionReader(TcfReader.class,
-                    TcfReader.PARAM_PATH, path, TcfReader.PARAM_PATTERNS,
+            CollectionReader reader = CollectionReaderFactory.createCollectionReader(
+                    TcfReader.class, TcfReader.PARAM_PATH, path, TcfReader.PARAM_PATTERNS,
                     new String[] { "[+]" + file });
             if (!reader.hasNext()) {
                 throw new FileNotFoundException("Annotation file [" + file + "] not found in ["
                         + path + "]");
             }
-             reader.getNext(cas);
-             jCas = cas.getJCas();
+            reader.getNext(cas);
+            jCas = cas.getJCas();
 
         }
         catch (FileNotFoundException ex) {
@@ -184,30 +195,42 @@ public class CasToBratJsonTest
         }
 
         List<String> tagSetNames = new ArrayList<String>();
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationType.POS);
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationType.DEPENDENCY);
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationType.NAMEDENTITY);
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationType.COREFERENCE);
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationType.COREFRELTYPE);
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.POS);
+        tagSetNames
+                .add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.DEPENDENCY);
+        tagSetNames
+                .add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.NAMEDENTITY);
+        tagSetNames
+                .add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.COREFERENCE);
+        tagSetNames
+                .add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.COREFRELTYPE);
 
+        CasToBratJson casToBratJson = new CasToBratJson();
 
-        CasToBratJson casToBratJson = new CasToBratJson(
-                BratAjaxCasUtil.getFirstSenetnceAddress(jCas),
-                BratAjaxCasUtil.getLastSenetnceAddress(jCas),10, tagSetNames);
+        BratAnnotatorModel bratannotatorModel = new BratAnnotatorModel();
+        bratannotatorModel.setWindowSize(10);
+        bratannotatorModel.setSentenceAddress(BratAjaxCasUtil.getFirstSenetnceAddress(jCas));
+        bratannotatorModel.setLastSentenceAddress(BratAjaxCasUtil.getLastSenetnceAddress(jCas));
+
+        Project project = new Project();
+        project.setReverseDependencyDirection(true);
 
         casToBratJson.setJsonConverter(jsonConverter);
 
         GetDocumentResponse response = new GetDocumentResponse();
         response.setText(jCas.getDocumentText());
 
-        casToBratJson.addTokenToResponse(jCas, response);
-        casToBratJson.addSentenceToResponse(jCas, response);
-        casToBratJson.addPosToResponse(jCas, response);
-        casToBratJson.addCorefTypeToResponse(jCas, response);
-        casToBratJson.addLemmaToResponse(jCas, response);
-        casToBratJson.addNamedEntityToResponse(jCas, response);
-        casToBratJson.addDependencyParsingToResponse(jCas, response);
-        casToBratJson.addCoreferenceToResponse(jCas, response);
+        casToBratJson.addTokenToResponse(jCas, response, bratannotatorModel);
+        casToBratJson.addSentenceToResponse(jCas, response, bratannotatorModel);
+        SpanAdapter.addSpanAnnotationToResponse(jCas, response, bratannotatorModel,
+                POS.class.getName(), AnnotationTypeConstant.POS_PREFIX, AnnotationTypeConstant.POS_FEATURENAME);
+        casToBratJson.addCorefTypeToResponse(jCas, response, bratannotatorModel);
+        SpanAdapter.addSpanAnnotationToResponse(jCas, response, bratannotatorModel,
+                Lemma.class.getName(), "", AnnotationTypeConstant.LEMMA_FEATURENAME);
+        SpanAdapter.addSpanAnnotationToResponse(jCas, response, bratannotatorModel,
+                NamedEntity.class.getName(), AnnotationTypeConstant.NAMEDENTITY_PREFIX, AnnotationTypeConstant.NAMEDENTITY_FEATURENAME);
+        casToBratJson.addDependencyParsingToResponse(jCas, response, bratannotatorModel, false);
+        casToBratJson.addCoreferenceToResponse(jCas, response, bratannotatorModel);
 
         casToBratJson.generateBratJson(response, new File(jsonFilePath));
 

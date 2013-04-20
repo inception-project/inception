@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
  * @author Seid Muhie Yimam
  *
  */
-public class AnnotationType
+public class AnnotationTypeConstant
 {
     // Annotation types, for span or arc annotations.
     public static final String POS = "pos";
@@ -46,5 +46,10 @@ public class AnnotationType
     public static final String POS_PARENT = "POS";
     public static final String NAMEDENTITY_PARENT = "Named Entity";
     public static final String COREFERENCE_PARENT = "COREF";
+
+    public static final String POS_FEATURENAME = "PosValue";
+    public static final String LEMMA_FEATURENAME = "value";
+    public static final String NAMEDENTITY_FEATURENAME = "value";
+
 
 }
