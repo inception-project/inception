@@ -352,7 +352,7 @@ public class BratAjaxCasController
         String type = BratAjaxCasUtil.getType(aUIData.getType());
 
         if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
-            BratAjaxCasUtil.updateDependencyParsing(aBratAnnotatorModel, type, aUIData);
+            ArcAdapter.getDependencyAdapter().addToCas(type, aUIData, aBratAnnotatorModel, false);
         }
         else if (annotationType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
             BratAjaxCasUtil.updateCoreferenceRelation(aBratAnnotatorModel, type, aUIData);
@@ -391,7 +391,7 @@ public class BratAjaxCasController
             String origin = aUIData.getOrigin();// swap variable
             aUIData.setOrigin(aUIData.getTarget());
             aUIData.setTarget(origin);
-            BratAjaxCasUtil.updateDependencyParsing(aBratAnnotatorModel, type, aUIData);
+            ArcAdapter.getDependencyAdapter().addToCas(type, aUIData, aBratAnnotatorModel, false);
         }
 
         GetDocumentResponse response = new GetDocumentResponse();
@@ -422,7 +422,7 @@ public class BratAjaxCasController
 
 
         if (annotationType.equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)) {
-            SpanAdapter.getNamedEntityAdapter().deleteFromCas(aUIData.getjCas().getCas(), aId);
+            SpanAdapter.getNamedEntityAdapter().deleteFromCas(aUIData.getjCas(), aId);
         }
         else if (annotationType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
             BratAjaxCasUtil.deleteCoreferenceType(aUIData.getjCas(), aId, type,

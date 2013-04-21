@@ -179,86 +179,6 @@ public class BratAjaxCasUtil
         }
     }
 
-    public static void updateDependencyParsing(BratAnnotatorModel aBratAnnotatorModel,
-            String aType, BratAnnotatorUIData aUIData)
-    {
-        boolean duplicate = false;
-        boolean modify = false;
-
-        int originAddress;
-        int targetAddress;
-
-        if(aBratAnnotatorModel.getProject().isReverseDependencyDirection()){
-            originAddress = Integer.parseInt(aUIData.getTarget()
-                    .replaceAll("[\\D]", ""));
-            targetAddress = Integer.parseInt(aUIData.getOrigin()
-                    .replaceAll("[\\D]", ""));
-        }
-        else{
-        originAddress = Integer.parseInt(aUIData.getOrigin()
-                .replaceAll("[\\D]", ""));
-        targetAddress = Integer.parseInt(aUIData.getTarget()
-                .replaceAll("[\\D]", ""));
-        }
-        Dependency dependencyToDelte = null;
-        Map<Integer, Token> tokens = getToken(aUIData.getjCas());
-        Map<Integer, Integer> tokenPositions = getTokenPosition(aUIData.getjCas());
-
-        int beginOffset = selectAnnotationByAddress(aUIData.getjCas(), Sentence.class,
-                aBratAnnotatorModel.getSentenceAddress()).getBegin();
-        int endOffset = selectAnnotationByAddress(
-                aUIData.getjCas(),
-                Sentence.class,
-                getLastSentenceAddressInDisplayWindow(aUIData.getjCas(),
-                        aBratAnnotatorModel.getSentenceAddress(),
-                        aBratAnnotatorModel.getWindowSize())).getEnd();
-
-        for (Dependency dependency : selectCovered(aUIData.getjCas(), Dependency.class,
-                beginOffset, endOffset)) {
-            if (dependency.getDependent().getPos().getAddress() == originAddress
-                    && dependency.getGovernor().getPos().getAddress() == targetAddress
-                    && !aType.equals("ROOT")) {
-                dependencyToDelte = dependency;
-                modify = !dependency.getDependencyType().equals(aType);
-                duplicate = true;
-                break;
-            }
-            // remove double-mother dependency
-            /*
-             * else if (dependency.getGovernor().getPos().getAddress() == targetAddress &&
-             * !aType.equals("ROOT")) { dependencyToDelte = dependency; break; } // remove
-             * double-mother dependency, for a ROOT one else if
-             * (dependency.getGovernor().getPos().getAddress() == originAddress &&
-             * aType.equals("ROOT")) { dependencyToDelte = dependency; break; }
-             */
-        }
-        if (modify) {
-            dependencyToDelte.setDependencyType(aType);
-        }
-        if (!duplicate) {
-            if (dependencyToDelte != null) {
-                dependencyToDelte.removeFromIndexes();
-            }
-            // if the type is ROOT, governor = dependent
-            Dependency dependency = new Dependency(aUIData.getjCas());
-            dependency.setDependencyType(aType);
-
-            if (aType.equals("ROOT")) {
-                dependency.setBegin(tokens.get(tokenPositions.get(originAddress)).getBegin());
-                dependency.setBegin(tokens.get(tokenPositions.get(originAddress)).getEnd());
-                dependency.setDependent(tokens.get(tokenPositions.get(originAddress)));
-                dependency.setGovernor(tokens.get(tokenPositions.get(originAddress)));
-            }
-            else {
-                dependency.setBegin(tokens.get(tokenPositions.get(originAddress)).getBegin());
-                dependency.setBegin(tokens.get(tokenPositions.get(targetAddress)).getEnd());
-                dependency.setDependent(tokens.get(tokenPositions.get(originAddress)));
-                dependency.setGovernor(tokens.get(tokenPositions.get(targetAddress)));
-            }
-            dependency.addToIndexes();
-        }
-    }
-
     // Updating a coreference.
     // CASE 1: Chain does not exist yet
     // CASE 2: Add to the beginning of an existing chain
@@ -712,7 +632,7 @@ public class BratAjaxCasUtil
     /**
      * Get the token at a given position. This is used for dependency and coreference annotations
      */
-    private static Map<Integer, Token> getToken(JCas aJcas)
+    public static Map<Integer, Token> getToken(JCas aJcas)
     {
         Map<Integer, Token> tokens = new HashMap<Integer, Token>();
         for (Token token : select(aJcas, Token.class)) {

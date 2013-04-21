@@ -51,5 +51,11 @@ public class AnnotationTypeConstant
     public static final String LEMMA_FEATURENAME = "value";
     public static final String NAMEDENTITY_FEATURENAME = "value";
 
+    public static final String DEPENDENCY_FEATURENAME = "DependencyType";
+    public static final String DEPENDENCY_DEPENDENT_FEATURENAME = "Dependent";
+    public static final String DEPENDENCY_GOVERNOR_FEATURENAME = "Governor";
+    public static final String ARC_POS_FEATURE_NAME = "pos";
+
+    public static final String ROOT = "ROOT";
 
 }
