@@ -198,6 +198,7 @@ public class SpanAdapter
         Type type = CasUtil.getType(aCas, annotationTypeName);
         Feature feature = type.getFeatureByBaseName(labelFeatureName);
         for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
+
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
                 if (!fs.getStringValue(feature).equals(aValue)) {
                     fs.setStringValue(feature, aValue);
@@ -214,14 +215,14 @@ public class SpanAdapter
 
     /**
      * Delete a span annotation from CAS
-     * @param aCas the CAS object
+     * @param aJCas the CAS object
      * @param aId the low-level address of the span annotation.
      */
-    public void deleteFromCas(CAS aCas, String aId)
+    public void deleteFromCas(JCas aJCas, String aId)
     {
         int ref = Integer.parseInt(aId.replaceAll("[\\D]", ""));
-        FeatureStructure fs = aCas.getLowLevelCAS().ll_getFSForRef(ref);
-        aCas.removeFsFromIndexes(fs);
+        FeatureStructure fs = getFS(aJCas, ref);
+        aJCas.removeFsFromIndexes(fs);
     }
 
     /**
