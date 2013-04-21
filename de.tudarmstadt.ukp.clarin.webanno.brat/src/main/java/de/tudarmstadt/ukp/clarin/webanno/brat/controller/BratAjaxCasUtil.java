@@ -519,13 +519,6 @@ public class BratAjaxCasUtil
         return a.getBegin() == begin && a.getEnd() == end;
     }
 
-    public static void deleteNamedEntity(JCas aJcas, String aId)
-    {
-        int ref = Integer.parseInt(aId.replaceAll("[\\D]", ""));
-        NamedEntity ne = (NamedEntity) aJcas.getLowLevelCas().ll_getFSForRef(ref);
-        ne.removeFromIndexes();
-    }
-
     public static void deleteCoreferenceType(JCas aJcas, String aId, String aTyep, int aStart,
             int aEnd)
     {

@@ -420,8 +420,9 @@ public class BratAjaxCasController
         String annotationType = BratAjaxCasUtil.getAnnotationType(aUIData.getType());
         String type = BratAjaxCasUtil.getType(aUIData.getType());
 
+
         if (annotationType.equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)) {
-            BratAjaxCasUtil.deleteNamedEntity(aUIData.getjCas(), aId);
+            SpanAdapter.getNamedEntityAdapter().deleteFromCas(aUIData.getjCas().getCas(), aId);
         }
         else if (annotationType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
             BratAjaxCasUtil.deleteCoreferenceType(aUIData.getjCas(), aId, type,
@@ -510,7 +511,7 @@ public class BratAjaxCasController
                     aBratAnnotatorModel);
         }
         if (annotationLayers.contains(AnnotationTypeConstant.NAMEDENTITY)) {
-            SpanAdapter.getNamedEntityAdapter().addToBrat(aUIData.getjCas(), 
+            SpanAdapter.getNamedEntityAdapter().addToBrat(aUIData.getjCas(),
             		aResponse, aBratAnnotatorModel);
         }
         if (annotationLayers.contains(AnnotationTypeConstant.DEPENDENCY)
