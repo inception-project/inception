@@ -62,6 +62,7 @@ import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataRetrievalFailureException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.uimafit.factory.AnalysisEngineFactory;
 import org.uimafit.factory.CollectionReaderFactory;
@@ -122,6 +123,8 @@ public class RepositoryServiceDbData
     private static final String ANNOTATION = "/annotation";
     private static final String SETTINGS = "/settings/";
 
+    private static final String CURATION_USER = "CURATION_USER";
+
     @PersistenceContext
     private EntityManager entityManager;
 
@@ -176,11 +179,11 @@ public class RepositoryServiceDbData
      * @throws IOException
      *             if the folder cannot be created.
      */
-    private File getAnnotationFolder(AnnotationDocument aAnnotationDocument)
+    private File getAnnotationFolder(SourceDocument aDocument)
         throws IOException
     {
-        File annotationFolder = new File(dir, PROJECT + aAnnotationDocument.getProject().getId()
-                + DOCUMENT + aAnnotationDocument.getDocument().getId() + ANNOTATION);
+        File annotationFolder = new File(dir, PROJECT + aDocument.getProject().getId() + DOCUMENT
+                + aDocument.getId() + ANNOTATION);
         FileUtils.forceMkdir(annotationFolder);
         return annotationFolder;
     }
@@ -191,137 +194,9 @@ public class RepositoryServiceDbData
             User aUser)
         throws IOException
     {
-        synchronized (lock) {
-            File annotationFolder = getAnnotationFolder(aAnnotationDocument);
-            FileUtils.forceMkdir(annotationFolder);
 
-            final String username = aAnnotationDocument.getUser().getUsername();
-
-            File currentVersion = new File(annotationFolder, username + ".ser");
-            File oldVersion = new File(annotationFolder, username + ".ser.old");
-
-            // Save current version
-            try {
-                // Make a backup of the current version of the file before overwriting
-                if (currentVersion.exists()) {
-                    renameFile(currentVersion, oldVersion);
-                }
-
-                // Now write the new version to "<username>.ser"
-                writeContent(aAnnotationDocument, aJcas);
-                createLog(aAnnotationDocument.getProject(), aUser).info(
-                        " Updated annotation file [" + aAnnotationDocument.getName() + "] "
-                                + "with ID [" + aAnnotationDocument.getDocument().getId()
-                                + "] in project ID [" + aAnnotationDocument.getProject().getId()
-                                + "]");
-                createLog(aAnnotationDocument.getProject(), aUser).removeAllAppenders();
-
-                // If the saving was successful, we delete the old version
-                if (oldVersion.exists()) {
-                    FileUtils.forceDelete(oldVersion);
-                }
-            }
-            catch (IOException e) {
-                // If we could not save the new version, restore the old one.
-                FileUtils.forceDelete(currentVersion);
-                // If this is the first version, there is no old version, so do not restore anything
-                if (oldVersion.exists()) {
-                    renameFile(oldVersion, currentVersion);
-                }
-                // Now abort anyway
-                throw e;
-            }
-
-            // Manage history
-            if (backupInterval > 0) {
-                // Determine the reference point in time based on the current version
-                long now = currentVersion.lastModified();
-
-                // Get all history files for the current user
-                File[] history = annotationFolder.listFiles(new FileFilter()
-                {
-                    private Matcher matcher = Pattern.compile(
-                            Pattern.quote(username) + "\\.ser\\.[0-9]+\\.bak").matcher("");
-
-                    @Override
-                    public boolean accept(File aFile)
-                    {
-                        // Check if the filename matches the pattern given above.
-                        return matcher.reset(aFile.getName()).matches();
-                    }
-                });
-
-                // Sort the files (oldest one first)
-                Arrays.sort(history, LastModifiedFileComparator.LASTMODIFIED_COMPARATOR);
-
-                // Check if we need to make a new history file
-                boolean historyFileCreated = false;
-                File historyFile = new File(annotationFolder, username + ".ser." + now + ".bak");
-                if (history.length == 0) {
-                    // If there is no history yet but we should keep history, then we create a
-                    // history file in any case.
-                    FileUtils.copyFile(currentVersion, historyFile);
-                    historyFileCreated = true;
-                }
-                else {
-                    // Check if the newest history file is significantly older than the current one
-                    File latestHistory = history[history.length - 1];
-                    if (latestHistory.lastModified() + backupInterval < now) {
-                        FileUtils.copyFile(currentVersion, historyFile);
-                        historyFileCreated = true;
-                    }
-                }
-
-                // Prune history based on number of backup
-                if (historyFileCreated) {
-                    // The new version is not in the history, so we keep that in any case. That
-                    // means we need to keep one less.
-                    int toKeep = Math.max(backupKeepNumber - 1, 0);
-                    if ((backupKeepNumber > 0) && (toKeep < history.length)) {
-                        // Copy the oldest files to a new array
-                        File[] toRemove = new File[history.length - toKeep];
-                        System.arraycopy(history, 0, toRemove, 0, toRemove.length);
-
-                        // Restrict the history to what is left
-                        File[] newHistory = new File[toKeep];
-                        if (toKeep > 0) {
-                            System.arraycopy(history, toRemove.length, newHistory, 0,
-                                    newHistory.length);
-                        }
-                        history = newHistory;
-
-                        // Remove these old files
-                        for (File file : toRemove) {
-                            FileUtils.forceDelete(file);
-                            createLog(aAnnotationDocument.getProject(), aUser).info(
-                                    "Removed surplus history file [" + file.getName() + "] "
-                                            + " for document with ID ["
-                                            + aAnnotationDocument.getDocument().getId()
-                                            + "] in project ID ["
-                                            + aAnnotationDocument.getProject().getId() + "]");
-                            createLog(aAnnotationDocument.getProject(), aUser).removeAllAppenders();
-                        }
-                    }
-
-                    // Prune history based on time
-                    if (backupKeepTime > 0) {
-                        for (File file : history) {
-                            if ((file.lastModified() + backupKeepTime) < now) {
-                                FileUtils.forceDelete(file);
-                                createLog(aAnnotationDocument.getProject(), aUser).info(
-                                        "Removed outdated history file [" + file.getName() + "] "
-                                                + " for document with ID ["
-                                                + aAnnotationDocument.getDocument().getId()
-                                                + "] in project ID ["
-                                                + aAnnotationDocument.getProject().getId() + "]");
-                                createLog(aAnnotationDocument.getProject(), aUser)
-                                        .removeAllAppenders();
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        createAnnotationContent(aAnnotationDocument.getDocument(), aJcas, aUser.getUsername(),
+                aUser);
     }
 
     @Override
@@ -453,7 +328,7 @@ public class RepositoryServiceDbData
         exportTempDir.delete();
         exportTempDir.mkdirs();
 
-        File annotationFolder = getAnnotationFolder(getAnnotationDocument(aDocument, aUser));
+        File annotationFolder = getAnnotationFolder(aDocument);
         String serializedCaseFileName = aUser.getUsername() + ".ser";
 
         CollectionReader reader = CollectionReaderFactory
@@ -526,38 +401,8 @@ public class RepositoryServiceDbData
     public JCas getAnnotationDocumentContent(AnnotationDocument aAnnotationDocument)
         throws IOException, UIMAException, ClassNotFoundException
     {
-        synchronized (lock) {
-
-            File annotationFolder = getAnnotationFolder(aAnnotationDocument);
-
-            String file = aAnnotationDocument.getUser().getUsername() + ".ser";
-
-            try {
-                CAS cas = JCasFactory.createJCas().getCas();
-                CollectionReader reader = CollectionReaderFactory.createCollectionReader(
-                        SerializedCasReader.class, SerializedCasReader.PARAM_PATH,
-                        annotationFolder, SerializedCasReader.PARAM_PATTERNS, new String[] { "[+]"
-                                + file });
-                if (!reader.hasNext()) {
-                    throw new FileNotFoundException("Annotation file [" + file + "] not found in ["
-                            + annotationFolder
-                            + "]. Report the incident to the Project Administrator");
-                }
-                reader.getNext(cas);
-
-                return cas.getJCas();
-            }
-            catch (IOException e) {
-                throw new DataRetrievalFailureException("Unable to parse annotation", e);
-            }
-            catch (UIMAException e) {
-                throw new DataRetrievalFailureException("Unable to parse annotation", e);
-            }
-            /*
-             * catch (SAXException e) { throw new
-             * DataRetrievalFailureException("Unable to parse annotation", e); }
-             */
-        }
+        return getAnnotationContent(aAnnotationDocument.getDocument(), aAnnotationDocument
+                .getUser().getUsername());
     }
 
     @Override
@@ -606,8 +451,10 @@ public class RepositoryServiceDbData
     {
 
         return entityManager
-                .createQuery("SELECT DISTINCT user FROM ProjectPermission WHERE " + "project =:project ORDER BY username ASC",
-                        User.class).setParameter("project", aProject).getResultList();
+                .createQuery(
+                        "SELECT DISTINCT user FROM ProjectPermission WHERE "
+                                + "project =:project ORDER BY username ASC", User.class)
+                .setParameter("project", aProject).getResultList();
     }
 
     @Override
@@ -958,11 +805,11 @@ public class RepositoryServiceDbData
 
     }
 
-    private void writeContent(AnnotationDocument aAnnotationDocument, JCas aJcas)
+    private void writeContent(SourceDocument aDocument, JCas aJcas, String aUsername)
         throws IOException
     {
         try {
-            File targetPath = getAnnotationFolder(aAnnotationDocument);
+            File targetPath = getAnnotationFolder(aDocument);
             AnalysisEngine writer = AnalysisEngineFactory.createPrimitive(
                     SerializedCasWriter.class, SerializedCasWriter.PARAM_PATH, targetPath,
                     SerializedCasWriter.PARAM_USE_DOCUMENT_ID, true);
@@ -973,7 +820,7 @@ public class RepositoryServiceDbData
             catch (IllegalArgumentException e) {
                 md = DocumentMetaData.create(aJcas);
             }
-            md.setDocumentId(aAnnotationDocument.getUser().getUsername());
+            md.setDocumentId(aUsername);
             writer.process(aJcas);
         }
         catch (ResourceInitializationException e) {
@@ -1033,4 +880,210 @@ public class RepositoryServiceDbData
         annotationPreferencePropertiesFileName = aAnnotationPreferencePropertiesFileName;
     }
 
+    @Override
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
+    public void createCurationDocumentContent(JCas aJcas, SourceDocument aDocument, User aUser)
+        throws IOException
+    {
+        createAnnotationContent(aDocument, aJcas, CURATION_USER, aUser);
+    }
+
+    @Override
+    public JCas getCurationDocumentContent(SourceDocument aDocument)
+        throws UIMAException, IOException, ClassNotFoundException
+    {
+
+        return getAnnotationContent(aDocument, CURATION_USER);
+    }
+
+    /**
+     * Creates an annotation document (either user's annotation document or CURATION_USER's
+     * annotation document)
+     *
+     * @param aDocument
+     *            the {@link SourceDocument}
+     * @param aJcas
+     *            The annotated CAS object
+     * @param aUserName
+     *            the user who annotates the document if it is user's annotation document OR the
+     *            CURATION_USER
+     * @param aUser
+     *            The user who annotates the document OR the curator who curates the document
+     * @throws IOException
+     */
+
+    private void createAnnotationContent(SourceDocument aDocument, JCas aJcas, String aUserName,
+            User aUser)
+        throws IOException
+    {
+        synchronized (lock) {
+            File annotationFolder = getAnnotationFolder(aDocument);
+            FileUtils.forceMkdir(annotationFolder);
+
+            final String username = aUserName;
+
+            File currentVersion = new File(annotationFolder, username + ".ser");
+            File oldVersion = new File(annotationFolder, username + ".ser.old");
+
+            // Save current version
+            try {
+                // Make a backup of the current version of the file before overwriting
+                if (currentVersion.exists()) {
+                    renameFile(currentVersion, oldVersion);
+                }
+
+                // Now write the new version to "<username>.ser" or CURATION_USER.ser
+                writeContent(aDocument, aJcas, aUserName);
+                createLog(aDocument.getProject(), aUser).info(
+                        " Updated annotation file [" + aDocument.getName() + "] " + "with ID ["
+                                + aDocument.getId() + "] in project ID ["
+                                + aDocument.getProject().getId() + "]");
+                createLog(aDocument.getProject(), aUser).removeAllAppenders();
+
+                // If the saving was successful, we delete the old version
+                if (oldVersion.exists()) {
+                    FileUtils.forceDelete(oldVersion);
+                }
+            }
+            catch (IOException e) {
+                // If we could not save the new version, restore the old one.
+                FileUtils.forceDelete(currentVersion);
+                // If this is the first version, there is no old version, so do not restore anything
+                if (oldVersion.exists()) {
+                    renameFile(oldVersion, currentVersion);
+                }
+                // Now abort anyway
+                throw e;
+            }
+
+            // Manage history
+            if (backupInterval > 0) {
+                // Determine the reference point in time based on the current version
+                long now = currentVersion.lastModified();
+
+                // Get all history files for the current user
+                File[] history = annotationFolder.listFiles(new FileFilter()
+                {
+                    private Matcher matcher = Pattern.compile(
+                            Pattern.quote(username) + "\\.ser\\.[0-9]+\\.bak").matcher("");
+
+                    @Override
+                    public boolean accept(File aFile)
+                    {
+                        // Check if the filename matches the pattern given above.
+                        return matcher.reset(aFile.getName()).matches();
+                    }
+                });
+
+                // Sort the files (oldest one first)
+                Arrays.sort(history, LastModifiedFileComparator.LASTMODIFIED_COMPARATOR);
+
+                // Check if we need to make a new history file
+                boolean historyFileCreated = false;
+                File historyFile = new File(annotationFolder, username + ".ser." + now + ".bak");
+                if (history.length == 0) {
+                    // If there is no history yet but we should keep history, then we create a
+                    // history file in any case.
+                    FileUtils.copyFile(currentVersion, historyFile);
+                    historyFileCreated = true;
+                }
+                else {
+                    // Check if the newest history file is significantly older than the current one
+                    File latestHistory = history[history.length - 1];
+                    if (latestHistory.lastModified() + backupInterval < now) {
+                        FileUtils.copyFile(currentVersion, historyFile);
+                        historyFileCreated = true;
+                    }
+                }
+
+                // Prune history based on number of backup
+                if (historyFileCreated) {
+                    // The new version is not in the history, so we keep that in any case. That
+                    // means we need to keep one less.
+                    int toKeep = Math.max(backupKeepNumber - 1, 0);
+                    if ((backupKeepNumber > 0) && (toKeep < history.length)) {
+                        // Copy the oldest files to a new array
+                        File[] toRemove = new File[history.length - toKeep];
+                        System.arraycopy(history, 0, toRemove, 0, toRemove.length);
+
+                        // Restrict the history to what is left
+                        File[] newHistory = new File[toKeep];
+                        if (toKeep > 0) {
+                            System.arraycopy(history, toRemove.length, newHistory, 0,
+                                    newHistory.length);
+                        }
+                        history = newHistory;
+
+                        // Remove these old files
+                        for (File file : toRemove) {
+                            FileUtils.forceDelete(file);
+                            createLog(aDocument.getProject(), aUser).info(
+                                    "Removed surplus history file [" + file.getName() + "] "
+                                            + " for document with ID [" + aDocument.getId()
+                                            + "] in project ID [" + aDocument.getProject().getId()
+                                            + "]");
+                            createLog(aDocument.getProject(), aUser).removeAllAppenders();
+                        }
+                    }
+
+                    // Prune history based on time
+                    if (backupKeepTime > 0) {
+                        for (File file : history) {
+                            if ((file.lastModified() + backupKeepTime) < now) {
+                                FileUtils.forceDelete(file);
+                                createLog(aDocument.getProject(), aUser).info(
+                                        "Removed outdated history file [" + file.getName() + "] "
+                                                + " for document with ID [" + aDocument.getId()
+                                                + "] in project ID ["
+                                                + aDocument.getProject().getId() + "]");
+                                createLog(aDocument.getProject(), aUser).removeAllAppenders();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * For a given {@link SourceDocument}, return the {@link AnnotationDocument} for the user or for
+     * the CURATION_USER
+     *
+     * @param aDocument
+     *            the {@link SourceDocument}
+     * @param aUsername
+     *            the {@link User} who annotates the {@link SourceDocument} or the CURATION_USER
+     */
+    private JCas getAnnotationContent(SourceDocument aDocument, String aUsername)
+        throws IOException
+    {
+        synchronized (lock) {
+
+            File annotationFolder = getAnnotationFolder(aDocument);
+
+            String file = aUsername + ".ser";
+
+            try {
+                CAS cas = JCasFactory.createJCas().getCas();
+                CollectionReader reader = CollectionReaderFactory.createCollectionReader(
+                        SerializedCasReader.class, SerializedCasReader.PARAM_PATH,
+                        annotationFolder, SerializedCasReader.PARAM_PATTERNS, new String[] { "[+]"
+                                + file });
+                if (!reader.hasNext()) {
+                    throw new FileNotFoundException("Annotation file [" + file + "] not found in ["
+                            + annotationFolder
+                            + "]. Report the incident to the Project Administrator");
+                }
+                reader.getNext(cas);
+
+                return cas.getJCas();
+            }
+            catch (IOException e) {
+                throw new DataRetrievalFailureException("Unable to parse annotation", e);
+            }
+            catch (UIMAException e) {
+                throw new DataRetrievalFailureException("Unable to parse annotation", e);
+            }
+        }
+    }
 }

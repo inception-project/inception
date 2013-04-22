@@ -74,6 +74,13 @@ public interface RepositoryService
         throws IOException;
 
     /**
+     * Create a curation annotation document under a special user named as "CURATION_USER"
+     */
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
+    void createCurationDocumentContent(JCas jCas, SourceDocument document, User user)
+        throws IOException;
+
+    /**
      * Creates a {@code Project}. Creating a project needs a global ROLE_ADMIN role. For the first
      * time the project is created, an associated project path will be created on the file system as
      * {@code webanno.home/project/Project.id }
@@ -132,16 +139,22 @@ public interface RepositoryService
      * @return
      */
     boolean existsProject(String name);
+
     /**
      * Check if a user have at least one {@link PermissionLevel } for this {@link Project}
+     *
      * @return
      */
     boolean existProjectPermission(User user, Project project);
+
     /**
-     * Check if there is already a {@link PermissionLevel} on a given {@link Project} for a given {@link User}
+     * Check if there is already a {@link PermissionLevel} on a given {@link Project} for a given
+     * {@link User}
+     *
      * @return
      */
     boolean existProjectPermissionLevel(User user, Project project, PermissionLevel level);
+
     /**
      * Exports an {@link AnnotationDocument } CAS Object as TCF/TXT/XMI... file formats.
      *
@@ -181,6 +194,12 @@ public interface RepositoryService
      * @throws ClassNotFoundException
      */
     JCas getAnnotationDocumentContent(AnnotationDocument annotationDocument)
+        throws UIMAException, IOException, ClassNotFoundException;
+
+    /**
+     * Get a curation document for the given {@link SourceDocument}
+     */
+    JCas getCurationDocumentContent(SourceDocument document)
         throws UIMAException, IOException, ClassNotFoundException;
 
     /**
@@ -252,9 +271,9 @@ public interface RepositoryService
         throws IOException;
 
     /**
-     * Get a {@link ProjectPermission }objects where a project is member of. We need to get them,
-     * for example if the associated {@link Project} is deleted, the {@link ProjectPermission }
-     * objects too.
+     * Get a {@link ProjectPermission }objects where a project is member of. We need to get them, for
+     * example if the associated {@link Project} is deleted, the {@link ProjectPermission } objects
+     * too.
      *
      * @param project
      *            The project contained in a projectPermision
