@@ -54,7 +54,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.dkpro.core.tokit.BreakIteratorSegmenter;
 
 /**
@@ -523,41 +522,6 @@ public class BratAjaxCasUtil
         for (CoreferenceChain chain : orphanChains) {
             chain.removeFromIndexes();
         }
-    }
-
-    public static void deleteDependencyParsing(BratAnnotatorModel aBratAnnotatorModel,
-            String aType, BratAnnotatorUIData aUIData)
-    {
-
-        int originAddress;
-        int targetAddress;
-
-        if(aBratAnnotatorModel.getProject().isReverseDependencyDirection()){
-            originAddress = Integer.parseInt(aUIData.getTarget()
-                    .replaceAll("[\\D]", ""));
-            targetAddress = Integer.parseInt(aUIData.getOrigin()
-                    .replaceAll("[\\D]", ""));
-        }
-        else{
-        originAddress = Integer.parseInt(aUIData.getOrigin()
-                .replaceAll("[\\D]", ""));
-        targetAddress = Integer.parseInt(aUIData.getTarget()
-                .replaceAll("[\\D]", ""));
-        }
-
-        Map<Integer, Integer> tokenPositions = getTokenPosition(aUIData.getjCas());
-        Dependency dependencyToDelete = new Dependency(aUIData.getjCas());
-
-        for (Dependency dependency : select(aUIData.getjCas(), Dependency.class)) {
-
-            if (dependency.getDependent().getBegin() == tokenPositions.get(originAddress)
-                    && dependency.getGovernor().getBegin() == tokenPositions.get(targetAddress)
-                    && dependency.getDependencyType().equals(aType)) {
-                dependencyToDelete = dependency;
-                break;
-            }
-        }
-        dependencyToDelete.removeFromIndexes();
     }
 
     public static <T extends Annotation> T selectAnnotationByAddress(JCas aJCas, Class<T> aType,

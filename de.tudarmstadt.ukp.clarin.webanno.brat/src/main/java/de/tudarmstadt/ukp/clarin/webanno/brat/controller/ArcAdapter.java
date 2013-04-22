@@ -201,6 +201,55 @@ public class ArcAdapter
         }
     }
     /**
+     * Delete arc annotation from CAS
+     * @param aJCas
+     * @param aId
+     */
+    public void deleteFromCas(BratAnnotatorUIData aUIData,
+            BratAnnotatorModel aBratAnnotatorModel)
+    {
+
+        int originAddress;
+        int targetAddress;
+        JCas jCas = aUIData.getjCas();
+
+        if(aBratAnnotatorModel.getProject().isReverseDependencyDirection()){
+            originAddress = Integer.parseInt(aUIData.getTarget()
+                    .replaceAll("[\\D]", ""));
+            targetAddress = Integer.parseInt(aUIData.getOrigin()
+                    .replaceAll("[\\D]", ""));
+        }
+        else{
+        originAddress = Integer.parseInt(aUIData.getOrigin()
+                .replaceAll("[\\D]", ""));
+        targetAddress = Integer.parseInt(aUIData.getTarget()
+                .replaceAll("[\\D]", ""));
+        }
+        FeatureStructure fsToDelete = null;
+
+        Type type = CasUtil.getType(jCas.getCas(), annotationTypeName);
+        Feature dependentFeature = type.getFeatureByBaseName(dependentFeatureName);
+        Feature governorFeature = type.getFeatureByBaseName(governorFeatureName);
+
+        Type spanType = CasUtil.getType(jCas.getCas(), arcSpanType);
+        Feature arcSpanFeature = spanType.getFeatureByBaseName(arcSpanTypeFeatureName);
+
+        for (AnnotationFS fs : CasUtil.select(jCas.getCas(), type)) {
+
+            FeatureStructure dependentFs = fs.getFeatureValue(dependentFeature).getFeatureValue(
+                    arcSpanFeature);
+            FeatureStructure governorFs = fs.getFeatureValue(governorFeature).getFeatureValue(
+                    arcSpanFeature);
+            if (((FeatureStructureImpl) dependentFs).getAddress() == originAddress
+                    && ((FeatureStructureImpl) governorFs).getAddress() == targetAddress) {
+                fsToDelete = fs;
+                break;
+            }
+        }
+        jCas.removeFsFromIndexes(fsToDelete);
+    }
+
+    /**
      * Convenience method to get an adapter for Dependency Parsing.
      *
      * NOTE: This is not meant to stay. It's just a convenience during refactoring!

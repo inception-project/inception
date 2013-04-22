@@ -386,7 +386,7 @@ public class BratAjaxCasController
         String type = BratAjaxCasUtil.getType(aUIData.getType());
 
         if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
-            BratAjaxCasUtil.deleteDependencyParsing(aBratAnnotatorModel, type, aUIData);
+            ArcAdapter.getDependencyAdapter().deleteFromCas(aUIData, aBratAnnotatorModel);
             // Reverse directions
             String origin = aUIData.getOrigin();// swap variable
             aUIData.setOrigin(aUIData.getTarget());
@@ -455,7 +455,7 @@ public class BratAjaxCasController
         String type = BratAjaxCasUtil.getType(aUIData.getType());
 
         if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
-            BratAjaxCasUtil.deleteDependencyParsing(aBratAnnotatorModel, type, aUIData);
+            ArcAdapter.getDependencyAdapter().deleteFromCas(aUIData, aBratAnnotatorModel);
         }
         else if (annotationType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
             BratAjaxCasUtil.deleteCoreference(aBratAnnotatorModel, type, aUIData);
