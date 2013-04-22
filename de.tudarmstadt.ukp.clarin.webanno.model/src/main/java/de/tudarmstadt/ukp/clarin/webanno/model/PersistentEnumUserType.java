@@ -65,12 +65,12 @@ public abstract class PersistentEnumUserType<T extends PersistentEnum> implement
     @Override
     public Object nullSafeGet(ResultSet rs, String[] names,SessionImplementor session, Object owner)
             throws HibernateException, SQLException {
-        String name = rs.getString(names[0]).toLowerCase();
+        String name = rs.getString(names[0]);
         if(rs.wasNull()) {
             return null;
         }
         for(PersistentEnum value : returnedClass().getEnumConstants()) {
-            if(name.equals(value.toString().toLowerCase())) {
+            if(name.equals(value.getId())) {
                 return value;
             }
         }
@@ -83,8 +83,7 @@ public abstract class PersistentEnumUserType<T extends PersistentEnum> implement
         if (value == null) {
             st.setNull(index, Types.INTEGER);
         } else {
-           // st.setInt(index, ((PersistentEnum)value).getId());
-            st.setString(index, ((PersistentEnum)value).toString().toLowerCase());
+            st.setString(index, ((PersistentEnum)value).getId());
         }
     }
 
@@ -99,7 +98,7 @@ public abstract class PersistentEnumUserType<T extends PersistentEnum> implement
 
     @Override
     public int[] sqlTypes() {
-        return new int[]{Types.INTEGER};
+        return new int[]{Types.VARCHAR};
     }
 
 }

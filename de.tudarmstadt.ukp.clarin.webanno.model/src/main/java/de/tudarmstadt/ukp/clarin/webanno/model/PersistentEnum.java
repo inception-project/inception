@@ -24,5 +24,5 @@ package de.tudarmstadt.ukp.clarin.webanno.model;
  */
 public interface PersistentEnum
 {
-    int getId();
+    String getId();
 }

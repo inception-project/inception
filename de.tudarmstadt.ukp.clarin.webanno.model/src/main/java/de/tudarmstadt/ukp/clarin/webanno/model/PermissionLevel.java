@@ -25,7 +25,7 @@ package de.tudarmstadt.ukp.clarin.webanno.model;
 public enum PermissionLevel
     implements PersistentEnum
 {
-    USER(0), CURATOR(1), ADMIN(2);
+    USER("user"), CURATOR("curator"), ADMIN("admin");
     public String getName()
     {
         return this.name().toLowerCase();
@@ -36,15 +36,15 @@ public enum PermissionLevel
         return this.name().toLowerCase();
     }
 
-    PermissionLevel(int aId)
+    PermissionLevel(String aId)
     {
         this.id = aId;
     }
 
-    private final int id;
+    private final String id;
 
     @Override
-    public int getId()
+    public String getId()
     {
         return id;
     }
