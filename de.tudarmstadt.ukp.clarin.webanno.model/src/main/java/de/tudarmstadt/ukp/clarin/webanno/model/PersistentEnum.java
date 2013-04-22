@@ -16,36 +16,13 @@
 package de.tudarmstadt.ukp.clarin.webanno.model;
 
 /**
- * Permission levels for a project. {@link PermissionLevel#USER} is an annotator while
- * {@link PermissionLevel#ADMIN} is a project administrator
+ * An interface used to decouple enums from the data. Implementation based on ideas from
+ * http://www.gabiaxel.com/2011/01/better-enum-mapping-with-hibernate.html
  *
  * @author Seid Muhie Yimam
  *
  */
-public enum PermissionLevel
-    implements PersistentEnum
+public interface PersistentEnum
 {
-    USER(0), CURATOR(1), ADMIN(2);
-    public String getName()
-    {
-        return this.name().toLowerCase();
-    }
-
-    public String tosString()
-    {
-        return this.name().toLowerCase();
-    }
-
-    PermissionLevel(int aId)
-    {
-        this.id = aId;
-    }
-
-    private final int id;
-
-    @Override
-    public int getId()
-    {
-        return id;
-    }
+    int getId();
 }

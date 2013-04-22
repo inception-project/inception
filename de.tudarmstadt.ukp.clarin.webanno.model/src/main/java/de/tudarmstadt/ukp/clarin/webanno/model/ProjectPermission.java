@@ -18,14 +18,14 @@ package de.tudarmstadt.ukp.clarin.webanno.model;
 import java.io.Serializable;
 
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+
+import org.hibernate.annotations.Type;
 /**
  * A persistence object for project permission. A user can have one or multiple permissions on a project.
  * Project permissions include {@code admin}, {@code user} for (annotator) and {@code curator}
@@ -44,7 +44,7 @@ public class ProjectPermission
     @GeneratedValue
     private long id;
 
-    @Enumerated(EnumType.STRING)
+    @Type(type="de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevelType")
     private PermissionLevel level;
 
     @ManyToOne

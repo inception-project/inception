@@ -15,37 +15,16 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.model;
 
-/**
- * Permission levels for a project. {@link PermissionLevel#USER} is an annotator while
- * {@link PermissionLevel#ADMIN} is a project administrator
- *
+
+/** Implementation of {@link PersistentEnumUserType}
  * @author Seid Muhie Yimam
  *
  */
-public enum PermissionLevel
-    implements PersistentEnum
-{
-    USER(0), CURATOR(1), ADMIN(2);
-    public String getName()
-    {
-        return this.name().toLowerCase();
-    }
-
-    public String tosString()
-    {
-        return this.name().toLowerCase();
-    }
-
-    PermissionLevel(int aId)
-    {
-        this.id = aId;
-    }
-
-    private final int id;
+public class PermissionLevelType extends PersistentEnumUserType<PermissionLevel> {
 
     @Override
-    public int getId()
-    {
-        return id;
+    public Class<PermissionLevel> returnedClass() {
+        return PermissionLevel.class;
     }
+
 }

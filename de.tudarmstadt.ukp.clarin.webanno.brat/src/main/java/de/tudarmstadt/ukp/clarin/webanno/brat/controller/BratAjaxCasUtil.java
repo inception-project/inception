@@ -19,7 +19,6 @@ import static org.uimafit.factory.AnalysisEngineFactory.createAggregate;
 import static org.uimafit.factory.AnalysisEngineFactory.createAggregateDescription;
 import static org.uimafit.factory.AnalysisEngineFactory.createPrimitiveDescription;
 import static org.uimafit.util.JCasUtil.select;
-import static org.uimafit.util.JCasUtil.selectCovered;
 import static org.uimafit.util.JCasUtil.selectFollowing;
 import static org.uimafit.util.JCasUtil.selectPreceding;
 
@@ -50,8 +49,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
 import de.tudarmstadt.ukp.dkpro.core.api.io.ResourceCollectionReaderBase;
-import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
-import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.tokit.BreakIteratorSegmenter;
@@ -65,69 +62,7 @@ import de.tudarmstadt.ukp.dkpro.core.tokit.BreakIteratorSegmenter;
  */
 public class BratAjaxCasUtil
 {
-    /**
-     * Update the CAS with new/modification of named enmity annotation
-     */
-    public static void updateNamedEntity(BratAnnotatorModel aBratAnnotatorModel, String aType,
-            BratAnnotatorUIData aUIData)
-    {
-        boolean duplicate = false;
-        boolean modify = false;
-        NamedEntity namedEntityToDelete = null;
 
-        Map<Integer, Integer> offsets = offsets(aUIData.getjCas());
-        int startAndEnd[] = getTokenStart(offsets, aUIData.getAnnotationOffsetStart(),
-                aUIData.getAnnotationOffsetEnd());
-
-        aUIData.setAnnotationOffsetStart(startAndEnd[0]);
-        aUIData.setAnnotationOffsetEnd(startAndEnd[1]);
-
-        for (NamedEntity namedEntity : selectCovered(aUIData.getjCas(), NamedEntity.class,
-                aUIData.getAnnotationOffsetStart(),
-                aUIData.getAnnotationOffsetEnd())) {
-            if (namedEntity.getBegin() == aUIData.getAnnotationOffsetStart()
-                    && namedEntity.getEnd() == aUIData.getAnnotationOffsetEnd()) {
-                namedEntityToDelete = namedEntity;
-                duplicate = true;
-                modify = !namedEntity.getValue().equals(aType);
-                break;
-            }
-        }
-        if (modify) {
-            namedEntityToDelete.setValue(aType);
-        }
-        if (!duplicate) {
-
-            NamedEntity namedEntity = new NamedEntity(aUIData.getjCas(),
-                    aUIData.getAnnotationOffsetStart(),
-                    aUIData.getAnnotationOffsetEnd());
-            namedEntity.setValue(aType);
-            namedEntity.addToIndexes();
-        }
-    }
-
-    public static void updatePos(BratAnnotatorModel aBratAnnotatorModel, String type, BratAnnotatorUIData aUIData)
-    {
-        List<POS> pos = selectCovered(aUIData.getjCas(), POS.class,
-                aUIData.getAnnotationOffsetStart(),
-                aUIData.getAnnotationOffsetEnd());
-        if (pos.size() == 1) {// is update POS
-            pos.get(0).setPosValue(type);
-        }
-        else {
-            List<Token> token = selectCovered(aUIData.getjCas(), Token.class,
-                    aUIData.getAnnotationOffsetStart(),
-                    aUIData.getAnnotationOffsetEnd());
-            if (token.size() == 1) {// POS possible only on single token
-                POS posToAdd = new POS(aUIData.getjCas(),
-                        aUIData.getAnnotationOffsetStart(),
-                        aUIData.getAnnotationOffsetEnd());
-                posToAdd.setPosValue(type);
-                posToAdd.addToIndexes();
-                token.get(0).setPos(posToAdd);
-            }
-        }
-    }
 
     public static void updateCoreferenceType(BratAnnotatorModel aBratAnnotatorModel, String aType,
             BratAnnotatorUIData aUIData)
