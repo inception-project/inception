@@ -16,8 +16,10 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.component.model;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 public class CurationSegment implements Serializable {
 
@@ -26,7 +28,7 @@ public class CurationSegment implements Serializable {
 	private String text;
 	private SentenceState sentenceState;
 	
-	private Integer sentenceAddress;
+	private Map<String, Integer> sentenceAddress = new HashMap<String, Integer>();
 	
 	public CurationSegment() {
 		
@@ -58,12 +60,8 @@ public class CurationSegment implements Serializable {
 		this.end = end;
 	}
 
-	public Integer getSentenceAddress() {
+	public Map<String, Integer> getSentenceAddress() {
 		return sentenceAddress;
-	}
-
-	public void setSentenceAddress(Integer sentenceAdress) {
-		this.sentenceAddress = sentenceAdress;
 	}
 
 	public Boolean getHasDiff() {

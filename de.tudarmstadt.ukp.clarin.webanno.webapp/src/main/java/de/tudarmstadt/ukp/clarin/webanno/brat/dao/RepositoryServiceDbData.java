@@ -529,6 +529,9 @@ public class RepositoryServiceDbData
                 .setParameter("username", aUsername).getSingleResult();
     }
 
+    /**
+     * @return true, if at least one annotationDocument has state FINISHED
+     */
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public boolean isAnnotationFinished(SourceDocument aDocument, Project aProject)
@@ -540,16 +543,12 @@ public class RepositoryServiceDbData
                                 + "project = :project", AnnotationDocument.class)
                 .setParameter("document", aDocument).setParameter("project", aProject)
                 .getResultList();
-        boolean isFinished = true;
-        boolean hasDocuments = false;
         for (AnnotationDocument annotationDocument : annotationDocuments) {
-            hasDocuments = true;
-            if (!annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
-                isFinished = false;
+            if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
+                return true;
             }
         }
-        // return hasDocuments && isFinished;
-        return hasDocuments; // TODO remove to enable workflow
+        return false;
     }
 
     @Override
