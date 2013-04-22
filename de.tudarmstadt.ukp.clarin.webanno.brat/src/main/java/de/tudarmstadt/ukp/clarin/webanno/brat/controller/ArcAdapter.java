@@ -15,6 +15,10 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
+import static java.util.Arrays.asList;
+
+import java.util.List;
+
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
@@ -25,6 +29,9 @@ import org.uimafit.util.CasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorUIData;
+import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Argument;
+import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Relation;
+import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -98,6 +105,83 @@ public class ArcAdapter
         arcTokenType = aTokenType;
 
     }
+    /**
+     * Add arc annotations from the CAS, which is controlled by the window size, to the brat response
+     * {@link GetDocumentResponse}
+     *
+     * @param aJcas
+     *            The JCAS object containing annotations
+     * @param aResponse
+     *            A brat response containing annotations in brat protocol
+     * @param aBratAnnotatorModel
+     *            Data model for brat annotations
+     */
+    public void addToBrat(JCas aJcas, GetDocumentResponse aResponse,
+            BratAnnotatorModel aBratAnnotatorModel)
+    {
+        boolean reverse = aBratAnnotatorModel.getProject().isReverseDependencyDirection();
+        // The first sentence address in the display window!
+        Sentence firstSentence = getFS(aJcas, aBratAnnotatorModel.getSentenceAddress());
+        int i = aBratAnnotatorModel.getSentenceAddress();
+
+        // Loop based on window size
+        // j, controlling variable to display sentences based on window size
+        // i, address of each sentences
+        int j = 1;
+        while (j <= aBratAnnotatorModel.getWindowSize()) {
+            if (i >= aBratAnnotatorModel.getLastSentenceAddress()) {
+                Sentence sentence = getFS(aJcas, i);
+                updateResponse(sentence, aResponse, firstSentence.getBegin(), reverse);
+                break;
+            }
+            else {
+                Sentence sentence = getFS(aJcas, i);
+                updateResponse(sentence, aResponse, firstSentence.getBegin(), reverse);
+                i = BratAjaxCasUtil.getFollowingSentenceAddress(aJcas, i);
+            }
+            j++;
+        }
+    }
+
+    /**
+     * a helper method to the {@link #addToBrat(JCas, GetDocumentResponse, BratAnnotatorModel)}
+     *
+     * @param aSentence
+     *            The current sentence in the CAS annotation, with annotations
+     * @param aResponse
+     *            The {@link GetDocumentResponse} object with the annotation from CAS annotation
+     * @param aFirstSentenceOffset
+     *            The first sentence offset. The actual offset in the brat visualization window will
+     *            be <b>X-Y</b>, where <b>X</b> is the offset of the annotated span and <b>Y</b> is
+     *            aFirstSentenceOffset
+     */
+    private void updateResponse(Sentence aSentence, GetDocumentResponse aResponse,
+            int aFirstSentenceOffset, boolean aReverse)
+    {
+        Type type = CasUtil.getType(aSentence.getCAS(), annotationTypeName);
+        Feature dependentFeature = type.getFeatureByBaseName(dependentFeatureName);
+        Feature governorFeature = type.getFeatureByBaseName(governorFeatureName);
+
+        Type spanType = CasUtil.getType(aSentence.getCAS(), arcSpanType);
+        Feature arcSpanFeature = spanType.getFeatureByBaseName(arcSpanTypeFeatureName);
+
+        for (AnnotationFS fs : CasUtil.selectCovered(type, aSentence)) {
+
+            FeatureStructure dependentFs = fs.getFeatureValue(dependentFeature).getFeatureValue(
+                    arcSpanFeature);
+            FeatureStructure governorFs = fs.getFeatureValue(governorFeature).getFeatureValue(
+                    arcSpanFeature);
+
+            List<Argument> argumentList = getArgument(governorFs, dependentFs, aReverse);
+
+            Feature labelFeature = fs.getType().getFeatureByBaseName(labelFeatureName);
+
+            aResponse.addRelation(new Relation(((FeatureStructureImpl) fs).getAddress(),
+                    typePrefix + fs.getStringValue(labelFeature),
+                    argumentList));
+        }
+    }
+
     /**
      * Update the CAS with new/modification of arc annotations from brat
      *
@@ -264,6 +348,21 @@ public class ArcAdapter
         return adapter;
     }
 
+    /**
+     * Argument lists for the arc annotation
+     * @return
+     */
+    private List<Argument> getArgument(FeatureStructure aGovernorFs,FeatureStructure aDependentFs, boolean arevers)
+    {
+        if (arevers) {
+            return asList(new Argument("Arg1", ((FeatureStructureImpl)aGovernorFs).getAddress()),
+                    new Argument("Arg2", ((FeatureStructureImpl)aDependentFs).getAddress()));
+        }
+        else {
+            return asList(new Argument("Arg1", ((FeatureStructureImpl)aDependentFs).getAddress()),
+                    new Argument("Arg2", ((FeatureStructureImpl)aGovernorFs).getAddress()));
+        }
+    }
     /**
      * Fetch a feature structure by its address from the CAS.
      *

@@ -516,9 +516,7 @@ public class BratAjaxCasController
         }
         if (annotationLayers.contains(AnnotationTypeConstant.DEPENDENCY)
                 && annotationLayers.contains(AnnotationTypeConstant.POS)) {
-            casToBratJson.addDependencyParsingToResponse(aUIData.getjCas(), aResponse,
-                    aBratAnnotatorModel, aBratAnnotatorModel.getProject()
-                            .isReverseDependencyDirection());
+            ArcAdapter.getDependencyAdapter().addToBrat(aUIData.getjCas(), aResponse, aBratAnnotatorModel);
         }
         if (annotationLayers.contains(AnnotationTypeConstant.COREFERENCE)
                 && annotationLayers.contains(AnnotationTypeConstant.COREFRELTYPE)) {
