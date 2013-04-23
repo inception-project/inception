@@ -54,8 +54,8 @@ public class SpanAdapter
      * Prefix of the label value for Brat to make sure that different annotation types can use the
      * same label, e.g. a POS tag "N" and a named entity type "N".
      *
-     * TODO: Do we really need that? It should be possible to determine the type by looking up the
-     * ID in the CAS.
+     * This is used to differentiate the different types in the brat anotation/visualization. The prifx
+     * will not stored in the CAS(striped away at {@link BratAjaxCasController#getType}  )
      */
     private String typePrefix;
 
@@ -220,11 +220,22 @@ public class SpanAdapter
      */
     public void deleteFromCas(JCas aJCas, String aId)
     {
-        int ref = Integer.parseInt(aId.replaceAll("[\\D]", ""));
+        int ref = getAddress(aId);
         FeatureStructure fs = getFS(aJCas, ref);
         aJCas.removeFsFromIndexes(fs);
     }
 
+    /**
+     * The ID of the span in brat annotation is is sent as String. This is low level address of the
+     * annotation in CAS
+     *
+     * @param aId
+     * @return
+     */
+    private int getAddress(String aId)
+    {
+        return Integer.parseInt(aId.replaceAll("[\\D]", ""));
+    }
     /**
      * Stores, for every tokens, the start and end position offsets : used fro multiple span
      * annotations

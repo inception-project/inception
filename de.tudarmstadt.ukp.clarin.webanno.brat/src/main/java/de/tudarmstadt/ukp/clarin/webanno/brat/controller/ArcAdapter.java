@@ -105,9 +105,10 @@ public class ArcAdapter
         arcTokenType = aTokenType;
 
     }
+
     /**
-     * Add arc annotations from the CAS, which is controlled by the window size, to the brat response
-     * {@link GetDocumentResponse}
+     * Add arc annotations from the CAS, which is controlled by the window size, to the brat
+     * response {@link GetDocumentResponse}
      *
      * @param aJcas
      *            The JCAS object containing annotations
@@ -176,9 +177,8 @@ public class ArcAdapter
 
             Feature labelFeature = fs.getType().getFeatureByBaseName(labelFeatureName);
 
-            aResponse.addRelation(new Relation(((FeatureStructureImpl) fs).getAddress(),
-                    typePrefix + fs.getStringValue(labelFeature),
-                    argumentList));
+            aResponse.addRelation(new Relation(((FeatureStructureImpl) fs).getAddress(), typePrefix
+                    + fs.getStringValue(labelFeature), argumentList));
         }
     }
 
@@ -189,7 +189,8 @@ public class ArcAdapter
      *            the value of the annotation for the arc
      * @param aUIData
      *            Other information obtained from brat such as the start and end offsets
-     * @param aReverse If arc direction are in reverse direction, from Dependent to Governor
+     * @param aReverse
+     *            If arc direction are in reverse direction, from Dependent to Governor
      */
     public void addToCas(String aLabelValue, BratAnnotatorUIData aUIData,
             BratAnnotatorModel aBratAnnotatorModel, boolean aReverse)
@@ -198,12 +199,12 @@ public class ArcAdapter
         int targetAddress;
 
         if (aReverse) {
-            originAddress = Integer.parseInt(aUIData.getTarget().replaceAll("[\\D]", ""));
-            targetAddress = Integer.parseInt(aUIData.getOrigin().replaceAll("[\\D]", ""));
+            originAddress = getAddress(aUIData.getTarget());
+            targetAddress = getAddress(aUIData.getOrigin());
         }
         else {
-            originAddress = Integer.parseInt(aUIData.getOrigin().replaceAll("[\\D]", ""));
-            targetAddress = Integer.parseInt(aUIData.getTarget().replaceAll("[\\D]", ""));
+            originAddress = getAddress(aUIData.getOrigin());
+            targetAddress = getAddress(aUIData.getTarget());
         }
 
         int beginOffset = BratAjaxCasUtil.selectAnnotationByAddress(aUIData.getjCas(),
@@ -284,30 +285,27 @@ public class ArcAdapter
             aJCas.addFsToIndexes(newAnnotation);
         }
     }
+
     /**
      * Delete arc annotation from CAS
+     *
      * @param aJCas
      * @param aId
      */
-    public void deleteFromCas(BratAnnotatorUIData aUIData,
-            BratAnnotatorModel aBratAnnotatorModel)
+    public void deleteFromCas(BratAnnotatorUIData aUIData, BratAnnotatorModel aBratAnnotatorModel)
     {
 
         int originAddress;
         int targetAddress;
         JCas jCas = aUIData.getjCas();
 
-        if(aBratAnnotatorModel.getProject().isReverseDependencyDirection()){
-            originAddress = Integer.parseInt(aUIData.getTarget()
-                    .replaceAll("[\\D]", ""));
-            targetAddress = Integer.parseInt(aUIData.getOrigin()
-                    .replaceAll("[\\D]", ""));
+        if (aBratAnnotatorModel.getProject().isReverseDependencyDirection()) {
+            originAddress = getAddress(aUIData.getTarget());
+            targetAddress = getAddress(aUIData.getOrigin());
         }
-        else{
-        originAddress = Integer.parseInt(aUIData.getOrigin()
-                .replaceAll("[\\D]", ""));
-        targetAddress = Integer.parseInt(aUIData.getTarget()
-                .replaceAll("[\\D]", ""));
+        else {
+            originAddress = getAddress(aUIData.getOrigin());
+            targetAddress = getAddress(aUIData.getTarget());
         }
         FeatureStructure fsToDelete = null;
 
@@ -334,6 +332,18 @@ public class ArcAdapter
     }
 
     /**
+     * The ID of the arc in brat annotation is is sent as String. This is low level address of the
+     * annotation in CAS
+     *
+     * @param aId
+     * @return
+     */
+    private int getAddress(String aId)
+    {
+        return Integer.parseInt(aId.replaceAll("[\\D]", ""));
+    }
+
+    /**
      * Convenience method to get an adapter for Dependency Parsing.
      *
      * NOTE: This is not meant to stay. It's just a convenience during refactoring!
@@ -350,19 +360,22 @@ public class ArcAdapter
 
     /**
      * Argument lists for the arc annotation
+     *
      * @return
      */
-    private List<Argument> getArgument(FeatureStructure aGovernorFs,FeatureStructure aDependentFs, boolean arevers)
+    private List<Argument> getArgument(FeatureStructure aGovernorFs, FeatureStructure aDependentFs,
+            boolean arevers)
     {
         if (arevers) {
-            return asList(new Argument("Arg1", ((FeatureStructureImpl)aGovernorFs).getAddress()),
-                    new Argument("Arg2", ((FeatureStructureImpl)aDependentFs).getAddress()));
+            return asList(new Argument("Arg1", ((FeatureStructureImpl) aGovernorFs).getAddress()),
+                    new Argument("Arg2", ((FeatureStructureImpl) aDependentFs).getAddress()));
         }
         else {
-            return asList(new Argument("Arg1", ((FeatureStructureImpl)aDependentFs).getAddress()),
-                    new Argument("Arg2", ((FeatureStructureImpl)aGovernorFs).getAddress()));
+            return asList(new Argument("Arg1", ((FeatureStructureImpl) aDependentFs).getAddress()),
+                    new Argument("Arg2", ((FeatureStructureImpl) aGovernorFs).getAddress()));
         }
     }
+
     /**
      * Fetch a feature structure by its address from the CAS.
      *
