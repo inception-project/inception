@@ -59,7 +59,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
  * @author Richard Eckart de Castilho
  * @author Seid Muhie Yimam
  */
-public class BratAnnotationDocumentEditor
+public class BratCurationDocumentEditor
     extends Panel
 {
     private static final long serialVersionUID = -1537506294440056609L;
@@ -84,7 +84,7 @@ public class BratAnnotationDocumentEditor
     private String document = "";
     
     /**
-     * Data models for {@link BratAnnotationDocumentEditor}
+     * Data models for {@link BratCurationDocumentEditor}
      */
 	public void setModel(IModel<BratAnnotatorModel> aModel)
 	{
@@ -108,7 +108,7 @@ public class BratAnnotationDocumentEditor
 	}
 
 
-    public BratAnnotationDocumentEditor(String id, IModel<BratAnnotatorModel> aModel)
+    public BratCurationDocumentEditor(String id, IModel<BratAnnotatorModel> aModel)
     {
         super(id, aModel);
 
@@ -118,8 +118,6 @@ public class BratAnnotationDocumentEditor
         collection = "#" + getModelObject().getProject().getName() + "/";
         document = getModelObject().getDocument().getName();
         this.rewriteUrl = collection + document;
-        
-        final AnnotationDocument annotationDocument = repository.getAnnotationDocument(getModelObject().getDocument(), getModelObject().getUser());
         
         controller = new AbstractDefaultAjaxBehavior()
         {
@@ -142,7 +140,7 @@ public class BratAnnotationDocumentEditor
                 final IRequestParameters request = getRequest().getPostParameters();
 
                 Object result = null;
-                BratAjaxCasController controller = new BratAjaxCasController(jsonConverter,
+                BratAjaxCasCurationController controller = new BratAjaxCasCurationController(jsonConverter,
                         repository, annotationService);
 
                 if (request.getParameterValue("action").toString().equals("whoami")) {
@@ -171,7 +169,7 @@ public class BratAnnotationDocumentEditor
                 }
 
                 else if (request.getParameterValue("action").toString().equals("getDocument")) {
-                    result = getDocument(annotationDocument, getModelObject().getUser(), uIData);
+                    result = getDocument(getModelObject().getDocument(), getModelObject().getUser(), uIData);
 
                 }
                 else if (request.getParameterValue("action").toString().equals("createSpan")) {
@@ -337,13 +335,13 @@ public class BratAnnotationDocumentEditor
         return result;
     }
 
-    private Object getDocument(AnnotationDocument annotationDocument, User aUser, BratAnnotatorUIData aUIData)
+    private Object getDocument(SourceDocument aSourceDocument, User aUser, BratAnnotatorUIData aUIData)
     {
     	Object result = null;
     	BratAjaxCasController controller = new BratAjaxCasController(jsonConverter, repository,
     			annotationService);
-    	String collection = annotationDocument.getProject().getName();
-    	String documentName = annotationDocument.getName();
+    	String collection = aSourceDocument.getProject().getName();
+    	String documentName = aSourceDocument.getName();
     	
     	try {
     		{
@@ -660,7 +658,7 @@ public class BratAnnotationDocumentEditor
             try {
                 BratAjaxCasController controller = new BratAjaxCasController(jsonConverter, repository,
                         annotationService);
-                jCas = controller.getJCas(getModelObject().getDocument(), getModelObject().getProject(), getModelObject().getUser());
+                jCas = repository.getCurationDocumentContent(getModelObject().getDocument());
             }
             catch (UIMAException e) {
                 error("CAS object not found :" + ExceptionUtils.getRootCauseMessage(e));

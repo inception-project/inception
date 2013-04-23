@@ -32,6 +32,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.jcas.JCas;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.uimafit.util.CasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
@@ -71,15 +72,10 @@ public class CurationBuilder {
 			List<AnnotationDocument> annotationDocuments = repository
 					.listAnnotationDocument(sourceDocument);
 			
-			AnnotationDocument mergeAnnotationDocument = null;
 			Map<String, JCas> jCases = new HashMap<String, JCas>();
-			User curationUser = repository.getUser(CurationPanel.CURATION_USER);
 			AnnotationDocument randomAnnotationDocument = null;
 			for (AnnotationDocument annotationDocument : annotationDocuments) {
 				String username = annotationDocument.getUser().getUsername();
-				if(username.equals(CurationPanel.CURATION_USER)) {
-					mergeAnnotationDocument = annotationDocument;
-				}
 				if(annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
 					try {
 						JCas jCas = repository.getAnnotationDocumentContent(annotationDocument);
@@ -105,22 +101,11 @@ public class CurationBuilder {
 				}
 			}
 			
-			// TODO create new AnnotationDocument
-			if(mergeAnnotationDocument == null) {
-				
-				mergeAnnotationDocument = new AnnotationDocument();
-				mergeAnnotationDocument.setDocument(sourceDocument);
-				mergeAnnotationDocument.setName(sourceDocument.getName());
-				mergeAnnotationDocument.setUser(curationUser);
-				mergeAnnotationDocument.setProject(sourceDocument.getProject());
-
-	            repository.createAnnotationDocument(mergeAnnotationDocument);
-			}
 			// TODO Create pre-merged jcas if not exists for curation user
 			
 			JCas mergeJCas = null;
 			try {
-				mergeJCas = repository.getAnnotationDocumentContent(mergeAnnotationDocument);
+				mergeJCas = repository.getCurationDocumentContent(sourceDocument);
 			} catch (Exception e) {
 				// JCas does not exist
 			}
@@ -144,6 +129,7 @@ public class CurationBuilder {
 				}
 
 				entryTypes = getEntryTypes(mergeJCas);
+				jCases.put(CurationPanel.CURATION_USER, mergeJCas);
 		    	
 		    	List<AnnotationOption> annotationOptions = null;
 				try {
@@ -158,25 +144,28 @@ public class CurationBuilder {
 					// remove the featureStructure if more than 1 annotationSelection exists per annotationOption
 					boolean removeFS = annotationOption.getAnnotationSelections().size() > 1;
 					if(annotationOption.getAnnotationSelections().size() == 1) {
-						removeFS = annotationOption.getAnnotationSelections().get(0).getAddressByUsername().size() < numUsers;
+						removeFS = annotationOption.getAnnotationSelections().get(0).getAddressByUsername().size() <= numUsers;
 					}
 					for (AnnotationSelection annotationSelection : annotationOption.getAnnotationSelections()) {
 						for (String username : annotationSelection.getAddressByUsername().keySet()) {
-							Integer address = annotationSelection.getAddressByUsername().get(username);
-
-							// removing disagreeing feature structures in mergeJCas
-							if(removeFS && username.equals(CurationPanel.CURATION_USER) && address != null) {
-								FeatureStructure fs = mergeJCas.getLowLevelCas().ll_getFSForRef(address);
-								if(!(fs instanceof Token)) {
-									mergeJCas.getCas().removeFsFromIndexes(fs);
+							if(username.equals(CurationPanel.CURATION_USER)) {
+								Integer address = annotationSelection.getAddressByUsername().get(username);
+								
+								// removing disagreeing feature structures in mergeJCas
+								if(removeFS && address != null) {
+									FeatureStructure fs = mergeJCas.getLowLevelCas().ll_getFSForRef(address);
+									if(!(fs instanceof Token)) {
+										mergeJCas.getCas().removeFsFromIndexes(fs);
+									}
 								}
 							}
 						}
 					}
 				}
-				
+
+				User userLoggedIn = repository.getUser(SecurityContextHolder.getContext().getAuthentication().getName());
 				try {
-					repository.createAnnotationDocumentContent(mergeJCas, mergeAnnotationDocument, curationUser);
+					repository.createCurationDocumentContent(mergeJCas, sourceDocument, userLoggedIn);
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();

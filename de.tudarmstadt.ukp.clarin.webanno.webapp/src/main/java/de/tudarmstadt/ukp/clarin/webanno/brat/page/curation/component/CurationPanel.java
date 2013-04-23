@@ -49,6 +49,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
 import org.codehaus.jackson.JsonGenerator;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.uimafit.util.CasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
@@ -64,7 +65,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.AnnotationOption;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.component.model.AnnotationState;
-import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.component.model.BratAnnotationDocumentEditor;
+import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.component.model.BratCurationDocumentEditor;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.component.model.BratCurationVisualizer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.page.curation.component.model.CurationSegment;
@@ -163,26 +164,21 @@ public class CurationPanel extends Panel {
 		                StringValue action = request.getParameterValue("action");
 		                if (!action.isEmpty() && action.toString().equals("selectSpanForMerge")) {
 		                	// add span for merge
-		                	User curationUser = repository.getUser(CURATION_USER);
 		                	String username = curationUserSegment.getUsername();
 		                    Integer address = request.getParameterValue("id").toInteger();
 		                    AnnotationSelection annotationSelection = annotationSelectionByUsernameAndAddress.get(username).get(address);
 
 		                    SourceDocument sourceDocument = curationContainer.getSourceDocument();
-		                    AnnotationDocument mergeAnnotationDocument = null;
 		                    AnnotationDocument clickedAnnotationDocument = null;
 		                    List<AnnotationDocument> annotationDocuments = repository.listAnnotationDocument(sourceDocument);
 		                    for (AnnotationDocument annotationDocument : annotationDocuments) {
-								if(annotationDocument.getUser().getUsername().equals(CURATION_USER)) {
-									mergeAnnotationDocument = annotationDocument;
-								}
 								if(annotationDocument.getUser().getUsername().equals(username)) {
 									clickedAnnotationDocument = annotationDocument;
 								}
 							}
-							if(mergeAnnotationDocument != null && annotationSelection != null) {
+							if(annotationSelection != null) {
 								try {
-									JCas mergeJCas = repository.getAnnotationDocumentContent(mergeAnnotationDocument);
+									JCas mergeJCas = repository.getCurationDocumentContent(sourceDocument);
 
 									// remove old annotation selections (if present)
 									for (AnnotationSelection as : annotationSelection.getAnnotationOption().getAnnotationSelections()) {
@@ -201,7 +197,8 @@ public class CurationPanel extends Panel {
 										mergeJCas.getCas().addFsToIndexes(fsCopy);
 									}
 									// persist jcas
-									repository.createAnnotationDocumentContent(mergeJCas, mergeAnnotationDocument, curationUser);
+									User userLoggedIn = repository.getUser(SecurityContextHolder.getContext().getAuthentication().getName());
+									repository.createCurationDocumentContent(mergeJCas, sourceDocument, userLoggedIn);
 
 								} catch (UIMAException e) {
 									// TODO Auto-generated catch block
@@ -272,9 +269,20 @@ public class CurationPanel extends Panel {
 		SourceDocument sourceDocument = curationContainer.getSourceDocument();
 		List<AnnotationDocument> annotationDocuments = repository.listAnnotationDocument(sourceDocument);
 		Map<String, JCas> jCases = new HashMap<String, JCas>();
-		AnnotationDocument mergeAnnotationDocument = null;
 		JCas mergeJCas = null;
-    	User curationUser = repository.getUser(CURATION_USER);
+		try {
+			mergeJCas = repository.getCurationDocumentContent(sourceDocument);
+		} catch (UIMAException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (ClassNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		User userLoggedIn = repository.getUser(SecurityContextHolder.getContext().getAuthentication().getName());
 
 		// get cases from repository
 		for (AnnotationDocument annotationDocument : annotationDocuments) {
@@ -283,10 +291,6 @@ public class CurationPanel extends Panel {
 				try {
 					JCas jCas = repository.getAnnotationDocumentContent(annotationDocument);
 					jCases.put(username, jCas);
-					if (username.equals(CURATION_USER)) {
-						mergeAnnotationDocument = annotationDocument;
-						mergeJCas = jCas;
-					}
 
 					// cleanup annotationSelections
 					annotationSelectionByUsernameAndAddress.put(username, new HashMap<Integer, AnnotationSelection>());
@@ -296,6 +300,8 @@ public class CurationPanel extends Panel {
 				}
 			}
 		}
+		// add mergeJCas separately
+		jCases.put(CURATION_USER, mergeJCas);
 
 		// create cas for merge panel
 		int numUsers = jCases.size();
@@ -322,12 +328,14 @@ public class CurationPanel extends Panel {
 		for (AnnotationOption annotationOption : annotationOptions) {
 			for (AnnotationSelection annotationSelection : annotationOption.getAnnotationSelections()) {
 				for (String username : annotationSelection.getAddressByUsername().keySet()) {
-					Integer address = annotationSelection.getAddressByUsername().get(username);
-					annotationSelectionByUsernameAndAddress.get(username).put(address, annotationSelection);
+					if (!username.equals(CURATION_USER)) {
+						Integer address = annotationSelection.getAddressByUsername().get(username);
+						annotationSelectionByUsernameAndAddress.get(username).put(address, annotationSelection);
+					}
 				}
 			}
 		}
-
+		
 		List<CurationUserSegment2> sentences = new LinkedList<CurationUserSegment2>();
 
 		boolean hasDiff = false;
@@ -371,13 +379,13 @@ public class CurationPanel extends Panel {
 		BratAnnotatorModel bratAnnotatorModel = new BratAnnotatorModel();
 		bratAnnotatorModel.setDocument(sourceDocument);
 		bratAnnotatorModel.setProject(sourceDocument.getProject());
-		bratAnnotatorModel.setUser(curationUser);
+		bratAnnotatorModel.setUser(userLoggedIn);
 		bratAnnotatorModel.setFirstSentenceAddress(curationSegment.getSentenceAddress().get(CURATION_USER));
 		bratAnnotatorModel.setLastSentenceAddress(curationSegment.getSentenceAddress().get(CURATION_USER));
 		bratAnnotatorModel.setSentenceAddress(curationSegment.getSentenceAddress().get(CURATION_USER));
         bratAnnotatorModel.setAnnotationLayers(new HashSet<TagSet>(annotationService
                 .listTagSets(bratAnnotatorModel.getProject())));
-		BratAnnotationDocumentEditor mergeVisualizer = new BratAnnotationDocumentEditor("mergeView", new Model<BratAnnotatorModel>(bratAnnotatorModel));
+		BratCurationDocumentEditor mergeVisualizer = new BratCurationDocumentEditor("mergeView", new Model<BratAnnotatorModel>(bratAnnotatorModel));
 		/*
 		BratCurationVisualizer mergeVisualizer = new BratCurationVisualizer("mergeView", new Model<CurationUserSegment2>(mergeUserSegment)) {
 			@Override
@@ -385,7 +393,7 @@ public class CurationPanel extends Panel {
 				// Do nothing if clicked on entry in the merge panel
 			}
 		};
-		*/
+         */
 
     	// send response to the client
 //		parent.replace(curationListView);
@@ -418,7 +426,8 @@ public class CurationPanel extends Panel {
         casToBratJson.addCorefTypeToResponse(jCas, response, bratAnnotatorModel);
         SpanAdapter.getLemmaAdapter().addToBrat(jCas, response, bratAnnotatorModel);
         SpanAdapter.getNamedEntityAdapter().addToBrat(jCas, response, bratAnnotatorModel);
-        ArcAdapter.getDependencyAdapter().addToBrat(jCas, response, bratAnnotatorModel);
+        // TODO does not work yet
+        //ArcAdapter.getDependencyAdapter().addToBrat(jCas, response, bratAnnotatorModel);
         casToBratJson.addCoreferenceToResponse(jCas, response, bratAnnotatorModel);
 
         /*
