@@ -38,6 +38,7 @@ import org.uimafit.factory.CollectionReaderFactory;
 import org.uimafit.factory.JCasFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.CasToBratJson;
@@ -218,13 +219,13 @@ public class CasToBratJsonTest
 
         casToBratJson.addTokenToResponse(jCas, response, bratannotatorModel);
         casToBratJson.addSentenceToResponse(jCas, response, bratannotatorModel);
-        
+
         SpanAdapter.getPosAdapter().addToBrat(jCas, response, bratannotatorModel);
         casToBratJson.addCorefTypeToResponse(jCas, response, bratannotatorModel);
 
         SpanAdapter.getLemmaAdapter().addToBrat(jCas, response, bratannotatorModel);
         SpanAdapter.getNamedEntityAdapter().addToBrat(jCas, response, bratannotatorModel);
-        casToBratJson.addDependencyParsingToResponse(jCas, response, bratannotatorModel, false);
+        ArcAdapter.getDependencyAdapter().addToBrat(jCas, response, bratannotatorModel);
         casToBratJson.addCoreferenceToResponse(jCas, response, bratannotatorModel);
 
         casToBratJson.generateBratJson(response, new File(jsonFilePath));

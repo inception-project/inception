@@ -119,40 +119,6 @@ public class CasToBratJson
         }
     }
 
-    public void addDependencyParsingToResponse(JCas aJcas, GetDocumentResponse aResponse,
-            BratAnnotatorModel aBratAnnotatorModel, boolean aReverse)
-    {
-
-        int i = aBratAnnotatorModel.getSentenceAddress();
-        Sentence sentence = null;
-
-        for (int j = 0; j < aBratAnnotatorModel.getWindowSize(); j++) {
-            if (i >= aBratAnnotatorModel.getLastSentenceAddress()) {
-                sentence = (Sentence) aJcas.getLowLevelCas().ll_getFSForRef(i);
-                for (Dependency dependency : selectCovered(aJcas, Dependency.class,
-                        sentence.getBegin(), sentence.getEnd())) {
-
-                    List<Argument> argumentList = getArgument(dependency, aReverse);
-
-                    aResponse.addRelation(new Relation(dependency.getAddress(),
-                            AnnotationTypeConstant.POS_PREFIX + dependency.getDependencyType(),
-                            argumentList));
-                }
-                break;
-            }
-            sentence = (Sentence) aJcas.getLowLevelCas().ll_getFSForRef(i);
-            for (Dependency dependency : selectCovered(aJcas, Dependency.class,
-                    sentence.getBegin(), sentence.getEnd())) {
-
-                List<Argument> argumentList = getArgument(dependency, aReverse);
-
-                aResponse.addRelation(new Relation(dependency.getAddress(),
-                        AnnotationTypeConstant.POS_PREFIX + dependency.getDependencyType(), argumentList));
-            }
-            i = BratAjaxCasUtil.getFollowingSentenceAddress(aJcas, i);
-        }
-    }
-
     public void addCorefTypeToResponse(JCas aJcas, GetDocumentResponse aResponse,
             BratAnnotatorModel aBratAnnotatorModel)
     {

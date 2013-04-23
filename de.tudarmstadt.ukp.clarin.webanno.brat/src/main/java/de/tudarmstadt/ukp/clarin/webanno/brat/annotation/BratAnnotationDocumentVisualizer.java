@@ -30,6 +30,7 @@ import org.springframework.http.converter.json.MappingJacksonHttpMessageConverte
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.CasToBratJson;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
@@ -154,8 +155,7 @@ public class BratAnnotationDocumentVisualizer
         SpanAdapter.getLemmaAdapter().addToBrat(jCas, response, bratAnnotatorDataModel);
         // IF Named Entity layer exist in CAS TODO
         SpanAdapter.getNamedEntityAdapter().addToBrat(jCas, response, bratAnnotatorDataModel);
-        casToBratJson.addDependencyParsingToResponse(jCas, response, bratAnnotatorDataModel,
-                bratAnnotatorDataModel.getProject().isReverseDependencyDirection());
+        ArcAdapter.getDependencyAdapter().addToBrat(jCas, response, bratAnnotatorDataModel);
         casToBratJson.addCoreferenceToResponse(jCas, response, bratAnnotatorDataModel);
 
         // Serialize BRAT object model to JSON
