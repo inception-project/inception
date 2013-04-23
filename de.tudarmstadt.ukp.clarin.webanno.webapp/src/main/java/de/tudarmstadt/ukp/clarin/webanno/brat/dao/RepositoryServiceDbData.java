@@ -529,26 +529,31 @@ public class RepositoryServiceDbData
                 .setParameter("username", aUsername).getSingleResult();
     }
 
-    /**
-     * @return true, if at least one annotationDocument has state FINISHED
-     */
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public boolean isAnnotationFinished(SourceDocument aDocument, Project aProject)
+    public boolean isAnnotationFinished(SourceDocument aDocument, Project aProject, User aUser)
     {
+        try{
 
-        List<AnnotationDocument> annotationDocuments = entityManager
+        AnnotationDocument annotationDocument = entityManager
                 .createQuery(
                         "FROM AnnotationDocument WHERE document = :document AND "
-                                + "project = :project", AnnotationDocument.class)
-                .setParameter("document", aDocument).setParameter("project", aProject)
-                .getResultList();
-        for (AnnotationDocument annotationDocument : annotationDocuments) {
-            if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
-                return true;
-            }
+                                + "project = :project AND user =:user", AnnotationDocument.class)
+                .setParameter("document", aDocument)
+                .setParameter("project", aProject)
+                .setParameter("user", aUser)
+                .getSingleResult();
+        if(annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)){
+            return true;
         }
-        return false;
+        else {
+            return false;
+        }
+        }
+        // User even didn't start annotating
+        catch(NoResultException e){
+            return false;
+        }
     }
 
     @Override
@@ -598,13 +603,13 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public List<String> listFinishedAnnotationDocuments(Project aProject, User aUser,
+    public List<AnnotationDocument> listFinishedAnnotationDocuments(Project aProject, User aUser,
             AnnotationDocumentState aState)
     {
         return entityManager
                 .createQuery(
-                        "SELECT name FROM AnnotationDocument WHERE project = :project AND "
-                                + "user =:user AND state =:state", String.class)
+                        "FROM AnnotationDocument WHERE project = :project AND "
+                                + "user =:user AND state =:state", AnnotationDocument.class)
                 .setParameter("project", aProject).setParameter("user", aUser)
                 .setParameter("state", aState).getResultList();
 
@@ -627,7 +632,10 @@ public class RepositoryServiceDbData
                         String.class).setParameter("projectId", aproject.getId()).getResultList();
         return users;
     }
-
+    /**
+     * The method {@link #listProjectUsersWithPermissions(Project)} suffices
+     */
+    @Deprecated
     @Override
     @Transactional
     public List<User> listProjectUsers(Project aproject)

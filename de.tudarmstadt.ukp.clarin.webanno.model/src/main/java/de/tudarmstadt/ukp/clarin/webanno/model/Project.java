@@ -51,6 +51,10 @@ public class Project
     @Lob
     private String description;
 
+    /**
+     * The model {@link ProjectPermission} contains the map between users and projects
+     */
+    @Deprecated
     @ManyToMany
     private Set<User> users = new HashSet<User>();
 

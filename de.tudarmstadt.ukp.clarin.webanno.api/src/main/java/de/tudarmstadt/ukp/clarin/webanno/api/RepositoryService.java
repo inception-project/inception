@@ -316,14 +316,12 @@ public interface RepositoryService
      */
     User getUser(String username);
 
+
     /**
-     * Check if at least one annotation document Finished.
-     *
-     * @param annotationDocument
-     *            the Annotation document to be checked.
-     * @return {@link Boolean}
+     * Check if the user finished annotating the {@link SourceDocument} in this {@link Project}
      */
-    boolean isAnnotationFinished(SourceDocument document, Project project);
+
+    boolean isAnnotationFinished(SourceDocument document, Project project, User user);
 
     /**
      * List all annotation documents in the system.
@@ -380,7 +378,7 @@ public interface RepositoryService
      *         {@link AnnotationDocumentState#FINISHED}
      */
 
-    List<String> listFinishedAnnotationDocuments(Project project, User user,
+    List<AnnotationDocument> listFinishedAnnotationDocuments(Project project, User user,
             AnnotationDocumentState state);
 
     /**

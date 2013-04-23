@@ -17,6 +17,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.page.monitoring;
 
 import java.util.List;
 
+import org.apache.wicket.behavior.SimpleAttributeModifier;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.DataGridView;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.AbstractColumn;
@@ -27,6 +28,7 @@ import org.apache.wicket.model.IModel;
 
 /**
  * Build dynamic columns for the user's annotation documents status {@link DataGridView}
+ *
  * @author Seid Muhie Yimam
  *
  */
@@ -56,10 +58,28 @@ public class DocumentColumnMetaData
         columnNumber = colNumber;
     }
 
+    @Override
     public void populateItem(Item<ICellPopulator<List<String>>> cellItem, String componentId,
             IModel<List<String>> rowModel)
     {
-        cellItem.add(new Label(componentId, rowModel.getObject().get(columnNumber)));
+
+        String value = rowModel.getObject().get(columnNumber);
+        String color = "";
+        if (value.equals("XX")) {
+            color = "red";
+        }
+        else if(value.equals("YY")) {
+            color ="green";
+        }
+        //It is a username column
+        if (color.equals("")) {
+            cellItem.add(new Label(componentId, value));
+        }
+        else {
+            cellItem.add(new Label(componentId, value)).add(
+                    new SimpleAttributeModifier("style", "color:" + color + ";background-color:"
+                            + color));
+        }
     }
 
 }
