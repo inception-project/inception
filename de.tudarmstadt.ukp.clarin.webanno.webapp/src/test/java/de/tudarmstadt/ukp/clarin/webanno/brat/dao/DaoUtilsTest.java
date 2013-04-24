@@ -35,6 +35,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
 
+import de.tudarmstadt.ukp.clarin.webanno.webapp.dao.DaoUtils;
+
 public class DaoUtilsTest
 {
     private Log LOG = LogFactory.getLog(getClass());

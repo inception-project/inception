@@ -30,7 +30,7 @@
 		location="file:${webanno.home}/formats.properties" /> 
 
 	<bean id="wicketApplication"
-		class="de.tudarmstadt.ukp.clarin.webanno.brat.WicketApplication" />
+		class="de.tudarmstadt.ukp.clarin.webanno.webapp.WicketApplication" />
 
 	<bean
 		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
@@ -59,15 +59,15 @@
 	</bean>
 
 	<bean id="annotationService"
-		class="de.tudarmstadt.ukp.clarin.webanno.brat.dao.AnnotationServiceImpl">
+		class="de.tudarmstadt.ukp.clarin.webanno.webapp.dao.AnnotationServiceImpl">
 	</bean>
 
 	<bean id="documentRepository"
-		class="de.tudarmstadt.ukp.clarin.webanno.brat.dao.RepositoryServiceDbData">
+		class="de.tudarmstadt.ukp.clarin.webanno.webapp.dao.RepositoryServiceDbData">
 		<property name="dir" value="${webanno.home}/repository/" />
 		<property name="annotationPreferencePropertiesFileName" value="annotation.properties" />
 	</bean>
 
 	<bean id="applicationContextProvider"
-		class="de.tudarmstadt.ukp.clarin.webanno.brat.support.ApplicationContextProvider"></bean>
+		class="de.tudarmstadt.ukp.clarin.webanno.webapp.support.ApplicationContextProvider"></bean>
 </beans>
