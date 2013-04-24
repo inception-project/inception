@@ -70,7 +70,7 @@ public interface RepositoryService
      */
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void createAnnotationDocumentContent(JCas jCas, AnnotationDocument annotationDocument, User user)
+    void createAnnotationDocumentContent(JCas jCas, SourceDocument document, User user)
         throws IOException;
 
     /**
