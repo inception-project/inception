@@ -759,7 +759,7 @@ public class BratAnnotator
         // get project preference from file system
         try {
             for (Entry<Object, Object> entry : repository.loadUserSettings(aUsername,
-                    bratAnnotatorModel.getProject(), Subject.annotation).entrySet()) {
+                    bratAnnotatorModel.getProject(), Subject.ANNOTATION).entrySet()) {
                 String propertyName = entry.getKey().toString();
                 int index = propertyName.lastIndexOf(".");
                 propertyName = propertyName.substring(index + 1);
