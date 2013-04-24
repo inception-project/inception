@@ -16,6 +16,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
@@ -117,8 +118,8 @@ public class AnnotationPage
             @Override
             public void onClick(AjaxRequestTarget target)
             {
-                openDocumentsModal.setContent(new OpenModalWindowPanel(openDocumentsModal.getContentId(),
-                        openDataMOdel, openDocumentsModal, Subject.ANNOTATION));
+                openDocumentsModal.setContent(new OpenModalWindowPanel(openDocumentsModal
+                        .getContentId(), openDataMOdel, openDocumentsModal, Subject.ANNOTATION));
                 openDocumentsModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
                 {
                     private static final long serialVersionUID = -1746088901018629567L;
@@ -130,22 +131,6 @@ public class AnnotationPage
                                 && openDataMOdel.getDocument() != null) {
                             String collection = "#" + openDataMOdel.getProject().getName() + "/";
                             String document = openDataMOdel.getDocument().getName();
-
-                            /*
-                             * String coll ="$('#collection_input').val("+collection+");"; String
-                             * doc =" $('#document_input').val("+document+");";
-                             *
-                             *
-                             *
-                             * target.appendJavaScript(
-                             * "dispatcher.post('ajax', [{action: 'getDocument'," +
-                             * "'collection': "+collection+",'document': "+document+",}, " +
-                             * "'renderData', {'collection': "+collection+"," +
-                             * " 'document': "+document+"}])"); target.add(annotator);
-                             * target.appendJavaScript
-                             * ("dispatcher.post('startedRendering', ["+collection
-                             * +", "+document+", {}]);");
-                             */
                             target.appendJavaScript("window.location.hash = '" + collection
                                     + document + "';");
                         }
@@ -246,6 +231,73 @@ public class AnnotationPage
             }
         });
 
+        // Show the previous document, if exist
+        add(new AjaxLink<Void>("showPreviousDocument")
+        {
+            private static final long serialVersionUID = 7496156015186497496L;
+
+            /**
+             * Get the current beginning sentence address and add on it the size of the display
+             * window
+             */
+            @Override
+            public void onClick(AjaxRequestTarget target)
+            {
+                // List of all Source Documents in the project
+                List<SourceDocument> listOfSourceDocuements = repository
+                        .listSourceDocuments(annotator.bratAnnotatorModel.getProject());
+
+                // Index of the current source document in the list
+                int currentDocumentIndex = listOfSourceDocuements
+                        .indexOf(annotator.bratAnnotatorModel.getDocument());
+
+                // If the first the document
+                if (currentDocumentIndex == 0) {
+                    target.appendJavaScript("alert('This is the first document!')");
+                }
+                else {
+                    annotator.bratAnnotatorModel.setDocumentName(listOfSourceDocuements.get(
+                            currentDocumentIndex - 1).getName());
+                    //target.add(annotator);
+                    target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                }
+            }
+        }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up }, EventType.click)));
+
+        // Show the next document if exist
+        add(new AjaxLink<Void>("showNextDocument")
+        {
+            private static final long serialVersionUID = 7496156015186497496L;
+
+            /**
+             * Get the current beginning sentence address and add on it the size of the display
+             * window
+             */
+            @Override
+            public void onClick(AjaxRequestTarget target)
+            {
+                // List of all Source Documents in the project
+                List<SourceDocument> listOfSourceDocuements = repository
+                        .listSourceDocuments(annotator.bratAnnotatorModel.getProject());
+
+                // Index of the current source document in the list
+                int currentDocumentIndex = listOfSourceDocuements
+                        .indexOf(annotator.bratAnnotatorModel.getDocument());
+
+                // If the first the document
+                if (currentDocumentIndex == listOfSourceDocuements.size()-1) {
+                    target.appendJavaScript("alert('This is the last document!')");
+                }
+                else {
+                    annotator.bratAnnotatorModel.setDocumentName(listOfSourceDocuements.get(
+                            currentDocumentIndex + 1).getName());
+                   // target.add(annotator);
+                    target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                }
+            }
+        }.add(new InputBehavior(new KeyType[] {KeyType.Shift, KeyType.Page_down }, EventType.click)));
+
+        // Show the next page of this document
         add(new AjaxLink<Void>("showNext")
         {
             private static final long serialVersionUID = 7496156015186497496L;
@@ -271,7 +323,7 @@ public class AnnotationPage
                     }
 
                     else {
-                        target.appendJavaScript("alert('This is Last Page!')");
+                        target.appendJavaScript("alert('This is last page!')");
                     }
                 }
                 else {
@@ -280,6 +332,7 @@ public class AnnotationPage
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Page_down }, EventType.click)));
 
+        // SHow the previous page of this document
         add(new AjaxLink<Void>("showPrevious")
         {
             private static final long serialVersionUID = 7496156015186497496L;
@@ -326,7 +379,7 @@ public class AnnotationPage
                         target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
                     }
                     else {
-                        target.appendJavaScript("alert('This is first Page!')");
+                        target.appendJavaScript("alert('This is first page!')");
                     }
                 }
                 else {

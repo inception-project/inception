@@ -94,6 +94,7 @@ public class BratAnnotator
     private AnnotationService annotationService;
 
     public Label numberOfPages;
+    public Label documentNameLabel;
     private int sentenceNumber = 1;
     private int totalNumberOfSentence;
 
@@ -117,6 +118,35 @@ public class BratAnnotator
         feedbackPanel.setOutputMarkupId(true);
         feedbackPanel.add(new SimpleAttributeModifier("class", "info"));
         feedbackPanel.add(new SimpleAttributeModifier("class", "error"));
+
+        // Add project and document information at the top
+
+        add(documentNameLabel = (Label) new Label("doumentName", new LoadableDetachableModel()
+        {
+
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected String load()
+            {
+                String projectName;
+                String documentName;
+                if (bratAnnotatorModel.getProject() == null) {
+                    projectName = "/";
+                }
+                else {
+                    projectName = bratAnnotatorModel.getProject().getName() + "/";
+                }
+                if (bratAnnotatorModel.getDocument() == null) {
+                    documentName = "";
+                }
+                else {
+                    documentName = bratAnnotatorModel.getDocument().getName();
+                }
+                return projectName + documentName;
+
+            }
+        }).setOutputMarkupId(true));
 
         add(numberOfPages = (Label) new Label("numberOfPages", new LoadableDetachableModel()
         {
@@ -219,12 +249,19 @@ public class BratAnnotator
 
                 else if (request.getParameterValue("action").toString().equals("getDocument")) {
                     String collection = request.getParameterValue("collection").toString();
-                    String documentName = request.getParameterValue("document").toString();
+                    String documentName;
+                    if (bratAnnotatorModel.getDocumentName() == null) {
+                        documentName = request.getParameterValue("document").toString();
+                    }
+                    else {
+                        documentName = bratAnnotatorModel.getDocumentName();
+                    }
 
                     boolean firstTimeDocumentOpened = isDocumentOpenedFirstTime(collection,
                             documentName);
 
-                    result = getDocument(request, bratAnnotatorModel.getUser(), uIData);
+                    result = getDocument(collection, documentName, bratAnnotatorModel.getUser(),
+                            uIData);
 
                     if (firstTimeDocumentOpened) {
                         info("Document is opened for the first time. "
@@ -232,6 +269,9 @@ public class BratAnnotator
                                 + bratAnnotatorModel.getDocument().getFormat()
                                 + "> has been performed.");
                     }
+                    // update source document
+                    bratAnnotatorModel.setDocument(repository.getSourceDocument(documentName,
+                            bratAnnotatorModel.getProject()));
                 }
                 else if (request.getParameterValue("action").toString().equals("createSpan")) {
                     try {
@@ -242,13 +282,19 @@ public class BratAnnotator
                         }
                         else {
                             error("This document is already closed. Please ask admin to re-open");
-                            result = getDocument(request, bratAnnotatorModel.getUser(), uIData);
+                            String collection = request.getParameterValue("collection").toString();
+                            String documentName = request.getParameterValue("document").toString();
+                            result = getDocument(collection, documentName,
+                                    bratAnnotatorModel.getUser(), uIData);
                         }
                     }
 
                     catch (Exception e) {
                         info(e);
-                        result = getDocument(request, bratAnnotatorModel.getUser(), uIData);
+                        String collection = request.getParameterValue("collection").toString();
+                        String documentName = request.getParameterValue("document").toString();
+                        result = getDocument(collection, documentName,
+                                bratAnnotatorModel.getUser(), uIData);
                     }
 
                 }
@@ -261,7 +307,10 @@ public class BratAnnotator
                     }
                     else {
                         error("This document is already closed. Please ask admin to re-open");
-                        result = getDocument(request, bratAnnotatorModel.getUser(), uIData);
+                        String collection = request.getParameterValue("collection").toString();
+                        String documentName = request.getParameterValue("document").toString();
+                        result = getDocument(collection, documentName,
+                                bratAnnotatorModel.getUser(), uIData);
                     }
                 }
 
@@ -273,7 +322,10 @@ public class BratAnnotator
                     }
                     else {
                         error("This document is already closed. Please ask admin to re-open");
-                        result = getDocument(request, bratAnnotatorModel.getUser(), uIData);
+                        String collection = request.getParameterValue("collection").toString();
+                        String documentName = request.getParameterValue("document").toString();
+                        result = getDocument(collection, documentName,
+                                bratAnnotatorModel.getUser(), uIData);
                     }
                 }
                 else if (request.getParameterValue("action").toString().equals("deleteSpan")) {
@@ -284,7 +336,10 @@ public class BratAnnotator
                     }
                     else {
                         error("This document is already closed. Please ask admin to re-open");
-                        result = getDocument(request, bratAnnotatorModel.getUser(), uIData);
+                        String collection = request.getParameterValue("collection").toString();
+                        String documentName = request.getParameterValue("document").toString();
+                        result = getDocument(collection, documentName,
+                                bratAnnotatorModel.getUser(), uIData);
                     }
                 }
 
@@ -296,7 +351,10 @@ public class BratAnnotator
                     }
                     else {
                         error("This document is already closed. Please ask admin to re-open");
-                        result = getDocument(request, bratAnnotatorModel.getUser(), uIData);
+                        String collection = request.getParameterValue("collection").toString();
+                        String documentName = request.getParameterValue("document").toString();
+                        result = getDocument(collection, documentName,
+                                bratAnnotatorModel.getUser(), uIData);
                     }
                 }
 
@@ -324,7 +382,7 @@ public class BratAnnotator
                 // getRequestCycle().scheduleRequestHandlerAfterCurrent(
                 // new TextRequestHandler("application/json", "UTF-8", out.toString()));
                 aTarget.add(numberOfPages);
-
+                aTarget.add(documentNameLabel);
                 aTarget.add(feedbackPanel);
             }
         };
@@ -359,17 +417,16 @@ public class BratAnnotator
         aResponse.renderOnLoadJavaScript("\n" + StringUtils.join(script, "\n"));
     }
 
-    private Object getDocument(IRequestParameters aRequest, User aUser, BratAnnotatorUIData aUIData)
+    private Object getDocument(String aCollection, String aDocumentName, User aUser,
+            BratAnnotatorUIData aUIData)
     {
         Object result = null;
         BratAjaxCasController controller = new BratAjaxCasController(jsonConverter, repository,
                 annotationService);
-        String collection = aRequest.getParameterValue("collection").toString();
-        String documentName = aRequest.getParameterValue("document").toString();
 
         try {
             {
-                setAttributesForDocument(collection, documentName, aUIData);
+                setAttributesForDocument(aCollection, aDocumentName, aUIData);
             }
             aUIData.setGetDocument(true);
             result = controller.getDocument(bratAnnotatorModel, aUIData);
@@ -423,14 +480,15 @@ public class BratAnnotator
             setAttributesForDocument(bratAnnotatorModel.getProject().getName(), bratAnnotatorModel
                     .getDocument().getName(), aUIData);
             aUIData.setAnnotationOffsetStart(BratAjaxCasUtil.getAnnotationBeginOffset(
-                    aUIData.getjCas(), bratAnnotatorModel.getSentenceAddress()) + start);
+                    aUIData.getjCas(), bratAnnotatorModel.getSentenceAddress())
+                    + start);
             aUIData.setAnnotationOffsetEnd(BratAjaxCasUtil.getAnnotationBeginOffset(
-                    aUIData.getjCas(), bratAnnotatorModel.getSentenceAddress()) + end);
+                    aUIData.getjCas(), bratAnnotatorModel.getSentenceAddress())
+                    + end);
             aUIData.setType(aRequest.getParameterValue("type").toString());
 
             if (!BratAjaxCasUtil.offsetsInOneSentences(aUIData.getjCas(),
-                    aUIData.getAnnotationOffsetStart(),
-                    aUIData.getAnnotationOffsetEnd())) {
+                    aUIData.getAnnotationOffsetStart(), aUIData.getAnnotationOffsetEnd())) {
                 throw new Exception(
                         "Annotation coveres multiple sentence, Limit your annotation to single sentence");
             }
@@ -438,9 +496,8 @@ public class BratAnnotator
             if (bratAnnotatorModel.isScrollPage()) {
                 bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(
                         aUIData.getjCas(), bratAnnotatorModel.getSentenceAddress(),
-                        aUIData.getAnnotationOffsetStart(),
-                        bratAnnotatorModel.getProject(), bratAnnotatorModel.getDocument(),
-                        bratAnnotatorModel.getWindowSize()));
+                        aUIData.getAnnotationOffsetStart(), bratAnnotatorModel.getProject(),
+                        bratAnnotatorModel.getDocument(), bratAnnotatorModel.getWindowSize()));
             }
         }
         catch (JsonParseException e) {
@@ -483,9 +540,8 @@ public class BratAnnotator
             if (bratAnnotatorModel.isScrollPage()) {
                 bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(
                         aUIData.getjCas(), bratAnnotatorModel.getSentenceAddress(),
-                        aUIData.getAnnotationOffsetStart(),
-                        bratAnnotatorModel.getProject(), bratAnnotatorModel.getDocument(),
-                        bratAnnotatorModel.getWindowSize()));
+                        aUIData.getAnnotationOffsetStart(), bratAnnotatorModel.getProject(),
+                        bratAnnotatorModel.getDocument(), bratAnnotatorModel.getWindowSize()));
             }
         }
         catch (UIMAException e) {
@@ -522,9 +578,8 @@ public class BratAnnotator
                 if (bratAnnotatorModel.isScrollPage()) {
                     bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(
                             aUIData.getjCas(), bratAnnotatorModel.getSentenceAddress(),
-                            aUIData.getAnnotationOffsetStart(),
-                            bratAnnotatorModel.getProject(), bratAnnotatorModel.getDocument(),
-                            bratAnnotatorModel.getWindowSize()));
+                            aUIData.getAnnotationOffsetStart(), bratAnnotatorModel.getProject(),
+                            bratAnnotatorModel.getDocument(), bratAnnotatorModel.getWindowSize()));
                 }
             }
         }
@@ -556,17 +611,18 @@ public class BratAnnotator
             setAttributesForDocument(bratAnnotatorModel.getProject().getName(), bratAnnotatorModel
                     .getDocument().getName(), aUIData);
             aUIData.setAnnotationOffsetStart(BratAjaxCasUtil.getAnnotationBeginOffset(
-                    aUIData.getjCas(), bratAnnotatorModel.getSentenceAddress()) + start);
+                    aUIData.getjCas(), bratAnnotatorModel.getSentenceAddress())
+                    + start);
             aUIData.setAnnotationOffsetEnd(BratAjaxCasUtil.getAnnotationBeginOffset(
-                    aUIData.getjCas(), bratAnnotatorModel.getSentenceAddress()) + end);
+                    aUIData.getjCas(), bratAnnotatorModel.getSentenceAddress())
+                    + end);
             aUIData.setType(aRequest.getParameterValue("type").toString());
             result = controller.deleteSpan(bratAnnotatorModel, id, aUIData);
             if (bratAnnotatorModel.isScrollPage()) {
                 bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(
                         aUIData.getjCas(), bratAnnotatorModel.getSentenceAddress(),
-                        aUIData.getAnnotationOffsetStart(),
-                        bratAnnotatorModel.getProject(), bratAnnotatorModel.getDocument(),
-                        bratAnnotatorModel.getWindowSize()));
+                        aUIData.getAnnotationOffsetStart(), bratAnnotatorModel.getProject(),
+                        bratAnnotatorModel.getDocument(), bratAnnotatorModel.getWindowSize()));
             }
 
         }
@@ -609,9 +665,8 @@ public class BratAnnotator
             if (bratAnnotatorModel.isScrollPage()) {
                 bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(
                         aUIData.getjCas(), bratAnnotatorModel.getSentenceAddress(),
-                        aUIData.getAnnotationOffsetStart(),
-                        bratAnnotatorModel.getProject(), bratAnnotatorModel.getDocument(),
-                        bratAnnotatorModel.getWindowSize()));
+                        aUIData.getAnnotationOffsetStart(), bratAnnotatorModel.getProject(),
+                        bratAnnotatorModel.getDocument(), bratAnnotatorModel.getWindowSize()));
             }
 
         }

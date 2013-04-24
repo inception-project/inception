@@ -78,7 +78,11 @@ public class BratAnnotatorModel
      * Used to enable/disable auto-scrolling while annotation
      */
     private boolean scrollPage;
-
+    /**
+     * If the document is opened through the next/previous buttons on the annotation page, not with
+     * the open dialog method, used to change {@link #document}
+     */
+    private String documentName;
     public Project getProject()
     {
         return project;
@@ -177,6 +181,16 @@ public class BratAnnotatorModel
     public void setScrollPage(boolean aScrollPage)
     {
         scrollPage = aScrollPage;
+    }
+
+    public String getDocumentName()
+    {
+        return documentName;
+    }
+
+    public void setDocumentName(String documentName)
+    {
+        this.documentName = documentName;
     }
 
 }

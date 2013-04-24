@@ -27,153 +27,242 @@
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 
-<html lang="en-US" xml:lang="en-US" xmlns="http://www.w3.org/1999/xhtml"
-	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 
 
-<body>
-	<wicket:extend>
-		<script>
-			var njsw = document.getElementById('no_js_wrapper');
-			njsw.parentNode.removeChild(njsw);
-		</script>
-		
-		<img id="spinner" src="static/img/spinner.gif" />
-		<div class="actionbar">
-			<ul class="horizontal">
-				<li><a wicket:id="showOpenDocumentModal"
-					id="showOpenDocumentModal"> <img src="images/drawer_open.png"
-						title="Open" /><br />Open
-				</a></li>
+<html 
+    lang="en-US"
+    xml:lang="en-US"
+    xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 
-				<li><a wicket:id="showExportModal"> <img
-						src="images/document_export.png" title="Export" /><br />Export
-				</a></li>
+  <body>
+    <wicket:extend>
+      <script>
+        var njsw = document.getElementById('no_js_wrapper');
+        njsw.parentNode.removeChild(njsw);
+      </script>
 
-				<li><a wicket:id="showannotationLayerModal"> <img
-						src="images/cog.png" title="Settings" /><br />Settings
-				</a></li>
+      <img id="spinner" src="static/img/spinner.gif" />
+      <div class="actionbar">
+        <ul class="horizontal">
 
-				<li><a wicket:id="showGuidelineModal"> <img
-						src="images/help.png" title="Guidelines" /><br />Guidelines
-				</a></li>
+          <li>
+          <a wicket:id="showPreviousDocument">
+            <img src="images/document_back.png" title="First page" />
+            <br />
+            Previous Document
+          </a>
+        </li>
+        <li>
+        <a wicket:id="showOpenDocumentModal" id="showOpenDocumentModal">
+          <img src="images/drawer_open.png" title="Open" />
+          <br />
+          Open
+        </a>
+      </li>
 
-				<li><a wicket:id="showFirst"> <img
-						src="images/document_page.png" title="First page" /><br />First
-				</a></li>
+      <li>
+      <a wicket:id="showExportModal">
+        <img src="images/document_export.png" title="Export" />
+        <br />
+        Export
+      </a>
+    </li>
 
-				<li><a wicket:id="showPrevious"> <img
-						src="images/document_page_previous.png" title="Previous page" /><br />Prev.
-				</a></li>
+    <li>
+    <a wicket:id="showannotationLayerModal">
+      <img src="images/cog.png" title="Settings" />
+      <br />
+      Settings
+    </a>
+  </li>
 
-				<li><div style="height: 32px;">
-						<input type="number" wicket:id="gotoPageText"
-							style="width: 4em; text-align: right;" />
-					</div>
-					<div>
-						<a wicket:id="gotoPageLink">Go to</a>
-					</div></li>
+  <li>
+  <a wicket:id="showGuidelineModal">
+    <img src="images/help.png" title="Guidelines" />
+    <br />
+    Guidelines
+  </a>
+</li>
 
-				<li><a wicket:id="showNext"> <img
-						src="images/document_page_next.png" title="Next page" /><br />Next
-				</a></li>
+<li>
+<a wicket:id="showFirst">
+  <img src="images/document_page.png" title="First page" />
+  <br />
+  First
+</a>
+</li>
 
-				<li><a wicket:id="showLast"> <img
-						src="images/document_page_last.png" title="Last page" /><br />Last
-				</a></li>
+<li>
+<a wicket:id="showPrevious">
+  <img src="images/document_page_previous.png" title="Previous page" />
+  <br />
+  Prev.
+</a>
+</li>
 
-				<li><a wicket:id="showYesNoModal"> <img
-						src="images/accept.png" title="Done" /><br />Done
-				</a></li>
-			</ul>
-		</div>
-		<div id="messagepullup" class="messages" style="display: none" />
-		<div id="commentpopup" />
-		<div id="document_name">
-			<input readonly="readonly" />
-		</div>
+<li>
+<div style="height: 32px;">
+  <input type="number" wicket:id="gotoPageText" style="width: 4em; text-align: right;" />
+</div>
+<div>
+  <a wicket:id="gotoPageLink">
+    Go to
+  </a>
+</div>
+</li>
 
-		<!-- <span id="document_ctime"/> -->
-		<div wicket:id=annotationLayerModal></div>
-		<div wicket:id=exportModal></div>
-		<div wicket:id=guidelineModal></div>
-		<div wicket:id=openDocumentsModal></div>
-		<div wicket:id=yesNoModal></div>
+<li>
+<a wicket:id="showNext">
+  <img src="images/document_page_next.png" title="Next page" />
+  <br />
+  Next
+</a>
+</li>
 
-		<div class="hfill" wicket:id="embedder1"></div>
+<li>
+<a wicket:id="showLast">
+  <img src="images/document_page_last.png" title="Last page" />
+  <br />
+  Last
+</a>
+</li>
 
-		<!-- Span dialog (view+edit) -->
-		<form id="span_form" class="dialog" title="Span">
-			<!-- Span dialog annotated text -->
-			<fieldset id="span_selected_fset">
-				<legend> Text </legend>
-				<a target="brat_linked" id="span_highlight_link" href="#"> Link
-				</a>
-				<div id="span_selected" />
-			</fieldset>
-			<!-- Span dialog search links -->
-			<fieldset id="span_search_fieldset">
-				<legend> Search </legend>
-				<div id="span_search_links" />
-			</fieldset>
-			<!-- Span dialog type selector -->
-			<fieldset>
-				<div id="entity_and_event_wrapper" class="split_wrapper">
-					<div id="span_entity_section" class="wrapper_half_left">
-						<div id="entity_label" class="label-like">Entity type</div>
-						<div id="entity_types" class="scroll_wrapper_upper">
-							<div class="scroller" />
-						</div>
-					</div>
-				</div>
-			</fieldset>
-			<!-- Span dialog normalization -->
-			<fieldset id="norm_fieldset">
-				<legend> Normalization </legend>
-				<div id="norm_container">
-					<select id="span_norm_db" /> <a id="span_norm_db_link"
-						target="brat_linked" href="#" title="Search DB"> <img
-						src="static/img/Fugue-shadowless-magnifier.png"
-						style="vertical-align: middle" />
-					</a> <span class="span_norm_label"> ID: </span> <input
-						id="span_norm_id" class="span_norm_id_input" style="width: 20%" />
-					<span class="span_norm_label"> Ref: </span> <input
-						id="span_norm_txt" class="span_norm_txt_input" readonly="readonly"
-						style="width: 45%" placeholder="Click here to search" /> <a
-						id="span_norm_ref_link" target="brat_linked" href="#"
-						title="See in DB"> <img
-						src="static/img/Fugue-shadowless-external.png"
-						style="vertical-align: middle" />
-					</a> <input id="clear_norm_button" type="button" value="&#x2715;"
-						title="Clear normalization" />
-				</div>
-			</fieldset>
-		</form>
-		<!-- Arc dialog -->
-		<form id="arc_form" class="dialog" title="Arc">
-			<fieldset id="arc_origin_fset">
-				<legend> From </legend>
-				<a target="brat_linked" id="arc_highlight_link" href="#"> Link </a>
-				<div id="arc_origin" />
-			</fieldset>
+<li>
+<a wicket:id="showYesNoModal">
+  <img src="images/accept.png" title="Done" />
+  <br />
+  Done
+</a>
+</li>
 
-			<fieldset id="arc_target_fset">
-				<legend> To </legend>
-				<div id="arc_target" />
-			</fieldset>
+<li>
+<a wicket:id="showNextDocument">
+  <img src="images/document_next.png" title="Done" />
+  <br />
+  Done
+</a>
+</li>
 
-			<div id="arc_roles" class="scroll_fset">
-				<fieldset>
-					<legend> Type </legend>
-					<div class="scroller" />
-				</fieldset>
-			</div>
+</ul>
+</div>
+<div id="messagepullup" class="messages" style="display: none" />
+<div id="commentpopup" />
+<div id="document_name">
+  <input readonly="readonly" />
+</div>
 
-		</form>
+<!-- <span id="document_ctime"/> -->
+<div wicket:id=annotationLayerModal>
+</div>
+<div wicket:id=exportModal>
+</div>
+<div wicket:id=guidelineModal>
+</div>
+<div wicket:id=openDocumentsModal>
+</div>
+<div wicket:id=yesNoModal>
+</div>
 
-		<div id="waiter" class="dialog" title="Please wait">
-			<img src="static/img/spinner.gif" />
-		</div>
-	</wicket:extend>
+<div class="hfill" wicket:id="embedder1">
+</div>
+
+<!-- Span dialog (view+edit) -->
+<form id="span_form" class="dialog" title="Span">
+  <!-- Span dialog annotated text -->
+  <fieldset id="span_selected_fset">
+    <legend>
+      Text
+    </legend>
+    <a target="brat_linked" id="span_highlight_link" href="#">
+      Link
+    </a>
+    <div id="span_selected" />
+  </fieldset>
+  <!-- Span dialog search links -->
+  <fieldset id="span_search_fieldset">
+    <legend>
+      Search
+    </legend>
+    <div id="span_search_links" />
+  </fieldset>
+  <!-- Span dialog type selector -->
+  <fieldset>
+    <div id="entity_and_event_wrapper" class="split_wrapper">
+      <div id="span_entity_section" class="wrapper_half_left">
+        <div id="entity_label" class="label-like">
+          Entity type
+        </div>
+        <div id="entity_types" class="scroll_wrapper_upper">
+          <div class="scroller" />
+        </div>
+      </div>
+    </div>
+  </fieldset>
+  <!-- Span dialog normalization -->
+  <fieldset id="norm_fieldset">
+    <legend>
+      Normalization
+    </legend>
+    <div id="norm_container">
+      <select id="span_norm_db" />
+      <a id="span_norm_db_link" target="brat_linked" href="#" title="Search DB">
+        <img src="static/img/Fugue-shadowless-magnifier.png" style="vertical-align: middle" />
+      </a>
+      <span class="span_norm_label">
+        ID:
+      </span>
+      <input id="span_norm_id" class="span_norm_id_input" style="width: 20%" />
+      <span class="span_norm_label">
+        Ref:
+      </span>
+      <input 
+          id="span_norm_txt"
+          class="span_norm_txt_input"
+          readonly="readonly"
+          style="width: 45%"
+          placeholder="Click here to search"
+      />
+      <a id="span_norm_ref_link" target="brat_linked" href="#" title="See in DB">
+        <img src="static/img/Fugue-shadowless-external.png" style="vertical-align: middle" />
+      </a>
+      <input id="clear_norm_button" type="button" value="&#x2715;" title="Clear normalization" />
+    </div>
+  </fieldset>
+</form>
+<!-- Arc dialog -->
+<form id="arc_form" class="dialog" title="Arc">
+  <fieldset id="arc_origin_fset">
+    <legend>
+      From
+    </legend>
+    <a target="brat_linked" id="arc_highlight_link" href="#">
+      Link
+    </a>
+    <div id="arc_origin" />
+  </fieldset>
+
+  <fieldset id="arc_target_fset">
+    <legend>
+      To
+    </legend>
+    <div id="arc_target" />
+  </fieldset>
+
+  <div id="arc_roles" class="scroll_fset">
+    <fieldset>
+      <legend>
+        Type
+      </legend>
+      <div class="scroller" />
+    </fieldset>
+  </div>
+
+</form>
+
+<div id="waiter" class="dialog" title="Please wait">
+  <img src="static/img/spinner.gif" />
+</div>
+</wicket:extend>
 </body>
 </html>
