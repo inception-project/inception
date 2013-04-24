@@ -211,7 +211,7 @@ public class CasToBratJsonTest
 
         Project project = new Project();
         project.setReverseDependencyDirection(true);
-
+        bratannotatorModel.setProject(project);
         casToBratJson.setJsonConverter(jsonConverter);
 
         GetDocumentResponse response = new GetDocumentResponse();
