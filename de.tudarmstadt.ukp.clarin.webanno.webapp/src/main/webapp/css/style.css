@@ -517,3 +517,9 @@ div.tabpanel div.tab-row a:hover {
 	
 }
 
+.curation-sentence-item {
+	border:1px outset gray;
+	margin:2px 0px;
+	padding:2px 0px;
+	white-space:nowrap;
+}
