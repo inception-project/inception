@@ -190,12 +190,12 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public void createAnnotationDocumentContent(JCas aJcas, AnnotationDocument aAnnotationDocument,
+    public void createAnnotationDocumentContent(JCas aJcas, SourceDocument aDocument,
             User aUser)
         throws IOException
     {
 
-        createAnnotationContent(aAnnotationDocument.getDocument(), aJcas, aUser.getUsername(),
+        createAnnotationContent(aDocument, aJcas, aUser.getUsername(),
                 aUser);
     }
 
