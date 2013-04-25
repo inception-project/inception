@@ -252,6 +252,7 @@ public class BratCurationDocumentEditor
                 + "var logger = new AnnotationLog(dispatcher);" + "dispatcher.post('init');"
                 //+ "window.location.hash = '" + rewriteUrl + "';"
                 //+ "dispatcher.post('setCollection', ['"+collection+"', '"+document+"', {}]);"
+                + "dispatcher.post('clearSVG', []);"
                 + "dispatcher.post('current', ['"+collection+"', '1234', {}, true]);"
                 + "dispatcher.post('ajax', [{action: 'getCollectionInformation',collection: '"+collection+"'}, 'collectionLoaded', {collection: '"+collection+"',keep: true}]);"
                 //+ "dispatcher.post('collectionChanged');"
@@ -573,4 +574,5 @@ public class BratCurationDocumentEditor
             }
             return jCas;
         }
+    
 }

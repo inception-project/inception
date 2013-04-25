@@ -218,6 +218,7 @@ public class CurationPanel extends Panel {
 						System.out.println("On Merge");
 
 						updateRightSide(aTarget, outer, curationContainer);
+						aTarget.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
 					}
     	    	};
     	    	curationVisualizer.setOutputMarkupId(true);
@@ -244,6 +245,7 @@ public class CurationPanel extends Panel {
 					protected void respond(AjaxRequestTarget target) {
 						curationSegment = curationSegmentItem;
 						updateRightSide(target, getParent(), curationContainer);
+                        target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
 					}
 
 				};

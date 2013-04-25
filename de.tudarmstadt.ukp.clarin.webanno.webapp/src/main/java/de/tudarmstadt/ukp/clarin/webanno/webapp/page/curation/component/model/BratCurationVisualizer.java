@@ -77,6 +77,7 @@ public class BratCurationVisualizer extends BratVisualizer {
 				"  '"+collProvider.getCallbackUrl()+"', ",
 				"  '"+docProvider.getCallbackUrl()+"', ",
 				"  function(dispatcher) {",
+                "dispatcher.post('clearSVG', []);",
 				"    dispatcher.ajaxUrl = '" + controller.getCallbackUrl() + "'; ",
                 "    dispatcher.wicketId = '" + vis.getMarkupId() + "'; ",
                 "    var ajax = new Ajax(dispatcher);",
