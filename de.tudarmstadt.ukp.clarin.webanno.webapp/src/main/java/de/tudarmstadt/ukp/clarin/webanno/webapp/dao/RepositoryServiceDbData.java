@@ -324,9 +324,7 @@ public class RepositoryServiceDbData
             Class aWriter, String aFileName)
         throws UIMAException, IOException, WLFormatException, ClassNotFoundException
     {
-        File exportTempDir = File.createTempFile("webanno", "export");
-        exportTempDir.delete();
-        exportTempDir.mkdirs();
+        File exportTempDir =  new File(System.getProperty("java.io.tmpdir"));
 
         File annotationFolder = getAnnotationFolder(aDocument);
         String serializedCaseFileName = aUser.getUsername() + ".ser";
