@@ -324,7 +324,9 @@ public class RepositoryServiceDbData
             Class aWriter, String aFileName)
         throws UIMAException, IOException, WLFormatException, ClassNotFoundException
     {
-        File exportTempDir =  new File(System.getProperty("java.io.tmpdir"));
+        File exportTempDir = File.createTempFile("webanno", "export");
+        exportTempDir.delete();
+        exportTempDir.mkdirs();
 
         File annotationFolder = getAnnotationFolder(aDocument);
         String serializedCaseFileName = aUser.getUsername() + ".ser";
@@ -370,12 +372,12 @@ public class RepositoryServiceDbData
 
         if (exportTempDir.listFiles().length > 1) {
             try {
-                DaoUtils.zipFolder(exportTempDir, new File(exportTempDir.getName() + ".zip"));
+                DaoUtils.zipFolder(exportTempDir, new File(exportTempDir.getAbsolutePath() + ".zip"));
             }
             catch (Exception e) {
                 createLog(aProject, aUser).info("Unable to create Zip File");
             }
-            return new File(exportTempDir.getName() + ".zip");
+            return new File(exportTempDir.getAbsolutePath() + ".zip");
         }
         return exportTempDir.listFiles()[0];
 
