@@ -113,8 +113,8 @@ public class CurationPage
                         // and curation not yet
                         // finished on it
                         if (openDataModel.getDocument() != null
-                                && repository.isAnnotationFinished(openDataModel.getDocument(),
-                                        openDataModel.getProject(), user)
+                                && repository.existsFinishedAnnotation(openDataModel.getDocument(),
+                                        openDataModel.getProject())
                                 && !openDataModel.getDocument().getState()
                                         .equals(SourceDocumentState.CURATION_FINISHED)) {
                             // Update source document state to CURRATION_INPROGRESS

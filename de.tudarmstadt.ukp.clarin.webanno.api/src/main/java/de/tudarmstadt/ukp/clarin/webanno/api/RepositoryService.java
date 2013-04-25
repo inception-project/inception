@@ -324,6 +324,14 @@ public interface RepositoryService
     boolean isAnnotationFinished(SourceDocument document, Project project, User user);
 
     /**
+     * Check if at least one annotation document is finished for this {@link SourceDocument} in the project
+     * @param document
+     * @param project
+     * @return
+     */
+    boolean existsFinishedAnnotation(SourceDocument document, Project project);
+
+    /**
      * List all annotation documents in the system.
      *
      * @return
