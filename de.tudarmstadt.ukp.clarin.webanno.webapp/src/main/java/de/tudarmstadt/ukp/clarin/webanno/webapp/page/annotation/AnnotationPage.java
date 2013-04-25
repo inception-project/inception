@@ -258,8 +258,14 @@ public class AnnotationPage
                 else {
                     annotator.bratAnnotatorModel.setDocumentName(listOfSourceDocuements.get(
                             currentDocumentIndex - 1).getName());
-                    //target.add(annotator);
-                    target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                    // target.add(annotator);
+                    String project = "#" + annotator.bratAnnotatorModel.getProject().getName()
+                            + "/";
+                    String document = listOfSourceDocuements.get(currentDocumentIndex - 1)
+                            .getName();
+                    String rewriteUrl = project + document;
+                    target.appendJavaScript("window.location.hash = '" + rewriteUrl
+                            + "'; Wicket.Window.unloadConfirmation=false;window.location.reload()");
                 }
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up }, EventType.click)));
@@ -285,17 +291,23 @@ public class AnnotationPage
                         .indexOf(annotator.bratAnnotatorModel.getDocument());
 
                 // If the first the document
-                if (currentDocumentIndex == listOfSourceDocuements.size()-1) {
+                if (currentDocumentIndex == listOfSourceDocuements.size() - 1) {
                     target.appendJavaScript("alert('This is the last document!')");
                 }
                 else {
                     annotator.bratAnnotatorModel.setDocumentName(listOfSourceDocuements.get(
                             currentDocumentIndex + 1).getName());
-                   // target.add(annotator);
-                    target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                    // target.add(annotator);
+                    String project = "#" + annotator.bratAnnotatorModel.getProject().getName()
+                            + "/";
+                    String document = listOfSourceDocuements.get(currentDocumentIndex + 1)
+                            .getName();
+                    String rewriteUrl = project + document;
+                    target.appendJavaScript("window.location.hash = '" + rewriteUrl
+                            + "'; Wicket.Window.unloadConfirmation=false;window.location.reload()");
                 }
             }
-        }.add(new InputBehavior(new KeyType[] {KeyType.Shift, KeyType.Page_down }, EventType.click)));
+        }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down }, EventType.click)));
 
         // Show the next page of this document
         add(new AjaxLink<Void>("showNext")
