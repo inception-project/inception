@@ -39,7 +39,11 @@ public enum SourceDocumentStateTransition
     /**
      * Explicit curator action
      */
-    CURATIONINPROGRESSTOCURATIONFINISHED;
+    CURATIONINPROGRESSTOCURATIONFINISHED,
+    /**
+     * Implicit when admin re-open at least one annotation document
+     */
+    ANNOTATIONFINISHEDTOANNOTATIONINPROGRESS;
 
     public static SourceDocumentState transition(SourceDocumentStateTransition aTransition)
         throws IllegalArgumentException
@@ -55,6 +59,9 @@ public enum SourceDocumentStateTransition
         }
         else if (aTransition.equals(CURATIONINPROGRESSTOCURATIONFINISHED)) {
             return SourceDocumentState.CURATION_FINISHED;
+        }
+        else if (aTransition.equals(ANNOTATIONFINISHEDTOANNOTATIONINPROGRESS)) {
+            return SourceDocumentState.ANNOTATION_INPROGRESS;
         }
         else {
             throw new IllegalArgumentException();

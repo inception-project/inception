@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,16 +19,13 @@ import static org.uimafit.util.JCasUtil.select;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
-import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.jcas.JCas;
@@ -38,6 +35,7 @@ import org.uimafit.util.CasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.AnnotationOption;
@@ -56,12 +54,12 @@ public class CurationBuilder {
 	private RepositoryService repository;
 
 	private final static Log LOG = LogFactory.getLog(CurationPanel.class);
-	
+
 	public CurationBuilder(RepositoryService repository) {
 		this.repository = repository;
 	}
 
-	public CurationContainer buildCurationContainer(SourceDocument sourceDocument) {
+	public CurationContainer buildCurationContainer(Project aProject, SourceDocument sourceDocument) {
 		CurationContainer curationContainer = new CurationContainer();
 			// initialize Variables
 			Map<Integer, Integer> segmentBeginEnd = new HashMap<Integer, Integer>();
@@ -70,8 +68,8 @@ public class CurationBuilder {
 			Map<String, Map<Integer, Integer>> segmentAdress = new HashMap<String, Map<Integer, Integer>>();
 			// get annotation documents
 			List<AnnotationDocument> annotationDocuments = repository
-					.listAnnotationDocument(sourceDocument);
-			
+					.listAnnotationDocument(aProject, sourceDocument);
+
 			Map<String, JCas> jCases = new HashMap<String, JCas>();
 			AnnotationDocument randomAnnotationDocument = null;
 			for (AnnotationDocument annotationDocument : annotationDocuments) {
@@ -79,11 +77,11 @@ public class CurationBuilder {
 				if(annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
 					try {
 						JCas jCas = repository.getAnnotationDocumentContent(annotationDocument);
-						
+
 						if(randomAnnotationDocument == null) {
 							randomAnnotationDocument = annotationDocument;
 						}
-						
+
 						int sentenceNumber = 0;
 						segmentAdress.put(username, new HashMap<Integer, Integer>());
 						for (Sentence sentence : select(jCas, Sentence.class)) {
@@ -93,25 +91,25 @@ public class CurationBuilder {
 							segmentNumber.put(sentence.getBegin(), sentenceNumber);
 							segmentAdress.get(username).put(sentence.getBegin(), sentence.getAddress());
 						}
-						
+
 						jCases.put(username, jCas);
 					} catch (Exception e) {
 						LOG.info("Skipping document due to exception ["+annotationDocument+"]", e);
 					}
 				}
 			}
-			
+
 			// TODO Create pre-merged jcas if not exists for curation user
-			
+
 			JCas mergeJCas = null;
 			try {
 				mergeJCas = repository.getCurationDocumentContent(sourceDocument);
 			} catch (Exception e) {
 				// JCas does not exist
 			}
-			
+
 			int numUsers = jCases.size();
-			
+
 			List<Type> entryTypes = null;
 			// Create jcas, if it could not be loaded from the file system
 			if (mergeJCas == null) {
@@ -130,7 +128,7 @@ public class CurationBuilder {
 
 				entryTypes = getEntryTypes(mergeJCas);
 				jCases.put(CurationPanel.CURATION_USER, mergeJCas);
-		    	
+
 		    	List<AnnotationOption> annotationOptions = null;
 				try {
 					int begin = 0;
@@ -150,7 +148,7 @@ public class CurationBuilder {
 						for (String username : annotationSelection.getAddressByUsername().keySet()) {
 							if(username.equals(CurationPanel.CURATION_USER)) {
 								Integer address = annotationSelection.getAddressByUsername().get(username);
-								
+
 								// removing disagreeing feature structures in mergeJCas
 								if(removeFS && address != null) {
 									FeatureStructure fs = mergeJCas.getLowLevelCas().ll_getFSForRef(address);
@@ -171,19 +169,19 @@ public class CurationBuilder {
 					e1.printStackTrace();
 				}
 			}
-			
+
 			segmentAdress.put(CurationPanel.CURATION_USER, new HashMap<Integer, Integer>());
 			for (Sentence sentence : select(mergeJCas, Sentence.class)) {
 				segmentAdress.get(CurationPanel.CURATION_USER).put(sentence.getBegin(), sentence.getAddress());
 			}
-			
+
 	    	if(entryTypes == null) {
 	    		entryTypes = getEntryTypes(mergeJCas);
 	    	}
 
 			for (Integer begin : segmentBeginEnd.keySet()) {
 				Integer end = segmentBeginEnd.get(begin);
-				
+
 		    	List<AnnotationOption> annotationOptions = null;
 				try {
 					annotationOptions = CasDiff.doDiff(entryTypes, jCases, begin, end);
@@ -191,7 +189,7 @@ public class CurationBuilder {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				
+
 				Boolean hasDiff = false;
 				for (AnnotationOption annotationOption : annotationOptions) {
 					List<AnnotationSelection> annotationSelections = annotationOption.getAnnotationSelections();
@@ -204,7 +202,7 @@ public class CurationBuilder {
 						}
 					}
 				}
-				
+
 				CurationSegment curationSegment = new CurationSegment();
 				curationSegment.setBegin(begin);
 				curationSegment.setEnd(end);
@@ -215,7 +213,7 @@ public class CurationBuilder {
 				}
 				String text = "(" + segmentNumber.get(begin).toString() + ") " + segmentText.get(begin);
 				curationSegment.setText(text);
-				
+
 				for (String username : segmentAdress.keySet()) {
 					curationSegment.getSentenceAddress().put(username, segmentAdress.get(username).get(begin));
 				}

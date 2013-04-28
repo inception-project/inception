@@ -56,13 +56,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.CasToBratJson;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -169,8 +169,9 @@ public class CurationPanel extends Panel {
 		                    AnnotationSelection annotationSelection = annotationSelectionByUsernameAndAddress.get(username).get(address);
 
 		                    SourceDocument sourceDocument = curationContainer.getSourceDocument();
+		                    Project project = curationContainer.getProject();
 		                    AnnotationDocument clickedAnnotationDocument = null;
-		                    List<AnnotationDocument> annotationDocuments = repository.listAnnotationDocument(sourceDocument);
+		                    List<AnnotationDocument> annotationDocuments = repository.listAnnotationDocument(project, sourceDocument);
 		                    for (AnnotationDocument annotationDocument : annotationDocuments) {
 								if(annotationDocument.getUser().getUsername().equals(username)) {
 									clickedAnnotationDocument = annotationDocument;
@@ -269,7 +270,8 @@ public class CurationPanel extends Panel {
 
 	protected void updateRightSide(AjaxRequestTarget target, MarkupContainer parent, CurationContainer curationContainer) {
 		SourceDocument sourceDocument = curationContainer.getSourceDocument();
-		List<AnnotationDocument> annotationDocuments = repository.listAnnotationDocument(sourceDocument);
+		Project project = curationContainer.getProject();
+		List<AnnotationDocument> annotationDocuments = repository.listAnnotationDocument(project, sourceDocument);
 		Map<String, JCas> jCases = new HashMap<String, JCas>();
 		JCas mergeJCas = null;
 		try {
@@ -337,7 +339,7 @@ public class CurationPanel extends Panel {
 				}
 			}
 		}
-		
+
 		List<CurationUserSegment2> sentences = new LinkedList<CurationUserSegment2>();
 
 		boolean hasDiff = false;

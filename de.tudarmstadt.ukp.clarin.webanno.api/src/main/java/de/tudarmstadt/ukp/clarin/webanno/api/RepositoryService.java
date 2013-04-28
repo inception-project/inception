@@ -346,7 +346,8 @@ public interface RepositoryService
     List<AnnotationDocument> listAnnotationDocument(Project project);
 
     /**
-     * List all the {@link AnnotationDocument}s, if available for a given {@link SourceDocument}.
+     * List all the {@link AnnotationDocument}s, if available for a given {@link SourceDocument} in
+     * the {@link Project}.
      * Returns list of {@link AnnotationDocument}s for all {@link User}s in the {@link Project} that
      * has already annotated the {@link SourceDocument}
      *
@@ -354,7 +355,7 @@ public interface RepositoryService
      *            the {@link SourceDocument}
      * @return {@link AnnotationDocument}
      */
-    List<AnnotationDocument> listAnnotationDocument(SourceDocument document);
+    List<AnnotationDocument> listAnnotationDocument(Project project, SourceDocument document);
 
     /**
      * List all annotation documents in the state <b>INPROGRESS</b>

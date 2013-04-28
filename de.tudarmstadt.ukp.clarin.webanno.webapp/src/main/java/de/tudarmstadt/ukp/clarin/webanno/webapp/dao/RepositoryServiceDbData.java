@@ -190,13 +190,11 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public void createAnnotationDocumentContent(JCas aJcas, SourceDocument aDocument,
-            User aUser)
+    public void createAnnotationDocumentContent(JCas aJcas, SourceDocument aDocument, User aUser)
         throws IOException
     {
 
-        createAnnotationContent(aDocument, aJcas, aUser.getUsername(),
-                aUser);
+        createAnnotationContent(aDocument, aJcas, aUser.getUsername(), aUser);
     }
 
     @Override
@@ -372,7 +370,8 @@ public class RepositoryServiceDbData
 
         if (exportTempDir.listFiles().length > 1) {
             try {
-                DaoUtils.zipFolder(exportTempDir, new File(exportTempDir.getAbsolutePath() + ".zip"));
+                DaoUtils.zipFolder(exportTempDir,
+                        new File(exportTempDir.getAbsolutePath() + ".zip"));
             }
             catch (Exception e) {
                 createLog(aProject, aUser).info("Unable to create Zip File");
@@ -453,8 +452,9 @@ public class RepositoryServiceDbData
         return entityManager
                 .createQuery(
                         "SELECT DISTINCT user FROM ProjectPermission WHERE "
-                                + "project =:project ORDER BY username ASC", User.class)
-                .setParameter("project", aProject).getResultList();
+                                + "project =:project ORDER BY username ASC",
+                        User.class).setParameter("project", aProject)
+                .getResultList();
     }
 
     @Override
@@ -537,13 +537,12 @@ public class RepositoryServiceDbData
                 .createQuery(
                         "FROM AnnotationDocument WHERE document = :document AND "
                                 + "project = :project", AnnotationDocument.class)
-                .setParameter("document", aDocument)
-                .setParameter("project", aProject)
+                .setParameter("document", aDocument).setParameter("project", aProject)
                 .getResultList();
-        for(AnnotationDocument annotationDocument: annotationDocuments){
-        if(annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)){
-            return true;
-        }
+        for (AnnotationDocument annotationDocument : annotationDocuments) {
+            if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
+                return true;
+            }
         }
 
         return false;
@@ -553,37 +552,38 @@ public class RepositoryServiceDbData
     @Transactional(noRollbackFor = NoResultException.class)
     public boolean isAnnotationFinished(SourceDocument aDocument, Project aProject, User aUser)
     {
-        try{
+        try {
 
-        AnnotationDocument annotationDocument = entityManager
-                .createQuery(
-                        "FROM AnnotationDocument WHERE document = :document AND "
-                                + "project = :project AND user =:user", AnnotationDocument.class)
-                .setParameter("document", aDocument)
-                .setParameter("project", aProject)
-                .setParameter("user", aUser)
-                .getSingleResult();
-        if(annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)){
-            return true;
-        }
-        else {
-            return false;
-        }
+            AnnotationDocument annotationDocument = entityManager
+                    .createQuery(
+                            "FROM AnnotationDocument WHERE document = :document AND "
+                                    + "project = :project AND user =:user",
+                            AnnotationDocument.class).setParameter("document", aDocument)
+                    .setParameter("project", aProject).setParameter("user", aUser)
+                    .getSingleResult();
+            if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
+                return true;
+            }
+            else {
+                return false;
+            }
         }
         // User even didn't start annotating
-        catch(NoResultException e){
+        catch (NoResultException e) {
             return false;
         }
     }
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public List<AnnotationDocument> listAnnotationDocument(SourceDocument aDocument)
+    public List<AnnotationDocument> listAnnotationDocument(Project aProject,
+            SourceDocument aDocument)
     {
         return entityManager
-                .createQuery("FROM AnnotationDocument WHERE document = :document",
-                        AnnotationDocument.class).setParameter("document", aDocument)
-                .getResultList();
+                .createQuery(
+                        "FROM AnnotationDocument WHERE project =:project AND document = :document",
+                        AnnotationDocument.class).setParameter("project", aProject)
+                .setParameter("document", aDocument).getResultList();
     }
 
     @Override
@@ -652,6 +652,7 @@ public class RepositoryServiceDbData
                         String.class).setParameter("projectId", aproject.getId()).getResultList();
         return users;
     }
+
     /**
      * The method {@link #listProjectUsersWithPermissions(Project)} suffices
      */
@@ -700,7 +701,7 @@ public class RepositoryServiceDbData
 
         for (SourceDocument document : listSourceDocuments(aProject)) {
             removeSourceDocument(document, aUser);
-            // removeAnnotationDocument(document);
+
         }
 
         for (TagSet tagset : annotationService.listTagSets(aProject)) {
@@ -757,7 +758,10 @@ public class RepositoryServiceDbData
 
         // remove metadata from DB
         if (existsAnnotationDocument(aDocument, aUser)) {
-            entityManager.remove(getAnnotationDocument(aDocument, aUser));
+            for(AnnotationDocument annotationDocument:
+                listAnnotationDocument(aDocument.getProject(), aDocument)) {
+                entityManager.remove(annotationDocument);
+            }
         }
         entityManager.remove(aDocument);
 

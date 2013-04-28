@@ -129,9 +129,10 @@ public class CurationPage
                             }
                             // transform jcas to objects for wicket components
                             CurationBuilder builder = new CurationBuilder(repository);
-                            curationContainer = builder.buildCurationContainer(openDataModel
+                            curationContainer = builder.buildCurationContainer(openDataModel.getProject(), openDataModel
                                     .getDocument());
                             curationContainer.setSourceDocument(openDataModel.getDocument());
+                            curationContainer.setProject(openDataModel.getProject());
                             updatePanel(curationContainer);
                             // target.add(curationPanel) should work!
                             target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
