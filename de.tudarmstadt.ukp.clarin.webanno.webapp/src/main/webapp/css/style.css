@@ -14,178 +14,203 @@
  * limitations under the License.
  ******************************************************************************/
 
-body,table {
-	font-family: arial, helvetica, "Verdana", sans-serif;
-	font-size: 10pt;
+body,
+table{
+    font-family:arial, helvetica, "Verdana", sans-serif;
+    font-size:10pt;
 }
 
-html,body {
-	margin: 0;
-	padding: 0;
-	min-height: 100%;
-	height: 100%;
+html,
+body{
+    margin:0;
+    padding:0;
+    min-height:100%;
+    height:100%;
 }
 
-label.top {
-	text-align: left;
+label.top{
+    text-align:left;
 }
 
-label.inline {
-	text-align: inherit;
-	display: inline;
+label.inline{
+    text-align:inherit;
+    display:inline;
 }
 
-ul label {
-	display: inline;
-	text-align: left;
-	font-weight: normal;
+ul label{
+    display:inline;
+    text-align:left;
+    font-weight:normal;
 }
 
-.inline-labels label {
-	display: inline;
+.inline-labels label{
+    display:inline;
 }
 
-fieldset {
-	-moz-border-radius: 6px;
-	-webkit-border-radius: 6px;
-	-khtml-border-radius: 6px;
-	border-radius: 6px;
+fieldset{
+    -moz-border-radius:6px;
+    -webkit-border-radius:6px;
+    -khtml-border-radius:6px;
+    border-radius:6px;
 }
 
-.buttons {
-	text-align: right;
+.buttons{
+    text-align:right;
 }
 
-ul.vcheckboxgroup {
-	padding: 0px;
-	margin: 0px;
-	list-style: none;
-	white-space: nowrap;
+ul.vcheckboxgroup{
+    padding:0px;
+    margin:0px;
+    list-style:none;
+    white-space:nowrap;
 }
 
-.hfill {
-	width: 100%;
-	max-width: none;
+.hfill{
+    width:100%;
+    max-width:none;
 }
 
-.dfill {
-	width: 30%;
-	max-width: none;
+.dfill{
+    width:30%;
+    max-width:none;
 }
 
-.vfill {
-	height: 100%;
-	max-height: none;
+.vfill{
+    height:100%;
+    max-height:none;
 }
 
 /* 
  * Safari does not apply height:100% in table cells, but relative positioning works. In Firefox
  * this does not work.
  */
-.webkit td.vfill {
-	position: relative;
+.webkit td.vfill{
+    position:relative;
 }
 
-.webkit td.vfill>* {
-	top: 0px;
-	bottom: 0px;
-	left: 0px;
-	right: 0px;
-	position: absolute;
+.webkit td.vfill > *{
+    top:0px;
+    bottom:0px;
+    left:0px;
+    right:0px;
+    position:absolute;
 }
 
-select.hfill {
-	min-width: 100%;
+select.hfill{
+    min-width:100%;
 }
 
-select.hfill[multiple] {
-	width: auto;
-	/* If the select content is very large, this forces the select to accomodate the
+select.hfill[multiple]{
+    width:auto;
+    /* If the select content is very large, this forces the select to accomodate the
  *  full expanded content... usually not what we want, only the popup should be full-width. But
  *  for multiple selection, we really want to show the full with by default*/
 }
 
-.nowrap {
-	white-space: nowrap;
+.nowrap{
+    white-space:nowrap;
 }
 
-.centering {
-	text-align: center;
+.centering{
+    text-align:center;
 }
 
-.centering .wicketstuff-progressbar {
-	margin-left: auto;
-	margin-right: auto;
+.centering .wicketstuff-progressbar{
+    margin-left:auto;
+    margin-right:auto;
 }
 
-.centering table {
-	margin-left: auto;
-	margin-right: auto;
-	text-align: left;
+.centering table{
+    margin-left:auto;
+    margin-right:auto;
+    text-align:left;
 }
 
 /* -------------------------------------------------------------------------------------------------
  * Page header
  */
-.logo {
-	margin: 2px;
-	float: right;
-	vertical-align: middle;
-	height: 64px;
+.logo{
+    margin:2px;
+    float:right;
+    vertical-align:middle;
+    height:64px;
 }
 
-.pageicon {
-	margin: 2px;
-	float: left;
-	vertical-align: middle;
-	height: 64px;
+.pageicon{
+    margin:2px;
+    float:left;
+    vertical-align:middle;
+    height:64px;
 }
 
-.pageheader {
-	font-weight: bold;
-	font-size: 39px;
-	vertical-align: middle;
-	background-color: #B90F22;
-	content: '<div style="clear:both"/>';
+.pageheader{
+    font-weight:bold;
+    font-size:39px;
+    vertical-align:middle;
+    background-color:#B90F22;
+    content:'<div style="clear:both"/>';
 }
 
-.pagecontent {
-	padding-bottom: 1.5em;
+.pagecontent{
+    padding-bottom:1.5em;
 }
 
-.pagefooter {
-	clear: both;
-	width: 100%;
-	position: fixed;
-	bottom: 0px;
-	text-align: center;
-	vertical-align: middle;
-	border-top: solid grey 1px;
-	color: grey;
-	background: white;
-	z-index: 9999;
+.pagefooter{
+    clear:both;
+    width:100%;
+    position:fixed;
+    bottom:0px;
+    text-align:center;
+    vertical-align:middle;
+    border-top:solid grey 1px;
+    color:grey;
+    background:white;
+    z-index:9999;
 }
 
 /* -------------------------------------------------------------------------------------------------
  * Menu
  */
-.menubar {
-	vertical-align: middle;
-	background-color: #4D4D4D;
-	color: yellow;
+.menubar{
+    vertical-align:middle;
+    background-color:#4D4D4D;
+    color:yellow;
 }
 
-.menubar a {
-	color: yellow;
+.menubar a{
+    color:yellow;
 }
 
-.actionbar {
-    text-align: center;
-    background-color: #DFDFDF;
-    vertical-align: middle;
-    box-shadow: 0px 0px 5px 5px #DFDFDF;
-    margin-top: 8px;
-    margin-bottom: 8px;
+.actionbar{
+    text-align:center;
+    background-color:#DFDFDF;
+    vertical-align:middle;
+    box-shadow:0px 0px 5px 5px #DFDFDF;
+    margin-top:8px;
+    margin-bottom:8px;
+}
+
+.actionbar fieldset{
+    border-width:2px;
+    border-style:ridge;
+    border-color:#BFBFBF;
+    -moz-border-radius:5px;
+    -webkit-border-radius:5px;
+    border-radius:5px;
+    margin:0px;
+    padding:2px;
+}
+
+.actionbar fieldset legend{
+    font-weight:bold;
+    font-size:90%;
+    -moz-border-radius:3px;
+    -webkit-border-radius:3px;
+    border-radius:3px;
+    background-color:#4D4D4D;
+    color:white;
+    padding-left:0.5em;
+    padding-right:0.5em;
 }
 
 /* -------------------------------------------------------------------------------------------------
@@ -193,15 +218,16 @@ select.hfill[multiple] {
  */
 
 /* Use for a horizontal list of icons */
-ul.horizontal {
-	margin: 0px;
+ul.horizontal{
+    margin:0px;
+    padding:0px;
 }
 
-ul.horizontal li {
-	margin-left: 0.5em;
-	margin-right: 0.5em;
-	display: inline-block;
-	text-align: center;
+ul.horizontal li{
+    margin-left:0.5em;
+    margin-right:0.5em;
+    display:inline-block;
+    text-align:center;
 }
 
 /* Caption of the icon 
@@ -213,7 +239,7 @@ ul.horizontal li div {
 /* -------------------------------------------------------------------------------------------------
  * Info panel
  */
- /*
+/*
 .info {
 	position: relative;
 	clear: both;
@@ -227,299 +253,303 @@ ul.horizontal li div {
 
 }
 */
-.biginfo {
-	min-height: 400px;
-	max-height: 400px;
+.biginfo{
+    min-height:400px;
+    max-height:400px;
 }
 
-.tagsetcontent {
-	border: 0;
-	margin: 0;
-	padding: 0;
+.tagsetcontent{
+    border:0;
+    margin:0;
+    padding:0;
 }
 
-.info .content {
-	top: 0px;
-	bottom: 0px;
-	left: 0px;
-	right: 0px;
-	position: absolute;
-	margin: 7px;
-	overflow: auto;
+.info .content{
+    top:0px;
+    bottom:0px;
+    left:0px;
+    right:0px;
+    position:absolute;
+    margin:7px;
+    overflow:auto;
 }
 
-.icon+.content {
-	left: 158px; /* 128(img) + 2*15(img-padding) */
+.icon + .content{
+    left:158px; /* 128(img) + 2*15(img-padding) */
 }
 
-.info .content p {
-	margin-top: 0px;
-	padding: 0px;
+.info .content p{
+    margin-top:0px;
+    padding:0px;
 }
 
-.info .icon {
-	padding: 15px;
-	float: left;
-	height: 128px;
+.info .icon{
+    padding:15px;
+    float:left;
+    height:128px;
 }
 
-.info .buttons {
-	position: absolute;
-	bottom: 0px;
-	right: 0px;
-	max-height: 25px;
+.info .buttons{
+    position:absolute;
+    bottom:0px;
+    right:0px;
+    max-height:25px;
 }
 
-.infomargin {
-	margin: 0.7em;
+.infomargin{
+    margin:0.7em;
 }
 
-.infomargin .content {
-	margin: 7px;
+.infomargin .content{
+    margin:7px;
 }
 
 /* -------------------------------------------------------------------------------------------------
  * KWIC table
  */
-.headers,.headers a:link,.headers a:visited {
-	background-color: #B90F22;
-	color: white;
-	vertical-align: bottom;
+.headers,
+.headers a:link,
+.headers a:visited{
+    background-color:#B90F22;
+    color:white;
+    vertical-align:bottom;
 }
 
-tr.headers th.wicket_orderDown a {
-	padding-right: 24px;
-	background-image: url(../images/descending.png);
-	background-position: right;
-	background-repeat: no-repeat;
+tr.headers th.wicket_orderDown a{
+    padding-right:24px;
+    background-image:url(../images/descending.png);
+    background-position:right;
+    background-repeat:no-repeat;
 }
 
-tr.headers th.wicket_orderUp a {
-	padding-right: 24px;
-	background-image: url(../images/ascending.png);
-	background-position: right;
-	background-repeat: no-repeat;
+tr.headers th.wicket_orderUp a{
+    padding-right:24px;
+    background-image:url(../images/ascending.png);
+    background-position:right;
+    background-repeat:no-repeat;
 }
 
-div.navigatorLabel {
-	float: left;
+div.navigatorLabel{
+    float:left;
 }
 
-div.navigator {
-	text-align: right;
+div.navigator{
+    text-align:right;
 }
 
-th {
-	padding: 3px;
+th{
+    padding:3px;
 }
 
 /* td {
 	vertical-align: top;
 	padding: 3px;
 } */
-tr.odd {
-	background: #EEEEEE;
+tr.odd{
+    background:#EEEEEE;
 }
 
-tr.even {
-	background: #DDDDDD;
+tr.even{
+    background:#DDDDDD;
 }
 
-tr.odd:hover {
-	background: #CCCCAA;
+tr.odd:hover{
+    background:#CCCCAA;
 }
 
-tr.even:hover {
-	background: #CCCCAA;
+tr.even:hover{
+    background:#CCCCAA;
 }
 
-td.editable {
-	background: khaki;
-	cursor: pointer;
+td.editable{
+    background:khaki;
+    cursor:pointer;
 }
 
-td.correct {
-	font-weight: bold;
-	color: white;
-	background: limegreen;
+td.correct{
+    font-weight:bold;
+    color:white;
+    background:limegreen;
 }
 
-td.wrong {
-	font-weight: bold;
-	color: white;
-	background: crimson;
+td.wrong{
+    font-weight:bold;
+    color:white;
+    background:crimson;
 }
 
-td.check {
-	font-weight: bold;
-	color: black;
-	background: yellow;
+td.check{
+    font-weight:bold;
+    color:black;
+    background:yellow;
 }
 
-td.pred_correct {
-	font-weight: bold;
-	color: black;
-	background: #66ff66; /* 60% limegreen */
-	font-style: italic;
+td.pred_correct{
+    font-weight:bold;
+    color:black;
+    background:#66ff66; /* 60% limegreen */
+    font-style:italic;
 }
 
-td.pred_wrong {
-	font-weight: bold;
-	color: black;
-	background: #ea728a; /* 60% crimson */
-	font-style: italic;
+td.pred_wrong{
+    font-weight:bold;
+    color:black;
+    background:#ea728a; /* 60% crimson */
+    font-style:italic;
 }
 
-td.leftContext {
-	text-align: right;
+td.leftContext{
+    text-align:right;
 }
 
-td.match {
-	padding-left: .5em;
-	padding-right: .5em;
-	border-left: 1px black solid;
-	border-right: 1px black solid;
-	text-align: center;
+td.match{
+    padding-left:.5em;
+    padding-right:.5em;
+    border-left:1px black solid;
+    border-right:1px black solid;
+    text-align:center;
 }
 
-td.rightContext {
-	text-align: left;
+td.rightContext{
+    text-align:left;
 }
 
-.showCol {
-	display: table-cell;
+.showCol{
+    display:table-cell;
 }
 
-.hideCol {
-	display: none;
+.hideCol{
+    display:none;
 }
 
 /* -------------------------------------------------------------------------------------------------
  * Context view
  */
-.contextView {
-	background-color: white;
+.contextView{
+    background-color:white;
 }
 
-.contextUnitLeft {
-	font-weight: bold;
-	background: #DDDDDD;
+.contextUnitLeft{
+    font-weight:bold;
+    background:#DDDDDD;
 }
 
-.contextMatch {
-	font-weight: bold;
-	background: #999999;
+.contextMatch{
+    font-weight:bold;
+    background:#999999;
 }
 
-.contextUnitRight {
-	font-weight: bold;
-	background: #DDDDDD;
+.contextUnitRight{
+    font-weight:bold;
+    background:#DDDDDD;
 }
 /* color scheme on explicit error */
-div.error ul.feedbackPanel {
-	background-color: #fe8;
-	border: 1px solid #900;
-	color: #900;
+div.error ul.feedbackPanel{
+    background-color:#fe8;
+    border:1px solid #900;
+    color:#900;
 }
 
 /* color scheme on explicit info */
-div.info ul.feedbackPanel {
-	background-color: #fe8;
-	border: 1px solid #090;
-	color: #090;
+div.info ul.feedbackPanel{
+    background-color:#fe8;
+    border:1px solid #090;
+    color:#090;
 }
 /* left/right column arrangments for project/annotation settings */
-#left {
-	position: absolute;
-	left: 2%;
-	width: 19%;
-	background-color: #ffffff;
+#left{
+    position:absolute;
+    left:2%;
+    width:19%;
+    background-color:#ffffff;
 }
 
-#middleleft {
-	position: absolute;
-	left: 22%;
-	width: 70%;
-	background-color: #ffffff;
+#middleleft{
+    position:absolute;
+    left:22%;
+    width:70%;
+    background-color:#ffffff;
 }
 
-#middlelefttagset {
-	position: absolute;
-	left: 22%;
-	width: 32%;
-	background-color: #ffffff;
+#middlelefttagset{
+    position:absolute;
+    left:22%;
+    width:32%;
+    background-color:#ffffff;
 }
 
-#middleright {
-	position: absolute;
-	left: 55%;
-	width: 25%;
-	background-color: #ffffff;
+#middleright{
+    position:absolute;
+    left:55%;
+    width:25%;
+    background-color:#ffffff;
 }
 
-#right {
-	position: absolute;
-	left: 81%;
-	width: 20%;
-	height: 100%;
-	background-color: #ffffff;
+#right{
+    position:absolute;
+    left:81%;
+    width:20%;
+    height:100%;
+    background-color:#ffffff;
 }
 
-#leftopenproject {
-	position: absolute;
-	left: 2%;
-	width: 35%;
-	background-color: #ffffff;
+#leftopenproject{
+    position:absolute;
+    left:2%;
+    width:35%;
+    background-color:#ffffff;
 }
 
-#rightopenproject {
-	position: absolute;
-	left: 40%;
-	width: 40%;
-	height: 100%;
-	background-color: #ffffff;
+#rightopenproject{
+    position:absolute;
+    left:40%;
+    width:40%;
+    height:100%;
+    background-color:#ffffff;
 }
 
-div.tabpanel div.tab-row li {
-	margin: 0;
-	padding: 0;
-	display: inline;
-	list-style-type: none;
+div.tabpanel div.tab-row li{
+    margin:0;
+    padding:0;
+    display:inline;
+    list-style-type:none;
 }
 
-div.tabpanel div.tab-row a:link,div.tabpanel div.tab-row a:visited {
-	float: left;
-	background: #f3f3f3;
-	font-size: 12px;
-	line-height: 14px;
-	font-weight: bold;
-	padding: 2px 10px 2px 10px;
-	margin-right: 4px;
-	border: 1px solid #ccc;
-	text-decoration: none;
-	color: #666;
+div.tabpanel div.tab-row a:link,
+div.tabpanel div.tab-row a:visited{
+    float:left;
+    background:#f3f3f3;
+    font-size:12px;
+    line-height:14px;
+    font-weight:bold;
+    padding:2px 10px 2px 10px;
+    margin-right:4px;
+    border:1px solid #ccc;
+    text-decoration:none;
+    color:#666;
 }
 
-div.tabpanel div.tab-row li.selected a:link,div.tabpanel div.tab-row a:visited.active
-	{
-	border-bottom: 1px solid #fff;
-	background: #fff;
-	color: #000;
+div.tabpanel div.tab-row li.selected a:link,
+div.tabpanel div.tab-row a:visited.active
+{
+    border-bottom:1px solid #fff;
+    background:#fff;
+    color:#000;
 }
 
-div.tabpanel div.tab-row a:hover {
-	background: #fff;
+div.tabpanel div.tab-row a:hover{
+    background:#fff;
 }
 
-.documenttable {
-	width: 55%;
-	text-align: center;
-	
+.documenttable{
+    width:55%;
+    text-align:center;
+
 }
 
-.curation-sentence-item {
-	border:1px outset gray;
-	margin:2px 0px;
-	padding:2px 0px;
-	white-space:nowrap;
+.curation-sentence-item{
+    border:1px outset gray;
+    margin:2px 0px;
+    padding:2px 0px;
+    white-space:nowrap;
 }
