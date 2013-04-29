@@ -182,23 +182,22 @@ public class MonitoringPage
                         annotatorsProgressImage.setVisible(true);
 
                         List<String> documentListAsColumnHeader = new ArrayList<String>();
-                        documentListAsColumnHeader.add("Users");
-                        for (SourceDocument document : documents) {
-                            documentListAsColumnHeader.add(document.getName());
+                        documentListAsColumnHeader.add("Documents");
+
+                        for (User user : projectRepository.listProjectUsersWithPermissions(project)) {
+                            documentListAsColumnHeader.add(user.getUsername());
                         }
                         List<List<String>> userAnnotationDocumentStatusList = new ArrayList<List<String>>();
-                        for (User user : projectRepository.listProjectUsersWithPermissions(project)) {
-
+                        for (SourceDocument document : documents) {
                             List<String> userAnnotationDocuments = new ArrayList<String>();
-                            userAnnotationDocuments.add(USER + user.getUsername()); // the user
-                                                                                    // column
-
-                            for (SourceDocument document : documents) {
+                            userAnnotationDocuments.add(DOCUMENT+ document.getName());
+                            for (User user : projectRepository.listProjectUsersWithPermissions(project)) {
                                 userAnnotationDocuments.add(user.getUsername() + "-" + DOCUMENT
                                         + document.getName());
                             }
                             userAnnotationDocumentStatusList.add(userAnnotationDocuments);
                         }
+
                         UserAnnotatedDocumentProvider provider = new UserAnnotatedDocumentProvider(
                                 documentListAsColumnHeader, userAnnotationDocumentStatusList);
 

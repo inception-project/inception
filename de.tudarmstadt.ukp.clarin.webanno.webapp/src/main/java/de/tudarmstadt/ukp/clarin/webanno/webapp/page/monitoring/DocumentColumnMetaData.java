@@ -248,8 +248,8 @@ public class DocumentColumnMetaData
     private String getCellValue(String aValue)
     {
         // It is the user column, return user name
-        if (aValue.startsWith(MonitoringPage.USER)) {
-            return aValue.substring(aValue.indexOf(MonitoringPage.USER));
+        if (aValue.startsWith(MonitoringPage.DOCUMENT)) {
+            return aValue.substring(aValue.indexOf(MonitoringPage.DOCUMENT));
         }
         // Initialization of the appliaction, no project selected
         else if (project.getId() == 0) {
