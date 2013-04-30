@@ -15,9 +15,7 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
-import static org.uimafit.factory.AnalysisEngineFactory.createAggregate;
-import static org.uimafit.factory.AnalysisEngineFactory.createAggregateDescription;
-import static org.uimafit.factory.AnalysisEngineFactory.createPrimitiveDescription;
+import static org.uimafit.factory.AnalysisEngineFactory.*;
 import static org.uimafit.util.JCasUtil.select;
 import static org.uimafit.util.JCasUtil.selectFollowing;
 import static org.uimafit.util.JCasUtil.selectPreceding;
@@ -842,8 +840,13 @@ public class BratAjaxCasUtil
         }
         reader.getNext(cas);
         JCas jCas = cas.getJCas();
-        if (!(JCasUtil.exists(jCas, Token.class) || JCasUtil.exists(jCas, Token.class))) {
-            AnalysisEngine pipeline = createAggregate(createAggregateDescription(createPrimitiveDescription(BreakIteratorSegmenter.class)));
+        boolean hasTokens = JCasUtil.exists(jCas, Token.class);
+        boolean hasSentences = JCasUtil.exists(jCas, Sentence.class);
+        if (!hasTokens || !hasSentences) {
+			AnalysisEngine pipeline = createPrimitive(createPrimitiveDescription(
+					BreakIteratorSegmenter.class,
+					BreakIteratorSegmenter.PARAM_CREATE_TOKENS, !hasTokens,
+					BreakIteratorSegmenter.PARAM_CREATE_SENTENCES, !hasSentences));
             pipeline.process(cas.getJCas());
         }
         return jCas;
