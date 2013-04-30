@@ -17,6 +17,8 @@ package de.tudarmstadt.ukp.clarin.webanno.crowdflower;
 
 import java.util.Vector;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.http.HttpEntity;
@@ -34,7 +36,6 @@ import org.springframework.web.client.RestTemplate;
 * Abstracts away the details of communicating with crowdflower.com's API
 * @author Benjamin Milde
 */
-
 public class CrowdClient
 {
     // Crowdflower API documentation: https://crowdflower.com/docs/api
@@ -52,6 +53,8 @@ public class CrowdClient
     static final String debitKey = "debit[units_count]";
     static final String jobPaymentKey = "job[payment_cents]";
     private String apiKey = "";
+
+    private Log LOG = LogFactory.getLog(getClass());
 
     /**
      * This sets the API key to be used with Crowdflower. This has to be set to a valid key prior to any other requests to the API.
@@ -153,14 +156,14 @@ public class CrowdClient
         String result = "";
 
         if(job == null) {
-            System.out.println("Upload new data and create new job: " + jsonObjectCollection);
+            LOG.info("Upload new data and create new job: " + jsonObjectCollection);
             result = restTemplate.postForObject(uploadDataURL, request, String.class, apiKey);
         }
         else {
-            System.out.println("Uploading new data to job: "+ job.getId() + ":" + jsonObjectCollection);
+            LOG.info("Uploading new data to job: "+ job.getId() + ":" + jsonObjectCollection);
             result = restTemplate.postForObject(uploadDataWithJobURL, request, String.class, job.getId(), apiKey);
         }
-        System.out.println("Upload response:" + result);
+        LOG.info("Upload response:" + result);
 
         //set gold? this is what i would like to do...
         //updateVariable(job, "https://api.crowdflower.com/v1/jobs/{jobid}/gold?key={apiKey}", "set_standard_gold", "TRUE");
@@ -211,10 +214,9 @@ public class CrowdClient
             argumentMap.add(channelKey+"[]", channel);
         }
 
-        System.out.println(argumentMap);
-
         updateVariable(job, jobPaymentKey, String.valueOf(payPerAssigment));
 
+        LOG.info("Order Job: #" + job.getId() + " with " + units + " judgments for " + payPerAssigment + " cents (dollar) per assigment.");
         JsonNode result = restTemplate.postForObject(orderJobURL, argumentMap, JsonNode.class, job.getId(), apiKey);
 
         return result;
@@ -246,6 +248,6 @@ public class CrowdClient
 
         JsonNode result = restTemplate.getForObject(channelsURL, JsonNode.class, job.getId(), apiKey);
 
-        System.out.println(result);
+        //System.out.println(result);
     }
 }
