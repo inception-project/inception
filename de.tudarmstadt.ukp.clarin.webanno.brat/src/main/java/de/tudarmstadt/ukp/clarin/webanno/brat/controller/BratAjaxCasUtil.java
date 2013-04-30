@@ -33,6 +33,7 @@ import java.util.TreeMap;
 import org.apache.uima.UIMAException;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
@@ -126,16 +127,10 @@ public class BratAjaxCasUtil
     {
         boolean modify = false;
 
-        CoreferenceLink originCoreferenceType = (CoreferenceLink) aUIData
-                .getjCas()
-                .getLowLevelCas()
-                .ll_getFSForRef(
-                        Integer.parseInt(aUIData.getOrigin().replaceAll("[\\D]", "")));
-        CoreferenceLink targetCoreferenceType = (CoreferenceLink) aUIData
-                .getjCas()
-                .getLowLevelCas()
-                .ll_getFSForRef(
-                        Integer.parseInt(aUIData.getTarget().replaceAll("[\\D]", "")));
+        CoreferenceLink originCoreferenceType = selectAnnotationByAddress(aUIData.getjCas(),
+				CoreferenceLink.class, aUIData.getOrigin());
+        CoreferenceLink targetCoreferenceType = selectAnnotationByAddress(aUIData.getjCas(),
+				CoreferenceLink.class, aUIData.getTarget());
 
         // Currently support only anaphoric relation
         // Inverse direction
@@ -371,11 +366,10 @@ public class BratAjaxCasUtil
         return a.getBegin() == begin && a.getEnd() == end;
     }
 
-    public static void deleteCoreferenceType(JCas aJcas, String aId, String aTyep, int aStart,
+    public static void deleteCoreferenceType(JCas aJcas, int ref, String aTyep, int aStart,
             int aEnd)
     {
-        int ref = Integer.parseInt(aId.replaceAll("[\\D]", ""));
-        CoreferenceLink linktoRemove = (CoreferenceLink) aJcas.getLowLevelCas().ll_getFSForRef(ref);
+        CoreferenceLink linktoRemove = selectAnnotationByAddress(aJcas, CoreferenceLink.class, ref);
         CoreferenceLink prevLink = null;
         new ArrayList<CoreferenceChain>();
         for (CoreferenceChain chain : select(aJcas, CoreferenceChain.class)) {
@@ -416,11 +410,8 @@ public class BratAjaxCasUtil
         CoreferenceChain newChain = new CoreferenceChain(aUIData.getjCas());
         boolean found = false;
 
-        CoreferenceLink originCorefType = (CoreferenceLink) aUIData
-                .getjCas()
-                .getLowLevelCas()
-                .ll_getFSForRef(
-                        Integer.parseInt(aUIData.getOrigin().replaceAll("[\\D]", "")));
+		CoreferenceLink originCorefType = selectAnnotationByAddress(aUIData.getjCas(),
+				CoreferenceLink.class, aUIData.getOrigin());
         for (CoreferenceChain chain : select(aUIData.getjCas(), CoreferenceChain.class)) {
             CoreferenceLink link = chain.getFirst();
 
@@ -457,7 +448,7 @@ public class BratAjaxCasUtil
         }
     }
 
-    public static <T extends Annotation> T selectAnnotationByAddress(JCas aJCas, Class<T> aType,
+    public static <T extends FeatureStructure> T selectAnnotationByAddress(JCas aJCas, Class<T> aType,
             int aAddress)
     {
         return aType.cast(aJCas.getLowLevelCas().ll_getFSForRef(aAddress));
@@ -541,32 +532,30 @@ public class BratAjaxCasUtil
     /**
      * Get the beginning offset of an Annotation
      *
-     * @param aJcas
+     * @param aJCas
      *            The CAS object
      * @param aRef
      *            the low level address of the annotation in the CAS
      * @return the beginning offset address of an annotation
      */
     // private static <T extends Annotation> T selectFirstAt(JCas aJcas, final Class<T> type
-    public static int getAnnotationBeginOffset(JCas aJcas, int aRef)
+    public static int getAnnotationBeginOffset(JCas aJCas, int aRef)
     {
-        Annotation a = (Annotation) aJcas.getLowLevelCas().ll_getFSForRef(aRef);
-        return a.getBegin();
+    	return selectAnnotationByAddress(aJCas, Annotation.class, aRef).getBegin();
     }
 
     /**
      * Get end offset of an annotation
      *
-     * @param aJcas
+     * @param aJCas
      *            The CAS object
      * @param aRef
      *            the low level address of the annotation in the CAS
      * @return end position of the annotation
      */
-    public static int getAnnotationEndOffset(JCas aJcas, int aRef)
+    public static int getAnnotationEndOffset(JCas aJCas, int aRef)
     {
-        Annotation a = (Annotation) aJcas.getLowLevelCas().ll_getFSForRef(aRef);
-        return a.getEnd();
+    	return selectAnnotationByAddress(aJCas, Annotation.class, aRef).getEnd();
     }
 
     /**

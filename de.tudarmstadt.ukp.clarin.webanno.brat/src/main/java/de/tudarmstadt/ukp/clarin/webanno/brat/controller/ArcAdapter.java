@@ -39,358 +39,334 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
  * A class that is used to create Brat Arc to CAS relations and vice-versa
- *
+ * 
  * @author Seid Muhie Yimam
- *
+ * 
  */
 public class ArcAdapter
+	implements TypeAdapter
 {
-    /**
-     * Prefix of the label value for Brat to make sure that different annotation types can use the
-     * same label, e.g. a POS tag "N" and a named entity type "N".
-     *
-     */
-    private String typePrefix;
+	/**
+	 * Prefix of the label value for Brat to make sure that different annotation types can use the
+	 * same label, e.g. a POS tag "N" and a named entity type "N".
+	 * 
+	 */
+	private String typePrefix;
 
-    /**
-     * The UIMA type name.
-     */
-    private String annotationTypeName;
+	/**
+	 * The UIMA type name.
+	 */
+	private String annotationTypeName;
 
-    /**
-     * The feature of an UIMA annotation containing the label to be displayed in the UI.
-     */
-    private String labelFeatureName;
-    /**
-     * The feature of an UIMA annotation containing the label to be used as a governor for arc
-     * annotations
-     */
-    private String governorFeatureName;
-    /**
-     * The feature of an UIMA annotation containing the label to be used as a dependent for arc
-     * annotations
-     */
+	/**
+	 * The feature of an UIMA annotation containing the label to be displayed in the UI.
+	 */
+	private String labelFeatureName;
+	/**
+	 * The feature of an UIMA annotation containing the label to be used as a governor for arc
+	 * annotations
+	 */
+	private String governorFeatureName;
+	/**
+	 * The feature of an UIMA annotation containing the label to be used as a dependent for arc
+	 * annotations
+	 */
 
-    private String dependentFeatureName;
+	private String dependentFeatureName;
 
-    /**
-     * The UIMA type name used as for origin/target span annotations, e.g. {@link POS} for
-     * {@link Dependency}
-     */
-    private String arcSpanType;
+	/**
+	 * The UIMA type name used as for origin/target span annotations, e.g. {@link POS} for
+	 * {@link Dependency}
+	 */
+	private String arcSpanType;
 
-    /**
-     * The feature of an UIMA annotation containing the label to be used as origin/target spans for
-     * arc annotations
-     */
-    private String arcSpanTypeFeatureName;
+	/**
+	 * The feature of an UIMA annotation containing the label to be used as origin/target spans for
+	 * arc annotations
+	 */
+	private String arcSpanTypeFeatureName;
 
-    /**
-     * as Governor and Dependent of Dependency annotation type are based on Token, we need the UIMA
-     * type for token
-     */
-    private String arcTokenType;
+	/**
+	 * as Governor and Dependent of Dependency annotation type are based on Token, we need the UIMA
+	 * type for token
+	 */
+	private String arcTokenType;
 
-    public ArcAdapter(String aTypePrefix, String aTypeName, String aLabelFeatureName,
-            String aDependentFeatureName, String aGovernorFeatureName, String aArcSpanType,
-            String aArcSpanTypeFeatureName, String aTokenType)
-    {
-        typePrefix = aTypePrefix;
-        labelFeatureName = aLabelFeatureName;
-        annotationTypeName = aTypeName;
-        governorFeatureName = aGovernorFeatureName;
-        dependentFeatureName = aDependentFeatureName;
-        arcSpanType = aArcSpanType;
-        arcSpanTypeFeatureName = aArcSpanTypeFeatureName;
-        arcTokenType = aTokenType;
+	public ArcAdapter(String aTypePrefix, String aTypeName, String aLabelFeatureName,
+			String aDependentFeatureName, String aGovernorFeatureName, String aArcSpanType,
+			String aArcSpanTypeFeatureName, String aTokenType)
+	{
+		typePrefix = aTypePrefix;
+		labelFeatureName = aLabelFeatureName;
+		annotationTypeName = aTypeName;
+		governorFeatureName = aGovernorFeatureName;
+		dependentFeatureName = aDependentFeatureName;
+		arcSpanType = aArcSpanType;
+		arcSpanTypeFeatureName = aArcSpanTypeFeatureName;
+		arcTokenType = aTokenType;
 
-    }
+	}
 
-    /**
-     * Add arc annotations from the CAS, which is controlled by the window size, to the brat
-     * response {@link GetDocumentResponse}
-     *
-     * @param aJcas
-     *            The JCAS object containing annotations
-     * @param aResponse
-     *            A brat response containing annotations in brat protocol
-     * @param aBratAnnotatorModel
-     *            Data model for brat annotations
-     */
-    public void addToBrat(JCas aJcas, GetDocumentResponse aResponse,
-            BratAnnotatorModel aBratAnnotatorModel)
-    {
-        boolean reverse = aBratAnnotatorModel.getProject().isReverseDependencyDirection();
-        // The first sentence address in the display window!
-        Sentence firstSentence = getFS(aJcas, aBratAnnotatorModel.getSentenceAddress());
-        int i = aBratAnnotatorModel.getSentenceAddress();
+	/**
+	 * Add arc annotations from the CAS, which is controlled by the window size, to the brat
+	 * response {@link GetDocumentResponse}
+	 * 
+	 * @param aJcas
+	 *            The JCAS object containing annotations
+	 * @param aResponse
+	 *            A brat response containing annotations in brat protocol
+	 * @param aBratAnnotatorModel
+	 *            Data model for brat annotations
+	 */
+	@Override
+	public void addToBrat(JCas aJcas, GetDocumentResponse aResponse,
+			BratAnnotatorModel aBratAnnotatorModel)
+	{
+		boolean reverse = aBratAnnotatorModel.getProject().isReverseDependencyDirection();
+		// The first sentence address in the display window!
+		Sentence firstSentence = (Sentence) BratAjaxCasUtil.selectAnnotationByAddress(aJcas,
+				FeatureStructure.class, aBratAnnotatorModel.getSentenceAddress());
+		int i = aBratAnnotatorModel.getSentenceAddress();
 
-        // Loop based on window size
-        // j, controlling variable to display sentences based on window size
-        // i, address of each sentences
-        int j = 1;
-        while (j <= aBratAnnotatorModel.getWindowSize()) {
-            if (i >= aBratAnnotatorModel.getLastSentenceAddress()) {
-                Sentence sentence = getFS(aJcas, i);
-                updateResponse(sentence, aResponse, firstSentence.getBegin(), reverse);
-                break;
-            }
-            else {
-                Sentence sentence = getFS(aJcas, i);
-                updateResponse(sentence, aResponse, firstSentence.getBegin(), reverse);
-                i = BratAjaxCasUtil.getFollowingSentenceAddress(aJcas, i);
-            }
-            j++;
-        }
-    }
+		// Loop based on window size
+		// j, controlling variable to display sentences based on window size
+		// i, address of each sentences
+		int j = 1;
+		while (j <= aBratAnnotatorModel.getWindowSize()) {
+			if (i >= aBratAnnotatorModel.getLastSentenceAddress()) {
+				Sentence sentence = (Sentence) BratAjaxCasUtil.selectAnnotationByAddress(aJcas,
+						FeatureStructure.class, i);
+				updateResponse(sentence, aResponse, firstSentence.getBegin(), reverse);
+				break;
+			}
+			else {
+				Sentence sentence = (Sentence) BratAjaxCasUtil.selectAnnotationByAddress(aJcas,
+						FeatureStructure.class, i);
+				updateResponse(sentence, aResponse, firstSentence.getBegin(), reverse);
+				i = BratAjaxCasUtil.getFollowingSentenceAddress(aJcas, i);
+			}
+			j++;
+		}
+	}
 
-    /**
-     * a helper method to the {@link #addToBrat(JCas, GetDocumentResponse, BratAnnotatorModel)}
-     *
-     * @param aSentence
-     *            The current sentence in the CAS annotation, with annotations
-     * @param aResponse
-     *            The {@link GetDocumentResponse} object with the annotation from CAS annotation
-     * @param aFirstSentenceOffset
-     *            The first sentence offset. The actual offset in the brat visualization window will
-     *            be <b>X-Y</b>, where <b>X</b> is the offset of the annotated span and <b>Y</b> is
-     *            aFirstSentenceOffset
-     */
-    private void updateResponse(Sentence aSentence, GetDocumentResponse aResponse,
-            int aFirstSentenceOffset, boolean aReverse)
-    {
-        Type type = CasUtil.getType(aSentence.getCAS(), annotationTypeName);
-        Feature dependentFeature = type.getFeatureByBaseName(dependentFeatureName);
-        Feature governorFeature = type.getFeatureByBaseName(governorFeatureName);
+	/**
+	 * a helper method to the {@link #addToBrat(JCas, GetDocumentResponse, BratAnnotatorModel)}
+	 * 
+	 * @param aSentence
+	 *            The current sentence in the CAS annotation, with annotations
+	 * @param aResponse
+	 *            The {@link GetDocumentResponse} object with the annotation from CAS annotation
+	 * @param aFirstSentenceOffset
+	 *            The first sentence offset. The actual offset in the brat visualization window will
+	 *            be <b>X-Y</b>, where <b>X</b> is the offset of the annotated span and <b>Y</b> is
+	 *            aFirstSentenceOffset
+	 */
+	private void updateResponse(Sentence aSentence, GetDocumentResponse aResponse,
+			int aFirstSentenceOffset, boolean aReverse)
+	{
+		Type type = CasUtil.getType(aSentence.getCAS(), annotationTypeName);
+		Feature dependentFeature = type.getFeatureByBaseName(dependentFeatureName);
+		Feature governorFeature = type.getFeatureByBaseName(governorFeatureName);
 
-        Type spanType = CasUtil.getType(aSentence.getCAS(), arcSpanType);
-        Feature arcSpanFeature = spanType.getFeatureByBaseName(arcSpanTypeFeatureName);
+		Type spanType = CasUtil.getType(aSentence.getCAS(), arcSpanType);
+		Feature arcSpanFeature = spanType.getFeatureByBaseName(arcSpanTypeFeatureName);
 
-        for (AnnotationFS fs : CasUtil.selectCovered(type, aSentence)) {
+		for (AnnotationFS fs : CasUtil.selectCovered(type, aSentence)) {
 
-            FeatureStructure dependentFs = fs.getFeatureValue(dependentFeature).getFeatureValue(
-                    arcSpanFeature);
-            FeatureStructure governorFs = fs.getFeatureValue(governorFeature).getFeatureValue(
-                    arcSpanFeature);
+			FeatureStructure dependentFs = fs.getFeatureValue(dependentFeature).getFeatureValue(
+					arcSpanFeature);
+			FeatureStructure governorFs = fs.getFeatureValue(governorFeature).getFeatureValue(
+					arcSpanFeature);
 
-            List<Argument> argumentList = getArgument(governorFs, dependentFs, aReverse);
+			List<Argument> argumentList = getArgument(governorFs, dependentFs, aReverse);
 
-            Feature labelFeature = fs.getType().getFeatureByBaseName(labelFeatureName);
+			Feature labelFeature = fs.getType().getFeatureByBaseName(labelFeatureName);
 
-            aResponse.addRelation(new Relation(((FeatureStructureImpl) fs).getAddress(), typePrefix
-                    + fs.getStringValue(labelFeature), argumentList));
-        }
-    }
+			aResponse.addRelation(new Relation(((FeatureStructureImpl) fs).getAddress(), typePrefix
+					+ fs.getStringValue(labelFeature), argumentList));
+		}
+	}
 
-    /**
-     * Update the CAS with new/modification of arc annotations from brat
-     *
-     * @param aLabelValue
-     *            the value of the annotation for the arc
-     * @param aUIData
-     *            Other information obtained from brat such as the start and end offsets
-     * @param aReverse
-     *            If arc direction are in reverse direction, from Dependent to Governor
-     */
-    public void addToCas(String aLabelValue, BratAnnotatorUIData aUIData,
-            BratAnnotatorModel aBratAnnotatorModel, boolean aReverse)
-    {
-        int originAddress;
-        int targetAddress;
+	/**
+	 * Update the CAS with new/modification of arc annotations from brat
+	 * 
+	 * @param aLabelValue
+	 *            the value of the annotation for the arc
+	 * @param aUIData
+	 *            Other information obtained from brat such as the start and end offsets
+	 * @param aReverse
+	 *            If arc direction are in reverse direction, from Dependent to Governor
+	 */
+	public void addToCas(String aLabelValue, BratAnnotatorUIData aUIData,
+			BratAnnotatorModel aBratAnnotatorModel, boolean aReverse)
+	{
+		int originAddress;
+		int targetAddress;
 
-        if (aReverse) {
-            originAddress = getAddress(aUIData.getTarget());
-            targetAddress = getAddress(aUIData.getOrigin());
-        }
-        else {
-            originAddress = getAddress(aUIData.getOrigin());
-            targetAddress = getAddress(aUIData.getTarget());
-        }
+		if (aReverse) {
+			originAddress = aUIData.getTarget();
+			targetAddress = aUIData.getOrigin();
+		}
+		else {
+			originAddress = aUIData.getOrigin();
+			targetAddress = aUIData.getTarget();
+		}
 
-        int beginOffset = BratAjaxCasUtil.selectAnnotationByAddress(aUIData.getjCas(),
-                Sentence.class, aBratAnnotatorModel.getSentenceAddress()).getBegin();
-        int endOffset = BratAjaxCasUtil.selectAnnotationByAddress(
-                aUIData.getjCas(),
-                Sentence.class,
-                BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(aUIData.getjCas(),
-                        aBratAnnotatorModel.getSentenceAddress(),
-                        aBratAnnotatorModel.getWindowSize())).getEnd();
+		int beginOffset = BratAjaxCasUtil.selectAnnotationByAddress(aUIData.getjCas(),
+				Sentence.class, aBratAnnotatorModel.getSentenceAddress()).getBegin();
+		int endOffset = BratAjaxCasUtil.selectAnnotationByAddress(
+				aUIData.getjCas(),
+				Sentence.class,
+				BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(aUIData.getjCas(),
+						aBratAnnotatorModel.getSentenceAddress(),
+						aBratAnnotatorModel.getWindowSize())).getEnd();
 
-        aUIData.setAnnotationOffsetStart(beginOffset);
-        aUIData.setAnnotationOffsetEnd(endOffset);
-        updateCas(aUIData.getjCas(), aUIData.getAnnotationOffsetStart(),
-                aUIData.getAnnotationOffsetEnd(), originAddress, targetAddress, aLabelValue);
-    }
+		aUIData.setAnnotationOffsetStart(beginOffset);
+		aUIData.setAnnotationOffsetEnd(endOffset);
+		updateCas(aUIData.getjCas(), aUIData.getAnnotationOffsetStart(),
+				aUIData.getAnnotationOffsetEnd(), originAddress, targetAddress, aLabelValue);
+	}
 
-    /**
-     * A Helper method to {@link #addToCas(String, BratAnnotatorUIData)}
-     */
-    private void updateCas(JCas aJCas, int aBegin, int aEnd, int aOriginAddress,
-            int aTargetAddress, String aValue)
-    {
-        boolean duplicate = false;
+	/**
+	 * A Helper method to {@link #addToCas(String, BratAnnotatorUIData)}
+	 */
+	private void updateCas(JCas aJCas, int aBegin, int aEnd, int aOriginAddress,
+			int aTargetAddress, String aValue)
+	{
+		boolean duplicate = false;
 
-        Type type = CasUtil.getType(aJCas.getCas(), annotationTypeName);
-        Feature feature = type.getFeatureByBaseName(labelFeatureName);
-        Feature dependentFeature = type.getFeatureByBaseName(dependentFeatureName);
-        Feature governorFeature = type.getFeatureByBaseName(governorFeatureName);
+		Type type = CasUtil.getType(aJCas.getCas(), annotationTypeName);
+		Feature feature = type.getFeatureByBaseName(labelFeatureName);
+		Feature dependentFeature = type.getFeatureByBaseName(dependentFeatureName);
+		Feature governorFeature = type.getFeatureByBaseName(governorFeatureName);
 
-        Type spanType = CasUtil.getType(aJCas.getCas(), arcSpanType);
-        Feature arcSpanFeature = spanType.getFeatureByBaseName(arcSpanTypeFeatureName);
+		Type spanType = CasUtil.getType(aJCas.getCas(), arcSpanType);
+		Feature arcSpanFeature = spanType.getFeatureByBaseName(arcSpanTypeFeatureName);
 
-        Type tokenType = CasUtil.getType(aJCas.getCas(), arcTokenType);
+		Type tokenType = CasUtil.getType(aJCas.getCas(), arcTokenType);
 
-        for (AnnotationFS fs : CasUtil.selectCovered(aJCas.getCas(), type, aBegin, aEnd)) {
+		for (AnnotationFS fs : CasUtil.selectCovered(aJCas.getCas(), type, aBegin, aEnd)) {
 
-            FeatureStructure dependentFs = fs.getFeatureValue(dependentFeature).getFeatureValue(
-                    arcSpanFeature);
-            FeatureStructure governorFs = fs.getFeatureValue(governorFeature).getFeatureValue(
-                    arcSpanFeature);
-            if (((FeatureStructureImpl) dependentFs).getAddress() == aOriginAddress
-                    && ((FeatureStructureImpl) governorFs).getAddress() == aTargetAddress
-                    && !aValue.equals(AnnotationTypeConstant.ROOT)) {
+			FeatureStructure dependentFs = fs.getFeatureValue(dependentFeature).getFeatureValue(
+					arcSpanFeature);
+			FeatureStructure governorFs = fs.getFeatureValue(governorFeature).getFeatureValue(
+					arcSpanFeature);
+			if (((FeatureStructureImpl) dependentFs).getAddress() == aOriginAddress
+					&& ((FeatureStructureImpl) governorFs).getAddress() == aTargetAddress
+					&& !aValue.equals(AnnotationTypeConstant.ROOT)) {
 
-                // It is update of arc value, update it
-                if (!fs.getStringValue(feature).equals(aValue)) {
-                    fs.setStringValue(feature, aValue);
-                }
-                duplicate = true;
-                break;
-            }
-        }
-        // It is new ARC annotation, create it
-        if (!duplicate) {
-            AnnotationFS dependentFS;
-            AnnotationFS governorFS;
-            if (aValue.equals("ROOT")) {
-                dependentFS = getFS(aJCas, aOriginAddress);
-                governorFS = dependentFS;
-            }
-            else {
-                dependentFS = getFS(aJCas, aOriginAddress);
-                governorFS = getFS(aJCas, aTargetAddress);
-            }
-            AnnotationFS newAnnotation = aJCas.getCas().createAnnotation(type,
-                    dependentFS.getBegin(), governorFS.getEnd());
-            newAnnotation.setStringValue(feature, aValue);
-            // TODO - manage if arc types are based on multiple tokens
-            newAnnotation.setFeatureValue(
-                    dependentFeature,
-                    CasUtil.selectCovered(aJCas.getCas(), tokenType, dependentFS.getBegin(),
-                            dependentFS.getEnd()).get(0));
-            newAnnotation.setFeatureValue(
-                    governorFeature,
-                    CasUtil.selectCovered(aJCas.getCas(), tokenType, governorFS.getBegin(),
-                            governorFS.getEnd()).get(0));
-            aJCas.addFsToIndexes(newAnnotation);
-        }
-    }
+				// It is update of arc value, update it
+				if (!fs.getStringValue(feature).equals(aValue)) {
+					fs.setStringValue(feature, aValue);
+				}
+				duplicate = true;
+				break;
+			}
+		}
+		// It is new ARC annotation, create it
+		if (!duplicate) {
+			AnnotationFS dependentFS;
+			AnnotationFS governorFS;
+			if (aValue.equals("ROOT")) {
+				dependentFS = (AnnotationFS) BratAjaxCasUtil.selectAnnotationByAddress(aJCas,
+						FeatureStructure.class, aOriginAddress);
+				governorFS = dependentFS;
+			}
+			else {
+				dependentFS = (AnnotationFS) BratAjaxCasUtil.selectAnnotationByAddress(aJCas,
+						FeatureStructure.class, aOriginAddress);
+				governorFS = (AnnotationFS) BratAjaxCasUtil.selectAnnotationByAddress(aJCas,
+						FeatureStructure.class, aTargetAddress);
+			}
+			AnnotationFS newAnnotation = aJCas.getCas().createAnnotation(type,
+					dependentFS.getBegin(), governorFS.getEnd());
+			newAnnotation.setStringValue(feature, aValue);
+			// TODO - manage if arc types are based on multiple tokens
+			newAnnotation.setFeatureValue(
+					dependentFeature,
+					CasUtil.selectCovered(aJCas.getCas(), tokenType, dependentFS.getBegin(),
+							dependentFS.getEnd()).get(0));
+			newAnnotation.setFeatureValue(
+					governorFeature,
+					CasUtil.selectCovered(aJCas.getCas(), tokenType, governorFS.getBegin(),
+							governorFS.getEnd()).get(0));
+			aJCas.addFsToIndexes(newAnnotation);
+		}
+	}
 
-    /**
-     * Delete arc annotation from CAS
-     *
-     * @param aJCas
-     * @param aId
-     */
-    public void deleteFromCas(BratAnnotatorUIData aUIData, BratAnnotatorModel aBratAnnotatorModel)
-    {
+	/**
+	 * Delete arc annotation from CAS
+	 * 
+	 * @param aJCas
+	 * @param aId
+	 */
+	public void deleteFromCas(BratAnnotatorUIData aUIData, BratAnnotatorModel aBratAnnotatorModel)
+	{
+		int originAddress;
+		int targetAddress;
+		JCas jCas = aUIData.getjCas();
 
-        int originAddress;
-        int targetAddress;
-        JCas jCas = aUIData.getjCas();
+		if (aBratAnnotatorModel.getProject().isReverseDependencyDirection()) {
+			originAddress = aUIData.getTarget();
+			targetAddress = aUIData.getOrigin();
+		}
+		else {
+			originAddress = aUIData.getOrigin();
+			targetAddress = aUIData.getTarget();
+		}
+		FeatureStructure fsToDelete = null;
 
-        if (aBratAnnotatorModel.getProject().isReverseDependencyDirection()) {
-            originAddress = getAddress(aUIData.getTarget());
-            targetAddress = getAddress(aUIData.getOrigin());
-        }
-        else {
-            originAddress = getAddress(aUIData.getOrigin());
-            targetAddress = getAddress(aUIData.getTarget());
-        }
-        FeatureStructure fsToDelete = null;
+		Type type = CasUtil.getType(jCas.getCas(), annotationTypeName);
+		Feature dependentFeature = type.getFeatureByBaseName(dependentFeatureName);
+		Feature governorFeature = type.getFeatureByBaseName(governorFeatureName);
 
-        Type type = CasUtil.getType(jCas.getCas(), annotationTypeName);
-        Feature dependentFeature = type.getFeatureByBaseName(dependentFeatureName);
-        Feature governorFeature = type.getFeatureByBaseName(governorFeatureName);
+		Type spanType = CasUtil.getType(jCas.getCas(), arcSpanType);
+		Feature arcSpanFeature = spanType.getFeatureByBaseName(arcSpanTypeFeatureName);
 
-        Type spanType = CasUtil.getType(jCas.getCas(), arcSpanType);
-        Feature arcSpanFeature = spanType.getFeatureByBaseName(arcSpanTypeFeatureName);
+		for (AnnotationFS fs : CasUtil.select(jCas.getCas(), type)) {
+			FeatureStructure dependentFs = fs.getFeatureValue(dependentFeature).getFeatureValue(
+					arcSpanFeature);
+			FeatureStructure governorFs = fs.getFeatureValue(governorFeature).getFeatureValue(
+					arcSpanFeature);
+			if (((FeatureStructureImpl) dependentFs).getAddress() == originAddress
+					&& ((FeatureStructureImpl) governorFs).getAddress() == targetAddress) {
+				fsToDelete = fs;
+				break;
+			}
+		}
+		jCas.removeFsFromIndexes(fsToDelete);
+	}
 
-        for (AnnotationFS fs : CasUtil.select(jCas.getCas(), type)) {
+	/**
+	 * Convenience method to get an adapter for Dependency Parsing.
+	 * 
+	 * NOTE: This is not meant to stay. It's just a convenience during refactoring!
+	 */
+	public static final ArcAdapter getDependencyAdapter()
+	{
+		ArcAdapter adapter = new ArcAdapter(AnnotationTypeConstant.POS_PREFIX,
+				Dependency.class.getName(), AnnotationTypeConstant.DEPENDENCY_FEATURENAME,
+				AnnotationTypeConstant.DEPENDENCY_DEPENDENT_FEATURENAME,
+				AnnotationTypeConstant.DEPENDENCY_GOVERNOR_FEATURENAME, Token.class.getName(),
+				AnnotationTypeConstant.ARC_POS_FEATURE_NAME, Token.class.getName());
+		return adapter;
+	}
 
-            FeatureStructure dependentFs = fs.getFeatureValue(dependentFeature).getFeatureValue(
-                    arcSpanFeature);
-            FeatureStructure governorFs = fs.getFeatureValue(governorFeature).getFeatureValue(
-                    arcSpanFeature);
-            if (((FeatureStructureImpl) dependentFs).getAddress() == originAddress
-                    && ((FeatureStructureImpl) governorFs).getAddress() == targetAddress) {
-                fsToDelete = fs;
-                break;
-            }
-        }
-        jCas.removeFsFromIndexes(fsToDelete);
-    }
-
-    /**
-     * The ID of the arc in brat annotation is is sent as String. This is low level address of the
-     * annotation in CAS
-     *
-     * @param aId
-     * @return
-     */
-    private int getAddress(String aId)
-    {
-        return Integer.parseInt(aId.replaceAll("[\\D]", ""));
-    }
-
-    /**
-     * Convenience method to get an adapter for Dependency Parsing.
-     *
-     * NOTE: This is not meant to stay. It's just a convenience during refactoring!
-     */
-    public static final ArcAdapter getDependencyAdapter()
-    {
-        ArcAdapter adapter = new ArcAdapter(AnnotationTypeConstant.POS_PREFIX,
-                Dependency.class.getName(), AnnotationTypeConstant.DEPENDENCY_FEATURENAME,
-                AnnotationTypeConstant.DEPENDENCY_DEPENDENT_FEATURENAME,
-                AnnotationTypeConstant.DEPENDENCY_GOVERNOR_FEATURENAME, Token.class.getName(),
-                AnnotationTypeConstant.ARC_POS_FEATURE_NAME, Token.class.getName());
-        return adapter;
-    }
-
-    /**
-     * Argument lists for the arc annotation
-     *
-     * @return
-     */
-    private List<Argument> getArgument(FeatureStructure aGovernorFs, FeatureStructure aDependentFs,
-            boolean arevers)
-    {
-        if (arevers) {
-            return asList(new Argument("Arg1", ((FeatureStructureImpl) aGovernorFs).getAddress()),
-                    new Argument("Arg2", ((FeatureStructureImpl) aDependentFs).getAddress()));
-        }
-        else {
-            return asList(new Argument("Arg1", ((FeatureStructureImpl) aDependentFs).getAddress()),
-                    new Argument("Arg2", ((FeatureStructureImpl) aGovernorFs).getAddress()));
-        }
-    }
-
-    /**
-     * Fetch a feature structure by its address from the CAS.
-     *
-     * @param aJCas
-     *            the CAS.
-     * @param aType
-     *            the type of the feature structure to fetch.
-     * @param aAddress
-     *            the address of the feature structure.
-     * @return the feature structure.
-     */
-    @SuppressWarnings("unchecked")
-    private static <T extends FeatureStructure> T getFS(JCas aJCas, int aAddress)
-    {
-        return (T) aJCas.getLowLevelCas().ll_getFSForRef(aAddress);
-    }
-
+	/**
+	 * Argument lists for the arc annotation
+	 * 
+	 * @return
+	 */
+	private List<Argument> getArgument(FeatureStructure aGovernorFs, FeatureStructure aDependentFs,
+			boolean arevers)
+	{
+		if (arevers) {
+			return asList(new Argument("Arg1", ((FeatureStructureImpl) aGovernorFs).getAddress()),
+					new Argument("Arg2", ((FeatureStructureImpl) aDependentFs).getAddress()));
+		}
+		else {
+			return asList(new Argument("Arg1", ((FeatureStructureImpl) aDependentFs).getAddress()),
+					new Argument("Arg2", ((FeatureStructureImpl) aGovernorFs).getAddress()));
+		}
+	}
 }

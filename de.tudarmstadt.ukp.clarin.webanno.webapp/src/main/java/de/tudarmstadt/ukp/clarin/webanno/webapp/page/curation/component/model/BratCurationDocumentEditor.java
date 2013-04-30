@@ -17,8 +17,6 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.ArrayList;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
@@ -37,8 +35,6 @@ import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
-import org.springframework.security.core.context.SecurityContextHolder;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
@@ -46,8 +42,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorUIData;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.OffsetsList;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
@@ -402,11 +396,11 @@ public class BratCurationDocumentEditor
         BratAjaxCasCurationController controller = new BratAjaxCasCurationController(jsonConverter, repository,
                 annotationService);
         try {
-            aUIData.setOrigin(aRequest.getParameterValue("origin").toString());
-            aUIData.setTarget(aRequest.getParameterValue("target").toString());
+            aUIData.setOrigin(aRequest.getParameterValue("origin").toInt());
+            aUIData.setTarget(aRequest.getParameterValue("target").toInt());
             aUIData.setType(aRequest.getParameterValue("type").toString());
             aUIData.setAnnotationOffsetStart(BratAjaxCasUtil.getAnnotationBeginOffset(
-                    aUIData.getjCas(), Integer.parseInt(aUIData.getOrigin())));
+                    aUIData.getjCas(), aUIData.getOrigin()));
             result = controller.createArc(getModelObject(), aUIData);
             if (getModelObject().isScrollPage()) {
                 getModelObject().setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(
@@ -435,11 +429,11 @@ public class BratCurationDocumentEditor
                 annotationService);
 
         try {
-            aUIData.setOrigin(aRequest.getParameterValue("origin").toString());
-            aUIData.setTarget(aRequest.getParameterValue("target").toString());
+            aUIData.setOrigin(aRequest.getParameterValue("origin").toInt());
+            aUIData.setTarget(aRequest.getParameterValue("target").toInt());
             aUIData.setType(aRequest.getParameterValue("type").toString());
             aUIData.setAnnotationOffsetStart(BratAjaxCasUtil.getAnnotationBeginOffset(
-                    aUIData.getjCas(), Integer.parseInt(aUIData.getOrigin())));
+                    aUIData.getjCas(), aUIData.getOrigin()));
 
             String annotationType = aUIData.getType().substring(0,
                     aUIData.getType().indexOf(AnnotationTypeConstant.PREFIX) + 1);
@@ -474,7 +468,7 @@ public class BratCurationDocumentEditor
 
         try {
             String offsets = aRequest.getParameterValue("offsets").toString();
-            String id = aRequest.getParameterValue("id").toString();
+            int id = aRequest.getParameterValue("id").toInt();
             OffsetsList offsetLists = jsonConverter.getObjectMapper().readValue(offsets,
                     OffsetsList.class);
             int start = offsetLists.get(0).getBegin();
@@ -521,11 +515,11 @@ public class BratCurationDocumentEditor
                 annotationService);
 
         try {
-            aUIData.setOrigin(aRequest.getParameterValue("origin").toString());
-            aUIData.setTarget(aRequest.getParameterValue("target").toString());
+            aUIData.setOrigin(aRequest.getParameterValue("origin").toInt());
+            aUIData.setTarget(aRequest.getParameterValue("target").toInt());
             aUIData.setType(aRequest.getParameterValue("type").toString());
             aUIData.setAnnotationOffsetStart(BratAjaxCasUtil.getAnnotationBeginOffset(
-                    aUIData.getjCas(), Integer.parseInt(aUIData.getOrigin())));
+                    aUIData.getjCas(), aUIData.getOrigin()));
 
             result = controller.deleteArc(getModelObject(), aUIData);
             if (getModelObject().isScrollPage()) {

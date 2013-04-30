@@ -33,11 +33,11 @@ public class BratAnnotatorUIData{
     /**
      * The id of the origin span in arc annotation
      */
-    private String origin;
+    private int origin;
     /**
      * The id of target span in arc annotation
      */
-    private String target;
+    private int target;
 
     /**
      * The starting offset position for the current display window
@@ -78,22 +78,22 @@ public class BratAnnotatorUIData{
         annotationType = aType;
     }
 
-    public String getOrigin()
+    public int getOrigin()
     {
         return origin;
     }
 
-    public void setOrigin(String aOrigin)
+    public void setOrigin(int aOrigin)
     {
         origin = aOrigin;
     }
 
-    public String getTarget()
+    public int getTarget()
     {
         return target;
     }
 
-    public void setTarget(String aTarget)
+    public void setTarget(int aTarget)
     {
         target = aTarget;
     }

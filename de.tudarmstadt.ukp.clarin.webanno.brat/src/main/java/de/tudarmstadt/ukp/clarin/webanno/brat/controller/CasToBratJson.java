@@ -40,7 +40,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
  * Convert the CAS object to BRAT JSON format
@@ -212,18 +211,6 @@ public class CasToBratJson
             if (i > 12) {
                 i = 1;
             }
-        }
-    }
-
-    private List<Argument> getArgument(Dependency aDependency, boolean arevers)
-    {
-        if (arevers) {
-            return asList(new Argument("Arg1", aDependency.getGovernor().getPos().getAddress()),
-                    new Argument("Arg2", aDependency.getDependent().getPos().getAddress()));
-        }
-        else {
-            return asList(new Argument("Arg1", aDependency.getDependent().getPos().getAddress()),
-                    new Argument("Arg2", aDependency.getGovernor().getPos().getAddress()));
         }
     }
 

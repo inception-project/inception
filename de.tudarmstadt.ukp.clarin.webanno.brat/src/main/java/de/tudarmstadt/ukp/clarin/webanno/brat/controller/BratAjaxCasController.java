@@ -386,7 +386,7 @@ public class BratAjaxCasController
         if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
             ArcAdapter.getDependencyAdapter().deleteFromCas(aUIData, aBratAnnotatorModel);
             // Reverse directions
-            String origin = aUIData.getOrigin();// swap variable
+            int origin = aUIData.getOrigin();// swap variable
             aUIData.setOrigin(aUIData.getTarget());
             aUIData.setTarget(origin);
             ArcAdapter.getDependencyAdapter().addToCas(type, aUIData, aBratAnnotatorModel, false);
@@ -409,7 +409,7 @@ public class BratAjaxCasController
     /**
      * deletes a span annotation, except POS annotation
      */
-    public DeleteSpanResponse deleteSpan(BratAnnotatorModel aBratAnnotatorModel, String aId,
+    public DeleteSpanResponse deleteSpan(BratAnnotatorModel aBratAnnotatorModel, int aId,
             BratAnnotatorUIData aUIData)
         throws JsonParseException, JsonMappingException, IOException, UIMAException
     {

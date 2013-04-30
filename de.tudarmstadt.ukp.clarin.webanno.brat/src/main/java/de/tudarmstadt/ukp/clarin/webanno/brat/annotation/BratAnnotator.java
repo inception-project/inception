@@ -531,11 +531,11 @@ public class BratAnnotator
         try {
             setAttributesForDocument(bratAnnotatorModel.getProject().getName(), bratAnnotatorModel
                     .getDocument().getName(), aUIData);
-            aUIData.setOrigin(aRequest.getParameterValue("origin").toString());
-            aUIData.setTarget(aRequest.getParameterValue("target").toString());
+            aUIData.setOrigin(aRequest.getParameterValue("origin").toInt());
+            aUIData.setTarget(aRequest.getParameterValue("target").toInt());
             aUIData.setType(aRequest.getParameterValue("type").toString());
             aUIData.setAnnotationOffsetStart(BratAjaxCasUtil.getAnnotationBeginOffset(
-                    aUIData.getjCas(), Integer.parseInt(aUIData.getOrigin())));
+                    aUIData.getjCas(), aUIData.getOrigin()));
             result = controller.createArc(bratAnnotatorModel, aUIData);
             if (bratAnnotatorModel.isScrollPage()) {
                 bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(
@@ -565,11 +565,11 @@ public class BratAnnotator
         try {
             setAttributesForDocument(bratAnnotatorModel.getProject().getName(), bratAnnotatorModel
                     .getDocument().getName(), aUIData);
-            aUIData.setOrigin(aRequest.getParameterValue("origin").toString());
-            aUIData.setTarget(aRequest.getParameterValue("target").toString());
+            aUIData.setOrigin(aRequest.getParameterValue("origin").toInt());
+            aUIData.setTarget(aRequest.getParameterValue("target").toInt());
             aUIData.setType(aRequest.getParameterValue("type").toString());
             aUIData.setAnnotationOffsetStart(BratAjaxCasUtil.getAnnotationBeginOffset(
-                    aUIData.getjCas(), Integer.parseInt(aUIData.getOrigin())));
+                    aUIData.getjCas(), aUIData.getOrigin()));
 
             String annotationType = aUIData.getType().substring(0,
                     aUIData.getType().indexOf(AnnotationTypeConstant.PREFIX) + 1);
@@ -603,7 +603,7 @@ public class BratAnnotator
 
         try {
             String offsets = aRequest.getParameterValue("offsets").toString();
-            String id = aRequest.getParameterValue("id").toString();
+            int id = aRequest.getParameterValue("id").toInt();
             OffsetsList offsetLists = jsonConverter.getObjectMapper().readValue(offsets,
                     OffsetsList.class);
             int start = offsetLists.get(0).getBegin();
@@ -655,11 +655,11 @@ public class BratAnnotator
         try {
             setAttributesForDocument(bratAnnotatorModel.getProject().getName(), bratAnnotatorModel
                     .getDocument().getName(), aUIData);
-            aUIData.setOrigin(aRequest.getParameterValue("origin").toString());
-            aUIData.setTarget(aRequest.getParameterValue("target").toString());
+            aUIData.setOrigin(aRequest.getParameterValue("origin").toInt());
+            aUIData.setTarget(aRequest.getParameterValue("target").toInt());
             aUIData.setType(aRequest.getParameterValue("type").toString());
             aUIData.setAnnotationOffsetStart(BratAjaxCasUtil.getAnnotationBeginOffset(
-                    aUIData.getjCas(), Integer.parseInt(aUIData.getOrigin())));
+                    aUIData.getjCas(), aUIData.getOrigin()));
 
             result = controller.deleteArc(bratAnnotatorModel, aUIData);
             if (bratAnnotatorModel.isScrollPage()) {

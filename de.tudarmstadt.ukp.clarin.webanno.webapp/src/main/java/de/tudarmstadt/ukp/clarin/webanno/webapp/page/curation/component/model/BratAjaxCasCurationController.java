@@ -21,17 +21,13 @@ import java.util.HashSet;
 import java.util.List;
 
 import javax.annotation.Resource;
-import javax.persistence.NoResultException;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
-import org.apache.uima.jcas.JCas;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
-import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -61,10 +57,8 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.LoadConfResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.ReverseArcResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.StoreSvgResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.WhoamiResponse;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -394,7 +388,7 @@ public class BratAjaxCasCurationController
         if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
             ArcAdapter.getDependencyAdapter().deleteFromCas(aUIData, aBratAnnotatorModel);
             // Reverse directions
-            String origin = aUIData.getOrigin();// swap variable
+            int origin = aUIData.getOrigin();// swap variable
             aUIData.setOrigin(aUIData.getTarget());
             aUIData.setTarget(origin);
             ArcAdapter.getDependencyAdapter().addToCas(type, aUIData, aBratAnnotatorModel, false);
@@ -417,14 +411,13 @@ public class BratAjaxCasCurationController
     /**
      * deletes a span annotation, except POS annotation
      */
-    public DeleteSpanResponse deleteSpan(BratAnnotatorModel aBratAnnotatorModel, String aId,
+    public DeleteSpanResponse deleteSpan(BratAnnotatorModel aBratAnnotatorModel, int aId,
             BratAnnotatorUIData aUIData)
         throws JsonParseException, JsonMappingException, IOException, UIMAException
     {
 
         String annotationType = BratAjaxCasUtil.getAnnotationType(aUIData.getType());
         String type = BratAjaxCasUtil.getType(aUIData.getType());
-
 
         if (annotationType.equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)) {
             SpanAdapter.getNamedEntityAdapter().deleteFromCas(aUIData.getjCas(), aId);

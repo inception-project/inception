@@ -44,315 +44,295 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * A class that is used to create Brat Span to CAS and vice-versa
- *
+ * 
  * @author Seid Muhie Yimam
  * @author Richard Eckart de Castilho
  */
 public class SpanAdapter
+	implements TypeAdapter
 {
-    /**
-     * Prefix of the label value for Brat to make sure that different annotation types can use the
-     * same label, e.g. a POS tag "N" and a named entity type "N".
-     *
-     * This is used to differentiate the different types in the brat anotation/visualization. The prifx
-     * will not stored in the CAS(striped away at {@link BratAjaxCasController#getType}  )
-     */
-    private String typePrefix;
+	/**
+	 * Prefix of the label value for Brat to make sure that different annotation types can use the
+	 * same label, e.g. a POS tag "N" and a named entity type "N".
+	 * 
+	 * This is used to differentiate the different types in the brat annotation/visualization. The
+	 * prefix will not stored in the CAS(striped away at {@link BratAjaxCasController#getType} )
+	 */
+	private String typePrefix;
 
-    /**
-     * The UIMA type name.
-     */
-    private String annotationTypeName;
+	/**
+	 * The UIMA type name.
+	 */
+	private String annotationTypeName;
 
-    /**
-     * The feature of an UIMA annotation containing the label to be displayed in the UI.
-     */
-    private String labelFeatureName;
+	/**
+	 * The feature of an UIMA annotation containing the label to be displayed in the UI.
+	 */
+	private String labelFeatureName;
 
-    private boolean singleTokenBehavior = false;
+	private boolean singleTokenBehavior = false;
 
-    public SpanAdapter(String aTypePrefix, String aTypeName, String aLabelFeatureName)
-    {
-        typePrefix = aTypePrefix;
-        labelFeatureName = aLabelFeatureName;
-        annotationTypeName = aTypeName;
-    }
+	public SpanAdapter(String aTypePrefix, String aTypeName, String aLabelFeatureName)
+	{
+		typePrefix = aTypePrefix;
+		labelFeatureName = aLabelFeatureName;
+		annotationTypeName = aTypeName;
+	}
 
-    /**
-     * Span can only be made on a single token (not multiple tokens), e.g. for POS or Lemma
-     * annotations. If this is set and a span is made across multiple tokens, then one annotation of
-     * the specified type will be created for each token. If this is not set, a single annotation
-     * covering all tokens is created.
-     */
-    public void setSingleTokenBehavior(boolean aSingleTokenBehavior)
-    {
-        singleTokenBehavior = aSingleTokenBehavior;
-    }
+	/**
+	 * Span can only be made on a single token (not multiple tokens), e.g. for POS or Lemma
+	 * annotations. If this is set and a span is made across multiple tokens, then one annotation of
+	 * the specified type will be created for each token. If this is not set, a single annotation
+	 * covering all tokens is created.
+	 */
+	public void setSingleTokenBehavior(boolean aSingleTokenBehavior)
+	{
+		singleTokenBehavior = aSingleTokenBehavior;
+	}
 
-    /**
-     * @see #setSingleTokenBehavior(boolean)
-     */
-    public boolean isSingleTokenBehavior()
-    {
-        return singleTokenBehavior;
-    }
+	/**
+	 * @see #setSingleTokenBehavior(boolean)
+	 */
+	public boolean isSingleTokenBehavior()
+	{
+		return singleTokenBehavior;
+	}
 
-    /**
-     * Add annotations from the CAS, which is controlled by the window size, to the brat response
-     * {@link GetDocumentResponse}
-     *
-     * @param aJcas
-     *            The JCAS object containing annotations
-     * @param aResponse
-     *            A brat response containing annotations in brat protocol
-     * @param aBratAnnotatorModel
-     *            Data model for brat annotations
-     */
-    public void addToBrat(JCas aJcas, GetDocumentResponse aResponse,
-            BratAnnotatorModel aBratAnnotatorModel)
-    {
-        // The first sentence address in the display window!
-        Sentence firstSentence = getFS(aJcas, aBratAnnotatorModel.getSentenceAddress());
-        int i = aBratAnnotatorModel.getSentenceAddress();
+	/**
+	 * Add annotations from the CAS, which is controlled by the window size, to the brat response
+	 * {@link GetDocumentResponse}
+	 * 
+	 * @param aJcas
+	 *            The JCAS object containing annotations
+	 * @param aResponse
+	 *            A brat response containing annotations in brat protocol
+	 * @param aBratAnnotatorModel
+	 *            Data model for brat annotations
+	 */
+	@Override
+	public void addToBrat(JCas aJcas, GetDocumentResponse aResponse,
+			BratAnnotatorModel aBratAnnotatorModel)
+	{
+		// The first sentence address in the display window!
+		Sentence firstSentence = (Sentence) BratAjaxCasUtil.selectAnnotationByAddress(aJcas,
+				FeatureStructure.class, aBratAnnotatorModel.getSentenceAddress());
+		int i = aBratAnnotatorModel.getSentenceAddress();
 
-        // Loop based on window size
-        // j, controlling variable to display sentences based on window size
-        // i, address of each sentences
-        int j = 1;
-        while (j <= aBratAnnotatorModel.getWindowSize()) {
-            if (i >= aBratAnnotatorModel.getLastSentenceAddress()) {
-                Sentence sentence = getFS(aJcas, i);
-                updateResponse(sentence, aResponse, firstSentence.getBegin());
-                break;
-            }
-            else {
-                Sentence sentence = getFS(aJcas, i);
-                updateResponse(sentence, aResponse, firstSentence.getBegin());
-                i = BratAjaxCasUtil.getFollowingSentenceAddress(aJcas, i);
-            }
-            j++;
-        }
-    }
+		// Loop based on window size
+		// j, controlling variable to display sentences based on window size
+		// i, address of each sentences
+		int j = 1;
+		while (j <= aBratAnnotatorModel.getWindowSize()) {
+			if (i >= aBratAnnotatorModel.getLastSentenceAddress()) {
+				Sentence sentence = (Sentence) BratAjaxCasUtil.selectAnnotationByAddress(aJcas,
+						FeatureStructure.class, i);
+				updateResponse(sentence, aResponse, firstSentence.getBegin());
+				break;
+			}
+			else {
+				Sentence sentence = (Sentence) BratAjaxCasUtil.selectAnnotationByAddress(aJcas,
+						FeatureStructure.class, i);
+				updateResponse(sentence, aResponse, firstSentence.getBegin());
+				i = BratAjaxCasUtil.getFollowingSentenceAddress(aJcas, i);
+			}
+			j++;
+		}
+	}
 
-    /**
-     * a helper method to the {@link #addToBrat(JCas, GetDocumentResponse, BratAnnotatorModel)}
-     *
-     * @param aSentence
-     *            The current sentence in the CAS annotation, with annotations
-     * @param aResponse
-     *            The {@link GetDocumentResponse} object with the annotation from CAS annotation
-     * @param aFirstSentenceOffset
-     *            The first sentence offset. The actual offset in the brat visualization window will
-     *            be <b>X-Y</b>, where <b>X</b> is the offset of the annotated span and <b>Y</b> is
-     *            aFirstSentenceOffset
-     */
-    private void updateResponse(Sentence aSentence, GetDocumentResponse aResponse,
-            int aFirstSentenceOffset)
-    {
-        Type type = CasUtil.getType(aSentence.getCAS(), annotationTypeName);
-        for (AnnotationFS fs : CasUtil.selectCovered(type, aSentence)) {
+	/**
+	 * a helper method to the {@link #addToBrat(JCas, GetDocumentResponse, BratAnnotatorModel)}
+	 * 
+	 * @param aSentence
+	 *            The current sentence in the CAS annotation, with annotations
+	 * @param aResponse
+	 *            The {@link GetDocumentResponse} object with the annotation from CAS annotation
+	 * @param aFirstSentenceOffset
+	 *            The first sentence offset. The actual offset in the brat visualization window will
+	 *            be <b>X-Y</b>, where <b>X</b> is the offset of the annotated span and <b>Y</b> is
+	 *            aFirstSentenceOffset
+	 */
+	private void updateResponse(Sentence aSentence, GetDocumentResponse aResponse,
+			int aFirstSentenceOffset)
+	{
+		Type type = CasUtil.getType(aSentence.getCAS(), annotationTypeName);
+		for (AnnotationFS fs : CasUtil.selectCovered(type, aSentence)) {
 
-            Feature labelFeature = fs.getType().getFeatureByBaseName(labelFeatureName);
-            aResponse.addEntity(new Entity(((FeatureStructureImpl) fs).getAddress(), typePrefix
-                    + fs.getStringValue(labelFeature), asList(new Offsets(fs.getBegin()
-                    - aFirstSentenceOffset, fs.getEnd() - aFirstSentenceOffset))));
-        }
-    }
+			Feature labelFeature = fs.getType().getFeatureByBaseName(labelFeatureName);
+			aResponse.addEntity(new Entity(((FeatureStructureImpl) fs).getAddress(), typePrefix
+					+ fs.getStringValue(labelFeature), asList(new Offsets(fs.getBegin()
+					- aFirstSentenceOffset, fs.getEnd() - aFirstSentenceOffset))));
+		}
+	}
 
-    /**
-     * Update the CAS with new/modification of span annotations from brat
-     *
-     * @param aLabelValue
-     *            the value of the annotation for the span
-     * @param aUIData
-     *            Other information obtained from brat such as the start and end offsets
-     */
-    public void addToCas(String aLabelValue, BratAnnotatorUIData aUIData)
-    {
-        Map<Integer, Integer> offsets = offsets(aUIData.getjCas());
-        int startAndEnd[] = getTokenStart(offsets, aUIData.getAnnotationOffsetStart(),
-                aUIData.getAnnotationOffsetEnd());
+	/**
+	 * Update the CAS with new/modification of span annotations from brat
+	 * 
+	 * @param aLabelValue
+	 *            the value of the annotation for the span
+	 * @param aUIData
+	 *            Other information obtained from brat such as the start and end offsets
+	 */
+	public void addToCas(String aLabelValue, BratAnnotatorUIData aUIData)
+	{
+		Map<Integer, Integer> offsets = offsets(aUIData.getjCas());
 
-        if (singleTokenBehavior) {
-            Map<Integer, Integer> splitedTokens = getSplitedTokens(offsets,
-                    aUIData.getAnnotationOffsetStart(), aUIData.getAnnotationOffsetEnd());
-            for (Integer start : splitedTokens.keySet()) {
-                updateCas(aUIData.getjCas().getCas(), start, splitedTokens.get(start), aLabelValue);
-            }
-        }
-        else {
-            aUIData.setAnnotationOffsetStart(startAndEnd[0]);
-            aUIData.setAnnotationOffsetEnd(startAndEnd[1]);
-            updateCas(aUIData.getjCas().getCas(), aUIData.getAnnotationOffsetStart(),
-                    aUIData.getAnnotationOffsetEnd(), aLabelValue);
-        }
-    }
+		if (singleTokenBehavior) {
+			Map<Integer, Integer> splitedTokens = getSplitedTokens(offsets,
+					aUIData.getAnnotationOffsetStart(), aUIData.getAnnotationOffsetEnd());
+			for (Integer start : splitedTokens.keySet()) {
+				updateCas(aUIData.getjCas().getCas(), start, splitedTokens.get(start), aLabelValue);
+			}
+		}
+		else {
+			int startAndEnd[] = getTokenStart(offsets, aUIData.getAnnotationOffsetStart(),
+					aUIData.getAnnotationOffsetEnd());
+			aUIData.setAnnotationOffsetStart(startAndEnd[0]);
+			aUIData.setAnnotationOffsetEnd(startAndEnd[1]);
+			updateCas(aUIData.getjCas().getCas(), aUIData.getAnnotationOffsetStart(),
+					aUIData.getAnnotationOffsetEnd(), aLabelValue);
+		}
+	}
 
-    /**
-     * A Helper method to {@link #addToCas(String, BratAnnotatorUIData)}
-     */
-    private void updateCas(CAS aCas, int aBegin, int aEnd, String aValue)
-    {
+	/**
+	 * A Helper method to {@link #addToCas(String, BratAnnotatorUIData)}
+	 */
+	private void updateCas(CAS aCas, int aBegin, int aEnd, String aValue)
+	{
 
-        boolean duplicate = false;
-        Type type = CasUtil.getType(aCas, annotationTypeName);
-        Feature feature = type.getFeatureByBaseName(labelFeatureName);
-        for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
+		boolean duplicate = false;
+		Type type = CasUtil.getType(aCas, annotationTypeName);
+		Feature feature = type.getFeatureByBaseName(labelFeatureName);
+		for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
 
-            if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
-                if (!fs.getStringValue(feature).equals(aValue)) {
-                    fs.setStringValue(feature, aValue);
-                }
-                duplicate = true;
-            }
-        }
-        if (!duplicate) {
-            AnnotationFS newAnnotation = aCas.createAnnotation(type, aBegin, aEnd);
-            newAnnotation.setStringValue(feature, aValue);
-            aCas.addFsToIndexes(newAnnotation);
-        }
-    }
+			if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
+				if (!fs.getStringValue(feature).equals(aValue)) {
+					fs.setStringValue(feature, aValue);
+				}
+				duplicate = true;
+			}
+		}
+		if (!duplicate) {
+			AnnotationFS newAnnotation = aCas.createAnnotation(type, aBegin, aEnd);
+			newAnnotation.setStringValue(feature, aValue);
+			aCas.addFsToIndexes(newAnnotation);
+		}
+	}
 
-    /**
-     * Delete a span annotation from CAS
-     * @param aJCas the CAS object
-     * @param aId the low-level address of the span annotation.
-     */
-    public void deleteFromCas(JCas aJCas, String aId)
-    {
-        int ref = getAddress(aId);
-        FeatureStructure fs = getFS(aJCas, ref);
-        aJCas.removeFsFromIndexes(fs);
-    }
+	/**
+	 * Delete a span annotation from CAS
+	 * 
+	 * @param aJCas
+	 *            the CAS object
+	 * @param aId
+	 *            the low-level address of the span annotation.
+	 */
+	public void deleteFromCas(JCas aJCas, int aRef)
+	{
+		FeatureStructure fs = (FeatureStructure) BratAjaxCasUtil.selectAnnotationByAddress(aJCas,
+				FeatureStructure.class, aRef);
+		aJCas.removeFsFromIndexes(fs);
+	}
 
-    /**
-     * The ID of the span in brat annotation is is sent as String. This is low level address of the
-     * annotation in CAS
-     *
-     * @param aId
-     * @return
-     */
-    private int getAddress(String aId)
-    {
-        return Integer.parseInt(aId.replaceAll("[\\D]", ""));
-    }
-    /**
-     * Stores, for every tokens, the start and end position offsets : used fro multiple span
-     * annotations
-     *
-     * @return map of tokens begin and end positions
-     */
-    private static Map<Integer, Integer> offsets(JCas aJcas)
-    {
-        Map<Integer, Integer> offsets = new HashMap<Integer, Integer>();
-        for (Token token : select(aJcas, Token.class)) {
-            offsets.put(token.getBegin(), token.getEnd());
-        }
-        return offsets;
-    }
+	/**
+	 * Stores, for every tokens, the start and end position offsets : used for multiple span
+	 * annotations
+	 * 
+	 * @return map of tokens begin and end positions
+	 */
+	private static Map<Integer, Integer> offsets(JCas aJcas)
+	{
+		Map<Integer, Integer> offsets = new HashMap<Integer, Integer>();
+		for (Token token : select(aJcas, Token.class)) {
+			offsets.put(token.getBegin(), token.getEnd());
+		}
+		return offsets;
+	}
 
-    /**
-     * For multiple span, get the start and end offsets
-     */
-    private static int[] getTokenStart(Map<Integer, Integer> aOffset, int aStart, int aEnd)
-    {
-        Iterator<Integer> it = aOffset.keySet().iterator();
-        boolean startFound = false;
-        boolean endFound = false;
-        while (it.hasNext()) {
-            int tokenStart = it.next();
-            if (aStart >= tokenStart && aStart <= aOffset.get(tokenStart)) {
-                aStart = tokenStart;
-                startFound = true;
-                if (endFound) {
-                    break;
-                }
-            }
-            if (aEnd >= tokenStart && aEnd <= aOffset.get(tokenStart)) {
-                aEnd = aOffset.get(tokenStart);
-                endFound = true;
-                if (startFound) {
-                    break;
-                }
-            }
-        }
-        return new int[] { aStart, aEnd };
-    }
+	/**
+	 * For multiple span, get the start and end offsets
+	 */
+	private static int[] getTokenStart(Map<Integer, Integer> aOffset, int aStart, int aEnd)
+	{
+		Iterator<Integer> it = aOffset.keySet().iterator();
+		boolean startFound = false;
+		boolean endFound = false;
+		while (it.hasNext()) {
+			int tokenStart = it.next();
+			if (aStart >= tokenStart && aStart <= aOffset.get(tokenStart)) {
+				aStart = tokenStart;
+				startFound = true;
+				if (endFound) {
+					break;
+				}
+			}
+			if (aEnd >= tokenStart && aEnd <= aOffset.get(tokenStart)) {
+				aEnd = aOffset.get(tokenStart);
+				endFound = true;
+				if (startFound) {
+					break;
+				}
+			}
+		}
+		return new int[] { aStart, aEnd };
+	}
 
-    /**
-     * If the annotation type is limited to only a single token, but brat sends multiple tokens,
-     * split them up
-     *
-     * @return Map of start and end offsets for the multiple token span
-     */
+	/**
+	 * If the annotation type is limited to only a single token, but brat sends multiple tokens,
+	 * split them up
+	 * 
+	 * @return Map of start and end offsets for the multiple token span
+	 */
 
-    private static Map<Integer, Integer> getSplitedTokens(Map<Integer, Integer> aOffset,
-            int aStart, int aEnd)
-    {
-        Map<Integer, Integer> startAndEndOfSplitedTokens = new HashMap<Integer, Integer>();
-        Iterator<Integer> it = aOffset.keySet().iterator();
-        while (it.hasNext()) {
-            int tokenStart = it.next();
-            if (aStart <= tokenStart && tokenStart <= aEnd) {
-                startAndEndOfSplitedTokens.put(tokenStart, aOffset.get(tokenStart));
-            }
-        }
-        return startAndEndOfSplitedTokens;
-    }
+	private static Map<Integer, Integer> getSplitedTokens(Map<Integer, Integer> aOffset,
+			int aStart, int aEnd)
+	{
+		Map<Integer, Integer> startAndEndOfSplitedTokens = new HashMap<Integer, Integer>();
+		Iterator<Integer> it = aOffset.keySet().iterator();
+		while (it.hasNext()) {
+			int tokenStart = it.next();
+			if (aStart <= tokenStart && tokenStart <= aEnd) {
+				startAndEndOfSplitedTokens.put(tokenStart, aOffset.get(tokenStart));
+			}
+		}
+		return startAndEndOfSplitedTokens;
+	}
 
-    /**
-     * Convenience method to get an adapter for part-of-speech.
-     *
-     * NOTE: This is not meant to stay. It's just a convenience during refactoring!
-     */
-    public static final SpanAdapter getPosAdapter()
-    {
-        SpanAdapter adapter = new SpanAdapter(AnnotationTypeConstant.POS_PREFIX,
-                POS.class.getName(), AnnotationTypeConstant.POS_FEATURENAME);
-        adapter.setSingleTokenBehavior(true);
-        return adapter;
-    }
+	/**
+	 * Convenience method to get an adapter for part-of-speech.
+	 * 
+	 * NOTE: This is not meant to stay. It's just a convenience during refactoring!
+	 */
+	public static final SpanAdapter getPosAdapter()
+	{
+		SpanAdapter adapter = new SpanAdapter(AnnotationTypeConstant.POS_PREFIX,
+				POS.class.getName(), AnnotationTypeConstant.POS_FEATURENAME);
+		adapter.setSingleTokenBehavior(true);
+		return adapter;
+	}
 
-    /**
-     * Convenience method to get an adapter for lemma.
-     *
-     * NOTE: This is not meant to stay. It's just a convenience during refactoring!
-     */
-    public static final SpanAdapter getLemmaAdapter()
-    {
-        SpanAdapter adapter = new SpanAdapter("", Lemma.class.getName(),
-                AnnotationTypeConstant.LEMMA_FEATURENAME);
-        adapter.setSingleTokenBehavior(true);
-        return adapter;
-    }
+	/**
+	 * Convenience method to get an adapter for lemma.
+	 * 
+	 * NOTE: This is not meant to stay. It's just a convenience during refactoring!
+	 */
+	public static final SpanAdapter getLemmaAdapter()
+	{
+		SpanAdapter adapter = new SpanAdapter("", Lemma.class.getName(),
+				AnnotationTypeConstant.LEMMA_FEATURENAME);
+		adapter.setSingleTokenBehavior(true);
+		return adapter;
+	}
 
-    /**
-     * Convenience method to get an adapter for named entity.
-     *
-     * NOTE: This is not meant to stay. It's just a convenience during refactoring!
-     */
-    public static final SpanAdapter getNamedEntityAdapter()
-    {
-        SpanAdapter adapter = new SpanAdapter(AnnotationTypeConstant.NAMEDENTITY_PREFIX,
-                NamedEntity.class.getName(), AnnotationTypeConstant.NAMEDENTITY_FEATURENAME);
-        adapter.setSingleTokenBehavior(false);
-        return adapter;
-    }
-
-    /**
-     * Fetch a feature structure by its address from the CAS.
-     *
-     * @param aJCas
-     *            the CAS.
-     * @param aType
-     *            the type of the feature structure to fetch.
-     * @param aAddress
-     *            the address of the feature structure.
-     * @return the feature structure.
-     */
-    @SuppressWarnings("unchecked")
-    private static <T extends FeatureStructure> T getFS(JCas aJCas, int aAddress)
-    {
-        return (T) aJCas.getLowLevelCas().ll_getFSForRef(aAddress);
-    }
+	/**
+	 * Convenience method to get an adapter for named entity.
+	 * 
+	 * NOTE: This is not meant to stay. It's just a convenience during refactoring!
+	 */
+	public static final SpanAdapter getNamedEntityAdapter()
+	{
+		SpanAdapter adapter = new SpanAdapter(AnnotationTypeConstant.NAMEDENTITY_PREFIX,
+				NamedEntity.class.getName(), AnnotationTypeConstant.NAMEDENTITY_FEATURENAME);
+		adapter.setSingleTokenBehavior(false);
+		return adapter;
+	}
 }
