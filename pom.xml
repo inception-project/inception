@@ -224,6 +224,7 @@
 		<module>de.tudarmstadt.ukp.clarin.webanno.model</module>
 		<module>de.tudarmstadt.ukp.clarin.webanno.uima</module>
 		<module>de.tudarmstadt.ukp.clarin.webanno.webapp</module>
+		<module>de.tudarmstadt.ukp.clarin.webanno.crowdflower</module>
 	</modules>
 	<scm>
 		<developerConnection>scm:svn:https://webanno.googlecode.com/svn/trunk</developerConnection>
