@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+Build-Jdk: 1.6.0_43
+Built-By: ich
+Created-By: Maven Integration for Eclipse
+
