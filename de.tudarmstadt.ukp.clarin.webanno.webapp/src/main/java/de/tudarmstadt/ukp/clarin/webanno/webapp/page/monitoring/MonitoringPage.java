@@ -330,7 +330,8 @@ public class MonitoringPage
                             boolean exist = true;
                             for (User user:users){
                                 AnnotationDocument annotationDocument = projectRepository.getAnnotationDocument(sourceDocument, user);
-                                if(annotationDocument.getState().equals(AnnotationDocumentState.NEW)){
+                                if(annotationDocument.getState().equals(AnnotationDocumentState.NEW) ||
+                                        annotationDocument.getState().equals(AnnotationDocumentState.IGNOR)){
                                     exist = false;
                                     break;
                                 }
@@ -362,7 +363,7 @@ public class MonitoringPage
                         // get average agreement value across documents
                         for (int i = 0; i < users.size(); i++) {
                             for (int j = 0; j < users.size(); j++) {
-                                results[i][j] = results[i][j] / sourceDocuments.size();
+                                results[i][j] = results[i][j] / sourceDocumentsWithAnnotations.size();
                             }
                         }
 

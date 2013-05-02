@@ -18,11 +18,8 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.page.monitoring;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.uima.UIMAException;
-import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.SimpleAttributeModifier;
@@ -36,7 +33,6 @@ import org.apache.wicket.model.IModel;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
@@ -112,6 +108,10 @@ public class DocumentColumnMetaData
                         .equals(AnnotationDocumentState.INPROGRESS)) {
                     color = "cyan";
                 }
+                else if (projectRepositoryService.getAnnotationDocument(document, user).getState()
+                        .equals(AnnotationDocumentState.IGNOR)) {
+                    color = "black";
+                }
                 // it is in NEW state
                 else {
                     color = "red";
@@ -126,30 +126,6 @@ public class DocumentColumnMetaData
                 annotationDocument.setUser(user);
                 annotationDocument.setState(AnnotationDocumentState.NEW);
                 projectRepositoryService.createAnnotationDocument(annotationDocument);
-                JCas jCas = null;
-                try {
-                    jCas = BratAjaxCasUtil
-                            .getJCasFromFile(projectRepositoryService.getSourceDocumentContent(
-                                    project, document), projectRepositoryService
-                                    .getReadableFormats().get(document.getFormat()));
-                }
-                catch (UIMAException e) {
-                    LOG.info(ExceptionUtils.getRootCause(e));
-                }
-                catch (ClassNotFoundException e) {
-                    LOG.info(ExceptionUtils.getRootCause(e));
-                }
-                catch (IOException e) {
-                    LOG.info(ExceptionUtils.getRootCause(e));
-                }
-
-                try {
-                    projectRepositoryService.createAnnotationDocumentContent(jCas, document, user);
-                }
-                catch (IOException e) {
-                    LOG.info(ExceptionUtils.getRootCause(e));
-                }
-
                 color = "red";
             }
         }
@@ -182,53 +158,36 @@ public class DocumentColumnMetaData
                         if (projectRepositoryService.getAnnotationDocument(document, user)
                                 .getState().equals(AnnotationDocumentState.FINISHED)) {
 
-                            AnnotationDocument annotationDocument = projectRepositoryService
-                                    .getAnnotationDocument(document, user);
-                            annotationDocument.setState(AnnotationDocumentStateTransition
-                                    .transition(AnnotationDocumentStateTransition.ANNOTATIONFINISHEDTOANNOTATIONINPROGRESS));
-                            projectRepositoryService.createAnnotationDocument(annotationDocument);
+                            changeAnnotationDocumentState(
+                                    document,
+                                    user,
+                                    AnnotationDocumentStateTransition.ANNOTATIONFINISHEDTOANNOTATIONINPROGRESS);
                             color = "cyan";
-                            try {
-                                changeSourceDocumentState(project, document);
-                            }
-                            catch (IOException e) {
-                                LOG.info("Unable to change state of the document");
-                            }
                         }
                         else if (projectRepositoryService.getAnnotationDocument(document, user)
                                 .getState().equals(AnnotationDocumentState.INPROGRESS)) {
-                            AnnotationDocument annotationDocument = projectRepositoryService
-                                    .getAnnotationDocument(document, user);
-                            annotationDocument.setState(AnnotationDocumentStateTransition
-                                    .transition(AnnotationDocumentStateTransition.ANNOTATIONINPROGRESSTOANNOTATIONFINISHED));
-                            projectRepositoryService.createAnnotationDocument(annotationDocument);
-
-                            try {
-                                changeSourceDocumentState(project, document);
-                            }
-                            catch (IOException e) {
-                                LOG.info("Unable to change state of the document");
-                            }
-                            color = "green";
-                            // check if all annotation document are closed so that the source
-                            // document state changed to FINISHED
+                            changeAnnotationDocumentState(
+                                    document,
+                                    user,
+                                    AnnotationDocumentStateTransition.ANNOTATIONINPROGRESSTOANNOTATIONFINISHED);
 
                         }
-                        // State of document reversed to INPROGRESS
+                        // Change state of document to IGNORE
+                        else if (projectRepositoryService.getAnnotationDocument(document, user)
+                                .getState().equals(AnnotationDocumentState.NEW)) {
+                            changeAnnotationDocumentState(
+                                    document,
+                                    user,
+                                    AnnotationDocumentStateTransition.NEWTOIGNOR);
+                            color = "black";
+                        }
+                        // change state from IGNOR to NEW
                         else {
-
-                            AnnotationDocument annotationDocument = projectRepositoryService
-                                    .getAnnotationDocument(document, user);
-                            annotationDocument.setState(AnnotationDocumentStateTransition
-                                    .transition(AnnotationDocumentStateTransition.NEWTOANNOTATIONINPROGRESS));
-                            projectRepositoryService.createAnnotationDocument(annotationDocument);
-                            color = "cyan";
-                            try {
-                                changeSourceDocumentState(project, document);
-                            }
-                            catch (IOException e) {
-                                LOG.info("Unable to change state of the document");
-                            }
+                            changeAnnotationDocumentState(
+                                    document,
+                                    user,
+                                    AnnotationDocumentStateTransition.IGNORTONEW);
+                            color = "red";
                         }
                     }
                     // user didn't even start working on it
@@ -322,5 +281,23 @@ public class DocumentColumnMetaData
                             .transition(SourceDocumentStateTransition.ANNOTATIONFINISHEDTOANNOTATIONINPROGRESS));
             projectRepositoryService.createSourceDocument(aSourceDocument, user);
         }
+    }
+
+    private void changeAnnotationDocumentState(SourceDocument aSourceDocument, User aUser,
+            AnnotationDocumentStateTransition aAnnotationDocumentStateTransition)
+    {
+
+        AnnotationDocument annotationDocument = projectRepositoryService.getAnnotationDocument(
+                aSourceDocument, aUser);
+        annotationDocument.setState(AnnotationDocumentStateTransition
+                .transition(aAnnotationDocumentStateTransition));
+        projectRepositoryService.createAnnotationDocument(annotationDocument);
+        try {
+            changeSourceDocumentState(project, aSourceDocument);
+        }
+        catch (IOException e) {
+            LOG.info("Unable to change state of the document");
+        }
+
     }
 }

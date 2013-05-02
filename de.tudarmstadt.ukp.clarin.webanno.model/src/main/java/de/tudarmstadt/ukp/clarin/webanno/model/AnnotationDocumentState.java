@@ -36,5 +36,9 @@ public enum AnnotationDocumentState
     /**
      * annotator has marked annotation document as complete
      */
-    FINISHED;
+    FINISHED,
+    /**
+     * Ignor this annotation document from further processing such as curation
+     */
+    IGNOR;
 }

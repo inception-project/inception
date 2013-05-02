@@ -56,6 +56,8 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.ReverseArcResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.StoreSvgResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.WhoamiResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
@@ -331,9 +333,16 @@ public class BratAjaxCasController
         CreateSpanResponse createSpanResponse = new CreateSpanResponse();
 
         createSpanResponse.setAnnotations(response);
+        // If this is the first time the user working on it, change state from NEW to INPROGRESS
+        AnnotationDocument annotationDocument = repository.getAnnotationDocument(aBratAnnotatorModel.getDocument(),
+                aBratAnnotatorModel.getUser());
+        if (annotationDocument.getState().equals(AnnotationDocumentState.NEW)){
+            annotationDocument.setState(AnnotationDocumentStateTransition.transition(
+               AnnotationDocumentStateTransition.NEWTOANNOTATIONINPROGRESS));
+        }
 
-        repository.createAnnotationDocumentContent(aUIData.getjCas(),
-                aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
+            repository.createAnnotationDocumentContent(aUIData.getjCas(),
+                    aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
         return createSpanResponse;
 
     }
@@ -534,46 +543,58 @@ public class BratAjaxCasController
         JCas jCas = null;
         try {
             annotationDocument = repository.getAnnotationDocument(aDocument, aUser);
+            if (annotationDocument.getState().equals(AnnotationDocumentState.NEW)) {
+                jCas = createCasFirstTime(aDocument, annotationDocument, aProject, aUser);
+            }
             jCas = repository.getAnnotationDocumentContent(annotationDocument);
 
         }
         // it is new, create it and get CAS object
         catch (NoResultException ex) {
-            // change the state of the source document to inprogress
-            aDocument.setState(SourceDocumentStateTransition
-                    .transition(SourceDocumentStateTransition.NEWTOANNOTATIONINPROGRESS));
-            annotationDocument = new AnnotationDocument();
-            annotationDocument.setDocument(aDocument);
-            annotationDocument.setName(aDocument.getName());
-            annotationDocument.setUser(aUser);
-            annotationDocument.setProject(aProject);
-
-            try {
-                jCas = BratAjaxCasUtil.getJCasFromFile(repository.getSourceDocumentContent(
-                        aProject, aDocument),
-                        repository.getReadableFormats().get(aDocument.getFormat()));
-            }
-            catch (UIMAException uEx) {
-                LOG.info("Invalid TCF file: " + ExceptionUtils.getRootCauseMessage(uEx));
-                throw uEx;
-
-            }
-            catch (ClassNotFoundException e) {
-                LOG.info("The Class name in the properties is not found " + ":"
-                        + ExceptionUtils.getRootCauseMessage(e));
-                throw e;
-            }
-            catch (IOException e) {
-                LOG.info("Unable to get the CAS object  " + ":"
-                        + ExceptionUtils.getRootCauseMessage(e));
-                throw e;
-            }
-            repository.createAnnotationDocument(annotationDocument);
-            repository.createAnnotationDocumentContent(jCas, aDocument, aUser);
+            jCas = createCasFirstTime(aDocument, annotationDocument, aProject, aUser);
         }
         catch (DataRetrievalFailureException e) {
             throw e;
         }
+        return jCas;
+    }
+
+    private JCas createCasFirstTime(SourceDocument aDocument,
+            AnnotationDocument aAnnotationDocument, Project aProject, User aUser)
+        throws UIMAException, ClassNotFoundException, IOException
+    {
+        JCas jCas;
+        // change the state of the source document to inprogress
+        aDocument.setState(SourceDocumentStateTransition
+                .transition(SourceDocumentStateTransition.NEWTOANNOTATIONINPROGRESS));
+        if (!repository.existsAnnotationDocument(aDocument, aUser)) {
+            aAnnotationDocument = new AnnotationDocument();
+            aAnnotationDocument.setDocument(aDocument);
+            aAnnotationDocument.setName(aDocument.getName());
+            aAnnotationDocument.setUser(aUser);
+            aAnnotationDocument.setProject(aProject);
+        }
+
+        try {
+            jCas = BratAjaxCasUtil.getJCasFromFile(repository.getSourceDocumentContent(aProject,
+                    aDocument), repository.getReadableFormats().get(aDocument.getFormat()));
+        }
+        catch (UIMAException uEx) {
+            LOG.info("Invalid TCF file: " + ExceptionUtils.getRootCauseMessage(uEx));
+            throw uEx;
+
+        }
+        catch (ClassNotFoundException e) {
+            LOG.info("The Class name in the properties is not found " + ":"
+                    + ExceptionUtils.getRootCauseMessage(e));
+            throw e;
+        }
+        catch (IOException e) {
+            LOG.info("Unable to get the CAS object  " + ":" + ExceptionUtils.getRootCauseMessage(e));
+            throw e;
+        }
+        repository.createAnnotationDocument(aAnnotationDocument);
+        repository.createAnnotationDocumentContent(jCas, aDocument, aUser);
         return jCas;
     }
 }

@@ -35,7 +35,15 @@ public enum AnnotationDocumentStateTransition
      * explicit annotator action, only possible if associated document in states
      * "annotation in progress" or "annotation finished"
      */
-    ANNOTATIONFINISHEDTOANNOTATIONINPROGRESS;
+    ANNOTATIONFINISHEDTOANNOTATIONINPROGRESS,
+    /**
+     * Ignore this annotation document from further processing
+     */
+    NEWTOIGNOR,
+    /**
+     * Change document state from IGNOR back to NEW
+     */
+    IGNORTONEW;
 
     public static AnnotationDocumentState transition(AnnotationDocumentStateTransition aTransition)
         throws IllegalArgumentException
@@ -48,6 +56,12 @@ public enum AnnotationDocumentStateTransition
         }
         else if (aTransition.equals(ANNOTATIONFINISHEDTOANNOTATIONINPROGRESS)) {
             return AnnotationDocumentState.INPROGRESS;
+        }
+        else if (aTransition.equals(NEWTOIGNOR)) {
+            return AnnotationDocumentState.IGNOR;
+        }
+        else if (aTransition.equals(IGNORTONEW)) {
+            return AnnotationDocumentState.NEW;
         }
         else {
             throw new IllegalArgumentException();

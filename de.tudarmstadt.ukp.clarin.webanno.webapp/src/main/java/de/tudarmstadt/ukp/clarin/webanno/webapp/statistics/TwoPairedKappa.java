@@ -100,16 +100,13 @@ public class TwoPairedKappa
                 jCas = repositoryService.getAnnotationDocumentContent(annotationDocument);
             }
             catch (UIMAException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                LOG.info(ExceptionUtils.getRootCause(e));
             }
             catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                LOG.info(ExceptionUtils.getRootCause(e));
             }
             catch (ClassNotFoundException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                LOG.info(ExceptionUtils.getRootCause(e));
             }
             Type type = CasUtil.getType(jCas.getCas(), aType);
             for (AnnotationFS fs : CasUtil.select(jCas.getCas(), type)) {
