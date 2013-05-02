@@ -24,11 +24,9 @@
 
 	<context:component-scan base-package="de.tudarmstadt.ukp.clarin.webanno" />
 
-
 	<bean id="restTemplate" class="org.springframework.web.client.RestTemplate">
 		<property name="messageConverters">
 			<list>
-				<ref bean="jsonConverter" />
 				<ref bean="formConverter" />
 			</list>
 		</property>
@@ -41,7 +39,6 @@
 		class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">
 		<property name="messageConverters">
 			<list>
-				<ref bean="jsonConverter" />
 				<ref bean="formConverter" />
 			</list>
 		</property>
@@ -53,5 +50,15 @@
 
 	<bean id="formConverter"
 		class="org.springframework.http.converter.FormHttpMessageConverter">
+	</bean>
+
+	<bean id="multipartResolver"
+		class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<property name="maxUploadSize">
+			<value>104857600</value>
+		</property>
+		<property name="maxInMemorySize">
+			<value>4096</value>
+		</property>
 	</bean>
 </beans>

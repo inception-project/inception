@@ -34,7 +34,6 @@ import org.codehaus.jackson.map.JsonMappingException;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Controller;
 import org.springframework.util.MultiValueMap;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
@@ -80,7 +79,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  * @author Richard Eckart de Castilho
  *
  */
-@Controller
 public class BratAjaxCasController
 {
 

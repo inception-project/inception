@@ -32,50 +32,53 @@
 		</param-value>
 	</context-param>
 
-    <!-- 
-     - Listeners react to servlet content events and initialize resources.
-     -->
-    <!-- Make sure the Spring context is always available -->
+	<!--
+		- Listeners react to servlet content events and initialize resources.
+	-->
+	<!-- Make sure the Spring context is always available -->
 	<listener>
 		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
 	</listener>
 
-    <!-- Set up the JavaMelody monitoring tool -->
+	<!-- Set up the JavaMelody monitoring tool -->
 	<listener>
 		<listener-class>net.bull.javamelody.SessionListener</listener-class>
 	</listener>
 
-    <!-- 
-     - Filters are applied for each web request in the order they are defined here. This order
-     - mandatory for the application to function correctly.
-     -->
-    <!-- 1) Firewall: check if request is permitted, otherwise ask for authentication -->
+	<!--
+		- Filters are applied for each web request in the order they are defined
+		here. This order
+		- mandatory for the application to function correctly.
+	-->
+	<!-- 1) Firewall: check if request is permitted, otherwise ask for authentication -->
 	<filter>
 		<filter-name>springSecurityFilterChain</filter-name>
 		<filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
 	</filter>
-	
-    <!-- 
-     - 2) Handle access to the monitoring URL - after the security check so only authenticated users
-     -    can access this URL. 
-     -->
+
+	<!--
+		- 2) Handle access to the monitoring URL - after the security check so
+		only authenticated users
+		- can access this URL.
+	-->
 	<filter>
 		<filter-name>monitoring</filter-name>
 		<filter-class>net.bull.javamelody.MonitoringFilter</filter-class>
 	</filter>
-	
-	<!-- 
-	 - 3) Make sure we have one JPA session/transaction per request. Closes session at the end,
-	 -    without this, changed data may not be automatically saved to the DB.
-	 -->
+
+	<!--
+		- 3) Make sure we have one JPA session/transaction per request. Closes
+		session at the end,
+		- without this, changed data may not be automatically saved to the DB.
+	-->
 	<filter>
 		<filter-name>opensessioninview</filter-name>
 		<filter-class>org.springframework.orm.jpa.support.OpenEntityManagerInViewFilter</filter-class>
 	</filter>
-	
-	<!-- 
-	 - 4) Pass control to Wicket
-	 -->
+
+	<!--
+		- 4) Pass control to Wicket
+	-->
 	<filter>
 		<filter-name>wicket.filter</filter-name>
 		<filter-class>org.apache.wicket.protocol.http.WicketFilter</filter-class>
@@ -87,12 +90,18 @@
 			<param-name>configuration</param-name>
 			<param-value>deployment</param-value>
 		</init-param>
+		<!--
+			- The remote API is not handled by Wicket, but by Spring
+		-->
+		<init-param>
+			<param-name>ignorePaths</param-name>
+			<param-value>api/</param-value>
+		</init-param>
 	</filter>
 
-    <!-- 
-     - Required to access the BratAjaxCasController. Can be removed when Brat has been fully
-     - integrated into a Wicket component.
-     -->
+	<!--
+		- The remote API is not handled by Wicket, but by Spring
+	-->
 	<servlet>
 		<servlet-name>rest</servlet-name>
 		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
@@ -113,21 +122,17 @@
 		<filter-name>opensessioninview</filter-name>
 		<url-pattern>/*</url-pattern>
 	</filter-mapping>
-   
+
 	<filter-mapping>
 		<filter-name>wicket.filter</filter-name>
 		<url-pattern>/*</url-pattern>
 	</filter-mapping>
 
-    <!-- 
-     - Required to access the BratAjaxCasController. Can be removed when Brat has been fully
-     - integrated into a Wicket component.
-     -->
+	<!--
+		- The remote API is not handled by Wicket, but by Spring
+	-->
 	<servlet-mapping>
 		<servlet-name>rest</servlet-name>
-		<url-pattern>/ajax.cgi</url-pattern>
+		<url-pattern>/api/*</url-pattern>
 	</servlet-mapping>
-	<!--<session-config>
-		<session-timeout>1</session-timeout>
-	</session-config> -->
 </web-app>

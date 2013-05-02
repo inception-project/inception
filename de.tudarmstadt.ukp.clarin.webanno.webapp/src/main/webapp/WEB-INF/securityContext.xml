@@ -22,9 +22,14 @@
 
 	<!-- <security:global-method-security secured-annotations="enabled"/> -->
 
+	<security:http pattern="/api/**" create-session="stateless">
+		<security:http-basic />
+		<security:intercept-url pattern="/**"
+			access="ROLE_REMOTE" />
+	</security:http>
+
 	<security:http create-session="never" auto-config="true">
 		<security:remember-me />
-		<security:http-basic />
 		<security:logout />
 		<security:intercept-url pattern="/login.html*"
 			access="IS_AUTHENTICATED_ANONYMOUSLY" />
