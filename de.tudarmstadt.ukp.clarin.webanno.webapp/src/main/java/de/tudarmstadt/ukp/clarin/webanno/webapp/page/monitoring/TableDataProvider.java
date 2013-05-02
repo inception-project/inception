@@ -30,7 +30,7 @@ import org.apache.wicket.model.Model;
  * @author Seid Muhie Yimam
  *
  */
-public class UserAnnotatedDocumentProvider
+public class TableDataProvider
     extends SortableDataProvider<List<? extends String>>
 {
 
@@ -48,8 +48,8 @@ public class UserAnnotatedDocumentProvider
         return colNames;
     }
 
-    public UserAnnotatedDocumentProvider(final List<String> aDocuments,
-            final List<List<String>> aUserAnnotations)
+    public TableDataProvider(final List<String> aTableHeaders,
+            final List<List<String>> aCellContents)
     {
         dataModel = new LoadableDetachableModel<List<List<? extends String>>>()
         {
@@ -62,16 +62,16 @@ public class UserAnnotatedDocumentProvider
                 ArrayList<List<? extends String>> resultList = new ArrayList<List<? extends String>>();
 
                 colNames = new ArrayList<String>();
-                for (String document : aDocuments) {
+                for (String document : aTableHeaders) {
                     colNames.add(document);
                 }
 
                 int rowsRead = 0;
-                for (List<String> userAnnotationList : aUserAnnotations) {
+                for (List<String> cellContents : aCellContents) {
                     List<String> row = new ArrayList<String>();
                     rowsRead++;
-                    for (String userAnnotationValue : userAnnotationList) {
-                        row.add(userAnnotationValue);
+                    for (String cellContent : cellContents) {
+                        row.add(cellContent);
                     }
                     resultList.add(row);
                 }

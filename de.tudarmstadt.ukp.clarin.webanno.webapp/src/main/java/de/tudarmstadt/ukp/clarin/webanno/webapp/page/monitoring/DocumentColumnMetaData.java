@@ -60,7 +60,7 @@ public class DocumentColumnMetaData
 
     private Project project;
 
-    public DocumentColumnMetaData(final UserAnnotatedDocumentProvider prov, final int colNumber,
+    public DocumentColumnMetaData(final TableDataProvider prov, final int colNumber,
             Project aProject, RepositoryService aProjectreRepositoryService)
     {
         super(new AbstractReadOnlyModel<String>()

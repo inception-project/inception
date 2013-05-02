@@ -15,6 +15,7 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
+
 /**
  * Constants for annotation types
  * @author Seid Muhie Yimam
@@ -50,6 +51,9 @@ public class AnnotationTypeConstant
     public static final String POS_FEATURENAME = "PosValue";
     public static final String LEMMA_FEATURENAME = "value";
     public static final String NAMEDENTITY_FEATURENAME = "value";
+    public static final String COREFERENCELINK_FEATURENAME = "referenceType";
+    public static final String COREFERENCECHAIN_FEATURENAME = "referenceRelation";
+
 
     public static final String DEPENDENCY_FEATURENAME = "DependencyType";
     public static final String DEPENDENCY_DEPENDENT_FEATURENAME = "Dependent";
