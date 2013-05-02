@@ -147,6 +147,28 @@ public class CurationPanel extends Panel {
 		outer.setOutputMarkupId(true);
 		add(outer);
 
+		BratAnnotatorModel bratAnnotatorModel = new BratAnnotatorModel();
+		bratAnnotatorModel.setDocument(curationContainer.getSourceDocument());
+		if(curationContainer.getSourceDocument() != null) {
+			bratAnnotatorModel.setProject(curationContainer.getSourceDocument().getProject());
+			curationSegment = curationContainer.getCurationSegmentByBegin().get(0);
+			bratAnnotatorModel.setFirstSentenceAddress(curationSegment.getSentenceAddress().get(CURATION_USER));
+			bratAnnotatorModel.setLastSentenceAddress(curationSegment.getSentenceAddress().get(CURATION_USER));
+			bratAnnotatorModel.setSentenceAddress(curationSegment.getSentenceAddress().get(CURATION_USER));
+			bratAnnotatorModel.setAnnotationLayers(new HashSet<TagSet>(annotationService
+					.listTagSets(bratAnnotatorModel.getProject())));
+		}
+		User userLoggedIn = repository.getUser(SecurityContextHolder.getContext().getAuthentication().getName());
+		bratAnnotatorModel.setUser(userLoggedIn);
+		final BratCurationDocumentEditor mergeVisualizer = new BratCurationDocumentEditor("mergeView", new Model<BratAnnotatorModel>(bratAnnotatorModel));
+		mergeVisualizer.setOutputMarkupId(true);
+		outer.add(mergeVisualizer);
+		
+		/*
+			MergePanel mergePanel = new MergePanel("mergeView", "Click on a sentence to view differences...");
+	    	outer.add(mergePanel);
+	    	*/
+
 		LinkedList<CurationUserSegment2> sentences = new LinkedList<CurationUserSegment2>();
 		// update list of brat embeddings
     	curationListView = new ListView<CurationUserSegment2>("sentenceListView", sentences) {
@@ -218,8 +240,8 @@ public class CurationPanel extends Panel {
 
 						System.out.println("On Merge");
 
-						updateRightSide(aTarget, outer, curationContainer);
-						aTarget.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+						updateRightSide(aTarget, outer, curationContainer, mergeVisualizer);
+						//aTarget.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
 					}
     	    	};
     	    	curationVisualizer.setOutputMarkupId(true);
@@ -227,9 +249,6 @@ public class CurationPanel extends Panel {
     	    }
     	};
     	curationListView.setOutputMarkupId(true);
-
-    	MergePanel mergePanel = new MergePanel("mergeView", "Click on a sentence to view differences...");
-    	outer.add(mergePanel);
 
     	outer.add(curationListView);
 
@@ -245,8 +264,8 @@ public class CurationPanel extends Panel {
 					@Override
 					protected void respond(AjaxRequestTarget target) {
 						curationSegment = curationSegmentItem;
-						updateRightSide(target, getParent(), curationContainer);
-                        target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+						updateRightSide(target, getParent(), curationContainer, mergeVisualizer);
+                        //target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
 					}
 
 				};
@@ -268,7 +287,7 @@ public class CurationPanel extends Panel {
 
 	}
 
-	protected void updateRightSide(AjaxRequestTarget target, MarkupContainer parent, CurationContainer curationContainer) {
+	protected void updateRightSide(AjaxRequestTarget target, MarkupContainer parent, CurationContainer curationContainer, BratCurationDocumentEditor mergeVisualizer) {
 		SourceDocument sourceDocument = curationContainer.getSourceDocument();
 		Project project = curationContainer.getProject();
 		List<AnnotationDocument> annotationDocuments = repository.listAnnotationDocument(project, sourceDocument);
@@ -363,7 +382,7 @@ public class CurationPanel extends Panel {
 				curationUserSegment2.setDocumentResponse(getStringDocumentResponse(response));
 				curationUserSegment2.setUsername(username);
 
-				sentences.add(curationUserSegment2);
+				//sentences.add(curationUserSegment2);
 			}
 		}
 		if(!hasDiff && curationSegment.getSentenceState().equals(SentenceState.DISAGREE)) {
@@ -380,6 +399,13 @@ public class CurationPanel extends Panel {
 		//mergeUserSegment.setCollectionData(getStringCollectionData(response, mergeJCas, addresses, username));
 		mergeUserSegment.setCollectionData("{}");
 		mergeUserSegment.setDocumentResponse(getStringDocumentResponse(response));
+		
+		BratAnnotatorModel bratAnnotatorModel = mergeVisualizer.getModelObject();
+		bratAnnotatorModel.setFirstSentenceAddress(curationSegment.getSentenceAddress().get(CURATION_USER));
+		bratAnnotatorModel.setLastSentenceAddress(curationSegment.getSentenceAddress().get(CURATION_USER));
+		bratAnnotatorModel.setSentenceAddress(curationSegment.getSentenceAddress().get(CURATION_USER));
+		mergeVisualizer.reloadContent(target);
+		/*
 		BratAnnotatorModel bratAnnotatorModel = new BratAnnotatorModel();
 		bratAnnotatorModel.setDocument(sourceDocument);
 		bratAnnotatorModel.setProject(sourceDocument.getProject());
@@ -390,6 +416,8 @@ public class CurationPanel extends Panel {
         bratAnnotatorModel.setAnnotationLayers(new HashSet<TagSet>(annotationService
                 .listTagSets(bratAnnotatorModel.getProject())));
 		BratCurationDocumentEditor mergeVisualizer = new BratCurationDocumentEditor("mergeView", new Model<BratAnnotatorModel>(bratAnnotatorModel));
+		parent.replace(mergeVisualizer);
+		*/
 		/*
 		BratCurationVisualizer mergeVisualizer = new BratCurationVisualizer("mergeView", new Model<CurationUserSegment2>(mergeUserSegment)) {
 			@Override
@@ -401,7 +429,6 @@ public class CurationPanel extends Panel {
 
     	// send response to the client
 //		parent.replace(curationListView);
-		parent.replace(mergeVisualizer);
 		target.add(parent);
 
 	}

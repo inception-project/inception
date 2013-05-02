@@ -104,13 +104,15 @@ public class BratCurationDocumentEditor
     public BratCurationDocumentEditor(String id, IModel<BratAnnotatorModel> aModel)
     {
         super(id, aModel);
+        
+        if(getModelObject().getDocument() != null) {
+            collection = "#" + getModelObject().getProject().getName() + "/";
+            document = getModelObject().getDocument().getName();
+            this.rewriteUrl = collection + document;
+        }
 
         vis = new WebMarkupContainer("vis");
         vis.setOutputMarkupId(true);
-        
-        collection = "#" + getModelObject().getProject().getName() + "/";
-        document = getModelObject().getDocument().getName();
-        this.rewriteUrl = collection + document;
         
         controller = new AbstractDefaultAjaxBehavior()
         {
@@ -255,6 +257,33 @@ public class BratCurationDocumentEditor
         // This doesn't work with head.js because the onLoad event is fired before all the
         // JavaScript references are loaded.
         aResponse.renderOnLoadJavaScript("\n" + StringUtils.join(script, "\n"));
+    }
+    
+    public void reloadContent(AjaxRequestTarget aTarget) {
+        String[] script = new String[] { "dispatcher = new Dispatcher();"
+                // Each visualizer talks to its own Wicket component instance
+                + "dispatcher.ajaxUrl = '"
+                + controller.getCallbackUrl()
+                + "'; "
+                // We attach the JSON send back from the server to this HTML element
+                // because we cannot directly pass it from Wicket to the caller in ajax.js.
+                + "dispatcher.wicketId = '" + vis.getMarkupId() + "'; "
+//                + "var urlMonitor = new URLMonitor(dispatcher); "
+                + "var ajax = new Ajax(dispatcher);" + "var ajax_" + vis.getMarkupId() + " = ajax;"
+                + "var visualizer = new Visualizer(dispatcher, '" + vis.getMarkupId() + "');"
+                + "var visualizerUI = new VisualizerUI(dispatcher, visualizer.svg);"
+                + "var annotatorUI = new AnnotatorUI(dispatcher, visualizer.svg);"
+                + "var spinner = new Spinner(dispatcher, '#spinner');"
+                + "var logger = new AnnotationLog(dispatcher);" + "dispatcher.post('init');"
+                //+ "window.location.hash = '" + rewriteUrl + "';"
+                //+ "dispatcher.post('setCollection', ['"+collection+"', '"+document+"', {}]);"
+                + "dispatcher.post('clearSVG', []);"
+                + "dispatcher.post('current', ['"+collection+"', '1234', {}, true]);"
+                + "dispatcher.post('ajax', [{action: 'getCollectionInformation',collection: '"+collection+"'}, 'collectionLoaded', {collection: '"+collection+"',keep: true}]);"
+                + "dispatcher.post('resetData', []);"
+                //+ "dispatcher.post('collectionChanged');"
+                };
+    	aTarget.appendJavaScript("\n" + StringUtils.join(script, "\n"));
     }
 
     private Object getDocument(IRequestParameters aRequest, User aUser, BratAnnotatorUIData aUIData)
