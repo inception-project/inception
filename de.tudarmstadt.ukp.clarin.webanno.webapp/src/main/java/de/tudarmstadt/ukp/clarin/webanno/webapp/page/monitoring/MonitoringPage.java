@@ -68,6 +68,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -322,7 +324,23 @@ public class MonitoringPage
                         List<SourceDocument> sourceDocuments = projectRepository
                                 .listSourceDocuments(project);
 
+                        // Filter source documents that have annotation document already.
+                        List<SourceDocument> sourceDocumentsWithAnnotations = new ArrayList<SourceDocument>();
                         for (SourceDocument sourceDocument : sourceDocuments) {
+                            boolean exist = true;
+                            for (User user:users){
+                                AnnotationDocument annotationDocument = projectRepository.getAnnotationDocument(sourceDocument, user);
+                                if(annotationDocument.getState().equals(AnnotationDocumentState.NEW)){
+                                    exist = false;
+                                    break;
+                                }
+                            }
+                            if(exist) {
+                                sourceDocumentsWithAnnotations.add(sourceDocument);
+                            }
+                        }
+
+                        for (SourceDocument sourceDocument : sourceDocumentsWithAnnotations) {
                             TwoPairedKappa twoPairedKappa = new TwoPairedKappa(project,
                                     projectRepository);
                             Set<String> allANnotations = twoPairedKappa.getAllAnnotations(users,
@@ -601,7 +619,6 @@ public class MonitoringPage
         annotationTypeSelectionForm = new AnnotationTypeSelectionForm("annotationTypeSelectionForm");
         annotationTypeSelectionForm.setVisible(false);
         add(annotationTypeSelectionForm);
-
 
         annotatorsProgressImage = new NonCachingImage("annotator");
         annotatorsProgressImage.setOutputMarkupPlaceholderTag(true);

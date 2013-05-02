@@ -18,8 +18,11 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.page.monitoring;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.uima.UIMAException;
+import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.SimpleAttributeModifier;
@@ -33,6 +36,7 @@ import org.apache.wicket.model.IModel;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
@@ -109,7 +113,7 @@ public class DocumentColumnMetaData
                     color = "cyan";
                 }
                 // it is in NEW state
-                else{
+                else {
                     color = "red";
                 }
             }
@@ -122,13 +126,36 @@ public class DocumentColumnMetaData
                 annotationDocument.setUser(user);
                 annotationDocument.setState(AnnotationDocumentState.NEW);
                 projectRepositoryService.createAnnotationDocument(annotationDocument);
+                JCas jCas = null;
+                try {
+                    jCas = BratAjaxCasUtil
+                            .getJCasFromFile(projectRepositoryService.getSourceDocumentContent(
+                                    project, document), projectRepositoryService
+                                    .getReadableFormats().get(document.getFormat()));
+                }
+                catch (UIMAException e) {
+                    LOG.info(ExceptionUtils.getRootCause(e));
+                }
+                catch (ClassNotFoundException e) {
+                    LOG.info(ExceptionUtils.getRootCause(e));
+                }
+                catch (IOException e) {
+                    LOG.info(ExceptionUtils.getRootCause(e));
+                }
+
+                try {
+                    projectRepositoryService.createAnnotationDocumentContent(jCas, document, user);
+                }
+                catch (IOException e) {
+                    LOG.info(ExceptionUtils.getRootCause(e));
+                }
 
                 color = "red";
             }
         }
         // It is a username column
         if (color.equals("")) {
-            aCellItem.add(new Label(componentId, value.substring(value.indexOf(":")+1)));
+            aCellItem.add(new Label(componentId, value.substring(value.indexOf(":") + 1)));
         }
         else {
             aCellItem.add(new Label(componentId, "")).add(
@@ -165,7 +192,7 @@ public class DocumentColumnMetaData
                                 changeSourceDocumentState(project, document);
                             }
                             catch (IOException e) {
-                               LOG.info("Unable to change state of the document");
+                                LOG.info("Unable to change state of the document");
                             }
                         }
                         else if (projectRepositoryService.getAnnotationDocument(document, user)
@@ -180,7 +207,7 @@ public class DocumentColumnMetaData
                                 changeSourceDocumentState(project, document);
                             }
                             catch (IOException e) {
-                               LOG.info("Unable to change state of the document");
+                                LOG.info("Unable to change state of the document");
                             }
                             color = "green";
                             // check if all annotation document are closed so that the source
@@ -200,7 +227,7 @@ public class DocumentColumnMetaData
                                 changeSourceDocumentState(project, document);
                             }
                             catch (IOException e) {
-                               LOG.info("Unable to change state of the document");
+                                LOG.info("Unable to change state of the document");
                             }
                         }
                     }
@@ -219,7 +246,7 @@ public class DocumentColumnMetaData
                             changeSourceDocumentState(project, document);
                         }
                         catch (IOException e) {
-                           LOG.info("Unable to change state of the document");
+                            LOG.info("Unable to change state of the document");
                         }
 
                         color = "red";
@@ -265,7 +292,8 @@ public class DocumentColumnMetaData
         }
     }
 
-    private void changeSourceDocumentState(Project aProject, SourceDocument aSourceDocument) throws IOException
+    private void changeSourceDocumentState(Project aProject, SourceDocument aSourceDocument)
+        throws IOException
     {
 
         boolean allAnnotationDocumentStateFinished = true;
@@ -277,8 +305,7 @@ public class DocumentColumnMetaData
             }
         }
         if (allAnnotationDocumentStateFinished) {
-            String username = SecurityContextHolder.getContext()
-                    .getAuthentication().getName();
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
             User user = projectRepositoryService.getUser(username);
 
             aSourceDocument
@@ -286,9 +313,8 @@ public class DocumentColumnMetaData
                             .transition(SourceDocumentStateTransition.ANNOTATIONINPROGRESSTOANNOTATIONFINISHED));
             projectRepositoryService.createSourceDocument(aSourceDocument, user);
         }
-        else{
-            String username = SecurityContextHolder.getContext()
-                    .getAuthentication().getName();
+        else {
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
             User user = projectRepositoryService.getUser(username);
 
             aSourceDocument
