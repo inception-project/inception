@@ -60,6 +60,10 @@ public class RemoteApiController
 	/**
 	 * Create a new project.
 	 * 
+	 * To test, use the Linux "curl" command.
+	 * 
+	 * curl -v -F 'file=@test.zip' -F 'name=Test' -F 'filetype=tcf' 'http://USERNAME:PASSWORD@localhost:8080/de.tudarmstadt.ukp.clarin.webanno.webapp/api/project'
+	 * 
 	 * @param aName
 	 *            the name of the project to create.
 	 * @param aFileType
