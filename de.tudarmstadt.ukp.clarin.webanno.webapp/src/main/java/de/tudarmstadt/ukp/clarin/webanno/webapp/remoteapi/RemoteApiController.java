@@ -67,7 +67,8 @@ public class RemoteApiController
 	 * @param aName
 	 *            the name of the project to create.
 	 * @param aFileType
-	 *            the type of the files contained in the ZIP.
+	 *            the type of the files contained in the ZIP. The possible file types are configured
+	 *            in the formats.properties configuration file of WebAnno.
 	 * @param aFile
 	 *            a ZIP file containing the project data.
 	 * @throws IOException
