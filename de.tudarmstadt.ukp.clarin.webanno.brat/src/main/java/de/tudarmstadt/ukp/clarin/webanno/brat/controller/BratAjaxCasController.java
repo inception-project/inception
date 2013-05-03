@@ -57,6 +57,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.WhoamiResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
@@ -338,9 +339,14 @@ public class BratAjaxCasController
             annotationDocument.setState(AnnotationDocumentStateTransition.transition(
                AnnotationDocumentStateTransition.NEWTOANNOTATIONINPROGRESS));
         }
-
+        if(aBratAnnotatorModel.getMode().equals(Mode.ANNOTATION)){
             repository.createAnnotationDocumentContent(aUIData.getjCas(),
                     aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
+        }
+        else     if(aBratAnnotatorModel.getMode().equals(Mode.CURATION)){
+            repository.createCurationDocumentContent(aUIData.getjCas(),
+                    aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
+        }
         return createSpanResponse;
 
     }
@@ -371,8 +377,14 @@ public class BratAjaxCasController
 
         createArcResponse.setAnnotations(response);
 
-        repository.createAnnotationDocumentContent(aUIData.getjCas(),
-                aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
+        if(aBratAnnotatorModel.getMode().equals(Mode.ANNOTATION)){
+            repository.createAnnotationDocumentContent(aUIData.getjCas(),
+                    aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
+        }
+        else     if(aBratAnnotatorModel.getMode().equals(Mode.CURATION)){
+            repository.createCurationDocumentContent(aUIData.getjCas(),
+                    aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
+        }
 
         return createArcResponse;
 
@@ -406,8 +418,14 @@ public class BratAjaxCasController
 
         createArcResponse.setAnnotations(response);
 
-        repository.createAnnotationDocumentContent(aUIData.getjCas(),
-                aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
+        if(aBratAnnotatorModel.getMode().equals(Mode.ANNOTATION)){
+            repository.createAnnotationDocumentContent(aUIData.getjCas(),
+                    aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
+        }
+        else     if(aBratAnnotatorModel.getMode().equals(Mode.CURATION)){
+            repository.createCurationDocumentContent(aUIData.getjCas(),
+                    aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
+        }
 
         return createArcResponse;
 
@@ -438,8 +456,14 @@ public class BratAjaxCasController
 
         deleteSpanResponse.setAnnotations(response);
 
-        repository.createAnnotationDocumentContent(aUIData.getjCas(),
-                aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
+        if(aBratAnnotatorModel.getMode().equals(Mode.ANNOTATION)){
+            repository.createAnnotationDocumentContent(aUIData.getjCas(),
+                    aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
+        }
+        else     if(aBratAnnotatorModel.getMode().equals(Mode.CURATION)){
+            repository.createCurationDocumentContent(aUIData.getjCas(),
+                    aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
+        }
 
         return deleteSpanResponse;
 
@@ -470,8 +494,14 @@ public class BratAjaxCasController
 
         deleteArcResponse.setAnnotations(response);
 
-        repository.createAnnotationDocumentContent(aUIData.getjCas(),
-                aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
+        if(aBratAnnotatorModel.getMode().equals(Mode.ANNOTATION)){
+            repository.createAnnotationDocumentContent(aUIData.getjCas(),
+                    aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
+        }
+        else     if(aBratAnnotatorModel.getMode().equals(Mode.CURATION)){
+            repository.createCurationDocumentContent(aUIData.getjCas(),
+                    aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
+        }
 
         return deleteArcResponse;
 

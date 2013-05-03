@@ -45,7 +45,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.Subject;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.AnnotationPreferenceModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.ExportModalWindowPage;
@@ -119,7 +119,7 @@ public class AnnotationPage
             public void onClick(AjaxRequestTarget target)
             {
                 openDocumentsModal.setContent(new OpenModalWindowPanel(openDocumentsModal
-                        .getContentId(), openDataMOdel, openDocumentsModal, Subject.ANNOTATION));
+                        .getContentId(), openDataMOdel, openDocumentsModal, Mode.ANNOTATION));
                 openDocumentsModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
                 {
                     private static final long serialVersionUID = -1746088901018629567L;
@@ -534,7 +534,7 @@ public class AnnotationPage
             public void onClick(AjaxRequestTarget target)
             {
                 yesNoModal.setContent(new YesNoModalPanel(yesNoModal.getContentId(), openDataMOdel,
-                        yesNoModal, Subject.ANNOTATION));
+                        yesNoModal, Mode.ANNOTATION));
                 yesNoModal.show(target);
             }
         });

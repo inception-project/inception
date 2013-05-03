@@ -62,6 +62,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -148,6 +149,9 @@ public class CurationPanel extends Panel {
 		add(outer);
 
 		BratAnnotatorModel bratAnnotatorModel = new BratAnnotatorModel();
+		// This is a Curation Operation, add to the data model a CURATION Mode
+		bratAnnotatorModel.setMode(Mode.CURATION);
+
 		bratAnnotatorModel.setDocument(curationContainer.getSourceDocument());
 		if(curationContainer.getSourceDocument() != null) {
 			bratAnnotatorModel.setProject(curationContainer.getSourceDocument().getProject());
@@ -163,7 +167,7 @@ public class CurationPanel extends Panel {
 		final BratCurationDocumentEditor mergeVisualizer = new BratCurationDocumentEditor("mergeView", new Model<BratAnnotatorModel>(bratAnnotatorModel));
 		mergeVisualizer.setOutputMarkupId(true);
 		outer.add(mergeVisualizer);
-		
+
 		/*
 			MergePanel mergePanel = new MergePanel("mergeView", "Click on a sentence to view differences...");
 	    	outer.add(mergePanel);
@@ -399,7 +403,7 @@ public class CurationPanel extends Panel {
 		//mergeUserSegment.setCollectionData(getStringCollectionData(response, mergeJCas, addresses, username));
 		mergeUserSegment.setCollectionData("{}");
 		mergeUserSegment.setDocumentResponse(getStringDocumentResponse(response));
-		
+
 		BratAnnotatorModel bratAnnotatorModel = mergeVisualizer.getModelObject();
 		bratAnnotatorModel.setFirstSentenceAddress(curationSegment.getSentenceAddress().get(CURATION_USER));
 		bratAnnotatorModel.setLastSentenceAddress(curationSegment.getSentenceAddress().get(CURATION_USER));

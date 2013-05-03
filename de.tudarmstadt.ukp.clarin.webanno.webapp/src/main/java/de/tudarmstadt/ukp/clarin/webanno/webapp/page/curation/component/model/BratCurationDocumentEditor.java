@@ -17,6 +17,7 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model;
 
 import java.io.IOException;
 import java.io.StringWriter;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
@@ -35,11 +36,13 @@ import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorUIData;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.OffsetsList;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -71,11 +74,11 @@ public class BratCurationDocumentEditor
     private AnnotationService annotationService;
 
     private String rewriteUrl = "";
-    
+
     private String collection = "";
-    
+
     private String document = "";
-    
+
     /**
      * Data models for {@link BratCurationDocumentEditor}
      */
@@ -104,7 +107,7 @@ public class BratCurationDocumentEditor
     public BratCurationDocumentEditor(String id, IModel<BratAnnotatorModel> aModel)
     {
         super(id, aModel);
-        
+
         if(getModelObject().getDocument() != null) {
             collection = "#" + getModelObject().getProject().getName() + "/";
             document = getModelObject().getDocument().getName();
@@ -113,7 +116,7 @@ public class BratCurationDocumentEditor
 
         vis = new WebMarkupContainer("vis");
         vis.setOutputMarkupId(true);
-        
+
         controller = new AbstractDefaultAjaxBehavior()
         {
             private static final long serialVersionUID = 1L;
@@ -135,7 +138,7 @@ public class BratCurationDocumentEditor
                 final IRequestParameters request = getRequest().getPostParameters();
 
                 Object result = null;
-                BratAjaxCasCurationController controller = new BratAjaxCasCurationController(jsonConverter,
+                BratAjaxCasController controller = new BratAjaxCasController(jsonConverter,
                         repository, annotationService);
 
                 if (request.getParameterValue("action").toString().equals("whoami")) {
@@ -258,7 +261,7 @@ public class BratCurationDocumentEditor
         // JavaScript references are loaded.
         aResponse.renderOnLoadJavaScript("\n" + StringUtils.join(script, "\n"));
     }
-    
+
     public void reloadContent(AjaxRequestTarget aTarget) {
         String[] script = new String[] { "dispatcher = new Dispatcher();"
                 // Each visualizer talks to its own Wicket component instance
@@ -289,8 +292,8 @@ public class BratCurationDocumentEditor
     private Object getDocument(IRequestParameters aRequest, User aUser, BratAnnotatorUIData aUIData)
     {
         Object result = null;
-        BratAjaxCasCurationController controller = new BratAjaxCasCurationController(jsonConverter, repository,
-                annotationService);
+        BratAjaxCasController controller = new BratAjaxCasController(jsonConverter,
+                repository, annotationService);
         String collection = aRequest.getParameterValue("collection").toString();
         String documentName = aRequest.getParameterValue("document").toString();
 
@@ -320,11 +323,11 @@ public class BratCurationDocumentEditor
     private Object getDocument(SourceDocument aSourceDocument, User aUser, BratAnnotatorUIData aUIData)
     {
     	Object result = null;
-    	BratAjaxCasCurationController controller = new BratAjaxCasCurationController(jsonConverter, repository,
-    			annotationService);
+        BratAjaxCasController controller = new BratAjaxCasController(jsonConverter,
+                repository, annotationService);
     	String collection = aSourceDocument.getProject().getName();
     	String documentName = aSourceDocument.getName();
-    	
+
     	try {
     		aUIData.setGetDocument(true);
     		result = controller.getDocument(getModelObject(), aUIData);
@@ -347,14 +350,14 @@ public class BratCurationDocumentEditor
     	}
     	return result;
     }
-    
+
     private Object createSpan(IRequestParameters aRequest, User aUser, BratAnnotatorUIData aUIData)
         throws Exception
     {
 
         Object result = null;
-        BratAjaxCasCurationController controller = new BratAjaxCasCurationController(jsonConverter, repository,
-                annotationService);
+        BratAjaxCasController controller = new BratAjaxCasController(jsonConverter,
+                repository, annotationService);
         String offsets = aRequest.getParameterValue("offsets").toString();
         OffsetsList offsetList = null;
         try {
@@ -422,8 +425,8 @@ public class BratCurationDocumentEditor
     {
 
         Object result = null;
-        BratAjaxCasCurationController controller = new BratAjaxCasCurationController(jsonConverter, repository,
-                annotationService);
+        BratAjaxCasController controller = new BratAjaxCasController(jsonConverter,
+                repository, annotationService);
         try {
             aUIData.setOrigin(aRequest.getParameterValue("origin").toInt());
             aUIData.setTarget(aRequest.getParameterValue("target").toInt());
@@ -454,8 +457,8 @@ public class BratCurationDocumentEditor
     {
 
         Object result = null;
-        BratAjaxCasCurationController controller = new BratAjaxCasCurationController(jsonConverter, repository,
-                annotationService);
+        BratAjaxCasController controller = new BratAjaxCasController(jsonConverter,
+                repository, annotationService);
 
         try {
             aUIData.setOrigin(aRequest.getParameterValue("origin").toInt());
@@ -492,8 +495,8 @@ public class BratCurationDocumentEditor
     {
 
         Object result = null;
-        BratAjaxCasCurationController controller = new BratAjaxCasCurationController(jsonConverter, repository,
-                annotationService);
+        BratAjaxCasController controller = new BratAjaxCasController(jsonConverter,
+                repository, annotationService);
 
         try {
             String offsets = aRequest.getParameterValue("offsets").toString();
@@ -540,8 +543,8 @@ public class BratCurationDocumentEditor
     {
 
         Object result = null;
-        BratAjaxCasCurationController controller = new BratAjaxCasCurationController(jsonConverter, repository,
-                annotationService);
+        BratAjaxCasController controller = new BratAjaxCasController(jsonConverter,
+                repository, annotationService);
 
         try {
             aUIData.setOrigin(aRequest.getParameterValue("origin").toInt());
@@ -576,8 +579,8 @@ public class BratCurationDocumentEditor
         {
             JCas jCas = null;
             try {
-                BratAjaxCasCurationController controller = new BratAjaxCasCurationController(jsonConverter, repository,
-                        annotationService);
+                BratAjaxCasController controller = new BratAjaxCasController(jsonConverter,
+                        repository, annotationService);
                 jCas = repository.getCurationDocumentContent(getModelObject().getDocument());
             }
             catch (UIMAException e) {
@@ -597,5 +600,5 @@ public class BratCurationDocumentEditor
             }
             return jCas;
         }
-    
+
 }

@@ -28,7 +28,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationDocumentVisualizer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.Subject;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenDocumentModel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenModalWindowPanel;
@@ -97,7 +97,7 @@ public class CurationPage
             public void onClick(AjaxRequestTarget aTarget)
             {
                 openDocumentsModal.setContent(new OpenModalWindowPanel(openDocumentsModal.getContentId(),
-                        openDataModel, openDocumentsModal, Subject.CURATION));
+                        openDataModel, openDocumentsModal, Mode.CURATION));
                 openDocumentsModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
                 {
                     private static final long serialVersionUID = -1746088901018629567L;
@@ -175,7 +175,7 @@ public class CurationPage
             public void onClick(AjaxRequestTarget target)
             {
                 yesNoModal.setContent(new YesNoModalPanel(yesNoModal.getContentId(), openDataModel,
-                        yesNoModal, Subject.CURATION));
+                        yesNoModal, Mode.CURATION));
                 yesNoModal.show(target);
             }
         });

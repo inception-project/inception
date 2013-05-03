@@ -77,7 +77,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.Subject;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.io.JCasFileWriter_ImplBase;
@@ -683,7 +683,7 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public Properties loadUserSettings(String aUsername, Project aProject, Subject aSubject)
+    public Properties loadUserSettings(String aUsername, Project aProject, Mode aSubject)
         throws FileNotFoundException, IOException
     {
         Properties property = new Properties();
@@ -782,7 +782,7 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public <T> void saveUserSettings(String aUsername, Project aProject, Subject aSubject,
+    public <T> void saveUserSettings(String aUsername, Project aProject, Mode aSubject,
             T aConfigurationObject)
         throws IOException
     {

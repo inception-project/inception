@@ -43,7 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.Subject;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
@@ -79,11 +79,11 @@ public class OpenModalWindowPanel
 
     // Dialog is for annotation or curation
 
-    private Subject subject;
+    private Mode subject;
 
     List<Project> allowedProject = new ArrayList<Project>();
 
-    public OpenModalWindowPanel(String aId, OpenDocumentModel aOpenDataModel, ModalWindow aModalWindow, Subject aSubject)
+    public OpenModalWindowPanel(String aId, OpenDocumentModel aOpenDataModel, ModalWindow aModalWindow, Mode aSubject)
     {
         super(aId);
         this.subject = aSubject;
@@ -171,7 +171,7 @@ public class OpenModalWindowPanel
         }
     }
 
-    public List<Project> getAllowedProjects(Subject aSubject)
+    public List<Project> getAllowedProjects(Mode aSubject)
     {
 
         List<Project> allowedProject = new ArrayList<Project>();
@@ -339,7 +339,7 @@ public class OpenModalWindowPanel
                 {
                     projectSelectionForm.detach();
                     documentSelectionForm.detach();
-                    if(subject.equals(Subject.CURATION))
+                    if(subject.equals(Mode.CURATION))
                      {
                         openDataModel.setDocument(null); // on cancel, go welcomePage
                     }

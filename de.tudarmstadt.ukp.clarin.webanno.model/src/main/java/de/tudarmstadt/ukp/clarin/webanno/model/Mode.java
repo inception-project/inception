@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.model;
  * @author Seid Muhie Yimam
  *
  */
-public enum Subject
+public enum Mode
 {
 ANNOTATION, CURATION;
 }

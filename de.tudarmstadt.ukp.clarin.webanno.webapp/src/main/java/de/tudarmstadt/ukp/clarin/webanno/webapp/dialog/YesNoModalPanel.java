@@ -33,7 +33,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.Subject;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
@@ -56,7 +56,7 @@ public class YesNoModalPanel
     private OpenDocumentModel openDocumentModel;
 
     public YesNoModalPanel(String aId, OpenDocumentModel aOpenDocumentModel, ModalWindow aModalWindow,
-            Subject aSubject)
+            Mode aSubject)
     {
         super(aId);
         this.openDocumentModel = aOpenDocumentModel;
@@ -69,7 +69,7 @@ public class YesNoModalPanel
     {
         private static final long serialVersionUID = -5659356972501634268L;
 
-        public YesNoButtonsForm(String id, final ModalWindow modalWindow, final Subject aSubject)
+        public YesNoButtonsForm(String id, final ModalWindow modalWindow, final Mode aSubject)
         {
             super(id);
             add(new AjaxSubmitLink("yesButton")
@@ -86,7 +86,7 @@ public class YesNoModalPanel
 
                     User user = repository.getUser(username);
 
-                    if (aSubject.equals(Subject.ANNOTATION)) {
+                    if (aSubject.equals(Mode.ANNOTATION)) {
                         AnnotationDocument annotationDocument = repository.getAnnotationDocument(
                                 openDocumentModel.getDocument(), user);
 

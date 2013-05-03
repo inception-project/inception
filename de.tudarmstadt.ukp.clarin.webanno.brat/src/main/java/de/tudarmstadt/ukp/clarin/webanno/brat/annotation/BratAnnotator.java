@@ -61,10 +61,10 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.OffsetsList;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.Subject;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
@@ -109,6 +109,9 @@ public class BratAnnotator
     public BratAnnotator(String id, IModel<?> aModel)
     {
         super(id, aModel);
+
+        // This is an Annotation Operation, set model to ANNOTATION mode
+        bratAnnotatorModel.setMode(Mode.ANNOTATION);
 
         vis = new WebMarkupContainer("vis");
         vis.setOutputMarkupId(true);
@@ -814,7 +817,7 @@ public class BratAnnotator
         // get project preference from file system
         try {
             for (Entry<Object, Object> entry : repository.loadUserSettings(aUsername,
-                    bratAnnotatorModel.getProject(), Subject.ANNOTATION).entrySet()) {
+                    bratAnnotatorModel.getProject(), Mode.ANNOTATION).entrySet()) {
                 String propertyName = entry.getKey().toString();
                 int index = propertyName.lastIndexOf(".");
                 propertyName = propertyName.substring(index + 1);

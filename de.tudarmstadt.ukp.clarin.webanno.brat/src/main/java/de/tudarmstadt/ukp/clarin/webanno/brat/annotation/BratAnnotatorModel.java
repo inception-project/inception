@@ -20,6 +20,7 @@ import java.util.HashSet;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
@@ -83,6 +84,12 @@ public class BratAnnotatorModel
      * the open dialog method, used to change {@link #document}
      */
     private String documentName;
+    /**
+     * The Mode of the current operations as either {@link Mode#ANNOTATION} or
+     * as {@link Mode#CURATION}
+     */
+    private Mode mode;
+
     public Project getProject()
     {
         return project;
@@ -191,6 +198,16 @@ public class BratAnnotatorModel
     public void setDocumentName(String documentName)
     {
         this.documentName = documentName;
+    }
+
+    public Mode getMode()
+    {
+        return mode;
+    }
+
+    public void setMode(Mode mode)
+    {
+        this.mode = mode;
     }
 
 }

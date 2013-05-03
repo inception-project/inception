@@ -33,7 +33,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.Subject;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import eu.clarin.weblicht.wlfxb.io.WLFormatException;
 
@@ -446,7 +446,7 @@ public interface RepositoryService
      * @throws IOException
      * @throws FileNotFoundException
      */
-    Properties loadUserSettings(String username, Project project, Subject aSubject)
+    Properties loadUserSettings(String username, Project project, Mode aSubject)
         throws FileNotFoundException, IOException;
 
     /**
@@ -533,7 +533,7 @@ public interface RepositoryService
      * @throws FileNotFoundException
      * @throws IOException
      */
-    <T> void saveUserSettings(String username, Project project, Subject subject,
+    <T> void saveUserSettings(String username, Project project, Mode subject,
             T configurationObject)
         throws FileNotFoundException, IOException;
 
