@@ -18,6 +18,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -29,11 +30,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import eu.clarin.weblicht.wlfxb.io.WLFormatException;
 
@@ -92,7 +93,7 @@ public interface RepositoryService
      * @throws IOException
      *             If the specified webanno.home directory is not available no write permission
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_REMOTE')")
     void createProject(Project project, User user)
         throws IOException;
 
@@ -102,7 +103,7 @@ public interface RepositoryService
      * @param permission
      * @throws IOException
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER', 'ROLE_REMOTE')")
     void createProjectPermission(ProjectPermission permission)
         throws IOException;
 
@@ -118,7 +119,7 @@ public interface RepositoryService
      *            TODO
      * @throws IOException
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER','ROLE_REMOTE')")
     void createSourceDocument(SourceDocument document, User user)
         throws IOException;
 
@@ -154,6 +155,11 @@ public interface RepositoryService
      * @return
      */
     boolean existProjectPermissionLevel(User user, Project project, PermissionLevel level);
+    /**
+     * Check if a Source document with this same name exist in the project. The caller method then
+     * can decide to override or throw an exception/message to the cleint
+     */
+    boolean existSourceDocument(Project project, String fileName);
 
     /**
      * Exports an {@link AnnotationDocument } CAS Object as TCF/TXT/XMI... file formats.
@@ -496,7 +502,7 @@ public interface RepositoryService
      * @throws IOException
      *             If the source document searched for deletion is not availble
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER', 'ROLE_REMOTE')")
     void removeSourceDocument(SourceDocument document, User user)
         throws IOException;
 
@@ -537,10 +543,25 @@ public interface RepositoryService
             T configurationObject)
         throws FileNotFoundException, IOException;
 
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    public void uploadSourceDocument(File file, SourceDocument document, long projectId, User user)
+    /**
+     * Save some properties file associated to a project, such as meta-data.properties
+     * @param project The project for which the user save some properties file.
+     * @throws IOException
+     */
+   void savePropertiesFile(Project project, InputStream is, String fileName) throws IOException;
+
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER','ROLE_REMOTE')")
+    void uploadSourceDocument(File file, SourceDocument document, long projectId, User user)
         throws IOException, UIMAException, WLFormatException;
 
+    /**
+     * Upload a SourceDocument, obtained as Inputstream, such as from remote API Zip folder to
+     * a repository directory. This way we don't need to create the file to a temporary folder
+     */
+
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER','ROLE_REMOTE')")
+    void uploadSourceDocument(InputStream file, SourceDocument document, long projectId, User user)
+        throws IOException, UIMAException, WLFormatException;
     /**
      * Returns the format of the {@link SourceDocument} to be read from a properties File
      *

@@ -45,6 +45,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.comparator.LastModifiedFileComparator;
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.Level;
@@ -73,11 +74,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.io.JCasFileWriter_ImplBase;
@@ -309,6 +310,24 @@ public class RepositoryServiceDbData
             return false;
         }
     }
+    @Override
+    @Transactional
+    public boolean existSourceDocument(Project aProject, String aFileName){
+        try {
+            entityManager
+                    .createQuery(
+                            "FROM SourceDocument WHERE project = :project AND "
+                                    + "name =:name ",
+                                    SourceDocument.class)
+                    .setParameter("project", aProject)
+                    .setParameter("name", aFileName)
+                    .getSingleResult();
+            return true;
+        }
+        catch (NoResultException ex) {
+            return false;
+        }
+    }
 
     /**
      * A new directory is created using UUID so that every exported file will reside in its own
@@ -452,9 +471,8 @@ public class RepositoryServiceDbData
         return entityManager
                 .createQuery(
                         "SELECT DISTINCT user FROM ProjectPermission WHERE "
-                                + "project =:project ORDER BY username ASC",
-                        User.class).setParameter("project", aProject)
-                .getResultList();
+                                + "project =:project ORDER BY username ASC", User.class)
+                .setParameter("project", aProject).getResultList();
     }
 
     @Override
@@ -758,8 +776,8 @@ public class RepositoryServiceDbData
 
         // remove metadata from DB
         if (existsAnnotationDocument(aDocument, aUser)) {
-            for(AnnotationDocument annotationDocument:
-                listAnnotationDocument(aDocument.getProject(), aDocument)) {
+            for (AnnotationDocument annotationDocument : listAnnotationDocument(
+                    aDocument.getProject(), aDocument)) {
                 entityManager.remove(annotationDocument);
             }
         }
@@ -779,6 +797,27 @@ public class RepositoryServiceDbData
     public void setDir(File aDir)
     {
         dir = aDir;
+    }
+
+    @Override
+    public void savePropertiesFile(Project aProject, InputStream aIs, String aFileName)
+        throws IOException
+    {
+        String path = dir.getAbsolutePath() + PROJECT + aProject.getId()
+                + FilenameUtils.getFullPath(aFileName);
+        FileUtils.forceMkdir(new File(path));
+
+        File newTcfFile = new File(path, FilenameUtils.getName(aFileName));
+        OutputStream os = null;
+        try {
+            os = new FileOutputStream(newTcfFile);
+            copyLarge(aIs, os);
+        }
+        finally {
+            closeQuietly(os);
+            closeQuietly(aIs);
+        }
+
     }
 
     @Override
@@ -827,6 +866,34 @@ public class RepositoryServiceDbData
         finally {
             closeQuietly(os);
             closeQuietly(is);
+        }
+
+        createLog(aDocument.getProject(), aUser).info(
+                " Imported file [" + aDocument.getName() + "] with ID [" + aDocument.getId()
+                        + "] to Project [" + aDocument.getProject().getId() + "]");
+        createLog(aDocument.getProject(), aUser).removeAllAppenders();
+
+    }
+
+    @Override
+    @Transactional
+    public void uploadSourceDocument(InputStream aIs, SourceDocument aDocument, long aProjectId,
+            User aUser)
+        throws IOException
+    {
+        String path = dir.getAbsolutePath() + PROJECT + aProjectId + DOCUMENT + aDocument.getId()
+                + SOURCE;
+        FileUtils.forceMkdir(new File(path));
+        File newTcfFile = new File(path, aDocument.getName());
+
+        OutputStream os = null;
+        try {
+            os = new FileOutputStream(newTcfFile);
+            copyLarge(aIs, os);
+        }
+        finally {
+            closeQuietly(os);
+            closeQuietly(aIs);
         }
 
         createLog(aDocument.getProject(), aUser).info(

@@ -108,8 +108,7 @@ public interface AnnotationService
 
     /**
      * Initialize the project with default {@link AnnotationType}, {@link TagSet}s, and {@link Tag}
-     * s. For the time being, this initialization occurs only for the first project. It should be
-     * per project when {@link TagSet}s are associated with a project
+     * s. This is done per Project
      *
      * @param aProject
      * @throws IOException
