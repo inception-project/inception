@@ -168,8 +168,8 @@ public class ConllReader
         // For Nested Named Entity
         createNamedEntity(namedEntity2, aJCas, tokens, tokensStored);
         // add Dependency parsing to CAS, if exist
-        if (!noDependency) {
             for (int i = 1; i <= tokens.size(); i++) {
+                if(dependencyFunction.get(i)!=null){
                 Dependency outDependency = new Dependency(aJCas);
                 outDependency.setDependencyType(dependencyFunction.get(i));
                 outDependency.setBegin(tokensStored.get("t_" + i).getBegin());
@@ -183,7 +183,7 @@ public class ConllReader
                 }
                 outDependency.addToIndexes();
             }
-        }
+            }
 
         for (int i = 0; i < firstTokenInSentence.size(); i++) {
             Sentence outSentence = new Sentence(aJCas);

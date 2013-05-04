@@ -100,10 +100,8 @@ public class ConllWriter
             }
 
             int i = 1;
-            for (Dependency dependecny : selectCovered(Dependency.class, sentence)) {
-                // if(dependecny.getDependencyType().equals("S")||dependecny.getDependencyType().equals("ROOT"))
-                // {
-                dependencyMap.put(dependecny.getGovernor().getAddress(), i);
+            for (Token token : selectCovered(Token.class, sentence)) {
+                dependencyMap.put(token.getAddress(), i);
                 i++;
             }
 
