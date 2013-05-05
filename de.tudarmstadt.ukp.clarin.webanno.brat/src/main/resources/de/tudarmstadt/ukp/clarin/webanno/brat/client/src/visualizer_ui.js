@@ -619,7 +619,18 @@ var VisualizerUI = (function($, window, undefined) {
                 return false;
             });
 
+            var resizeFunction = function(evt) {
+            	window.location.reload();
+              };
 
+              var resizerTimeout = null;
+              var onResize = function(evt) {
+                if (evt.target === window) {
+                  clearTimeout(resizerTimeout);
+                  resizerTimeout = setTimeout(resizeFunction, 100); // TODO is 100ms okay?
+                }
+              };
+              
             var init = function() {
                     dispatcher.post('initForm', [viewspanForm,
                     {
@@ -679,6 +690,7 @@ var VisualizerUI = (function($, window, undefined) {
             on('showForm', showForm).
             on('hideForm', hideForm).
             on('initForm', initForm).
+            on('resize', onResize).
             on('collectionLoaded', rememberNormDb).
             on('spanAndAttributeTypesLoaded', spanAndAttributeTypesLoaded).
             on('isReloadOkay', isReloadOkay).
