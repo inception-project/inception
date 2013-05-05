@@ -15,6 +15,7 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,6 +25,7 @@ import java.util.zip.ZipFile;
 
 import javax.annotation.Resource;
 
+import org.apache.commons.fileupload.InvalidFileNameException;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -68,7 +70,7 @@ public class RemoteApiController
     @Resource(name = "annotationService")
     private AnnotationService annotationService;
 
-    private final Log log = LogFactory.getLog(getClass());
+    private final Log LOG = LogFactory.getLog(getClass());
 
     /**
      * Create a new project.
@@ -86,17 +88,19 @@ public class RemoteApiController
      *            in the formats.properties configuration file of WebAnno.
      * @param aFile
      *            a ZIP file containing the project data.
-     * @throws IOException
-     * @throws WLFormatException
-     * @throws UIMAException
+     * @throws Exception
      */
     @RequestMapping(value = "/project", method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public @ResponseStatus(HttpStatus.NO_CONTENT)
     void createProject(@RequestParam("file") MultipartFile aFile,
             @RequestParam("name") String aName, @RequestParam("filetype") String aFileType)
-        throws IOException, UIMAException, WLFormatException
+        throws Exception
     {
-        log.info("Creating project [" + aName + "]");
+        LOG.info("Creating project [" + aName + "]");
+
+        if(!isZipStream(aFile.getInputStream())){
+                throw new InvalidFileNameException("", "is an invalid Zip file");
+        }
 
         // Get current user
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -120,23 +124,22 @@ public class RemoteApiController
         }
         // Existing project
         else{
-            project = projectRepository.getProject(aName);
+            throw new IOException("The project with name ["+ aName+"] exists");
         }
 
         // Iterate through all the files in the ZIP
 
         // If the current filename does not start with "." and is in the root folder of the ZIP,
         // import it as a source document
-        // FIXME
         File zimpFile = File.createTempFile(aFile.getOriginalFilename(), ".zip");
         aFile.transferTo(zimpFile);
         ZipFile zip = new ZipFile(zimpFile);
 
-        for (Enumeration e = zip.entries(); e.hasMoreElements();) {
+        for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
             //
             // Get ZipEntry which is a file or a directory
             //
-            ZipEntry entry = (ZipEntry) e.nextElement();
+            ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
 
             // If it is the zip name, ignore it
             if ((FilenameUtils.removeExtension(aFile.getOriginalFilename()) + "/").equals(entry
@@ -146,7 +149,6 @@ public class RemoteApiController
             // IF the current filename is META-INF/webanno/source-meta-data.properties store it
             // as
             // project meta data
-            // FIXME
             else if (entry.toString().equals(
                     FilenameUtils.removeExtension(aFile.getOriginalFilename())
                             + "/META-INF/webanno/source-meta-data.properties")) {
@@ -165,27 +167,20 @@ public class RemoteApiController
             else if(StringUtils.countMatches(entry.toString(), "/") == 1 &&
                     !FilenameUtils.getExtension(entry.toString()).equals("") &&
                     !FilenameUtils.getName(entry.toString()).equals(".")){
-                uploadSourceDocument(zip, entry, project, user, aFileType);
 
+                uploadSourceDocument(zip, entry, project, user, aFileType);
             }
 
         }
 
-        log.info("Successfully created project [" + aName + "] for user [" + username + "]");
+        LOG.info("Successfully created project [" + aName + "] for user [" + username + "]");
 
     }
 
     private void uploadSourceDocument(ZipFile zip, ZipEntry entry, Project project, User user,
-            String aFileType)
-        throws UIMAException, IOException, WLFormatException
+            String aFileType) throws IOException, UIMAException, WLFormatException
     {
         String fileName = entry.toString().substring(entry.toString().indexOf("/") + 1);
-
-        // If the file already exists, override
-        if (projectRepository.existSourceDocument(project, fileName)) {
-            SourceDocument sourceDocument = projectRepository.getSourceDocument(fileName, project);
-            projectRepository.removeSourceDocument(sourceDocument, user);
-        }
 
         InputStream zipStream = zip.getInputStream(entry);
         SourceDocument document = new SourceDocument();
@@ -198,5 +193,28 @@ public class RemoteApiController
         projectRepository.uploadSourceDocument(zipStream, document, project.getId(), user);
 
     }
+
+    // The magic bytes for ZIP
+    // see http://notepad2.blogspot.de/2012/07/java-detect-if-stream-or-file-is-zip.html
+    private byte[] MAGIC = { 'P', 'K', 0x3, 0x4 };
+    private boolean isZipStream(InputStream in) {
+        if (!in.markSupported()) {
+         in = new BufferedInputStream(in);
+        }
+        boolean isZip = true;
+        try {
+         in.mark(MAGIC.length);
+         for (byte element : MAGIC) {
+          if (element != (byte) in.read()) {
+           isZip = false;
+           break;
+          }
+         }
+         in.reset();
+        } catch (IOException e) {
+         isZip = false;
+        }
+        return isZip;
+       }
 
 }
