@@ -51,8 +51,11 @@ public class AnnotationTypeConstant
     public static final String POS_FEATURENAME = "PosValue";
     public static final String LEMMA_FEATURENAME = "value";
     public static final String NAMEDENTITY_FEATURENAME = "value";
+
     public static final String COREFERENCELINK_FEATURENAME = "referenceType";
     public static final String COREFERENCECHAIN_FEATURENAME = "referenceRelation";
+    public static final String COREFERENCELINK_NEXT_FEATURENAME = "next";
+    public static final String COREFERENCECHAIN_FIRST_FEATURENAME = "first";
 
 
     public static final String DEPENDENCY_FEATURENAME = "DependencyType";

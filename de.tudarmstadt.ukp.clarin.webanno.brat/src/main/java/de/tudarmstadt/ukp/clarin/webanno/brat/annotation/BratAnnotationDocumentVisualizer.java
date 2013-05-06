@@ -32,6 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.CasToBratJson;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -150,13 +151,13 @@ public class BratAnnotationDocumentVisualizer
         casToBratJson.addSentenceToResponse(jCas, response, bratAnnotatorDataModel);
         // If POS annotation exist in CAS TODO
         SpanAdapter.getPosAdapter().addToBrat(jCas, response, bratAnnotatorDataModel);
-        casToBratJson.addCorefTypeToResponse(jCas, response, bratAnnotatorDataModel);
+        ChainAdapter.getCoreferenceLinkAdapter().addToBrat(jCas, response, bratAnnotatorDataModel);
         // If Lemma Layer Exist in CAS TODO
         SpanAdapter.getLemmaAdapter().addToBrat(jCas, response, bratAnnotatorDataModel);
         // IF Named Entity layer exist in CAS TODO
         SpanAdapter.getNamedEntityAdapter().addToBrat(jCas, response, bratAnnotatorDataModel);
         ArcAdapter.getDependencyAdapter().addToBrat(jCas, response, bratAnnotatorDataModel);
-        casToBratJson.addCoreferenceToResponse(jCas, response, bratAnnotatorDataModel);
+        ChainAdapter.getCoreferenceChainAdapter().addToBrat(jCas, response, bratAnnotatorDataModel);
 
         // Serialize BRAT object model to JSON
         try {

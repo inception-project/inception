@@ -42,6 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.CasToBratJson;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
@@ -221,12 +222,12 @@ public class CasToBratJsonTest
         casToBratJson.addSentenceToResponse(jCas, response, bratannotatorModel);
 
         SpanAdapter.getPosAdapter().addToBrat(jCas, response, bratannotatorModel);
-        casToBratJson.addCorefTypeToResponse(jCas, response, bratannotatorModel);
+        ChainAdapter.getCoreferenceLinkAdapter().addToBrat(jCas, response, bratannotatorModel);
 
         SpanAdapter.getLemmaAdapter().addToBrat(jCas, response, bratannotatorModel);
         SpanAdapter.getNamedEntityAdapter().addToBrat(jCas, response, bratannotatorModel);
         ArcAdapter.getDependencyAdapter().addToBrat(jCas, response, bratannotatorModel);
-        casToBratJson.addCoreferenceToResponse(jCas, response, bratannotatorModel);
+        ChainAdapter.getCoreferenceChainAdapter().addToBrat(jCas, response, bratannotatorModel);
 
         casToBratJson.generateBratJson(response, new File(jsonFilePath));
 

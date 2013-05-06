@@ -15,7 +15,8 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
-import static org.uimafit.factory.AnalysisEngineFactory.*;
+import static org.uimafit.factory.AnalysisEngineFactory.createPrimitive;
+import static org.uimafit.factory.AnalysisEngineFactory.createPrimitiveDescription;
 import static org.uimafit.util.JCasUtil.select;
 import static org.uimafit.util.JCasUtil.selectFollowing;
 import static org.uimafit.util.JCasUtil.selectPreceding;
@@ -28,7 +29,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.analysis_engine.AnalysisEngine;
@@ -63,55 +63,6 @@ public class BratAjaxCasUtil
 {
 
 
-    public static void updateCoreferenceType(BratAnnotatorModel aBratAnnotatorModel, String aType,
-            BratAnnotatorUIData aUIData)
-    {
-        boolean modify = false;
-        CoreferenceLink corefeTypeToAdd = null;
-
-        for (CoreferenceLink link : select(aUIData.getjCas(), CoreferenceLink.class)) {
-            if (link.getBegin() == aUIData.getAnnotationOffsetStart()
-                    && link.getEnd() == aUIData.getAnnotationOffsetEnd()) {
-                corefeTypeToAdd = link;
-                modify = !link.getReferenceType().equals(aType);
-                break;
-            }
-            while (link.getNext() != null) {
-                if (link.getNext().getBegin() == aUIData.getAnnotationOffsetStart()
-                        && link.getNext().getEnd() == aUIData.getAnnotationOffsetEnd()) {
-                    corefeTypeToAdd = link.getNext();
-                    modify = !link.getNext().getReferenceType().equals(aType);
-                    link = link.getNext();
-                    break;
-                }
-                else {
-                    link = link.getNext();
-                }
-            }
-        }
-        if (corefeTypeToAdd == null) {
-
-            Map<Integer, Integer> offsets = offsets(aUIData.getjCas());
-
-            int startAndEnd[] = getTokenStart(offsets,
-                    aUIData.getAnnotationOffsetStart(),
-                    aUIData.getAnnotationOffsetEnd());
-
-            aUIData.setAnnotationOffsetStart(startAndEnd[0]);
-            aUIData.setAnnotationOffsetEnd(startAndEnd[1]);
-
-            corefeTypeToAdd = new CoreferenceLink(aUIData.getjCas(),
-                    aUIData.getAnnotationOffsetStart(),
-                    aUIData.getAnnotationOffsetEnd());
-            corefeTypeToAdd.setReferenceType(aType);
-            corefeTypeToAdd.addToIndexes();
-        }
-
-        if (modify) {
-            corefeTypeToAdd.setReferenceType(aType);
-        }
-    }
-
     // Updating a coreference.
     // CASE 1: Chain does not exist yet
     // CASE 2: Add to the beginning of an existing chain
@@ -121,7 +72,7 @@ public class BratAjaxCasUtil
     // CASE 4b: we replace the link to an intermediate link -> chain is cut in two,
     // create new CorefChain pointing to the first link in new chain
     // CASE 5: Add link at the same position as existing -> just update type
-
+/*
     public static void updateCoreferenceRelation(BratAnnotatorModel aBratAnnotatorModel,
             String aRelation, BratAnnotatorUIData aUIData)
     {
@@ -273,8 +224,7 @@ public class BratAjaxCasUtil
         for (CoreferenceChain chain : select(aJcas, CoreferenceChain.class)) {
             CoreferenceLink link = chain.getFirst();
             boolean tempInThisChain = false;
-            if (link.getNext() != null) { // as each corefType are a chain by creation,
-                // it should have a next link to be considered as a chain
+            if (link.getNext() != null) {
                 while (link != null) {
                     if (inThisChain) {
                         thatChain = chain;
@@ -317,8 +267,8 @@ public class BratAjaxCasUtil
             thisChain.getFirst();
             // |----------|
             // |---------------|
-            /*
-             */// |----------------------------|
+
+             // |----------------------------|
                // |------------|
                // OR
                // |-------|
@@ -354,7 +304,7 @@ public class BratAjaxCasUtil
             thatChain.removeFromIndexes();
         }
         return inThatChain;
-    }
+    }*/
 
     public static boolean isAt(Annotation a, Annotation b)
     {
@@ -364,43 +314,6 @@ public class BratAjaxCasUtil
     public static boolean isAt(Annotation a, int begin, int end)
     {
         return a.getBegin() == begin && a.getEnd() == end;
-    }
-
-    public static void deleteCoreferenceType(JCas aJcas, int ref, String aTyep, int aStart,
-            int aEnd)
-    {
-        CoreferenceLink linktoRemove = selectAnnotationByAddress(aJcas, CoreferenceLink.class, ref);
-        CoreferenceLink prevLink = null;
-        new ArrayList<CoreferenceChain>();
-        for (CoreferenceChain chain : select(aJcas, CoreferenceChain.class)) {
-            CoreferenceLink link = chain.getFirst();
-            boolean found = false;
-            while (link != null) {
-                if (link.getBegin() == linktoRemove.getBegin()) {
-                    found = true;
-                    // Break previous chain pointing to this
-
-                    if (prevLink != null) {
-                        prevLink.setNext(null);
-                    }
-                    // If exist pursue the chain
-                    if (link.getNext() != null) {
-                        CoreferenceChain newChain = new CoreferenceChain(aJcas);
-                        newChain.setFirst(link.getNext());
-                        newChain.addToIndexes();
-                    }
-                    link.setNext(null);
-                    break;
-                }
-                prevLink = link;
-                link = link.getNext();
-            }
-            if (found) {
-                break;
-            }
-        }
-        linktoRemove.removeFromIndexes();
-        removeInvalidChain(aJcas);
     }
 
     public static void deleteCoreference(BratAnnotatorModel aBratAnnotatorModel, String aType,
@@ -430,23 +343,10 @@ public class BratAjaxCasUtil
         }
         newChain.addToIndexes();
 
-        removeInvalidChain(aUIData.getjCas());
+     //   removeInvalidChain(aUIData.getjCas());
 
     }
 
-    private static void removeInvalidChain(JCas aJcas)
-    {
-        // clean unconnected coreference chains
-        List<CoreferenceChain> orphanChains = new ArrayList<CoreferenceChain>();
-        for (CoreferenceChain chain : select(aJcas, CoreferenceChain.class)) {
-            if (chain.getFirst().getNext() == null) {
-                orphanChains.add(chain);
-            }
-        }
-        for (CoreferenceChain chain : orphanChains) {
-            chain.removeFromIndexes();
-        }
-    }
 
     public static <T extends FeatureStructure> T selectAnnotationByAddress(JCas aJCas, Class<T> aType,
             int aAddress)

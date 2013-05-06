@@ -322,7 +322,7 @@ public class BratAjaxCasController
             SpanAdapter.getPosAdapter().addToCas(type, aUIData);
         }
         else if (annotationType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
-            BratAjaxCasUtil.updateCoreferenceType(aBratAnnotatorModel, type, aUIData);
+            ChainAdapter.getCoreferenceLinkAdapter().addToCas(type, aUIData);
         }
 
         GetDocumentResponse response = new GetDocumentResponse();
@@ -367,7 +367,7 @@ public class BratAjaxCasController
             ArcAdapter.getDependencyAdapter().addToCas(type, aUIData, aBratAnnotatorModel, false);
         }
         else if (annotationType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
-            BratAjaxCasUtil.updateCoreferenceRelation(aBratAnnotatorModel, type, aUIData);
+            ChainAdapter.getCoreferenceChainAdapter().addToCas(type, aUIData);
         }
         GetDocumentResponse response = new GetDocumentResponse();
 
@@ -446,8 +446,10 @@ public class BratAjaxCasController
             SpanAdapter.getNamedEntityAdapter().deleteFromCas(aUIData.getjCas(), aId);
         }
         else if (annotationType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
-            BratAjaxCasUtil.deleteCoreferenceType(aUIData.getjCas(), aId, type,
-                    aUIData.getAnnotationOffsetStart(), aUIData.getAnnotationOffsetEnd());
+            ChainAdapter.getCoreferenceChainAdapter().updateCasBeforeDelete(aUIData.getjCas(), aId);
+            ChainAdapter.getCoreferenceLinkAdapter().deleteFromCas(aUIData.getjCas(), aId);
+            ChainAdapter.getCoreferenceChainAdapter().removeInvalidChain(aUIData.getjCas().getCas());
+
         }
 
         GetDocumentResponse response = new GetDocumentResponse();
@@ -535,7 +537,9 @@ public class BratAjaxCasController
         }
 
         if (annotationLayers.contains(AnnotationTypeConstant.COREFRELTYPE)) {
-            casToBratJson.addCorefTypeToResponse(aUIData.getjCas(), aResponse, aBratAnnotatorModel);
+
+            ChainAdapter.getCoreferenceLinkAdapter().addToBrat(aUIData.getjCas(), aResponse,
+                    aBratAnnotatorModel);
         }
         if (aBratAnnotatorModel.isDisplayLemmaSelected()) {
             SpanAdapter.getLemmaAdapter().addToBrat(aUIData.getjCas(), aResponse,
@@ -552,7 +556,7 @@ public class BratAjaxCasController
         }
         if (annotationLayers.contains(AnnotationTypeConstant.COREFERENCE)
                 && annotationLayers.contains(AnnotationTypeConstant.COREFRELTYPE)) {
-            casToBratJson.addCoreferenceToResponse(aUIData.getjCas(), aResponse,
+            ChainAdapter.getCoreferenceChainAdapter().addToBrat(aUIData.getjCas(), aResponse,
                     aBratAnnotatorModel);
         }
     }
