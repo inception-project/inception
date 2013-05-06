@@ -57,6 +57,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.CasToBratJson;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
@@ -458,12 +459,13 @@ public class CurationPanel extends Panel {
         casToBratJson.addTokenToResponse(jCas, response, bratAnnotatorModel);
         casToBratJson.addSentenceToResponse(jCas, response, bratAnnotatorModel);
         SpanAdapter.getPosAdapter().addToBrat(jCas, response, bratAnnotatorModel);
-        casToBratJson.addCorefTypeToResponse(jCas, response, bratAnnotatorModel);
+        ChainAdapter.getCoreferenceLinkAdapter().addToBrat(jCas, response, bratAnnotatorModel);
+
         SpanAdapter.getLemmaAdapter().addToBrat(jCas, response, bratAnnotatorModel);
         SpanAdapter.getNamedEntityAdapter().addToBrat(jCas, response, bratAnnotatorModel);
         // TODO does not work yet
         //ArcAdapter.getDependencyAdapter().addToBrat(jCas, response, bratAnnotatorModel);
-        casToBratJson.addCoreferenceToResponse(jCas, response, bratAnnotatorModel);
+        ChainAdapter.getCoreferenceChainAdapter().addToBrat(jCas, response, bratAnnotatorModel);
 
         /*
         try {
