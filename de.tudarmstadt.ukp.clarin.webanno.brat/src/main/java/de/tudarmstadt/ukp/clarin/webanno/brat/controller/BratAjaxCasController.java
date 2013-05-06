@@ -333,17 +333,17 @@ public class BratAjaxCasController
 
         createSpanResponse.setAnnotations(response);
         // If this is the first time the user working on it, change state from NEW to INPROGRESS
-        AnnotationDocument annotationDocument = repository.getAnnotationDocument(aBratAnnotatorModel.getDocument(),
-                aBratAnnotatorModel.getUser());
-        if (annotationDocument.getState().equals(AnnotationDocumentState.NEW)){
-            annotationDocument.setState(AnnotationDocumentStateTransition.transition(
-               AnnotationDocumentStateTransition.NEWTOANNOTATIONINPROGRESS));
+        AnnotationDocument annotationDocument = repository.getAnnotationDocument(
+                aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
+        if (annotationDocument.getState().equals(AnnotationDocumentState.NEW)) {
+            annotationDocument.setState(AnnotationDocumentStateTransition
+                    .transition(AnnotationDocumentStateTransition.NEWTOANNOTATIONINPROGRESS));
         }
-        if(aBratAnnotatorModel.getMode().equals(Mode.ANNOTATION)){
+        if (aBratAnnotatorModel.getMode().equals(Mode.ANNOTATION)) {
             repository.createAnnotationDocumentContent(aUIData.getjCas(),
                     aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
         }
-        else     if(aBratAnnotatorModel.getMode().equals(Mode.CURATION)){
+        else if (aBratAnnotatorModel.getMode().equals(Mode.CURATION)) {
             repository.createCurationDocumentContent(aUIData.getjCas(),
                     aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
         }
@@ -377,11 +377,11 @@ public class BratAjaxCasController
 
         createArcResponse.setAnnotations(response);
 
-        if(aBratAnnotatorModel.getMode().equals(Mode.ANNOTATION)){
+        if (aBratAnnotatorModel.getMode().equals(Mode.ANNOTATION)) {
             repository.createAnnotationDocumentContent(aUIData.getjCas(),
                     aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
         }
-        else     if(aBratAnnotatorModel.getMode().equals(Mode.CURATION)){
+        else if (aBratAnnotatorModel.getMode().equals(Mode.CURATION)) {
             repository.createCurationDocumentContent(aUIData.getjCas(),
                     aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
         }
@@ -418,11 +418,11 @@ public class BratAjaxCasController
 
         createArcResponse.setAnnotations(response);
 
-        if(aBratAnnotatorModel.getMode().equals(Mode.ANNOTATION)){
+        if (aBratAnnotatorModel.getMode().equals(Mode.ANNOTATION)) {
             repository.createAnnotationDocumentContent(aUIData.getjCas(),
                     aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
         }
-        else     if(aBratAnnotatorModel.getMode().equals(Mode.CURATION)){
+        else if (aBratAnnotatorModel.getMode().equals(Mode.CURATION)) {
             repository.createCurationDocumentContent(aUIData.getjCas(),
                     aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
         }
@@ -447,8 +447,9 @@ public class BratAjaxCasController
         }
         else if (annotationType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
             ChainAdapter.getCoreferenceChainAdapter().updateCasBeforeDelete(aUIData.getjCas(), aId);
-            ChainAdapter.getCoreferenceLinkAdapter().deleteFromCas(aUIData.getjCas(), aId);
-            ChainAdapter.getCoreferenceChainAdapter().removeInvalidChain(aUIData.getjCas().getCas());
+            ChainAdapter.getCoreferenceLinkAdapter().deleteLinkFromCas(aUIData.getjCas(), aId);
+            ChainAdapter.getCoreferenceChainAdapter()
+                    .removeInvalidChain(aUIData.getjCas().getCas());
 
         }
 
@@ -458,11 +459,11 @@ public class BratAjaxCasController
 
         deleteSpanResponse.setAnnotations(response);
 
-        if(aBratAnnotatorModel.getMode().equals(Mode.ANNOTATION)){
+        if (aBratAnnotatorModel.getMode().equals(Mode.ANNOTATION)) {
             repository.createAnnotationDocumentContent(aUIData.getjCas(),
                     aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
         }
-        else     if(aBratAnnotatorModel.getMode().equals(Mode.CURATION)){
+        else if (aBratAnnotatorModel.getMode().equals(Mode.CURATION)) {
             repository.createCurationDocumentContent(aUIData.getjCas(),
                     aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
         }
@@ -486,7 +487,8 @@ public class BratAjaxCasController
             ArcAdapter.getDependencyAdapter().deleteFromCas(aUIData, aBratAnnotatorModel);
         }
         else if (annotationType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
-            BratAjaxCasUtil.deleteCoreference(aBratAnnotatorModel, type, aUIData);
+            ChainAdapter.getCoreferenceChainAdapter().deleteChainFromCas(aUIData.getjCas(),
+                    aUIData.getOrigin());
         }
 
         GetDocumentResponse response = new GetDocumentResponse();
@@ -496,11 +498,11 @@ public class BratAjaxCasController
 
         deleteArcResponse.setAnnotations(response);
 
-        if(aBratAnnotatorModel.getMode().equals(Mode.ANNOTATION)){
+        if (aBratAnnotatorModel.getMode().equals(Mode.ANNOTATION)) {
             repository.createAnnotationDocumentContent(aUIData.getjCas(),
                     aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
         }
-        else     if(aBratAnnotatorModel.getMode().equals(Mode.CURATION)){
+        else if (aBratAnnotatorModel.getMode().equals(Mode.CURATION)) {
             repository.createCurationDocumentContent(aUIData.getjCas(),
                     aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
         }

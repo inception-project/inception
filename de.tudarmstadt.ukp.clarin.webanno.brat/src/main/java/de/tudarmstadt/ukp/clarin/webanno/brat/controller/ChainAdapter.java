@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -364,6 +365,15 @@ public class ChainAdapter
     /**
      * A Helper method to {@link #addToCas(String, BratAnnotatorUIData)}
      */
+    // Updating a coreference.
+    // CASE 1: Chain does not exist yet
+    // CASE 2: Add to the beginning of an existing chain
+    // CASE 3: Add to the end of an existing chain
+    // CASE 4: Replace a link in an existing chain
+    // CASE 4a: we replace the link to the last link -> delete last link
+    // CASE 4b: we replace the link to an intermediate link -> chain is cut in two,
+    // create new CorefChain pointing to the first link in new chain
+    // CASE 5: Add link at the same position as existing -> just update type
     private void updateCoreferenceChainCas(JCas aJcas, int aOrigin, int aTarget, String aValue)
     {
         boolean modify = false;
@@ -386,20 +396,18 @@ public class ChainAdapter
         boolean found = false;
 
         // If the two links are in different chain, merge them!!!
-        boolean merge = mergeChain(aJcas.getCas(), originLink, targetLink, aValue);
+        boolean merge = mergeChain(aJcas, originLink, targetLink, aValue);
 
         if (!merge) {
 
             Type type = CasUtil.getType(aJcas.getCas(), annotationTypeName);
             Feature first = type.getFeatureByBaseName(chainFirstFeatureName);
-            Feature next = null;
-            Feature labelFeature = null;
+            Feature next = targetLink.getType().getFeatureByBaseName(linkNextFeatureName);
+            Feature labelFeature = targetLink.getType().getFeatureByBaseName(labelFeatureName);
             for (FeatureStructure fs : CasUtil.selectFS(aJcas.getCas(), type)) {
 
                 AnnotationFS linkFs = (AnnotationFS) fs.getFeatureValue(first);
 
-                next = linkFs.getType().getFeatureByBaseName(linkNextFeatureName);
-                labelFeature = linkFs.getType().getFeatureByBaseName(labelFeatureName);
                 // CASE 2
                 if (fs.getFeatureValue(first) != null
                         && !found
@@ -499,7 +507,6 @@ public class ChainAdapter
 
                 // CASE 1
                 if (!chainExist) {
-
                     FeatureStructure newChainFs = aJcas.getCas().createFS(type);
                     newChainFs.setFeatureValue(first, originLink);
                     originLink.setFeatureValue(next, targetLink);
@@ -518,90 +525,111 @@ public class ChainAdapter
         removeInvalidChain(aJcas.getCas());
     }
 
-    private boolean mergeChain(CAS aCas, AnnotationFS aOrigin, AnnotationFS aTarget,
+    private boolean mergeChain(JCas aJcas, AnnotationFS aOrigin, AnnotationFS aTarget,
             String aValue)
     {
+        boolean inThisChain = false;
+        boolean inThatChain = false;
+        FeatureStructure thatChain = null;
+        FeatureStructure thisChain = null;
 
-        int firstAddres = 0;
-        int secondAddress = 0;
-
-        boolean firstFound = false;
-        boolean secondFound = false;
-
-        FeatureStructure firstChain = null;
-        FeatureStructure secondChain = null;
-
-        AnnotationFS firstLink = null;
-        AnnotationFS secondLink = null;
-
-        AnnotationFS firstLastLink = null;
-        AnnotationFS secondLastLink = null;
-
-        Type type = CasUtil.getType(aCas, annotationTypeName);
+        Type type = CasUtil.getType(aJcas.getCas(), annotationTypeName);
         Feature first = type.getFeatureByBaseName(chainFirstFeatureName);
-        Feature next = null;
-        Feature labelFeature = null;
+        Feature next = aOrigin.getType().getFeatureByBaseName(linkNextFeatureName);
+        Feature labelFeature = aOrigin.getType().getFeatureByBaseName(labelFeatureName);
 
-        // Get where abouts of Origin Link
-        for (FeatureStructure fs : CasUtil.selectFS(aCas, type)) {
+        for (FeatureStructure fs : CasUtil.selectFS(aJcas.getCas(), type)) {
             AnnotationFS linkFs = (AnnotationFS) fs.getFeatureValue(first);
-            firstLink = linkFs;
-            firstAddres = ((FeatureStructureImpl) linkFs).getAddress();
-            firstChain = fs;
+            boolean tempInThisChain = false;
+            if (linkFs.getFeatureValue(next) != null) {
+                while (linkFs != null) {
+                    if (inThisChain) {
+                        thatChain = fs;
+                        if (BratAjaxCasUtil.isAt((Annotation)linkFs, (Annotation)aOrigin)) {
+                            inThatChain = true;
+                            linkFs = (AnnotationFS) linkFs.getFeatureValue(next);
 
-            next = linkFs.getType().getFeatureByBaseName(linkNextFeatureName);
-            labelFeature = linkFs.getType().getFeatureByBaseName(labelFeatureName);
+                        }
+                        else if (BratAjaxCasUtil.isAt((Annotation)linkFs, (Annotation)aTarget)) {
+                            inThatChain = true;
+                            linkFs = (AnnotationFS) linkFs.getFeatureValue(next);
 
-            while (linkFs != null) {
-                firstLastLink = linkFs;
-                if (((FeatureStructureImpl) aOrigin).getAddress() == ((FeatureStructureImpl) linkFs)
-                        .getAddress()) {
-                    firstFound = true;
+                        }
+                        else {
+                            linkFs = (AnnotationFS) linkFs.getFeatureValue(next);
+                        }
+                    }
+                    else {
+                        thisChain = fs;
+                        if (BratAjaxCasUtil.isAt((Annotation)linkFs, (Annotation)aOrigin)) {
+                            tempInThisChain = true;
+                            linkFs = (AnnotationFS) linkFs.getFeatureValue(next);
+                        }
+                        else if (BratAjaxCasUtil.isAt((Annotation)linkFs, (Annotation)aTarget)) {
+                            tempInThisChain = true;
+                            linkFs = (AnnotationFS) linkFs.getFeatureValue(next);
+                        }
+                        else {
+                            linkFs = (AnnotationFS) linkFs.getFeatureValue(next);
+                        }
+                    }
                 }
+            }
+            if (tempInThisChain) {
+                inThisChain = true;
+            }
+        }
+        if (inThatChain) {
+            thatChain.getFeatureValue(first);
+            thisChain.getFeatureValue(first);
+            // |----------|
+            // |---------------|
+
+             // |----------------------------|
+               // |------------|
+               // OR
+               // |-------|
+               // |-------| ...
+               // else{
+            Map<Integer, AnnotationFS> beginRelationMaps = new TreeMap<Integer, AnnotationFS>();
+
+            // All links in the first chain
+            AnnotationFS linkFs = (AnnotationFS) thisChain.getFeatureValue(first);
+            while(linkFs!=null){
+                beginRelationMaps.put(linkFs.getBegin(), linkFs);
                 linkFs = (AnnotationFS) linkFs.getFeatureValue(next);
             }
-            if (firstFound) {
-                break;
-            }
-        }
-        // Get where abouts of target Link
-        for (FeatureStructure fs : CasUtil.selectFS(aCas, type)) {
-            AnnotationFS linkFs = (AnnotationFS) fs.getFeatureValue(first);
-            secondLink = linkFs;
-            secondAddress = ((FeatureStructureImpl) linkFs).getAddress();
-            secondChain = fs;
 
-            next = linkFs.getType().getFeatureByBaseName(linkNextFeatureName);
-            labelFeature = linkFs.getType().getFeatureByBaseName(labelFeatureName);
-
-            while (linkFs != null) {
-                secondLastLink = linkFs;
-                if (((FeatureStructureImpl) aTarget).getAddress() == ((FeatureStructureImpl) linkFs)
-                        .getAddress()) {
-                    secondFound = true;
-                }
+            linkFs = (AnnotationFS) thatChain.getFeatureValue(first);
+            while(linkFs!=null){
+                beginRelationMaps.put(linkFs.getBegin(), linkFs);
                 linkFs = (AnnotationFS) linkFs.getFeatureValue(next);
             }
-            if (secondFound) {
-                break;
-            }
-        }
-        // If the two Links reside in different chain and an arc is drawn from Origin to Target, it
-        // is a merge.
-        if (firstFound && secondFound && firstAddres != secondAddress) {
-            if (firstLastLink.getBegin() < secondLastLink.getBegin()) {
-                firstLastLink.setFeatureValue(next, secondLink);
-                firstLastLink.setStringValue(labelFeature, aValue);
-                aCas.removeFsFromIndexes(secondChain);
-            }
-            else {
-                secondLastLink.setFeatureValue(next, firstLink);
-                secondLastLink.setStringValue(labelFeature, aValue);
-                aCas.removeFsFromIndexes(firstChain);
-            }
-        }
 
-        return firstFound && secondFound;
+            aOrigin.setStringValue(labelFeature, aValue);
+            beginRelationMaps.put(aOrigin.getBegin(), aOrigin);// update the relation
+
+            Iterator<Integer> it = beginRelationMaps.keySet().iterator();
+
+            FeatureStructure newChain =  aJcas.getCas().createFS(type);
+            newChain.setFeatureValue(first, beginRelationMaps.get(it.next()));
+            AnnotationFS newLink = (AnnotationFS) newChain.getFeatureValue(first);
+
+            while (it.hasNext()) {
+                AnnotationFS link = beginRelationMaps.get(it.next());
+                link.setFeatureValue(next, null);
+                newLink.setFeatureValue(next, link);
+                newLink.setStringValue(labelFeature, newLink.getStringValue(labelFeature) == null ? aValue
+                        : newLink.getStringValue(labelFeature));
+                newLink = (AnnotationFS) newLink.getFeatureValue(next);
+            }
+
+            aJcas.addFsToIndexes(newChain);
+
+            aJcas.removeFsFromIndexes(thisChain);
+            aJcas.removeFsFromIndexes(thatChain);
+        }
+        return inThatChain;
     }
 
     /**
@@ -612,7 +640,7 @@ public class ChainAdapter
      * @param aId
      *            the low-level address of the span annotation.
      */
-    public void deleteFromCas(JCas aJCas, int aRef)
+    public void deleteLinkFromCas(JCas aJCas, int aRef)
     {
         FeatureStructure fsToRemove = (FeatureStructure) BratAjaxCasUtil.selectAnnotationByAddress(
                 aJCas, FeatureStructure.class, aRef);
@@ -621,7 +649,7 @@ public class ChainAdapter
     }
 
     /**
-     * Update the Cas before deleting the a link. This way, if a link is deleted at the middle, The
+     * Update the Cas before deleting a link. This way, if a link is deleted at the middle, The
      * chain will be splitted into two. If the first link is deleted, the <b>First</b> link will be
      * shifted to the next one.
      */
@@ -671,6 +699,46 @@ public class ChainAdapter
             newChainFs.setFeatureValue(first, nextLink);
             aJCas.addFsToIndexes(newChainFs);
         }
+    }
+
+    /**
+     * Remove an arc from a {@link CoreferenceChain}
+     *
+     * @param aBratAnnotatorModel
+     * @param aType
+     * @param aUIData
+     */
+    public void deleteChainFromCas(JCas aJCas, int aOrigin)
+    {
+        Type type = CasUtil.getType(aJCas.getCas(), annotationTypeName);
+        Feature first = type.getFeatureByBaseName(chainFirstFeatureName);
+
+        FeatureStructure newChain = aJCas.getCas().createFS(type);
+        boolean found = false;
+
+        AnnotationFS originCorefType = (AnnotationFS) BratAjaxCasUtil.selectAnnotationByAddress(
+                aJCas, FeatureStructure.class, aOrigin);
+        for (FeatureStructure fs : CasUtil.selectFS(aJCas.getCas(), type)) {
+            AnnotationFS linkFs = (AnnotationFS) fs.getFeatureValue(first);
+            Feature next = linkFs.getType().getFeatureByBaseName(linkNextFeatureName);
+            if (found) {
+                break;
+            }
+            while (linkFs != null && !found) {
+                if (((FeatureStructureImpl) linkFs).getAddress() == ((FeatureStructureImpl) originCorefType)
+                        .getAddress()) {
+                    newChain.setFeatureValue(first, linkFs.getFeatureValue(next));
+                    linkFs.setFeatureValue(next, null);
+                    found = true;
+                    break;
+                }
+                linkFs = (AnnotationFS) linkFs.getFeatureValue(next);
+            }
+        }
+        aJCas.addFsToIndexes(newChain);
+
+        removeInvalidChain(aJCas.getCas());
+
     }
 
     /**

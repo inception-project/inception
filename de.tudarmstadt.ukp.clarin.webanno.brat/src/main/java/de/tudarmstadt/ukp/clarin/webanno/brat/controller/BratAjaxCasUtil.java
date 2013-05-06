@@ -41,12 +41,8 @@ import org.uimafit.factory.CollectionReaderFactory;
 import org.uimafit.factory.JCasFactory;
 import org.uimafit.util.JCasUtil;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorUIData;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
-import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
 import de.tudarmstadt.ukp.dkpro.core.api.io.ResourceCollectionReaderBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -63,248 +59,8 @@ public class BratAjaxCasUtil
 {
 
 
-    // Updating a coreference.
-    // CASE 1: Chain does not exist yet
-    // CASE 2: Add to the beginning of an existing chain
-    // CASE 3: Add to the end of an existing chain
-    // CASE 4: Replace a link in an existing chain
-    // CASE 4a: we replace the link to the last link -> delete last link
-    // CASE 4b: we replace the link to an intermediate link -> chain is cut in two,
-    // create new CorefChain pointing to the first link in new chain
-    // CASE 5: Add link at the same position as existing -> just update type
-/*
-    public static void updateCoreferenceRelation(BratAnnotatorModel aBratAnnotatorModel,
-            String aRelation, BratAnnotatorUIData aUIData)
-    {
-        boolean modify = false;
 
-        CoreferenceLink originCoreferenceType = selectAnnotationByAddress(aUIData.getjCas(),
-				CoreferenceLink.class, aUIData.getOrigin());
-        CoreferenceLink targetCoreferenceType = selectAnnotationByAddress(aUIData.getjCas(),
-				CoreferenceLink.class, aUIData.getTarget());
 
-        // Currently support only anaphoric relation
-        // Inverse direction
-        if (originCoreferenceType.getBegin() > targetCoreferenceType.getBegin()) {
-            CoreferenceLink temp = originCoreferenceType;
-            originCoreferenceType = targetCoreferenceType;
-            targetCoreferenceType = temp;
-        }
-
-        CoreferenceLink existingCoreference = null;
-        boolean chainExist = false;
-        boolean found = false;
-
-        // If the two links are in different chain, merge them!!!
-        boolean merge = mergeChain(aUIData.getjCas(), originCoreferenceType, targetCoreferenceType,
-                aRelation);
-
-        if (!merge) {
-            for (CoreferenceChain chain : select(aUIData.getjCas(), CoreferenceChain.class)) {
-
-                // CASE 2
-                if (chain.getFirst() != null && !found
-                        && chain.getFirst().getBegin() == targetCoreferenceType.getBegin()) {
-                    chain.setFirst(originCoreferenceType);
-                    originCoreferenceType.setNext(targetCoreferenceType);
-                    originCoreferenceType.setReferenceRelation(aRelation);
-                    found = true;
-                    break;
-                }
-
-                CoreferenceLink link = chain.getFirst();
-                CoreferenceLink lastLink = link;
-
-                while (link != null && !found) {
-                    // a-> c, b->c = a->b->c
-                    if (link.getNext() != null && isAt(link.getNext(), targetCoreferenceType)) {
-                        if (link.getBegin() > originCoreferenceType.getBegin()) {
-                            originCoreferenceType.setNext(link);
-
-                            if (lastLink == chain.getFirst()) {
-                                chain.setFirst(originCoreferenceType);
-                            }
-                            else {
-                                lastLink.setNext(originCoreferenceType);
-                            }
-                        }
-                        else {
-                            link.setNext(originCoreferenceType);
-                            originCoreferenceType.setNext(targetCoreferenceType);
-                        }
-                        originCoreferenceType.setReferenceRelation(aRelation);
-                        chainExist = true;
-                        found = true;
-                        break;
-                    }
-                    // CASE 4a/b
-                    if (isAt(link, originCoreferenceType) && link.getNext() != null
-                            && !isAt(link.getNext(), targetCoreferenceType)
-                            && targetCoreferenceType.getBegin() < link.getNext().getBegin()) {
-                        CoreferenceLink tmpLink = link.getNext();
-                        String tmpRel = link.getReferenceRelation();
-                        link.setNext(targetCoreferenceType);
-                        link.setReferenceRelation(aRelation);
-                        targetCoreferenceType.setNext(tmpLink);
-                        targetCoreferenceType.setReferenceRelation(tmpRel);
-                        chainExist = true;
-                        found = true;
-                        break;
-                    }
-                    else if (isAt(link, originCoreferenceType) && link.getNext() != null
-                            && !isAt(link.getNext(), targetCoreferenceType)) {
-                        link = link.getNext();
-                        originCoreferenceType = link;
-                        continue;
-                    }
-                    else if (isAt(link, originCoreferenceType) && link.getNext() == null) {
-                        link.setNext(targetCoreferenceType);
-                        link.setReferenceRelation(aRelation);
-                        chainExist = true;
-                        found = true;
-                        break;
-                    }
-                    if (isAt(link, originCoreferenceType) && link.getNext() != null
-                            && isAt(link.getNext(), targetCoreferenceType)) {
-                        modify = !link.getReferenceType().equals(aRelation);
-                        existingCoreference = link;
-                        chainExist = true;
-                        break;
-                    }
-
-                    lastLink = link;
-                    link = link.getNext();
-                }
-
-                // CASE 3
-                if (lastLink != null && lastLink.getBegin() == originCoreferenceType.getBegin()) {
-                    lastLink.setNext(targetCoreferenceType);
-                    lastLink.setReferenceRelation(aRelation);
-                    chainExist = true;
-                    break;
-                }
-            }
-
-            if (existingCoreference == null) {
-
-                // CASE 1
-                if (!chainExist) {
-                    CoreferenceChain chain = new CoreferenceChain(aUIData.getjCas());
-                    chain.setFirst(originCoreferenceType);
-                    originCoreferenceType.setNext(targetCoreferenceType);
-                    originCoreferenceType.setReferenceRelation(aRelation);
-                    chain.addToIndexes();
-                }
-            }
-            // CASE 4: only change the relation type, everything same!!!
-            else if (modify) {
-                existingCoreference.setReferenceRelation(aRelation);
-                existingCoreference.addToIndexes();
-            }
-        }
-        // clean unconnected coreference chains
-        List<CoreferenceChain> orphanChains = new ArrayList<CoreferenceChain>();
-        for (CoreferenceChain chain : select(aUIData.getjCas(), CoreferenceChain.class)) {
-            if (chain.getFirst().getNext() == null) {
-                orphanChains.add(chain);
-            }
-        }
-        for (CoreferenceChain chain : orphanChains) {
-            chain.removeFromIndexes();
-        }
-    }
-
-    private static boolean mergeChain(JCas aJcas, CoreferenceLink aOrigin, CoreferenceLink aTarget,
-            String aRelation)
-    {
-        boolean inThisChain = false;
-        boolean inThatChain = false;
-        CoreferenceChain thatChain = null;
-        CoreferenceChain thisChain = null;
-        for (CoreferenceChain chain : select(aJcas, CoreferenceChain.class)) {
-            CoreferenceLink link = chain.getFirst();
-            boolean tempInThisChain = false;
-            if (link.getNext() != null) {
-                while (link != null) {
-                    if (inThisChain) {
-                        thatChain = chain;
-                        if (isAt(link, aOrigin)) {
-                            inThatChain = true;
-                            link = link.getNext();
-
-                        }
-                        else if (isAt(link, aTarget)) {
-                            inThatChain = true;
-                            link = link.getNext();
-
-                        }
-                        else {
-                            link = link.getNext();
-                        }
-                    }
-                    else {
-                        thisChain = chain;
-                        if (isAt(link, aOrigin)) {
-                            tempInThisChain = true;
-                            link = link.getNext();
-                        }
-                        else if (isAt(link, aTarget)) {
-                            tempInThisChain = true;
-                            link = link.getNext();
-                        }
-                        else {
-                            link = link.getNext();
-                        }
-                    }
-                }
-            }
-            if (tempInThisChain) {
-                inThisChain = true;
-            }
-        }
-        if (inThatChain) {
-            thatChain.getFirst();
-            thisChain.getFirst();
-            // |----------|
-            // |---------------|
-
-             // |----------------------------|
-               // |------------|
-               // OR
-               // |-------|
-               // |-------| ...
-               // else{
-            Map<Integer, CoreferenceLink> beginRelationMaps = new TreeMap<Integer, CoreferenceLink>();
-            for (CoreferenceLink link : thisChain.links()) {
-                beginRelationMaps.put(link.getBegin(), link);
-            }
-            for (CoreferenceLink link : thatChain.links()) {
-                beginRelationMaps.put(link.getBegin(), link);
-            }
-            aOrigin.setReferenceRelation(aRelation);
-            beginRelationMaps.put(aOrigin.getBegin(), aOrigin);// update the relation
-
-            Iterator<Integer> it = beginRelationMaps.keySet().iterator();
-
-            CoreferenceChain newChain = new CoreferenceChain(aJcas);
-            newChain.setFirst(beginRelationMaps.get(it.next()));
-            CoreferenceLink newLink = newChain.getFirst();
-
-            while (it.hasNext()) {
-                CoreferenceLink link = beginRelationMaps.get(it.next());
-                link.setNext(null);
-                newLink.setNext(link);
-                newLink.setReferenceRelation(newLink.getReferenceRelation() == null ? aRelation
-                        : newLink.getReferenceRelation());
-                newLink = newLink.getNext();
-            }
-
-            newChain.addToIndexes();
-            thisChain.removeFromIndexes();
-            thatChain.removeFromIndexes();
-        }
-        return inThatChain;
-    }*/
 
     public static boolean isAt(Annotation a, Annotation b)
     {
@@ -316,7 +72,7 @@ public class BratAjaxCasUtil
         return a.getBegin() == begin && a.getEnd() == end;
     }
 
-    public static void deleteCoreference(BratAnnotatorModel aBratAnnotatorModel, String aType,
+/*    public static void deleteCoreference(BratAnnotatorModel aBratAnnotatorModel, String aType,
             BratAnnotatorUIData aUIData)
     {
 
@@ -345,7 +101,7 @@ public class BratAjaxCasUtil
 
      //   removeInvalidChain(aUIData.getjCas());
 
-    }
+    }*/
 
 
     public static <T extends FeatureStructure> T selectAnnotationByAddress(JCas aJCas, Class<T> aType,
