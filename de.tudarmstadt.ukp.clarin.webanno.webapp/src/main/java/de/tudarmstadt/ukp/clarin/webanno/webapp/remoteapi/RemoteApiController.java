@@ -121,6 +121,12 @@ public class RemoteApiController
             permission.setProject(project);
             permission.setUser(user);
             projectRepository.createProjectPermission(permission);
+
+            permission = new ProjectPermission();
+            permission.setLevel(PermissionLevel.USER);
+            permission.setProject(project);
+            permission.setUser(user);
+            projectRepository.createProjectPermission(permission);
         }
         // Existing project
         else{
