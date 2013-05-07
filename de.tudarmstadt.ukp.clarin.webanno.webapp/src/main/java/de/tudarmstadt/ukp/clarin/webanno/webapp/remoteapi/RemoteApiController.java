@@ -164,8 +164,7 @@ public class RemoteApiController
             }
             // If the current filename does not start with "." and is in the root folder of the
             // ZIP, import it as a source document
-            else if(StringUtils.countMatches(entry.toString(), "/") == 1 &&
-                    !FilenameUtils.getExtension(entry.toString()).equals("") &&
+            else if(!FilenameUtils.getExtension(entry.toString()).equals("") &&
                     !FilenameUtils.getName(entry.toString()).equals(".")){
 
                 uploadSourceDocument(zip, entry, project, user, aFileType);
@@ -180,7 +179,7 @@ public class RemoteApiController
     private void uploadSourceDocument(ZipFile zip, ZipEntry entry, Project project, User user,
             String aFileType) throws IOException, UIMAException, WLFormatException
     {
-        String fileName = entry.toString().substring(entry.toString().indexOf("/") + 1);
+        String fileName = FilenameUtils.getName(entry.toString());
 
         InputStream zipStream = zip.getInputStream(entry);
         SourceDocument document = new SourceDocument();

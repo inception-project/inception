@@ -78,7 +78,7 @@ public class ExportModalWindowPage
         {
             super(id);
             try {
-                writeableFormats = new ArrayList<String>(repository.getWritableFormats().keySet());
+                writeableFormats = (ArrayList<String>) repository.getWritableFormatsLabel();
                 selectedFormat = writeableFormats.get(0);
             }
             catch (IOException e) {
@@ -124,7 +124,7 @@ public class ExportModalWindowPage
                                 try {
                                     downloadFile = repository.exportAnnotationDocument(document,
                                             project, user,
-                                            repository.getWritableFormats().get(selectedFormat), fileName);
+                                            repository.getWritableFormats().get(repository.getWritableFormatId(selectedFormat)), fileName);
                                 }
                                 catch (FileNotFoundException e) {
                                     error("Ubable to find annotation document " + ":"

@@ -930,6 +930,42 @@ public class RepositoryServiceDbData
     }
 
     @Override
+    public List<String> getReadableFormatsLabel()
+        throws ClassNotFoundException
+    {
+        List<String> readableFormats = new ArrayList<String>();
+        Set<String> key = (Set) readWriteFileFormats.keySet();
+
+        for (String keyvalue : key) {
+            if (keyvalue.contains(".label")) {
+                String readerLabel = keyvalue.substring(0, keyvalue.lastIndexOf(".label"));
+                if (readWriteFileFormats.getProperty(readerLabel + ".reader") != null) {
+                    readableFormats.add(readWriteFileFormats.getProperty(keyvalue));
+                }
+            }
+        }
+        return readableFormats;
+    }
+
+    @Override
+    public String getReadableFormatId( String aLabel)
+        throws ClassNotFoundException
+    {
+        Set<String> key = (Set) readWriteFileFormats.keySet();
+        String readableFormat = "";
+        for (String keyvalue : key) {
+            if (keyvalue.contains(".label")) {
+
+             if(readWriteFileFormats.getProperty(keyvalue).equals(aLabel)){
+                 readableFormat = keyvalue.substring(0, keyvalue.lastIndexOf(".label"));
+                 break;
+             }
+            }
+        }
+        return readableFormat;
+    }
+
+    @Override
     public Map<String, Class> getReadableFormats()
         throws ClassNotFoundException
     {
@@ -940,12 +976,47 @@ public class RepositoryServiceDbData
             if (keyvalue.contains(".label")) {
                 String readerLabel = keyvalue.substring(0, keyvalue.lastIndexOf(".label"));
                 if (readWriteFileFormats.getProperty(readerLabel + ".reader") != null) {
-                    readableFormats.put(readWriteFileFormats.getProperty(keyvalue), Class
+                    readableFormats.put(readerLabel, Class
                             .forName(readWriteFileFormats.getProperty(readerLabel + ".reader")));
                 }
             }
         }
         return readableFormats;
+    }
+
+    @Override
+    public List<String> getWritableFormatsLabel()
+        throws ClassNotFoundException
+    {
+        List<String> writableFormats = new ArrayList<String>();
+        Set<String> keys = (Set) readWriteFileFormats.keySet();
+
+        for (String keyvalue : keys) {
+            if (keyvalue.contains(".label")) {
+                String writerLabel = keyvalue.substring(0, keyvalue.lastIndexOf(".label"));
+                if (readWriteFileFormats.getProperty(writerLabel + ".writer") != null) {
+                    writableFormats.add(readWriteFileFormats.getProperty(keyvalue));
+                }
+            }
+        }
+        return writableFormats;
+    }
+
+    @Override
+    public String getWritableFormatId(String aLabel)
+        throws ClassNotFoundException
+    {
+        Set<String> keys = (Set) readWriteFileFormats.keySet();
+        String writableFormat="";
+        for (String keyvalue : keys) {
+            if (keyvalue.contains(".label")) {
+                if(readWriteFileFormats.getProperty(keyvalue).equals(aLabel)){
+                    writableFormat = keyvalue.substring(0, keyvalue.lastIndexOf(".label"));
+                    break;
+                }
+            }
+        }
+        return writableFormat;
     }
 
     @Override
@@ -955,11 +1026,11 @@ public class RepositoryServiceDbData
         Map<String, Class> writableFormats = new HashMap<String, Class>();
         Set<String> keys = (Set) readWriteFileFormats.keySet();
 
-        for (String key : keys) {
-            if (key.contains(".label")) {
-                String writerLabel = key.substring(0, key.lastIndexOf(".label"));
+        for (String keyvalue : keys) {
+            if (keyvalue.contains(".label")) {
+                String writerLabel = keyvalue.substring(0, keyvalue.lastIndexOf(".label"));
                 if (readWriteFileFormats.getProperty(writerLabel + ".writer") != null) {
-                    writableFormats.put(readWriteFileFormats.getProperty(key), Class
+                    writableFormats.put(writerLabel, Class
                             .forName(readWriteFileFormats.getProperty(writerLabel + ".writer")));
                 }
             }

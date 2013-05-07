@@ -77,7 +77,7 @@ public class ProjectDocumentsPanel
         super(id);
         this.selectedProjectModel = aProjectModel;
         try {
-            readableFormats = new ArrayList<String>(projectRepository.getReadableFormats().keySet());
+            readableFormats = new ArrayList<String>(projectRepository.getReadableFormatsLabel());
             selectedFormat = readableFormats.get(0);
         }
         catch (IOException e) {
@@ -126,7 +126,8 @@ public class ProjectDocumentsPanel
                                 SourceDocument document = new SourceDocument();
                                 document.setName(fileName);
                                 document.setProject(project);
-                                document.setFormat(readableFormatsChoice.getModelObject());
+                                String reader = projectRepository.getReadableFormatId(readableFormatsChoice.getModelObject());
+                                document.setFormat(reader);
                                 projectRepository.createSourceDocument(document, user);
                                 projectRepository.uploadSourceDocument(uploadFile, document,
                                         project.getId(), user);

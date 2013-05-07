@@ -563,17 +563,56 @@ public interface RepositoryService
     void uploadSourceDocument(InputStream file, SourceDocument document, long projectId, User user)
         throws IOException, UIMAException, WLFormatException;
     /**
-     * Returns the format of the {@link SourceDocument} to be read from a properties File
+     * Returns the labels on the UI for the format of the {@link SourceDocument} to be read from a properties File
+     *
+     * @return
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
+    List<String> getReadableFormatsLabel()
+        throws IOException, ClassNotFoundException;
+
+    /**
+     * Returns the Id of the format for the {@link SourceDocument} to be read from a properties File
+     *
+     * @return
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
+
+    String getReadableFormatId(String label)
+            throws IOException, ClassNotFoundException;
+    /**
+     * Returns formats of the {@link SourceDocument} to be read from a properties File
      *
      * @return
      * @throws IOException
      * @throws ClassNotFoundException
      */
     Map<String, Class> getReadableFormats()
+            throws IOException, ClassNotFoundException;
+    /**
+     * Returns the labels on the UI for the format of {@link AnnotationDocument} while exporting
+     *
+     * @return
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
+   List<String> getWritableFormatsLabel()
         throws IOException, ClassNotFoundException;
 
     /**
-     * Returns the format of {@link AnnotationDocument} while exporting
+     * Returns the Id of the format for {@link AnnotationDocument} while exporting
+     *
+     * @return
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
+
+    String getWritableFormatId(String label)
+            throws IOException, ClassNotFoundException;
+    /**
+     * Returns formats of {@link AnnotationDocument} while exporting
      *
      * @return
      * @throws IOException
@@ -581,7 +620,6 @@ public interface RepositoryService
      */
     Map<String, Class> getWritableFormats()
         throws IOException, ClassNotFoundException;
-
     /**
      * Get list of permissions a user have in a given project
      *
