@@ -8,40 +8,45 @@
 -->
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
   <wicket:panel>
-    <br />
-    <div class="documenttable">
-      <table style="margin-left:auto;margin-right:left;text-align:left">
-        <tr>
-          <td>
-          </td>
-          <td>
-            <input wicket:id="content" type="file" multiple />
-          </td>
-        </tr>
-        <tr>
-          <td>
-          </td>
-          <td>
-            <span>
-              <input type="submit" wicket:id="importGuideline" />
-            </span>
-          </td>
-          <td>
-          </td>
-        </tr>
-      </table>
-    </div>
-    <div>
-      <label class="top">
-        Guidelines:
-      </label>
-    </div>
-    <div>
-      <select class="dfill" wicket:id="documents" size="35">
-      </select>
-    </div>
-    <div>
-      <input type="submit" wicket:id="remove" />
-    </div>
+    <br>
+    <br>
+    <table align="left">
+      <tr>
+        <td>
+        </td>
+        <td>
+          <input wicket:id="content" type="file" multiple />
+        </td>
+      </tr>
+      <tr>
+        <td>
+        </td>
+        <td>
+          <span>
+            <input type="submit" wicket:id="importGuideline" />
+          </span>
+        </td>
+        <td>
+        </td>
+      </tr>
+      <tr>
+        <td>
+        </td>
+        <td>
+          <div>
+            <label class="top">
+              Guidelines:
+            </label>
+          </div>
+          <div>
+            <select class="hfill" wicket:id="documents" size="10">
+            </select>
+          </div>
+          <div>
+            <input type="submit" wicket:id="remove" />
+          </div>
+        </td>
+      </tr>
+    </table>
   </wicket:panel>
 </html>

@@ -8,45 +8,27 @@
 -->
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
   <wicket:panel>
-    <br />
-    <div class="documenttable">
-      <table style="margin-left:auto;margin-right:left;text-align:left">
-        <tr>
-          <td>
-            <input wicket:id="content" type="file" multiple />
-          </td>
-          <td>
-            choose Format:
-          </td>
-          <td>
-            <select wicket:id="readableFormats">
-            </select>
-          </td>
-        </tr>
-        <tr>
-          <td>
-          </td>
-          <td>
-            <span>
-              <input type="submit" wicket:id="import" />
-            </span>
-          </td>
-          <td>
-          </td>
-        </tr>
-      </table>
-    </div>
-    <div>
-      <label class="top">
-        Documents:
-      </label>
-    </div>
-    <div>
-      <select class="dfill" wicket:id="documents" size="35">
+    <ul style="text-align: left; float: left; width: 100%; list-style-type: none; ">
+      <li>
+      <input wicket:id="content" type="file" multiple />
+      choose Format:
+      <select wicket:id="readableFormats">
       </select>
-    </div>
-    <div>
-      <input type="submit" wicket:id="remove" />
-    </div>
-  </wicket:panel>
+   	 </li>
+   	 <li>
+    <input type="submit" wicket:id="import" />
+  	</li>
+ 	 <li>
+ 	 <br>
+ 	 List of Imported Documents:
+	</li>
+	<li>
+		<select class="dfill" wicket:id="documents" size="25">
+		</select>
+	</li>
+	<li>
+		<input type="submit" wicket:id="remove" />
+	</li>
+	</ul>
+</wicket:panel>
 </html>

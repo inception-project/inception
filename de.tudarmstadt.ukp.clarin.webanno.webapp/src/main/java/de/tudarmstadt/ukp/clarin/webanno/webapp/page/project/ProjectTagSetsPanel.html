@@ -9,11 +9,10 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
   <wicket:panel>
     <br />
-    <table WIDTH="100%" >
-      <tr VALIGN=TOP>
+    <table WIDTH="100%" STYLE="table-layout:fixed;">
+      <tr VALIGN=TOP >
         <td width="20%">
           <form wicket:id="tagSetSelectionForm">
-            <fieldset>
               <div>
                 <label class="top">
                   TagSets:
@@ -26,7 +25,7 @@
 
               <div style="border-style: ridge;">
                 <br />
-                <table class="hfill">
+                <table>
                   <tr>
                     <td>
                       <input wicket:id="content" type="file" multiple />
@@ -42,7 +41,6 @@
                   </tr>
                 </table>
               </div>
-            </fieldset>
           </form>
         </td>
         <td  width="33%">
@@ -159,7 +157,6 @@
         </td>
         <td  width="15%">
           <form wicket:id="tagSelectionForm">
-            <fieldset class="ui-widget-content ui-corner-all centering">
               <div>
                 <label>
                   Tags:
@@ -169,7 +166,6 @@
                 <select class="hfill" wicket:id="tag" size="35">
                 </select>
               </div>
-            </fieldset>
           </form>
         </td>
       </tr>

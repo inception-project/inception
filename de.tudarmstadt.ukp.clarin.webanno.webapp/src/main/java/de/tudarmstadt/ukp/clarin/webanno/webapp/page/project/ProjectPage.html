@@ -10,34 +10,32 @@
 
   <body>
     <wicket:extend>
-      <div style="position: relative; top: 0px;">
-        <form wicket:id="projectSelectionForm" id="left">
-          <fieldset class="ui-widget-content ui-corner-all centering">
-            <div>
-              <label class="top">
-                Projects:
-              </label>
-            </div>
-            <div>
-              <select class="hfill" wicket:id="project" >
-              </select>
-            </div>
-            <div class="buttons">
-              <input type="submit" wicket:id="create" />
-            </div>
-          </fieldset>
-        </form>
-
-        <form wicket:id="projectDetailForm"  id="middleleft">
-          <div wicket:id="tabs" class="tabpanel">
-          </div>
-        </form>
-
-        <!--
-          <form wicket:id="backForm" class="vfill" style="margin: 15px"> <div class="buttons"> <input type="submit"
-          wicket:id="back" /> </div> </form>
-        -->
-      </div>
+      <table WIDTH="100%" STYLE="table-layout:fixed;">
+        <tr VALIGN=TOP>
+          <td width ="20%">
+            <form wicket:id="projectSelectionForm">
+              <div>
+                <label>
+                  Projects:
+                </label>
+              </div>
+              <div>
+                <select class="hfill" wicket:id="project" >
+                </select>
+              </div>
+              <div class="buttons">
+                <input type="submit" wicket:id="create" />
+              </div>
+            </form>
+          </td>
+          <td width="80%">
+            <form wicket:id="projectDetailForm">
+              <div wicket:id="tabs" class="tabpanel">
+              </div>
+            </form>
+          </td>
+        </tr>
+      </table>
     </wicket:extend>
   </body>
 </html>
