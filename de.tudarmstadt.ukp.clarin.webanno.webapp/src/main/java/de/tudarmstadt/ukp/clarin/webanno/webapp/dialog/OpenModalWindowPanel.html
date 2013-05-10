@@ -7,48 +7,77 @@
   the License. #
 -->
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+  <head>
+    <wicket:head>
+      <!--
+        Cannot use head.js because then onLoad event fires before all JS has been loaded causing errors.
+      -->
+      <script type="text/javascript" src="client/lib/jquery.min.js">
+      </script>
+      <script type="text/javascript" src="client/lib/jquery-ui.min.js">
+      </script>
 
-  <wicket:panel>
-    <table  align="left">
-      <tr style="color:blue; font-weight:bold;">
-        <td>
-          Projects:
-        </td>
-        <td>
-          Documents:
-        </td>
-      </tr>
-      <tr VALIGN=TOP >
-        <td>
-          <form wicket:id="projectSelectionForm" >
-            <select 
-                wicket:id="project"
-                 style="color:green; font-weight:bold; background-color:white;width:150px; height:230px">
+      <link rel="stylesheet" href="css/style.css" type="text/css">
+    </link>
+  </wicket:head>
+</head>
+<wicket:panel>
 
-            </select>
-          </form>
-        </td>
-        <td>
-          <form wicket:id="documentSelectionForm">
-            <select  wicket:id="document" style="color:black; font-weight:bold;width:300px; height:230px">
-            </select>
-          </form>
-        </td>
-      </tr>
-      <tr>
-        <td>
-        </td>
-        <td>
-          <form wicket:id="buttonsForm" >
-            <button wicket:id="openButton">
-              Open
-            </button>
-            <button wicket:id="cancelButton">
-              Cancel
-            </button>
-          </form>
-        </td>
-      </tr>
-    </table>
-  </wicket:panel>
+  <span>
+    <a wicket:id="increaseFont" id="increaseFont" title="Increase Font">
+      A++
+    </a>
+    </span>
+    &nbsp &nbsp &nbsp
+    <span>
+    <a wicket:id="decreaseFont" id="decreaseFont" title="Decrease Font">
+      A--
+    </a>
+  </span>
+
+  <table  align="left">
+    <tr style="color:blue; font-weight:bold;">
+      <td>
+        Projects:
+      </td>
+      <td>
+        Documents:
+      </td>
+    </tr>
+    <tr VALIGN=TOP >
+      <td>
+        <form wicket:id="projectSelectionForm" >
+          <select 
+              wicket:id="project"
+              style="color:green; font-weight:bold; background-color:white;width:150px; height:230px">
+
+
+
+
+          </select>
+        </form>
+      </td>
+      <td>
+        <form wicket:id="documentSelectionForm">
+          <select  wicket:id="document" style="color:black; font-weight:bold;width:300px; height:230px">
+          </select>
+        </form>
+      </td>
+    </tr>
+    <tr>
+      <td>
+      </td>
+      <td>
+        <form wicket:id="buttonsForm" >
+          <button wicket:id="openButton">
+            Open
+          </button>
+          <button wicket:id="cancelButton">
+            Cancel
+          </button>
+        </form>
+      </td>
+    </tr>
+  </table>
+</wicket:panel>
 </html>
