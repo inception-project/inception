@@ -1239,9 +1239,10 @@ public class RepositoryServiceDbData
                         annotationFolder, SerializedCasReader.PARAM_PATTERNS, new String[] { "[+]"
                                 + file });
                 if (!reader.hasNext()) {
-                    throw new FileNotFoundException("Annotation file [" + file + "] not found in ["
-                            + annotationFolder
-                            + "]. Report the incident to the Project Administrator");
+                    throw new FileNotFoundException("Annotation document of user [" + aUsername + "] for source document ["
+                            + aDocument.getName()
+                            + "] ("+ aDocument.getId()+"). not found in project["
+                            +aDocument.getProject().getName()+"] ("+aDocument.getProject().getId()+")");
                 }
                 reader.getNext(cas);
 
