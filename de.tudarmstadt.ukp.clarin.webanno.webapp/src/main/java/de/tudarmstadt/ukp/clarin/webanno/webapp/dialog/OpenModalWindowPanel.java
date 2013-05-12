@@ -41,9 +41,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
@@ -72,8 +72,6 @@ public class OpenModalWindowPanel
     private SourceDocument selectedDocument;
 
     private ListChoice<SourceDocument> documents;
-    private ListChoice<Project> projects;
-
     private OpenDocumentModel openDataModel;
 
     private String username;
@@ -85,50 +83,9 @@ public class OpenModalWindowPanel
 
     List<Project> allowedProject = new ArrayList<Project>();
 
-    public OpenModalWindowPanel(String aId, OpenDocumentModel aOpenDataModel,
-            ModalWindow aModalWindow, Mode aSubject)
+    public OpenModalWindowPanel(String aId, OpenDocumentModel aOpenDataModel, ModalWindow aModalWindow, Mode aSubject)
     {
         super(aId);
-
-        add(new AjaxLink<Void>("increaseFont")
-        {
-            private static final long serialVersionUID = 7202600912406469768L;
-
-            @Override
-            public void onClick(AjaxRequestTarget aTarget)
-            {
-
-                String script = " var currentFontSize = $('#" + documents.getMarkupId()
-                        + "').css('font-size'); "
-                        + "var currentFontSizeNum = parseFloat(currentFontSize, 10);"
-                        + "var newFontSize = currentFontSizeNum * 1.2;" + "$('#"
-                        + documents.getMarkupId() + "').css('font-size', newFontSize); " + "$('#"
-                        + projects.getMarkupId() + "').css('font-size', newFontSize);  ";
-
-                aTarget.appendJavaScript(script);
-
-            }
-        });
-        add(new AjaxLink<Void>("decreaseFont")
-        {
-            private static final long serialVersionUID = 7202600912406469768L;
-
-            @Override
-            public void onClick(AjaxRequestTarget aTarget)
-            {
-
-                String script = " var currentFontSize = $('#" + documents.getMarkupId()
-                        + "').css('font-size'); "
-                        + "var currentFontSizeNum = parseFloat(currentFontSize, 10);"
-                        + "var newFontSize = currentFontSizeNum * 0.8;" + "$('#"
-                        + documents.getMarkupId() + "').css('font-size', newFontSize); " + "$('#"
-                        + projects.getMarkupId() + "').css('font-size', newFontSize);  ";
-
-                aTarget.appendJavaScript(script);
-
-            }
-        });
-
         this.subject = aSubject;
         username = SecurityContextHolder.getContext().getAuthentication().getName();
         user = projectRepository.getUser(username);
@@ -150,8 +107,9 @@ public class OpenModalWindowPanel
         extends Form<SelectionModel>
     {
         private static final long serialVersionUID = -1L;
-
         @SuppressWarnings({ "unchecked" })
+        private ListChoice<Project> projects;
+
         public ProjectSelectionForm(String id)
         {
             // super(id);
@@ -218,15 +176,15 @@ public class OpenModalWindowPanel
 
         List<Project> allowedProject = new ArrayList<Project>();
 
-        if (aSubject.equals(subject.ANNOTATION)) {
-            for (Project project : projectRepository.listProjects()) {
-                if (projectRepository.existProjectPermission(user, project)
-                        && ApplicationUtils.isMember(project, projectRepository, user)) {
-                    allowedProject.add(project);
-                }
+        if(aSubject.equals(subject.ANNOTATION)){
+        for (Project project : projectRepository.listProjects()) {
+            if (projectRepository.existProjectPermission(user, project)
+                    && ApplicationUtils.isMember(project, projectRepository, user)) {
+                allowedProject.add(project);
             }
         }
-        else if (aSubject.equals(subject.CURATION)) {
+        }
+        else if(aSubject.equals(subject.CURATION)){
             for (Project project : projectRepository.listProjects()) {
                 if (projectRepository.existProjectPermission(user, project)
                         && ApplicationUtils.isCurator(project, projectRepository, user)) {
@@ -312,28 +270,30 @@ public class OpenModalWindowPanel
             });
             documents.setOutputMarkupId(true);
             documents.setMaxRows(10);
-            documents.add(new OnChangeAjaxBehavior()
-            {
-                private static final long serialVersionUID = 1L;
+            documents
+                    .add(new OnChangeAjaxBehavior()
+                    {
+                        private static final long serialVersionUID = 1L;
 
-                @Override
-                protected void onUpdate(AjaxRequestTarget aTarget)
-                {
-                    selectedDocument = getModelObject().document;
-                }
-            }).add(new AjaxEventBehavior("ondblclick")
-            {
+                        @Override
+                        protected void onUpdate(AjaxRequestTarget aTarget)
+                        {
+                            selectedDocument = getModelObject().document;
+                        }
+                    })
+                    .add(new AjaxEventBehavior("ondblclick")
+                    {
 
-                private static final long serialVersionUID = 1L;
+                        private static final long serialVersionUID = 1L;
 
-                @Override
-                protected void onEvent(final AjaxRequestTarget aTarget)
-                {
-                    openDataModel.setProject(selectedProject);
-                    openDataModel.setDocument(selectedDocument);
-                    modalWindow.close(aTarget);
-                }
-            }).add(new ResizableBehavior());
+                        @Override
+                        protected void onEvent(final AjaxRequestTarget aTarget)
+                        {
+                            openDataModel.setProject(selectedProject);
+                            openDataModel.setDocument(selectedDocument);
+                            modalWindow.close(aTarget);
+                        }
+                    }).add(new ResizableBehavior());
         }
     }
 
@@ -351,13 +311,10 @@ public class OpenModalWindowPanel
                 protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
                 {
                     if (selectedProject == null) {
-                        aTarget.appendJavaScript("alert('No project is selected!')"); // If there is
-                                                                                      // no project
-                                                                                      // at all
+                        aTarget.appendJavaScript("alert('No project is selected!')"); // If there is no project at all
                     }
                     else if (selectedDocument == null) {
-                        aTarget.appendJavaScript("alert('Please select a document for project: "
-                                + selectedProject.getName() + "')");
+                        aTarget.appendJavaScript("alert('Please select a document for project: " + selectedProject.getName()+"')");
                     }
                     else {
                         openDataModel.setProject(selectedProject);
@@ -382,7 +339,8 @@ public class OpenModalWindowPanel
                 {
                     projectSelectionForm.detach();
                     documentSelectionForm.detach();
-                    if (subject.equals(Mode.CURATION)) {
+                    if(subject.equals(Mode.CURATION))
+                     {
                         openDataModel.setDocument(null); // on cancel, go welcomePage
                     }
                     modalWindow.close(aTarget);
