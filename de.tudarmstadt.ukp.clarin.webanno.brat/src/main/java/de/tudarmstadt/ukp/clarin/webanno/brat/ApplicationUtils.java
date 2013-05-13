@@ -15,7 +15,7 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -42,9 +42,9 @@ public class ApplicationUtils
      * Read Tag and Tag Description. A line has a tag name and a tag description separated by a TAB
      *
      */
-    public static Map<String, String> getTagsFromText(String aLineSeparatedTags)
+    public static Map<String, String> getTagSetFromFile(String aLineSeparatedTags)
     {
-        Map<String, String> tags = new HashMap<String, String>();
+        Map<String, String> tags = new LinkedHashMap<String, String>();
         StringTokenizer st = new StringTokenizer(aLineSeparatedTags, "\n");
         while (st.hasMoreTokens()) {
             StringTokenizer stTag = new StringTokenizer(st.nextToken(), "\t");

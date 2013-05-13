@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -58,6 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.CasToBratJson;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSetConstants;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSetContent;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSets;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
@@ -66,8 +67,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.support.EntityModel;
+
 /**
  * A Panel Used to add Tagsets to a selected {@link Project}
+ *
  * @author Seid Muhie Yimam
  *
  */
@@ -81,6 +84,11 @@ public class ProjectTagSetsPanel
     private AnnotationService annotationService;
     @SpringBean(name = "documentRepository")
     private RepositoryService projectRepository;
+
+    private List<FileUpload> uploadedFiles;
+    private FileUploadField fileUpload;
+    DropDownChoice<String> tagsetFormat;
+    private String selectedExporTagsetFormat = ExportedTagSetConstants.JSON_FORMAT;
 
     private class TagSetSelectionForm
         extends Form<SelectionModel>
@@ -174,6 +182,9 @@ public class ProjectTagSetsPanel
             });
 
             add(fileUpload = new FileUploadField("content", new Model()));
+            add(tagsetFormat = new DropDownChoice<String>("tagsetFormat", new Model<String>(
+                    selectedExporTagsetFormat), Arrays.asList(new String[] {
+                    ExportedTagSetConstants.JSON_FORMAT, ExportedTagSetConstants.TAB_FORMAT })));
             add(new Button("import", new ResourceModel("label"))
             {
 
@@ -189,64 +200,149 @@ public class ProjectTagSetsPanel
                     User user = projectRepository.getUser(username);
 
                     if (isNotEmpty(uploadedFiles)) {
-                        for (FileUpload tagFile : uploadedFiles) {
-                            InputStream tagInputStream;
-                            try {
-                                tagInputStream = tagFile.getInputStream();
-                                String text = IOUtils.toString(tagInputStream, "UTF-8");
+                        if (tagsetFormat.getModelObject().equals(
+                                ExportedTagSetConstants.JSON_FORMAT)) {
+                            for (FileUpload tagFile : uploadedFiles) {
+                                InputStream tagInputStream;
+                                try {
+                                    tagInputStream = tagFile.getInputStream();
+                                    String text = IOUtils.toString(tagInputStream, "UTF-8");
 
-                                MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
-                                ExportedTagSets importedTagSet = jsonConverter.getObjectMapper()
-                                        .readValue(text, ExportedTagSets.class);
-                                List<ExportedTagSetContent> importedTagSets = importedTagSet
-                                        .getTagSets();
+                                    MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
+                                    ExportedTagSets importedTagSet = jsonConverter
+                                            .getObjectMapper().readValue(text,
+                                                    ExportedTagSets.class);
+                                    List<ExportedTagSetContent> importedTagSets = importedTagSet
+                                            .getTagSets();
 
-                                AnnotationType type = null;
-                                List<AnnotationType> types = annotationService.getTypes(
-                                        importedTagSets.get(0).getTypeName(), importedTagSets
-                                                .get(0).getType());
-                                if (types.size() == 0) {
-                                    type = new AnnotationType();
-                                    type.setDescription(importedTagSets.get(0).getTypeDescription());
-                                    type.setName(importedTagSets.get(0).getTypeName());
-                                    type.setType(importedTagSets.get(0).getType());
-                                    annotationService.createType(type);
-                                }
-                                else {
-                                    type = types.get(0);
-                                }
-
-                                for (ExportedTagSetContent tagSet : importedTagSets) {
-                                    List<TagSet> tagSetInDb = annotationService.getTagSet(type,
-                                            project);
-                                    if (tagSetInDb.size() == 0) {
-                                        TagSet newTagSet = new TagSet();
-                                        newTagSet.setDescription(tagSet.getDescription());
-                                        newTagSet.setName(tagSet.getName());
-                                        newTagSet.setLanguage(tagSet.getLanguage());
-                                        newTagSet.setProject(project);
-                                        newTagSet.setType(type);
-                                        annotationService.createTagSet(newTagSet, user);
-                                        for (de.tudarmstadt.ukp.clarin.webanno.export.model.Tag tag : tagSet
-                                                .getTags()) {
-                                            Tag newTag = new Tag();
-                                            newTag.setDescription(tag.getDescription());
-                                            newTag.setName(tag.getName());
-                                            newTag.setTagSet(newTagSet);
-                                            annotationService.createTag(newTag, user);
-                                        }
-                                        info("TagSet successfully imported. Refresh page to see the imported TagSet.");
+                                    AnnotationType type = null;
+                                    if (!annotationService.existsType(importedTagSets.get(0)
+                                            .getTypeName(), importedTagSets.get(0).getType())) {
+                                        type = new AnnotationType();
+                                        type.setDescription(importedTagSets.get(0)
+                                                .getTypeDescription());
+                                        type.setName(importedTagSets.get(0).getTypeName());
+                                        type.setType(importedTagSets.get(0).getType());
+                                        annotationService.createType(type);
                                     }
                                     else {
-                                        error("Tagset" + importedTagSets.get(0).getName()
-                                                + " already exist");
+                                        type = annotationService.getType(importedTagSets.get(0)
+                                                .getTypeName(), importedTagSets.get(0).getType());
+                                    }
+
+                                    for (ExportedTagSetContent tagSet : importedTagSets) {
+
+                                        if (!annotationService.existTagSet(type, project)) {
+                                            TagSet newTagSet = new TagSet();
+                                            newTagSet.setDescription(tagSet.getDescription());
+                                            newTagSet.setName(tagSet.getName());
+                                            newTagSet.setLanguage(tagSet.getLanguage());
+                                            newTagSet.setProject(project);
+                                            newTagSet.setType(type);
+                                            annotationService.createTagSet(newTagSet, user);
+                                            for (de.tudarmstadt.ukp.clarin.webanno.export.model.Tag tag : tagSet
+                                                    .getTags()) {
+                                                Tag newTag = new Tag();
+                                                newTag.setDescription(tag.getDescription());
+                                                newTag.setName(tag.getName());
+                                                newTag.setTagSet(newTagSet);
+                                                annotationService.createTag(newTag, user);
+                                            }
+                                            info("TagSet successfully imported. Refresh page to see the imported TagSet.");
+                                        }
+                                        else {
+                                            error("Tagset" + importedTagSets.get(0).getName()
+                                                    + " already exist");
+                                        }
+                                    }
+
+                                }
+                                catch (IOException e) {
+                                    error("Error Importing TagSet "
+                                            + ExceptionUtils.getRootCauseMessage(e));
+                                }
+                            }
+                        }
+                        else if (tagsetFormat.getModelObject().equals(
+                                ExportedTagSetConstants.TAB_FORMAT)) {
+                            for (FileUpload tagFile : uploadedFiles) {
+                                InputStream tagInputStream;
+                                try {
+                                    tagInputStream = tagFile.getInputStream();
+                                    String text = IOUtils.toString(tagInputStream, "UTF-8");
+                                    Map<String, String> tabbedTagsetFromFile = ApplicationUtils
+                                            .getTagSetFromFile(text);
+
+                                    Set<String> listOfTagsFromFile = tabbedTagsetFromFile.keySet();
+                                    int i = 0;
+                                    String tagSetName = "";
+                                    String tagSetDescription = "";
+                                    String tagsetLanguage = "";
+                                    String tagsetType = "";
+                                    String tagsetTypeName = "";
+                                    String tagsetTypeDescription = "";
+                                    TagSet tagSet = null;
+                                    for (String key : listOfTagsFromFile) {
+                                        // the first key is the tagset name and its description
+                                        if (i == 0) {
+                                            tagSetName = key;
+                                            tagSetDescription = tabbedTagsetFromFile.get(key);
+                                        }
+                                        // the second key is the tagset type
+                                        else if (i == 1) {
+                                            tagsetType = key;
+                                        }
+                                        // the third key is the tagset type name and its description
+                                        else if (i == 2) {
+                                            tagsetTypeName = key;
+                                            tagsetTypeDescription = tabbedTagsetFromFile.get(key);
+                                        }
+                                        // the fourth key is the tagset language
+                                        else if (i == 3) {
+                                            tagsetLanguage = key;
+                                            // Create the type, if not exist
+                                            AnnotationType type = null;
+                                            if (!annotationService.existsType(tagsetTypeName,
+                                                    tagsetType)) {
+                                                type = new AnnotationType();
+                                                type.setDescription(tagsetTypeDescription);
+                                                type.setName(tagsetTypeName);
+                                                type.setType(tagsetType);
+                                                annotationService.createType(type);
+                                            }
+                                            // type exist, get it
+                                            else {
+                                                type = annotationService.getType(tagsetTypeName,
+                                                        tagsetType);
+                                            }
+                                            // remove and replace the tagset if it exist
+                                            if (annotationService.existTagSet(type, project)) {
+                                                annotationService.removeTagSet(annotationService
+                                                        .getTagSet(type, project));
+                                            }
+                                                tagSet = new TagSet();
+                                                tagSet.setName(tagSetName);
+                                                tagSet.setDescription(tagSetDescription);
+                                                tagSet.setLanguage(tagsetLanguage);
+                                                tagSet.setProject(project);
+                                                tagSet.setType(type);
+                                                annotationService.createTagSet(tagSet, user);
+                                        }
+                                        // otherwise it is a tag entry, add the tag to the tagset
+                                        else {
+                                            Tag tag = new Tag();
+                                            tag.setDescription(tabbedTagsetFromFile.get(key));
+                                            tag.setName(key);
+                                            tag.setTagSet(tagSet);
+                                            annotationService.createTag(tag, user);
+                                        }
+                                        i++;
                                     }
                                 }
-
-                            }
-                            catch (IOException e) {
-                                error("Error Importing TagSDet "
-                                        + ExceptionUtils.getRootCauseMessage(e));
+                                catch (Exception e) {
+                                    error("Error Importing tabbed TagSet."
+                                            + ExceptionUtils.getRootCauseMessage(e));
+                                }
                             }
                         }
                     }
@@ -303,12 +399,11 @@ public class ProjectTagSetsPanel
                     TagSet tagSet = TagSetDetailForm.this.getModelObject();
 
                     if (tagSet.getId() == 0) {
-                        try {
-                            annotationService.getTagSet(tagSet.getType(),
-                                    selectedProjectModel.getObject());
+                        if (annotationService.existTagSet(tagSet.getType(),
+                                selectedProjectModel.getObject())) {
                             error("Only one tagset per type per project is allowed!");
                         }
-                        catch (NoResultException ex) {
+                        else {
 
                             String username = SecurityContextHolder.getContext()
                                     .getAuthentication().getName();
@@ -345,76 +440,6 @@ public class ProjectTagSetsPanel
                         tagDetailForm.setVisible(false);
                     }
                     TagSetDetailForm.this.setModelObject(new TagSet());
-                }
-            });
-
-            add(fileUpload = new FileUploadField("content", new Model()));
-            add(new Button("import", new ResourceModel("label"))
-            {
-
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                public void onSubmit()
-                {
-                    uploadedFiles = fileUpload.getFileUploads();
-                    Project project = selectedProjectModel.getObject();
-
-                    if (isNotEmpty(uploadedFiles)) {
-                        for (FileUpload tagFile : uploadedFiles) {
-                            InputStream tagInputStream;
-                            try {
-                                TagSet tagSet = TagSetDetailForm.this.getModelObject();
-                                if (tagSet.getId() != 0) {
-                                    tagInputStream = tagFile.getInputStream();
-                                    String text = IOUtils.toString(tagInputStream, "UTF-8");
-                                    Map<String, String> mapOfTagsAndDescriptionsFromFile = ApplicationUtils
-                                            .getTagsFromText(text);
-
-                                    List<Tag> listOfTagsFromDatabase = annotationService
-                                            .listTags(tagSet);
-                                    Set<String> listOfTagsFromFile = mapOfTagsAndDescriptionsFromFile
-                                            .keySet();
-
-                                    Set<String> listOfTagNamesFromDatabse = new HashSet<String>();
-
-                                    for (Tag tag : listOfTagsFromDatabase) {
-                                        listOfTagNamesFromDatabse.add(tag.getName());
-                                    }
-
-                                    listOfTagsFromFile.removeAll(listOfTagNamesFromDatabse);
-
-                                    for (String tagName : listOfTagsFromFile) {
-
-                                        String username = SecurityContextHolder.getContext()
-                                                .getAuthentication().getName();
-                                        User user = projectRepository.getUser(username);
-
-                                        Tag tag = new Tag();
-                                        tag.setDescription(mapOfTagsAndDescriptionsFromFile
-                                                .get(tagName));
-                                        tag.setName(tagName);
-                                        tag.setTagSet(tagSet);
-                                        annotationService.createTag(tag, user);
-                                    }
-                                }
-                                else {
-                                    error("Please save TagSet first!");
-                                }
-                            }
-                            catch (Exception e) {
-                                error("Error uploading document "
-                                        + ExceptionUtils.getRootCauseMessage(e));
-                            }
-                        }
-                    }
-                    else if (isEmpty(uploadedFiles)) {
-                        error("No document is selected to upload, please select a document first");
-                    }
-                    else if (project.getId() == 0) {
-                        error("Project not yet created, please save project Details!");
-                    }
-
                 }
             });
 
@@ -614,9 +639,6 @@ public class ProjectTagSetsPanel
     private TagSelectionForm tagSelectionForm;
     private TagSetDetailForm tagSetDetailForm;
     private TagDetailForm tagDetailForm;
-
-    private List<FileUpload> uploadedFiles;
-    private FileUploadField fileUpload;
 
     private Model<Project> selectedProjectModel;
 

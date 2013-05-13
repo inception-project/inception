@@ -87,24 +87,30 @@ public interface AnnotationService
      * @param aType
      * @return
      */
-    List<TagSet> getTagSet(AnnotationType type, Project project);
+   boolean  existTagSet(AnnotationType type, Project project);
 
     /**
-     * get a {@link TagSet} by its name
+     * get a {@link TagSet} by its type and its project
      *
      * @param tagName
      * @return {@link TagSet}
      */
-    TagSet getTagSet(String tagName);
+    TagSet getTagSet(AnnotationType type, Project project);
 
     /**
      * Get Tagset by its ID
      */
     TagSet getTagSet(long id);
+
     /**
-    * Get an annotation type using its name
+     * Get an {@link AnnotationType}
+     */
+    AnnotationType getType(String name, String type);
+    /**
+    * Check if an {@link AnnotationType} already exists.
     */
-   List<AnnotationType> getTypes(String name, String type);
+   boolean existsType(String name, String type);
+
 
     /**
      * Initialize the project with default {@link AnnotationType}, {@link TagSet}s, and {@link Tag}

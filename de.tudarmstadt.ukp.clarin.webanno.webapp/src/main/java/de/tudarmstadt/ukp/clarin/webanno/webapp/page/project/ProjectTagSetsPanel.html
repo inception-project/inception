@@ -13,34 +13,43 @@
       <tr VALIGN=TOP >
         <td width="20%">
           <form wicket:id="tagSetSelectionForm">
-              <div>
-                <label class="top">
-                  TagSets:
-                </label>
-              </div>
-              <div>
-                <select class="hfill" wicket:id="tagSet">
-                </select>
-              </div>
+            <div>
+              <label class="top">
+                TagSets:
+              </label>
+            </div>
+            <div>
+              <select class="hfill" wicket:id="tagSet">
+              </select>
+            </div>
 
-              <div style="border-style: ridge;">
-                <br />
-                <table>
+            <div style="border-style: ridge;">
+              <br />
+              <table>
+                <tr>
+                  <td>
+                    <input wicket:id="content" type="file" multiple />
+                  </td>
                   <tr>
                     <td>
-                      <input wicket:id="content" type="file" multiple />
+                      <label>
+                        TagSet Format:
+                      </label>
+                      <select wicket:id="tagsetFormat">
+                      </select>
                     </td>
                   </tr>
-                  <tr>
-                    <td>
-                      <div>
-                        <input type="submit" wicket:id="import" />
-                        <input type="submit" wicket:id="create" />
-                      </div>
-                    </td>
-                  </tr>
-                </table>
-              </div>
+                </tr>
+                <tr>
+                  <td>
+                    <div>
+                      <input type="submit" wicket:id="import" />
+                      <input type="submit" wicket:id="create" />
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </div>
           </form>
         </td>
         <td  width="33%">
@@ -99,25 +108,6 @@
                 <input type="submit" wicket:id="remove" />
                 <input type="submit" wicket:id="export" value="Export Tagsets" />
               </div>
-              <div style="border-style: ridge;">
-                <br />
-                <table class="hfill">
-                  <tr>
-                    <td>
-                      <input wicket:id="content" type="file" multiple />
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <div>
-                        <span class="hfill">
-                          <input type="submit" wicket:id="import" />
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
-                </table>
-              </div>
             </fieldset>
           </form>
         </td>
@@ -157,15 +147,15 @@
         </td>
         <td  width="15%">
           <form wicket:id="tagSelectionForm">
-              <div>
-                <label>
-                  Tags:
-                </label>
-              </div>
-              <div>
-                <select class="hfill" wicket:id="tag" size="35">
-                </select>
-              </div>
+            <div>
+              <label>
+                Tags:
+              </label>
+            </div>
+            <div>
+              <select class="hfill" wicket:id="tag" size="35">
+              </select>
+            </div>
           </form>
         </td>
       </tr>

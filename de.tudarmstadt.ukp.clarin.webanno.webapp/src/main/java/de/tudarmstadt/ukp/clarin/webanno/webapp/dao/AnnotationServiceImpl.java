@@ -97,19 +97,27 @@ public class AnnotationServiceImpl
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public List<TagSet> getTagSet(AnnotationType aType, Project aProject)
+    public boolean existTagSet(AnnotationType aType, Project aProject)
     {
-        return entityManager
+        try{
+         entityManager
                 .createQuery("FROM TagSet WHERE type = :type AND project = :project", TagSet.class)
-                .setParameter("type", aType).setParameter("project", aProject).getResultList();
+                .setParameter("type", aType).setParameter("project", aProject).getSingleResult();
+         return true;
+        }
+        catch (NoResultException e){
+            return false;
+
+        }
     }
 
     @Override
     @Transactional
-    public TagSet getTagSet(String aTagSetName)
+    public TagSet getTagSet(AnnotationType aType, Project aProject)
     {
-        return entityManager.createQuery("FROM TagSet WHERE name = :name", TagSet.class)
-                .setParameter("name", aTagSetName).getSingleResult();
+        return entityManager.createQuery("FROM TagSet WHERE type = :type AND project =:project", TagSet.class)
+                .setParameter("type", aType)
+                .setParameter("project", aProject).getSingleResult();
     }
 
     @Override
@@ -118,13 +126,29 @@ public class AnnotationServiceImpl
         return entityManager.createQuery("FROM TagSet WHERE id = :id", TagSet.class)
                 .setParameter("id", aId).getSingleResult();
     }
+
     @Override
-    public List<AnnotationType> getTypes(String aName, String aType)
+    @Transactional(noRollbackFor = NoResultException.class)
+   public AnnotationType getType(String aName, String aType){
+      return  entityManager
+        .createQuery("From AnnotationType where name = :name AND type = :type",
+                AnnotationType.class).setParameter("name", aName)
+        .setParameter("type", aType).getSingleResult();
+    }
+
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public boolean existsType (String aName, String aType)
     {
-        return entityManager
+        try{ entityManager
                 .createQuery("From AnnotationType where name = :name AND type = :type",
                         AnnotationType.class).setParameter("name", aName)
-                .setParameter("type", aType).getResultList();
+                .setParameter("type", aType).getSingleResult();
+        return true;
+        }
+        catch(NoResultException e){
+            return false;
+        }
     }
 
     private void initializeType(String aName, String aDescription, String aType,
@@ -132,12 +156,9 @@ public class AnnotationServiceImpl
             Project aProject, User aUser)
         throws IOException
     {
-        List<AnnotationType> types;
         AnnotationType type = null;
 
-        types = getTypes(aName, aType);
-
-        if (types.size() == 0) {
+        if (!existsType(aName, aType)) {
             type = new AnnotationType();
             type.setDescription(aDescription);
             type.setName(aName);
@@ -145,7 +166,7 @@ public class AnnotationServiceImpl
             createType(type);
         }
         else {
-            type = types.get(0);
+            type = getType(aName, aType);
         }
         TagSet tagSet = new TagSet();
         tagSet.setDescription(aDescription);
