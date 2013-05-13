@@ -15,6 +15,9 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.StringWriter;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,9 +25,12 @@ import java.util.StringTokenizer;
 
 import javax.persistence.NoResultException;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.codehaus.jackson.JsonGenerator;
+import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
@@ -35,6 +41,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 public class ApplicationUtils
 {
+
+    private static MappingJacksonHttpMessageConverter jsonConverter;
+
+    public static void setJsonConverter(MappingJacksonHttpMessageConverter aJsonConverter)
+    {
+        jsonConverter = aJsonConverter;
+    }
 
     private static final Log LOG = LogFactory.getLog(ApplicationUtils.class);
 
@@ -194,4 +207,16 @@ public class ApplicationUtils
 
         return (user || roleAdmin);
     }
+
+    public static void generateJson(Object aResponse, File aFile)
+            throws IOException
+        {
+            StringWriter out = new StringWriter();
+
+            JsonGenerator jsonGenerator = jsonConverter.getObjectMapper().getJsonFactory()
+                    .createJsonGenerator(out);
+
+            jsonGenerator.writeObject(aResponse);
+            FileUtils.writeStringToFile(aFile, out.toString());
+        }
 }

@@ -17,14 +17,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
 import static org.uimafit.util.JCasUtil.selectCovered;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.StringWriter;
-
-import org.apache.commons.io.FileUtils;
 import org.apache.uima.jcas.JCas;
-import org.codehaus.jackson.JsonGenerator;
-import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
@@ -44,13 +37,6 @@ public class CasToBratJson
     public CasToBratJson()
     {
         // Nothing to Do.
-    }
-
-    private MappingJacksonHttpMessageConverter jsonConverter;
-
-    public void setJsonConverter(MappingJacksonHttpMessageConverter aJsonConverter)
-    {
-        jsonConverter = aJsonConverter;
     }
 
     public void addTokenToResponse(JCas aJcas, GetDocumentResponse aResponse,
@@ -106,17 +92,5 @@ public class CasToBratJson
             aResponse.addSentence(sentence.getBegin() - current, sentence.getEnd() - current);
             i = BratAjaxCasUtil.getFollowingSentenceAddress(aJcas, i);
         }
-    }
-
-    public void generateBratJson(Object aResponse, File aFile)
-        throws IOException
-    {
-        StringWriter out = new StringWriter();
-
-        JsonGenerator jsonGenerator = jsonConverter.getObjectMapper().getJsonFactory()
-                .createJsonGenerator(out);
-
-        jsonGenerator.writeObject(aResponse);
-        FileUtils.writeStringToFile(aFile, out.toString());
     }
 }

@@ -63,7 +63,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.CasToBratJson;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSetConstants;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSetContent;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSets;
@@ -510,12 +509,11 @@ public class ProjectTagSetsPanel
                             exportedTagSetscontent.add(exportedTagSetContent);
                             ExportedTagSets exportedTagSet = new ExportedTagSets();
                             exportedTagSet.setTagSets(exportedTagSetscontent);
-                            CasToBratJson exportedTagSets = new CasToBratJson();
                             MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
-                            exportedTagSets.setJsonConverter(jsonConverter);
+                            ApplicationUtils.setJsonConverter(jsonConverter);
 
                             try {
-                                exportedTagSets.generateJson(exportedTagSet, exportFile);
+                                ApplicationUtils.generateJson(exportedTagSet, exportFile);
                             }
                             catch (IOException e) {
                                 error("File Path not found or No permision to save the file!");
