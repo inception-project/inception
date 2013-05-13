@@ -19,10 +19,16 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.page.project;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -87,7 +93,8 @@ public class ProjectTagSetsPanel
 
     private List<FileUpload> uploadedFiles;
     private FileUploadField fileUpload;
-    DropDownChoice<String> tagsetFormat;
+    DropDownChoice<String> importTagsetFormat;
+    DropDownChoice<String> exportTagsetFormat;
     private String selectedExporTagsetFormat = ExportedTagSetConstants.JSON_FORMAT;
 
     private class TagSetSelectionForm
@@ -182,9 +189,10 @@ public class ProjectTagSetsPanel
             });
 
             add(fileUpload = new FileUploadField("content", new Model()));
-            add(tagsetFormat = new DropDownChoice<String>("tagsetFormat", new Model<String>(
-                    selectedExporTagsetFormat), Arrays.asList(new String[] {
-                    ExportedTagSetConstants.JSON_FORMAT, ExportedTagSetConstants.TAB_FORMAT })));
+            add(importTagsetFormat = new DropDownChoice<String>("importTagsetFormat",
+                    new Model<String>(selectedExporTagsetFormat),
+                    Arrays.asList(new String[] { ExportedTagSetConstants.JSON_FORMAT,
+                            ExportedTagSetConstants.TAB_FORMAT })));
             add(new Button("import", new ResourceModel("label"))
             {
 
@@ -200,7 +208,7 @@ public class ProjectTagSetsPanel
                     User user = projectRepository.getUser(username);
 
                     if (isNotEmpty(uploadedFiles)) {
-                        if (tagsetFormat.getModelObject().equals(
+                        if (importTagsetFormat.getModelObject().equals(
                                 ExportedTagSetConstants.JSON_FORMAT)) {
                             for (FileUpload tagFile : uploadedFiles) {
                                 InputStream tagInputStream;
@@ -263,7 +271,7 @@ public class ProjectTagSetsPanel
                                 }
                             }
                         }
-                        else if (tagsetFormat.getModelObject().equals(
+                        else if (importTagsetFormat.getModelObject().equals(
                                 ExportedTagSetConstants.TAB_FORMAT)) {
                             for (FileUpload tagFile : uploadedFiles) {
                                 InputStream tagInputStream;
@@ -320,13 +328,13 @@ public class ProjectTagSetsPanel
                                                 annotationService.removeTagSet(annotationService
                                                         .getTagSet(type, project));
                                             }
-                                                tagSet = new TagSet();
-                                                tagSet.setName(tagSetName);
-                                                tagSet.setDescription(tagSetDescription);
-                                                tagSet.setLanguage(tagsetLanguage);
-                                                tagSet.setProject(project);
-                                                tagSet.setType(type);
-                                                annotationService.createTagSet(tagSet, user);
+                                            tagSet = new TagSet();
+                                            tagSet.setName(tagSetName);
+                                            tagSet.setDescription(tagSetDescription);
+                                            tagSet.setLanguage(tagsetLanguage);
+                                            tagSet.setProject(project);
+                                            tagSet.setType(type);
+                                            annotationService.createTagSet(tagSet, user);
                                         }
                                         // otherwise it is a tag entry, add the tag to the tagset
                                         else {
@@ -376,6 +384,7 @@ public class ProjectTagSetsPanel
         private List<FileUpload> uploadedFiles;
         private FileUploadField fileUpload;
 
+        @SuppressWarnings("unchecked")
         public TagSetDetailForm(String id)
         {
             super(id, new CompoundPropertyModel<TagSet>(new EntityModel<TagSet>(new TagSet())));
@@ -443,6 +452,20 @@ public class ProjectTagSetsPanel
                 }
             });
 
+            add(exportTagsetFormat = (DropDownChoice<String>) new DropDownChoice<String>(
+                    "exportTagsetFormat", new Model<String>(selectedExporTagsetFormat),
+                    Arrays.asList(new String[] { ExportedTagSetConstants.JSON_FORMAT,
+                            ExportedTagSetConstants.TAB_FORMAT })).add(new OnChangeAjaxBehavior()
+            {
+
+                @Override
+                protected void onUpdate(AjaxRequestTarget target)
+                {
+                    selectedExporTagsetFormat = exportTagsetFormat.getModelObject();
+
+                }
+            }));
+
             add(new DownloadLink("export", new LoadableDetachableModel<File>()
             {
                 private static final long serialVersionUID = 840863954694163375L;
@@ -450,55 +473,102 @@ public class ProjectTagSetsPanel
                 @Override
                 protected File load()
                 {
-                    File downloadFile = null;
-                    try {
-                        downloadFile = File.createTempFile("exportedtagsets", ".json");
-                    }
-                    catch (IOException e1) {
-                        error("Unable to create temporary File!!");
-
-                    }
-                    if (selectedProjectModel.getObject().getId() == 0) {
-                        error("Project not yet created. Please save project details first!");
-                    }
-                    else {
-                        List<ExportedTagSetContent> exportedTagSetscontent = new ArrayList<ExportedTagSetContent>();
-                        TagSet tagSet = tagSetDetailForm.getModelObject();
-                        ExportedTagSetContent exportedTagSetContent = new ExportedTagSetContent();
-                        exportedTagSetContent.setDescription(tagSet.getDescription());
-                        exportedTagSetContent.setLanguage(tagSet.getLanguage());
-                        exportedTagSetContent.setName(tagSet.getName());
-
-                        exportedTagSetContent.setType(tagSet.getType().getType());
-                        exportedTagSetContent.setTypeName(tagSet.getType().getName());
-                        exportedTagSetContent.setTypeDescription(tagSet.getType().getDescription());
-
-                        List<de.tudarmstadt.ukp.clarin.webanno.export.model.Tag> exportedTags = new ArrayList<de.tudarmstadt.ukp.clarin.webanno.export.model.Tag>();
-                        for (Tag tag : annotationService.listTags(tagSet)) {
-                            de.tudarmstadt.ukp.clarin.webanno.export.model.Tag exportedTag = new de.tudarmstadt.ukp.clarin.webanno.export.model.Tag();
-                            exportedTag.setDescription(tag.getDescription());
-                            exportedTag.setName(tag.getName());
-                            exportedTags.add(exportedTag);
+                    File exportFile = null;
+                    if (selectedExporTagsetFormat.equals(ExportedTagSetConstants.JSON_FORMAT)) {
+                        try {
+                            exportFile = File.createTempFile("exportedtagsets", ".json");
+                        }
+                        catch (IOException e1) {
+                            error("Unable to create temporary File!!");
 
                         }
-                        exportedTagSetContent.setTags(exportedTags);
-                        exportedTagSetscontent.add(exportedTagSetContent);
-                        ExportedTagSets exportedTagSet = new ExportedTagSets();
-                        exportedTagSet.setTagSets(exportedTagSetscontent);
-                        CasToBratJson exportedTagSets = new CasToBratJson();
-                        MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
-                        exportedTagSets.setJsonConverter(jsonConverter);
+                        if (selectedProjectModel.getObject().getId() == 0) {
+                            error("Project not yet created. Please save project details first!");
+                        }
+                        else {
+                            List<ExportedTagSetContent> exportedTagSetscontent = new ArrayList<ExportedTagSetContent>();
+                            TagSet tagSet = tagSetDetailForm.getModelObject();
+                            ExportedTagSetContent exportedTagSetContent = new ExportedTagSetContent();
+                            exportedTagSetContent.setDescription(tagSet.getDescription());
+                            exportedTagSetContent.setLanguage(tagSet.getLanguage());
+                            exportedTagSetContent.setName(tagSet.getName());
 
+                            exportedTagSetContent.setType(tagSet.getType().getType());
+                            exportedTagSetContent.setTypeName(tagSet.getType().getName());
+                            exportedTagSetContent.setTypeDescription(tagSet.getType()
+                                    .getDescription());
+
+                            List<de.tudarmstadt.ukp.clarin.webanno.export.model.Tag> exportedTags = new ArrayList<de.tudarmstadt.ukp.clarin.webanno.export.model.Tag>();
+                            for (Tag tag : annotationService.listTags(tagSet)) {
+                                de.tudarmstadt.ukp.clarin.webanno.export.model.Tag exportedTag = new de.tudarmstadt.ukp.clarin.webanno.export.model.Tag();
+                                exportedTag.setDescription(tag.getDescription());
+                                exportedTag.setName(tag.getName());
+                                exportedTags.add(exportedTag);
+
+                            }
+                            exportedTagSetContent.setTags(exportedTags);
+                            exportedTagSetscontent.add(exportedTagSetContent);
+                            ExportedTagSets exportedTagSet = new ExportedTagSets();
+                            exportedTagSet.setTagSets(exportedTagSetscontent);
+                            CasToBratJson exportedTagSets = new CasToBratJson();
+                            MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
+                            exportedTagSets.setJsonConverter(jsonConverter);
+
+                            try {
+                                exportedTagSets.generateJson(exportedTagSet, exportFile);
+                            }
+                            catch (IOException e) {
+                                error("File Path not found or No permision to save the file!");
+                            }
+                            info("TagSets successfully exported to :"
+                                    + exportFile.getAbsolutePath());
+
+                        }
+                    }
+                    else if (selectedExporTagsetFormat.equals(ExportedTagSetConstants.TAB_FORMAT)) {
+                        TagSet tagSet = tagSetDetailForm.getModelObject();
                         try {
-                            exportedTagSets.generateBratJson(exportedTagSet, downloadFile);
+                            exportFile = File.createTempFile("exportedtagsets", ".txt");
+                        }
+                        catch (IOException e1) {
+                            error("Unable to create temporary File!!");
+                        }
+                        OutputStream os;
+                        OutputStreamWriter osw;
+                        BufferedWriter bw;
+                        try {
+                            os = (OutputStream) new FileOutputStream(exportFile);
+                            osw = new OutputStreamWriter(os, "UTF-8");
+                            bw = new BufferedWriter(osw);
+                            bw.write(tagSet.getName() + "\t"
+                                    + tagSet.getDescription().replace("\n", "").replace("\r", "")
+                                    + "\n");
+                            bw.write(tagSet.getType().getType() + "\t" + " \n");
+                            bw.write(tagSet.getType().getName()
+                                    + "\t"
+                                    + tagSet.getType().getDescription().replace("\n", "")
+                                            .replace("\r", "") + "\n");
+                            bw.write(tagSet.getLanguage() + "\t" + " \n");
+                            for (Tag tag : annotationService.listTags(tagSet)) {
+                                bw.write(tag.getName() + "\t" + tag.getDescription() + "\n");
+                            }
+
+                            bw.flush();
+                            bw.close();
+                        }
+                        catch (FileNotFoundException e) {
+                            error("The file for export not found "
+                                    + ExceptionUtils.getRootCauseMessage(e));
+                        }
+                        catch (UnsupportedEncodingException e) {
+                            error("Unsupported encoding " + ExceptionUtils.getRootCauseMessage(e));
                         }
                         catch (IOException e) {
-                            error("File Path not found or No permision to save the file!");
+                            error(ExceptionUtils.getRootCause(e));
                         }
-                        info("TagSets successfully exported to :" + downloadFile.getAbsolutePath());
 
                     }
-                    return downloadFile;
+                    return exportFile;
                 }
             }).setOutputMarkupId(true));
 

@@ -13,6 +13,7 @@
       <tr VALIGN=TOP >
         <td width="20%">
           <form wicket:id="tagSetSelectionForm">
+           <fieldset class="ui-widget-content ui-corner-all centering">
             <div>
               <label class="top">
                 TagSets:
@@ -23,6 +24,9 @@
               </select>
             </div>
 
+            <div align="right">
+              <input type="submit" wicket:id="create" />
+            </div>
             <div style="border-style: ridge;">
               <br />
               <table>
@@ -30,31 +34,31 @@
                   <td>
                     <input wicket:id="content" type="file" multiple />
                   </td>
-                  <tr>
-                    <td>
-                      <label>
-                        TagSet Format:
-                      </label>
-                      <select wicket:id="tagsetFormat">
-                      </select>
-                    </td>
-                  </tr>
+                </tr>
+                <tr>
+                  <td>
+                    <label>
+                      TagSet Format:
+                    </label>
+                    <select wicket:id="importTagsetFormat">
+                    </select>
+                  </td>
                 </tr>
                 <tr>
                   <td>
                     <div>
                       <input type="submit" wicket:id="import" />
-                      <input type="submit" wicket:id="create" />
                     </div>
                   </td>
                 </tr>
               </table>
             </div>
+            </fieldset>
           </form>
         </td>
         <td  width="33%">
           <form wicket:id="tagSetDetailForm">
-            <fieldset class="ui-widget-content ui-corner-all centering">
+           <fieldset class="ui-widget-content ui-corner-all centering">
               <table class="hfill">
                 <tr>
                   <td>
@@ -103,12 +107,32 @@
                   </td>
                 </tr>
               </table>
-              <div class="buttons">
+              <div style="float: center">
                 <input type="submit" wicket:id="save" />
                 <input type="submit" wicket:id="remove" />
-                <input type="submit" wicket:id="export" value="Export Tagsets" />
               </div>
-            </fieldset>
+             <div style="border-style: ridge;">
+              <br />
+              <table>
+                <tr>
+                  <td>
+                    <label>
+                      TagSet Format:
+                    </label>
+                    <select wicket:id="exportTagsetFormat">
+                    </select>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <div>
+                      <input type="submit" wicket:id="export" value="Export Tagsets" />
+                    </div>
+                  </td>
+                </tr>
+              </table>
+              </div>
+              </fieldset>
           </form>
         </td>
         <td  width="32%">
