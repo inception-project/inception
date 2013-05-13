@@ -215,7 +215,8 @@ public class ProjectTagSetsPanel
                                     tagInputStream = tagFile.getInputStream();
                                     String text = IOUtils.toString(tagInputStream, "UTF-8");
 
-                                    MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
+                                    MappingJacksonHttpMessageConverter jsonConverter = new
+                                            MappingJacksonHttpMessageConverter();
                                     ExportedTagSets importedTagSet = jsonConverter
                                             .getObjectMapper().readValue(text,
                                                     ExportedTagSets.class);
@@ -239,7 +240,10 @@ public class ProjectTagSetsPanel
 
                                     for (ExportedTagSetContent tagSet : importedTagSets) {
 
-                                        if (!annotationService.existTagSet(type, project)) {
+                                        // Override existing tagset
+                                        if (annotationService.existTagSet(type, project)) {
+                                            annotationService.removeTagSet(annotationService.getTagSet(type, project));
+                                        }
                                             TagSet newTagSet = new TagSet();
                                             newTagSet.setDescription(tagSet.getDescription());
                                             newTagSet.setName(tagSet.getName());
@@ -257,11 +261,6 @@ public class ProjectTagSetsPanel
                                             }
                                             info("TagSet successfully imported. Refresh page to see the imported TagSet.");
                                         }
-                                        else {
-                                            error("Tagset" + importedTagSets.get(0).getName()
-                                                    + " already exist");
-                                        }
-                                    }
 
                                 }
                                 catch (IOException e) {
