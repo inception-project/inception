@@ -281,7 +281,9 @@ public class ArcAdapter
 			AnnotationFS newAnnotation = aJCas.getCas().createAnnotation(type,
 					dependentFS.getBegin(), governorFS.getEnd());
 			newAnnotation.setStringValue(feature, aValue);
-			// TODO - manage if arc types are based on multiple tokens
+			// If origin and target spans are multiple tokens, dependentFS.getBegin will be the 
+			// the begin position of the first token and dependentFS.getEnd will be the End 
+			// position of the last token.
 			newAnnotation.setFeatureValue(
 					dependentFeature,
 					CasUtil.selectCovered(aJCas.getCas(), tokenType, dependentFS.getBegin(),

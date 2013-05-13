@@ -41,8 +41,8 @@ public interface AnnotationService
      * {@code tagset name} should be unique
      *
      * @param tag
-     * @param user
-     *            TODO
+     * @param user 
+     *             The User who perform this operation
      * @throws IOException
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
@@ -54,7 +54,7 @@ public interface AnnotationService
      *
      * @param tagset
      * @param user
-     *            TODO
+     *            The User who perform this operation
      * @throws IOException
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")

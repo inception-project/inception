@@ -145,16 +145,16 @@ public class BratAnnotationDocumentVisualizer
         // int windowSize = (Integer)session.getAttribute("windowSize-" + project.getName()
         // +"-"+document.getName());
         CasToBratJson casToBratJson = new CasToBratJson();
-        // TODO: If this Classe is used somewhere, get BratAnnotatorModel populated somewhere
+        // If this Classe is used somewhere, get BratAnnotatorModel populated somewhere
         BratAnnotatorModel bratAnnotatorDataModel = new BratAnnotatorModel();
         casToBratJson.addTokenToResponse(jCas, response, bratAnnotatorDataModel);
         casToBratJson.addSentenceToResponse(jCas, response, bratAnnotatorDataModel);
-        // If POS annotation exist in CAS TODO
+        // If POS annotation exist in CAS 
         SpanAdapter.getPosAdapter().addToBrat(jCas, response, bratAnnotatorDataModel);
         ChainAdapter.getCoreferenceLinkAdapter().addToBrat(jCas, response, bratAnnotatorDataModel);
-        // If Lemma Layer Exist in CAS TODO
+        // If Lemma Layer Exist in CAS 
         SpanAdapter.getLemmaAdapter().addToBrat(jCas, response, bratAnnotatorDataModel);
-        // IF Named Entity layer exist in CAS TODO
+        // IF Named Entity layer exist in CAS 
         SpanAdapter.getNamedEntityAdapter().addToBrat(jCas, response, bratAnnotatorDataModel);
         ArcAdapter.getDependencyAdapter().addToBrat(jCas, response, bratAnnotatorDataModel);
         ChainAdapter.getCoreferenceChainAdapter().addToBrat(jCas, response, bratAnnotatorDataModel);

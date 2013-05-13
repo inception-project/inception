@@ -67,7 +67,7 @@ public interface RepositoryService
      * documents are stored per project, user and document
      *
      * @param user
-     *            TODO
+     *           The User who perform this operation
      */
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
@@ -89,7 +89,7 @@ public interface RepositoryService
      * @param aProject
      *            The {@link Project} object to be created.
      * @param user
-     *            TODO
+     *           The User who perform this operation
      * @throws IOException
      *             If the specified webanno.home directory is not available no write permission
      */
@@ -116,7 +116,7 @@ public interface RepositoryService
      * @param document
      *            {@link SourceDocument} to be created
      * @param user
-     *            TODO
+     *            The User who perform this operation
      * @throws IOException
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER','ROLE_REMOTE')")
@@ -388,7 +388,7 @@ public interface RepositoryService
      * @param user
      *            the annotator
      * @param state
-     *            TODO
+     *           The state of this AnnotationDocument
      * @return list of {@link AnnotationDocument}s marked as
      *         {@link AnnotationDocumentState#FINISHED}
      */
@@ -469,7 +469,7 @@ public interface RepositoryService
      * remove a user permission from the project
      *
      * @param projectPermission
-     *            TODO
+     *            The ProjectPermission to be removed
      * @throws IOException
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
@@ -483,7 +483,7 @@ public interface RepositoryService
      * @param project
      *            the project to be deleted
      * @param aUser
-     *            TODO
+     *            The User who perform this operation
      * @throws IOException
      *             if the project to be deleted is not available in the file system
      */
@@ -498,7 +498,7 @@ public interface RepositoryService
      * @param document
      *            the source document to be deleted
      * @param user
-     *            TODO
+     *            The User who perform this operation
      * @throws IOException
      *             If the source document searched for deletion is not availble
      */
@@ -517,7 +517,7 @@ public interface RepositoryService
      * @param projectId
      *            The id of the {@link Project}
      * @param user
-     *            TODO
+     *            The User who perform this operation
      * @throws IOException
      * @throws UIMAException
      * @throws WLFormatException
