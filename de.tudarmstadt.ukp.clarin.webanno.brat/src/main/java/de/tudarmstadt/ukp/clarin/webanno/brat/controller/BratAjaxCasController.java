@@ -446,10 +446,9 @@ public class BratAjaxCasController
             SpanAdapter.getNamedEntityAdapter().deleteFromCas(aUIData.getjCas(), aId);
         }
         else if (annotationType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
-            ChainAdapter.getCoreferenceChainAdapter().updateCasBeforeDelete(aUIData.getjCas(), aId);
-            ChainAdapter.getCoreferenceLinkAdapter().deleteLinkFromCas(aUIData.getjCas(), aId);
-            ChainAdapter.getCoreferenceChainAdapter()
-                    .removeInvalidChain(aUIData.getjCas().getCas());
+
+            ChainAdapter.getCoreferenceLinkAdapter().deleteFromCas(aUIData.getjCas(), aId);
+
 
         }
 
@@ -487,7 +486,7 @@ public class BratAjaxCasController
             ArcAdapter.getDependencyAdapter().deleteFromCas(aUIData, aBratAnnotatorModel);
         }
         else if (annotationType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
-            ChainAdapter.getCoreferenceChainAdapter().deleteChainFromCas(aUIData.getjCas(),
+            ChainAdapter.getCoreferenceChainAdapter().deleteFromCas(aUIData.getjCas(),
                     aUIData.getOrigin());
         }
 

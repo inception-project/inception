@@ -580,8 +580,7 @@ public class ChainAdapter
             }
         }
         if (inThatChain) {
-            thatChain.getFeatureValue(first);
-            thisChain.getFeatureValue(first);
+
             // |----------|
             // |---------------|
 
@@ -708,8 +707,9 @@ public class ChainAdapter
      * @param aType
      * @param aUIData
      */
-    public void deleteChainFromCas(JCas aJCas, int aOrigin)
+    public void deleteFromCas(JCas aJCas, int aRef)
     {
+        if(isChain){
         Type type = CasUtil.getType(aJCas.getCas(), annotationTypeName);
         Feature first = type.getFeatureByBaseName(chainFirstFeatureName);
 
@@ -717,7 +717,7 @@ public class ChainAdapter
         boolean found = false;
 
         AnnotationFS originCorefType = (AnnotationFS) BratAjaxCasUtil.selectAnnotationByAddress(
-                aJCas, FeatureStructure.class, aOrigin);
+                aJCas, FeatureStructure.class, aRef);
         for (FeatureStructure fs : CasUtil.selectFS(aJCas.getCas(), type)) {
             AnnotationFS linkFs = (AnnotationFS) fs.getFeatureValue(first);
             Feature next = linkFs.getType().getFeatureByBaseName(linkNextFeatureName);
@@ -738,7 +738,17 @@ public class ChainAdapter
         aJCas.addFsToIndexes(newChain);
 
         removeInvalidChain(aJCas.getCas());
+        }
+        else{
+            ChainAdapter.getCoreferenceChainAdapter().updateCasBeforeDelete(aJCas, aRef);
 
+            FeatureStructure fsToRemove = (FeatureStructure) BratAjaxCasUtil.selectAnnotationByAddress(
+                    aJCas, FeatureStructure.class, aRef);
+
+            aJCas.removeFsFromIndexes(fsToRemove);
+
+            ChainAdapter.getCoreferenceChainAdapter().removeInvalidChain(aJCas.getCas());
+        }
     }
 
     /**
