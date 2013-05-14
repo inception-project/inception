@@ -117,6 +117,7 @@ public class BratCurationDocumentEditor
         vis = new WebMarkupContainer("vis");
         vis.setOutputMarkupId(true);
 
+        
         controller = new AbstractDefaultAjaxBehavior()
         {
             private static final long serialVersionUID = 1L;
@@ -124,6 +125,7 @@ public class BratCurationDocumentEditor
             @Override
             protected void respond(AjaxRequestTarget aTarget)
             {
+            	boolean hasChanged = false;
                 BratAnnotatorUIData uIData = new BratAnnotatorUIData();
                 try {
 					uIData.setjCas(getCas());
@@ -167,6 +169,7 @@ public class BratCurationDocumentEditor
                             result = createSpan(request, getModelObject().getUser(), uIData);
                             info("Annotation [" + request.getParameterValue("type").toString()
                                     + "]has been created");
+                            hasChanged = true;
                     }
 
                     catch (Exception e) {
@@ -180,23 +183,27 @@ public class BratCurationDocumentEditor
                         result = createArc(request, getModelObject().getUser(), uIData);
                         info("Annotation [" + request.getParameterValue("type").toString()
                                 + "]has been created");
+                        hasChanged = true;
                 }
 
                 else if (request.getParameterValue("action").toString().equals("reverseArc")) {
                         result = reverseArc(request, getModelObject().getUser(), uIData);
                         info("Annotation [" + request.getParameterValue("type").toString()
                                 + "]has been reversed");
+                        hasChanged = true;
                 }
                 else if (request.getParameterValue("action").toString().equals("deleteSpan")) {
                         result = deleteSpan(request, getModelObject().getUser(), uIData);
                         info("Annotation [" + request.getParameterValue("type").toString()
                                 + "]has been deleted");
+                        hasChanged = true;
                 }
 
                 else if (request.getParameterValue("action").toString().equals("deleteArc")) {
                         result = deleteArc(request, getModelObject().getUser(), uIData);
                         info("Annotation [" + request.getParameterValue("type").toString()
                                 + "]has been deleted");
+                        hasChanged = true;
                 }
 
                 StringWriter out = new StringWriter();
@@ -222,11 +229,19 @@ public class BratCurationDocumentEditor
                         + out.toString() + ";");
                 // getRequestCycle().scheduleRequestHandlerAfterCurrent(
                 // new TextRequestHandler("application/json", "UTF-8", out.toString()));
+                if(hasChanged) {
+                	onChange(aTarget);
+                }
             }
         };
 
         add(vis);
         add(controller);
+        
+    }
+    
+    protected void onChange(AjaxRequestTarget aTarget) {
+    	// Overriden in curationPanel
     }
 
     @Override
@@ -251,9 +266,9 @@ public class BratCurationDocumentEditor
                 + "var logger = new AnnotationLog(dispatcher);" + "dispatcher.post('init');"
                 //+ "window.location.hash = '" + rewriteUrl + "';"
                 //+ "dispatcher.post('setCollection', ['"+collection+"', '"+document+"', {}]);"
-                + "dispatcher.post('clearSVG', []);"
-                + "dispatcher.post('current', ['"+collection+"', '1234', {}, true]);"
-                + "dispatcher.post('ajax', [{action: 'getCollectionInformation',collection: '"+collection+"'}, 'collectionLoaded', {collection: '"+collection+"',keep: true}]);"
+//                + "dispatcher.post('clearSVG', []);"
+//                + "dispatcher.post('current', ['"+collection+"', '1234', {}, true]);"
+//                + "dispatcher.post('ajax', [{action: 'getCollectionInformation',collection: '"+collection+"'}, 'collectionLoaded', {collection: '"+collection+"',keep: true}]);"
                 //+ "dispatcher.post('collectionChanged');"
                 };
 
@@ -263,27 +278,9 @@ public class BratCurationDocumentEditor
     }
 
     public void reloadContent(AjaxRequestTarget aTarget) {
-        String[] script = new String[] { "dispatcher = new Dispatcher();"
-                // Each visualizer talks to its own Wicket component instance
-                + "dispatcher.ajaxUrl = '"
-                + controller.getCallbackUrl()
-                + "'; "
-                // We attach the JSON send back from the server to this HTML element
-                // because we cannot directly pass it from Wicket to the caller in ajax.js.
-                + "dispatcher.wicketId = '" + vis.getMarkupId() + "'; "
-//                + "var urlMonitor = new URLMonitor(dispatcher); "
-                + "var ajax = new Ajax(dispatcher);" + "var ajax_" + vis.getMarkupId() + " = ajax;"
-                + "var visualizer = new Visualizer(dispatcher, '" + vis.getMarkupId() + "');"
-                + "var visualizerUI = new VisualizerUI(dispatcher, visualizer.svg);"
-                + "var annotatorUI = new AnnotatorUI(dispatcher, visualizer.svg);"
-                + "var spinner = new Spinner(dispatcher, '#spinner');"
-                + "var logger = new AnnotationLog(dispatcher);" + "dispatcher.post('init');"
-                //+ "window.location.hash = '" + rewriteUrl + "';"
-                //+ "dispatcher.post('setCollection', ['"+collection+"', '"+document+"', {}]);"
-                + "dispatcher.post('clearSVG', []);"
+        String[] script = new String[] { "dispatcher.post('clearSVG', []);"
                 + "dispatcher.post('current', ['"+collection+"', '1234', {}, true]);"
                 + "dispatcher.post('ajax', [{action: 'getCollectionInformation',collection: '"+collection+"'}, 'collectionLoaded', {collection: '"+collection+"',keep: true}]);"
-                + "dispatcher.post('resetData', []);"
                 //+ "dispatcher.post('collectionChanged');"
                 };
     	aTarget.appendJavaScript("\n" + StringUtils.join(script, "\n"));

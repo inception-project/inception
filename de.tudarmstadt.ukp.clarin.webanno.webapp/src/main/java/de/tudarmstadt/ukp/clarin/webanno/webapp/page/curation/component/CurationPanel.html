@@ -16,25 +16,22 @@
 	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
 	<wicket:panel>
-		<div wicket:id="outer">
-		<div style="float:left;width:33%;">
+		<div style="float:left;width:33%;" wicket:id="textOuterView">
 			<div wicket:id="textListView">
 				<span wicket:id="sentence"></span><br/>
 			</div>
 		</div>
-		<br />
-		<br />
-		<br />
-		
+
 		<div style="float:left;width:66%;">
-			<div wicket:id="sentenceListView">
-				<div wicket:id="sentence" />
+			<div  wicket:id="sentenceOuterView">
+				<div wicket:id="sentenceListView">
+					<div wicket:id="sentence" />
+				</div>
 			</div>
 			<div wicket:id="mergeView" />
 		</div>
 		
 		<div style="clear:both;" />
-		</div>
         <script type="text/javascript">
         	var webFontURLs = [
         		'/static/fonts/Astloch-Bold.ttf',
