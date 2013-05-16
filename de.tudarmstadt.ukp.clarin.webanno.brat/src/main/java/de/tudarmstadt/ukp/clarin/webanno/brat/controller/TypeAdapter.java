@@ -36,6 +36,12 @@ public interface TypeAdapter
     void addToBrat(JCas aJcas, GetDocumentResponse aResponse,
             BratAnnotatorModel aBratAnnotatorModel);
     
+    /**
+     * 
+     * @return The feature of an UIMA annotation containing the label to be displayed in the UI.
+     */
+    String getLabelFeatureName();
+    
 //    /**
 //     * Update the CAS with new/modification of annotations from brat
 //     *

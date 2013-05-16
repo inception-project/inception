@@ -45,6 +45,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.OffsetsList;
+import de.tudarmstadt.ukp.clarin.webanno.brat.message.CreateArcResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
@@ -54,6 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
  *
  * @author Richard Eckart de Castilho
  * @author Seid Muhie Yimam
+ * @author Andreas Straninger
  */
 public class BratCurationDocumentEditor
     extends Panel

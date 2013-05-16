@@ -371,4 +371,9 @@ public class ArcAdapter
 					new Argument("Arg2", ((FeatureStructureImpl) aGovernorFs).getAddress()));
 		}
 	}
+
+	@Override
+	public String getLabelFeatureName() {
+		return labelFeatureName;
+	}
 }

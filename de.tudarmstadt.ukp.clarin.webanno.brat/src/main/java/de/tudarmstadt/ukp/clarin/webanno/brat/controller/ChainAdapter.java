@@ -869,4 +869,9 @@ public class ChainAdapter
         adapter.setChain(true);
         return adapter;
     }
+
+	@Override
+	public String getLabelFeatureName() {
+		return labelFeatureName;
+	}
 }

@@ -6,17 +6,31 @@ var CurationMod = (function($, window, undefined) {
 		var onMouseDown = function(evt) {
 			var target = $(evt.target);
 			// if clicked on a span, send ajax call to server
+			if (type = target.attr('data-arc-role')) {
+		          var originSpanId = target.attr('data-arc-origin');
+		          var targetSpanId = target.attr('data-arc-target');
+		          //var originSpan = data.spans[originSpanId];
+		          //var targetSpan = data.spans[targetSpanId];
+					dispatcher.post('ajax', [ {
+						action: 'selectArcForMerge',
+						originSpanId: originSpanId,
+						targetSpanId: targetSpanId,
+						type: type
+					}, 'serverResult']);
+			}
 			if (id = target.attr('data-span-id')) {
-				var span = data.spans[id];
+				//var span = data.spans[id];
 				dispatcher.post('ajax', [ {
 					action: 'selectSpanForMerge',
-					id: id}, 'selectSpanForMerge']);
+					id: id
+				}, 'serverResult']);
 			}
 			// TODO check for arcs
 		};
 		
 		// callback function which is called after ajax response has arrived
-		var selectSpanForMerge = function(response) {
+		var serverResult = function(response) {
+			// dummy, probably not called at all
 	        if (response.exception) {
 	            // TODO: better response to failure
 	            dispatcher.post('messages', [[['Lookup error', 'warning', -1]]]);
@@ -35,7 +49,7 @@ var CurationMod = (function($, window, undefined) {
 		// register events
 		dispatcher.on('mousedown', onMouseDown).
 		on('dataReady', rememberData).
-        on('selectSpanForMerge', selectSpanForMerge);
+        on('serverResult', serverResult);
 	};
 
 	return CurationMod;

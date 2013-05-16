@@ -30,8 +30,10 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.util.CasCopier;
 import org.apache.wicket.MarkupContainer;
@@ -57,11 +59,15 @@ import org.uimafit.util.CasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorUIData;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.CasToBratJson;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -85,6 +91,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
@@ -157,7 +164,7 @@ public class CurationPanel extends Panel {
 		sentenceOuterView.setOutputMarkupId(true);
 		add(sentenceOuterView);
 		
-		BratAnnotatorModel bratAnnotatorModel = new BratAnnotatorModel();
+		final BratAnnotatorModel bratAnnotatorModel = new BratAnnotatorModel();
 		// This is a Curation Operation, add to the data model a CURATION Mode
 		bratAnnotatorModel.setMode(Mode.CURATION);
 
@@ -197,17 +204,99 @@ public class CurationPanel extends Panel {
 					protected void onSelectAnnotationForMerge(AjaxRequestTarget aTarget) {
 		                final IRequestParameters request = getRequest().getPostParameters();
 
+	                    SourceDocument sourceDocument = curationContainer.getSourceDocument();
+	                    Project project = curationContainer.getProject();
+		                JCas mergeJCas = null;
+						try {
+							mergeJCas = repository.getCurationDocumentContent(sourceDocument);
+						} catch (UIMAException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						} catch (IOException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						} catch (ClassNotFoundException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
 		                StringValue action = request.getParameterValue("action");
+		                AnnotationSelection annotationSelection = null;
+		                Integer address = null;
+		                String username = curationUserSegment.getUsername();
 		                // check if clicked on a span
 		                if (!action.isEmpty() && action.toString().equals("selectSpanForMerge")) {
 		                	// add span for merge
 		                	// get information of the span clicked
-		                	String username = curationUserSegment.getUsername();
-		                    Integer address = request.getParameterValue("id").toInteger();
-		                    AnnotationSelection annotationSelection = annotationSelectionByUsernameAndAddress.get(username).get(address);
+		                	address = request.getParameterValue("id").toInteger();
+		                    annotationSelection = annotationSelectionByUsernameAndAddress.get(username).get(address);
+		                }
+		                // check if clicked on an arc
+		                if (!action.isEmpty() && action.toString().equals("selectArcForMerge")) {
+		                	// add span for merge
+		                	// get information of the span clicked
+		                	Integer addressOriginClicked = request.getParameterValue("originSpanId").toInteger();
+		                	Integer addressTargetClicked = request.getParameterValue("targetSpanId").toInteger();
+		                	String arcType = request.getParameterValue("type").toString();
+		                    String typePrefix = BratAjaxCasUtil.getAnnotationType(arcType);
+		                    String typeValue = BratAjaxCasUtil.getType(arcType);
+		                    AnnotationSelection annotationSelectionOrigin = annotationSelectionByUsernameAndAddress.get(username).get(addressOriginClicked);
+		                    AnnotationSelection annotationSelectionTarget = annotationSelectionByUsernameAndAddress.get(username).get(addressTargetClicked);
+		                    Integer addressOrigin = annotationSelectionOrigin.getAddressByUsername().get(CURATION_USER);
+		                    Integer addressTarget = annotationSelectionTarget.getAddressByUsername().get(CURATION_USER);
+		                    
 
-		                    SourceDocument sourceDocument = curationContainer.getSourceDocument();
-		                    Project project = curationContainer.getProject();
+		                	if(annotationSelectionOrigin != null && annotationSelectionTarget != null) {
+		                		BratAnnotatorUIData uIData = new  BratAnnotatorUIData();
+		                		uIData.setjCas(mergeJCas);
+		                		uIData.setGetDocument(false);
+		                		uIData.setType(arcType);
+		                		uIData.setOrigin(addressOrigin);
+		                		uIData.setTarget(addressTarget);
+		                        BratAjaxCasController controller = new BratAjaxCasController(jsonConverter,
+		                                repository, annotationService);
+		                		try {
+									controller.createArcWithoutResponse(bratAnnotatorModel, uIData);
+								} catch (UIMAException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								} catch (IOException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
+		                		/*
+		                		if (typePrefix.equals(AnnotationTypeConstant.POS_PREFIX)) {
+		                			
+		                			ArcAdapter.getDependencyAdapter().addToCas(typeValue, uIData, bratAnnotatorModel, false);
+		                			
+		                			adapter = ArcAdapter.getDependencyAdapter();
+		                		}
+		                		else if (typePrefix.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
+		                			adapter = ChainAdapter.getCoreferenceChainAdapter();
+		                		}
+								AnnotationFS fsOrigin = (AnnotationFS) mergeJCas.getLowLevelCas().ll_getFSForRef(address);
+								AnnotationFS fsTarget = (AnnotationFS) mergeJCas.getLowLevelCas().ll_getFSForRef(address);
+								Type tokenType = CasUtil.getType(mergeJCas.getCas(), Token.class.getName());
+								Feature feature = type.getFeatureByBaseName(labelFeatureName);
+
+                				AnnotationFS newAnnotation = mergeJCas.getCas().createAnnotation(type,
+                						fsOrigin.getBegin(), fsTarget.getEnd());
+		                				newAnnotation.setStringValue(feature, typeValue);
+		                				// If origin and target spans are multiple tokens, dependentFS.getBegin will be the 
+		                				// the begin position of the first token and dependentFS.getEnd will be the End 
+		                				// position of the last token.
+		                				newAnnotation.setFeatureValue(
+		                						fsOrigin,
+		                						CasUtil.selectCovered(mergeJCas.getCas(), tokenType, fsOrigin.getBegin(),
+		                								fsOrigin.getEnd()).get(0));
+		                				newAnnotation.setFeatureValue(
+		                						fsTarget,
+		                						CasUtil.selectCovered(mergeJCas.getCas(), tokenType, fsTarget.getBegin(),
+		                								fsTarget.getEnd()).get(0));
+		                				mergeJCas.addFsToIndexes(newAnnotation);
+*/
+		                	}
+		                }
+		                if(annotationSelection != null) {
 		                    AnnotationDocument clickedAnnotationDocument = null;
 		                    List<AnnotationDocument> annotationDocuments = repository.listAnnotationDocument(project, sourceDocument);
 		                    for (AnnotationDocument annotationDocument : annotationDocuments) {
@@ -219,8 +308,6 @@ public class CurationPanel extends Panel {
 							if(annotationSelection != null) {
 								// remove old spans and add new span to merge cas
 								try {
-									// get merge cas, which contains the curation information
-									JCas mergeJCas = repository.getCurationDocumentContent(sourceDocument);
 
 									// clean up: remove old annotation selections (if present)
 									for (AnnotationSelection as : annotationSelection.getAnnotationOption().getAnnotationSelections()) {
@@ -422,11 +509,13 @@ public class CurationPanel extends Panel {
 		// update sentence list on the right side
 		sentenceListView.setModelObject(sentences);
 
+		/*
 		CurationUserSegment2 mergeUserSegment = new CurationUserSegment2();
 		GetDocumentResponse response = getDocumentResponse(mergeJCas, CURATION_USER, bratAnnotatorModel);
 		//mergeUserSegment.setCollectionData(getStringCollectionData(response, mergeJCas, addresses, username));
 		mergeUserSegment.setCollectionData("{}");
 		mergeUserSegment.setDocumentResponse(getStringDocumentResponse(response));
+		*/
 
 		mergeVisualizer.reloadContent(target);
 		

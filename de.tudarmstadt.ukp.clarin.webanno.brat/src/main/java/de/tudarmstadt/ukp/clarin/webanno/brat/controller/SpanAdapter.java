@@ -394,4 +394,10 @@ public class SpanAdapter
         adapter.setSingleTokenBehavior(false);
         return adapter;
     }
+
+	@Override
+	public String getLabelFeatureName() {
+		// TODO Auto-generated method stub
+		return labelFeatureName;
+	}
 }

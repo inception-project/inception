@@ -351,11 +351,8 @@ public class BratAjaxCasController
 
     }
 
-    /**
-     * Creates an arc annotation between two annotated spans
-     */
-
-    public CreateArcResponse createArc(BratAnnotatorModel aBratAnnotatorModel,
+    // TODO: split createArc, etc. method and change in BratAnnotator and BratCurationDocumentEditor
+    public void createArcWithoutResponse(BratAnnotatorModel aBratAnnotatorModel,
             BratAnnotatorUIData aUIData)
         throws UIMAException, IOException
     {
@@ -369,13 +366,6 @@ public class BratAjaxCasController
         else if (annotationType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
             ChainAdapter.getCoreferenceChainAdapter().addToCas(type, aUIData);
         }
-        GetDocumentResponse response = new GetDocumentResponse();
-
-        addBratResponses(response, aBratAnnotatorModel, aUIData);
-
-        CreateArcResponse createArcResponse = new CreateArcResponse();
-
-        createArcResponse.setAnnotations(response);
 
         if (aBratAnnotatorModel.getMode().equals(Mode.ANNOTATION)) {
             repository.createAnnotationDocumentContent(aUIData.getjCas(),
@@ -385,10 +375,45 @@ public class BratAjaxCasController
             repository.createCurationDocumentContent(aUIData.getjCas(),
                     aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
         }
-
-        return createArcResponse;
-
     }
+    
+    
+    public CreateArcResponse createArc(BratAnnotatorModel aBratAnnotatorModel,
+    		BratAnnotatorUIData aUIData)
+    				throws UIMAException, IOException
+    				{
+    	
+    	String annotationType = BratAjaxCasUtil.getAnnotationType(aUIData.getType());
+    	String type = BratAjaxCasUtil.getType(aUIData.getType());
+    	
+    	if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
+    		ArcAdapter.getDependencyAdapter().addToCas(type, aUIData, aBratAnnotatorModel, false);
+    	}
+    	else if (annotationType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
+    		ChainAdapter.getCoreferenceChainAdapter().addToCas(type, aUIData);
+    	}
+    	GetDocumentResponse response = new GetDocumentResponse();
+    	
+    	addBratResponses(response, aBratAnnotatorModel, aUIData);
+    	
+    	CreateArcResponse createArcResponse = new CreateArcResponse();
+    	
+    	createArcResponse.setAnnotations(response);
+    	
+    	if (aBratAnnotatorModel.getMode().equals(Mode.ANNOTATION)) {
+    		repository.createAnnotationDocumentContent(aUIData.getjCas(),
+    				aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
+    	}
+    	else if (aBratAnnotatorModel.getMode().equals(Mode.CURATION)) {
+    		repository.createCurationDocumentContent(aUIData.getjCas(),
+    				aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
+    	}
+    	
+    	return createArcResponse;
+    	
+    				}
+    
+    
 
     /**
      * reverse the direction of arc annotations, in this case, Dependency parsing
