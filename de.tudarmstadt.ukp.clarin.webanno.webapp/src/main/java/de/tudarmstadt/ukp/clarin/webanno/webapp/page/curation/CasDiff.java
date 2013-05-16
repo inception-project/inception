@@ -38,45 +38,16 @@ import org.uimafit.util.CasUtil;
 public class CasDiff {
 
 	/**
-	 * spot differing annotations by comparing cases of the same document.
-	 * Notice: if two annotations exist for one cas, that have the same entry
-	 * type, begin and end, the result may contain more
+	 * spot differing annotations by comparing cases of the same source document.
+	 * <br /><br />
+	 * 
 	 * 
 	 * @param aCasMap
 	 *            Map of (username, cas)
-	 * @return Map of (username, feature structure addresses)
+	 * @return List of {@link AnnotationOption}
 	 * @throws Exception
 	 */
 
-//	public static Map<String, Set<FeatureStructure>> doDiff(List<Type> aEntryType,
-//			Map<String, CAS> aCasMap) throws Exception {
-//		Iterator<CAS> casIterator = aCasMap.values().iterator();
-//		if (!casIterator.hasNext()) {
-//			return new HashMap<String, Set<FeatureStructure>>();
-//		}
-//		CAS cas = casIterator.next();
-//		// TODO get begin and end like that?
-//		int begin = 0;
-//		int end = cas.getJCas().getDocumentText().length();
-//		return doDiff(aEntryType, aCasMap, begin, end);
-//	}
-	
-
-//	public static Map<String, Set<FeatureStructure>> doDiff(List<Type> aEntryTypes,
-//			Map<String, CAS> aCasMap, int aBegin, int aEnd) throws Exception {
-//		Map<String, Set<FeatureStructure>> diffs = new HashMap<String, Set<FeatureStructure>>();
-//		
-//		for (Type entryType : aEntryTypes) {
-//			Map<String, Set<FeatureStructure>> diff = doDiff(entryType, aCasMap, aBegin, aEnd);
-//			for (String username : diff.keySet()) {
-//				if(!diffs.containsKey(username)) {
-//					diffs.put(username, new HashSet<FeatureStructure>());
-//				}
-//				diffs.get(username).addAll(diff.get(username));
-//			}
-//		}
-//		return diffs;
-//	}
 	public static List<AnnotationOption> doDiff(List<Type> aEntryTypes,
 			Map<String, JCas> aCasMap, int aBegin, int aEnd) throws Exception {
 		Map<Integer, Map<Integer, Set<AnnotationFS>>> annotationFSsByBeginEnd = new HashMap<Integer, Map<Integer, Set<AnnotationFS>>>();
@@ -90,7 +61,7 @@ public class CasDiff {
 				usernames.add(username);
 				CAS cas = aCasMap.get(username).getCas();
 				
-				// statt cas.getAnnotationIndex(aEntryType) auch
+				// instead cas.getAnnotationIndex(aEntryType) also
 				// cas.getIndexRepository().getAllIndexedFS(aType)
 				for (AnnotationFS annotationFS : selectCovered(cas, aEntryType,
 						aBegin, aEnd)) {
@@ -114,17 +85,6 @@ public class CasDiff {
 			for (Map<Integer, Set<AnnotationFS>> annotationFSsByEnd : annotationFSsByBeginEnd
 					.values()) {
 				for (Set<AnnotationFS> annotationFSs : annotationFSsByEnd.values()) {
-					// TODO check if still necessary
-					/*
-					if(annotationFSs.size() < aCasMap.keySet().size()) {
-						for (AnnotationFS annotationFS : annotationFSs) {
-							String username = usernameByFeatureStructure.get(annotationFS);
-							diffs.get(username).add(annotationFS);
-						}
-						// Annotation is missing, thus add 
-					}
-					*/
-					//Map<String, AnnotationSelection> annotationSelectionByUsername = new HashMap<String, AnnotationSelection>();
 					Map<String, AnnotationOption> annotationOptionPerType = new HashMap<String, AnnotationOption>();
 					for (FeatureStructure fsNew : annotationFSs) {
 						String usernameFSNew = usernameByFeatureStructure
@@ -137,7 +97,6 @@ public class CasDiff {
 						for (FeatureStructure fsOld : annotationSelectionByFeatureStructure.keySet()) {
 							String usernameFSOld = usernameByFeatureStructure
 									.get(fsOld);
-							// TODO add annotationFS to existing annotationSelectionByAnnotationFS
 							if (fsNew != fsOld) {
 								CompareResult compareResult = compareFeatureFS(
 										fsNew, fsOld, diffFSNew);
@@ -147,30 +106,8 @@ public class CasDiff {
 									AnnotationSelection annotationSelection = annotationSelectionByFeatureStructure.get(compareResultFSOld);
 									annotationSelection.getAddressByUsername().put(usernameFSNew, addressNew);
 									annotationSelectionByFeatureStructureNew.put(compareResultFSNew, annotationSelection);
-									// Only one fs needed?
-									//annotationSelectionByFeatureStructure.put(compareResultFSNew, annotationSelection);
 									
 								}
-								/* TODO wird das benötigt?
-								for (FeatureStructure compareResultFS1 : compareResult.getDiffs().keySet()) {
-									FeatureStructure compareResultFS2 = compareResult.getDiffs().get(compareResultFS1);
-									AnnotationSelection annotationSelection = annotationSelectionByFeatureStructure.get(compareResultFS2);
-									AnnotationOption annotationOption = annotationSelection.getAnnotationOption();
-									// TODO Wird nicht verwendet. Warum?
-									annotationOptionByCompareResultFS1.put(compareResultFS1, annotationOption);
-								}
-								 */
-								/*
-								for (FeatureStructure newDiff : compareResult.getDiffs()
-										.get(fs1)) {
-									// TODO new AnnatationSelection for FS1
-									diffs.get(usernameFS1).add(newDiff);
-								}
-								for (FeatureStructure newAgreement : compareResult.getAgreements()
-										.get(fs1)) {
-									// TODO merge AnnotationSelection to FS2
-								}
-								*/
 							}
 						}
 						annotationSelectionByFeatureStructure = annotationSelectionByFeatureStructureNew;
@@ -207,8 +144,7 @@ public class CasDiff {
 			// compare primitive values
 			if (!feature.getRange().isPrimitive()) {
 				// compare composite types
-				// TODO assumtion: if feature is not primitive, it is a
-				// composite feature
+				// assumtion: if feature is not primitive, it is a composite feature
 				FeatureStructure featureValue = fs.getFeatureValue(feature);
 				if (featureValue != null) {
 					nodePlusChildren.addAll(traverseFS(featureValue));
@@ -219,19 +155,14 @@ public class CasDiff {
 	}
 
 	private static CompareResult compareFeatureFS(
-			FeatureStructure fs1, FeatureStructure fs2, Set<FeatureStructure> diffFS1) throws Exception {
-		//Map<FeatureStructure, Set<FeatureStructure>> diffs = new HashMap<FeatureStructure, Set<FeatureStructure>>();
+			FeatureStructure fsNew, FeatureStructure fsOld, Set<FeatureStructure> diffFSNew) throws Exception {
 		CompareResult compareResult = new CompareResult();
-//		compareResult.getAgreements().put(fs1, new HashSet<FeatureStructure>());
-//		compareResult.getAgreements().put(fs2, new HashSet<FeatureStructure>());
-//		compareResult.getDiffs().put(fs1, new HashSet<FeatureStructure>());
-//		compareResult.getDiffs().put(fs2, new HashSet<FeatureStructure>());
 		
 		// check if types are equal
-		Type type = fs1.getType();
-		if (!fs2.getType().toString().equals(type.toString())) {
+		Type type = fsNew.getType();
+		if (!fsOld.getType().toString().equals(type.toString())) {
 			// if types differ add feature structure to diff
-			compareResult.getDiffs().put(fs1, fs2);
+			compareResult.getDiffs().put(fsNew, fsOld);
 			return compareResult;
 		}
 
@@ -240,31 +171,26 @@ public class CasDiff {
 			// features are present in both feature structures, fs1 and fs2
 			// compare primitive values
 			if (feature.getRange().isPrimitive()) {
-				// System.out.println(feature.getDomain().getName());
-				// System.out.println(feature.getRange().getName());
 
 				// check int Values
 				if (feature.getRange().getName().equals("uima.cas.Integer")) {
-					if (!(fs1.getIntValue(feature) == fs2.getIntValue(feature))) {
+					if (!(fsNew.getIntValue(feature) == fsOld.getIntValue(feature))) {
 						//disagree
 						agreeOnSubfeatures = false;
-						//compareResult.getDiffs().put(fs1, fs2);
 					} else {
 						// agree
-						//compareResult.getAgreements().put(fs1, fs2);
-						//diffFS1.remove(fs1);
 					}
 				} else if (feature.getRange().getName()
 						.equals("uima.cas.String")) {
-					String stringValue1 = fs1.getStringValue(feature);
-					String stringValue2 = fs1.getStringValue(feature);
+					String stringValue1 = fsNew.getStringValue(feature);
+					String stringValue2 = fsNew.getStringValue(feature);
 					if (stringValue1 == null && stringValue2 == null) {
-						// TODO agree
+						// agree
 						// Do nothing, null == null
 					} else if (stringValue1 == null
 							|| stringValue2 == null
-							|| !fs1.getStringValue(feature).equals(
-									fs2.getStringValue(feature))) {
+							|| !fsNew.getStringValue(feature).equals(
+									fsOld.getStringValue(feature))) {
 						// stringValue1 differs from stringValue2
 						
 						// disagree
@@ -285,11 +211,11 @@ public class CasDiff {
 				// compare composite types
 				// TODO assumtion: if feature is not primitive, it is a
 				// composite feature
-				FeatureStructure featureValue1 = fs1.getFeatureValue(feature);
-				FeatureStructure featureValue2 = fs2.getFeatureValue(feature);
+				FeatureStructure featureValue1 = fsNew.getFeatureValue(feature);
+				FeatureStructure featureValue2 = fsOld.getFeatureValue(feature);
 				if (featureValue1 != null && featureValue2 != null) {
 					CompareResult compareResultSubfeatures = compareFeatureFS(
-							featureValue1, featureValue2, diffFS1);
+							featureValue1, featureValue2, diffFSNew);
 					compareResult.getDiffs().putAll(compareResultSubfeatures.getDiffs());
 					compareResult.getAgreements().putAll(compareResultSubfeatures.getAgreements());
 					if(!compareResult.getDiffs().isEmpty()) {
@@ -312,16 +238,16 @@ public class CasDiff {
 			}
 		}
 		if(agreeOnSubfeatures) {
-			compareResult.getAgreements().put(fs1, fs2);
-			diffFS1.remove(fs1);
+			compareResult.getAgreements().put(fsNew, fsOld);
+			diffFSNew.remove(fsNew);
 		} else {
-			compareResult.getDiffs().put(fs1, fs2);
+			compareResult.getDiffs().put(fsNew, fsOld);
 		}
 		
 		// TODO if no diffs, agree (here or elsewhere)?
 		if(compareResult.getDiffs().isEmpty()) {
-			compareResult.getAgreements().put(fs1, fs2);
-			diffFS1.remove(fs1);
+			compareResult.getAgreements().put(fsNew, fsOld);
+			diffFSNew.remove(fsNew);
 		}
 
 		return compareResult;

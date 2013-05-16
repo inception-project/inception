@@ -39,7 +39,7 @@ public class BratCurationVisualizer extends BratVisualizer {
 			@Override
 			protected void respond(AjaxRequestTarget aTarget) {
                 //aTarget.prependJavaScript("Wicket.$('"+vis.getMarkupId()+"').temp = ['test'];");
-				onMerge(aTarget);
+				onSelectAnnotationForMerge(aTarget);
 			}
         	
         };
@@ -101,7 +101,7 @@ public class BratCurationVisualizer extends BratVisualizer {
 		return getModelObject().getCollectionData();
 	}
 	
-	protected void onMerge(AjaxRequestTarget aTarget) {
+	protected void onSelectAnnotationForMerge(AjaxRequestTarget aTarget) {
 		// Overriden in Curation Panel
 	}
 

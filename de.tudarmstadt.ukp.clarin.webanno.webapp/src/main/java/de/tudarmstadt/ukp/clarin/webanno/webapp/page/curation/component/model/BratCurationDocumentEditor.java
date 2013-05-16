@@ -280,6 +280,7 @@ public class BratCurationDocumentEditor
     public void reloadContent(AjaxRequestTarget aTarget) {
         String[] script = new String[] { "dispatcher.post('clearSVG', []);"
                 + "dispatcher.post('current', ['"+collection+"', '1234', {}, true]);"
+                // start ajax call, which requests the collection (and the document) from the server and renders the svg
                 + "dispatcher.post('ajax', [{action: 'getCollectionInformation',collection: '"+collection+"'}, 'collectionLoaded', {collection: '"+collection+"',keep: true}]);"
                 //+ "dispatcher.post('collectionChanged');"
                 };
@@ -578,7 +579,9 @@ public class BratCurationDocumentEditor
             try {
                 BratAjaxCasController controller = new BratAjaxCasController(jsonConverter,
                         repository, annotationService);
-                jCas = repository.getCurationDocumentContent(getModelObject().getDocument());
+                if(getModelObject().getDocument() != null) {
+                	jCas = repository.getCurationDocumentContent(getModelObject().getDocument());
+                }
             }
             catch (UIMAException e) {
                 error("CAS object not found :" + ExceptionUtils.getRootCauseMessage(e));

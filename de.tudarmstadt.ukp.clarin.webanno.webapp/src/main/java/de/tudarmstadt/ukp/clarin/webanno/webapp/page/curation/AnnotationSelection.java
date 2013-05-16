@@ -21,6 +21,12 @@ import java.util.Map;
 
 import org.apache.uima.cas.FeatureStructure;
 
+/**
+ * This class comprises usernames, which agree on a
+ * specific annotation (same annotation type, same annotation value, same position).
+ * @author Andreas Straninger
+ *
+ */
 public class AnnotationSelection implements Serializable {
 	Map<String, Integer> addressByUsername = new HashMap<String, Integer>();
 	AnnotationOption annotationOption = null;
@@ -29,6 +35,13 @@ public class AnnotationSelection implements Serializable {
 		return addressByUsername;
 	}
 
+	/**
+	 * Set Map of Username-Address-Tuples. The Map contains only annotations,
+	 * which have the same annotation type and annotation value, and the same position in the cas.
+	 * <br><br>
+	 * Example: <pre>{"Anno1": 1234, "Anno2": 1235}</pre>
+	 * @param aAddressByUsername HashMap of Username-Address-Tuples
+	 */
 	public void setAddressByUsername(Map<String, Integer> aAddressByUsername) {
 		this.addressByUsername = aAddressByUsername;
 	}
@@ -37,6 +50,10 @@ public class AnnotationSelection implements Serializable {
 		return annotationOption;
 	}
 
+	/**
+	 * 
+	 * @param annotationOption
+	 */
 	public void setAnnotationOption(AnnotationOption annotationOption) {
 		this.annotationOption = annotationOption;
 	}

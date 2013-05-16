@@ -12,6 +12,7 @@ var CurationMod = (function($, window, undefined) {
 					action: 'selectSpanForMerge',
 					id: id}, 'selectSpanForMerge']);
 			}
+			// TODO check for arcs
 		};
 		
 		// callback function which is called after ajax response has arrived
