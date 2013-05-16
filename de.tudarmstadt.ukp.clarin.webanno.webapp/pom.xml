@@ -6,7 +6,8 @@
 	under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES 
 	OR CONDITIONS OF ANY KIND, either express or implied. See the License for 
 	the specific language governing permissions and limitations under the License. -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<artifactId>de.tudarmstadt.ukp.clarin.webanno</artifactId>
@@ -238,7 +239,7 @@
 			<artifactId>jfreechart</artifactId>
 			<version>1.0.14</version>
 		</dependency>
-	
+
 		<dependency>
 			<groupId>org.wicketstuff</groupId>
 			<artifactId>wicketstuff-progressbar-spring</artifactId>
@@ -251,10 +252,11 @@
 			<artifactId>wicketstuff-input-events</artifactId>
 			<version>1.5.8.1</version>
 		</dependency>
+
 		<dependency>
-			<groupId>de.tudarmstadt.ukp.statistics</groupId>
-			<artifactId>de.tudarmstadt.ukp.statistics</artifactId>
-			<version>0.0.2</version>
+			<groupId>de.tudarmstadt.ukp.dkpro.statistics</groupId>
+			<artifactId>de.tudarmstadt.ukp.dkpro.statistics</artifactId>
+			<version>1.0.0</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-fileupload</groupId>

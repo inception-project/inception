@@ -42,10 +42,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
-import de.tudarmstadt.ukp.statistics.agreement.AnnotationStudy;
-import de.tudarmstadt.ukp.statistics.agreement.IAnnotationStudy;
-import de.tudarmstadt.ukp.statistics.agreement.TwoRaterKappaAgreement;
-
+import de.tudarmstadt.ukp.dkpro.statistics.agreement.AnnotationStudy;
+import de.tudarmstadt.ukp.dkpro.statistics.agreement.IAnnotationStudy;
+import de.tudarmstadt.ukp.dkpro.statistics.agreement.TwoRaterKappaAgreement;
 /**
  * For a given source document, return user annotations for a given UIMA type. This is a Map of
  * users with a nested map which contains the concatenations of annotation offsets and UIMA features
