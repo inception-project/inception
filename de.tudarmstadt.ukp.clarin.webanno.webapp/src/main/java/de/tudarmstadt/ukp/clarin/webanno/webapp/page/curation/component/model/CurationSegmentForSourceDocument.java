@@ -26,7 +26,7 @@ import java.util.Map;
  * @author  Seid Muhie Yimam
  *
  */
-public class CurationSegment
+public class CurationSegmentForSourceDocument
     implements Serializable
 {
 
@@ -39,7 +39,7 @@ public class CurationSegment
 
     private Map<String, Integer> sentenceAddress = new HashMap<String, Integer>();
 
-    public CurationSegment()
+    public CurationSegmentForSourceDocument()
     {
 
     }

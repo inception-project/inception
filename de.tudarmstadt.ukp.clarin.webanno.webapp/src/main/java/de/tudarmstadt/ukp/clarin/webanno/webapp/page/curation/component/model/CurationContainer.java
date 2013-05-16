@@ -26,7 +26,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 /**
- * A model for curation container comprises of {@link CurationSegment}, {@link SourceDocument},
+ * A model for curation container comprises of {@link CurationSegmentForSourceDocument}, {@link SourceDocument},
  * and {@link Project}
  * @author  Andreas Straninger
  * @author  Seid Muhie Yimam
@@ -37,29 +37,29 @@ public class CurationContainer
 {
     private static final long serialVersionUID = -6632707037285383353L;
 
-    private Map<Integer, CurationSegment> curationSegmentByBegin = new HashMap<Integer, CurationSegment>();
+    private Map<Integer, CurationSegmentForSourceDocument> curationSegmentByBegin = new HashMap<Integer, CurationSegmentForSourceDocument>();
 
     private SourceDocument sourceDocument;
 
     private Project project;
 
-    public List<CurationSegment> getCurationSegments()
+    public List<CurationSegmentForSourceDocument> getCurationSegments()
     {
         LinkedList<Integer> segmentsBegin = new LinkedList<Integer>(curationSegmentByBegin.keySet());
         Collections.sort(segmentsBegin);
-        List<CurationSegment> curationSegments = new LinkedList<CurationSegment>();
+        List<CurationSegmentForSourceDocument> curationSegments = new LinkedList<CurationSegmentForSourceDocument>();
         for (Integer begin : segmentsBegin) {
             curationSegments.add(curationSegmentByBegin.get(begin));
         }
         return curationSegments;
     }
 
-    public Map<Integer, CurationSegment> getCurationSegmentByBegin()
+    public Map<Integer, CurationSegmentForSourceDocument> getCurationSegmentByBegin()
     {
         return curationSegmentByBegin;
     }
 
-    public void setCurationSegmentByBegin(Map<Integer, CurationSegment> curationSegmentByBegin)
+    public void setCurationSegmentByBegin(Map<Integer, CurationSegmentForSourceDocument> curationSegmentByBegin)
     {
         this.curationSegmentByBegin = curationSegmentByBegin;
     }

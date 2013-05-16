@@ -29,7 +29,7 @@ public class BratCurationVisualizer extends BratVisualizer {
 
 	private AbstractDefaultAjaxBehavior controller;
 
-	public BratCurationVisualizer(String id, IModel<CurationUserSegment2> aModel) {
+	public BratCurationVisualizer(String id, IModel<CurationUserSegmentForAnnotationDocument> aModel) {
 		super(id, aModel);
 		
 		Label label = new Label("username", "Username: "+getModelObject().getUsername());
@@ -46,25 +46,25 @@ public class BratCurationVisualizer extends BratVisualizer {
         add(controller);
 	}
 
-	public void setModel(IModel<CurationUserSegment2> aModel)
+	public void setModel(IModel<CurationUserSegmentForAnnotationDocument> aModel)
 	{
 		setDefaultModel(aModel);
 	}
 
-	public void setModelObject(CurationUserSegment2 aModel)
+	public void setModelObject(CurationUserSegmentForAnnotationDocument aModel)
 	{
 		setDefaultModelObject(aModel);
 	}
 
 	@SuppressWarnings("unchecked")
-	public IModel<CurationUserSegment2> getModel()
+	public IModel<CurationUserSegmentForAnnotationDocument> getModel()
 	{
-		return (IModel<CurationUserSegment2>) getDefaultModel();
+		return (IModel<CurationUserSegmentForAnnotationDocument>) getDefaultModel();
 	}
 
-	public CurationUserSegment2 getModelObject()
+	public CurationUserSegmentForAnnotationDocument getModelObject()
 	{
-		return (CurationUserSegment2) getDefaultModelObject();
+		return (CurationUserSegmentForAnnotationDocument) getDefaultModelObject();
 	}
 
 	@Override

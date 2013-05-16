@@ -80,8 +80,8 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.An
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.BratCurationDocumentEditor;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.BratCurationVisualizer;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationContainer;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationSegment;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationUserSegment2;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationSegmentForSourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationUserSegmentForAnnotationDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
@@ -117,11 +117,11 @@ public class CurationPanel
      */
     private Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress = new HashMap<String, Map<Integer, AnnotationSelection>>();
 
-    private ListView<CurationUserSegment2> sentenceListView;
+    private ListView<CurationUserSegmentForAnnotationDocument> sentenceListView;
 
-    private CurationSegment curationSegment;
+    private CurationSegmentForSourceDocument curationSegment;
 
-    ListView<CurationSegment> textListView;
+    ListView<CurationSegmentForSourceDocument> textListView;
 
     /**
      * Class for combining an on click ajax call and a label
@@ -198,16 +198,16 @@ public class CurationPanel
         mergeVisualizer.setOutputMarkupId(true);
         add(mergeVisualizer);
 
-        LinkedList<CurationUserSegment2> sentences = new LinkedList<CurationUserSegment2>();
+        LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<CurationUserSegmentForAnnotationDocument>();
         // update list of brat embeddings
-        sentenceListView = new ListView<CurationUserSegment2>("sentenceListView", sentences)
+        sentenceListView = new ListView<CurationUserSegmentForAnnotationDocument>("sentenceListView", sentences)
         {
             @Override
-            protected void populateItem(ListItem<CurationUserSegment2> item2)
+            protected void populateItem(ListItem<CurationUserSegmentForAnnotationDocument> item2)
             {
-                final CurationUserSegment2 curationUserSegment = item2.getModelObject();
+                final CurationUserSegmentForAnnotationDocument curationUserSegment = item2.getModelObject();
                 BratCurationVisualizer curationVisualizer = new BratCurationVisualizer("sentence",
-                        new Model<CurationUserSegment2>(curationUserSegment))
+                        new Model<CurationUserSegmentForAnnotationDocument>(curationUserSegment))
                 {
                     /**
                      * Method is called, if user has clicked on a span or an arc in the sentence
@@ -226,16 +226,13 @@ public class CurationPanel
                             mergeJCas = repository.getCurationDocumentContent(sourceDocument);
                         }
                         catch (UIMAException e1) {
-                            // TODO Auto-generated catch block
-                            e1.printStackTrace();
+                         error(ExceptionUtils.getRootCause(e1));
                         }
                         catch (IOException e1) {
-                            // TODO Auto-generated catch block
-                            e1.printStackTrace();
+                            error(ExceptionUtils.getRootCause(e1));
                         }
                         catch (ClassNotFoundException e1) {
-                            // TODO Auto-generated catch block
-                            e1.printStackTrace();
+                            error(ExceptionUtils.getRootCause(e1));
                         }
                         StringValue action = request.getParameterValue("action");
                         AnnotationSelection annotationSelection = null;
@@ -397,13 +394,13 @@ public class CurationPanel
         sentenceOuterView.add(sentenceListView);
 
         // List view for the complete text on the left side. Each item is a sentence of the text
-        textListView = new ListView<CurationSegment>("textListView",
+        textListView = new ListView<CurationSegmentForSourceDocument>("textListView",
                 curationContainer.getCurationSegments())
         {
             @Override
-            protected void populateItem(ListItem<CurationSegment> item)
+            protected void populateItem(ListItem<CurationSegmentForSourceDocument> item)
             {
-                final CurationSegment curationSegmentItem = item.getModelObject();
+                final CurationSegmentForSourceDocument curationSegmentItem = item.getModelObject();
 
                 // ajax call when clicking on a sentence on the left side
                 final AbstractDefaultAjaxBehavior click = new AbstractDefaultAjaxBehavior()
@@ -530,7 +527,7 @@ public class CurationPanel
             }
         }
 
-        List<CurationUserSegment2> sentences = new LinkedList<CurationUserSegment2>();
+        List<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<CurationUserSegmentForAnnotationDocument>();
 
         BratAnnotatorModel bratAnnotatorModel = mergeVisualizer.getModelObject();
         bratAnnotatorModel.setDocument(sourceDocument);
@@ -566,7 +563,7 @@ public class CurationPanel
                 GetDocumentResponse response = this.getDocumentResponse(jCas, username,
                         bratAnnotatorModel);
 
-                CurationUserSegment2 curationUserSegment2 = new CurationUserSegment2();
+                CurationUserSegmentForAnnotationDocument curationUserSegment2 = new CurationUserSegmentForAnnotationDocument();
                 curationUserSegment2.setCollectionData(getStringCollectionData(response, jCas,
                         annotationSelectionByAddress, username, numUsers));
                 curationUserSegment2.setDocumentResponse(getStringDocumentResponse(response));

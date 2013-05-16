@@ -203,7 +203,7 @@ public class CurationBuilder {
 					}
 				}
 
-				CurationSegment curationSegment = new CurationSegment();
+				CurationSegmentForSourceDocument curationSegment = new CurationSegmentForSourceDocument();
 				curationSegment.setBegin(begin);
 				curationSegment.setEnd(end);
 				if(hasDiff) {
