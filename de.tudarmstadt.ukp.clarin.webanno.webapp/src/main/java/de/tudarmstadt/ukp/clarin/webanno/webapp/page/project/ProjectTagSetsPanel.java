@@ -353,7 +353,7 @@ public class ProjectTagSetsPanel
                         }
                     }
                     else if (isEmpty(uploadedFiles)) {
-                        error("No Tagset File is selected to upload, please select a document first");
+                        error("Please choose file with tagset before uploading");
                     }
                     else if (project.getId() == 0) {
                         error("Project not yet created, please save project Details!");

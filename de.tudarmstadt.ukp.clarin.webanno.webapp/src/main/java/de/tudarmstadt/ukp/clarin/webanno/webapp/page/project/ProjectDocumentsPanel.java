@@ -138,7 +138,7 @@ public class ProjectDocumentsPanel
                             error("Error uploading document "
                                     + ExceptionUtils.getRootCauseMessage(e));
                         }
-                        info("File [" + fileName + "] is written successfully!");
+                        info("File [" + fileName + "] has been imported successfully!");
                     }
                 }
                 else if (isEmpty(uploadedFiles)) {
