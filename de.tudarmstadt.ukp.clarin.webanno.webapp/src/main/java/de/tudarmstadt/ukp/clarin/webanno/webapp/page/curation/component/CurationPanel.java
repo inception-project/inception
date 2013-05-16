@@ -254,8 +254,6 @@ public class CurationPanel extends Panel {
 
 		                }
 
-						System.out.println("On Merge");
-
 						updateRightSide(aTarget, sentenceOuterView, curationContainer, mergeVisualizer);
 						//aTarget.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
 					}
