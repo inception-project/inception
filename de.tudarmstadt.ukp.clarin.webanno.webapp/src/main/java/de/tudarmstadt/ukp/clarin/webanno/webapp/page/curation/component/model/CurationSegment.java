@@ -27,6 +27,7 @@ public class CurationSegment implements Serializable {
 	private Integer end;
 	private String text;
 	private SentenceState sentenceState;
+	private Integer sentenceNumber;
 	
 	private Map<String, Integer> sentenceAddress = new HashMap<String, Integer>();
 	
@@ -74,6 +75,14 @@ public class CurationSegment implements Serializable {
 
 	public void setSentenceState(SentenceState sentenceState) {
 		this.sentenceState = sentenceState;
+	}
+
+	public Integer getSentenceNumber() {
+		return sentenceNumber;
+	}
+
+	public void setSentenceNumber(Integer sentenceNumber) {
+		this.sentenceNumber = sentenceNumber;
 	}
 
 	

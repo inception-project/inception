@@ -16,19 +16,22 @@
 	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
 	<wicket:panel>
-		<div style="float:left;width:33%;" wicket:id="textOuterView">
-			<div wicket:id="textListView">
-				<span wicket:id="sentence"></span><br/>
-			</div>
+		<div class="curation-table" style="float:left;width:33%;">
+			<table class="curation-sentence-table" wicket:id="textOuterView">
+				<tr wicket:id="textListView">
+					<td class="curation-sentence-number" wicket:id="sentenceNumber"/>
+					<td class="curation-sentence-item" wicket:id="sentence"/>
+				</tr>
+			</table>
 		</div>
 
 		<div style="float:left;width:66%;">
 			<div  wicket:id="sentenceOuterView">
-				<div wicket:id="sentenceListView">
+				<div class="sentence-list-view" wicket:id="sentenceListView">
 					<div wicket:id="sentence" />
 				</div>
 			</div>
-			<div wicket:id="mergeView" />
+			<div class="merge-view" wicket:id="mergeView" />
 		</div>
 		
 		<div style="clear:both;" />

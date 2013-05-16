@@ -18,6 +18,8 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -292,6 +294,9 @@ public class CurationPanel extends Panel {
 				}
 				Label currentSentence = new AjaxLabel("sentence",curationSegmentItem.getText(), click);
 				item.add(currentSentence);
+				
+				Label sentenceNumber = new AjaxLabel("sentenceNumber", curationSegmentItem.getSentenceNumber().toString(), click);
+				item.add(sentenceNumber);
 			}
 
 		};
@@ -376,7 +381,9 @@ public class CurationPanel extends Panel {
 		List<CurationUserSegment2> sentences = new LinkedList<CurationUserSegment2>();
 
 		boolean hasDiff = false;
-		for (String username : jCases.keySet()) {
+		List<String> usernamesSorted = new LinkedList<String>(jCases.keySet());
+		Collections.sort(usernamesSorted);
+		for (String username : usernamesSorted) {
 			if(!username.equals(CURATION_USER)) {
 				Map<Integer, AnnotationSelection> annotationSelectionByAddress = new HashMap<Integer, AnnotationSelection>();
 				for (AnnotationOption annotationOption : annotationOptions) {
@@ -414,14 +421,6 @@ public class CurationPanel extends Panel {
 		mergeUserSegment.setDocumentResponse(getStringDocumentResponse(response));
 
 		BratAnnotatorModel bratAnnotatorModel = mergeVisualizer.getModelObject();
-		bratAnnotatorModel.setFirstSentenceAddress(curationSegment.getSentenceAddress().get(CURATION_USER));
-		bratAnnotatorModel.setLastSentenceAddress(curationSegment.getSentenceAddress().get(CURATION_USER));
-		bratAnnotatorModel.setSentenceAddress(curationSegment.getSentenceAddress().get(CURATION_USER));
-		
-		mergeVisualizer.reloadContent(target);
-		
-		/*
-		BratAnnotatorModel bratAnnotatorModel = new BratAnnotatorModel();
 		bratAnnotatorModel.setDocument(sourceDocument);
 		bratAnnotatorModel.setProject(sourceDocument.getProject());
 		bratAnnotatorModel.setUser(userLoggedIn);
@@ -430,6 +429,14 @@ public class CurationPanel extends Panel {
 		bratAnnotatorModel.setSentenceAddress(curationSegment.getSentenceAddress().get(CURATION_USER));
         bratAnnotatorModel.setAnnotationLayers(new HashSet<TagSet>(annotationService
                 .listTagSets(bratAnnotatorModel.getProject())));
+		
+		mergeVisualizer.reloadContent(target);
+		
+		/*
+		BratAnnotatorModel bratAnnotatorModel = new BratAnnotatorModel();
+		bratAnnotatorModel.setFirstSentenceAddress(curationSegment.getSentenceAddress().get(CURATION_USER));
+		bratAnnotatorModel.setLastSentenceAddress(curationSegment.getSentenceAddress().get(CURATION_USER));
+		bratAnnotatorModel.setSentenceAddress(curationSegment.getSentenceAddress().get(CURATION_USER));
 		BratCurationDocumentEditor mergeVisualizer = new BratCurationDocumentEditor("mergeView", new Model<BratAnnotatorModel>(bratAnnotatorModel));
 		parent.replace(mergeVisualizer);
 		*/

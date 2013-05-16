@@ -211,8 +211,8 @@ public class CurationBuilder {
 				} else {
 					curationSegment.setSentenceState(SentenceState.AGREE);
 				}
-				String text = "(" + segmentNumber.get(begin).toString() + ") " + segmentText.get(begin);
-				curationSegment.setText(text);
+				curationSegment.setText(segmentText.get(begin));
+				curationSegment.setSentenceNumber(segmentNumber.get(begin));
 
 				for (String username : segmentAdress.keySet()) {
 					curationSegment.getSentenceAddress().put(username, segmentAdress.get(username).get(begin));
