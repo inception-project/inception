@@ -45,7 +45,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.OffsetsList;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.CreateArcResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
@@ -119,7 +118,7 @@ public class BratCurationDocumentEditor
         vis = new WebMarkupContainer("vis");
         vis.setOutputMarkupId(true);
 
-        
+
         controller = new AbstractDefaultAjaxBehavior()
         {
             private static final long serialVersionUID = 1L;
@@ -132,11 +131,9 @@ public class BratCurationDocumentEditor
                 try {
 					uIData.setjCas(getCas());
 				} catch (UIMAException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
+					error(ExceptionUtils.getRootCause(e1));
 				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
+				    error(ExceptionUtils.getRootCause(e1));
 				}
 
                 final IRequestParameters request = getRequest().getPostParameters();
@@ -239,9 +236,9 @@ public class BratCurationDocumentEditor
 
         add(vis);
         add(controller);
-        
+
     }
-    
+
     protected void onChange(AjaxRequestTarget aTarget) {
     	// Overriden in curationPanel
     }

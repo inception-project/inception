@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,73 +17,91 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model;
 
 import java.io.Serializable;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 
-public class CurationSegment implements Serializable {
+/**
+ * A model comprises of Curation Segments comprising of the begin and end of a sentence, {@link SentenceState}
+ *  Sentence number and the text (the Sentence content)
+ * @author  Andreas Straninger
+ * @author  Seid Muhie Yimam
+ *
+ */
+public class CurationSegment
+    implements Serializable
+{
 
-	private Integer begin;
-	private Integer end;
-	private String text;
-	private SentenceState sentenceState;
-	private Integer sentenceNumber;
-	
-	private Map<String, Integer> sentenceAddress = new HashMap<String, Integer>();
-	
-	public CurationSegment() {
-		
-	}
+    private static final long serialVersionUID = 9219600871129699568L;
+    private Integer begin;
+    private Integer end;
+    private String text;
+    private SentenceState sentenceState;
+    private Integer sentenceNumber;
 
-	public String getText() {
-		return text;
-	}
+    private Map<String, Integer> sentenceAddress = new HashMap<String, Integer>();
 
+    public CurationSegment()
+    {
 
-	public void setText(String text) {
-		this.text = text;
-	}
+    }
 
+    public String getText()
+    {
+        return text;
+    }
 
-	public Integer getBegin() {
-		return begin;
-	}
+    public void setText(String text)
+    {
+        this.text = text;
+    }
 
-	public void setBegin(Integer begin) {
-		this.begin = begin;
-	}
+    public Integer getBegin()
+    {
+        return begin;
+    }
 
-	public Integer getEnd() {
-		return end;
-	}
+    public void setBegin(Integer begin)
+    {
+        this.begin = begin;
+    }
 
-	public void setEnd(Integer end) {
-		this.end = end;
-	}
+    public Integer getEnd()
+    {
+        return end;
+    }
 
-	public Map<String, Integer> getSentenceAddress() {
-		return sentenceAddress;
-	}
+    public void setEnd(Integer end)
+    {
+        this.end = end;
+    }
 
-	public Boolean getHasDiff() {
-		return sentenceState.hasDiff();
-	}
+    public Map<String, Integer> getSentenceAddress()
+    {
+        return sentenceAddress;
+    }
 
-	public SentenceState getSentenceState() {
-		return sentenceState;
-	}
+    public Boolean getHasDiff()
+    {
+        return sentenceState.hasDiff();
+    }
 
-	public void setSentenceState(SentenceState sentenceState) {
-		this.sentenceState = sentenceState;
-	}
+    public SentenceState getSentenceState()
+    {
+        return sentenceState;
+    }
 
-	public Integer getSentenceNumber() {
-		return sentenceNumber;
-	}
+    public void setSentenceState(SentenceState sentenceState)
+    {
+        this.sentenceState = sentenceState;
+    }
 
-	public void setSentenceNumber(Integer sentenceNumber) {
-		this.sentenceNumber = sentenceNumber;
-	}
+    public Integer getSentenceNumber()
+    {
+        return sentenceNumber;
+    }
 
-	
+    public void setSentenceNumber(Integer sentenceNumber)
+    {
+        this.sentenceNumber = sentenceNumber;
+    }
+
 }

@@ -26,9 +26,8 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationDocumentVisualizer;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenDocumentModel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenModalWindowPanel;
@@ -40,24 +39,17 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.Cu
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome.WelcomePage;
 
 /**
- *
- * @author Andreas Straninger This is the main class for the curation page. It contains an interface
+ *This is the main class for the curation page. It contains an interface
  *         which displays differences between user annotations for a specific document. The
  *         interface provides a tool for merging these annotations and storing them as a new
  *         annotation.
+ * @author Andreas Straninger
+ * @author Seid Muhie Yimam
  */
 public class CurationPage
     extends ApplicationPageBase
 {
     private static final long serialVersionUID = 1378872465851908515L;
-
-    private AjaxLink<Void> reload1;
-
-    private AjaxLink<Void> reload2;
-
-    private BratAnnotationDocumentVisualizer embedder1;
-
-    private BratAnnotationDocumentVisualizer embedder2;
 
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
@@ -190,7 +182,9 @@ public class CurationPage
         curationPanel.setOutputMarkupId(true);
         add(curationPanel);
     }
-
+    /**
+     * for the first time, open the <b>open document dialog</b>
+     */
     @Override
     public void renderHead(IHeaderResponse response)
     {

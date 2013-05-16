@@ -25,46 +25,61 @@ import java.util.Map;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
-public class CurationContainer implements Serializable {
+/**
+ * A model for curation container comprises of {@link CurationSegment}, {@link SourceDocument},
+ * and {@link Project}
+ * @author  Andreas Straninger
+ * @author  Seid Muhie Yimam
+ *
+ */
+public class CurationContainer
+    implements Serializable
+{
+    private static final long serialVersionUID = -6632707037285383353L;
 
-	private Map<Integer, CurationSegment> curationSegmentByBegin = new HashMap<Integer, CurationSegment>();
+    private Map<Integer, CurationSegment> curationSegmentByBegin = new HashMap<Integer, CurationSegment>();
 
-	private SourceDocument sourceDocument;
+    private SourceDocument sourceDocument;
 
-	private Project project;
+    private Project project;
 
-	public List<CurationSegment> getCurationSegments() {
-		LinkedList<Integer> segmentsBegin = new LinkedList<Integer>(curationSegmentByBegin.keySet());
-		Collections.sort(segmentsBegin);
-		List<CurationSegment> curationSegments = new LinkedList<CurationSegment>();
-		for (Integer begin : segmentsBegin) {
-			curationSegments.add(curationSegmentByBegin.get(begin));
-		}
-		return curationSegments;
-	}
+    public List<CurationSegment> getCurationSegments()
+    {
+        LinkedList<Integer> segmentsBegin = new LinkedList<Integer>(curationSegmentByBegin.keySet());
+        Collections.sort(segmentsBegin);
+        List<CurationSegment> curationSegments = new LinkedList<CurationSegment>();
+        for (Integer begin : segmentsBegin) {
+            curationSegments.add(curationSegmentByBegin.get(begin));
+        }
+        return curationSegments;
+    }
 
-	public Map<Integer, CurationSegment> getCurationSegmentByBegin() {
-		return curationSegmentByBegin;
-	}
+    public Map<Integer, CurationSegment> getCurationSegmentByBegin()
+    {
+        return curationSegmentByBegin;
+    }
 
-	public void setCurationSegmentByBegin(
-			Map<Integer, CurationSegment> curationSegmentByBegin) {
-		this.curationSegmentByBegin = curationSegmentByBegin;
-	}
+    public void setCurationSegmentByBegin(Map<Integer, CurationSegment> curationSegmentByBegin)
+    {
+        this.curationSegmentByBegin = curationSegmentByBegin;
+    }
 
-	public SourceDocument getSourceDocument() {
-		return sourceDocument;
-	}
+    public SourceDocument getSourceDocument()
+    {
+        return sourceDocument;
+    }
 
-	public void setSourceDocument(SourceDocument aSourceDocument) {
-		sourceDocument = aSourceDocument;
-	}
+    public void setSourceDocument(SourceDocument aSourceDocument)
+    {
+        sourceDocument = aSourceDocument;
+    }
 
-	@Override
-    public String toString() {
-		return "curationSegmentByBegin"+curationSegmentByBegin.toString();
+    @Override
+    public String toString()
+    {
+        return "curationSegmentByBegin" + curationSegmentByBegin.toString();
 
-	}
+    }
 
     public Project getProject()
     {
@@ -75,6 +90,5 @@ public class CurationContainer implements Serializable {
     {
         project = aProject;
     }
-
 
 }
