@@ -22,6 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
@@ -39,9 +40,7 @@ public class CurationContainer
 
     private Map<Integer, CurationSegmentForSourceDocument> curationSegmentByBegin = new HashMap<Integer, CurationSegmentForSourceDocument>();
 
-    private SourceDocument sourceDocument;
-
-    private Project project;
+    private BratAnnotatorModel bratAnnotatorModel;
 
     public List<CurationSegmentForSourceDocument> getCurationSegments()
     {
@@ -64,15 +63,6 @@ public class CurationContainer
         this.curationSegmentByBegin = curationSegmentByBegin;
     }
 
-    public SourceDocument getSourceDocument()
-    {
-        return sourceDocument;
-    }
-
-    public void setSourceDocument(SourceDocument aSourceDocument)
-    {
-        sourceDocument = aSourceDocument;
-    }
 
     @Override
     public String toString()
@@ -81,14 +71,14 @@ public class CurationContainer
 
     }
 
-    public Project getProject()
+    public BratAnnotatorModel getBratAnnotatorModel()
     {
-        return project;
+        return bratAnnotatorModel;
     }
 
-    public void setProject(Project aProject)
+    public void setBratAnnotatorModel(BratAnnotatorModel bratAnnotatorModel)
     {
-        project = aProject;
+        this.bratAnnotatorModel = bratAnnotatorModel;
     }
 
 }

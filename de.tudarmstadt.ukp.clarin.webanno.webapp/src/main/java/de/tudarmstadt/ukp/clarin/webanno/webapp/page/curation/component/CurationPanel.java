@@ -163,13 +163,11 @@ public class CurationPanel
         sentenceOuterView.setOutputMarkupId(true);
         add(sentenceOuterView);
 
-        final BratAnnotatorModel bratAnnotatorModel = new BratAnnotatorModel();
+        final BratAnnotatorModel bratAnnotatorModel =curationContainer.getBratAnnotatorModel();
         // This is a Curation Operation, add to the data model a CURATION Mode
         bratAnnotatorModel.setMode(Mode.CURATION);
 
-        bratAnnotatorModel.setDocument(curationContainer.getSourceDocument());
-        if (curationContainer.getSourceDocument() != null) {
-            bratAnnotatorModel.setProject(curationContainer.getSourceDocument().getProject());
+        if (bratAnnotatorModel.getDocument() != null) {
             curationSegment = curationContainer.getCurationSegmentByBegin().get(0);
             bratAnnotatorModel.setFirstSentenceAddress(curationSegment.getSentenceAddress().get(
                     CURATION_USER));
@@ -219,8 +217,8 @@ public class CurationPanel
                     {
                         final IRequestParameters request = getRequest().getPostParameters();
 
-                        SourceDocument sourceDocument = curationContainer.getSourceDocument();
-                        Project project = curationContainer.getProject();
+                        SourceDocument sourceDocument = bratAnnotatorModel.getDocument();
+                        Project project = bratAnnotatorModel.getProject();
                         JCas mergeJCas = null;
                         try {
                             mergeJCas = repository.getCurationDocumentContent(sourceDocument);
@@ -443,8 +441,8 @@ public class CurationPanel
     protected void updateRightSide(AjaxRequestTarget target, MarkupContainer parent,
             CurationContainer curationContainer, BratCurationDocumentEditor mergeVisualizer)
     {
-        SourceDocument sourceDocument = curationContainer.getSourceDocument();
-        Project project = curationContainer.getProject();
+        SourceDocument sourceDocument = curationContainer.getBratAnnotatorModel().getDocument();
+        Project project = curationContainer.getBratAnnotatorModel().getProject();
         List<AnnotationDocument> annotationDocuments = repository.listAnnotationDocument(project,
                 sourceDocument);
         Map<String, JCas> jCases = new HashMap<String, JCas>();

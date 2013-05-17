@@ -16,11 +16,16 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.lang.reflect.ParameterizedType;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.StringTokenizer;
 
 import javax.persistence.NoResultException;
@@ -30,15 +35,27 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.codehaus.jackson.JsonGenerator;
+import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.beans.BeansException;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
+import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
-
+/**
+ * This class Utility methods that can be used application wide
+ * @author Seid Muhie Yimam
+ *
+ */
 public class ApplicationUtils
 {
 
@@ -219,4 +236,56 @@ public class ApplicationUtils
             jsonGenerator.writeObject(aResponse);
             FileUtils.writeStringToFile(aFile, out.toString());
         }
+
+    /**
+     * Set annotation preferences of users for a given project such as window size, annotation layers
+     *  , ...that can be saved to a file system
+     * @param aPreference the {@link AnnotationPreference} instance
+     * @param aUsername {@link The annotator/curator who has logged in to the system}
+     */
+    public static void setAnnotationPreference(AnnotationPreference aPreference, String aUsername,
+            RepositoryService aRepositoryService, AnnotationService aAnnotationService,
+            BratAnnotatorModel abAnnotatorModel, Mode aMode)
+        throws BeansException, FileNotFoundException, IOException
+    {
+        BeanWrapper wrapper = new BeanWrapperImpl(aPreference);
+        // get annotation preference from file system
+        try {
+            for (Entry<Object, Object> entry : aRepositoryService.loadUserSettings(aUsername,
+                    abAnnotatorModel.getProject(), aMode).entrySet()) {
+                String propertyName = entry.getKey().toString();
+                int index = propertyName.lastIndexOf(".");
+                propertyName = propertyName.substring(index + 1);
+                if (wrapper.isWritableProperty(propertyName)) {
+
+                    if (AnnotationPreference.class.getDeclaredField(propertyName).getGenericType() instanceof ParameterizedType) {
+                        List<String> value = Arrays.asList(StringUtils.replaceChars(
+                                entry.getValue().toString(), "[]", "").split(","));
+                        if (!value.get(0).equals("")) {
+                            wrapper.setPropertyValue(propertyName, value);
+                        }
+                    }
+                    else {
+                        wrapper.setPropertyValue(propertyName, entry.getValue());
+                    }
+                }
+            }
+            abAnnotatorModel.setWindowSize(aPreference.getWindowSize());
+            abAnnotatorModel.setScrollPage(aPreference.isScrollPage());
+            abAnnotatorModel.setDisplayLemmaSelected(aPreference.isDisplayLemmaSelected());
+            // Get tagset using the id, from the properties file
+            abAnnotatorModel.getAnnotationLayers().clear();
+            if (aPreference.getAnnotationLayers() != null) {
+                for (Long id : aPreference.getAnnotationLayers()) {
+                    abAnnotatorModel.getAnnotationLayers().add(aAnnotationService.getTagSet(id));
+                }
+            }
+        }
+        // no preference found
+        catch (Exception e) {
+            abAnnotatorModel.setAnnotationLayers(new HashSet<TagSet>(aAnnotationService
+                    .listTagSets(abAnnotatorModel.getProject())));
+        }
+
+    }
 }

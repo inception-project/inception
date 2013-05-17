@@ -18,12 +18,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map.Entry;
 
 import javax.persistence.NoResultException;
 
@@ -47,8 +42,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
-import org.springframework.beans.BeanWrapper;
-import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.BeansException;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
@@ -56,6 +49,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
@@ -65,7 +59,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
@@ -712,7 +705,8 @@ public class BratAnnotator
                 bratAnnotatorModel.setFirstSentenceAddress(bratAnnotatorModel.getSentenceAddress());
 
                 AnnotationPreference preference = new AnnotationPreference();
-                setAnnotationPreference(preference, username);
+                ApplicationUtils.setAnnotationPreference(preference, username,repository,
+                        annotationService, bratAnnotatorModel, Mode.ANNOTATION);
             }
             catch (DataRetrievalFailureException ex) {
                 throw ex;
@@ -730,7 +724,6 @@ public class BratAnnotator
 
         currentprojectId = bratAnnotatorModel.getProject().getId();
         currentDocumentId = bratAnnotatorModel.getDocument().getId();
-
     }
 
     /**
@@ -750,7 +743,8 @@ public class BratAnnotator
             if (bratAnnotatorModel.getProject().getId() != currentprojectId) {
                 AnnotationPreference preference = new AnnotationPreference();
                 try {
-                    setAnnotationPreference(preference, username);
+                    ApplicationUtils.setAnnotationPreference(preference, username,repository,
+                            annotationService, bratAnnotatorModel, Mode.ANNOTATION);
                 }
                 catch (BeansException e) {
                     throw e;
@@ -807,51 +801,6 @@ public class BratAnnotator
             throw ex;
         }
         return jCas;
-    }
-
-    private void setAnnotationPreference(AnnotationPreference aPreference, String aUsername)
-        throws BeansException, FileNotFoundException, IOException
-    {
-        BeanWrapper wrapper = new BeanWrapperImpl(aPreference);
-
-        // get project preference from file system
-        try {
-            for (Entry<Object, Object> entry : repository.loadUserSettings(aUsername,
-                    bratAnnotatorModel.getProject(), Mode.ANNOTATION).entrySet()) {
-                String propertyName = entry.getKey().toString();
-                int index = propertyName.lastIndexOf(".");
-                propertyName = propertyName.substring(index + 1);
-                if (wrapper.isWritableProperty(propertyName)) {
-
-                    if (AnnotationPreference.class.getDeclaredField(propertyName).getGenericType() instanceof ParameterizedType) {
-                        List<String> value = Arrays.asList(StringUtils.replaceChars(
-                                entry.getValue().toString(), "[]", "").split(","));
-                        if (!value.get(0).equals("")) {
-                            wrapper.setPropertyValue(propertyName, value);
-                        }
-                    }
-                    else {
-                        wrapper.setPropertyValue(propertyName, entry.getValue());
-                    }
-                }
-            }
-            bratAnnotatorModel.setWindowSize(aPreference.getWindowSize());
-            bratAnnotatorModel.setScrollPage(aPreference.isScrollPage());
-            bratAnnotatorModel.setDisplayLemmaSelected(aPreference.isDisplayLemmaSelected());
-            // Get tagset using the id, from the properties file
-            bratAnnotatorModel.getAnnotationLayers().clear();
-            if (aPreference.getAnnotationLayers() != null) {
-                for (Long id : aPreference.getAnnotationLayers()) {
-                    bratAnnotatorModel.getAnnotationLayers().add(annotationService.getTagSet(id));
-                }
-            }
-        }
-        // no preference found
-        catch (Exception e) {
-            bratAnnotatorModel.setAnnotationLayers(new HashSet<TagSet>(annotationService
-                    .listTagSets(bratAnnotatorModel.getProject())));
-        }
-
     }
 
     private boolean isDocumentFinished()

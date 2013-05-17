@@ -22,10 +22,13 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.IHeaderResponse;
+import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -57,6 +60,9 @@ public class CurationPage
     private OpenDocumentModel openDataModel;
 
     private CurationContainer curationContainer;
+    private BratAnnotatorModel bratAnnotatorModel;
+    private Label documentNameLabel;
+
 
     // Open the dialog window on first load
     boolean firstLoad = true;
@@ -64,8 +70,10 @@ public class CurationPage
     public CurationPage()
     {
         openDataModel = new OpenDocumentModel();
+        bratAnnotatorModel = new BratAnnotatorModel();
 
         curationContainer = new CurationContainer();
+        curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
         curationPanel = new CurationPanel("curationPanel", curationContainer);
         curationPanel.setOutputMarkupId(true);
         add(curationPanel);
@@ -80,6 +88,35 @@ public class CurationPage
         openDocumentsModal.setWidthUnit("px");
         openDocumentsModal.setHeightUnit("px");
         openDocumentsModal.setTitle("Open document");
+
+        // Add project and document information at the top
+
+        add(documentNameLabel = (Label) new Label("doumentName", new LoadableDetachableModel()
+        {
+
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected String load()
+            {
+                String projectName;
+                String documentName;
+                if (bratAnnotatorModel.getProject() == null) {
+                    projectName = "/";
+                }
+                else {
+                    projectName = bratAnnotatorModel.getProject().getName() + "/";
+                }
+                if (bratAnnotatorModel.getDocument() == null) {
+                    documentName = "";
+                }
+                else {
+                    documentName = bratAnnotatorModel.getDocument().getName();
+                }
+                return projectName + documentName;
+
+            }
+        }).setOutputMarkupId(true));
 
         add(new AjaxLink<Void>("showOpenDocumentModal")
         {
@@ -123,8 +160,9 @@ public class CurationPage
                             CurationBuilder builder = new CurationBuilder(repository);
                             curationContainer = builder.buildCurationContainer(openDataModel.getProject(), openDataModel
                                     .getDocument());
-                            curationContainer.setSourceDocument(openDataModel.getDocument());
-                            curationContainer.setProject(openDataModel.getProject());
+                            bratAnnotatorModel.setDocument(openDataModel.getDocument());
+                            bratAnnotatorModel.setProject(openDataModel.getProject());
+                            curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
                             updatePanel(curationContainer);
                             // target.add(curationPanel) should work!
                             target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
@@ -142,6 +180,7 @@ public class CurationPage
                             target.appendJavaScript("alert('Annotation in progress for document ["
                                     + openDataModel.getDocument().getName() + "]')");
                         }
+                        target.add(documentNameLabel);
                     }
                 });
                 openDocumentsModal.show(aTarget);
@@ -172,7 +211,6 @@ public class CurationPage
             }
         });
     }
-
     // Update the curation panel.
     private void updatePanel(CurationContainer aCurationContainer)
     {
