@@ -33,6 +33,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.uimafit.util.CasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -49,190 +51,241 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
-public class CurationBuilder {
+public class CurationBuilder
+{
 
-	private RepositoryService repository;
+    private RepositoryService repository;
 
-	private final static Log LOG = LogFactory.getLog(CurationPanel.class);
+    private final static Log LOG = LogFactory.getLog(CurationPanel.class);
+    int sentenceNumber;
+    int begin, end;
 
-	public CurationBuilder(RepositoryService repository) {
-		this.repository = repository;
-	}
+    public CurationBuilder(RepositoryService repository)
+    {
+        this.repository = repository;
+    }
 
-	public CurationContainer buildCurationContainer(Project aProject, SourceDocument sourceDocument) {
-		CurationContainer curationContainer = new CurationContainer();
-			// initialize Variables
-			Map<Integer, Integer> segmentBeginEnd = new HashMap<Integer, Integer>();
-			Map<Integer, Integer> segmentNumber = new HashMap<Integer, Integer>();
-			Map<Integer, String> segmentText = new HashMap<Integer, String>();
-			Map<String, Map<Integer, Integer>> segmentAdress = new HashMap<String, Map<Integer, Integer>>();
-			// get annotation documents
-			List<AnnotationDocument> annotationDocuments = repository
-					.listAnnotationDocument(aProject, sourceDocument);
+    public CurationContainer buildCurationContainer(BratAnnotatorModel aBratAnnotatorModel)
+    {
+        CurationContainer curationContainer = new CurationContainer();
+        // initialize Variables
+        Project project = aBratAnnotatorModel.getProject();
+        SourceDocument sourceDocument = aBratAnnotatorModel.getDocument();
+        Map<Integer, Integer> segmentBeginEnd = new HashMap<Integer, Integer>();
+        Map<Integer, Integer> segmentNumber = new HashMap<Integer, Integer>();
+        Map<Integer, String> segmentText = new HashMap<Integer, String>();
+        Map<String, Map<Integer, Integer>> segmentAdress = new HashMap<String, Map<Integer, Integer>>();
+        // get annotation documents
+        List<AnnotationDocument> annotationDocuments = repository.listAnnotationDocument(project,
+                sourceDocument);
 
-			Map<String, JCas> jCases = new HashMap<String, JCas>();
-			AnnotationDocument randomAnnotationDocument = null;
-			for (AnnotationDocument annotationDocument : annotationDocuments) {
-				String username = annotationDocument.getUser().getUsername();
-				if(annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
-					try {
-						JCas jCas = repository.getAnnotationDocumentContent(annotationDocument);
+        Map<String, JCas> jCases = new HashMap<String, JCas>();
+        AnnotationDocument randomAnnotationDocument = null;
+        for (AnnotationDocument annotationDocument : annotationDocuments) {
+            String username = annotationDocument.getUser().getUsername();
+            if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
+                try {
+                    JCas jCas = repository.getAnnotationDocumentContent(annotationDocument);
 
-						if(randomAnnotationDocument == null) {
-							randomAnnotationDocument = annotationDocument;
-						}
+                    if (randomAnnotationDocument == null) {
+                        randomAnnotationDocument = annotationDocument;
+                    }
 
-						int sentenceNumber = 0;
-						segmentAdress.put(username, new HashMap<Integer, Integer>());
-						for (Sentence sentence : select(jCas, Sentence.class)) {
-							sentenceNumber += 1;
-							segmentBeginEnd.put(sentence.getBegin(), sentence.getEnd());
-							segmentText.put(sentence.getBegin(), sentence.getCoveredText().toString());
-							segmentNumber.put(sentence.getBegin(), sentenceNumber);
-							segmentAdress.get(username).put(sentence.getBegin(), sentence.getAddress());
-						}
+                    int windowSize = aBratAnnotatorModel.getWindowSize();
 
-						jCases.put(username, jCas);
-					} catch (Exception e) {
-						LOG.info("Skipping document due to exception ["+annotationDocument+"]", e);
-					}
-				}
-			}
+                    begin = BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
+                            aBratAnnotatorModel.getSentenceAddress());
+                    end = BratAjaxCasUtil.getAnnotationEndOffset(jCas, BratAjaxCasUtil
+                            .getLastSentenceAddressInDisplayWindow(jCas,
+                                    aBratAnnotatorModel.getSentenceAddress(), windowSize));
+                    sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas,
+                            aBratAnnotatorModel.getSentenceAddress());
+                    segmentAdress.put(username, new HashMap<Integer, Integer>());
 
-			// TODO Create pre-merged jcas if not exists for curation user
+                    int i = aBratAnnotatorModel.getSentenceAddress();
+                    Sentence sentence = null;
 
-			JCas mergeJCas = null;
-			try {
-				mergeJCas = repository.getCurationDocumentContent(sourceDocument);
-			} catch (Exception e) {
-				// JCas does not exist
-			}
+                    for (int j = 0; j < aBratAnnotatorModel.getWindowSize(); j++) {
+                        if (i >= aBratAnnotatorModel.getLastSentenceAddress()) {
+                            sentence = (Sentence) jCas.getLowLevelCas().ll_getFSForRef(i);
+                            sentenceNumber += 1;
+                            segmentBeginEnd.put(sentence.getBegin(), sentence.getEnd());
+                            segmentText.put(sentence.getBegin(), sentence.getCoveredText()
+                                    .toString());
+                            segmentNumber.put(sentence.getBegin(), sentenceNumber);
+                            segmentAdress.get(username).put(sentence.getBegin(),
+                                    sentence.getAddress());
+                            break;
+                        }
+                        sentence = (Sentence) jCas.getLowLevelCas().ll_getFSForRef(i);
+                        sentenceNumber += 1;
+                        segmentBeginEnd.put(sentence.getBegin(), sentence.getEnd());
+                        segmentText.put(sentence.getBegin(), sentence.getCoveredText().toString());
+                        segmentNumber.put(sentence.getBegin(), sentenceNumber);
+                        segmentAdress.get(username).put(sentence.getBegin(), sentence.getAddress());
+                        i = BratAjaxCasUtil.getFollowingSentenceAddress(jCas, i);
+                    }
 
-			int numUsers = jCases.size();
+                    jCases.put(username, jCas);
+                }
+                catch (Exception e) {
+                    LOG.info("Skipping document due to exception [" + annotationDocument + "]", e);
+                }
+            }
+        }
 
-			List<Type> entryTypes = null;
-			// Create jcas, if it could not be loaded from the file system
-			if (mergeJCas == null) {
-				try {
-					mergeJCas = repository.getAnnotationDocumentContent(randomAnnotationDocument);
-				} catch (UIMAException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (ClassNotFoundException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+        // TODO Create pre-merged jcas if not exists for curation user
 
-				entryTypes = getEntryTypes(mergeJCas);
-				jCases.put(CurationPanel.CURATION_USER, mergeJCas);
+        JCas mergeJCas = null;
+        try {
+            mergeJCas = repository.getCurationDocumentContent(sourceDocument);
+        }
+        catch (Exception e) {
+            // JCas does not exist
+        }
 
-		    	List<AnnotationOption> annotationOptions = null;
-				try {
-					int begin = 0;
-					int end = mergeJCas.getDocumentText().length();
-					annotationOptions = CasDiff.doDiff(entryTypes, jCases, begin, end);
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				for (AnnotationOption annotationOption : annotationOptions) {
-					// remove the featureStructure if more than 1 annotationSelection exists per annotationOption
-					boolean removeFS = annotationOption.getAnnotationSelections().size() > 1;
-					if(annotationOption.getAnnotationSelections().size() == 1) {
-						removeFS = annotationOption.getAnnotationSelections().get(0).getAddressByUsername().size() <= numUsers;
-					}
-					for (AnnotationSelection annotationSelection : annotationOption.getAnnotationSelections()) {
-						for (String username : annotationSelection.getAddressByUsername().keySet()) {
-							if(username.equals(CurationPanel.CURATION_USER)) {
-								Integer address = annotationSelection.getAddressByUsername().get(username);
+        int numUsers = jCases.size();
 
-								// removing disagreeing feature structures in mergeJCas
-								if(removeFS && address != null) {
-									FeatureStructure fs = mergeJCas.getLowLevelCas().ll_getFSForRef(address);
-									if(!(fs instanceof Token)) {
-										mergeJCas.getCas().removeFsFromIndexes(fs);
-									}
-								}
-							}
-						}
-					}
-				}
+        List<Type> entryTypes = null;
+        // Create jcas, if it could not be loaded from the file system
+        if (mergeJCas == null) {
+            try {
+                mergeJCas = repository.getAnnotationDocumentContent(randomAnnotationDocument);
+            }
+            catch (UIMAException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            catch (ClassNotFoundException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
 
-				User userLoggedIn = repository.getUser(SecurityContextHolder.getContext().getAuthentication().getName());
-				try {
-					repository.createCurationDocumentContent(mergeJCas, sourceDocument, userLoggedIn);
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-			}
+            entryTypes = getEntryTypes(mergeJCas);
+            jCases.put(CurationPanel.CURATION_USER, mergeJCas);
 
-			segmentAdress.put(CurationPanel.CURATION_USER, new HashMap<Integer, Integer>());
-			for (Sentence sentence : select(mergeJCas, Sentence.class)) {
-				segmentAdress.get(CurationPanel.CURATION_USER).put(sentence.getBegin(), sentence.getAddress());
-			}
+            List<AnnotationOption> annotationOptions = null;
+            try {
 
-	    	if(entryTypes == null) {
-	    		entryTypes = getEntryTypes(mergeJCas);
-	    	}
+                annotationOptions = CasDiff.doDiff(entryTypes, jCases, begin, end);
+            }
+            catch (Exception e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            for (AnnotationOption annotationOption : annotationOptions) {
+                // remove the featureStructure if more than 1 annotationSelection exists per
+                // annotationOption
+                boolean removeFS = annotationOption.getAnnotationSelections().size() > 1;
+                if (annotationOption.getAnnotationSelections().size() == 1) {
+                    removeFS = annotationOption.getAnnotationSelections().get(0)
+                            .getAddressByUsername().size() <= numUsers;
+                }
+                for (AnnotationSelection annotationSelection : annotationOption
+                        .getAnnotationSelections()) {
+                    for (String username : annotationSelection.getAddressByUsername().keySet()) {
+                        if (username.equals(CurationPanel.CURATION_USER)) {
+                            Integer address = annotationSelection.getAddressByUsername().get(
+                                    username);
 
-			for (Integer begin : segmentBeginEnd.keySet()) {
-				Integer end = segmentBeginEnd.get(begin);
+                            // removing disagreeing feature structures in mergeJCas
+                            if (removeFS && address != null) {
+                                FeatureStructure fs = mergeJCas.getLowLevelCas().ll_getFSForRef(
+                                        address);
+                                if (!(fs instanceof Token)) {
+                                    mergeJCas.getCas().removeFsFromIndexes(fs);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
-		    	List<AnnotationOption> annotationOptions = null;
-				try {
-					annotationOptions = CasDiff.doDiff(entryTypes, jCases, begin, end);
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+            User userLoggedIn = repository.getUser(SecurityContextHolder.getContext()
+                    .getAuthentication().getName());
+            try {
+                repository.createCurationDocumentContent(mergeJCas, sourceDocument, userLoggedIn);
+            }
+            catch (IOException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            }
+        }
 
-				Boolean hasDiff = false;
-				for (AnnotationOption annotationOption : annotationOptions) {
-					List<AnnotationSelection> annotationSelections = annotationOption.getAnnotationSelections();
-					if (annotationSelections.size() > 1) {
-						hasDiff = true;
-					} else if(annotationSelections.size() == 1) {
-						AnnotationSelection annotationSelection = annotationSelections.get(0);
-						if(annotationSelection.getAddressByUsername().size() < numUsers) {
-							hasDiff = true;
-						}
-					}
-				}
+        segmentAdress.put(CurationPanel.CURATION_USER, new HashMap<Integer, Integer>());
+        for (Sentence sentence : select(mergeJCas, Sentence.class)) {
+            segmentAdress.get(CurationPanel.CURATION_USER).put(sentence.getBegin(),
+                    sentence.getAddress());
+        }
 
-				CurationSegmentForSourceDocument curationSegment = new CurationSegmentForSourceDocument();
-				curationSegment.setBegin(begin);
-				curationSegment.setEnd(end);
-				if(hasDiff) {
-					curationSegment.setSentenceState(SentenceState.DISAGREE);
-				} else {
-					curationSegment.setSentenceState(SentenceState.AGREE);
-				}
-				curationSegment.setText(segmentText.get(begin));
-				curationSegment.setSentenceNumber(segmentNumber.get(begin));
+        if (entryTypes == null) {
+            entryTypes = getEntryTypes(mergeJCas);
+        }
 
-				for (String username : segmentAdress.keySet()) {
-					curationSegment.getSentenceAddress().put(username, segmentAdress.get(username).get(begin));
-				}
-				curationContainer.getCurationSegmentByBegin().put(begin, curationSegment);
-			}
+        for (Integer begin : segmentBeginEnd.keySet()) {
+            Integer end = segmentBeginEnd.get(begin);
 
-		return curationContainer;
-	}
+            List<AnnotationOption> annotationOptions = null;
+            try {
+                annotationOptions = CasDiff.doDiff(entryTypes, jCases, begin, end);
+            }
+            catch (Exception e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
 
-	private List<Type> getEntryTypes(JCas mergeJCas) {
-		List<Type> entryTypes = new LinkedList<Type>();
-		//entryTypes.add(CasUtil.getType(firstJCas.getCas(), Token.class));
-		//entryTypes.add(CasUtil.getType(firstJCas.getCas(), Sentence.class));
-		entryTypes.add(CasUtil.getType(mergeJCas.getCas(), POS.class));
-		entryTypes.add(CasUtil.getType(mergeJCas.getCas(), CoreferenceLink.class));
-		entryTypes.add(CasUtil.getType(mergeJCas.getCas(), Lemma.class));
-		entryTypes.add(CasUtil.getType(mergeJCas.getCas(), NamedEntity.class));
-		// TODO arc types
-		return entryTypes;
-	}
+            Boolean hasDiff = false;
+            for (AnnotationOption annotationOption : annotationOptions) {
+                List<AnnotationSelection> annotationSelections = annotationOption
+                        .getAnnotationSelections();
+                if (annotationSelections.size() > 1) {
+                    hasDiff = true;
+                }
+                else if (annotationSelections.size() == 1) {
+                    AnnotationSelection annotationSelection = annotationSelections.get(0);
+                    if (annotationSelection.getAddressByUsername().size() < numUsers) {
+                        hasDiff = true;
+                    }
+                }
+            }
+
+            CurationSegmentForSourceDocument curationSegment = new CurationSegmentForSourceDocument();
+            curationSegment.setBegin(begin);
+            curationSegment.setEnd(end);
+            if (hasDiff) {
+                curationSegment.setSentenceState(SentenceState.DISAGREE);
+            }
+            else {
+                curationSegment.setSentenceState(SentenceState.AGREE);
+            }
+            curationSegment.setText(segmentText.get(begin));
+            curationSegment.setSentenceNumber(segmentNumber.get(begin));
+
+            for (String username : segmentAdress.keySet()) {
+                curationSegment.getSentenceAddress().put(username,
+                        segmentAdress.get(username).get(begin));
+            }
+            curationContainer.getCurationSegmentByBegin().put(begin, curationSegment);
+        }
+
+        return curationContainer;
+    }
+
+    private List<Type> getEntryTypes(JCas mergeJCas)
+    {
+        List<Type> entryTypes = new LinkedList<Type>();
+        // entryTypes.add(CasUtil.getType(firstJCas.getCas(), Token.class));
+        // entryTypes.add(CasUtil.getType(firstJCas.getCas(), Sentence.class));
+        entryTypes.add(CasUtil.getType(mergeJCas.getCas(), POS.class));
+        entryTypes.add(CasUtil.getType(mergeJCas.getCas(), CoreferenceLink.class));
+        entryTypes.add(CasUtil.getType(mergeJCas.getCas(), Lemma.class));
+        entryTypes.add(CasUtil.getType(mergeJCas.getCas(), NamedEntity.class));
+        // TODO arc types
+        return entryTypes;
+    }
 
 }

@@ -16,7 +16,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model;
 
 import java.io.Serializable;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -37,7 +37,7 @@ public class CurationSegmentForSourceDocument
     private SentenceState sentenceState;
     private Integer sentenceNumber;
 
-    private Map<String, Integer> sentenceAddress = new HashMap<String, Integer>();
+    private Map<String, Integer> sentenceAddress = new LinkedHashMap<String, Integer>();
 
     public CurationSegmentForSourceDocument()
     {

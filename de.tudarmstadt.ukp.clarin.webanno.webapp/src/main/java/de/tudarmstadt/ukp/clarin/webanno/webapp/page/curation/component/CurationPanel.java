@@ -60,7 +60,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorUIData;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.CasToBratJson;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
@@ -97,6 +96,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 public class CurationPanel
     extends Panel
 {
+    private static final long serialVersionUID = -5128648754044819314L;
 
     private final static Log LOG = LogFactory.getLog(CurationPanel.class);
 
@@ -163,24 +163,8 @@ public class CurationPanel
         sentenceOuterView.setOutputMarkupId(true);
         add(sentenceOuterView);
 
-        final BratAnnotatorModel bratAnnotatorModel =curationContainer.getBratAnnotatorModel();
-        // This is a Curation Operation, add to the data model a CURATION Mode
-        bratAnnotatorModel.setMode(Mode.CURATION);
+        final BratAnnotatorModel bratAnnotatorModel = curationContainer.getBratAnnotatorModel();
 
-        if (bratAnnotatorModel.getDocument() != null) {
-            curationSegment = curationContainer.getCurationSegmentByBegin().get(0);
-            bratAnnotatorModel.setFirstSentenceAddress(curationSegment.getSentenceAddress().get(
-                    CURATION_USER));
-            bratAnnotatorModel.setLastSentenceAddress(curationSegment.getSentenceAddress().get(
-                    CURATION_USER));
-            bratAnnotatorModel.setSentenceAddress(curationSegment.getSentenceAddress().get(
-                    CURATION_USER));
-            bratAnnotatorModel.setAnnotationLayers(new HashSet<TagSet>(annotationService
-                    .listTagSets(bratAnnotatorModel.getProject())));
-        }
-        User userLoggedIn = repository.getUser(SecurityContextHolder.getContext()
-                .getAuthentication().getName());
-        bratAnnotatorModel.setUser(userLoggedIn);
         final BratCurationDocumentEditor mergeVisualizer = new BratCurationDocumentEditor(
                 "mergeView", new Model<BratAnnotatorModel>(bratAnnotatorModel))
         {
@@ -193,20 +177,28 @@ public class CurationPanel
                 updateRightSide(aTarget, sentenceOuterView, curationContainer, this);
             }
         };
+        // reset sentenceAddress and lastSentenceAddress to the orginal once
+
         mergeVisualizer.setOutputMarkupId(true);
         add(mergeVisualizer);
 
         LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<CurationUserSegmentForAnnotationDocument>();
         // update list of brat embeddings
-        sentenceListView = new ListView<CurationUserSegmentForAnnotationDocument>("sentenceListView", sentences)
+        sentenceListView = new ListView<CurationUserSegmentForAnnotationDocument>(
+                "sentenceListView", sentences)
         {
+            private static final long serialVersionUID = -5389636445364196097L;
+
             @Override
             protected void populateItem(ListItem<CurationUserSegmentForAnnotationDocument> item2)
             {
-                final CurationUserSegmentForAnnotationDocument curationUserSegment = item2.getModelObject();
+                final CurationUserSegmentForAnnotationDocument curationUserSegment = item2
+                        .getModelObject();
                 BratCurationVisualizer curationVisualizer = new BratCurationVisualizer("sentence",
                         new Model<CurationUserSegmentForAnnotationDocument>(curationUserSegment))
                 {
+                    private static final long serialVersionUID = -1205541428144070566L;
+
                     /**
                      * Method is called, if user has clicked on a span or an arc in the sentence
                      * panel. The span or arc respectively is identified and copied to the merge
@@ -224,7 +216,7 @@ public class CurationPanel
                             mergeJCas = repository.getCurationDocumentContent(sourceDocument);
                         }
                         catch (UIMAException e1) {
-                         error(ExceptionUtils.getRootCause(e1));
+                            error(ExceptionUtils.getRootCause(e1));
                         }
                         catch (IOException e1) {
                             error(ExceptionUtils.getRootCause(e1));
@@ -245,7 +237,7 @@ public class CurationPanel
                                     username).get(address);
                         }
                         // check if clicked on an arc
-                        if (!action.isEmpty() && action.toString().equals("selectArcForMerge")) {
+                        else if (!action.isEmpty() && action.toString().equals("selectArcForMerge")) {
                             // add span for merge
                             // get information of the span clicked
                             Integer addressOriginClicked = request
@@ -253,8 +245,6 @@ public class CurationPanel
                             Integer addressTargetClicked = request
                                     .getParameterValue("targetSpanId").toInteger();
                             String arcType = request.getParameterValue("type").toString();
-                            String typePrefix = BratAjaxCasUtil.getAnnotationType(arcType);
-                            String typeValue = BratAjaxCasUtil.getType(arcType);
                             AnnotationSelection annotationSelectionOrigin = annotationSelectionByUsernameAndAddress
                                     .get(username).get(addressOriginClicked);
                             AnnotationSelection annotationSelectionTarget = annotationSelectionByUsernameAndAddress
@@ -285,37 +275,6 @@ public class CurationPanel
                                     // TODO Auto-generated catch block
                                     e.printStackTrace();
                                 }
-                                /*
-                                 * if (typePrefix.equals(AnnotationTypeConstant.POS_PREFIX)) {
-                                 *
-                                 * ArcAdapter.getDependencyAdapter().addToCas(typeValue, uIData,
-                                 * bratAnnotatorModel, false);
-                                 *
-                                 * adapter = ArcAdapter.getDependencyAdapter(); } else if
-                                 * (typePrefix.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
-                                 * adapter = ChainAdapter.getCoreferenceChainAdapter(); }
-                                 * AnnotationFS fsOrigin = (AnnotationFS)
-                                 * mergeJCas.getLowLevelCas().ll_getFSForRef(address); AnnotationFS
-                                 * fsTarget = (AnnotationFS)
-                                 * mergeJCas.getLowLevelCas().ll_getFSForRef(address); Type
-                                 * tokenType = CasUtil.getType(mergeJCas.getCas(),
-                                 * Token.class.getName()); Feature feature =
-                                 * type.getFeatureByBaseName(labelFeatureName);
-                                 *
-                                 * AnnotationFS newAnnotation =
-                                 * mergeJCas.getCas().createAnnotation(type, fsOrigin.getBegin(),
-                                 * fsTarget.getEnd()); newAnnotation.setStringValue(feature,
-                                 * typeValue); // If origin and target spans are multiple tokens,
-                                 * dependentFS.getBegin will be the // the begin position of the
-                                 * first token and dependentFS.getEnd will be the End // position of
-                                 * the last token. newAnnotation.setFeatureValue( fsOrigin,
-                                 * CasUtil.selectCovered(mergeJCas.getCas(), tokenType,
-                                 * fsOrigin.getBegin(), fsOrigin.getEnd()).get(0));
-                                 * newAnnotation.setFeatureValue( fsTarget,
-                                 * CasUtil.selectCovered(mergeJCas.getCas(), tokenType,
-                                 * fsTarget.getBegin(), fsTarget.getEnd()).get(0));
-                                 * mergeJCas.addFsToIndexes(newAnnotation);
-                                 */
                             }
                         }
                         if (annotationSelection != null) {
@@ -527,7 +486,7 @@ public class CurationPanel
 
         List<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<CurationUserSegmentForAnnotationDocument>();
 
-        BratAnnotatorModel bratAnnotatorModel = mergeVisualizer.getModelObject();
+        BratAnnotatorModel bratAnnotatorModel = new BratAnnotatorModel();// .getModelObject();
         bratAnnotatorModel.setDocument(sourceDocument);
         bratAnnotatorModel.setProject(sourceDocument.getProject());
         bratAnnotatorModel.setUser(userLoggedIn);
@@ -539,6 +498,7 @@ public class CurationPanel
                 CURATION_USER));
         bratAnnotatorModel.setAnnotationLayers(new HashSet<TagSet>(annotationService
                 .listTagSets(bratAnnotatorModel.getProject())));
+        bratAnnotatorModel.setMode(Mode.CURATION);
 
         boolean hasDiff = false;
         List<String> usernamesSorted = new LinkedList<String>(jCases.keySet());
@@ -581,7 +541,7 @@ public class CurationPanel
          * addresses, username)); mergeUserSegment.setCollectionData("{}");
          * mergeUserSegment.setDocumentResponse(getStringDocumentResponse(response));
          */
-
+        mergeVisualizer.setModelObject(bratAnnotatorModel);
         mergeVisualizer.reloadContent(target);
 
         // send response to the client
