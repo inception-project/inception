@@ -322,8 +322,6 @@ public class BratCurationDocumentEditor
     	Object result = null;
         BratAjaxCasController controller = new BratAjaxCasController(jsonConverter,
                 repository, annotationService);
-    	String collection = aSourceDocument.getProject().getName();
-    	String documentName = aSourceDocument.getName();
 
     	try {
     		aUIData.setGetDocument(true);

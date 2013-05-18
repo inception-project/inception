@@ -43,9 +43,9 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.AnnotationPreferenceModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.ExportModalWindowPage;
@@ -344,7 +344,7 @@ public class AnnotationPage
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Page_down }, EventType.click)));
 
-        // SHow the previous page of this document
+        // Show the previous page of this document
         add(new AjaxLink<Void>("showPrevious")
         {
             private static final long serialVersionUID = 7496156015186497496L;

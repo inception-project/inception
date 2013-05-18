@@ -422,7 +422,7 @@ public class BratAnnotator
 
         try {
             {
-                setAttributesForDocument(aCollection, aDocumentName, aUIData);
+                setAttributesForDocument( aUIData);
             }
             aUIData.setGetDocument(true);
             result = controller.getDocument(bratAnnotatorModel, aUIData);
@@ -473,8 +473,7 @@ public class BratAnnotator
                     OffsetsList.class);
             int start = offsetLists.get(0).getBegin();
             int end = offsetLists.get(0).getEnd();
-            setAttributesForDocument(bratAnnotatorModel.getProject().getName(), bratAnnotatorModel
-                    .getDocument().getName(), aUIData);
+            setAttributesForDocument(aUIData);
             aUIData.setAnnotationOffsetStart(BratAjaxCasUtil.getAnnotationBeginOffset(
                     aUIData.getjCas(), bratAnnotatorModel.getSentenceAddress())
                     + start);
@@ -525,8 +524,7 @@ public class BratAnnotator
         BratAjaxCasController controller = new BratAjaxCasController(jsonConverter, repository,
                 annotationService);
         try {
-            setAttributesForDocument(bratAnnotatorModel.getProject().getName(), bratAnnotatorModel
-                    .getDocument().getName(), aUIData);
+            setAttributesForDocument(aUIData);
             aUIData.setOrigin(aRequest.getParameterValue("origin").toInt());
             aUIData.setTarget(aRequest.getParameterValue("target").toInt());
             aUIData.setType(aRequest.getParameterValue("type").toString());
@@ -559,8 +557,7 @@ public class BratAnnotator
                 annotationService);
 
         try {
-            setAttributesForDocument(bratAnnotatorModel.getProject().getName(), bratAnnotatorModel
-                    .getDocument().getName(), aUIData);
+            setAttributesForDocument(aUIData);
             aUIData.setOrigin(aRequest.getParameterValue("origin").toInt());
             aUIData.setTarget(aRequest.getParameterValue("target").toInt());
             aUIData.setType(aRequest.getParameterValue("type").toString());
@@ -604,8 +601,7 @@ public class BratAnnotator
                     OffsetsList.class);
             int start = offsetLists.get(0).getBegin();
             int end = offsetLists.get(0).getEnd();
-            setAttributesForDocument(bratAnnotatorModel.getProject().getName(), bratAnnotatorModel
-                    .getDocument().getName(), aUIData);
+            setAttributesForDocument( aUIData);
             aUIData.setAnnotationOffsetStart(BratAjaxCasUtil.getAnnotationBeginOffset(
                     aUIData.getjCas(), bratAnnotatorModel.getSentenceAddress())
                     + start);
@@ -649,8 +645,7 @@ public class BratAnnotator
                 annotationService);
 
         try {
-            setAttributesForDocument(bratAnnotatorModel.getProject().getName(), bratAnnotatorModel
-                    .getDocument().getName(), aUIData);
+            setAttributesForDocument(aUIData);
             aUIData.setOrigin(aRequest.getParameterValue("origin").toInt());
             aUIData.setTarget(aRequest.getParameterValue("target").toInt());
             aUIData.setType(aRequest.getParameterValue("type").toString());
@@ -685,7 +680,7 @@ public class BratAnnotator
      * @throws IOException
      */
     @SuppressWarnings("unchecked")
-    public void setAttributesForDocument(String aProjectName, String aDocumentName,
+    public void setAttributesForDocument(
             BratAnnotatorUIData aUIData)
         throws UIMAException, IOException
     {
