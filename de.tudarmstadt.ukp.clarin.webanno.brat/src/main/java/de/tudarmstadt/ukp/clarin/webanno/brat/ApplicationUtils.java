@@ -253,10 +253,11 @@ public class ApplicationUtils
         try {
             for (Entry<Object, Object> entry : aRepositoryService.loadUserSettings(aUsername,
                     abAnnotatorModel.getProject(), aMode).entrySet()) {
-                String propertyName = entry.getKey().toString();
-                int index = propertyName.lastIndexOf(".");
-                propertyName = propertyName.substring(index + 1);
-                if (wrapper.isWritableProperty(propertyName)) {
+                String property = entry.getKey().toString();
+                int index = property.lastIndexOf(".");
+               String propertyName = property.substring(index + 1);
+                String mode = property.substring(0, index);
+                if (wrapper.isWritableProperty(propertyName) && mode.equals(aMode.name())) {
 
                     if (AnnotationPreference.class.getDeclaredField(propertyName).getGenericType() instanceof ParameterizedType) {
                         List<String> value = Arrays.asList(StringUtils.replaceChars(
