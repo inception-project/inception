@@ -140,81 +140,14 @@ public class CurationBuilder
         try {
             mergeJCas = repository.getCurationDocumentContent(sourceDocument);
         }
+        // Create jcas, if it could not be loaded from the file system
         catch (Exception e) {
-            // JCas does not exist
+            mergeJCas = createMergeCas(mergeJCas, repository, randomAnnotationDocument, jCases);
         }
 
         int numUsers = jCases.size();
 
         List<Type> entryTypes = null;
-        // Create jcas, if it could not be loaded from the file system
-        if (mergeJCas == null) {
-            try {
-                mergeJCas = repository.getAnnotationDocumentContent(randomAnnotationDocument);
-            }
-            catch (UIMAException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-            catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-            catch (ClassNotFoundException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-
-            entryTypes = getEntryTypes(mergeJCas);
-            jCases.put(CurationPanel.CURATION_USER, mergeJCas);
-
-            List<AnnotationOption> annotationOptions = null;
-            try {
-
-                annotationOptions = CasDiff.doDiff(entryTypes, jCases, begin, end);
-            }
-            catch (Exception e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-            for (AnnotationOption annotationOption : annotationOptions) {
-                // remove the featureStructure if more than 1 annotationSelection exists per
-                // annotationOption
-                boolean removeFS = annotationOption.getAnnotationSelections().size() > 1;
-                if (annotationOption.getAnnotationSelections().size() == 1) {
-                    removeFS = annotationOption.getAnnotationSelections().get(0)
-                            .getAddressByUsername().size() <= numUsers;
-                }
-                for (AnnotationSelection annotationSelection : annotationOption
-                        .getAnnotationSelections()) {
-                    for (String username : annotationSelection.getAddressByUsername().keySet()) {
-                        if (username.equals(CurationPanel.CURATION_USER)) {
-                            Integer address = annotationSelection.getAddressByUsername().get(
-                                    username);
-
-                            // removing disagreeing feature structures in mergeJCas
-                            if (removeFS && address != null) {
-                                FeatureStructure fs = mergeJCas.getLowLevelCas().ll_getFSForRef(
-                                        address);
-                                if (!(fs instanceof Token)) {
-                                    mergeJCas.getCas().removeFsFromIndexes(fs);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            User userLoggedIn = repository.getUser(SecurityContextHolder.getContext()
-                    .getAuthentication().getName());
-            try {
-                repository.createCurationDocumentContent(mergeJCas, sourceDocument, userLoggedIn);
-            }
-            catch (IOException e1) {
-                // TODO Auto-generated catch block
-                e1.printStackTrace();
-            }
-        }
 
         segmentAdress.put(CurationPanel.CURATION_USER, new HashMap<Integer, Integer>());
         for (Sentence sentence : select(mergeJCas, Sentence.class)) {
@@ -287,5 +220,79 @@ public class CurationBuilder
         // TODO arc types
         return entryTypes;
     }
+    /**
+     * For the first time a curation page is opened, create a MergeCas that contains only agreeing annotations
+     * Using the CAS of the curator user.
+     */
+    public JCas createMergeCas(JCas mergeJCas, RepositoryService repository,
+            AnnotationDocument randomAnnotationDocument, Map<String, JCas> jCases ){
+        List<Type> entryTypes = null;
+        int numUsers = jCases.size();
+            try {
+                mergeJCas = repository.getAnnotationDocumentContent(randomAnnotationDocument);
+            }
+            catch (UIMAException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            catch (ClassNotFoundException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
 
+            entryTypes = getEntryTypes(mergeJCas);
+            jCases.put(CurationPanel.CURATION_USER, mergeJCas);
+
+            List<AnnotationOption> annotationOptions = null;
+            try {
+
+                annotationOptions = CasDiff.doDiff(entryTypes, jCases, begin, end);
+            }
+            catch (Exception e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            for (AnnotationOption annotationOption : annotationOptions) {
+                // remove the featureStructure if more than 1 annotationSelection exists per
+                // annotationOption
+                boolean removeFS = annotationOption.getAnnotationSelections().size() > 1;
+                if (annotationOption.getAnnotationSelections().size() == 1) {
+                    removeFS = annotationOption.getAnnotationSelections().get(0)
+                            .getAddressByUsername().size() <= numUsers;
+                }
+                for (AnnotationSelection annotationSelection : annotationOption
+                        .getAnnotationSelections()) {
+                    for (String username : annotationSelection.getAddressByUsername().keySet()) {
+                        if (username.equals(CurationPanel.CURATION_USER)) {
+                            Integer address = annotationSelection.getAddressByUsername().get(
+                                    username);
+
+                            // removing disagreeing feature structures in mergeJCas
+                            if (removeFS && address != null) {
+                                FeatureStructure fs = mergeJCas.getLowLevelCas().ll_getFSForRef(
+                                        address);
+                                if (!(fs instanceof Token)) {
+                                    mergeJCas.getCas().removeFsFromIndexes(fs);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            User userLoggedIn = repository.getUser(SecurityContextHolder.getContext()
+                    .getAuthentication().getName());
+            try {
+                repository.createCurationDocumentContent(mergeJCas, randomAnnotationDocument.getDocument(), userLoggedIn);
+            }
+            catch (IOException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            }
+            return mergeJCas;
+        }
 }
