@@ -345,9 +345,90 @@ public class CurationPage
                 }
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Page_up }, EventType.click)));
-    }
 
+
+
+    add(new AjaxLink<Void>("showFirst")
+    {
+        private static final long serialVersionUID = 7496156015186497496L;
+
+        @Override
+        public void onClick(AjaxRequestTarget target)
+        {
+            if (bratAnnotatorModel.getDocument() != null) {
+                if (bratAnnotatorModel.getFirstSentenceAddress() != bratAnnotatorModel
+                        .getSentenceAddress()) {
+                    bratAnnotatorModel
+                            .setSentenceAddress(bratAnnotatorModel
+                                    .getFirstSentenceAddress());
+
+                 // transform jcas to objects for wicket components
+                    CurationBuilder builder = new CurationBuilder(repository);
+                    curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
+                    curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
+                    updatePanel(curationContainer);
+                    target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+
+                }
+                else {
+                    target.appendJavaScript("alert('This is first page!')");
+                }
+            }
+            else {
+                target.appendJavaScript("alert('Please open a document first!')");
+            }
+        }
+    }.add(new InputBehavior(new KeyType[] { KeyType.Home }, EventType.click)));
+
+    add(new AjaxLink<Void>("showLast")
+    {
+        private static final long serialVersionUID = 7496156015186497496L;
+
+        @Override
+        public void onClick(AjaxRequestTarget target)
+        {
+            if (bratAnnotatorModel.getDocument() != null) {
+                JCas mergeJCas = null;
+                try {
+                    mergeJCas = repository.getCurationDocumentContent(bratAnnotatorModel
+                            .getDocument());
+                }
+                catch (UIMAException e) {
+                    error(ExceptionUtils.getRootCause(e));
+                }
+                catch (ClassNotFoundException e) {
+                    error(ExceptionUtils.getRootCause(e));
+                }
+                catch (IOException e) {
+                    error(ExceptionUtils.getRootCause(e));
+                }
+                int lastDisplayWindowBeginingSentenceAddress = BratAjaxCasUtil
+                        .getLastDisplayWindowFirstSentenceAddress(mergeJCas,
+                                bratAnnotatorModel.getWindowSize());
+                if (lastDisplayWindowBeginingSentenceAddress != bratAnnotatorModel
+                        .getSentenceAddress()) {
+                    bratAnnotatorModel
+                            .setSentenceAddress(lastDisplayWindowBeginingSentenceAddress);
+                 // transform jcas to objects for wicket components
+                    CurationBuilder builder = new CurationBuilder(repository);
+                    curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
+                    curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
+                    updatePanel(curationContainer);
+                    target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+
+                }
+                else {
+                    target.appendJavaScript("alert('This is last Page!')");
+                }
+            }
+            else {
+                target.appendJavaScript("alert('Please open a document first!')");
+            }
+        }
+    }.add(new InputBehavior(new KeyType[] { KeyType.End }, EventType.click)));
+    }
     // Update the curation panel.
+
     private void updatePanel(CurationContainer aCurationContainer)
     {
         // remove old panel, create new one, add it
@@ -404,7 +485,7 @@ public class CurationPage
 
                 AnnotationPreference preference = new AnnotationPreference();
                 ApplicationUtils.setAnnotationPreference(preference, username, repository,
-                        annotationService, bratAnnotatorModel, Mode.ANNOTATION);
+                        annotationService, bratAnnotatorModel, Mode.CURATION);
             }
             catch (DataRetrievalFailureException ex) {
                 throw ex;
