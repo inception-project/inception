@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,29 +19,25 @@ import static org.uimafit.util.CasUtil.selectCovered;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.FSIndex;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
-import org.apache.uima.util.CasCopier;
-import org.uimafit.util.CasUtil;
 
 public class CasDiff {
 
 	/**
 	 * spot differing annotations by comparing cases of the same source document.
 	 * <br /><br />
-	 * 
-	 * 
+	 *
+	 *
 	 * @param aCasMap
 	 *            Map of (username, cas)
 	 * @return List of {@link AnnotationOption}
@@ -60,14 +56,14 @@ public class CasDiff {
 			for (String username : aCasMap.keySet()) {
 				usernames.add(username);
 				CAS cas = aCasMap.get(username).getCas();
-				
+
 				// instead cas.getAnnotationIndex(aEntryType) also
 				// cas.getIndexRepository().getAllIndexedFS(aType)
 				for (AnnotationFS annotationFS : selectCovered(cas, aEntryType,
 						aBegin, aEnd)) {
 					Integer begin = annotationFS.getBegin();
 					Integer end = annotationFS.getEnd();
-					
+
 					if (!annotationFSsByBeginEnd.containsKey(begin)) {
 						annotationFSsByBeginEnd.put(begin,
 								new HashMap<Integer, Set<AnnotationFS>>());
@@ -80,7 +76,7 @@ public class CasDiff {
 					usernameByFeatureStructure.put(annotationFS, username);
 				}
 			}
-			
+
 			Map<FeatureStructure, AnnotationSelection> annotationSelectionByFeatureStructure = new HashMap<FeatureStructure, AnnotationSelection>();
 			for (Map<Integer, Set<AnnotationFS>> annotationFSsByEnd : annotationFSsByBeginEnd
 					.values()) {
@@ -92,7 +88,7 @@ public class CasDiff {
 						// diffFS1 contains all feature structures of fs1, which do not occur in other cases
 						Set<FeatureStructure> diffFSNew = traverseFS(fsNew);
 						Map<FeatureStructure, AnnotationOption> annotationOptionByCompareResultFS1 = new HashMap<FeatureStructure, AnnotationOption>();
-						
+
 						Map<FeatureStructure, AnnotationSelection> annotationSelectionByFeatureStructureNew = new HashMap<FeatureStructure, AnnotationSelection>(annotationSelectionByFeatureStructure);
 						for (FeatureStructure fsOld : annotationSelectionByFeatureStructure.keySet()) {
 							String usernameFSOld = usernameByFeatureStructure
@@ -106,12 +102,12 @@ public class CasDiff {
 									AnnotationSelection annotationSelection = annotationSelectionByFeatureStructure.get(compareResultFSOld);
 									annotationSelection.getAddressByUsername().put(usernameFSNew, addressNew);
 									annotationSelectionByFeatureStructureNew.put(compareResultFSNew, annotationSelection);
-									
+
 								}
 							}
 						}
 						annotationSelectionByFeatureStructure = annotationSelectionByFeatureStructureNew;
-						
+
 						// add featureStructures, that have not been found in existing annotationSelections
 						for (FeatureStructure subFS1 : diffFSNew) {
 							AnnotationSelection annotationSelection = new AnnotationSelection();
@@ -157,7 +153,7 @@ public class CasDiff {
 	private static CompareResult compareFeatureFS(
 			FeatureStructure fsNew, FeatureStructure fsOld, Set<FeatureStructure> diffFSNew) throws Exception {
 		CompareResult compareResult = new CompareResult();
-		
+
 		// check if types are equal
 		Type type = fsNew.getType();
 		if (!fsOld.getType().toString().equals(type.toString())) {
@@ -192,7 +188,7 @@ public class CasDiff {
 							|| !fsNew.getStringValue(feature).equals(
 									fsOld.getStringValue(feature))) {
 						// stringValue1 differs from stringValue2
-						
+
 						// disagree
 						agreeOnSubfeatures = false;
 						//compareResult.getDiffs().put(fs1, fs2);
@@ -243,7 +239,7 @@ public class CasDiff {
 		} else {
 			compareResult.getDiffs().put(fsNew, fsOld);
 		}
-		
+
 		// TODO if no diffs, agree (here or elsewhere)?
 		if(compareResult.getDiffs().isEmpty()) {
 			compareResult.getAgreements().put(fsNew, fsOld);
@@ -252,5 +248,5 @@ public class CasDiff {
 
 		return compareResult;
 	}
-	
+
 }

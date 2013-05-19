@@ -558,7 +558,7 @@ public class AnnotationPage
             String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
             User user = repository.getUser(username);
-            BratAjaxCasController controller = new BratAjaxCasController(jsonConverter, repository,
+            BratAjaxCasController controller = new BratAjaxCasController( repository,
                     annotationService);
             jCas = controller.getJCas(aDocument, aProject, user);
         }

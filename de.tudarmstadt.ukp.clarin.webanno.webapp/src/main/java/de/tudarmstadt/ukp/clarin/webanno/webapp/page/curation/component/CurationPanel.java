@@ -263,7 +263,7 @@ public class CurationPanel
                                 uIData.setOrigin(addressOrigin);
                                 uIData.setTarget(addressTarget);
                                 BratAjaxCasController controller = new BratAjaxCasController(
-                                        jsonConverter, repository, annotationService);
+                                         repository, annotationService);
                                 try {
                                     controller.createArcWithoutResponse(bratAnnotatorModel, uIData);
                                 }

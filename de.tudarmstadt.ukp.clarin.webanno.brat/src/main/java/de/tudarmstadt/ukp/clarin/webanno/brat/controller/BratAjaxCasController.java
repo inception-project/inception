@@ -32,7 +32,6 @@ import org.apache.uima.jcas.JCas;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.springframework.dao.DataRetrievalFailureException;
-import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.MultiValueMap;
 
@@ -94,9 +93,6 @@ public class BratAjaxCasController
     @Resource(name = "annotationService")
     private AnnotationService annotationService;
 
-    @Resource(name = "jsonConverter")
-    private MappingJacksonHttpMessageConverter jsonConverter;
-
     private Log LOG = LogFactory.getLog(getClass());
 
     public BratAjaxCasController()
@@ -104,12 +100,10 @@ public class BratAjaxCasController
 
     }
 
-    public BratAjaxCasController(MappingJacksonHttpMessageConverter aJsonConverter,
-            RepositoryService aRepository, AnnotationService aAnnotationService)
+    public BratAjaxCasController(RepositoryService aRepository, AnnotationService aAnnotationService)
     {
         this.annotationService = aAnnotationService;
         this.repository = aRepository;
-        this.jsonConverter = aJsonConverter;
     }
 
     /**
@@ -376,16 +370,16 @@ public class BratAjaxCasController
                     aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
         }
     }
-    
-    
+
+
     public CreateArcResponse createArc(BratAnnotatorModel aBratAnnotatorModel,
     		BratAnnotatorUIData aUIData)
     				throws UIMAException, IOException
     				{
-    	
+
     	String annotationType = BratAjaxCasUtil.getAnnotationType(aUIData.getType());
     	String type = BratAjaxCasUtil.getType(aUIData.getType());
-    	
+
     	if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
     		ArcAdapter.getDependencyAdapter().addToCas(type, aUIData, aBratAnnotatorModel, false);
     	}
@@ -393,13 +387,13 @@ public class BratAjaxCasController
     		ChainAdapter.getCoreferenceChainAdapter().addToCas(type, aUIData);
     	}
     	GetDocumentResponse response = new GetDocumentResponse();
-    	
+
     	addBratResponses(response, aBratAnnotatorModel, aUIData);
-    	
+
     	CreateArcResponse createArcResponse = new CreateArcResponse();
-    	
+
     	createArcResponse.setAnnotations(response);
-    	
+
     	if (aBratAnnotatorModel.getMode().equals(Mode.ANNOTATION)) {
     		repository.createAnnotationDocumentContent(aUIData.getjCas(),
     				aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
@@ -408,12 +402,12 @@ public class BratAjaxCasController
     		repository.createCurationDocumentContent(aUIData.getjCas(),
     				aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
     	}
-    	
+
     	return createArcResponse;
-    	
+
     				}
-    
-    
+
+
 
     /**
      * reverse the direction of arc annotations, in this case, Dependency parsing

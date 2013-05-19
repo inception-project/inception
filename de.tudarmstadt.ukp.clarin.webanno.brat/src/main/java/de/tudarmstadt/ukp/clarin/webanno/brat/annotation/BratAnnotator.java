@@ -215,7 +215,7 @@ public class BratAnnotator
                 final IRequestParameters request = getRequest().getPostParameters();
 
                 Object result = null;
-                BratAjaxCasController controller = new BratAjaxCasController(jsonConverter,
+                BratAjaxCasController controller = new BratAjaxCasController(
                         repository, annotationService);
 
                 if (request.getParameterValue("action").toString().equals("whoami")) {
@@ -417,7 +417,7 @@ public class BratAnnotator
             BratAnnotatorUIData aUIData)
     {
         Object result = null;
-        BratAjaxCasController controller = new BratAjaxCasController(jsonConverter, repository,
+        BratAjaxCasController controller = new BratAjaxCasController( repository,
                 annotationService);
 
         try {
@@ -451,7 +451,7 @@ public class BratAnnotator
     {
 
         Object result = null;
-        BratAjaxCasController controller = new BratAjaxCasController(jsonConverter, repository,
+        BratAjaxCasController controller = new BratAjaxCasController( repository,
                 annotationService);
         String offsets = aRequest.getParameterValue("offsets").toString();
         OffsetsList offsetList = null;
@@ -521,7 +521,7 @@ public class BratAnnotator
     {
 
         Object result = null;
-        BratAjaxCasController controller = new BratAjaxCasController(jsonConverter, repository,
+        BratAjaxCasController controller = new BratAjaxCasController( repository,
                 annotationService);
         try {
             setAttributesForDocument(aUIData);
@@ -553,7 +553,7 @@ public class BratAnnotator
     {
 
         Object result = null;
-        BratAjaxCasController controller = new BratAjaxCasController(jsonConverter, repository,
+        BratAjaxCasController controller = new BratAjaxCasController( repository,
                 annotationService);
 
         try {
@@ -591,7 +591,7 @@ public class BratAnnotator
     {
 
         Object result = null;
-        BratAjaxCasController controller = new BratAjaxCasController(jsonConverter, repository,
+        BratAjaxCasController controller = new BratAjaxCasController(repository,
                 annotationService);
 
         try {
@@ -641,7 +641,7 @@ public class BratAnnotator
     {
 
         Object result = null;
-        BratAjaxCasController controller = new BratAjaxCasController(jsonConverter, repository,
+        BratAjaxCasController controller = new BratAjaxCasController(repository,
                 annotationService);
 
         try {
@@ -776,7 +776,7 @@ public class BratAnnotator
     {
         JCas jCas = null;
         try {
-            BratAjaxCasController controller = new BratAjaxCasController(jsonConverter, repository,
+            BratAjaxCasController controller = new BratAjaxCasController(repository,
                     annotationService);
             jCas = controller.getJCas(aDocument, aProject, user);
         }

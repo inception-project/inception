@@ -18,9 +18,9 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 import java.io.Serializable;
 import java.util.HashSet;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
@@ -70,7 +70,7 @@ public class BratAnnotatorModel
     /**
      * The number of sentences to be dispalyed at atime
      */
-    private int windowSize = 10;
+    private int windowSize = 2;
     /**
      * Used to enable/disable the display of lemma layers
      */
