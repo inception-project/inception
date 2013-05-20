@@ -15,7 +15,7 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model;
 
-import static org.uimafit.util.JCasUtil.select;
+import static org.uimafit.util.JCasUtil.selectCovered;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -150,7 +150,7 @@ public class CurationBuilder
         List<Type> entryTypes = null;
 
         segmentAdress.put(CurationPanel.CURATION_USER, new HashMap<Integer, Integer>());
-        for (Sentence sentence : select(mergeJCas, Sentence.class)) {
+        for (Sentence sentence : selectCovered(mergeJCas, Sentence.class, begin, end)) {
             segmentAdress.get(CurationPanel.CURATION_USER).put(sentence.getBegin(),
                     sentence.getAddress());
         }
@@ -204,7 +204,6 @@ public class CurationBuilder
             }
             curationContainer.getCurationSegmentByBegin().put(begin, curationSegment);
         }
-
         return curationContainer;
     }
 

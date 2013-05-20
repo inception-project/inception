@@ -70,7 +70,7 @@ public class BratAnnotatorModel
     /**
      * The number of sentences to be dispalyed at atime
      */
-    private int windowSize = 2;
+    private int windowSize = 10;
     /**
      * Used to enable/disable the display of lemma layers
      */
