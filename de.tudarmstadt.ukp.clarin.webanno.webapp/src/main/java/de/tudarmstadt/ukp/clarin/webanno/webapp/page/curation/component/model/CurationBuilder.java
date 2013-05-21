@@ -52,6 +52,14 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
+ * This class is responsible for two things. Firstly, it creates a pre-merged
+ * cas, which contains all annotations, where all annotators agree on. This is
+ * done by copying a random cas and removing all differing annotations.
+ * 
+ * Secondly, the class creates an instance of {@link CurationContainer}, which
+ * is the wicket model for the curation panel. The {@link CurationContainer}
+ * contains the text for all sentences, which are displayed at a specific page.
+ * 
  * @author Andreas Straninger
  * @author Seid Muhie Yimam
  */
