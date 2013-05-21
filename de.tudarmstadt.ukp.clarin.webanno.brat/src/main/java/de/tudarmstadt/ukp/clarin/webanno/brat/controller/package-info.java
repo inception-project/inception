@@ -15,6 +15,6 @@
  ******************************************************************************/
 
 /**
- * Provides Classes that cumpute brat specific operations such as {@link de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController#getDocument(String, String)}....
+ * Provides Classes that cumpute brat specific operations such as {@link de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController#getDocumentResponse(String, String)}....
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;

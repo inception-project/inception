@@ -425,7 +425,7 @@ public class BratAnnotator
                 setAttributesForDocument( aUIData);
             }
             aUIData.setGetDocument(true);
-            result = controller.getDocument(bratAnnotatorModel, aUIData);
+            result = controller.getDocumentResponse(bratAnnotatorModel, aUIData);
             aUIData.setGetDocument(false);
         }
         catch (UIMAException e) {
@@ -487,7 +487,7 @@ public class BratAnnotator
                 throw new Exception(
                         "Annotation coveres multiple sentence, Limit your annotation to single sentence");
             }
-            result = controller.createSpan(bratAnnotatorModel, aUIData);
+            result = controller.createSpanResponse(bratAnnotatorModel, aUIData);
             if (bratAnnotatorModel.isScrollPage()) {
                 bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(
                         aUIData.getjCas(), bratAnnotatorModel.getSentenceAddress(),
@@ -530,7 +530,7 @@ public class BratAnnotator
             aUIData.setType(aRequest.getParameterValue("type").toString());
             aUIData.setAnnotationOffsetStart(BratAjaxCasUtil.getAnnotationBeginOffset(
                     aUIData.getjCas(), aUIData.getOrigin()));
-            result = controller.createArc(bratAnnotatorModel, aUIData);
+            result = controller.createArcResponse(bratAnnotatorModel, aUIData);
             if (bratAnnotatorModel.isScrollPage()) {
                 bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(
                         aUIData.getjCas(), bratAnnotatorModel.getSentenceAddress(),
@@ -567,7 +567,7 @@ public class BratAnnotator
             String annotationType = aUIData.getType().substring(0,
                     aUIData.getType().indexOf(AnnotationTypeConstant.PREFIX) + 1);
             if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
-                result = controller.reverseArc(bratAnnotatorModel, aUIData);
+                result = controller.reverseArcResponse(bratAnnotatorModel, aUIData);
                 if (bratAnnotatorModel.isScrollPage()) {
                     bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(
                             aUIData.getjCas(), bratAnnotatorModel.getSentenceAddress(),
@@ -609,7 +609,7 @@ public class BratAnnotator
                     aUIData.getjCas(), bratAnnotatorModel.getSentenceAddress())
                     + end);
             aUIData.setType(aRequest.getParameterValue("type").toString());
-            result = controller.deleteSpan(bratAnnotatorModel, id, aUIData);
+            result = controller.deleteSpanResponse(bratAnnotatorModel, id, aUIData);
             if (bratAnnotatorModel.isScrollPage()) {
                 bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(
                         aUIData.getjCas(), bratAnnotatorModel.getSentenceAddress(),
@@ -652,7 +652,7 @@ public class BratAnnotator
             aUIData.setAnnotationOffsetStart(BratAjaxCasUtil.getAnnotationBeginOffset(
                     aUIData.getjCas(), aUIData.getOrigin()));
 
-            result = controller.deleteArc(bratAnnotatorModel, aUIData);
+            result = controller.deleteArcResponse(bratAnnotatorModel, aUIData);
             if (bratAnnotatorModel.isScrollPage()) {
                 bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(
                         aUIData.getjCas(), bratAnnotatorModel.getSentenceAddress(),

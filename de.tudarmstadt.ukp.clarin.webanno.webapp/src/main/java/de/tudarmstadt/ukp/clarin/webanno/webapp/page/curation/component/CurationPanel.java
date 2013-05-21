@@ -235,6 +235,12 @@ public class CurationPanel
                             address = request.getParameterValue("id").toInteger();
                             annotationSelection = annotationSelectionByUsernameAndAddress.get(
                                     username).get(address);
+                /*            String spanType = request.getParameterValue("type").toString();
+                            BratAjaxCasController controller = new BratAjaxCasController(
+                                    repository, annotationService);
+                            controller.createSpan(bratAnnotatorModel, aUIData);*/
+
+
                         }
                         // check if clicked on an arc
                         else if (!action.isEmpty() && action.toString().equals("selectArcForMerge")) {
@@ -265,11 +271,9 @@ public class CurationPanel
                                 BratAjaxCasController controller = new BratAjaxCasController(
                                          repository, annotationService);
                                 try {
-                                    controller.createArcWithoutResponse(bratAnnotatorModel, uIData);
-                                }
-                                catch (UIMAException e) {
-                                    // TODO Auto-generated catch block
-                                    e.printStackTrace();
+                                    controller.addArcToCas(bratAnnotatorModel, uIData);
+                                    controller.createAnnotationDocumentContent(bratAnnotatorModel.getMode(),
+                                            bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),mergeJCas);
                                 }
                                 catch (IOException e) {
                                     // TODO Auto-generated catch block
