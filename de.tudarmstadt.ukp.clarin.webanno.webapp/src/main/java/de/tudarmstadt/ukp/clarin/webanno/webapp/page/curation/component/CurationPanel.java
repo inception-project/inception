@@ -89,8 +89,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 /**
  * Main Panel for the curation page. It displays a box with the complete
  * text on the left side and a box for a selected sentence on the right side.
- * 
- * @author Andreas Straninger 
+ *
+ * @author Andreas Straninger
  */
 public class CurationPanel
     extends Panel
@@ -336,6 +336,13 @@ public class CurationPanel
                         curationSegment = curationSegmentItem;
                         updateRightSide(target, sentenceOuterView, curationContainer,
                                 mergeVisualizer);
+                        List<CurationSegmentForSourceDocument> segments = curationContainer.getCurationSegments();
+                        for (CurationSegmentForSourceDocument segment : segments) {
+                            segment.setCurrentSentence(curationSegmentItem.getSentenceNumber().equals(segment.getSentenceNumber()));
+                        }
+                        textListView.setModelObject(segments);
+                        textOuterView.addOrReplace(textListView);
+                        target.add(textOuterView);
                         // target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
                     }
 
@@ -344,9 +351,14 @@ public class CurationPanel
                 // add subcomponents to the component
                 item.add(click);
                 String colorCode = curationSegmentItem.getSentenceState().getColorCode();
-                if (colorCode != null) {
+                if (curationSegmentItem.isCurrentSentence()){
+                    item.add(new SimpleAttributeModifier("style", "background-color:" + "yellow"
+                            + ";"));
+                } else {
+                    if (colorCode != null) {
                     item.add(new SimpleAttributeModifier("style", "background-color:" + colorCode
                             + ";"));
+                    }
                 }
                 Label currentSentence = new AjaxLabel("sentence", curationSegmentItem.getText(),
                         click);

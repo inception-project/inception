@@ -36,6 +36,7 @@ public class CurationSegmentForSourceDocument
     private String text;
     private SentenceState sentenceState;
     private Integer sentenceNumber;
+    private boolean isCurrentSentence;
 
     private Map<String, Integer> sentenceAddress = new LinkedHashMap<String, Integer>();
 
@@ -103,5 +104,16 @@ public class CurationSegmentForSourceDocument
     {
         this.sentenceNumber = sentenceNumber;
     }
+
+    public boolean isCurrentSentence()
+    {
+        return isCurrentSentence;
+    }
+
+    public void setCurrentSentence(boolean isCurrentSentence)
+    {
+        this.isCurrentSentence = isCurrentSentence;
+    }
+
 
 }
