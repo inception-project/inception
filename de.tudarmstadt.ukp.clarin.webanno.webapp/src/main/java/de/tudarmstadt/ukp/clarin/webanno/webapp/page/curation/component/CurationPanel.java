@@ -29,10 +29,9 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
-import org.apache.uima.util.CasCopier;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -235,11 +234,32 @@ public class CurationPanel
                             address = request.getParameterValue("id").toInteger();
                             annotationSelection = annotationSelectionByUsernameAndAddress.get(
                                     username).get(address);
-                /*            String spanType = request.getParameterValue("type").toString();
-                            BratAjaxCasController controller = new BratAjaxCasController(
-                                    repository, annotationService);
-                            controller.createSpan(bratAnnotatorModel, aUIData);*/
-
+                            if (annotationSelection != null) {
+                                AnnotationDocument clickedAnnotationDocument = null;
+                                List<AnnotationDocument> annotationDocuments = repository
+                                        .listAnnotationDocument(project, sourceDocument);
+                                for (AnnotationDocument annotationDocument : annotationDocuments) {
+                                    if (annotationDocument.getUser().getUsername().equals(username)) {
+                                        clickedAnnotationDocument = annotationDocument;
+                                        break;
+                                    }
+                                }
+                                try {
+                                    createSpan(request,bratAnnotatorModel, mergeJCas, clickedAnnotationDocument, address);
+                                }
+                                catch (UIMAException e) {
+                                    // TODO Auto-generated catch block
+                                    e.printStackTrace();
+                                }
+                                catch (ClassNotFoundException e) {
+                                    // TODO Auto-generated catch block
+                                    e.printStackTrace();
+                                }
+                                catch (IOException e) {
+                                    // TODO Auto-generated catch block
+                                    e.printStackTrace();
+                                }
+                            }
 
                         }
                         // check if clicked on an arc
@@ -269,76 +289,19 @@ public class CurationPanel
                                 uIData.setOrigin(addressOrigin);
                                 uIData.setTarget(addressTarget);
                                 BratAjaxCasController controller = new BratAjaxCasController(
-                                         repository, annotationService);
+                                        repository, annotationService);
                                 try {
                                     controller.addArcToCas(bratAnnotatorModel, uIData);
-                                    controller.createAnnotationDocumentContent(bratAnnotatorModel.getMode(),
-                                            bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),mergeJCas);
+                                    controller.createAnnotationDocumentContent(
+                                            bratAnnotatorModel.getMode(),
+                                            bratAnnotatorModel.getDocument(),
+                                            bratAnnotatorModel.getUser(), mergeJCas);
                                 }
                                 catch (IOException e) {
                                     // TODO Auto-generated catch block
                                     e.printStackTrace();
                                 }
                             }
-                        }
-                        if (annotationSelection != null) {
-                            AnnotationDocument clickedAnnotationDocument = null;
-                            List<AnnotationDocument> annotationDocuments = repository
-                                    .listAnnotationDocument(project, sourceDocument);
-                            for (AnnotationDocument annotationDocument : annotationDocuments) {
-                                if (annotationDocument.getUser().getUsername().equals(username)) {
-                                    clickedAnnotationDocument = annotationDocument;
-                                }
-                            }
-
-                            if (annotationSelection != null) {
-                                // remove old spans and add new span to merge cas
-                                try {
-
-                                    // clean up: remove old annotation selections (if present)
-                                    for (AnnotationSelection as : annotationSelection
-                                            .getAnnotationOption().getAnnotationSelections()) {
-                                        Integer addressRemove = as.getAddressByUsername().get(
-                                                CURATION_USER);
-                                        if (addressRemove != null) {
-                                            FeatureStructure fsRemove = mergeJCas.getLowLevelCas()
-                                                    .ll_getFSForRef(addressRemove);
-                                            mergeJCas.removeFsFromIndexes(fsRemove);
-                                        }
-                                    }
-                                    // copy clicked annotation selection
-                                    if (clickedAnnotationDocument != null) {
-                                        JCas clickedJCas = repository
-                                                .getAnnotationDocumentContent(clickedAnnotationDocument);
-                                        CasCopier copier = new CasCopier(clickedJCas.getCas(),
-                                                mergeJCas.getCas());
-                                        FeatureStructure fsClicked = clickedJCas.getLowLevelCas()
-                                                .ll_getFSForRef(address);
-                                        FeatureStructure fsCopy = copier.copyFs(fsClicked);
-                                        mergeJCas.getCas().addFsToIndexes(fsCopy);
-                                    }
-                                    // persist jcas
-                                    User userLoggedIn = repository.getUser(SecurityContextHolder
-                                            .getContext().getAuthentication().getName());
-                                    repository.createCurationDocumentContent(mergeJCas,
-                                            sourceDocument, userLoggedIn);
-
-                                }
-                                catch (UIMAException e) {
-                                    // TODO Auto-generated catch block
-                                    e.printStackTrace();
-                                }
-                                catch (IOException e) {
-                                    // TODO Auto-generated catch block
-                                    e.printStackTrace();
-                                }
-                                catch (ClassNotFoundException e) {
-                                    // TODO Auto-generated catch block
-                                    e.printStackTrace();
-                                }
-
-                            }
-
                         }
 
                         updateRightSide(aTarget, sentenceOuterView, curationContainer,
@@ -399,6 +362,36 @@ public class CurationPanel
         textListView.setOutputMarkupId(true);
         textOuterView.add(textListView);
 
+    }
+
+    private void createSpan(IRequestParameters aRequest,
+            BratAnnotatorModel aBratAnnotatorModel, JCas aMergeJCas,
+            AnnotationDocument aAnnotationDocument, int aAddress)
+        throws IOException, UIMAException, ClassNotFoundException
+    {
+
+        String spanType = aRequest.getParameterValue("type").toString()
+                .replace("_("+AnnotationState.AGREE.name()+")","")
+        .replace("_("+AnnotationState.USE.name()+")","")
+        .replace("_("+AnnotationState.DISAGREE.name()+")","")
+        .replace("_("+AnnotationState.DO_NOT_USE.name()+")","")
+        .replace("_("+AnnotationState.NOT_SUPPORTED.name()+")","");
+
+        JCas clickedJCas = repository
+                .getAnnotationDocumentContent(aAnnotationDocument);
+        AnnotationFS fsClicked = (AnnotationFS) clickedJCas.getLowLevelCas()
+                .ll_getFSForRef(aAddress);
+        BratAnnotatorUIData uIData = new BratAnnotatorUIData();
+        uIData.setjCas(aMergeJCas);
+        uIData.setGetDocument(false);
+        uIData.setType(spanType);
+        uIData.setAnnotationOffsetStart(fsClicked.getBegin());
+        uIData.setAnnotationOffsetEnd(fsClicked.getEnd());
+        BratAjaxCasController controller = new BratAjaxCasController(repository, annotationService);
+
+        controller.addSpanToCas(uIData);
+        controller.createAnnotationDocumentContent(aBratAnnotatorModel.getMode(),
+                aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser(), aMergeJCas);
     }
 
     protected void updateRightSide(AjaxRequestTarget target, MarkupContainer parent,
@@ -612,25 +605,18 @@ public class CurationPanel
             // ... or if entity has already been clicked on
             int address = entity.getId();
             AnnotationSelection annotationSelection = annotationSelectionByAddress.get(address);
+            AnnotationState newState = null;
             if (annotationSelection == null) {
-                String label = entity.getType();
-                String type = entity.getType() + "_(NOT_SUPPORTED)";
-                entity.setType(type);
-                entityTypes.put(type, getEntity(type, label, AnnotationState.NOT_SUPPORTED));
+                newState = AnnotationState.NOT_SUPPORTED;
+
             }
             else if (annotationSelection.getAddressByUsername().size() == numUsers) {
-                String label = entity.getType();
-                String type = entity.getType() + "_(AGREE)";
-                entity.setType(type);
-                entityTypes.put(type, getEntity(type, label, AnnotationState.AGREE));
+                newState = AnnotationState.AGREE;
+
             }
             else if (annotationSelection.getAddressByUsername().containsKey(CURATION_USER)) {
-                entityTypes.put(entity.getType(),
-                        getEntity(entity.getType(), entity.getType(), AnnotationState.USE));
-                String label = entity.getType();
-                String type = entity.getType() + "_(USE)";
-                entity.setType(type);
-                entityTypes.put(type, getEntity(type, label, AnnotationState.USE));
+                newState = AnnotationState.USE;
+
             }
             else {
                 boolean doNotUse = false;
@@ -642,22 +628,20 @@ public class CurationPanel
                     }
                 }
                 if (doNotUse) {
-                    entityTypes.put(
-                            entity.getType(),
-                            getEntity(entity.getType(), entity.getType(),
-                                    AnnotationState.DO_NOT_USE));
-                    String label = entity.getType();
-                    String type = entity.getType() + "_(DO_NOT_USE)";
-                    entity.setType(type);
-                    entityTypes.put(type, getEntity(type, label, AnnotationState.DO_NOT_USE));
+                    newState = AnnotationState.DO_NOT_USE;
                 }
                 else {
-                    entityTypes
-                            .put(entity.getType(),
-                                    getEntity(entity.getType(), entity.getType(),
-                                            AnnotationState.DISAGREE));
+                    newState = AnnotationState.DISAGREE;
+
                 }
             }
+            if (newState!=null){
+            String label = entity.getType();
+            String type = entity.getType() + "_("+newState.name()+")";
+            entity.setType(type);
+            entityTypes.put(type, getEntity(type, label, newState));
+            }
+
         }
 
         Map<Object, Object> collection = new HashMap<Object, Object>();

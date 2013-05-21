@@ -19,10 +19,11 @@ var CurationMod = (function($, window, undefined) {
 					}, 'serverResult']);
 			}
 			if (id = target.attr('data-span-id')) {
-				//var span = data.spans[id];
+				var editedSpan = data.spans[id];
 				dispatcher.post('ajax', [ {
 					action: 'selectSpanForMerge',
-					id: id
+					id: id,
+					type: editedSpan.type,
 				}, 'serverResult']);
 			}
 			// TODO check for arcs
