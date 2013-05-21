@@ -18,8 +18,8 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model;
 /**
  * An ennumeration to differentiate sentences in a document with different colors so as to easily
  * identify
+ * 
  * @author  Andreas Straninger
- *
  */
 public enum SentenceState
 {

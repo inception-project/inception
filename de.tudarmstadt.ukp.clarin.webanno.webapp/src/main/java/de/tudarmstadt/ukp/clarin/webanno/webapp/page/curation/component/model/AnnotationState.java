@@ -15,9 +15,36 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model;
 
+/**
+ * State of an annotated span (or arc). Contains color code for visualization 
+ *
+ * @author straninger
+ */
 public enum AnnotationState
 {
-	AGREE("#eeeeee"), DISAGREE("#7fa2ff"), USE("#7fffa2"), DO_NOT_USE("#ff7fa2"), NOT_SUPPORTED("#111111");
+	/**
+	 * All annotators and the curated document have the same annotation.
+	 */
+	AGREE("#eeeeee"),
+	/**
+	 * Annotators have annotated differently. Curated document not yet has any annotations.
+	 */
+	DISAGREE("#7fa2ff"),
+	/**
+	 * Annotators have annotated differently. Annotation for current document and curation
+	 * document are equal.
+	 */
+	USE("#7fffa2"),
+	/**
+	 * Annotators have annotated differently. Annotation for current document and curation
+	 * document are not equal.
+	 */
+	DO_NOT_USE("#ff7fa2"),
+	/**
+	 * Error state. Annotation has been added to the visualization, but has not been identified
+	 * by the CasDiff.
+	 */
+	NOT_SUPPORTED("#111111");
 
 	private String colorCode;
 

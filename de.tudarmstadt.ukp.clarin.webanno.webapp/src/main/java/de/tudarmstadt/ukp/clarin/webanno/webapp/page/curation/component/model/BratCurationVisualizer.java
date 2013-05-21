@@ -25,8 +25,19 @@ import org.apache.wicket.model.IModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratVisualizer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 
+/**
+ * Wicket panel for visualizing an annotated sentence in brat. When a user
+ * clicks on a span or an arc, the Method onSelectAnnotationForMerge() is
+ * called. Override that method to receive the result in another wicket panel.
+ * 
+ * @author Andreas Straninger
+ */
 public class BratCurationVisualizer extends BratVisualizer {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6653508018500736430L;
 	private AbstractDefaultAjaxBehavior controller;
 
 	public BratCurationVisualizer(String id, IModel<CurationUserSegmentForAnnotationDocument> aModel) {

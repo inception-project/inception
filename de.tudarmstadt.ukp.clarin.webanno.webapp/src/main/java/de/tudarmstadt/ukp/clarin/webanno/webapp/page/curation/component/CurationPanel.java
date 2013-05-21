@@ -88,10 +88,10 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
- *
- * @author Andreas Straninger Main Panel for the curation page. It displays a box with the complete
- *         text on the left side and a box for a selected sentence on the right side.
- *
+ * Main Panel for the curation page. It displays a box with the complete
+ * text on the left side and a box for a selected sentence on the right side.
+ * 
+ * @author Andreas Straninger 
  */
 public class CurationPanel
     extends Panel

@@ -31,6 +31,14 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 
+/**
+ * Class for finding clusters of equal annotations. Equal annotations are grouped into
+ * a {@link AnnotationSelection}. Instances of {@link AnnotationSelection}, which are
+ * exchangeble, because they refer to the same annotated unit, are grouped together in
+ * an {@link AnnotationOption}.
+ * 
+ * @author Andreas Straninger
+ */
 public class CasDiff {
 
     /**

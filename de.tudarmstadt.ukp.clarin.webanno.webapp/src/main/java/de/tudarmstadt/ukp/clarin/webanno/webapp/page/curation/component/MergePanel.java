@@ -21,8 +21,19 @@ import org.apache.wicket.markup.html.IHeaderResponse;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 
+/**
+ * Panel, that shows the result of the curated document. This class has been
+ * replaced by {@link BratCurationDocumentEditor} and not maintained anymore.
+ * 
+ * @deprecated
+ * @author Andreas Straninger
+ */
 public class MergePanel extends Panel {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private String scriptContents = "";
 
 	public class EmbedBehavior extends Behavior {

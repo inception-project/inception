@@ -24,8 +24,8 @@ import org.apache.uima.cas.FeatureStructure;
 /**
  * This class comprises usernames, which agree on a
  * specific annotation (same annotation type, same annotation value, same position).
+ * 
  * @author Andreas Straninger
- *
  */
 public class AnnotationSelection implements Serializable {
 	Map<String, Integer> addressByUsername = new HashMap<String, Integer>();

@@ -51,6 +51,10 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
+/**
+ * @author Andreas Straninger
+ * @author Seid Muhie Yimam
+ */
 public class CurationBuilder
 {
 
