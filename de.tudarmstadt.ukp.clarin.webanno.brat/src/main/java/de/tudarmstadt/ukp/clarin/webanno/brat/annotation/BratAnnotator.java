@@ -454,19 +454,6 @@ public class BratAnnotator
         BratAjaxCasController controller = new BratAjaxCasController( repository,
                 annotationService);
         String offsets = aRequest.getParameterValue("offsets").toString();
-        OffsetsList offsetList = null;
-        try {
-            offsetList = jsonConverter.getObjectMapper().readValue(offsets, OffsetsList.class);
-        }
-        catch (JsonParseException e1) {
-            error("Inavlid Json Object sent from Brat :" + ExceptionUtils.getRootCauseMessage(e1));
-        }
-        catch (JsonMappingException e1) {
-            error("Inavlid Json Object sent from Brat :" + ExceptionUtils.getRootCauseMessage(e1));
-        }
-        catch (IOException e1) {
-            error("Inavlid Json Object sent from Brat :" + ExceptionUtils.getRootCauseMessage(e1));
-        }
 
         try {
             OffsetsList offsetLists = jsonConverter.getObjectMapper().readValue(offsets,
