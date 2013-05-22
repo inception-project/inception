@@ -34,32 +34,35 @@ import org.uimafit.util.CasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.AnnotationOption;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.CurationPanel;
+import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
- * This class is responsible for two things. Firstly, it creates a pre-merged
- * cas, which contains all annotations, where all annotators agree on. This is
- * done by copying a random cas and removing all differing annotations.
- * 
- * Secondly, the class creates an instance of {@link CurationContainer}, which
- * is the wicket model for the curation panel. The {@link CurationContainer}
- * contains the text for all sentences, which are displayed at a specific page.
- * 
+ * This class is responsible for two things. Firstly, it creates a pre-merged cas, which contains
+ * all annotations, where all annotators agree on. This is done by copying a random cas and removing
+ * all differing annotations.
+ *
+ * Secondly, the class creates an instance of {@link CurationContainer}, which is the wicket model
+ * for the curation panel. The {@link CurationContainer} contains the text for all sentences, which
+ * are displayed at a specific page.
+ *
  * @author Andreas Straninger
  * @author Seid Muhie Yimam
  */
@@ -154,7 +157,8 @@ public class CurationBuilder
         }
         // Create jcas, if it could not be loaded from the file system
         catch (Exception e) {
-            mergeJCas = createMergeCas(mergeJCas, repository, randomAnnotationDocument, jCases);
+            mergeJCas = createMergeCas(mergeJCas, repository, randomAnnotationDocument, jCases,
+                    aBratAnnotatorModel);
         }
 
         int numUsers = jCases.size();
@@ -168,7 +172,7 @@ public class CurationBuilder
         }
 
         if (entryTypes == null) {
-            entryTypes = getEntryTypes(mergeJCas);
+            entryTypes = getEntryTypes(mergeJCas, aBratAnnotatorModel);
         }
 
         for (Integer begin : segmentBeginEnd.keySet()) {
@@ -219,91 +223,108 @@ public class CurationBuilder
         return curationContainer;
     }
 
-    private List<Type> getEntryTypes(JCas mergeJCas)
+    public static List<Type> getEntryTypes(JCas mergeJCas, BratAnnotatorModel aBratAnnotatorModel)
     {
         List<Type> entryTypes = new LinkedList<Type>();
         // entryTypes.add(CasUtil.getType(firstJCas.getCas(), Token.class));
         // entryTypes.add(CasUtil.getType(firstJCas.getCas(), Sentence.class));
-        entryTypes.add(CasUtil.getType(mergeJCas.getCas(), POS.class));
-        entryTypes.add(CasUtil.getType(mergeJCas.getCas(), CoreferenceLink.class));
-        entryTypes.add(CasUtil.getType(mergeJCas.getCas(), Lemma.class));
-        entryTypes.add(CasUtil.getType(mergeJCas.getCas(), NamedEntity.class));
-        // TODO arc types
+        for (TagSet tagSet : aBratAnnotatorModel.getAnnotationLayers()) {
+            if (tagSet.getType().getName().equals(AnnotationTypeConstant.POS)) {
+                entryTypes.add(CasUtil.getType(mergeJCas.getCas(), POS.class));
+            }
+            if (tagSet.getType().getName().equals(AnnotationTypeConstant.DEPENDENCY)
+                    && tagSet.getType().getName().equals(AnnotationTypeConstant.POS)) {
+                entryTypes.add(CasUtil.getType(mergeJCas.getCas(), Dependency.class));
+            }
+            if (tagSet.getType().getName().equals(AnnotationTypeConstant.NAMEDENTITY)) {
+                entryTypes.add(CasUtil.getType(mergeJCas.getCas(), NamedEntity.class));
+            }
+            if (tagSet.getType().getName().equals(AnnotationTypeConstant.COREFRELTYPE)) {
+                entryTypes.add(CasUtil.getType(mergeJCas.getCas(), CoreferenceLink.class));
+            }
+            if (tagSet.getType().getName().equals(AnnotationTypeConstant.COREFERENCE)
+                    && tagSet.getType().getName().equals(AnnotationTypeConstant.COREFRELTYPE)) {
+                entryTypes.add(CasUtil.getType(mergeJCas.getCas(), CoreferenceChain.class));
+            }
+        }
         return entryTypes;
     }
+
     /**
-     * For the first time a curation page is opened, create a MergeCas that contains only agreeing annotations
-     * Using the CAS of the curator user.
+     * For the first time a curation page is opened, create a MergeCas that contains only agreeing
+     * annotations Using the CAS of the curator user.
      */
     public JCas createMergeCas(JCas mergeJCas, RepositoryService repository,
-            AnnotationDocument randomAnnotationDocument, Map<String, JCas> jCases ){
+            AnnotationDocument randomAnnotationDocument, Map<String, JCas> jCases,
+            BratAnnotatorModel aBratAnnotatorModel)
+    {
         List<Type> entryTypes = null;
         int numUsers = jCases.size();
-            try {
-                mergeJCas = repository.getAnnotationDocumentContent(randomAnnotationDocument);
-            }
-            catch (UIMAException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-            catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-            catch (ClassNotFoundException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
+        try {
+            mergeJCas = repository.getAnnotationDocumentContent(randomAnnotationDocument);
+        }
+        catch (UIMAException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        catch (ClassNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
 
-            entryTypes = getEntryTypes(mergeJCas);
-            jCases.put(CurationPanel.CURATION_USER, mergeJCas);
+        entryTypes = getEntryTypes(mergeJCas, aBratAnnotatorModel);
+        jCases.put(CurationPanel.CURATION_USER, mergeJCas);
 
-            List<AnnotationOption> annotationOptions = null;
-            try {
+        List<AnnotationOption> annotationOptions = null;
+        try {
 
-                annotationOptions = CasDiff.doDiff(entryTypes, jCases, begin, end);
+            annotationOptions = CasDiff.doDiff(entryTypes, jCases, begin, end);
+        }
+        catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        for (AnnotationOption annotationOption : annotationOptions) {
+            // remove the featureStructure if more than 1 annotationSelection exists per
+            // annotationOption
+            boolean removeFS = annotationOption.getAnnotationSelections().size() > 1;
+            if (annotationOption.getAnnotationSelections().size() == 1) {
+                removeFS = annotationOption.getAnnotationSelections().get(0).getAddressByUsername()
+                        .size() <= numUsers;
             }
-            catch (Exception e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-            for (AnnotationOption annotationOption : annotationOptions) {
-                // remove the featureStructure if more than 1 annotationSelection exists per
-                // annotationOption
-                boolean removeFS = annotationOption.getAnnotationSelections().size() > 1;
-                if (annotationOption.getAnnotationSelections().size() == 1) {
-                    removeFS = annotationOption.getAnnotationSelections().get(0)
-                            .getAddressByUsername().size() <= numUsers;
-                }
-                for (AnnotationSelection annotationSelection : annotationOption
-                        .getAnnotationSelections()) {
-                    for (String username : annotationSelection.getAddressByUsername().keySet()) {
-                        if (username.equals(CurationPanel.CURATION_USER)) {
-                            Integer address = annotationSelection.getAddressByUsername().get(
-                                    username);
+            for (AnnotationSelection annotationSelection : annotationOption
+                    .getAnnotationSelections()) {
+                for (String username : annotationSelection.getAddressByUsername().keySet()) {
+                    if (username.equals(CurationPanel.CURATION_USER)) {
+                        Integer address = annotationSelection.getAddressByUsername().get(username);
 
-                            // removing disagreeing feature structures in mergeJCas
-                            if (removeFS && address != null) {
-                                FeatureStructure fs = mergeJCas.getLowLevelCas().ll_getFSForRef(
-                                        address);
-                                if (!(fs instanceof Token)) {
-                                    mergeJCas.getCas().removeFsFromIndexes(fs);
-                                }
+                        // removing disagreeing feature structures in mergeJCas
+                        if (removeFS && address != null) {
+                            FeatureStructure fs = mergeJCas.getLowLevelCas()
+                                    .ll_getFSForRef(address);
+                            if (!(fs instanceof Token)) {
+                                mergeJCas.getCas().removeFsFromIndexes(fs);
                             }
                         }
                     }
                 }
             }
-
-            User userLoggedIn = repository.getUser(SecurityContextHolder.getContext()
-                    .getAuthentication().getName());
-            try {
-                repository.createCurationDocumentContent(mergeJCas, randomAnnotationDocument.getDocument(), userLoggedIn);
-            }
-            catch (IOException e1) {
-                // TODO Auto-generated catch block
-                e1.printStackTrace();
-            }
-            return mergeJCas;
         }
+
+        User userLoggedIn = repository.getUser(SecurityContextHolder.getContext()
+                .getAuthentication().getName());
+        try {
+            repository.createCurationDocumentContent(mergeJCas,
+                    randomAnnotationDocument.getDocument(), userLoggedIn);
+        }
+        catch (IOException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+        return mergeJCas;
+    }
 }

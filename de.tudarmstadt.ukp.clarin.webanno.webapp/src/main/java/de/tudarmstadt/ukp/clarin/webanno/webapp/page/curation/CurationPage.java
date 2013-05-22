@@ -46,6 +46,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.AnnotationPreferenceModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenDocumentModel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenModalWindowPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.YesNoModalPanel;
@@ -280,6 +281,56 @@ public class CurationPage
                     }
                 });
                 openDocumentsModal.show(aTarget);
+            }
+        });
+
+        // dialog window to select annotation layer preferences
+        final ModalWindow annotationLayerSelectionModal;
+        add(annotationLayerSelectionModal = new ModalWindow("annotationLayerModal"));
+        annotationLayerSelectionModal.setOutputMarkupId(true);
+        annotationLayerSelectionModal.setInitialWidth(440);
+        annotationLayerSelectionModal.setInitialHeight(250);
+        annotationLayerSelectionModal.setResizable(true);
+        annotationLayerSelectionModal.setWidthUnit("px");
+        annotationLayerSelectionModal.setHeightUnit("px");
+        annotationLayerSelectionModal
+                .setTitle("Annotation Layer and window size configuration Window");
+
+        add(new AjaxLink<Void>("showannotationLayerModal")
+        {
+            private static final long serialVersionUID = 7496156015186497496L;
+
+            @Override
+            public void onClick(AjaxRequestTarget target)
+            {
+                if (bratAnnotatorModel.getProject() == null) {
+                    target.appendJavaScript("alert('Please open a project first!')");
+                }
+                else {
+
+                    annotationLayerSelectionModal.setContent(new AnnotationPreferenceModalPanel(
+                            annotationLayerSelectionModal.getContentId(),
+                            annotationLayerSelectionModal, bratAnnotatorModel));
+
+                    annotationLayerSelectionModal
+                            .setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
+                            {
+                                private static final long serialVersionUID = 1643342179335627082L;
+
+                                @Override
+                                public void onClose(AjaxRequestTarget target)
+                                {
+                                    // transform jcas to objects for wicket components
+                                    CurationBuilder builder = new CurationBuilder(repository);
+                                    curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
+                                    curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
+                                    updatePanel(curationContainer);
+                                    target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                                }
+                            });
+                    annotationLayerSelectionModal.show(target);
+                }
+
             }
         });
 

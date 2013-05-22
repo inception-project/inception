@@ -43,10 +43,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 
 /**
@@ -73,7 +72,7 @@ public class AnnotationPreferenceModalPanel
     private CheckBoxMultipleChoice<TagSet> tagSets;
     private NumberTextField<Integer> windowSizeField;
 
-    private BratAnnotator annotator;
+    private BratAnnotatorModel bratAnnotatorModel;
 
     private class AnnotationLayerDetailForm
         extends Form<AnnotationLayerDetailFormModel>
@@ -87,11 +86,11 @@ public class AnnotationPreferenceModalPanel
                     new AnnotationLayerDetailFormModel()));
 
             // Import current settings from the annotator
-            getModelObject().numberOfSentences = annotator.bratAnnotatorModel.getWindowSize();
-            getModelObject().scrollPage = annotator.bratAnnotatorModel.isScrollPage();
-            getModelObject().displayLemma = annotator.bratAnnotatorModel.isDisplayLemmaSelected();
+            getModelObject().numberOfSentences = bratAnnotatorModel.getWindowSize();
+            getModelObject().scrollPage = bratAnnotatorModel.isScrollPage();
+            getModelObject().displayLemma = bratAnnotatorModel.isDisplayLemmaSelected();
 
-            for (TagSet tagSet : annotator.bratAnnotatorModel.getAnnotationLayers()) {
+            for (TagSet tagSet : bratAnnotatorModel.getAnnotationLayers()) {
                 getModelObject().annotationLayers.add(tagSet);
             }
             windowSizeField = (NumberTextField<Integer>) new NumberTextField<Integer>(
@@ -114,7 +113,7 @@ public class AnnotationPreferenceModalPanel
                         @Override
                         protected List<TagSet> load()
                         {
-                            return annotationService.listTagSets(annotator.bratAnnotatorModel.getProject());
+                            return annotationService.listTagSets(bratAnnotatorModel.getProject());
                         }
                     });
                     setChoiceRenderer(new ChoiceRenderer<TagSet>("name", "id"));
@@ -144,8 +143,8 @@ public class AnnotationPreferenceModalPanel
                     String username = SecurityContextHolder.getContext().getAuthentication()
                             .getName();
                     try {
-                        projectRepository.saveUserSettings(username, annotator.bratAnnotatorModel.getProject(),
-                                Mode.ANNOTATION, preference);
+                        projectRepository.saveUserSettings(username, bratAnnotatorModel.getProject(),
+                                bratAnnotatorModel.getMode(), preference);
                     }
                     catch (FileNotFoundException e) {
                         error("Unable to save preferences in a property file: "
@@ -156,11 +155,10 @@ public class AnnotationPreferenceModalPanel
                                 + ExceptionUtils.getRootCauseMessage(e));
                     }
 
-                    annotator.bratAnnotatorModel.setDisplayLemmaSelected(getModelObject().displayLemma);
-                    annotator.bratAnnotatorModel.setScrollPage(getModelObject().scrollPage);
-                    annotator.bratAnnotatorModel.setAnnotationLayers(getModelObject().annotationLayers);
-                    annotator.bratAnnotatorModel.setWindowSize(getModelObject().numberOfSentences);
-                    aTarget.add(annotator);
+                    bratAnnotatorModel.setDisplayLemmaSelected(getModelObject().displayLemma);
+                    bratAnnotatorModel.setScrollPage(getModelObject().scrollPage);
+                    bratAnnotatorModel.setAnnotationLayers(getModelObject().annotationLayers);
+                    bratAnnotatorModel.setWindowSize(getModelObject().numberOfSentences);
                     modalWindow.close(aTarget);
                 }
 
@@ -199,10 +197,10 @@ public class AnnotationPreferenceModalPanel
     }
 
     public AnnotationPreferenceModalPanel(String aId, final ModalWindow modalWindow,
-            BratAnnotator aAnnotator)
+            BratAnnotatorModel aBratAnnotatorModel)
     {
         super(aId);
-        this.annotator = aAnnotator;
+        this.bratAnnotatorModel = aBratAnnotatorModel;
         tagSelectionForm = new AnnotationLayerDetailForm("tagSelectionForm", modalWindow);
         add(tagSelectionForm);
     }

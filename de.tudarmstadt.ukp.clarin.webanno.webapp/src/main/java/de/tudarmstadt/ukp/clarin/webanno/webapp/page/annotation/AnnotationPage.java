@@ -172,7 +172,7 @@ public class AnnotationPage
 
                     annotationLayerSelectionModal.setContent(new AnnotationPreferenceModalPanel(
                             annotationLayerSelectionModal.getContentId(),
-                            annotationLayerSelectionModal, annotator));
+                            annotationLayerSelectionModal, annotator.bratAnnotatorModel));
 
                     annotationLayerSelectionModal
                             .setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
