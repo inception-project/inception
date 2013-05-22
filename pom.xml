@@ -15,7 +15,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 	<artifactId>de.tudarmstadt.ukp.clarin.webanno</artifactId>
-	<version>0.3.0-beta-11</version>
+	<version>0.3.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>WebAnno</name>
 	<url>http://code.google.com/p/webanno/</url>
@@ -35,37 +35,37 @@
 			<dependency>
 				<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 				<artifactId>de.tudarmstadt.ukp.clarin.webanno.api</artifactId>
-				<version>0.3.0-beta-11</version>
+				<version>0.3.0-SNAPSHOT</version>
 			</dependency>
 			<dependency>
 				<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 				<artifactId>de.tudarmstadt.ukp.clarin.webanno.brat</artifactId>
-				<version>0.3.0-beta-11</version>
+				<version>0.3.0-SNAPSHOT</version>
 			</dependency>
 			<dependency>
 				<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 				<artifactId>de.tudarmstadt.ukp.clarin.webanno.conll</artifactId>
-				<version>0.3.0-beta-11</version>
+				<version>0.3.0-SNAPSHOT</version>
 			</dependency>
 			<dependency>
 				<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 				<artifactId>de.tudarmstadt.ukp.clarin.webanno.model</artifactId>
-				<version>0.3.0-beta-11</version>
+				<version>0.3.0-SNAPSHOT</version>
 			</dependency>
 			<dependency>
 				<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 				<artifactId>de.tudarmstadt.ukp.clarin.webanno.tcf</artifactId>
-				<version>0.3.0-beta-11</version>
+				<version>0.3.0-SNAPSHOT</version>
 			</dependency>
 			<dependency>
 				<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 				<artifactId>de.tudarmstadt.ukp.clarin.webanno.uima</artifactId>
-				<version>0.3.0-beta-11</version>
+				<version>0.3.0-SNAPSHOT</version>
 			</dependency>
 			<dependency>
 				<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 				<artifactId>de.tudarmstadt.ukp.clarin.webanno.webapp</artifactId>
-				<version>0.3.0-beta-11</version>
+				<version>0.3.0-SNAPSHOT</version>
 			</dependency>
 			<dependency>
 				<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
@@ -219,7 +219,7 @@
 				<artifactId>
 					de.tudarmstadt.ukp.clarin.webanno.crowdflower
 				</artifactId>
-				<version>0.3.0-beta-11</version>
+				<version>0.3.0-SNAPSHOT</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -234,9 +234,9 @@
 		<module>de.tudarmstadt.ukp.clarin.webanno.crowdflower</module>
 	</modules>
 	<scm>
-		<developerConnection>scm:svn:https://webanno.googlecode.com/svn/tags/de.tudarmstadt.ukp.clarin.webanno-0.3.0-beta-11</developerConnection>
-		<connection>scm:svn:https://webanno.googlecode.com/svn/tags/de.tudarmstadt.ukp.clarin.webanno-0.3.0-beta-11</connection>
-		<url>https://webanno.googlecode.com/svn/tags/de.tudarmstadt.ukp.clarin.webanno-0.3.0-beta-11</url>
+		<developerConnection>scm:svn:https://webanno.googlecode.com/svn/trunk</developerConnection>
+		<connection>scm:svn:https://webanno.googlecode.com/svn/trunk</connection>
+		<url>https://webanno.googlecode.com/svn/trunk</url>
 	</scm>
 	<build>
 		<extensions>
