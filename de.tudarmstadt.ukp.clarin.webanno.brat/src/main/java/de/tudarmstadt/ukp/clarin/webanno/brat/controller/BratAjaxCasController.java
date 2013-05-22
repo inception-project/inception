@@ -565,7 +565,7 @@ public class BratAjaxCasController
     /**
      * wrap JSON responses to BRAT visualizer
      */
-    private void addBratResponses(GetDocumentResponse aResponse,
+    public static void addBratResponses(GetDocumentResponse aResponse,
             BratAnnotatorModel aBratAnnotatorModel, BratAnnotatorUIData aUIData)
     {
         List<String> annotationLayers = new ArrayList<String>();
