@@ -38,6 +38,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -228,24 +229,28 @@ public class CurationBuilder
         List<Type> entryTypes = new LinkedList<Type>();
         // entryTypes.add(CasUtil.getType(firstJCas.getCas(), Token.class));
         // entryTypes.add(CasUtil.getType(firstJCas.getCas(), Sentence.class));
+        List<String> annotationTypeNames = new LinkedList<String>();
         for (TagSet tagSet : aBratAnnotatorModel.getAnnotationLayers()) {
-            if (tagSet.getType().getName().equals(AnnotationTypeConstant.POS)) {
-                entryTypes.add(CasUtil.getType(mergeJCas.getCas(), POS.class));
-            }
-            if (tagSet.getType().getName().equals(AnnotationTypeConstant.DEPENDENCY)
-                    && tagSet.getType().getName().equals(AnnotationTypeConstant.POS)) {
-                entryTypes.add(CasUtil.getType(mergeJCas.getCas(), Dependency.class));
-            }
-            if (tagSet.getType().getName().equals(AnnotationTypeConstant.NAMEDENTITY)) {
-                entryTypes.add(CasUtil.getType(mergeJCas.getCas(), NamedEntity.class));
-            }
-            if (tagSet.getType().getName().equals(AnnotationTypeConstant.COREFRELTYPE)) {
-                entryTypes.add(CasUtil.getType(mergeJCas.getCas(), CoreferenceLink.class));
-            }
-            if (tagSet.getType().getName().equals(AnnotationTypeConstant.COREFERENCE)
-                    && tagSet.getType().getName().equals(AnnotationTypeConstant.COREFRELTYPE)) {
-                entryTypes.add(CasUtil.getType(mergeJCas.getCas(), CoreferenceChain.class));
-            }
+        	annotationTypeNames.add(tagSet.getType().getName());
+        }
+        if (annotationTypeNames.contains(AnnotationTypeConstant.POS)) {
+        	entryTypes.add(CasUtil.getType(mergeJCas.getCas(), POS.class));
+        }
+        if (annotationTypeNames.contains(AnnotationTypeConstant.DEPENDENCY)
+        		&& annotationTypeNames.contains(AnnotationTypeConstant.POS)) {
+        	entryTypes.add(CasUtil.getType(mergeJCas.getCas(), Dependency.class));
+        }
+        if (annotationTypeNames.contains(AnnotationTypeConstant.NAMEDENTITY)) {
+        	entryTypes.add(CasUtil.getType(mergeJCas.getCas(), NamedEntity.class));
+        }
+        if (annotationTypeNames.contains(AnnotationTypeConstant.COREFRELTYPE)) {
+        	// TODO CasDiff does not support coreference links so far
+//        	entryTypes.add(CasUtil.getType(mergeJCas.getCas(), CoreferenceLink.class));
+        }
+        if (annotationTypeNames.contains(AnnotationTypeConstant.COREFERENCE)
+        		&& annotationTypeNames.contains(AnnotationTypeConstant.COREFRELTYPE)) {
+        	// TODO CasDiff does not support coreference chains so far
+//        	entryTypes.add(CasUtil.getType(mergeJCas.getCas(), CoreferenceChain.class));
         }
         return entryTypes;
     }
