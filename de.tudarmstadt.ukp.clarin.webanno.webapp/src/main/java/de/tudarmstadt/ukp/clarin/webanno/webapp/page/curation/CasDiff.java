@@ -107,6 +107,8 @@ public class CasDiff {
                                     AnnotationSelection annotationSelection = annotationSelectionByFeatureStructure.get(compareResultFSOld);
                                     annotationSelection.getAddressByUsername().put(usernameFSNew, addressNew);
                                     annotationSelectionByFeatureStructureNew.put(compareResultFSNew, annotationSelection);
+                                    // Add Debug information
+                                    annotationSelection.getFsStringByUsername().put(usernameFSNew, compareResultFSNew.toString());
 
                                 }
                             }
@@ -127,6 +129,8 @@ public class CasDiff {
                             // link annotationOption and annotationSelection
                             annotationSelection.setAnnotationOption(annotationOption);
                             annotationOption.getAnnotationSelections().add(annotationSelection);
+                            // Add Debug information
+                            annotationSelection.getFsStringByUsername().put(usernameFSNew, subFS1.toString());
                         }
                     }
                     annotationOptions.addAll(annotationOptionPerType.values());

@@ -29,6 +29,7 @@ import org.apache.uima.cas.FeatureStructure;
  */
 public class AnnotationSelection implements Serializable {
 	Map<String, Integer> addressByUsername = new HashMap<String, Integer>();
+	Map<String, String> fsStringByUsername = new HashMap<String, String>();
 	AnnotationOption annotationOption = null;
 
 	public Map<String, Integer> getAddressByUsername() {
@@ -59,7 +60,7 @@ public class AnnotationSelection implements Serializable {
 	}
 	
 	public String toString() {
-		return addressByUsername.toString();
+		return fsStringByUsername.toString();
 	}
 	
 	public boolean equals(Object obj) {
@@ -72,5 +73,13 @@ public class AnnotationSelection implements Serializable {
 	
 	public int hashCode() {
 		return addressByUsername.hashCode();
+	}
+
+	public Map<String, String> getFsStringByUsername() {
+		return fsStringByUsername;
+	}
+
+	public void setFsStringByUsername(Map<String, String> fsStringByUsername) {
+		this.fsStringByUsername = fsStringByUsername;
 	}
 }
