@@ -466,6 +466,12 @@ public interface RepositoryService
         throws IOException;
 
     /**
+     * Remove a curation annotation document from the file system, for this {@link SourceDocument}
+     * @throws IOException
+     */
+    void removeCurationDocumentContent(SourceDocument sourceDocument) throws IOException;
+
+    /**
      * remove a user permission from the project
      *
      * @param projectPermission

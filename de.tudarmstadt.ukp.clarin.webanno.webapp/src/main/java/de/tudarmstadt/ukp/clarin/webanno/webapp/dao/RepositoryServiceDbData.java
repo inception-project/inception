@@ -310,18 +310,17 @@ public class RepositoryServiceDbData
             return false;
         }
     }
+
     @Override
     @Transactional
-    public boolean existSourceDocument(Project aProject, String aFileName){
+    public boolean existSourceDocument(Project aProject, String aFileName)
+    {
         try {
             entityManager
                     .createQuery(
-                            "FROM SourceDocument WHERE project = :project AND "
-                                    + "name =:name ",
-                                    SourceDocument.class)
-                    .setParameter("project", aProject)
-                    .setParameter("name", aFileName)
-                    .getSingleResult();
+                            "FROM SourceDocument WHERE project = :project AND " + "name =:name ",
+                            SourceDocument.class).setParameter("project", aProject)
+                    .setParameter("name", aFileName).getSingleResult();
             return true;
         }
         catch (NoResultException ex) {
@@ -754,6 +753,11 @@ public class RepositoryServiceDbData
                 + GUIDELINE + aFileName));
     }
 
+    public void removeCurationDocumentContent( SourceDocument aSourceDocument) throws IOException{
+
+        FileUtils.forceDelete(new File(getAnnotationFolder(aSourceDocument), CURATION_USER+".ser"));
+        }
+
     @Override
     @Transactional
     public void removeProjectPermission(ProjectPermission projectPermission)
@@ -948,7 +952,7 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public String getReadableFormatId( String aLabel)
+    public String getReadableFormatId(String aLabel)
         throws ClassNotFoundException
     {
         Set<String> key = (Set) readWriteFileFormats.keySet();
@@ -956,10 +960,10 @@ public class RepositoryServiceDbData
         for (String keyvalue : key) {
             if (keyvalue.contains(".label")) {
 
-             if(readWriteFileFormats.getProperty(keyvalue).equals(aLabel)){
-                 readableFormat = keyvalue.substring(0, keyvalue.lastIndexOf(".label"));
-                 break;
-             }
+                if (readWriteFileFormats.getProperty(keyvalue).equals(aLabel)) {
+                    readableFormat = keyvalue.substring(0, keyvalue.lastIndexOf(".label"));
+                    break;
+                }
             }
         }
         return readableFormat;
@@ -976,8 +980,8 @@ public class RepositoryServiceDbData
             if (keyvalue.contains(".label")) {
                 String readerLabel = keyvalue.substring(0, keyvalue.lastIndexOf(".label"));
                 if (readWriteFileFormats.getProperty(readerLabel + ".reader") != null) {
-                    readableFormats.put(readerLabel, Class
-                            .forName(readWriteFileFormats.getProperty(readerLabel + ".reader")));
+                    readableFormats.put(readerLabel, Class.forName(readWriteFileFormats
+                            .getProperty(readerLabel + ".reader")));
                 }
             }
         }
@@ -1007,10 +1011,10 @@ public class RepositoryServiceDbData
         throws ClassNotFoundException
     {
         Set<String> keys = (Set) readWriteFileFormats.keySet();
-        String writableFormat="";
+        String writableFormat = "";
         for (String keyvalue : keys) {
             if (keyvalue.contains(".label")) {
-                if(readWriteFileFormats.getProperty(keyvalue).equals(aLabel)){
+                if (readWriteFileFormats.getProperty(keyvalue).equals(aLabel)) {
                     writableFormat = keyvalue.substring(0, keyvalue.lastIndexOf(".label"));
                     break;
                 }
@@ -1030,8 +1034,8 @@ public class RepositoryServiceDbData
             if (keyvalue.contains(".label")) {
                 String writerLabel = keyvalue.substring(0, keyvalue.lastIndexOf(".label"));
                 if (readWriteFileFormats.getProperty(writerLabel + ".writer") != null) {
-                    writableFormats.put(writerLabel, Class
-                            .forName(readWriteFileFormats.getProperty(writerLabel + ".writer")));
+                    writableFormats.put(writerLabel, Class.forName(readWriteFileFormats
+                            .getProperty(writerLabel + ".writer")));
                 }
             }
         }
@@ -1239,10 +1243,11 @@ public class RepositoryServiceDbData
                         annotationFolder, SerializedCasReader.PARAM_PATTERNS, new String[] { "[+]"
                                 + file });
                 if (!reader.hasNext()) {
-                    throw new FileNotFoundException("Annotation document of user [" + aUsername + "] for source document ["
-                            + aDocument.getName()
-                            + "] ("+ aDocument.getId()+"). not found in project["
-                            +aDocument.getProject().getName()+"] ("+aDocument.getProject().getId()+")");
+                    throw new FileNotFoundException("Annotation document of user [" + aUsername
+                            + "] for source document [" + aDocument.getName() + "] ("
+                            + aDocument.getId() + "). not found in project["
+                            + aDocument.getProject().getName() + "] ("
+                            + aDocument.getProject().getId() + ")");
                 }
                 reader.getNext(cas);
 
