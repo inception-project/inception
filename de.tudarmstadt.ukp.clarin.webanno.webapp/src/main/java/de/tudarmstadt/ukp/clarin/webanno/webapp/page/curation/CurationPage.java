@@ -395,10 +395,15 @@ public class CurationPage
                             try {
                                 repository.removeCurationDocumentContent(bratAnnotatorModel.getDocument());
                                 initBratAnnotatorDataModel();
+                             // transform jcas to objects for wicket components
+                                CurationBuilder builder = new CurationBuilder(repository);
+                                curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
+                                curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
+                                updatePanel(curationContainer);
+                                target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                                target.appendJavaScript("alert('remerege finished!')");
                             }
                             catch (IOException e) {
-                                //TODO error is not displayed on the curation page, workout
-                                target.appendJavaScript("alert('Document already deleted')");
                              error("Unable to delete the serialized Curation CAS object "+ e.getMessage());
                             }
                             catch (UIMAException e) {
