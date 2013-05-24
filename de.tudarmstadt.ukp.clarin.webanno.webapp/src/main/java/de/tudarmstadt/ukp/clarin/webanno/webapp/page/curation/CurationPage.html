@@ -17,7 +17,9 @@
 <body>
 	<wicket:extend>
 		<div wicket:id=openDocumentsModal></div>
-		<div wicket:id=yesNoModal></div>
+		<div wicket:id=finishCurationModal></div>
+		<div wicket:id=reCreateMergeCasModal></div>
+		
 		<div class="actionbar">
 			<ul class="horizontal">			
 				<li>
@@ -27,6 +29,10 @@
 							<li><a wicket:id="showOpenDocumentModal"
 								id="showOpenDocumentModal"> <img
 									src="images/drawer_open.png" title="Open" /><br />Open
+							</a></li>
+							<li><a wicket:id="showreCreateMergeCasModal"
+								id="showreCreateMergeCasModal"> <img
+									src="images/drawer_open.png" title="Open" /><br />Re-create Merge
 							</a></li>
 						<!-- 
 							<li><a wicket:id="showPreviousDocument"> <img
@@ -83,7 +89,7 @@
 					<fieldset>
 						<legend>Workflow</legend>
 						<ul class="horizontal">
-							<li><a wicket:id="showYesNoModal"> <img
+							<li><a wicket:id="showFinishCurationModal"> <img
 									src="images/accept.png" title="Done" /><br />Done
 							</a></li>
 						</ul>

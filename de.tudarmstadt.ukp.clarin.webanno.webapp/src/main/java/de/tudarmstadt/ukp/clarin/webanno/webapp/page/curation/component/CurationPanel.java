@@ -552,6 +552,7 @@ public class CurationPanel
          * addresses, username)); mergeUserSegment.setCollectionData("{}");
          * mergeUserSegment.setDocumentResponse(getStringDocumentResponse(response));
          */
+        bratAnnotatorModel.setMode(Mode.ANNOTATION);
         mergeVisualizer.setModelObject(bratAnnotatorModel);
         mergeVisualizer.reloadContent(target);
 
@@ -560,35 +561,6 @@ public class CurationPanel
         target.add(parent);
 
     }
-
-/*    private GetDocumentResponse getDocumentResponse(JCas jCas, String username,
-            BratAnnotatorModel aBratAnnotatorModel)
-    {
-        GetDocumentResponse response = new GetDocumentResponse();
-        response.setText(jCas.getDocumentText());
-
-        List<String> tagSetNames = new ArrayList<String>();
-        tagSetNames.add(AnnotationTypeConstant.POS);
-        tagSetNames.add(AnnotationTypeConstant.DEPENDENCY);
-        tagSetNames.add(AnnotationTypeConstant.NAMEDENTITY);
-        tagSetNames.add(AnnotationTypeConstant.COREFERENCE);
-        tagSetNames.add(AnnotationTypeConstant.COREFRELTYPE);
-
-        CasToBratJson casToBratJson = new CasToBratJson();
-
-        casToBratJson.addTokenToResponse(jCas, response, aBratAnnotatorModel);
-        casToBratJson.addSentenceToResponse(jCas, response, aBratAnnotatorModel);
-        SpanAdapter.getPosAdapter().addToBrat(jCas, response, aBratAnnotatorModel);
-        ChainAdapter.getCoreferenceLinkAdapter().addToBrat(jCas, response, aBratAnnotatorModel);
-
-        SpanAdapter.getLemmaAdapter().addToBrat(jCas, response, aBratAnnotatorModel);
-        SpanAdapter.getNamedEntityAdapter().addToBrat(jCas, response, aBratAnnotatorModel);
-        // TODO does not work yet
-        ArcAdapter.getDependencyAdapter().addToBrat(jCas, response, aBratAnnotatorModel);
-        ChainAdapter.getCoreferenceChainAdapter().addToBrat(jCas, response, aBratAnnotatorModel);
-
-        return response;
-    }*/
 
     private String getStringDocumentResponse(GetDocumentResponse aResponse)
     {

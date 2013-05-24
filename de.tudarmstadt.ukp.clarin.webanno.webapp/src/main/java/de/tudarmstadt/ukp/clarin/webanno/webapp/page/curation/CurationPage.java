@@ -49,11 +49,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.AnnotationPreferenceModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenDocumentModel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenModalWindowPanel;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.ReCreateMergeCASModalPanel;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.ReMergeCasModel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.YesNoModalPanel;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationContainer;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.project.SettingsPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome.WelcomePage;
 
 /**
@@ -65,7 +67,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome.WelcomePage;
  * @author Seid Muhie Yimam
  */
 public class CurationPage
-    extends ApplicationPageBase
+    extends SettingsPageBase
 {
     private static final long serialVersionUID = 1378872465851908515L;
 
@@ -77,6 +79,8 @@ public class CurationPage
 
     private CurationPanel curationPanel;
     private OpenDocumentModel openDataModel;
+
+    private ReMergeCasModel reMerge;
 
     private CurationContainer curationContainer;
     private BratAnnotatorModel bratAnnotatorModel;
@@ -97,6 +101,7 @@ public class CurationPage
     {
         openDataModel = new OpenDocumentModel();
         bratAnnotatorModel = new BratAnnotatorModel();
+        reMerge = new ReMergeCasModel();
 
         curationContainer = new CurationContainer();
         curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
@@ -334,30 +339,80 @@ public class CurationPage
             }
         });
 
-        final ModalWindow yesNoModal;
-        add(yesNoModal = new ModalWindow("yesNoModal"));
-        yesNoModal.setOutputMarkupId(true);
+        final ModalWindow finishCurationModal;
+        add(finishCurationModal = new ModalWindow("finishCurationModal"));
+        finishCurationModal.setOutputMarkupId(true);
 
-        yesNoModal.setInitialWidth(400);
-        yesNoModal.setInitialHeight(50);
-        yesNoModal.setResizable(true);
-        yesNoModal.setWidthUnit("px");
-        yesNoModal.setHeightUnit("px");
-        yesNoModal.setTitle("Are you sure you want to finish curating?");
+        finishCurationModal.setInitialWidth(400);
+        finishCurationModal.setInitialHeight(50);
+        finishCurationModal.setResizable(true);
+        finishCurationModal.setWidthUnit("px");
+        finishCurationModal.setHeightUnit("px");
+        finishCurationModal.setTitle("Are you sure you want to finish curating?");
 
-        add(new AjaxLink<Void>("showYesNoModal")
+        add(new AjaxLink<Void>("showFinishCurationModal")
         {
             private static final long serialVersionUID = 7496156015186497496L;
 
             @Override
             public void onClick(AjaxRequestTarget target)
             {
-                yesNoModal.setContent(new YesNoModalPanel(yesNoModal.getContentId(), openDataModel,
-                        yesNoModal, Mode.CURATION));
-                yesNoModal.show(target);
+                finishCurationModal.setContent(new YesNoModalPanel(finishCurationModal.getContentId(), openDataModel,
+                        finishCurationModal, Mode.CURATION));
+                finishCurationModal.show(target);
             }
         });
 
+        final ModalWindow reCreateMergeCas;
+        add(reCreateMergeCas = new ModalWindow("reCreateMergeCasModal"));
+        reCreateMergeCas.setOutputMarkupId(true);
+
+        reCreateMergeCas.setInitialWidth(400);
+        reCreateMergeCas.setInitialHeight(50);
+        reCreateMergeCas.setResizable(true);
+        reCreateMergeCas.setWidthUnit("px");
+        reCreateMergeCas.setHeightUnit("px");
+        reCreateMergeCas.setTitle("Are you sure you want to re-create Merge CAS? All annotation will be lost!");
+
+        add(new AjaxLink<Void>("showreCreateMergeCasModal")
+        {
+            private static final long serialVersionUID = 7496156015186497496L;
+
+            @Override
+            public void onClick(AjaxRequestTarget target)
+            {
+               reCreateMergeCas.setContent(new ReCreateMergeCASModalPanel(reCreateMergeCas.getContentId(),
+                        reCreateMergeCas, reMerge));
+                reCreateMergeCas.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
+                {
+
+                    private static final long serialVersionUID = 4816615910398625993L;
+
+                    @Override
+                    public void onClose(AjaxRequestTarget target)
+                    {
+                        if(reMerge.isReMerege()){
+                            try {
+                                repository.removeCurationDocumentContent(bratAnnotatorModel.getDocument());
+                                initBratAnnotatorDataModel();
+                            }
+                            catch (IOException e) {
+                                //TODO error is not displayed on the curation page, workout
+                                target.appendJavaScript("alert('Document already deleted')");
+                             error("Unable to delete the serialized Curation CAS object "+ e.getMessage());
+                            }
+                            catch (UIMAException e) {
+                                error(ExceptionUtils.getRootCause(e));
+                            }
+                            catch (ClassNotFoundException e) {
+                                error(ExceptionUtils.getRootCause(e));
+                            }
+
+                        }                    }
+                });
+                reCreateMergeCas.show(target);
+            }
+        });
         // Show the next page of this document
         add(new AjaxLink<Void>("showNext")
         {
