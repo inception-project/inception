@@ -6,29 +6,36 @@
   either express or implied. # See the License for the specific language governing permissions and # limitations under
   the License. #
 -->
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-  <wicket:panel>
-    <ul style="text-align: left; float: left; width: 100%; list-style-type: none; ">
-      <li>
-      <input wicket:id="content" type="file" multiple />
-      choose Format:
-      <select wicket:id="readableFormats">
-      </select>
-   	 </li>
-   	 <li>
-    <input type="submit" wicket:id="import" />
-  	</li>
- 	 <li>
- 	 <br>
- 	 List of Imported Documents:
-	</li>
-	<li>
-		<select class="dfill" wicket:id="documents" size="25">
-		</select>
-	</li>
-	<li>
-		<input type="submit" wicket:id="remove" />
-	</li>
-	</ul>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<wicket:panel>
+	<fieldset class="ui-widget-content ui-corner-all labels-left">
+		<legend>Import new documents</legend>
+		<table class="hfill">
+			<tr>
+				<td><label>Format:</label></td>
+				<td> <select wicket:id="readableFormats"></select></td>
+			</tr>
+			<tr>
+				<td><label>Files:</label></td>
+				<td><input wicket:id="content" type="file" multiple /></td>
+			</tr>
+		</table>
+		<div class="buttons">
+			<input type="submit" wicket:id="import" />
+		</div>
+	</fieldset>
+	
+	<fieldset class="ui-widget-content ui-corner-all">
+		<legend>Documents</legend>
+		<table class="hfill">
+			<tr>
+				<td><select class="hfill" wicket:id="documents" size="25"></select></td>
+			</tr>
+		</table>
+		<div class="buttons">
+			<input type="submit" wicket:id="remove" />
+		</div>
+	</fieldset>
 </wicket:panel>
 </html>

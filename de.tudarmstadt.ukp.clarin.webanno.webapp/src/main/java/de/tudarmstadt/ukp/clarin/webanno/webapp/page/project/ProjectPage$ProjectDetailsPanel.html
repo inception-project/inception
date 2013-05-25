@@ -6,49 +6,37 @@
   either express or implied. # See the License for the specific language governing permissions and # limitations under
   the License. #
 -->
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-  <wicket:panel>
-    <br />
-    <table class="hfill">
-      <tr>
-        <td>
-          <label>
-            Name:
-          </label>
-        </td>
-        <td class="hfill">
-          <input type="text" wicket:id="name" />
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <label>
-            Description:
-          </label>
-        </td>
-        <td class="hfill">
-          <textarea wicket:id="description" class="dfill" rows="10">
-          </textarea>
-        </td>
-      </tr>
-    </table>
-    <table>
-      <tr>
-        <td>
-          Reverse arc direction for dependency annotation
-        </td>
-        <td>
-          <input type="checkbox" wicket:id="reverseDependencyDirection" />
-        </td>
-      </tr>
-      <tr>
-        <td>
-        </td>
-        <td>
-          <input type="submit" wicket:id="save" />
-          <input type="submit" wicket:id="remove" />
-        </td>
-      </tr>
-    </table>
-  </wicket:panel>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<wicket:panel>
+	<fieldset class="ui-widget-content ui-corner-all labels-left">
+		<legend>General</legend>
+		<table class="hfill">
+			<tr>
+				<td><label>Name:</label></td>
+				<td class="hfill"><input type="text" wicket:id="name" /></td>
+			</tr>
+			<tr>
+				<td style="vertical-align: top"><label>Description:</label></td>
+				<td class="hfill"><textarea class="hfill" wicket:id="description" rows="10">
+          </textarea></td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset class="ui-widget-content ui-corner-all labels-left">
+		<legend>Annotation settings</legend>
+		<table class="hfill">
+			<tr>
+				<td><label>Reverse arc direction for dependency
+						annotation:</label></td>
+				<td class="hfill"><input type="checkbox"
+					wicket:id="reverseDependencyDirection" /></td>
+			</tr>
+		</table>
+	</fieldset>
+	<div class="buttons">
+		<input type="submit" wicket:id="save" />
+		<input type="submit" wicket:id="remove" />
+	</div>
+</wicket:panel>
 </html>

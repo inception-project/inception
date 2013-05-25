@@ -28,8 +28,18 @@ body{
     height:100%;
 }
 
-label.top{
+.labels-top label, label.top{
+    white-space:nowrap;
+    display: block;
     text-align:left;
+    font-weight: bold;
+}
+
+.labels-left label, label.left {
+    white-space:nowrap;
+    display: block;
+    text-align: right;
+    font-weight: bold;
 }
 
 label.inline{
@@ -540,6 +550,14 @@ div.tabpanel div.tab-row a:visited.active
 div.tabpanel div.tab-row a:hover{
     background:#fff;
 }
+
+div.tabpanel .tab-panel {
+    border: solid #666 1px;
+    clear: both;
+    padding: 1em;
+    margin: 1em;
+}
+
 
 .documenttable{
     width:55%;

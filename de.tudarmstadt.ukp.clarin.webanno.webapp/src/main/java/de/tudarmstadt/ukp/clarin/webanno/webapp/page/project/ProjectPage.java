@@ -206,7 +206,7 @@ public class ProjectPage
             super(id, new CompoundPropertyModel<Project>(new EntityModel<Project>(new Project())));
 
             List<ITab> tabs = new ArrayList<ITab>();
-            tabs.add(details = new AbstractTab(new Model<String>("Project Details"))
+            tabs.add(details = new AbstractTab(new Model<String>("Details"))
             {
                 private static final long serialVersionUID = 6703144434578403272L;
 
@@ -225,7 +225,7 @@ public class ProjectPage
 
             });
 
-            tabs.add(users = new AbstractTab(new Model<String>("Project Users"))
+            tabs.add(users = new AbstractTab(new Model<String>("Users"))
             {
                 private static final long serialVersionUID = 7160734867954315366L;
 
@@ -246,7 +246,7 @@ public class ProjectPage
                 }
             });
 
-            tabs.add(documents = new AbstractTab(new Model<String>("Project Documents"))
+            tabs.add(documents = new AbstractTab(new Model<String>("Documents"))
             {
                 private static final long serialVersionUID = 1170760600317199418L;
 
@@ -267,7 +267,7 @@ public class ProjectPage
                 }
             });
 
-            tabs.add(tagSets = new AbstractTab(new Model<String>("Project TagSets"))
+            tabs.add(tagSets = new AbstractTab(new Model<String>("Tag sets"))
             {
                 private static final long serialVersionUID = -3205723896786674220L;
 
@@ -288,7 +288,7 @@ public class ProjectPage
                 }
             });
 
-            tabs.add(new AbstractTab(new Model<String>("Annotation Guideline"))
+            tabs.add(new AbstractTab(new Model<String>("Guidelines"))
             {
                 private static final long serialVersionUID = 7887973231065189200L;
 
