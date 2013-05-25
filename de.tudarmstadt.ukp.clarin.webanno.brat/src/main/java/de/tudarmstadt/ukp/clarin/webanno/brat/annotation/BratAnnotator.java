@@ -286,7 +286,7 @@ public class BratAnnotator
                     }
 
                     catch (Exception e) {
-                        info(e);
+                        info(e.getMessage());
                         String collection = request.getParameterValue("collection").toString();
                         String documentName = request.getParameterValue("document").toString();
                         result = getDocument(collection, documentName,
