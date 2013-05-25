@@ -383,7 +383,7 @@ public class BratCurationDocumentEditor
                     aUIData.getAnnotationOffsetStart(),
                     aUIData.getAnnotationOffsetEnd())) {
                 throw new Exception(
-                        "Annotation coveres multiple sentence, Limit your annotation to single sentence");
+                        "Annotation coveres multiple sentences, limit your annotation to single sentence!");
             }
             result = controller.createSpanResponse(getModelObject(), aUIData);
             if (getModelObject().isScrollPage()) {

@@ -472,7 +472,7 @@ public class BratAnnotator
             if (!BratAjaxCasUtil.offsetsInOneSentences(aUIData.getjCas(),
                     aUIData.getAnnotationOffsetStart(), aUIData.getAnnotationOffsetEnd())) {
                 throw new Exception(
-                        "Annotation coveres multiple sentence, Limit your annotation to single sentence");
+                        "Annotation coveres multiple sentences, limit your annotation to single sentence!");
             }
             result = controller.createSpanResponse(bratAnnotatorModel, aUIData);
             if (bratAnnotatorModel.isScrollPage()) {
