@@ -9,28 +9,22 @@
 <html lang="en-US" xml:lang="en-US" xmlns="http://www.w3.org/1999/xhtml"
 	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <wicket:panel>
-	<fieldset class="ui-widget-content ui-corner-all labels-top">
-		<table class="hfill">
-			<tr>
-				<td style="vertical-align: top"><label>Users</label>
-					<form wicket:id="userSelectionForm" style="width: 100%">
-						<select wicket:id="user" style="width: 100%">
-						</select>
-						<div class="buttons">
-							<button wicket:id="addUser">Add Users</button>
-							<button wicket:id="removeUser">Remove User</button>
-							<button wicket:id="addPermissionLevel">Update
-								Permissions</button>
-						</div>
-					</form></td>
-			</tr>
-		</table>
-	</fieldset>
+	<form wicket:id="userSelectionForm" class="hfill">
+		<fieldset class="ui-widget-content ui-corner-all">
+			<legend>Users</legend>
+			<select wicket:id="user" class="hfill"></select>
+			<div class="buttons">
+				<button wicket:id="addUser">Add Users</button>
+				<button wicket:id="removeUser">Remove User</button>
+				<button wicket:id="addPermissionLevel">Change Permissions</button>
+			</div>
+		</fieldset>
+	</form>
 
 	<form wicket:id="userDetailForm" class="hfill">
 		<fieldset class="ui-widget-content ui-corner-all">
 			<legend>Select users to add</legend>
-			<span wicket:id="users" style="width: 100%"> </span>
+			<span wicket:id="users" class="hfill"> </span>
 			<div class="buttons">
 				<button wicket:id="add">Add</button>
 				<button wicket:id="cancel">Cancel</button>
@@ -41,7 +35,7 @@
 	<form wicket:id="permissionLevelDetailForm" class="hfill">
 		<fieldset class="ui-widget-content ui-corner-all">
 			<legend>Select the user's permission levels</legend>
-			<span wicket:id="permissionLevels" style="width: 100%"> </span>
+			<span wicket:id="permissionLevels" class="hfill"> </span>
 			<div class="buttons">
 				<button wicket:id="update">Update</button>
 				<button wicket:id="cancel">Cancel</button>
