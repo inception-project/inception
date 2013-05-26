@@ -97,7 +97,7 @@ public class ProjectUsersPanel
                             for (ProjectPermission projectPermission : projectPermissions) {
                                 permissionLevels.add(projectPermission.getLevel().getName());
                         }
-                            return  aObject.getUsername() + permissionLevels ;
+                            return  aObject.getUsername() + " " + permissionLevels ;
                         }
                     });
                     setNullValid(false);
