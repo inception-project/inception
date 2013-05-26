@@ -6,36 +6,30 @@
   either express or implied. # See the License for the specific language governing permissions and # limitations under
   the License. #
 -->
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-
-  <body>
-    <wicket:extend>
-      <table WIDTH="100%" STYLE="table-layout:fixed;">
-        <tr VALIGN=TOP>
-          <td width ="20%">
-            <form wicket:id="projectSelectionForm">
-              <div>
-                <label>
-                  Projects:
-                </label>
-              </div>
-              <div>
-                <select class="hfill" wicket:id="project" >
-                </select>
-              </div>
-              <div class="buttons">
-                <input type="submit" wicket:id="create" />
-              </div>
-            </form>
-          </td>
-          <td width="80%">
-            <form wicket:id="projectDetailForm">
-              <div wicket:id="tabs" class="tabpanel">
-              </div>
-            </form>
-          </td>
-        </tr>
-      </table>
-    </wicket:extend>
-  </body>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<body>
+	<wicket:extend>
+		<table class="hfill">
+			<tr style="vertical-align: top;">
+				<td width="20%">
+					<form wicket:id="projectSelectionForm">
+						<fieldset class="ui-widget-content ui-corner-all">
+							<legend>Projects</legend>
+							<select class="hfill" wicket:id="project"></select>
+							<div class="buttons">
+								<input type="submit" wicket:id="create" />
+							</div>
+						</fieldset>
+					</form>
+				</td>
+				<td width="80%">
+					<form wicket:id="projectDetailForm">
+						<div wicket:id="tabs" class="tabpanel"></div>
+					</form>
+				</td>
+			</tr>
+		</table>
+	</wicket:extend>
+</body>
 </html>
