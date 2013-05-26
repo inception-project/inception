@@ -50,19 +50,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 public class ProjectUsersPanel
     extends Panel
 {
+    private static final long serialVersionUID = 875749625429630464L;
 
     @SpringBean(name = "documentRepository")
     private RepositoryService projectRepository;
-
-    /*
-     * private class ItemContainer extends WebMarkupContainer {
-     *
-     * public final User user; boolean selected = false;
-     *
-     * public ItemContainer(String id, User aUser) { super(id); this.user = aUser; add(new
-     * Label("users", new PropertyModel(user, "number"))); add(new CheckBox("itemSelected", new
-     * PropertyModel(selected, "selected"))); } }
-     */
 
     private class UserSelectionForm
         extends Form<SelectionModel>
@@ -95,6 +86,8 @@ public class ProjectUsersPanel
 
                     setChoiceRenderer(new ChoiceRenderer<User>()
                     {
+                        private static final long serialVersionUID = 4607720784161484145L;
+
                         @Override
                         public Object getDisplayValue(User aObject)
                         {
@@ -104,7 +97,7 @@ public class ProjectUsersPanel
                             for (ProjectPermission projectPermission : projectPermissions) {
                                 permissionLevels.add(projectPermission.getLevel().getName());
                         }
-                            return  aObject.getUsername() + "[ " + permissionLevels + " ]";
+                            return  aObject.getUsername() + permissionLevels ;
                         }
                     });
                     setNullValid(false);
@@ -115,8 +108,6 @@ public class ProjectUsersPanel
                 {
                     if (aNewSelection != null) {
                         selectedUser = aNewSelection;
-                        // if (permissionLevelDetailForm.getModelObject().permissionLevels != null)
-                        // {
                         // Clear old selections
                         permissionLevelDetailForm.setModelObject(null);
                         List<ProjectPermission> projectPermissions = projectRepository
@@ -242,6 +233,8 @@ public class ProjectUsersPanel
                     });
                     setChoiceRenderer(new ChoiceRenderer<PermissionLevel>()
                     {
+                        private static final long serialVersionUID = 9050427999256764850L;
+
                         @Override
                         public Object getDisplayValue(PermissionLevel aObject)
                         {
