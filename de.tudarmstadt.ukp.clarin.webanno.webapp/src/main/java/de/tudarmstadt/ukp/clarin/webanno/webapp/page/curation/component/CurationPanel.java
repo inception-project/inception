@@ -552,7 +552,6 @@ public class CurationPanel
          * addresses, username)); mergeUserSegment.setCollectionData("{}");
          * mergeUserSegment.setDocumentResponse(getStringDocumentResponse(response));
          */
-        bratAnnotatorModel.setMode(Mode.ANNOTATION);
         mergeVisualizer.setModelObject(bratAnnotatorModel);
         mergeVisualizer.reloadContent(target);
 
