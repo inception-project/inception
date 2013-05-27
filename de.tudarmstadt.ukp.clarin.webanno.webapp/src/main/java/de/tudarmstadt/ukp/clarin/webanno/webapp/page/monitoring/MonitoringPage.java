@@ -331,7 +331,7 @@ public class MonitoringPage
                             for (User user:users){
                                 AnnotationDocument annotationDocument = projectRepository.getAnnotationDocument(sourceDocument, user);
                                 if(annotationDocument.getState().equals(AnnotationDocumentState.NEW) ||
-                                        annotationDocument.getState().equals(AnnotationDocumentState.IGNOR)){
+                                        annotationDocument.getState().equals(AnnotationDocumentState.IGNORE)){
                                     exist = false;
                                     break;
                                 }

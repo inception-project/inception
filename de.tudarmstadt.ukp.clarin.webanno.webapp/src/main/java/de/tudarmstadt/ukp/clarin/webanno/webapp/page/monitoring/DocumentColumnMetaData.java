@@ -109,7 +109,7 @@ public class DocumentColumnMetaData
                     color = "cyan";
                 }
                 else if (projectRepositoryService.getAnnotationDocument(document, user).getState()
-                        .equals(AnnotationDocumentState.IGNOR)) {
+                        .equals(AnnotationDocumentState.IGNORE)) {
                     color = "black";
                 }
                 // it is in NEW state
@@ -161,7 +161,7 @@ public class DocumentColumnMetaData
                             changeAnnotationDocumentState(
                                     document,
                                     user,
-                                    AnnotationDocumentStateTransition.ANNOTATIONFINISHEDTOANNOTATIONINPROGRESS);
+                                    AnnotationDocumentStateTransition.ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS);
                             color = "cyan";
                         }
                         else if (projectRepositoryService.getAnnotationDocument(document, user)
@@ -169,7 +169,7 @@ public class DocumentColumnMetaData
                             changeAnnotationDocumentState(
                                     document,
                                     user,
-                                    AnnotationDocumentStateTransition.ANNOTATIONINPROGRESSTOANNOTATIONFINISHED);
+                                    AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
 
                         }
                         // Change state of document to IGNORE
@@ -178,7 +178,7 @@ public class DocumentColumnMetaData
                             changeAnnotationDocumentState(
                                     document,
                                     user,
-                                    AnnotationDocumentStateTransition.NEWTOIGNOR);
+                                    AnnotationDocumentStateTransition.NEW_TO_IGNORE);
                             color = "black";
                         }
                         // change state from IGNOR to NEW
@@ -186,7 +186,7 @@ public class DocumentColumnMetaData
                             changeAnnotationDocumentState(
                                     document,
                                     user,
-                                    AnnotationDocumentStateTransition.IGNORTONEW);
+                                    AnnotationDocumentStateTransition.IGNORE_TO_NEW);
                             color = "red";
                         }
                     }
@@ -198,7 +198,7 @@ public class DocumentColumnMetaData
                         annotationDocument.setProject(project);
                         annotationDocument.setUser(user);
                         annotationDocument.setState(AnnotationDocumentStateTransition
-                                .transition(AnnotationDocumentStateTransition.NEWTOANNOTATIONINPROGRESS));
+                                .transition(AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
                         projectRepositoryService.createAnnotationDocument(annotationDocument);
 
                         try {
@@ -269,7 +269,7 @@ public class DocumentColumnMetaData
 
             aSourceDocument
                     .setState(SourceDocumentStateTransition
-                            .transition(SourceDocumentStateTransition.ANNOTATIONINPROGRESSTOANNOTATIONFINISHED));
+                            .transition(SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED));
             projectRepositoryService.createSourceDocument(aSourceDocument, user);
         }
         else {
@@ -278,7 +278,7 @@ public class DocumentColumnMetaData
 
             aSourceDocument
                     .setState(SourceDocumentStateTransition
-                            .transition(SourceDocumentStateTransition.ANNOTATIONFINISHEDTOANNOTATIONINPROGRESS));
+                            .transition(SourceDocumentStateTransition.ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS));
             projectRepositoryService.createSourceDocument(aSourceDocument, user);
         }
     }
