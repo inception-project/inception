@@ -20,9 +20,9 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.behavior.SimpleAttributeModifier;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.DataGridView;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.AbstractColumn;
@@ -30,6 +30,7 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.AbstractReadOnlyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.request.resource.ContextRelativeResource;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
@@ -40,6 +41,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.support.EmbeddableImage;
 
 /**
  * Build dynamic columns for the user's annotation documents status {@link DataGridView}
@@ -56,7 +58,6 @@ public class DocumentColumnMetaData
 
     private static final long serialVersionUID = 1L;
     private int columnNumber;
-    private String color = "";
 
     private Project project;
 
@@ -83,111 +84,78 @@ public class DocumentColumnMetaData
     public void populateItem(final Item<ICellPopulator<List<String>>> aCellItem,
             final String componentId, final IModel<List<String>> rowModel)
     {
-
+        int rowNumber = aCellItem.getIndex();
+        aCellItem.setOutputMarkupId(true);
+        
         final String value = getCellValue(rowModel.getObject().get(columnNumber)).trim();
-        if (value.equals("")) {
-            // it is first time the monitoring page is opened or there is no document in this
-            // project
+        if (rowNumber == 0) {
+            aCellItem.add(new Label(componentId, value.substring(value.indexOf(":") + 1)));
         }
-        else if (columnNumber == 0) {
-            // it is the user column, do nothing.
-        }
-
         else {
-
             SourceDocument document = projectRepositoryService.getSourceDocument(
                     value.substring(value.indexOf(":") + 1), project);
             User user = projectRepositoryService.getUser(value.substring(0, value.indexOf(":")));
 
+            AnnotationDocumentState state;
             if (projectRepositoryService.existsAnnotationDocument(document, user)) {
-                if (projectRepositoryService.getAnnotationDocument(document, user).getState()
-                        .equals(AnnotationDocumentState.FINISHED)) {
-                    color = "green";
-                }
-                else if (projectRepositoryService.getAnnotationDocument(document, user).getState()
-                        .equals(AnnotationDocumentState.INPROGRESS)) {
-                    color = "cyan";
-                }
-                else if (projectRepositoryService.getAnnotationDocument(document, user).getState()
-                        .equals(AnnotationDocumentState.IGNORE)) {
-                    color = "black";
-                }
-                // it is in NEW state
-                else {
-                    color = "red";
-                }
+                AnnotationDocument annoDoc = projectRepositoryService.getAnnotationDocument(document, user);
+                state = annoDoc.getState();
             }
             // user didn't even start working on it
             else {
+                state = AnnotationDocumentState.NEW;
                 AnnotationDocument annotationDocument = new AnnotationDocument();
                 annotationDocument.setDocument(document);
                 annotationDocument.setName(document.getName());
                 annotationDocument.setProject(project);
                 annotationDocument.setUser(user);
-                annotationDocument.setState(AnnotationDocumentState.NEW);
+                annotationDocument.setState(state);
                 projectRepositoryService.createAnnotationDocument(annotationDocument);
-                color = "red";
             }
-        }
-        // It is a username column
-        if (color.equals("")) {
-            aCellItem.add(new Label(componentId, value.substring(value.indexOf(":") + 1)));
-        }
-        else {
-            aCellItem.add(new Label(componentId, "")).add(
-                    new SimpleAttributeModifier("style", "color:" + color + ";background-color:"
-                            + color));
-        }
-
-        aCellItem.add(new AjaxEventBehavior("onclick")
-        {
-            @Override
-            protected void onEvent(AjaxRequestTarget aTarget)
+  
+            aCellItem.add(new EmbeddableImage(componentId, new ContextRelativeResource(
+                    "/images_small/" + state.toString() + ".png")));
+            aCellItem.add(AttributeModifier.append("class", "centering"));
+            aCellItem.add(new AjaxEventBehavior("onclick")
             {
-                if (columnNumber == 0) {
-                    color = "";
-                }
-                else {
-
+                @Override
+                protected void onEvent(AjaxRequestTarget aTarget)
+                {
                     SourceDocument document = projectRepositoryService.getSourceDocument(
                             value.substring(value.indexOf(":") + 1), project);
                     User user = projectRepositoryService.getUser(value.substring(0,
                             value.indexOf(":")));
-
+                    
+                    AnnotationDocumentState state;
                     if (projectRepositoryService.existsAnnotationDocument(document, user)) {
-                        if (projectRepositoryService.getAnnotationDocument(document, user)
-                                .getState().equals(AnnotationDocumentState.FINISHED)) {
-
+                        AnnotationDocument annoDoc = projectRepositoryService.getAnnotationDocument(document, user);
+                        state = annoDoc.getState();
+ 
+                        switch (state) {
+                        case FINISHED:
                             changeAnnotationDocumentState(
                                     document,
                                     user,
                                     AnnotationDocumentStateTransition.ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS);
-                            color = "cyan";
-                        }
-                        else if (projectRepositoryService.getAnnotationDocument(document, user)
-                                .getState().equals(AnnotationDocumentState.INPROGRESS)) {
+                            break;
+                        case INPROGRESS:
                             changeAnnotationDocumentState(
                                     document,
                                     user,
                                     AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
-
-                        }
-                        // Change state of document to IGNORE
-                        else if (projectRepositoryService.getAnnotationDocument(document, user)
-                                .getState().equals(AnnotationDocumentState.NEW)) {
+                            break;
+                        case NEW:
                             changeAnnotationDocumentState(
                                     document,
                                     user,
                                     AnnotationDocumentStateTransition.NEW_TO_IGNORE);
-                            color = "black";
-                        }
-                        // change state from IGNOR to NEW
-                        else {
+                            break;
+                        case IGNORE:
                             changeAnnotationDocumentState(
                                     document,
                                     user,
                                     AnnotationDocumentStateTransition.IGNORE_TO_NEW);
-                            color = "red";
+                            break;
                         }
                     }
                     // user didn't even start working on it
@@ -207,21 +175,11 @@ public class DocumentColumnMetaData
                         catch (IOException e) {
                             LOG.info("Unable to change state of the document");
                         }
-
-                        color = "red";
                     }
+                    aTarget.add(aCellItem);
                 }
-                // It is a username column
-                if (color.equals("")) {
-                    // do nothing
-                }
-                else {
-                    aCellItem.add(new SimpleAttributeModifier("style", "color:" + color
-                            + ";background-color:" + color));
-                }
-                aTarget.add(aCellItem.setOutputMarkupId(true));
-            }
-        });
+            });            
+        }
     }
 
     /**

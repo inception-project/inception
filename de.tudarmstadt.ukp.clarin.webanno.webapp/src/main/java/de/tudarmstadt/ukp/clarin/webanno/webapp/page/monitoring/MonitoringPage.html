@@ -10,71 +10,67 @@
 	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
 	<wicket:extend>
-		<table>
-			<tr>
-				<td>
-						<form wicket:id="projectSelectionForm">
-									<label class="top"> Projects: </label>
-									<select class="hfill" wicket:id="project">
-									</select>
-						</form>
-				</td>
-			</tr>
-			<tr>
-				<td>
-					<form wicket:id="monitoringDetailForm">
-						<table>
-							<tr style="color: green">
-								<td>Annotator's Progress -&gt <span wicket:id="projectName"
-									style="color: red"> </span>
-								</td>
-								<td>Projects's Progress</td>
-							</tr>
-							<tr>
-								<td>
-									<table style="height: 100%; width: 100%;">
-										<tr>
-											<td rowspan="2"><img wicket:id="annotator"
-												alt="Annotation Progress" /></td>
-										</tr>
-									</table>
-								</td>
-								<td>
-									<table style="height: 100%; width: 100%;">
-										<tbody>
-											<tr wicket:id="projectRepeator">
-												<td><span wicket:id="project"> : </span></td>
-												<td style="border-left: 1px black solid;">
-													<span wicket:id="projectProgress"></span>
-												</td>
-											</tr>
-										</tbody>
-									</table>
-								</td>
-							</tr>
-						</table>
-						<span style="color: green">
-							Completion status of documents by users for Project-&gt <span
-								wicket:id="projectName" style="color: red"> </span>
-						</span>
-						<table wicket:id="rsTable">
-						</table>
+		<table class="hfill">
+			<tr style="vertical-align: top;">
+				<td width="20%">
+					<form wicket:id="projectSelectionForm">
+						<fieldset class="ui-widget-content ui-corner-all">
+							<legend>Projects</legend>
+							<select class="hfill" wicket:id="project" size="29"></select>
+						</fieldset>
 					</form>
 				</td>
-			</tr>
-			<tr>
-				<td>
-					<form wicket:id="annotationTypeSelectionForm" id="middleright">
-						<select class="hfill" wicket:id="annotationTypes"></select>
+				<td width="80%">
+					<form wicket:id="monitoringDetailForm" class="hfill">
+						<fieldset class="ui-widget-content ui-corner-all"
+							style="display: none">
+							<legend>Overall progress</legend>
+							<table class="hfill">
+								<tbody>
+									<tr wicket:id="projectRepeator">
+										<td><span wicket:id="project"> : </span></td>
+										<td><span wicket:id="projectProgress"></span></td>
+									</tr>
+								</tbody>
+							</table>
+						</fieldset>
+						<fieldset class="ui-widget-content ui-corner-all">
+							<legend>Project</legend>
+							<div>
+								<span wicket:id="projectName"></span>
+							</div>
+						</fieldset>
+						<fieldset class="ui-widget-content ui-corner-all">
+							<legend>Progress by annotator</legend>
+							<img wicket:id="annotator" alt="Annotation Progress"></img>
+						</fieldset>
+						<fieldset class="ui-widget-content ui-corner-all">
+							<legend>Document status</legend>
+							<table wicket:id="rsTable" class="hfill"></table>
+						</fieldset>
 					</form>
-				</td>
-			</tr>
-			<tr>
-				<td>
-					<form wicket:id="agreementForm">
-						<table wicket:id="agreementTable">
-						</table>
-					</form>
+
+					<table class="hfill">
+						<tr style="vertical-align: top;">
+							<td width="20%">
+								<form wicket:id="annotationTypeSelectionForm" class="hfill">
+									<fieldset class="ui-widget-content ui-corner-all">
+										<legend>Layer</legend>
+										<select class="hfill" wicket:id="annotationTypes"></select>
+									</fieldset>
+								</form>
+							</td>
+							<td width="80%">
+								<form wicket:id="agreementForm" class="hfill">
+									<fieldset class="ui-widget-content ui-corner-all">
+										<legend>Agreement</legend>
+										<table wicket:id="agreementTable" class="hfill">
+										</table>
+									</fieldset>
+								</form>
+							</td>
+						</tr>
+					</table>
 				</td>
 			</tr>
 		</table>
