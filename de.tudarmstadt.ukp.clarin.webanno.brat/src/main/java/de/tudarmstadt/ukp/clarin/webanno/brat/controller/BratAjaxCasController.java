@@ -558,7 +558,7 @@ public class BratAjaxCasController
                 aUSer);
         if (annotationDocument.getState().equals(AnnotationDocumentState.NEW)) {
             annotationDocument.setState(AnnotationDocumentStateTransition
-                    .transition(AnnotationDocumentStateTransition.NEWTOANNOTATIONINPROGRESS));
+                    .transition(AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
         }
     }
 
@@ -651,7 +651,7 @@ public class BratAjaxCasController
         JCas jCas;
         // change the state of the source document to inprogress
         aDocument.setState(SourceDocumentStateTransition
-                .transition(SourceDocumentStateTransition.NEWTOANNOTATIONINPROGRESS));
+                .transition(SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
         if (!repository.existsAnnotationDocument(aDocument, aUser)) {
             aAnnotationDocument = new AnnotationDocument();
             aAnnotationDocument.setDocument(aDocument);
