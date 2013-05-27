@@ -26,41 +26,41 @@ public enum AnnotationDocumentStateTransition
     /**
      * Implicit, first time the annotator opened the document for annotation
      */
-    NEWTOANNOTATIONINPROGRESS,
+    NEW_TO_ANNOTATION_IN_PROGRESS,
     /**
      * Explicit annotator action
      */
-    ANNOTATIONINPROGRESSTOANNOTATIONFINISHED,
+    ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED,
     /**
      * explicit annotator action, only possible if associated document in states
      * "annotation in progress" or "annotation finished"
      */
-    ANNOTATIONFINISHEDTOANNOTATIONINPROGRESS,
+    ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS,
     /**
      * Ignore this annotation document from further processing
      */
-    NEWTOIGNOR,
+    NEW_TO_IGNORE,
     /**
      * Change document state from IGNOR back to NEW
      */
-    IGNORTONEW;
+    IGNORE_TO_NEW;
 
     public static AnnotationDocumentState transition(AnnotationDocumentStateTransition aTransition)
         throws IllegalArgumentException
     {
-        if (aTransition.equals(NEWTOANNOTATIONINPROGRESS)) {
+        if (aTransition.equals(NEW_TO_ANNOTATION_IN_PROGRESS)) {
             return AnnotationDocumentState.INPROGRESS;
         }
-        else if (aTransition.equals(ANNOTATIONINPROGRESSTOANNOTATIONFINISHED)) {
+        else if (aTransition.equals(ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED)) {
             return AnnotationDocumentState.FINISHED;
         }
-        else if (aTransition.equals(ANNOTATIONFINISHEDTOANNOTATIONINPROGRESS)) {
+        else if (aTransition.equals(ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS)) {
             return AnnotationDocumentState.INPROGRESS;
         }
-        else if (aTransition.equals(NEWTOIGNOR)) {
-            return AnnotationDocumentState.IGNOR;
+        else if (aTransition.equals(NEW_TO_IGNORE)) {
+            return AnnotationDocumentState.IGNORE;
         }
-        else if (aTransition.equals(IGNORTONEW)) {
+        else if (aTransition.equals(IGNORE_TO_NEW)) {
             return AnnotationDocumentState.NEW;
         }
         else {

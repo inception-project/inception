@@ -38,7 +38,7 @@ public enum AnnotationDocumentState
      */
     FINISHED,
     /**
-     * Ignor this annotation document from further processing such as curation
+     * Ignore this annotation document from further processing such as curation
      */
-    IGNOR;
+    IGNORE;
 }

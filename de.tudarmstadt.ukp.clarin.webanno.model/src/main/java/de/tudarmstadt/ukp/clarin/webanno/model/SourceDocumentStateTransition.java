@@ -27,40 +27,40 @@ public enum SourceDocumentStateTransition
     /**
      * Implicit based on annotation document states (new when the document uploaded to the project)
      */
-    NEWTOANNOTATIONINPROGRESS,
+    NEW_TO_ANNOTATION_IN_PROGRESS,
     /**
      * Implicit based on annotation document states
      */
-    ANNOTATIONINPROGRESSTOANNOTATIONFINISHED,
+    ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED,
     /**
      * Explicit curator action
      */
-    ANNOTATIONFINISHEDTOCURATIONINPROGRESS,
+    ANNOTATION_FINISHED_TO_CURATION_IN_PROGRESS,
     /**
      * Explicit curator action
      */
-    CURATIONINPROGRESSTOCURATIONFINISHED,
+    CURATION_IN_PROGRESS_TO_CURATION_FINISHED,
     /**
      * Implicit when admin re-open at least one annotation document
      */
-    ANNOTATIONFINISHEDTOANNOTATIONINPROGRESS;
+    ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS;
 
     public static SourceDocumentState transition(SourceDocumentStateTransition aTransition)
         throws IllegalArgumentException
     {
-        if (aTransition.equals(NEWTOANNOTATIONINPROGRESS)) {
+        if (aTransition.equals(NEW_TO_ANNOTATION_IN_PROGRESS)) {
             return SourceDocumentState.ANNOTATION_INPROGRESS;
         }
-        else if (aTransition.equals(ANNOTATIONINPROGRESSTOANNOTATIONFINISHED)) {
+        else if (aTransition.equals(ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED)) {
             return SourceDocumentState.ANNOTATION_FINISHED;
         }
-        else if (aTransition.equals(ANNOTATIONFINISHEDTOCURATIONINPROGRESS)) {
+        else if (aTransition.equals(ANNOTATION_FINISHED_TO_CURATION_IN_PROGRESS)) {
             return SourceDocumentState.CURATION_INPROGRESS;
         }
-        else if (aTransition.equals(CURATIONINPROGRESSTOCURATIONFINISHED)) {
+        else if (aTransition.equals(CURATION_IN_PROGRESS_TO_CURATION_FINISHED)) {
             return SourceDocumentState.CURATION_FINISHED;
         }
-        else if (aTransition.equals(ANNOTATIONFINISHEDTOANNOTATIONINPROGRESS)) {
+        else if (aTransition.equals(ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS)) {
             return SourceDocumentState.ANNOTATION_INPROGRESS;
         }
         else {
