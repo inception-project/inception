@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model;
  * An ennumeration to differentiate sentences in a document with different colors so as to easily
  * identify
  * 
- * @author  Andreas Straninger
+ * @author Andreas Straninger
  */
 public enum SentenceState
 {
@@ -30,16 +30,15 @@ public enum SentenceState
     /**
      * Conflicts of annotation found in this sentence, mark background in red
      */
-    DISAGREE(true, "#FF0000"),
+    DISAGREE(true, "#FF9999"),
     /**
      * Curator resolved conflicts - mark background in yellow
      */
-    RESOLVED(true, "#FFFF00"),
+    RESOLVED(true, "#FFFF99"),
     /**
      *
      */
-    CONFIRMED(true,
-            "#00FF00");
+    CONFIRMED(true, "#99FF99");
 
     private boolean hasDiff;
     private String colorCode;

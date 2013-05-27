@@ -335,6 +335,7 @@ fieldset {
   /* to prevent border from running into legend */
   margin-top: 5px;
 }
+/*
 fieldset legend {
   font-weight: bold;
   font-size: 90%;
@@ -346,6 +347,7 @@ fieldset legend {
   padding-left: 0.5em;
   padding-right: 0.5em;
 }
+*/
 .label-like {
    /* for UI consistency, this should match the "fieldset legend" style;
       sorry about the duplication. */

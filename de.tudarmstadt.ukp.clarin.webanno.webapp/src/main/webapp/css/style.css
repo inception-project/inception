@@ -564,12 +564,7 @@ div.tabpanel .tab-panel {
     text-align:center;
 
 }
-.curation-sentence-table { 
-  border-spacing:0px;
-  border-collapse:collapse;
-  padding:0px;
-  margin:0px;
-}
+
 .curation-sentence-item{
     border-bottom:1px outset gray;
     margin:2px 2px;
@@ -581,14 +576,4 @@ div.tabpanel .tab-panel {
     margin:2px 2px;
     padding:2px 2px;
     text-align: center;
-}
-
-.merge-view{
-    margin:20px;
-}
-.sentence-list-view{
-    margin:20px;
-}
-.curation-table{
-    margin:5px;
 }

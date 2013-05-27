@@ -16,32 +16,36 @@
 	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
 	<wicket:panel>
-		<div class="curation-table" style="float:left;width:33%;">
-			<table class="curation-sentence-table" wicket:id="textOuterView">
-				<tr wicket:id="textListView">
-					<td class="curation-sentence-number" wicket:id="sentenceNumber"/>
-					<td class="curation-sentence-item" wicket:id="sentence"/>
-				</tr>
-			</table>
-		</div>
+		<table class="hfill">
+			<tr style="vertical-align: top;">
+				<td width="33%">
+					<fieldset class="ui-widget-content ui-corner-all">
+						<legend>Sentences</legend>
+						<table class="hfill" wicket:id="textOuterView" style="border-collapse: collapse;">
+							<tr wicket:id="textListView">
+								<td class="curation-sentence-number" wicket:id="sentenceNumber" />
+								<td class="curation-sentence-item" wicket:id="sentence" />
+							</tr>
+						</table>
+					</fieldset>
+				</td>
+				<td width="66%">
+					<div class="merge-view" wicket:id="mergeView" />
 
-		<div style="float:left;width:66%;">
-			<div  wicket:id="sentenceOuterView">
-				<div class="sentence-list-view" wicket:id="sentenceListView">
-					<div wicket:id="sentence" />
-				</div>
-			</div>
-			<div class="merge-view" wicket:id="mergeView" />
-		</div>
-		
-		<div style="clear:both;" />
-        <script type="text/javascript">
-        	var webFontURLs = [
-        		'/static/fonts/Astloch-Bold.ttf',
-        		'/static/fonts/PT_Sans-Caption-Web-Regular.ttf',
-        		'/static/fonts/Liberation_Sans-Regular.ttf'
-			];
-        </script>
+					<div wicket:id="sentenceOuterView">
+						<div class="sentence-list-view" wicket:id="sentenceListView">
+							<div wicket:id="sentence" />
+						</div>
+					</div>
+				</td>
+			</tr>
+		</table>
+
+		<script type="text/javascript">
+			var webFontURLs = [ '/static/fonts/Astloch-Bold.ttf',
+					'/static/fonts/PT_Sans-Caption-Web-Regular.ttf',
+					'/static/fonts/Liberation_Sans-Regular.ttf' ];
+		</script>
 	</wicket:panel>
 </body>
 </html>

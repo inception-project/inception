@@ -31,11 +31,11 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
-import org.apache.wicket.behavior.SimpleAttributeModifier;
 import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
@@ -347,15 +347,12 @@ public class CurationPanel
                 item.add(click);
                 String colorCode = curationSegmentItem.getSentenceState().getColorCode();
                 if (curationSegmentItem.isCurrentSentence()) {
-                    item.add(new SimpleAttributeModifier("style", "background-color:" + "yellow"
-                            + ";"));
+                    item.add(AttributeModifier.append("style", "border: 4px solid black;"));
                 }
-                else {
-                    if (colorCode != null) {
-                        item.add(new SimpleAttributeModifier("style", "background-color:"
-                                + colorCode + ";"));
-                    }
+                if (colorCode != null) {
+                    item.add(AttributeModifier.append("style", "background-color: "+colorCode+";"));
                 }
+                
                 Label currentSentence = new AjaxLabel("sentence", curationSegmentItem.getText(),
                         click);
                 item.add(currentSentence);

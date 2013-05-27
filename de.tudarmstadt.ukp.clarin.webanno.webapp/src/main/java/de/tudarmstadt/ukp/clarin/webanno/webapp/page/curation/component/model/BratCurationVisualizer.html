@@ -16,7 +16,7 @@
 	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.5-strict.dtd">
 <head>
 <wicket:head>
-    <!-- Cannot use head.js because then onLoad event fires before all JS has been loaded 
+	<!-- Cannot use head.js because then onLoad event fires before all JS has been loaded 
     causing errors.
     -->
 	<!-- >script type="text/javascript" src="client/lib/jquery.min.js"></script -->
@@ -41,14 +41,19 @@
 	<script type="text/javascript" src="client/src/annotator_ui.js"></script>
 	<script type="text/javascript" src="client/src/spinner.js"></script>
 	<script type="text/javascript" src="client/src/curation_mod.js"></script>
-    <link rel="stylesheet" type="text/css" href="style-vis.css"/>
-    <link rel="stylesheet" type="text/css" href="style-ui.css"/>
+	<link rel="stylesheet" type="text/css" href="style-vis.css" />
+	<link rel="stylesheet" type="text/css" href="style-ui.css" />
 </wicket:head>
 </head>
 <body>
 	<wicket:panel>
-		<div wicket:id="username"></div>
-		<div wicket:id="vis"></div>
+		<fieldset class="ui-widget-content ui-corner-all">
+			<legend>
+				User: <span wicket:id="username"></span>
+			</legend>
+
+			<div wicket:id="vis"></div>
+		</fieldset>
 	</wicket:panel>
 </body>
 </html>
