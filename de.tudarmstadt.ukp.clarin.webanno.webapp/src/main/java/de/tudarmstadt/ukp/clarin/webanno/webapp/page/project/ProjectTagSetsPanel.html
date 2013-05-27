@@ -16,7 +16,7 @@
 					<fieldset class="ui-widget-content ui-corner-all">
 						<legend>Tag sets</legend>
 						<div>
-							<select class="hfill" wicket:id="tagSet"></select>
+							<select class="hfill" wicket:id="tagSet" size="6"></select>
 						</div>
 						<div class="buttons">
 							<input type="submit" wicket:id="create" />
@@ -56,19 +56,19 @@
 								<td class="hfill"><input type="text" wicket:id="language" /></td>
 							</tr>
 							<tr>
-								<td><label>Type:</label></td>
+								<td><label>Layer:</label></td>
 								<td class="hfill"><select wicket:id="type"></select></td>
 							</tr>
 							<tr>
 								<td style="vertical-align: top;"><label>Description:</label></td>
 								<td class="hfill"><textarea class="hfill"
-										wicket:id="description" rows="10"></textarea></td>
+										wicket:id="description" rows="7"></textarea></td>
 							</tr>
 						</table>
 						<div class="buttons">
 							<label class="inline">Export as:</label> <select
 								wicket:id="exportTagsetFormat"></select> <input type="submit"
-								wicket:id="export" value="Export Tagsets" />
+								wicket:id="export" value="Export tag set"/>
 							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 							<input type="submit" wicket:id="save" /> <input type="submit"
 								wicket:id="remove" />
@@ -86,7 +86,7 @@
 				<form wicket:id="tagSelectionForm">
 					<fieldset class="ui-widget-content ui-corner-all">
 						<legend>Tags</legend>
-						<select wicket:id="tag" size="14"></select>
+						<select wicket:id="tag" size="8"></select>
 					</fieldset>
 				</form>
 			</td>
@@ -104,7 +104,7 @@
 							<tr>
 								<td style="vertical-align: top;"><label>Description:</label></td>
 								<td class="hfill"><textarea class="hfill"
-										wicket:id="description" rows="10"></textarea></td>
+										wicket:id="description" rows="4"></textarea></td>
 							</tr>
 						</table>
 						<div class="buttons">
