@@ -158,7 +158,7 @@ public class RepositoryServiceDbData
 
     /**
      * Renames a file.
-     *
+     * 
      * @throws IOException
      *             if the file cannot be renamed.
      * @return the target file.
@@ -176,7 +176,7 @@ public class RepositoryServiceDbData
 
     /**
      * Get the folder where the annotations are stored. Creates the folder if necessary.
-     *
+     * 
      * @throws IOException
      *             if the folder cannot be created.
      */
@@ -596,10 +596,24 @@ public class RepositoryServiceDbData
     public List<AnnotationDocument> listAnnotationDocument(Project aProject,
             SourceDocument aDocument)
     {
+        // Get all annotators in the project
+        List<User> users = entityManager
+                .createQuery(
+                        "SELECT DISTINCT user FROM ProjectPermission WHERE project = :project "
+                                + "AND level = :level", User.class)
+                .setParameter("project", aProject).setParameter("level", PermissionLevel.USER.getId())
+                .getResultList();
+
+        // Bail out already. HQL doesn't seem to like queries with an empty parameter right of "in"
+        if (users.isEmpty()) {
+            return new ArrayList<AnnotationDocument>();
+        }
+        
         return entityManager
                 .createQuery(
-                        "FROM AnnotationDocument WHERE project =:project AND document = :document",
-                        AnnotationDocument.class).setParameter("project", aProject)
+                        "FROM AnnotationDocument WHERE project = :project AND document = :document "
+                                + "AND user in (:users)", AnnotationDocument.class)
+                .setParameter("project", aProject).setParameter("users", users)
                 .setParameter("document", aDocument).getResultList();
     }
 
@@ -753,10 +767,14 @@ public class RepositoryServiceDbData
                 + GUIDELINE + aFileName));
     }
 
-    public void removeCurationDocumentContent( SourceDocument aSourceDocument) throws IOException{
+    @Override
+    public void removeCurationDocumentContent(SourceDocument aSourceDocument)
+        throws IOException
+    {
 
-        FileUtils.forceDelete(new File(getAnnotationFolder(aSourceDocument), CURATION_USER+".ser"));
-        }
+        FileUtils
+                .forceDelete(new File(getAnnotationFolder(aSourceDocument), CURATION_USER + ".ser"));
+    }
 
     @Override
     @Transactional
@@ -1072,7 +1090,7 @@ public class RepositoryServiceDbData
     /**
      * Creates an annotation document (either user's annotation document or CURATION_USER's
      * annotation document)
-     *
+     * 
      * @param aDocument
      *            the {@link SourceDocument}
      * @param aJcas
@@ -1221,7 +1239,7 @@ public class RepositoryServiceDbData
     /**
      * For a given {@link SourceDocument}, return the {@link AnnotationDocument} for the user or for
      * the CURATION_USER
-     *
+     * 
      * @param aDocument
      *            the {@link SourceDocument}
      * @param aUsername
