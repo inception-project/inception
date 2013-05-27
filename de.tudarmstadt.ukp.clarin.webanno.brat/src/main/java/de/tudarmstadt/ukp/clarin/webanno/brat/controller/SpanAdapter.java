@@ -38,6 +38,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorUIData;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
@@ -156,6 +157,10 @@ public class SpanAdapter
     public void addToBrat(JCas aJcas, GetDocumentResponse aResponse,
             BratAnnotatorModel aBratAnnotatorModel)
     {
+        // Remove prefixes from response if it is in curation mode
+        if(aBratAnnotatorModel.getMode().equals(Mode.CURATION)) {
+            typePrefix = "";
+        }
         // The first sentence address in the display window!
         Sentence firstSentence = (Sentence) BratAjaxCasUtil.selectAnnotationByAddress(aJcas,
                 FeatureStructure.class, aBratAnnotatorModel.getSentenceAddress());

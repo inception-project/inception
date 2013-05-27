@@ -538,7 +538,7 @@ public class BratAjaxCasController
         if (aMode.equals(Mode.ANNOTATION)) {
             repository.createAnnotationDocumentContent(aJcas, aSourceDocument, aUser);
         }
-        else if (aMode.equals(Mode.CURATION)) {
+        else if (aMode.equals(Mode.CURATION)||aMode.equals(Mode.CURATIONANNOTATION)) {
             repository.createCurationDocumentContent(aJcas, aSourceDocument, aUser);
         }
     }

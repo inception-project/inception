@@ -34,6 +34,7 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.cas.Type;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
@@ -43,7 +44,10 @@ import org.uimafit.util.JCasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
 import de.tudarmstadt.ukp.dkpro.core.api.io.ResourceCollectionReaderBase;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
+import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.tokit.BreakIteratorSegmenter;
@@ -504,6 +508,28 @@ public class BratAjaxCasUtil
             annotationType = aType.substring(0, aType.indexOf("_") + 1);
         }
         return annotationType;
+    }
+
+    /**
+     * Get the annotation UIMA type, using the request sent from brat. If the request have type POS_NN,
+     * the the annotation type is  POS
+     *
+     * @param aType
+     *            the UIMA type of the annotation
+     */
+    public static String getAnnotationType(Type aType)
+    {
+        String annotationType = null;
+       if(aType.getName().equals(POS.class.getName())){
+           annotationType = AnnotationTypeConstant.POS_PREFIX;
+       }
+       else  if(aType.getName().equals(NamedEntity.class.getName())){
+           annotationType = AnnotationTypeConstant.NAMEDENTITY_PREFIX;
+       }
+       else  if(aType.getName().equals(CoreferenceLink.class.getName())){
+           annotationType = AnnotationTypeConstant.COREFERENCE_PREFIX;
+       }
+      return annotationType;
     }
 
     /**
