@@ -58,6 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorUIData;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -386,6 +387,9 @@ public class CurationPanel
         JCas clickedJCas = repository.getAnnotationDocumentContent(aAnnotationDocument);
         AnnotationFS fsClicked = (AnnotationFS) clickedJCas.getLowLevelCas().ll_getFSForRef(
                 aAddress);
+        // TODO temporarily solution to remove the the prefix from curation sentence annotation views
+        spanType =  BratAjaxCasUtil.getAnnotationType(fsClicked.getType())+spanType;
+
         BratAnnotatorUIData uIData = new BratAnnotatorUIData();
         uIData.setjCas(aMergeJCas);
         uIData.setGetDocument(false);
@@ -552,6 +556,7 @@ public class CurationPanel
          * addresses, username)); mergeUserSegment.setCollectionData("{}");
          * mergeUserSegment.setDocumentResponse(getStringDocumentResponse(response));
          */
+        bratAnnotatorModel.setMode(Mode.CURATIONANNOTATION);
         mergeVisualizer.setModelObject(bratAnnotatorModel);
         mergeVisualizer.reloadContent(target);
 

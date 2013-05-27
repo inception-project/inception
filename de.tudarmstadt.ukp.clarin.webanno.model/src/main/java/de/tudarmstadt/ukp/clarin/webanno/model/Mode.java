@@ -21,5 +21,5 @@ package de.tudarmstadt.ukp.clarin.webanno.model;
  */
 public enum Mode
 {
-ANNOTATION, CURATION;
+ANNOTATION, CURATION, CURATIONANNOTATION;
 }
