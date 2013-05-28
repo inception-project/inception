@@ -48,6 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -213,6 +214,8 @@ public class CasToBratJsonTest
         Project project = new Project();
         project.setReverseDependencyDirection(true);
         bratannotatorModel.setProject(project);
+        bratannotatorModel.setMode(Mode.ANNOTATION);
+
         ApplicationUtils.setJsonConverter(jsonConverter);
 
         GetDocumentResponse response = new GetDocumentResponse();
