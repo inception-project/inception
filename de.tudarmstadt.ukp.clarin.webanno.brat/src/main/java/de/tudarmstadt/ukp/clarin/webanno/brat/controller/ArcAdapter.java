@@ -32,6 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorUIData;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Argument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Relation;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -39,9 +40,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
  * A class that is used to create Brat Arc to CAS relations and vice-versa
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 public class ArcAdapter
 	implements TypeAdapter
@@ -49,7 +50,7 @@ public class ArcAdapter
 	/**
 	 * Prefix of the label value for Brat to make sure that different annotation types can use the
 	 * same label, e.g. a POS tag "N" and a named entity type "N".
-	 * 
+	 *
 	 */
 	private String typePrefix;
 
@@ -110,7 +111,7 @@ public class ArcAdapter
 	/**
 	 * Add arc annotations from the CAS, which is controlled by the window size, to the brat
 	 * response {@link GetDocumentResponse}
-	 * 
+	 *
 	 * @param aJcas
 	 *            The JCAS object containing annotations
 	 * @param aResponse
@@ -122,6 +123,12 @@ public class ArcAdapter
 	public void addToBrat(JCas aJcas, GetDocumentResponse aResponse,
 			BratAnnotatorModel aBratAnnotatorModel)
 	{
+
+        // Remove prefixes from response if it is in curation mode
+        if(aBratAnnotatorModel.getMode().equals(Mode.CURATION)) {
+            typePrefix = "";
+        }
+
 		boolean reverse = aBratAnnotatorModel.getProject().isReverseDependencyDirection();
 		// The first sentence address in the display window!
 		Sentence firstSentence = (Sentence) BratAjaxCasUtil.selectAnnotationByAddress(aJcas,
@@ -151,7 +158,7 @@ public class ArcAdapter
 
 	/**
 	 * a helper method to the {@link #addToBrat(JCas, GetDocumentResponse, BratAnnotatorModel)}
-	 * 
+	 *
 	 * @param aSentence
 	 *            The current sentence in the CAS annotation, with annotations
 	 * @param aResponse
@@ -189,7 +196,7 @@ public class ArcAdapter
 
 	/**
 	 * Update the CAS with new/modification of arc annotations from brat
-	 * 
+	 *
 	 * @param aLabelValue
 	 *            the value of the annotation for the arc
 	 * @param aUIData
@@ -278,11 +285,22 @@ public class ArcAdapter
 				governorFS = (AnnotationFS) BratAjaxCasUtil.selectAnnotationByAddress(aJCas,
 						FeatureStructure.class, aTargetAddress);
 			}
-			AnnotationFS newAnnotation = aJCas.getCas().createAnnotation(type,
+			// if span A has (start,end)= (20, 26) and B has (start,end)= (30, 36)
+			// arc drawn from A to B, dependency will have (start, end) = (20, 36)
+			// arc drawn from B to A, still dependency will have (start, end) = (20, 36)
+			AnnotationFS newAnnotation;
+			if(dependentFS.getEnd()<=governorFS.getEnd()){
+			newAnnotation = aJCas.getCas().createAnnotation(type,
 					dependentFS.getBegin(), governorFS.getEnd());
 			newAnnotation.setStringValue(feature, aValue);
-			// If origin and target spans are multiple tokens, dependentFS.getBegin will be the 
-			// the begin position of the first token and dependentFS.getEnd will be the End 
+			}
+			else{
+			    newAnnotation = aJCas.getCas().createAnnotation(type,
+			            governorFS.getBegin(), dependentFS.getEnd());
+	            newAnnotation.setStringValue(feature, aValue);
+			}
+			// If origin and target spans are multiple tokens, dependentFS.getBegin will be the
+			// the begin position of the first token and dependentFS.getEnd will be the End
 			// position of the last token.
 			newAnnotation.setFeatureValue(
 					dependentFeature,
@@ -298,7 +316,7 @@ public class ArcAdapter
 
 	/**
 	 * Delete arc annotation from CAS
-	 * 
+	 *
 	 * @param aJCas
 	 * @param aId
 	 */
@@ -341,7 +359,7 @@ public class ArcAdapter
 
 	/**
 	 * Convenience method to get an adapter for Dependency Parsing.
-	 * 
+	 *
 	 * NOTE: This is not meant to stay. It's just a convenience during refactoring!
 	 */
 	public static final ArcAdapter getDependencyAdapter()
@@ -356,7 +374,7 @@ public class ArcAdapter
 
 	/**
 	 * Argument lists for the arc annotation
-	 * 
+	 *
 	 * @return
 	 */
 	private List<Argument> getArgument(FeatureStructure aGovernorFs, FeatureStructure aDependentFs,
