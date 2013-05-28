@@ -106,6 +106,7 @@ public class MonitoringPage
      * The document column in the user-document status table
      */
     public static final String DOCUMENT = "document:";
+    public static final String SOURCE_DOCUMENT = "source document";
 
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
@@ -199,7 +200,10 @@ public class MonitoringPage
                         for (User user : projectRepository.listProjectUsersWithPermissions(project)) {
                             documentListAsColumnHeader.add(user.getUsername());
                         }
+                        //A column for curation user annotation document status
                         documentListAsColumnHeader.add(CurationPanel.CURATION_USER);
+                        //A column for source document states
+                        documentListAsColumnHeader.add(SOURCE_DOCUMENT);
                         List<List<String>> userAnnotationDocumentStatusList = new ArrayList<List<String>>();
                         for (SourceDocument document : documents) {
                             List<String> userAnnotationDocuments = new ArrayList<String>();
@@ -212,6 +216,10 @@ public class MonitoringPage
                             }
                             // Curation Document status
                             userAnnotationDocuments.add(CurationPanel.CURATION_USER + "-"
+                                    + DOCUMENT + document.getName());
+                            
+                            // source Document status
+                            userAnnotationDocuments.add(SOURCE_DOCUMENT + "-"
                                     + DOCUMENT + document.getName());
                             userAnnotationDocumentStatusList.add(userAnnotationDocuments);
                         }

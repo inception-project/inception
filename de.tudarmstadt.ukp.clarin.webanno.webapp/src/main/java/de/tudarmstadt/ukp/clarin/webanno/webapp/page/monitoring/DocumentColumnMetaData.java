@@ -93,19 +93,20 @@ public class DocumentColumnMetaData
         if (rowNumber == 0) {
             aCellItem.add(new Label(componentId, value.substring(value.indexOf(":") + 1)));
         }
-        else if (value.substring(0, value.indexOf(":")).equals(CurationPanel.CURATION_USER)){
+        else if (value.substring(0, value.indexOf(":")).equals(CurationPanel.CURATION_USER)) {
             SourceDocument document = projectRepositoryService.getSourceDocument(
                     value.substring(value.indexOf(":") + 1), project);
             SourceDocumentState state = document.getState();
             String iconNameForState;
-            // If state is annotation finished or annotation in progress, curation is not yet started
-            if(state.equals(SourceDocumentState.ANNOTATION_FINISHED)) {
+            // If state is annotation finished or annotation in progress, curation is not yet
+            // started
+            if (state.equals(SourceDocumentState.ANNOTATION_FINISHED)) {
                 iconNameForState = SourceDocumentState.NEW.toString();
             }
-            else if(state.equals(SourceDocumentState.ANNOTATION_INPROGRESS)) {
+            else if (state.equals(SourceDocumentState.ANNOTATION_INPROGRESS)) {
                 iconNameForState = SourceDocumentState.NEW.toString();
             }
-            else{
+            else {
                 iconNameForState = state.toString();
             }
             aCellItem.add(new EmbeddableImage(componentId, new ContextRelativeResource(
@@ -120,33 +121,54 @@ public class DocumentColumnMetaData
                 {
                     SourceDocument document = projectRepositoryService.getSourceDocument(
                             value.substring(value.indexOf(":") + 1), project);
-                    String username = SecurityContextHolder.getContext()
-                            .getAuthentication().getName();
+                    String username = SecurityContextHolder.getContext().getAuthentication()
+                            .getName();
                     User user = projectRepositoryService.getUser(username);
                     SourceDocumentState state = document.getState();
-                        switch (state) {
-                        case CURATION_FINISHED:
-                            try {
-                                changeSourceDocumentState(document, user,
-                                        SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS);
-                            }
-                            catch (IOException e) {
-                             LOG.info(e.getMessage());
-                            }
-                            break;
-                        case CURATION_INPROGRESS:
-                            try {
-                                changeSourceDocumentState(document, user,
-                                        SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED);
-                            }
-                            catch (IOException e) {
-                                LOG.info(e.getMessage());
-                            }
-                            break;
-                            default:
-                                aTarget.appendJavaScript("alert('the state can only be changed explicitly by the curator')");
+                    switch (state) {
+                    case CURATION_FINISHED:
+                        try {
+                            changeSourceDocumentState(
+                                    document,
+                                    user,
+                                    SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS);
                         }
+                        catch (IOException e) {
+                            LOG.info(e.getMessage());
+                        }
+                        break;
+                    case CURATION_INPROGRESS:
+                        try {
+                            changeSourceDocumentState(
+                                    document,
+                                    user,
+                                    SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED);
+                        }
+                        catch (IOException e) {
+                            LOG.info(e.getMessage());
+                        }
+                        break;
+                    default:
+                        aTarget.appendJavaScript("alert('the state can only be changed explicitly by the curator')");
+                    }
 
+                    aTarget.add(aCellItem);
+                }
+            });
+        }
+        else if (value.substring(0, value.indexOf(":")).equals(MonitoringPage.SOURCE_DOCUMENT)) {
+            SourceDocument document = projectRepositoryService.getSourceDocument(
+                    value.substring(value.indexOf(":") + 1), project);
+            aCellItem.add(new Label(componentId, document.getState().toString()));
+            aCellItem.add(AttributeModifier.append("class", "centering"));
+            aCellItem.add(new AjaxEventBehavior("onclick")
+            {
+                private static final long serialVersionUID = -3607394592031059409L;
+
+                @Override
+                protected void onEvent(AjaxRequestTarget aTarget)
+                {
+                    aTarget.appendJavaScript("alert('You cannot change the state of Source Documents')");
                     aTarget.add(aCellItem);
                 }
             });
@@ -158,7 +180,8 @@ public class DocumentColumnMetaData
 
             AnnotationDocumentState state;
             if (projectRepositoryService.existsAnnotationDocument(document, user)) {
-                AnnotationDocument annoDoc = projectRepositoryService.getAnnotationDocument(document, user);
+                AnnotationDocument annoDoc = projectRepositoryService.getAnnotationDocument(
+                        document, user);
                 state = annoDoc.getState();
             }
             // user didn't even start working on it
@@ -190,7 +213,8 @@ public class DocumentColumnMetaData
 
                     AnnotationDocumentState state;
                     if (projectRepositoryService.existsAnnotationDocument(document, user)) {
-                        AnnotationDocument annoDoc = projectRepositoryService.getAnnotationDocument(document, user);
+                        AnnotationDocument annoDoc = projectRepositoryService
+                                .getAnnotationDocument(document, user);
                         state = annoDoc.getState();
 
                         switch (state) {
@@ -207,15 +231,11 @@ public class DocumentColumnMetaData
                                     AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
                             break;
                         case NEW:
-                            changeAnnotationDocumentState(
-                                    document,
-                                    user,
+                            changeAnnotationDocumentState(document, user,
                                     AnnotationDocumentStateTransition.NEW_TO_IGNORE);
                             break;
                         case IGNORE:
-                            changeAnnotationDocumentState(
-                                    document,
-                                    user,
+                            changeAnnotationDocumentState(document, user,
                                     AnnotationDocumentStateTransition.IGNORE_TO_NEW);
                             break;
                         }
@@ -273,6 +293,7 @@ public class DocumentColumnMetaData
 
     /**
      * Change the state of the source document when the annotation document is changed.
+     *
      * @param aProject
      * @param aSourceDocument
      * @throws IOException
@@ -311,6 +332,7 @@ public class DocumentColumnMetaData
 
     /**
      * change the state of an annotation document. used to re-open closed documents
+     *
      * @param aSourceDocument
      * @param aUser
      * @param aAnnotationDocumentStateTransition
@@ -335,15 +357,18 @@ public class DocumentColumnMetaData
 
     /**
      * change source document state when curation document state is changed.
+     *
      * @param aSourceDocument
      * @param aUser
      * @param aSourceDocumentStateTransition
      * @throws IOException
      */
     private void changeSourceDocumentState(SourceDocument aSourceDocument, User aUser,
-            SourceDocumentStateTransition aSourceDocumentStateTransition) throws IOException
+            SourceDocumentStateTransition aSourceDocumentStateTransition)
+        throws IOException
     {
-        aSourceDocument.setState(SourceDocumentStateTransition.transition(aSourceDocumentStateTransition));
+        aSourceDocument.setState(SourceDocumentStateTransition
+                .transition(aSourceDocumentStateTransition));
         projectRepositoryService.createSourceDocument(aSourceDocument, aUser);
     }
 }
