@@ -39,8 +39,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.support.EmbeddableImage;
 
 /**
@@ -86,10 +88,68 @@ public class DocumentColumnMetaData
     {
         int rowNumber = aCellItem.getIndex();
         aCellItem.setOutputMarkupId(true);
-        
+
         final String value = getCellValue(rowModel.getObject().get(columnNumber)).trim();
         if (rowNumber == 0) {
             aCellItem.add(new Label(componentId, value.substring(value.indexOf(":") + 1)));
+        }
+        else if (value.substring(0, value.indexOf(":")).equals(CurationPanel.CURATION_USER)){
+            SourceDocument document = projectRepositoryService.getSourceDocument(
+                    value.substring(value.indexOf(":") + 1), project);
+            SourceDocumentState state = document.getState();
+            String iconNameForState;
+            // If state is annotation finished or annotation in progress, curation is not yet started
+            if(state.equals(SourceDocumentState.ANNOTATION_FINISHED)) {
+                iconNameForState = SourceDocumentState.NEW.toString();
+            }
+            else if(state.equals(SourceDocumentState.ANNOTATION_INPROGRESS)) {
+                iconNameForState = SourceDocumentState.NEW.toString();
+            }
+            else{
+                iconNameForState = state.toString();
+            }
+            aCellItem.add(new EmbeddableImage(componentId, new ContextRelativeResource(
+                    "/images_small/" + iconNameForState + ".png")));
+            aCellItem.add(AttributeModifier.append("class", "centering"));
+            aCellItem.add(new AjaxEventBehavior("onclick")
+            {
+                private static final long serialVersionUID = -4213621740511947285L;
+
+                @Override
+                protected void onEvent(AjaxRequestTarget aTarget)
+                {
+                    SourceDocument document = projectRepositoryService.getSourceDocument(
+                            value.substring(value.indexOf(":") + 1), project);
+                    String username = SecurityContextHolder.getContext()
+                            .getAuthentication().getName();
+                    User user = projectRepositoryService.getUser(username);
+                    SourceDocumentState state = document.getState();
+                        switch (state) {
+                        case CURATION_FINISHED:
+                            try {
+                                changeSourceDocumentState(document, user,
+                                        SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS);
+                            }
+                            catch (IOException e) {
+                             LOG.info(e.getMessage());
+                            }
+                            break;
+                        case CURATION_INPROGRESS:
+                            try {
+                                changeSourceDocumentState(document, user,
+                                        SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED);
+                            }
+                            catch (IOException e) {
+                                LOG.info(e.getMessage());
+                            }
+                            break;
+                            default:
+                                aTarget.appendJavaScript("alert('the state can only be changed explicitly by the curator')");
+                        }
+
+                    aTarget.add(aCellItem);
+                }
+            });
         }
         else {
             SourceDocument document = projectRepositoryService.getSourceDocument(
@@ -112,12 +172,14 @@ public class DocumentColumnMetaData
                 annotationDocument.setState(state);
                 projectRepositoryService.createAnnotationDocument(annotationDocument);
             }
-  
+
             aCellItem.add(new EmbeddableImage(componentId, new ContextRelativeResource(
                     "/images_small/" + state.toString() + ".png")));
             aCellItem.add(AttributeModifier.append("class", "centering"));
             aCellItem.add(new AjaxEventBehavior("onclick")
             {
+                private static final long serialVersionUID = -5089819284917455111L;
+
                 @Override
                 protected void onEvent(AjaxRequestTarget aTarget)
                 {
@@ -125,12 +187,12 @@ public class DocumentColumnMetaData
                             value.substring(value.indexOf(":") + 1), project);
                     User user = projectRepositoryService.getUser(value.substring(0,
                             value.indexOf(":")));
-                    
+
                     AnnotationDocumentState state;
                     if (projectRepositoryService.existsAnnotationDocument(document, user)) {
                         AnnotationDocument annoDoc = projectRepositoryService.getAnnotationDocument(document, user);
                         state = annoDoc.getState();
- 
+
                         switch (state) {
                         case FINISHED:
                             changeAnnotationDocumentState(
@@ -178,7 +240,7 @@ public class DocumentColumnMetaData
                     }
                     aTarget.add(aCellItem);
                 }
-            });            
+            });
         }
     }
 
@@ -209,6 +271,12 @@ public class DocumentColumnMetaData
         }
     }
 
+    /**
+     * Change the state of the source document when the annotation document is changed.
+     * @param aProject
+     * @param aSourceDocument
+     * @throws IOException
+     */
     private void changeSourceDocumentState(Project aProject, SourceDocument aSourceDocument)
         throws IOException
     {
@@ -241,6 +309,12 @@ public class DocumentColumnMetaData
         }
     }
 
+    /**
+     * change the state of an annotation document. used to re-open closed documents
+     * @param aSourceDocument
+     * @param aUser
+     * @param aAnnotationDocumentStateTransition
+     */
     private void changeAnnotationDocumentState(SourceDocument aSourceDocument, User aUser,
             AnnotationDocumentStateTransition aAnnotationDocumentStateTransition)
     {
@@ -257,5 +331,19 @@ public class DocumentColumnMetaData
             LOG.info("Unable to change state of the document");
         }
 
+    }
+
+    /**
+     * change source document state when curation document state is changed.
+     * @param aSourceDocument
+     * @param aUser
+     * @param aSourceDocumentStateTransition
+     * @throws IOException
+     */
+    private void changeSourceDocumentState(SourceDocument aSourceDocument, User aUser,
+            SourceDocumentStateTransition aSourceDocumentStateTransition) throws IOException
+    {
+        aSourceDocument.setState(SourceDocumentStateTransition.transition(aSourceDocumentStateTransition));
+        projectRepositoryService.createSourceDocument(aSourceDocument, aUser);
     }
 }

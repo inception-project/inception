@@ -76,6 +76,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.project.SettingsPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.statistics.TwoPairedKappa;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.support.ChartImageResource;
@@ -198,15 +199,20 @@ public class MonitoringPage
                         for (User user : projectRepository.listProjectUsersWithPermissions(project)) {
                             documentListAsColumnHeader.add(user.getUsername());
                         }
+                        documentListAsColumnHeader.add(CurationPanel.CURATION_USER);
                         List<List<String>> userAnnotationDocumentStatusList = new ArrayList<List<String>>();
                         for (SourceDocument document : documents) {
                             List<String> userAnnotationDocuments = new ArrayList<String>();
                             userAnnotationDocuments.add(DOCUMENT + document.getName());
                             for (User user : projectRepository
                                     .listProjectUsersWithPermissions(project)) {
+                                // annotation document status for this annotator
                                 userAnnotationDocuments.add(user.getUsername() + "-" + DOCUMENT
                                         + document.getName());
                             }
+                            // Curation Document status
+                            userAnnotationDocuments.add(CurationPanel.CURATION_USER + "-"
+                                    + DOCUMENT + document.getName());
                             userAnnotationDocumentStatusList.add(userAnnotationDocuments);
                         }
 
@@ -328,15 +334,18 @@ public class MonitoringPage
                         List<SourceDocument> sourceDocumentsWithAnnotations = new ArrayList<SourceDocument>();
                         for (SourceDocument sourceDocument : sourceDocuments) {
                             boolean exist = true;
-                            for (User user:users){
-                                AnnotationDocument annotationDocument = projectRepository.getAnnotationDocument(sourceDocument, user);
-                                if(annotationDocument.getState().equals(AnnotationDocumentState.NEW) ||
-                                        annotationDocument.getState().equals(AnnotationDocumentState.IGNORE)){
+                            for (User user : users) {
+                                AnnotationDocument annotationDocument = projectRepository
+                                        .getAnnotationDocument(sourceDocument, user);
+                                if (annotationDocument.getState().equals(
+                                        AnnotationDocumentState.NEW)
+                                        || annotationDocument.getState().equals(
+                                                AnnotationDocumentState.IGNORE)) {
                                     exist = false;
                                     break;
                                 }
                             }
-                            if(exist) {
+                            if (exist) {
                                 sourceDocumentsWithAnnotations.add(sourceDocument);
                             }
                         }
@@ -363,7 +372,8 @@ public class MonitoringPage
                         // get average agreement value across documents
                         for (int i = 0; i < users.size(); i++) {
                             for (int j = 0; j < users.size(); j++) {
-                                results[i][j] = results[i][j] / sourceDocumentsWithAnnotations.size();
+                                results[i][j] = results[i][j]
+                                        / sourceDocumentsWithAnnotations.size();
                             }
                         }
 
