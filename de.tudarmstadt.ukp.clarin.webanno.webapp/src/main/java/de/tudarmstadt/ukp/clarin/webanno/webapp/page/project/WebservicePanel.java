@@ -87,50 +87,53 @@ public class WebservicePanel
                             "http://aspra11.informatik.uni-leipzig.de:8080/"
                                     + "TEI-Integration/collection/addAnnotations?user=pws&pass=showcase");
 
-                    /*
-                     * File file = new File(
-                     * "/home/likewise-open/UKP/yimam/tmp/annotations_example.zip");
-                     */
-                    // Get all the source documents from the project
-                    List<SourceDocument> documents = projectRepository.listSourceDocuments(project);
-
                     File exportTempDir = File.createTempFile("webanno", "export");
                     exportTempDir.delete();
                     exportTempDir.mkdirs();
 
-                    File metaInfDir =  new File(exportTempDir+"/META_INF");
+                    File metaInfDir = new File(exportTempDir + "/META_INF");
                     FileUtils.forceMkdir(metaInfDir);
 
-                    for (SourceDocument sourceDocument : documents) {
+                    // Get all the source documents from the project
+                    List<SourceDocument> documents = projectRepository.listSourceDocuments(project);
+                    boolean curationDocumentExist = false;
+                        for (SourceDocument sourceDocument : documents) {
 
-                        // If the curation document is exist (either finished or in progress
-                        if (sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)
-                                || sourceDocument.getState().equals(
-                                        SourceDocumentState.CURATION_IN_PROGRESS)) {
-                            File tcfFile = projectRepository.exportAnnotationDocument(
-                                    sourceDocument, project, user, TcfWriter.class,
-                                    sourceDocument.getName(), Mode.CURATION);
-                            FileUtils.copyFileToDirectory(tcfFile, exportTempDir);
+                            // If the curation document is exist (either finished or in progress
+                            if (sourceDocument.getState().equals(
+                                    SourceDocumentState.CURATION_FINISHED)
+                                    || sourceDocument.getState().equals(
+                                            SourceDocumentState.CURATION_IN_PROGRESS)) {
+                                curationDocumentExist = true;
+                                File tcfFile = projectRepository.exportAnnotationDocument(
+                                        sourceDocument, project, user, TcfWriter.class,
+                                        sourceDocument.getName(), Mode.CURATION);
+                                FileUtils.copyFileToDirectory(tcfFile, exportTempDir);
+                            }
                         }
+                        if (!curationDocumentExist) {
+                            error("No curation document created yet for this document");
+                        }
+                        else {
+                        FileUtils.copyDirectory(new File(projectRepository.getDir(), "/project/"
+                                + project.getId() + "/META_INF"), metaInfDir);
+
+                        DaoUtils.zipFolder(exportTempDir, new File(exportTempDir.getAbsolutePath()
+                                + ".zip"));
+
+                        @SuppressWarnings("deprecation")
+                        FileEntity reqEntity = new FileEntity(new File(
+                                exportTempDir.getAbsolutePath() + ".zip"),
+                                "application/octet-stream");
+
+                        httppost.setEntity(reqEntity);
+
+                        HttpResponse response = httpclient.execute(httppost);
+                        HttpEntity resEntity = response.getEntity();
+
+                        info(response.getStatusLine().toString());
+                        EntityUtils.consume(resEntity);
                     }
-
-                    FileUtils.copyDirectory(new File(projectRepository.getDir(),
-                            "/project/"+project.getId()+"/META_INF"), metaInfDir);
-
-                    DaoUtils.zipFolder(exportTempDir, new File(exportTempDir.getAbsolutePath()
-                            + ".zip"));
-
-                    @SuppressWarnings("deprecation")
-                    FileEntity reqEntity = new FileEntity(new File(exportTempDir.getAbsolutePath()
-                            + ".zip"), "application/octet-stream");
-
-                    httppost.setEntity(reqEntity);
-
-                    HttpResponse response = httpclient.execute(httppost);
-                    HttpEntity resEntity = response.getEntity();
-
-                    info(response.getStatusLine().toString());
-                    EntityUtils.consume(resEntity);
                 }
                 catch (ClientProtocolException e) {
                     error(ExceptionUtils.getRootCause(e));
