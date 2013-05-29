@@ -22,29 +22,50 @@ package de.tudarmstadt.ukp.clarin.webanno.model;
  * @author Seid Muhie Yimam
  *
  */
-public enum SourceDocumentState
+public enum SourceDocumentState implements PersistentEnum
 {
 
     /**
      * no annotation document has been created for this document
      */
-    NEW,
+    NEW("NEW"),
     /**
      * at least one annotation document has been created for the document
      */
-    ANNOTATION_INPROGRESS,
+    ANNOTATION_IN_PROGRESS("ANNOTATION_INPROGRESS"),
     /**
      * all annotations have marked their annotation document as finished
      */
-    ANNOTATION_FINISHED,
+    ANNOTATION_FINISHED("ANNOTATION_FINISHED"),
     /**
      * curator claims to have curated all annotations
      */
-    CURATION_FINISHED,
+    CURATION_FINISHED("CURATION_FINISHED"),
     /**
      * curator has started working with the annotation document, annotators can no longer make
      * modifications in annotation documents
      */
-    CURATION_INPROGRESS;
+    CURATION_IN_PROGRESS("CURATION_INPROGRESS");
+    public String getName()
+    {
+        return getId();
+    }
+    @Override
+    public String toString()
+    {
+        return getId();
+    }
+    SourceDocumentState(String aId)
+    {
+        this.id = aId;
+    }
+
+    private final String id;
+
+    @Override
+    public String getId()
+    {
+        return id;
+    }
 
 }

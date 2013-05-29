@@ -49,13 +49,13 @@ public enum AnnotationDocumentStateTransition
         throws IllegalArgumentException
     {
         if (aTransition.equals(NEW_TO_ANNOTATION_IN_PROGRESS)) {
-            return AnnotationDocumentState.INPROGRESS;
+            return AnnotationDocumentState.IN_PROGRESS;
         }
         else if (aTransition.equals(ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED)) {
             return AnnotationDocumentState.FINISHED;
         }
         else if (aTransition.equals(ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS)) {
-            return AnnotationDocumentState.INPROGRESS;
+            return AnnotationDocumentState.IN_PROGRESS;
         }
         else if (aTransition.equals(NEW_TO_IGNORE)) {
             return AnnotationDocumentState.IGNORE;

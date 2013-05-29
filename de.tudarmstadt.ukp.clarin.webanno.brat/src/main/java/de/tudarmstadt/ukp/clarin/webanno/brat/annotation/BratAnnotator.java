@@ -797,7 +797,7 @@ public class BratAnnotator
                     || bratAnnotatorModel.getDocument().getState()
                             .equals(SourceDocumentState.CURATION_FINISHED)
                     || bratAnnotatorModel.getDocument().getState()
-                            .equals(SourceDocumentState.CURATION_INPROGRESS)) {
+                            .equals(SourceDocumentState.CURATION_IN_PROGRESS)) {
                 finished = true;
             }
         }

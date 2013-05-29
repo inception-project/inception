@@ -53,22 +53,22 @@ public enum SourceDocumentStateTransition
         throws IllegalArgumentException
     {
         if (aTransition.equals(NEW_TO_ANNOTATION_IN_PROGRESS)) {
-            return SourceDocumentState.ANNOTATION_INPROGRESS;
+            return SourceDocumentState.ANNOTATION_IN_PROGRESS;
         }
         else if (aTransition.equals(ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED)) {
             return SourceDocumentState.ANNOTATION_FINISHED;
         }
         else if (aTransition.equals(ANNOTATION_FINISHED_TO_CURATION_IN_PROGRESS)) {
-            return SourceDocumentState.CURATION_INPROGRESS;
+            return SourceDocumentState.CURATION_IN_PROGRESS;
         }
         else if (aTransition.equals(CURATION_IN_PROGRESS_TO_CURATION_FINISHED)) {
             return SourceDocumentState.CURATION_FINISHED;
         }
         else if (aTransition.equals(ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS)) {
-            return SourceDocumentState.ANNOTATION_INPROGRESS;
+            return SourceDocumentState.ANNOTATION_IN_PROGRESS;
         }
         else if (aTransition.equals(CURATION_FINISHED_TO_CURATION_IN_PROGRESS)) {
-            return SourceDocumentState.CURATION_INPROGRESS;
+            return SourceDocumentState.CURATION_IN_PROGRESS;
         }
         else {
             throw new IllegalArgumentException();

@@ -103,7 +103,7 @@ public class DocumentColumnMetaData
             if (state.equals(SourceDocumentState.ANNOTATION_FINISHED)) {
                 iconNameForState = SourceDocumentState.NEW.toString();
             }
-            else if (state.equals(SourceDocumentState.ANNOTATION_INPROGRESS)) {
+            else if (state.equals(SourceDocumentState.ANNOTATION_IN_PROGRESS)) {
                 iconNameForState = SourceDocumentState.NEW.toString();
             }
             else {
@@ -137,7 +137,7 @@ public class DocumentColumnMetaData
                             LOG.info(e.getMessage());
                         }
                         break;
-                    case CURATION_INPROGRESS:
+                    case CURATION_IN_PROGRESS:
                         try {
                             changeSourceDocumentState(
                                     document,
@@ -224,7 +224,7 @@ public class DocumentColumnMetaData
                                     user,
                                     AnnotationDocumentStateTransition.ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS);
                             break;
-                        case INPROGRESS:
+                        case IN_PROGRESS:
                             changeAnnotationDocumentState(
                                     document,
                                     user,

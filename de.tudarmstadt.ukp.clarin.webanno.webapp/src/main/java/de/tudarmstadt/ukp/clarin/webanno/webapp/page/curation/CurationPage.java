@@ -234,7 +234,7 @@ public class CurationPage
                                         .equals(SourceDocumentState.CURATION_FINISHED)) {
                             // Update source document state to CURRATION_INPROGRESS
                             openDataModel.getDocument().setState(
-                                    SourceDocumentState.CURATION_INPROGRESS);
+                                    SourceDocumentState.CURATION_IN_PROGRESS);
                             try {
                                 repository.createSourceDocument(openDataModel.getDocument(), user);
                             }
