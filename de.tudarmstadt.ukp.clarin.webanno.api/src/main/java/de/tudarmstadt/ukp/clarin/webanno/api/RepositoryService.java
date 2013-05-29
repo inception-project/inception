@@ -173,7 +173,7 @@ public interface RepositoryService
      *            the {@link User } who annotates the document.
      */
     File exportAnnotationDocument(SourceDocument document, Project project, User user,
-            Class writer, String fileName)
+            Class writer, String fileName, Mode mode)
         throws FileNotFoundException, UIMAException, IOException, WLFormatException,
         ClassNotFoundException;
 
@@ -638,4 +638,11 @@ public interface RepositoryService
      */
     List<User> listProjectUsersWithPermissions(Project project);
 
+    /**
+     * Determine if the project is created using the remote API webanno service or not
+     *TODO: For now, it checks if the project consists of META-INF folder!!
+     * @param project
+     * @return
+     */
+    boolean isRemoteProject(Project project);
 }

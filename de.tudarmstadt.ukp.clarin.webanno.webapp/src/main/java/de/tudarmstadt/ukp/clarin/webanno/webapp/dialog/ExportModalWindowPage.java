@@ -40,6 +40,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -124,7 +125,8 @@ public class ExportModalWindowPage
                                 try {
                                     downloadFile = repository.exportAnnotationDocument(document,
                                             project, user,
-                                            repository.getWritableFormats().get(repository.getWritableFormatId(selectedFormat)), fileName);
+                                            repository.getWritableFormats().get(repository.getWritableFormatId(selectedFormat)),
+                                            fileName, Mode.ANNOTATION);
                                 }
                                 catch (FileNotFoundException e) {
                                     error("Ubable to find annotation document " + ":"

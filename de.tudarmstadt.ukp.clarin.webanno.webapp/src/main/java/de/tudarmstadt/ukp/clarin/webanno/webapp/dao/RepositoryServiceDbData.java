@@ -158,7 +158,7 @@ public class RepositoryServiceDbData
 
     /**
      * Renames a file.
-     * 
+     *
      * @throws IOException
      *             if the file cannot be renamed.
      * @return the target file.
@@ -176,7 +176,7 @@ public class RepositoryServiceDbData
 
     /**
      * Get the folder where the annotations are stored. Creates the folder if necessary.
-     * 
+     *
      * @throws IOException
      *             if the folder cannot be created.
      */
@@ -337,7 +337,7 @@ public class RepositoryServiceDbData
     @Override
     @Transactional
     public File exportAnnotationDocument(SourceDocument aDocument, Project aProject, User aUser,
-            Class aWriter, String aFileName)
+            Class aWriter, String aFileName, Mode aMode)
         throws UIMAException, IOException, WLFormatException, ClassNotFoundException
     {
         File exportTempDir = File.createTempFile("webanno", "export");
@@ -345,7 +345,13 @@ public class RepositoryServiceDbData
         exportTempDir.mkdirs();
 
         File annotationFolder = getAnnotationFolder(aDocument);
-        String serializedCaseFileName = aUser.getUsername() + ".ser";
+        String serializedCaseFileName;
+        if(aMode.equals(Mode.ANNOTATION)){
+            serializedCaseFileName = aUser.getUsername() + ".ser";
+        }
+        else{
+            serializedCaseFileName = CURATION_USER + ".ser";
+        }
 
         CollectionReader reader = CollectionReaderFactory
                 .createCollectionReader(SerializedCasReader.class, SerializedCasReader.PARAM_PATH,
@@ -608,7 +614,7 @@ public class RepositoryServiceDbData
         if (users.isEmpty()) {
             return new ArrayList<AnnotationDocument>();
         }
-        
+
         return entityManager
                 .createQuery(
                         "FROM AnnotationDocument WHERE project = :project AND document = :document "
@@ -825,7 +831,7 @@ public class RepositoryServiceDbData
     public void savePropertiesFile(Project aProject, InputStream aIs, String aFileName)
         throws IOException
     {
-        String path = dir.getAbsolutePath() + PROJECT + aProject.getId()
+        String path = dir.getAbsolutePath() + PROJECT + aProject.getId()+"/"
                 + FilenameUtils.getFullPath(aFileName);
         FileUtils.forceMkdir(new File(path));
 
@@ -1090,7 +1096,7 @@ public class RepositoryServiceDbData
     /**
      * Creates an annotation document (either user's annotation document or CURATION_USER's
      * annotation document)
-     * 
+     *
      * @param aDocument
      *            the {@link SourceDocument}
      * @param aJcas
@@ -1239,7 +1245,7 @@ public class RepositoryServiceDbData
     /**
      * For a given {@link SourceDocument}, return the {@link AnnotationDocument} for the user or for
      * the CURATION_USER
-     * 
+     *
      * @param aDocument
      *            the {@link SourceDocument}
      * @param aUsername
@@ -1279,4 +1285,9 @@ public class RepositoryServiceDbData
             }
         }
     }
+
+ @Override
+public boolean   isRemoteProject(Project project){
+     return new File(dir, PROJECT+project.getId()+"/META_INF").exists();
+ }
 }

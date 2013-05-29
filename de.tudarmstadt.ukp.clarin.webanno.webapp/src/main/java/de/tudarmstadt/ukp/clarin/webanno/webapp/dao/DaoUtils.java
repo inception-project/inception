@@ -32,7 +32,9 @@ import de.tudarmstadt.ukp.dkpro.core.io.bincas.SerializedCasWriter;
  *
  */
 public class DaoUtils
-{   /**
+{
+    private static String srcPath;
+    /**
     * While exporting annotation documents, some of the writers generate multiple outputs, such as the
     * the {@link SerializedCasWriter}. This method generates a zip file if the exported file do
     * contain multiple file output
@@ -40,6 +42,7 @@ public class DaoUtils
     public static void zipFolder(File srcFolder, File destZipFile)
         throws Exception
     {
+       srcPath = srcFolder.getName();
         ZipOutputStream zip = null;
         FileOutputStream fileWriter = null;
 
@@ -54,13 +57,25 @@ public class DaoUtils
     private static void addFileToZip(File path, File srcFile, ZipOutputStream zip)
         throws Exception
     {
-
         if (srcFile.isDirectory()) {
             addFolderToZip(path, srcFile, zip);
+           /* // We don't need the folder name inside the zi[p
+            if(path.getName().equals(srcPath)){
+                File subFolder = new File(srcFile.getAbsolutePath().replace(srcPath, ""));
+                addFolderToZip(path, subFolder, zip);
+            }
+            else {
+                addFolderToZip(path, srcFile, zip);
+            }*/
         }
         else {
             FileInputStream in = new FileInputStream(srcFile);
-            zip.putNextEntry(new ZipEntry(path + "/" + srcFile.getName()));
+            if(path.getName().equals(srcPath)){
+                zip.putNextEntry(new ZipEntry("/" + srcFile.getName()));
+            }
+            else {
+                zip.putNextEntry(new ZipEntry(path + "/" + srcFile.getName()));
+            }
             IOUtils.copy(in, zip);
         }
     }
@@ -68,13 +83,15 @@ public class DaoUtils
     private static void addFolderToZip(File path, File srcFolder, ZipOutputStream zip)
         throws Exception
     {
-        // File folder = new File(srcFolder);
 
         for (String fileName : srcFolder.list()) {
             if (path.equals("")) {
                 addFileToZip(srcFolder, new File(srcFolder + "/" + fileName), zip);
             }
             else {
+                if(path.getPath()!=null && path.getName().equals(srcPath)) {
+                    path = new File("");
+                }
                 addFileToZip(new File(path + "/" + srcFolder.getName()), new File(srcFolder + "/"
                         + fileName), zip);
             }

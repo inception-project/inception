@@ -238,10 +238,7 @@ public class ProjectPage
                 @Override
                 public boolean isVisible()
                 {
-                    if (createProject) {
-                        return false;
-                    }
-                    return true;
+                    return(!createProject);
 
                 }
             });
@@ -259,10 +256,7 @@ public class ProjectPage
                 @Override
                 public boolean isVisible()
                 {
-                    if (createProject) {
-                        return false;
-                    }
-                    return true;
+                    return(!createProject);
 
                 }
             });
@@ -280,10 +274,7 @@ public class ProjectPage
                 @Override
                 public boolean isVisible()
                 {
-                    if (createProject) {
-                        return false;
-                    }
-                    return true;
+                    return(!createProject);
 
                 }
             });
@@ -301,10 +292,7 @@ public class ProjectPage
                 @Override
                 public boolean isVisible()
                 {
-                    if (createProject) {
-                        return false;
-                    }
-                    return true;
+                    return(!createProject);
 
                 }
             });
@@ -323,10 +311,7 @@ public class ProjectPage
                 @Override
                 public boolean isVisible()
                 {
-                    if (createProject) {
-                        return false;
-                    }
-                    return true;
+                    return(!createProject&&projectRepository.isRemoteProject(project.getObject()));
 
                 }
             });

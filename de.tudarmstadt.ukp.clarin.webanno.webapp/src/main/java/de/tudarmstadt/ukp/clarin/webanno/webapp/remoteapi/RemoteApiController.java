@@ -155,12 +155,9 @@ public class RemoteApiController
             // IF the current filename is META-INF/webanno/source-meta-data.properties store it
             // as
             // project meta data
-            else if (entry.toString().equals(
-                    FilenameUtils.removeExtension(aFile.getOriginalFilename())
-                            + "/META-INF/webanno/source-meta-data.properties")) {
+            else if (entry.toString().equals("META-INF/webanno/source-meta-data.properties")) {
                 InputStream zipStream = zip.getInputStream(entry);
-                projectRepository.savePropertiesFile(project, zipStream, entry.toString()
-                        .substring(entry.toString().indexOf("/")));
+                projectRepository.savePropertiesFile(project, zipStream, entry.toString());
 
             }
             // File not in the Zip's root folder OR not
