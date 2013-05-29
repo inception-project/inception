@@ -309,6 +309,28 @@ public class ProjectPage
                 }
             });
 
+            tabs.add(new AbstractTab(new Model<String>("WebService"))
+            {
+
+                private static final long serialVersionUID = 788812791376373350L;
+
+                @Override
+                public Panel getPanel(String panelId)
+                {
+                    return new WebservicePanel(panelId, project);
+                }
+
+                @Override
+                public boolean isVisible()
+                {
+                    if (createProject) {
+                        return false;
+                    }
+                    return true;
+
+                }
+            });
+
             add(allTabs = new AjaxTabbedPanel("tabs", tabs));
             ProjectDetailForm.this.setMultiPart(true);
         }
