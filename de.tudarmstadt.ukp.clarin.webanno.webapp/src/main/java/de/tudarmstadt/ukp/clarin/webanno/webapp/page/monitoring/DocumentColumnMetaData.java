@@ -125,8 +125,7 @@ public class DocumentColumnMetaData
                             .getName();
                     User user = projectRepositoryService.getUser(username);
                     SourceDocumentState state = document.getState();
-                    switch (state) {
-                    case CURATION_FINISHED:
+                    if(state.toString().equals(SourceDocumentState.CURATION_FINISHED.toString())){
                         try {
                             changeSourceDocumentState(
                                     document,
@@ -136,8 +135,8 @@ public class DocumentColumnMetaData
                         catch (IOException e) {
                             LOG.info(e.getMessage());
                         }
-                        break;
-                    case CURATION_IN_PROGRESS:
+                    }
+                    else if(state.toString().equals(SourceDocumentState.CURATION_IN_PROGRESS.toString())){
                         try {
                             changeSourceDocumentState(
                                     document,
@@ -147,8 +146,8 @@ public class DocumentColumnMetaData
                         catch (IOException e) {
                             LOG.info(e.getMessage());
                         }
-                        break;
-                    default:
+                    }
+                    else{
                         aTarget.appendJavaScript("alert('the state can only be changed explicitly by the curator')");
                     }
 
@@ -216,28 +215,25 @@ public class DocumentColumnMetaData
                         AnnotationDocument annoDoc = projectRepositoryService
                                 .getAnnotationDocument(document, user);
                         state = annoDoc.getState();
-
-                        switch (state) {
-                        case FINISHED:
+                        if(state.toString().equals(AnnotationDocumentState.FINISHED.toString())){
                             changeAnnotationDocumentState(
                                     document,
                                     user,
                                     AnnotationDocumentStateTransition.ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS);
-                            break;
-                        case IN_PROGRESS:
+                        }else
+                            if(state.toString().equals(AnnotationDocumentState.IN_PROGRESS.toString())){
                             changeAnnotationDocumentState(
                                     document,
                                     user,
                                     AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
-                            break;
-                        case NEW:
+                            }
+                        if(state.toString().equals(AnnotationDocumentState.NEW.toString())){
                             changeAnnotationDocumentState(document, user,
                                     AnnotationDocumentStateTransition.NEW_TO_IGNORE);
-                            break;
-                        case IGNORE:
+                        }
+                        if(state.toString().equals(AnnotationDocumentState.IGNORE.toString())){
                             changeAnnotationDocumentState(document, user,
                                     AnnotationDocumentStateTransition.IGNORE_TO_NEW);
-                            break;
                         }
                     }
                     // user didn't even start working on it

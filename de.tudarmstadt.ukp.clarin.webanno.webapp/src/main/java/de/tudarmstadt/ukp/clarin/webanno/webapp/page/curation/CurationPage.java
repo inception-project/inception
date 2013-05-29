@@ -18,6 +18,8 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import javax.persistence.NoResultException;
+
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
@@ -648,6 +650,12 @@ public class CurationPage
         // Get information to be populated to bratAnnotatorModel from the JCAS of the logged in user
         //
         catch(DataRetrievalFailureException e){
+            BratAjaxCasController controller = new BratAjaxCasController(repository,
+                    annotationService);
+            jCas = controller.getJCas(bratAnnotatorModel.getDocument(), bratAnnotatorModel
+                    .getDocument().getProject(), userLoggedIn);
+        }
+        catch(NoResultException e){
             BratAjaxCasController controller = new BratAjaxCasController(repository,
                     annotationService);
             jCas = controller.getJCas(bratAnnotatorModel.getDocument(), bratAnnotatorModel
