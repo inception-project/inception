@@ -252,7 +252,7 @@ public class ApplicationUtils
         // get annotation preference from file system
         try {
             for (Entry<Object, Object> entry : aRepositoryService.loadUserSettings(aUsername,
-                    abAnnotatorModel.getProject(), aMode).entrySet()) {
+                    abAnnotatorModel.getProject()).entrySet()) {
                 String property = entry.getKey().toString();
                 int index = property.lastIndexOf(".");
                String propertyName = property.substring(index + 1);

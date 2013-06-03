@@ -444,15 +444,13 @@ public interface RepositoryService
      *
      * @param username
      *            the username.
-     * @param subject
-     *            the type of the setting for {@link AnnotationPage } or {@link CurationPage}.
      * @param project
      *            the project where the user is wroking on.
      * @return
      * @throws IOException
      * @throws FileNotFoundException
      */
-    Properties loadUserSettings(String username, Project project, Mode aSubject)
+    Properties loadUserSettings(String username, Project project)
         throws FileNotFoundException, IOException;
 
     /**

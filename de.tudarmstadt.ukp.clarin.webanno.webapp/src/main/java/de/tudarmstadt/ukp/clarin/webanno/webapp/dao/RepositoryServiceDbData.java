@@ -34,6 +34,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -346,10 +347,10 @@ public class RepositoryServiceDbData
 
         File annotationFolder = getAnnotationFolder(aDocument);
         String serializedCaseFileName;
-        if(aMode.equals(Mode.ANNOTATION)){
+        if (aMode.equals(Mode.ANNOTATION)) {
             serializedCaseFileName = aUser.getUsername() + ".ser";
         }
-        else{
+        else {
             serializedCaseFileName = CURATION_USER + ".ser";
         }
 
@@ -607,8 +608,8 @@ public class RepositoryServiceDbData
                 .createQuery(
                         "SELECT DISTINCT user FROM ProjectPermission WHERE project = :project "
                                 + "AND level = :level", User.class)
-                .setParameter("project", aProject).setParameter("level", PermissionLevel.USER.getId())
-                .getResultList();
+                .setParameter("project", aProject)
+                .setParameter("level", PermissionLevel.USER.getId()).getResultList();
 
         // Bail out already. HQL doesn't seem to like queries with an empty parameter right of "in"
         if (users.isEmpty()) {
@@ -720,7 +721,7 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public Properties loadUserSettings(String aUsername, Project aProject, Mode aSubject)
+    public Properties loadUserSettings(String aUsername, Project aProject)
         throws FileNotFoundException, IOException
     {
         Properties property = new Properties();
@@ -831,7 +832,7 @@ public class RepositoryServiceDbData
     public void savePropertiesFile(Project aProject, InputStream aIs, String aFileName)
         throws IOException
     {
-        String path = dir.getAbsolutePath() + PROJECT + aProject.getId()+"/"
+        String path = dir.getAbsolutePath() + PROJECT + aProject.getId() + "/"
                 + FilenameUtils.getFullPath(aFileName);
         FileUtils.forceMkdir(new File(path));
 
@@ -861,6 +862,17 @@ public class RepositoryServiceDbData
         }
         String propertiesPath = dir.getAbsolutePath() + PROJECT + aProject.getId() + SETTINGS
                 + aUsername;
+        // append existing preferences for the other mode
+        if (new File(propertiesPath, annotationPreferencePropertiesFileName).exists()) {
+            aSubject = aSubject.equals(Mode.ANNOTATION) ? Mode.CURATION : Mode.ANNOTATION;
+            for (Entry<Object, Object> entry : loadUserSettings(aUsername, aProject).entrySet()) {
+                String key = entry.getKey().toString();
+                if (key.substring(0, key.indexOf(".")).equals(aSubject.toString())) {
+                    property.put(entry.getKey(), entry.getValue());
+                }
+            }
+        }
+        FileUtils.forceDeleteOnExit(new File(propertiesPath,annotationPreferencePropertiesFileName));
         FileUtils.forceMkdir(new File(propertiesPath));
         property.save(new FileOutputStream(new File(propertiesPath,
                 annotationPreferencePropertiesFileName)), null);
@@ -1286,8 +1298,9 @@ public class RepositoryServiceDbData
         }
     }
 
- @Override
-public boolean   isRemoteProject(Project project){
-     return new File(dir, PROJECT+project.getId()+"/META_INF").exists();
- }
+    @Override
+    public boolean isRemoteProject(Project project)
+    {
+        return new File(dir, PROJECT + project.getId() + "/META_INF").exists();
+    }
 }
