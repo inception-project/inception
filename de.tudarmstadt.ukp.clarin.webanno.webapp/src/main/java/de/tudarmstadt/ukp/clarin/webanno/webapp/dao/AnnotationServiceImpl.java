@@ -71,7 +71,7 @@ public class AnnotationServiceImpl
         entityManager.persist(aTagSet);
 
         RepositoryServiceDbData.createLog(aTagSet.getProject(), aUser).info(
-                " Added tag set  [" + aTagSet.getName() + "] with ID [" + aTagSet.getId() + "]");
+                " Added tagset  [" + aTagSet.getName() + "] with ID [" + aTagSet.getId() + "]");
         RepositoryServiceDbData.createLog(aTagSet.getProject(), aUser).removeAllAppenders();
     }
 

@@ -36,6 +36,7 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
+import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.LoadableDetachableModel;
@@ -215,14 +216,6 @@ public class ProjectPage
                 {
                     return new ProjectDetailsPanel(panelId);
                 }
-
-                @Override
-                public boolean isVisible()
-                {
-                    return true;
-
-                }
-
             });
 
             tabs.add(users = new AbstractTab(new Model<String>("Users"))
@@ -238,8 +231,7 @@ public class ProjectPage
                 @Override
                 public boolean isVisible()
                 {
-                    return(!createProject);
-
+                    return !createProject;
                 }
             });
 
@@ -256,12 +248,28 @@ public class ProjectPage
                 @Override
                 public boolean isVisible()
                 {
-                    return(!createProject);
+                    return !createProject;
+                }
+            });
+            
+            tabs.add(tagSets = new AbstractTab(new Model<String>("Layers"))
+            {
+                private static final long serialVersionUID = 3274065112505097898L;
 
+                @Override
+                public Panel getPanel(String panelId)
+                {
+                    return new EmptyPanel(panelId);
+                }
+
+                @Override
+                public boolean isVisible()
+                {
+                    return !createProject;
                 }
             });
 
-            tabs.add(tagSets = new AbstractTab(new Model<String>("Tag sets"))
+            tabs.add(tagSets = new AbstractTab(new Model<String>("Tagsets"))
             {
                 private static final long serialVersionUID = -3205723896786674220L;
 
@@ -274,8 +282,7 @@ public class ProjectPage
                 @Override
                 public boolean isVisible()
                 {
-                    return(!createProject);
-
+                    return !createProject;
                 }
             });
 
@@ -292,8 +299,7 @@ public class ProjectPage
                 @Override
                 public boolean isVisible()
                 {
-                    return(!createProject);
-
+                    return !createProject;
                 }
             });
 
