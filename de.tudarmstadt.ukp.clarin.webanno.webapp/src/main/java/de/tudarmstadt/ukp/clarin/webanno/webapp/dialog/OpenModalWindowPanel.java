@@ -41,9 +41,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
@@ -251,6 +252,15 @@ public class OpenModalWindowPanel
                             if (selectedProject != null) {
                                 List<SourceDocument> allDocuments = projectRepository
                                         .listSourceDocuments(selectedProject);
+                               List<SourceDocument> lockedDocuments = new ArrayList<SourceDocument>();
+                               for(SourceDocument sourceDocument: allDocuments){
+                                   if(projectRepository.existsAnnotationDocument(sourceDocument, user)
+                                           && projectRepository.getAnnotationDocument(sourceDocument, user)
+                                           .getState().equals(AnnotationDocumentState.IGNORE)){
+                                       lockedDocuments.add(sourceDocument);
+                                   }
+                               }
+                               allDocuments.removeAll(lockedDocuments);
                                 return allDocuments;
                             }
                             else {
