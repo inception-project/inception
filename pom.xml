@@ -234,9 +234,9 @@
 		<module>de.tudarmstadt.ukp.clarin.webanno.crowdflower</module>
 	</modules>
 	<scm>
-		<developerConnection>scm:svn:https://webanno.googlecode.com/svn/trunk</developerConnection>
-		<connection>scm:svn:https://webanno.googlecode.com/svn/trunk</connection>
-		<url>https://webanno.googlecode.com/svn/trunk</url>
+		<developerConnection>scm:svn:https://webanno.googlecode.com/svn/branches/0.3.x</developerConnection>
+		<connection>scm:svn:https://webanno.googlecode.com/svn/branches/0.3.x</connection>
+		<url>https://webanno.googlecode.com/svn/branches/0.3.x</url>
 	</scm>
 	<build>
 		<extensions>
