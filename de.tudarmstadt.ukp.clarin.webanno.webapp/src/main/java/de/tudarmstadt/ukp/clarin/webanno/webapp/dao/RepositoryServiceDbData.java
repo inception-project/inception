@@ -680,17 +680,6 @@ public class RepositoryServiceDbData
         return entityManager.createQuery("FROM Project", Project.class).getResultList();
     }
 
-    @Override
-    @Transactional
-    public List<String> listProjectUserNames(Project aproject)
-    {
-        List<String> users = entityManager
-                .createQuery(
-                        "SELECT i.username FROM Project s JOIN s.users i WHERE s.id = :projectId",
-                        String.class).setParameter("projectId", aproject.getId()).getResultList();
-        return users;
-    }
-
     /**
      * The method {@link #listProjectUsersWithPermissions(Project)} suffices
      */

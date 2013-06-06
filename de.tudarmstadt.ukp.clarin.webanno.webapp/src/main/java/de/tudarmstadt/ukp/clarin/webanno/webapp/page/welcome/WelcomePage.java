@@ -162,10 +162,10 @@ public class WelcomePage
                 setResponsePage(MonitoringPage.class);
             }
         };
+
         for (Project project : projectRepository.listProjects()) {
 
-            if (projectRepository.listProjectUserNames(project).contains(username)
-                    && ApplicationUtils.isProjectAdmin(project, projectRepository, user)) {
+            if (ApplicationUtils.isProjectAdmin(project, projectRepository, user)) {
                 add(monitoring);
                 monitoringAdded = true;
                 break;

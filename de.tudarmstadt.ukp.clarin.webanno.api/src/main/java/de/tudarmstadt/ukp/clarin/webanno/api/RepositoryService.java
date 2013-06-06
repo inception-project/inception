@@ -406,15 +406,6 @@ public interface RepositoryService
     List<Project> listProjects();
 
     /**
-     * list user names in a project. Hence, only users in a project can annotate documents
-     *
-     * @param project
-     *            The project where users are member of
-     * @return returns list of {@link User}s in a project
-     */
-    List<String> listProjectUserNames(Project project);
-
-    /**
      * List {@link User} objects in a project
      *
      * @param project
