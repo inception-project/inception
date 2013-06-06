@@ -157,9 +157,6 @@ public class MonitoringPage
                                         user)) {
                                     allowedProject.add(project);
                                 }
-                                else {
-                                    error("You don't have permission!");
-                                }
                             }
                             return allowedProject;
                         }
@@ -217,7 +214,7 @@ public class MonitoringPage
                             // Curation Document status
                             userAnnotationDocuments.add(CurationPanel.CURATION_USER + "-"
                                     + DOCUMENT + document.getName());
-                            
+
                             // source Document status
                             userAnnotationDocuments.add(SOURCE_DOCUMENT + "-"
                                     + DOCUMENT + document.getName());

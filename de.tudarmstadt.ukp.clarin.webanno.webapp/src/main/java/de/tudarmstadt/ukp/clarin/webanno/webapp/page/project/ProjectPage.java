@@ -143,9 +143,6 @@ public class ProjectPage
                                         user)) {
                                     allowedProject.add(project);
                                 }
-                                else {
-                                    error("You don't have permission!");
-                                }
                             }
                             return allowedProject;
                         }
@@ -251,7 +248,7 @@ public class ProjectPage
                     return !createProject;
                 }
             });
-            
+
             tabs.add(tagSets = new AbstractTab(new Model<String>("Layers"))
             {
                 private static final long serialVersionUID = 3274065112505097898L;
