@@ -41,6 +41,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -84,7 +85,8 @@ public class OpenModalWindowPanel
 
     List<Project> allowedProject = new ArrayList<Project>();
 
-    public OpenModalWindowPanel(String aId, OpenDocumentModel aOpenDataModel, ModalWindow aModalWindow, Mode aSubject)
+    public OpenModalWindowPanel(String aId, OpenDocumentModel aOpenDataModel,
+            ModalWindow aModalWindow, Mode aSubject)
     {
         super(aId);
         this.subject = aSubject;
@@ -177,18 +179,16 @@ public class OpenModalWindowPanel
 
         List<Project> allowedProject = new ArrayList<Project>();
 
-        if(aSubject.equals(subject.ANNOTATION)){
-        for (Project project : projectRepository.listProjects()) {
-            if (projectRepository.existProjectPermission(user, project)
-                    && ApplicationUtils.isMember(project, projectRepository, user)) {
-                allowedProject.add(project);
+        if (aSubject.equals(subject.ANNOTATION)) {
+            for (Project project : projectRepository.listProjects()) {
+                if (ApplicationUtils.isMember(project, projectRepository, user)) {
+                    allowedProject.add(project);
+                }
             }
         }
-        }
-        else if(aSubject.equals(subject.CURATION)){
+        else if (aSubject.equals(subject.CURATION)) {
             for (Project project : projectRepository.listProjects()) {
-                if (projectRepository.existProjectPermission(user, project)
-                        && ApplicationUtils.isCurator(project, projectRepository, user)) {
+                if (ApplicationUtils.isCurator(project, projectRepository, user)) {
                     allowedProject.add(project);
                 }
             }
@@ -252,15 +252,27 @@ public class OpenModalWindowPanel
                             if (selectedProject != null) {
                                 List<SourceDocument> allDocuments = projectRepository
                                         .listSourceDocuments(selectedProject);
-                               List<SourceDocument> lockedDocuments = new ArrayList<SourceDocument>();
-                               for(SourceDocument sourceDocument: allDocuments){
-                                   if(projectRepository.existsAnnotationDocument(sourceDocument, user)
-                                           && projectRepository.getAnnotationDocument(sourceDocument, user)
-                                           .getState().equals(AnnotationDocumentState.IGNORE)){
-                                       lockedDocuments.add(sourceDocument);
-                                   }
-                               }
-                               allDocuments.removeAll(lockedDocuments);
+
+                                // Remove from the list source documents that are in IGNORE state OR
+                                // that do not have at least one annotation document marked as
+                                // finished
+                                List<SourceDocument> noCurationDocuments = new ArrayList<SourceDocument>();
+                                for (SourceDocument sourceDocument : allDocuments) {
+                                    if (projectRepository.existsAnnotationDocument(sourceDocument,
+                                            user)
+                                            && projectRepository
+                                                    .getAnnotationDocument(sourceDocument, user)
+                                                    .getState()
+                                                    .equals(AnnotationDocumentState.IGNORE)) {
+                                        noCurationDocuments.add(sourceDocument);
+                                    }
+                                    else if (!existFinishedDocument(sourceDocument, user)) {
+                                        noCurationDocuments.add(sourceDocument);
+                                    }
+
+                                }
+                                allDocuments.removeAll(noCurationDocuments);
+
                                 return allDocuments;
                             }
                             else {
@@ -280,31 +292,52 @@ public class OpenModalWindowPanel
             });
             documents.setOutputMarkupId(true);
             documents.setMaxRows(10);
-            documents
-                    .add(new OnChangeAjaxBehavior()
-                    {
-                        private static final long serialVersionUID = 1L;
+            documents.add(new OnChangeAjaxBehavior()
+            {
+                private static final long serialVersionUID = 1L;
 
-                        @Override
-                        protected void onUpdate(AjaxRequestTarget aTarget)
-                        {
-                            selectedDocument = getModelObject().document;
-                        }
-                    })
-                    .add(new AjaxEventBehavior("ondblclick")
-                    {
+                @Override
+                protected void onUpdate(AjaxRequestTarget aTarget)
+                {
+                    selectedDocument = getModelObject().document;
+                }
+            }).add(new AjaxEventBehavior("ondblclick")
+            {
 
-                        private static final long serialVersionUID = 1L;
+                private static final long serialVersionUID = 1L;
 
-                        @Override
-                        protected void onEvent(final AjaxRequestTarget aTarget)
-                        {
-                            openDataModel.setProject(selectedProject);
-                            openDataModel.setDocument(selectedDocument);
-                            modalWindow.close(aTarget);
-                        }
-                    }).add(new ResizableBehavior());
+                @Override
+                protected void onEvent(final AjaxRequestTarget aTarget)
+                {
+                    openDataModel.setProject(selectedProject);
+                    openDataModel.setDocument(selectedDocument);
+                    modalWindow.close(aTarget);
+                }
+            }).add(new ResizableBehavior());
         }
+    }
+
+    /**
+     * Return true if there exist at least one annotation document exist for this
+     * {@link SourceDocument}
+     *
+     * @param aSourceDocument
+     * @param aUser
+     * @return
+     */
+    private boolean existFinishedDocument(SourceDocument aSourceDocument, User aUser)
+    {
+        List<AnnotationDocument> annotationDocuments = projectRepository.listAnnotationDocument(
+                selectedProject, aSourceDocument);
+        boolean finishedAnnotationDocumentExist = false;
+        for (AnnotationDocument annotationDocument : annotationDocuments) {
+            if(annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)){
+                finishedAnnotationDocumentExist = true;
+                break;
+            }
+        }
+        return finishedAnnotationDocumentExist;
+
     }
 
     private class ButtonsForm
@@ -321,10 +354,13 @@ public class OpenModalWindowPanel
                 protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
                 {
                     if (selectedProject == null) {
-                        aTarget.appendJavaScript("alert('No project is selected!')"); // If there is no project at all
+                        aTarget.appendJavaScript("alert('No project is selected!')"); // If there is
+                                                                                      // no project
+                                                                                      // at all
                     }
                     else if (selectedDocument == null) {
-                        aTarget.appendJavaScript("alert('Please select a document for project: " + selectedProject.getName()+"')");
+                        aTarget.appendJavaScript("alert('Please select a document for project: "
+                                + selectedProject.getName() + "')");
                     }
                     else {
                         openDataModel.setProject(selectedProject);
@@ -349,8 +385,7 @@ public class OpenModalWindowPanel
                 {
                     projectSelectionForm.detach();
                     documentSelectionForm.detach();
-                    if(subject.equals(Mode.CURATION))
-                     {
+                    if (subject.equals(Mode.CURATION)) {
                         openDataModel.setDocument(null); // on cancel, go welcomePage
                     }
                     modalWindow.close(aTarget);

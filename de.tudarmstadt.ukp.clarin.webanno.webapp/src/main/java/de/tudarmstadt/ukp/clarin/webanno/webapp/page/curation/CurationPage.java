@@ -275,7 +275,7 @@ public class CurationPage
                         else if (openDataModel.getDocument() != null
                                 && openDataModel.getDocument().getState()
                                         .equals(SourceDocumentState.CURATION_FINISHED)) {
-                            target.appendJavaScript("alert('Curation Has been closed. Document has been closed for curation. Ask admin to re-open!')");
+                            target.appendJavaScript("alert('Document has been closed for curation. Ask admin to re-open!')");
                         }
                         else if (openDataModel.getDocument() == null) {
                             setResponsePage(WelcomePage.class);
