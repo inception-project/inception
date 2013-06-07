@@ -337,7 +337,7 @@ public class MonitoringPage
                         String featureName = getFeatureName(annotationTypes.getModelObject()
                                 .getName());
                         List<User> users = projectRepository
-                                .listProjectUsersWithPermissions(project);
+                                .listProjectUsersWithPermissions(project, PermissionLevel.USER);
                         double[][] results = new double[users.size()][users.size()];
 
                         List<SourceDocument> sourceDocuments = projectRepository
