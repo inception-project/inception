@@ -81,7 +81,7 @@ public class OpenModalWindowPanel
 
     // Dialog is for annotation or curation
 
-    private Mode subject;
+    private Mode mode;
 
     List<Project> allowedProject = new ArrayList<Project>();
 
@@ -89,7 +89,7 @@ public class OpenModalWindowPanel
             ModalWindow aModalWindow, Mode aSubject)
     {
         super(aId);
-        this.subject = aSubject;
+        this.mode = aSubject;
         username = SecurityContextHolder.getContext().getAuthentication().getName();
         user = projectRepository.getUser(username);
         if (getAllowedProjects(aSubject).size() > 0) {
@@ -131,7 +131,7 @@ public class OpenModalWindowPanel
                         protected List<Project> load()
                         {
 
-                            return getAllowedProjects(subject);
+                            return getAllowedProjects(mode);
                         }
                     });
                     setChoiceRenderer(new ChoiceRenderer<Project>("name"));
@@ -179,14 +179,14 @@ public class OpenModalWindowPanel
 
         List<Project> allowedProject = new ArrayList<Project>();
 
-        if (aSubject.equals(subject.ANNOTATION)) {
+        if (aSubject.equals(mode.ANNOTATION)) {
             for (Project project : projectRepository.listProjects()) {
                 if (ApplicationUtils.isMember(project, projectRepository, user)) {
                     allowedProject.add(project);
                 }
             }
         }
-        else if (aSubject.equals(subject.CURATION)) {
+        else if (aSubject.equals(mode.CURATION)) {
             for (Project project : projectRepository.listProjects()) {
                 if (ApplicationUtils.isCurator(project, projectRepository, user)) {
                     allowedProject.add(project);
@@ -255,7 +255,7 @@ public class OpenModalWindowPanel
 
                                 // Remove from the list source documents that are in IGNORE state OR
                                 // that do not have at least one annotation document marked as
-                                // finished
+                                // finished for curation dialog
                                 List<SourceDocument> noCurationDocuments = new ArrayList<SourceDocument>();
                                 for (SourceDocument sourceDocument : allDocuments) {
                                     if (projectRepository.existsAnnotationDocument(sourceDocument,
@@ -266,13 +266,13 @@ public class OpenModalWindowPanel
                                                     .equals(AnnotationDocumentState.IGNORE)) {
                                         noCurationDocuments.add(sourceDocument);
                                     }
-                                    else if (!existFinishedDocument(sourceDocument, user)) {
+                                    else if (mode.equals(Mode.CURATION)
+                                            && !existFinishedDocument(sourceDocument, user)) {
                                         noCurationDocuments.add(sourceDocument);
                                     }
 
                                 }
                                 allDocuments.removeAll(noCurationDocuments);
-
                                 return allDocuments;
                             }
                             else {
@@ -331,7 +331,7 @@ public class OpenModalWindowPanel
                 selectedProject, aSourceDocument);
         boolean finishedAnnotationDocumentExist = false;
         for (AnnotationDocument annotationDocument : annotationDocuments) {
-            if(annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)){
+            if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
                 finishedAnnotationDocumentExist = true;
                 break;
             }
@@ -385,7 +385,7 @@ public class OpenModalWindowPanel
                 {
                     projectSelectionForm.detach();
                     documentSelectionForm.detach();
-                    if (subject.equals(Mode.CURATION)) {
+                    if (mode.equals(Mode.CURATION)) {
                         openDataModel.setDocument(null); // on cancel, go welcomePage
                     }
                     modalWindow.close(aTarget);
