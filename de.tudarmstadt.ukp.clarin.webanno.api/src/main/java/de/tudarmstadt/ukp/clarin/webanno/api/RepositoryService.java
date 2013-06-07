@@ -28,7 +28,6 @@ import org.apache.uima.jcas.JCas;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
@@ -338,20 +337,6 @@ public interface RepositoryService
     boolean existsFinishedAnnotation(SourceDocument document, Project project);
 
     /**
-     * List all annotation documents in the system.
-     *
-     * @return
-     */
-    List<AnnotationDocument> listAnnotationDocument();
-
-    /**
-     * List all annotation documents in a project.
-     *
-     * @return
-     */
-    List<AnnotationDocument> listAnnotationDocument(Project project);
-
-    /**
      * List all the {@link AnnotationDocument}s, if available for a given {@link SourceDocument} in
      * the {@link Project}.
      * Returns list of {@link AnnotationDocument}s for all {@link User}s in the {@link Project} that
@@ -380,23 +365,6 @@ public interface RepositoryService
     List<String> listAnnotationGuidelineDocument(Project project);
 
     /**
-     * List annotation documents in a project already marked as
-     * {@link AnnotationDocumentState#FINISHED}
-     *
-     * @param project
-     *            the project the annotator is working on
-     * @param user
-     *            the annotator
-     * @param state
-     *           The state of this AnnotationDocument
-     * @return list of {@link AnnotationDocument}s marked as
-     *         {@link AnnotationDocumentState#FINISHED}
-     */
-
-    List<AnnotationDocument> listFinishedAnnotationDocuments(Project project, User user,
-            AnnotationDocumentState state);
-
-    /**
      * List all Projects. If the user logged have a ROLE_ADMIN, he can see all the projects.
      * Otherwise, a user will see projects only he is member of.
      *
@@ -404,14 +372,6 @@ public interface RepositoryService
      */
 
     List<Project> listProjects();
-
-    /**
-     * List {@link User} objects in a project
-     *
-     * @param project
-     * @return
-     */
-    List<User> listProjectUsers(Project project);
 
     /**
      * List all source documents in a project. The source documents are the original TCF documents

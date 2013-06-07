@@ -644,53 +644,9 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public List<AnnotationDocument> listAnnotationDocument()
-    {
-        return entityManager.createQuery("From AnnotationDocument", AnnotationDocument.class)
-                .getResultList();
-    }
-
-    @Override
-    @Transactional
-    public List<AnnotationDocument> listAnnotationDocument(Project aProject)
-    {
-        return entityManager
-                .createQuery("FROM AnnotationDocument WHERE project = :project",
-                        AnnotationDocument.class).setParameter("project", aProject).getResultList();
-    }
-
-    @Override
-    @Transactional
-    public List<AnnotationDocument> listFinishedAnnotationDocuments(Project aProject, User aUser,
-            AnnotationDocumentState aState)
-    {
-        return entityManager
-                .createQuery(
-                        "FROM AnnotationDocument WHERE project = :project AND "
-                                + "user =:user AND state =:state", AnnotationDocument.class)
-                .setParameter("project", aProject).setParameter("user", aUser)
-                .setParameter("state", aState).getResultList();
-
-    }
-
-    @Override
-    @Transactional
     public List<Project> listProjects()
     {
         return entityManager.createQuery("FROM Project", Project.class).getResultList();
-    }
-
-    /**
-     * The method {@link #listProjectUsersWithPermissions(Project)} suffices
-     */
-    @Deprecated
-    @Override
-    @Transactional
-    public List<User> listProjectUsers(Project aproject)
-    {
-        return entityManager
-                .createQuery("SELECT i FROM Project s JOIN s.users i WHERE s.id = :projectId",
-                        User.class).setParameter("projectId", aproject.getId()).getResultList();
     }
 
     @Override

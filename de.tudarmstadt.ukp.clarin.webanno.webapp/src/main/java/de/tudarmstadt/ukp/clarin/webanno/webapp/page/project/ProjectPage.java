@@ -18,7 +18,6 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.page.project;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -425,10 +424,8 @@ public class ProjectPage
 
                             String oldProjectName = projectRepository.getProject(project.getId())
                                     .getName();
-                            List<User> selectedusers = projectRepository.listProjectUsers(project);
 
                             project.setName(oldProjectName);
-                            project.setUsers(new HashSet<User>(selectedusers));
                             error("Project name shouldn't contain characters such as /\\*?&!$+[^]");
                             LOG.error("Project name shouldn't contain characters such as /\\*?&!$+[^]");
                         }

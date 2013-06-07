@@ -102,7 +102,7 @@ public class YesNoModalPanel
                         // check if other users are also finished annotation, hence
                         // change source document state to FINISHED
                         boolean othersFinished = true;
-                        for (User annotationUser : repository.listProjectUsers(openDocumentModel
+                        for (User annotationUser : repository.listProjectUsersWithPermissions(openDocumentModel
                                 .getProject())) {
                             if (repository.existsAnnotationDocument(
                                     openDocumentModel.getDocument(), annotationUser)) {

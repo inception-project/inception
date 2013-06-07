@@ -16,15 +16,12 @@
 package de.tudarmstadt.ukp.clarin.webanno.model;
 
 import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Lob;
-import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
@@ -51,13 +48,6 @@ public class Project
     @Lob
     private String description;
 
-    /**
-     * The model {@link ProjectPermission} contains the map between users and projects
-     */
-    @Deprecated
-    @ManyToMany
-    private Set<User> users = new HashSet<User>();
-
     private boolean reverseDependencyDirection;
 
     public Project()
@@ -83,16 +73,6 @@ public class Project
     public void setName(String aName)
     {
         name = aName;
-    }
-
-    public Set<User> getUsers()
-    {
-        return users;
-    }
-
-    public void setUsers(Set<User> aUsers)
-    {
-        users = aUsers;
     }
 
     public boolean isReverseDependencyDirection()
