@@ -204,6 +204,7 @@ public class ProjectUsersPanel
 
         public List<PermissionLevel> permissionLevels = new ArrayList<PermissionLevel>();
         public User user;
+        public List<User> users = new ArrayList<User>();
     }
 
     private class PermissionLevelDetailForm
@@ -311,7 +312,7 @@ public class ProjectUsersPanel
 
         public UserDetailForm(String id)
         {
-            super(id);
+            super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
             add(users = (CheckBoxMultipleChoice<User>) new CheckBoxMultipleChoice<User>("users",
                     new LoadableDetachableModel<List<User>>()
                     {
