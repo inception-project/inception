@@ -136,7 +136,7 @@ public class CurationPanel
             // add onclick handler to the browser
             // if clicked in the browser, the function
             // click.response(AjaxRequestTarget target) is called on the server side
-            tag.put("onclick", "wicketAjaxGet('" + click.getCallbackUrl() + "')");
+            tag.put("ondblclick", "wicketAjaxGet('" + click.getCallbackUrl() + "')");
         }
 
     }
@@ -352,7 +352,7 @@ public class CurationPanel
                 if (colorCode != null) {
                     item.add(AttributeModifier.append("style", "background-color: "+colorCode+";"));
                 }
-                
+
                 Label currentSentence = new AjaxLabel("sentence", curationSegmentItem.getText(),
                         click);
                 item.add(currentSentence);
