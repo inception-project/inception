@@ -200,8 +200,6 @@ public class ExportPanel
             @Override
             public boolean isVisible()
             {
-                System.out.println(aProjectModel.getObject().getName());
-                System.out.println(isCurationDocumentExists(aProjectModel.getObject()));
               return   isCurationDocumentExists(aProjectModel.getObject());
 
             }
