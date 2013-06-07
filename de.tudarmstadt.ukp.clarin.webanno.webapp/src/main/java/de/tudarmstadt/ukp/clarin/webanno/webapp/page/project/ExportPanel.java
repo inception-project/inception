@@ -17,6 +17,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.webapp.page.project;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 
@@ -32,7 +33,9 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.apache.uima.UIMAException;
 import org.apache.wicket.markup.html.form.Button;
+import org.apache.wicket.markup.html.link.DownloadLink;
 import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -55,7 +58,7 @@ import eu.clarin.weblicht.wlfxb.io.WLFormatException;
  * @author Seid Muhie Yimam
  *
  */
-public class WebservicePanel
+public class ExportPanel
     extends Panel
 {
     private static final long serialVersionUID = 2116717853865353733L;
@@ -67,19 +70,25 @@ public class WebservicePanel
     private RepositoryService projectRepository;
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public WebservicePanel(String id, Model<Project> aProjectModel)
+    public ExportPanel(String id, final Model<Project> aProjectModel)
     {
         super(id);
-        final Project project = aProjectModel.getObject();
+       // final Project project = aProjectModel.getObject();
+
         add(new Button("send", new ResourceModel("label"))
         {
             private static final long serialVersionUID = 1L;
 
             @Override
+            public boolean isVisible()
+            {
+              return  projectRepository.isRemoteProject(aProjectModel.getObject());
+
+            }
+
+            @Override
             public void onSubmit()
             {
-                String username = SecurityContextHolder.getContext().getAuthentication().getName();
-                User user = projectRepository.getUser(username);
 
                 HttpClient httpclient = new DefaultHttpClient();
                 try {
@@ -94,29 +103,15 @@ public class WebservicePanel
                     File metaInfDir = new File(exportTempDir + "/META_INF");
                     FileUtils.forceMkdir(metaInfDir);
 
-                    // Get all the source documents from the project
-                    List<SourceDocument> documents = projectRepository.listSourceDocuments(project);
-                    boolean curationDocumentExist = false;
-                        for (SourceDocument sourceDocument : documents) {
+                    boolean curationDocumentExist = isCurationDocumentExists(aProjectModel.getObject());
 
-                            // If the curation document is exist (either finished or in progress
-                            if (sourceDocument.getState().equals(
-                                    SourceDocumentState.CURATION_FINISHED)
-                                    || sourceDocument.getState().equals(
-                                            SourceDocumentState.CURATION_IN_PROGRESS)) {
-                                curationDocumentExist = true;
-                                File tcfFile = projectRepository.exportAnnotationDocument(
-                                        sourceDocument, project, user, TcfWriter.class,
-                                        sourceDocument.getName(), Mode.CURATION);
-                                FileUtils.copyFileToDirectory(tcfFile, exportTempDir);
-                            }
-                        }
-                        if (!curationDocumentExist) {
-                            error("No curation document created yet for this document");
-                        }
-                        else {
+                    if (!curationDocumentExist) {
+                        error("No curation document created yet for this document");
+                    }
+                    else {
+                        copyCuratedDocuments(aProjectModel.getObject(), exportTempDir);
                         FileUtils.copyDirectory(new File(projectRepository.getDir(), "/project/"
-                                + project.getId() + "/META_INF"), metaInfDir);
+                                + aProjectModel.getObject().getId() + "/META_INF"), metaInfDir);
 
                         DaoUtils.zipFolder(exportTempDir, new File(exportTempDir.getAbsolutePath()
                                 + ".zip"));
@@ -163,6 +158,100 @@ public class WebservicePanel
                 }
 
             }
-        });
+        }).setOutputMarkupId(true);
+
+        add(new DownloadLink("export", new LoadableDetachableModel<File>()
+        {
+            private static final long serialVersionUID = 840863954694163375L;
+
+            @Override
+            protected File load()
+            {
+                File exportFile = null;
+                try {
+                    File exportTempDir = File.createTempFile("webanno", "export");
+                    exportTempDir.delete();
+                    exportTempDir.mkdirs();
+
+                    boolean curationDocumentExist = isCurationDocumentExists(aProjectModel.getObject());
+
+                    if (!curationDocumentExist) {
+                        error("No curation document created yet for this document");
+                    }
+                    else {
+                        copyCuratedDocuments(aProjectModel.getObject(), exportTempDir);
+                        DaoUtils.zipFolder(exportTempDir, new File(exportTempDir.getAbsolutePath()
+                                + ".zip"));
+                        exportFile = new File(exportTempDir.getAbsolutePath() + ".zip");
+                    }
+                }
+                catch (IOException e) {
+                    error(e.getMessage());
+                }
+                catch (Exception e) {
+                    error(e.getMessage());
+                }
+
+                return exportFile;
+            }
+        }){
+            private static final long serialVersionUID = 5630612543039605914L;
+
+            @Override
+            public boolean isVisible()
+            {
+                System.out.println(aProjectModel.getObject().getName());
+                System.out.println(isCurationDocumentExists(aProjectModel.getObject()));
+              return   isCurationDocumentExists(aProjectModel.getObject());
+
+            }
+        }).setOutputMarkupId(true);
+    }
+
+    /**
+     * Copy, if exists, curation documents to a folder that will be exported as Zip file
+     *
+     * @param aProject
+     *            The {@link Project}
+     * @param aCurationDocumentExist
+     *            Check if Curation document exists
+     * @param aCopyDir
+     *            The folder where curated documents are copied to be exported as Zip File
+     */
+    private void copyCuratedDocuments(Project aProject, File aCopyDir)
+        throws FileNotFoundException, UIMAException, IOException, WLFormatException,
+        ClassNotFoundException
+    {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = projectRepository.getUser(username);
+
+        // Get all the source documents from the project
+        List<SourceDocument> documents = projectRepository.listSourceDocuments(aProject);
+
+        for (SourceDocument sourceDocument : documents) {
+
+            // If the curation document is exist (either finished or in progress
+            if (sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)
+                    || sourceDocument.getState().equals(SourceDocumentState.CURATION_IN_PROGRESS)) {
+                File tcfFile = projectRepository.exportAnnotationDocument(sourceDocument, aProject,
+                        user, TcfWriter.class, sourceDocument.getName(), Mode.CURATION);
+                FileUtils.copyFileToDirectory(tcfFile, aCopyDir);
+            }
+        }
+    }
+    private boolean isCurationDocumentExists(Project aProject){
+        boolean curationDocumentExist = false;
+        List<SourceDocument> documents = projectRepository.listSourceDocuments(aProject);
+
+        for (SourceDocument sourceDocument : documents) {
+
+            // If the curation document is exist (either finished or in progress
+            if (sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)
+                    || sourceDocument.getState().equals(SourceDocumentState.CURATION_IN_PROGRESS)) {
+                curationDocumentExist = true;
+                break;
+            }
+        }
+        return curationDocumentExist;
     }
 }
