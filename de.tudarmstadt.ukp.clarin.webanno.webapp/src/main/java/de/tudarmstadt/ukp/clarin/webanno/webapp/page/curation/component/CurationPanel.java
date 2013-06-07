@@ -137,6 +137,7 @@ public class CurationPanel
             // if clicked in the browser, the function
             // click.response(AjaxRequestTarget target) is called on the server side
             tag.put("ondblclick", "wicketAjaxGet('" + click.getCallbackUrl() + "')");
+            tag.put("onclick", "wicketAjaxGet('" + click.getCallbackUrl() + "')");
         }
 
     }
@@ -346,9 +347,9 @@ public class CurationPanel
                 // add subcomponents to the component
                 item.add(click);
                 String colorCode = curationSegmentItem.getSentenceState().getColorCode();
-                if (curationSegmentItem.isCurrentSentence()) {
+/*                if (curationSegmentItem.isCurrentSentence()) {
                     item.add(AttributeModifier.append("style", "border: 4px solid black;"));
-                }
+                }*/
                 if (colorCode != null) {
                     item.add(AttributeModifier.append("style", "background-color: "+colorCode+";"));
                 }
