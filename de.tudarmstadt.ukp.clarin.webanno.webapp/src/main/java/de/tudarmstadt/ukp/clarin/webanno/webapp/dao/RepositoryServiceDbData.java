@@ -482,6 +482,15 @@ public class RepositoryServiceDbData
     }
 
     @Override
+    public List<User> listProjectUsersWithPermissions(Project aProject, PermissionLevel aPermissionLevel){
+        return entityManager
+                .createQuery(
+                        "SELECT DISTINCT user FROM ProjectPermission WHERE "
+                                + "project =:project AND level =:level ORDER BY username ASC", User.class)
+                .setParameter("project", aProject)
+                .setParameter("level", aPermissionLevel.getId()).getResultList();
+    }
+    @Override
     @Transactional
     public ProjectPermission getProjectPermission(User aUser, Project aProject)
     {

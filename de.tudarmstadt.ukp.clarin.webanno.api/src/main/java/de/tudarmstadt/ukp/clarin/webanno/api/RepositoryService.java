@@ -586,12 +586,19 @@ public interface RepositoryService
      * List Users those with some {@link PermissionLevel}s in the project
      */
     List<User> listProjectUsersWithPermissions(Project project);
-
+    /**
+     * List of users with the a given {@link PermissionLevel}
+     * @param project The {@link Project}
+     * @param permissionLevel The {@link PermissionLevel}
+     */
+    List<User> listProjectUsersWithPermissions(Project project, PermissionLevel permissionLevel);
     /**
      * Determine if the project is created using the remote API webanno service or not
      *TODO: For now, it checks if the project consists of META-INF folder!!
      * @param project
      * @return
      */
+
+
     boolean isRemoteProject(Project project);
 }

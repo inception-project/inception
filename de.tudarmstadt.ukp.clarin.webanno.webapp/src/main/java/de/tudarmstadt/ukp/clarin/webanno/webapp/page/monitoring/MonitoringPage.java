@@ -72,6 +72,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
+import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
@@ -194,19 +195,25 @@ public class MonitoringPage
                         List<String> documentListAsColumnHeader = new ArrayList<String>();
                         documentListAsColumnHeader.add("Documents");
 
-                        for (User user : projectRepository.listProjectUsersWithPermissions(project)) {
+                        // List of users with USER permission level
+                        List<User> usersWithPermissions = projectRepository
+                                .listProjectUsersWithPermissions(project, PermissionLevel.USER);
+
+                        for (User user : usersWithPermissions) {
                             documentListAsColumnHeader.add(user.getUsername());
                         }
-                        //A column for curation user annotation document status
+                        // A column for curation user annotation document status
                         documentListAsColumnHeader.add(CurationPanel.CURATION_USER);
-                        //A column for source document states
+                        // A column for source document states
                         documentListAsColumnHeader.add(SOURCE_DOCUMENT);
                         List<List<String>> userAnnotationDocumentStatusList = new ArrayList<List<String>>();
+
+
                         for (SourceDocument document : documents) {
                             List<String> userAnnotationDocuments = new ArrayList<String>();
                             userAnnotationDocuments.add(DOCUMENT + document.getName());
-                            for (User user : projectRepository
-                                    .listProjectUsersWithPermissions(project)) {
+
+                            for (User user :usersWithPermissions) {
                                 // annotation document status for this annotator
                                 userAnnotationDocuments.add(user.getUsername() + "-" + DOCUMENT
                                         + document.getName());
@@ -216,8 +223,8 @@ public class MonitoringPage
                                     + DOCUMENT + document.getName());
 
                             // source Document status
-                            userAnnotationDocuments.add(SOURCE_DOCUMENT + "-"
-                                    + DOCUMENT + document.getName());
+                            userAnnotationDocuments.add(SOURCE_DOCUMENT + "-" + DOCUMENT
+                                    + document.getName());
                             userAnnotationDocumentStatusList.add(userAnnotationDocuments);
                         }
 
