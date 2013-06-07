@@ -155,7 +155,9 @@ public class MonitoringPage
                             // else only projects she is admin of
                             for (Project project : allProjects) {
                                 if (ApplicationUtils.isProjectAdmin(project, projectRepository,
-                                        user)) {
+                                        user)
+                                        || ApplicationUtils.isCurator(project,
+                                                projectRepository, user)) {
                                     allowedProject.add(project);
                                 }
                             }
@@ -208,12 +210,11 @@ public class MonitoringPage
                         documentListAsColumnHeader.add(SOURCE_DOCUMENT);
                         List<List<String>> userAnnotationDocumentStatusList = new ArrayList<List<String>>();
 
-
                         for (SourceDocument document : documents) {
                             List<String> userAnnotationDocuments = new ArrayList<String>();
                             userAnnotationDocuments.add(DOCUMENT + document.getName());
 
-                            for (User user :usersWithPermissions) {
+                            for (User user : usersWithPermissions) {
                                 // annotation document status for this annotator
                                 userAnnotationDocuments.add(user.getUsername() + "-" + DOCUMENT
                                         + document.getName());

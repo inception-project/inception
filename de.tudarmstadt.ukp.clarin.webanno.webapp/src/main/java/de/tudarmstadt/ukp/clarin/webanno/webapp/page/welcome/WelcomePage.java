@@ -165,7 +165,8 @@ public class WelcomePage
 
         for (Project project : projectRepository.listProjects()) {
 
-            if (ApplicationUtils.isProjectAdmin(project, projectRepository, user)) {
+            if (ApplicationUtils.isProjectAdmin(project, projectRepository, user)
+                    || ApplicationUtils.isCurator(project, projectRepository, user)) {
                 add(monitoring);
                 monitoringAdded = true;
                 break;
