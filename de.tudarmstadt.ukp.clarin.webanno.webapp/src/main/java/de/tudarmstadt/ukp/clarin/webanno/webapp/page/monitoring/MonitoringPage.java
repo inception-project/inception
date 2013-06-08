@@ -403,7 +403,7 @@ public class MonitoringPage
                             agreementResult.add(user1.getUsername());
 
                             for (int j = 0; j < users.size(); j++) {
-                                agreementResult.add(results[i][j] + "");
+                                agreementResult.add((double)Math.round(results[i][j]*100)/100 + "");
                             }
                             i++;
                             agreementResults.add(agreementResult);
