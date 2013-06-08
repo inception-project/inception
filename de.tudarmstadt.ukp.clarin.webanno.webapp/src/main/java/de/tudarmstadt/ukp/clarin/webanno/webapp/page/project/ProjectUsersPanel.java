@@ -39,6 +39,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
@@ -93,11 +94,11 @@ public class ProjectUsersPanel
                         {
                             List<ProjectPermission> projectPermissions = projectRepository
                                     .listProjectPermisionLevel(aObject, selectedProject.getObject());
-                          List<String> permissionLevels = new ArrayList<String>();
+                            List<String> permissionLevels = new ArrayList<String>();
                             for (ProjectPermission projectPermission : projectPermissions) {
                                 permissionLevels.add(projectPermission.getLevel().getName());
-                        }
-                            return  aObject.getUsername() + " " + permissionLevels ;
+                            }
+                            return aObject.getUsername() + " " + permissionLevels;
                         }
                     });
                     setNullValid(false);
@@ -167,6 +168,22 @@ public class ProjectUsersPanel
                             catch (IOException e) {
                                 error("Unable to remove project permission level "
                                         + ExceptionUtils.getRootCauseMessage(e));
+                            }
+                        }
+                        // Remove any annotation document associated with this user too
+                        List<SourceDocument> sourceDocuments = projectRepository
+                                .listSourceDocuments(selectedProject.getObject());
+                        for (SourceDocument sourceDocument : sourceDocuments) {
+                            if (projectRepository.existsAnnotationDocument(sourceDocument,
+                                    selectedUser)) {
+                                try {
+                                    projectRepository.removeCurationDocumentContent(sourceDocument);
+                                }
+                                catch (IOException e) {
+                                   error(e.getMessage());
+                                }
+                                projectRepository.removeAnnotationDocument(projectRepository
+                                        .getAnnotationDocument(sourceDocument, selectedUser));
                             }
                         }
                         userLists.remove(selectedUser);

@@ -462,6 +462,11 @@ public interface RepositoryService
         throws IOException;
 
     /**
+     * Remove an annotation document, for example, when a user is removed from a project
+     * @param annotationDocument the {@link AnnotationDocument} to be removed
+     */
+    void removeAnnotationDocument(AnnotationDocument annotationDocument);
+    /**
      * This method creates the source document (TCF File) to a file system. It creates a directory
      * structure under webanno.home/project/project.id/document/Document.id/source/document.name.xml
      *

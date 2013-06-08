@@ -482,14 +482,17 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public List<User> listProjectUsersWithPermissions(Project aProject, PermissionLevel aPermissionLevel){
+    public List<User> listProjectUsersWithPermissions(Project aProject,
+            PermissionLevel aPermissionLevel)
+    {
         return entityManager
                 .createQuery(
                         "SELECT DISTINCT user FROM ProjectPermission WHERE "
-                                + "project =:project AND level =:level ORDER BY username ASC", User.class)
-                .setParameter("project", aProject)
+                                + "project =:project AND level =:level ORDER BY username ASC",
+                        User.class).setParameter("project", aProject)
                 .setParameter("level", aPermissionLevel.getId()).getResultList();
     }
+
     @Override
     @Transactional
     public ProjectPermission getProjectPermission(User aUser, Project aProject)
@@ -732,9 +735,10 @@ public class RepositoryServiceDbData
     public void removeCurationDocumentContent(SourceDocument aSourceDocument)
         throws IOException
     {
-
-        FileUtils
-                .forceDelete(new File(getAnnotationFolder(aSourceDocument), CURATION_USER + ".ser"));
+        if (new File(getAnnotationFolder(aSourceDocument), CURATION_USER + ".ser").exists()) {
+            FileUtils.forceDelete(new File(getAnnotationFolder(aSourceDocument), CURATION_USER
+                    + ".ser"));
+        }
     }
 
     @Override
@@ -758,10 +762,9 @@ public class RepositoryServiceDbData
     {
 
         // remove metadata from DB
-        if (existsAnnotationDocument(aDocument, aUser)) {
-            for (AnnotationDocument annotationDocument : listAnnotationDocument(
-                    aDocument.getProject(), aDocument)) {
-                entityManager.remove(annotationDocument);
+        for (User user : listProjectUsersWithPermissions(aDocument.getProject())) {
+            if (existsAnnotationDocument(aDocument, user)) {
+                removeAnnotationDocument(getAnnotationDocument(aDocument, user));
             }
         }
         entityManager.remove(aDocument);
@@ -769,12 +772,21 @@ public class RepositoryServiceDbData
         String path = dir.getAbsolutePath() + PROJECT + aDocument.getProject().getId() + DOCUMENT
                 + aDocument.getId();
         // remove from file both source and related annotation file
-        FileUtils.forceDelete(new File(path));
+        if (new File(path).exists()) {
+            FileUtils.forceDelete(new File(path));
+        }
         createLog(aDocument.getProject(), aUser).info(
                 " Removed Document [" + aDocument.getName() + "] with ID [" + aDocument.getId()
                         + "] from Project [" + aDocument.getProject().getId() + "]");
         createLog(aDocument.getProject(), aUser).removeAllAppenders();
 
+    }
+
+    @Override
+    @Transactional
+    public void removeAnnotationDocument(AnnotationDocument aAnnotationDocument)
+    {
+        entityManager.remove(aAnnotationDocument);
     }
 
     public void setDir(File aDir)
@@ -826,7 +838,8 @@ public class RepositoryServiceDbData
                 }
             }
         }
-        FileUtils.forceDeleteOnExit(new File(propertiesPath,annotationPreferencePropertiesFileName));
+        FileUtils
+                .forceDeleteOnExit(new File(propertiesPath, annotationPreferencePropertiesFileName));
         FileUtils.forceMkdir(new File(propertiesPath));
         property.save(new FileOutputStream(new File(propertiesPath,
                 annotationPreferencePropertiesFileName)), null);
