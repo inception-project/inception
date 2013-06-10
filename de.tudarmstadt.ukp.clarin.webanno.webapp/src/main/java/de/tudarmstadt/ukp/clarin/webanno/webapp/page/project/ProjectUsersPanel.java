@@ -39,7 +39,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
@@ -170,7 +169,7 @@ public class ProjectUsersPanel
                                         + ExceptionUtils.getRootCauseMessage(e));
                             }
                         }
-                        // Remove any annotation document associated with this user too
+                /*        // Remove any annotation document associated with this user too
                         List<SourceDocument> sourceDocuments = projectRepository
                                 .listSourceDocuments(selectedProject.getObject());
                         for (SourceDocument sourceDocument : sourceDocuments) {
@@ -185,7 +184,7 @@ public class ProjectUsersPanel
                                 projectRepository.removeAnnotationDocument(projectRepository
                                         .getAnnotationDocument(sourceDocument, selectedUser));
                             }
-                        }
+                        }*/
                         userLists.remove(selectedUser);
                     }
                     else {

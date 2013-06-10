@@ -761,12 +761,11 @@ public class RepositoryServiceDbData
         throws IOException
     {
 
-        // remove metadata from DB
-        for (User user : listProjectUsersWithPermissions(aDocument.getProject())) {
-            if (existsAnnotationDocument(aDocument, user)) {
-                removeAnnotationDocument(getAnnotationDocument(aDocument, user));
-            }
+        for (AnnotationDocument annotationDocument : listAnnotationDocument(aDocument.getProject(),
+                aDocument)) {
+            removeAnnotationDocument(annotationDocument);
         }
+
         entityManager.remove(aDocument);
 
         String path = dir.getAbsolutePath() + PROJECT + aDocument.getProject().getId() + DOCUMENT
