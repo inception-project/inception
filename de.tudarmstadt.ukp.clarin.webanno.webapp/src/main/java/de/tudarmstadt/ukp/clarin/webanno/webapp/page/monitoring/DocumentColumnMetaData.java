@@ -30,6 +30,7 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.AbstractReadOnlyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.resource.ContextRelativeResource;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -158,7 +159,7 @@ public class DocumentColumnMetaData
         else if (value.substring(0, value.indexOf(":")).equals(MonitoringPage.SOURCE_DOCUMENT)) {
             SourceDocument document = projectRepositoryService.getSourceDocument(
                     value.substring(value.indexOf(":") + 1), project);
-            aCellItem.add(new Label(componentId, document.getState().toString()));
+            aCellItem.add(new Label(componentId, new ResourceModel(document.getState().toString())));
             aCellItem.add(AttributeModifier.append("class", "centering"));
             aCellItem.add(new AjaxEventBehavior("onclick")
             {
