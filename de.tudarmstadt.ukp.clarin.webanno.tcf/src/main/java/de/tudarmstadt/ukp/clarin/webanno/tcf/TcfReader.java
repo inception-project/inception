@@ -278,8 +278,18 @@ public class TcfReader
                     governorTokens = dependentTokens;
                 }
                 Dependency outDependency = new Dependency(aJCas);
-                outDependency.setBegin(aTokens.get(governorTokens[0].getID()).getBegin());
-                outDependency.setEnd(aTokens.get(governorTokens[0].getID()).getEnd());
+                // if span A has (start,end)= (20, 26) and B has (start,end)= (30, 36)
+                // arc drawn from A to B, dependency will have (start, end) = (20, 36)
+                // arc drawn from B to A, still dependency will have (start, end) = (20, 36)
+                if(aTokens.get(dependentTokens[0].getID()).getBegin()<aTokens.get(governorTokens[0].getID()).getBegin()){
+                    outDependency.setBegin(aTokens.get(dependentTokens[0].getID()).getBegin());
+                    outDependency.setEnd(aTokens.get(governorTokens[0].getID()).getEnd());
+                }
+                else{
+                    outDependency.setBegin(aTokens.get(governorTokens[0].getID()).getBegin());
+                    outDependency.setEnd(aTokens.get(dependentTokens[0].getID()).getEnd());
+                }
+
                 outDependency.setDependencyType(dependency.getFunction());
                 outDependency.setGovernor(aTokens.get(governorTokens[0].getID()));
                 outDependency.setDependent(dependency.getFunction().equals("ROOT") ? aTokens
