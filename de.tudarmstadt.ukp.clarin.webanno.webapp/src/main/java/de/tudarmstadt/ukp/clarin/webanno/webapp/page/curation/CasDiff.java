@@ -223,6 +223,10 @@ public class CasDiff {
                 // composite feature
                 FeatureStructure featureValue1 = fsNew.getFeatureValue(feature);
                 FeatureStructure featureValue2 = fsOld.getFeatureValue(feature);
+                if(((AnnotationFS)featureValue1).getBegin()!=((AnnotationFS)featureValue2).getBegin()
+                        ||((AnnotationFS)featureValue1).getEnd()!=((AnnotationFS)featureValue2).getEnd()){
+                    agreeOnSubfeatures = false;
+                }
                 if (featureValue1 != null && featureValue2 != null &&
                         (aType.toString().equals(featureValue1.getType().toString()))) {
                     CompareResult compareResultSubfeatures = compareFeatureFS(aType,
