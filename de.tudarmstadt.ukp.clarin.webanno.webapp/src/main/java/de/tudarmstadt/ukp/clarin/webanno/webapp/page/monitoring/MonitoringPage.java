@@ -143,7 +143,7 @@ public class MonitoringPage
                             User user = projectRepository.getUser(username);
 
                             List<Project> allProjects = projectRepository.listProjects();
-                            List<Authority> authorities = projectRepository.getAuthorities(user);
+                            List<Authority> authorities = projectRepository.listAuthorities(user);
 
                             // if global admin, show all projects
                             for (Authority authority : authorities) {

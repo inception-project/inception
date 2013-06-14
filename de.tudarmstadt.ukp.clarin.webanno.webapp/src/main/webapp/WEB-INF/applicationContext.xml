@@ -69,5 +69,5 @@
 	</bean>
 
 	<bean id="applicationContextProvider"
-		class="de.tudarmstadt.ukp.clarin.webanno.webapp.support.ApplicationContextProvider"></bean>
+		class="de.tudarmstadt.ukp.clarin.webanno.model.support.spring.ApplicationContextProvider"></bean>
 </beans>

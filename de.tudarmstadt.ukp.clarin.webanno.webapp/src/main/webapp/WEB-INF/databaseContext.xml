@@ -94,4 +94,7 @@
 		class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
 		<property name="dataSource" ref="dataSource" />
 	</bean>
+	
+	<bean id="userRepository" class="de.tudarmstadt.ukp.clarin.webapp.security.dao.UserDaoImpl" />
+	<bean id="passwordEncoder" class="org.springframework.security.crypto.password.StandardPasswordEncoder" />
 </beans>

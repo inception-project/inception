@@ -214,7 +214,7 @@ public interface RepositoryService
      *            the {@link User} object
      * @return
      */
-    List<Authority> getAuthorities(User user);
+    List<Authority> listAuthorities(User user);
 
     /**
      * The Directory where the {@link SourceDocument}s and {@link AnnotationDocument}s stored

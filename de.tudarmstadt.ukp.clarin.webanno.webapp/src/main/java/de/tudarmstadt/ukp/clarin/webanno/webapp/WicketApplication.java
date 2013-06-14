@@ -36,6 +36,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.monitoring.MonitoringPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.project.ProjectPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome.WelcomePage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.security.SpringAuthenticatedWebSession;
+import de.tudarmstadt.ukp.webanno.webapp.security.page.ManageUsersPage;
 
 /**
  * The wicket application class. Sets up pages, authentication, theme, and other application-wide
@@ -80,6 +81,7 @@ public class WicketApplication
             mountPage("/projectpage.html", ProjectPage.class);
             mountPage("/projectsetting.html", ProjectPage.class);
             mountPage("/monitoring.html", MonitoringPage.class);
+            mountPage("/users.html", ManageUsersPage.class);
 
             mountResource("/client/lib/head.load.min.js",
                     new JavaScriptResourceReference(Myresources.class, "client/lib/head.load.min.js"));

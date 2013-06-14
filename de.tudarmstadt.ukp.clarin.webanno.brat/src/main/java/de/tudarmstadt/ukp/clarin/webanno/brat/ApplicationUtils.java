@@ -97,7 +97,7 @@ public class ApplicationUtils
     public static boolean isSuperAdmin(RepositoryService aProjectRepository, User aUser)
     {
         boolean roleAdmin = false;
-        List<Authority> authorities = aProjectRepository.getAuthorities(aUser);
+        List<Authority> authorities = aProjectRepository.listAuthorities(aUser);
         for (Authority authority : authorities) {
             if (authority.getRole().equals("ROLE_ADMIN")) {
                 roleAdmin = true;
@@ -117,7 +117,7 @@ public class ApplicationUtils
             User aUser)
     {
         boolean roleAdmin = false;
-        List<Authority> authorities = aProjectRepository.getAuthorities(aUser);
+        List<Authority> authorities = aProjectRepository.listAuthorities(aUser);
         for (Authority authority : authorities) {
             if (authority.getRole().equals("ROLE_ADMIN")) {
                 roleAdmin = true;
@@ -156,7 +156,7 @@ public class ApplicationUtils
             User aUser)
     {
         boolean roleAdmin = false;
-        List<Authority> authorities = aProjectRepository.getAuthorities(aUser);
+        List<Authority> authorities = aProjectRepository.listAuthorities(aUser);
         for (Authority authority : authorities) {
             if (authority.getRole().equals("ROLE_ADMIN")) {
                 roleAdmin = true;
@@ -195,7 +195,7 @@ public class ApplicationUtils
             User aUser)
     {
         boolean roleAdmin = false;
-        List<Authority> authorities = aProjectRepository.getAuthorities(aUser);
+        List<Authority> authorities = aProjectRepository.listAuthorities(aUser);
         for (Authority authority : authorities) {
             if (authority.getRole().equals("ROLE_ADMIN")) {
                 roleAdmin = true;

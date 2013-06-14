@@ -7,37 +7,23 @@
   the License. #
 -->
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-  <body>
-    <wicket:extend>
-      <form wicket:id="loginForm" method="post" action="?">
-        <table style="margin-left: auto; margin-right: auto;">
-          <tr>
-            <td>
-              <label>
-                Username:
-              </label>
-            </td>
-            <td>
-              <input type="text" wicket:id="username" />
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <label>
-                Password:
-              </label>
-            </td>
-            <td>
-              <input type="password" wicket:id="password" />
-            </td>
-          </tr>
-          <tr>
-            <td colspan="2" style="text-align: center;">
-              <input type="submit" value="Log in" />
-            </td>
-          </tr>
-        </table>
-      </form>
-    </wicket:extend>
-  </body>
+  	<body>
+		<wicket:extend>
+			<form wicket:id="loginForm" method="post" action="?">
+				<table style="margin-left:auto; margin-right:auto;">
+					<tr>
+						<td><label>Username:</label></td>
+						<td><input type="text" wicket:id="username" /></td>
+					</tr>
+					<tr>
+						<td><label>Password:</label></td>
+						<td><input type="password" wicket:id="password" /></td>
+					</tr>
+					<tr>
+						<td colspan="2" style="text-align: center;"><input type="submit" value="Log in" /></td>
+					</tr>
+				</table>
+			</form>
+		</wicket:extend>
+	</body>
 </html>

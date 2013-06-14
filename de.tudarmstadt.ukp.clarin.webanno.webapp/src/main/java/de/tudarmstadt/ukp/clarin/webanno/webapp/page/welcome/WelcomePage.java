@@ -15,8 +15,10 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
+import org.apache.wicket.authroles.authorization.strategies.role.metadata.MetaDataRoleAuthorizationStrategy;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -29,6 +31,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.CurationPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.monitoring.MonitoringPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.project.ProjectPage;
+import de.tudarmstadt.ukp.webanno.webapp.security.page.ManageUsersPage;
 
 /**
  * A home page for WebAnno: <br>
@@ -182,26 +185,19 @@ public class WelcomePage
 
         }
 
-        // adding user management page
-        /*
-         * boolean usreManagementAdded = false; usremanagement = new
-         * AjaxLink<Void>("usremanagement") { private static final long serialVersionUID =
-         * 7496156015186497496L;
-         *
-         * @Override public void onClick(AjaxRequestTarget target) {
-         * setResponsePage(UserManagementPage.class); } }; for (Project project :
-         * projectRepository.listProjects()) {
-         *
-         * if (projectRepository.listProjectUserNames(project).contains(username) &&
-         * ApplicationUtils.isProjectAdmin(project, projectRepository, user)) { add(usremanagement);
-         * usreManagementAdded = true; break; } }
-         * if(ApplicationUtils.isSuperAdmin(projectRepository, user) && !usreManagementAdded){
-         * add(usremanagement); } else if (!usreManagementAdded) {
-         *
-         * add(usremanagement); usremanagement.setVisible(false);
-         *
-         * }
-         */
+
+        usremanagement = new AjaxLink<Void>("usremanagement")
+                {
+                    private static final long serialVersionUID = 7496156015186497496L;
+
+                    @Override
+                    public void onClick(AjaxRequestTarget target)
+                    {
+                        setResponsePage(ManageUsersPage.class);
+                    }
+                };
+        MetaDataRoleAuthorizationStrategy.authorize(usremanagement, Component.RENDER, "ROLE_ADMIN");
+        add(usremanagement);
     }
 
     private static final long serialVersionUID = -530084892002620197L;
