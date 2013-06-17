@@ -654,10 +654,9 @@ public class CurationPanel
                 }
             }
             if (newState != null) {
-                String label = entity.getType();
                 String type = entity.getType() + "_(" + newState.name() + ")";
                 entity.setType(type);
-                entityTypes.put(type, getEntity(type, label, newState));
+                entityTypes.put(type, getEntity(type, newState));
             }
 
         }
@@ -679,11 +678,11 @@ public class CurationPanel
         return collData;
     }
 
-    private Map<String, Object> getEntity(String type, String label, AnnotationState annotationState)
+    private Map<String, Object> getEntity(String type, AnnotationState annotationState)
     {
         Map<String, Object> entityType = new HashMap<String, Object>();
         entityType.put("type", type);
-        entityType.put("labels", new String[] { type, label });
+        entityType.put("labels", new String[] { type });
         String color = annotationState.getColorCode();
         entityType.put("bgColor", color);
         entityType.put("borderColor", "darken");
