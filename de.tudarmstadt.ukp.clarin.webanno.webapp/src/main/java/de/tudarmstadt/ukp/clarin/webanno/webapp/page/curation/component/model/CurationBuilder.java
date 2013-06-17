@@ -18,6 +18,7 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model;
 import static org.uimafit.util.JCasUtil.selectCovered;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -38,7 +39,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -47,8 +47,6 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.AnnotationOption;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.CurationPanel;
-import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
-import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -158,8 +156,19 @@ public class CurationBuilder
         }
         // Create jcas, if it could not be loaded from the file system
         catch (Exception e) {
+            // reserve the begin/end offsets before creating re-merge
+            int tempBegin = begin;
+            int tempEnd = end;
+            // re-merge JCAS for all sentences
+            begin = BratAjaxCasUtil.getAnnotationBeginOffset((JCas)new ArrayList(jCases.values()).get(0),
+                    aBratAnnotatorModel.getFirstSentenceAddress());
+            end = BratAjaxCasUtil.getAnnotationEndOffset((JCas)new ArrayList(jCases.values()).get(0),
+                    aBratAnnotatorModel.getLastSentenceAddress());
             mergeJCas = createMergeCas(mergeJCas, repository, randomAnnotationDocument, jCases,
                     aBratAnnotatorModel);
+           // restore actual begin/end offsets
+            begin = tempBegin;
+            end = tempEnd;
         }
 
         int numUsers = jCases.size();
