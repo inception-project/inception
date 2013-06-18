@@ -637,6 +637,17 @@ public class RepositoryServiceDbData
     }
 
     @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public List<AnnotationDocument> listAnnotationDocument(SourceDocument aSourceDocument)
+    {
+        return entityManager
+                .createQuery(
+                        "FROM AnnotationDocument WHERE project = :project AND document = :document", AnnotationDocument.class)
+                .setParameter("project", aSourceDocument.getProject())
+                .setParameter("document", aSourceDocument).getResultList();
+    }
+
+    @Override
     public List<String> listAnnotationGuidelineDocument(Project aProject)
     {
         // list all guideline files
@@ -761,8 +772,7 @@ public class RepositoryServiceDbData
         throws IOException
     {
 
-        for (AnnotationDocument annotationDocument : listAnnotationDocument(aDocument.getProject(),
-                aDocument)) {
+        for (AnnotationDocument annotationDocument : listAnnotationDocument(aDocument)) {
             removeAnnotationDocument(annotationDocument);
         }
 
