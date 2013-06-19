@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package de.tudarmstadt.ukp.clarin.webapp.security.dao;
+package de.tudarmstadt.ukp.clarin.webanno.webapp.security.dao;
 
 import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
