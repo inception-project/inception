@@ -29,7 +29,7 @@ import org.codehaus.jackson.annotate.JsonPropertyOrder;
  */
 @JsonPropertyOrder(value = { "name", "description", "language", "type", "typeName",
         "typeDescription" ,"tags" })
-public class ExportedTagSetContent
+public class TagSet
 {
     @JsonProperty("name")
     String name;

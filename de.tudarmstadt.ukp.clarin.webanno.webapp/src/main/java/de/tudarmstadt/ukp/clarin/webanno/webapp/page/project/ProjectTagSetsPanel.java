@@ -63,13 +63,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
-import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSetConstants;
-import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSetContent;
-import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSets;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSetConstant;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
-import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.support.EntityModel;
 
@@ -94,7 +92,7 @@ public class ProjectTagSetsPanel
     private FileUploadField fileUpload;
     DropDownChoice<String> importTagsetFormat;
     DropDownChoice<String> exportTagsetFormat;
-    private String selectedExporTagsetFormat = ExportedTagSetConstants.JSON_FORMAT;
+    private String selectedExporTagsetFormat = ExportedTagSetConstant.JSON_FORMAT;
 
     private class TagSetSelectionForm
         extends Form<SelectionModel>
@@ -119,7 +117,7 @@ public class ProjectTagSetsPanel
                     }
                     else {
                         TagSetSelectionForm.this.getModelObject().tagSet = null;
-                        tagSetDetailForm.setModelObject(new TagSet());
+                        tagSetDetailForm.setModelObject(new de.tudarmstadt.ukp.clarin.webanno.model.TagSet());
                         tagSetDetailForm.setVisible(true);
                         tagSelectionForm.setVisible(false);
                         tagDetailForm.setVisible(false);
@@ -127,31 +125,31 @@ public class ProjectTagSetsPanel
                 }
             });
 
-            add(new ListChoice<TagSet>("tagSet")
+            add(new ListChoice<de.tudarmstadt.ukp.clarin.webanno.model.TagSet>("tagSet")
             {
                 private static final long serialVersionUID = 1L;
 
                 {
-                    setChoices(new LoadableDetachableModel<List<TagSet>>()
+                    setChoices(new LoadableDetachableModel<List<de.tudarmstadt.ukp.clarin.webanno.model.TagSet>>()
                     {
                         private static final long serialVersionUID = 1L;
 
                         @Override
-                        protected List<TagSet> load()
+                        protected List<de.tudarmstadt.ukp.clarin.webanno.model.TagSet> load()
                         {
                             Project project = selectedProjectModel.getObject();
                             if (project.getId() != 0) {
                                 return annotationService.listTagSets(project);
                             }
                             else {
-                                return new ArrayList<TagSet>();
+                                return new ArrayList<de.tudarmstadt.ukp.clarin.webanno.model.TagSet>();
                             }
                         }
                     });
-                    setChoiceRenderer(new ChoiceRenderer<TagSet>()
+                    setChoiceRenderer(new ChoiceRenderer<de.tudarmstadt.ukp.clarin.webanno.model.TagSet>()
                     {
                         @Override
-                        public Object getDisplayValue(TagSet aObject)
+                        public Object getDisplayValue(de.tudarmstadt.ukp.clarin.webanno.model.TagSet aObject)
                         {
                             return "[" + aObject.getType().getName() + "] " + aObject.getName();
                         }
@@ -160,7 +158,7 @@ public class ProjectTagSetsPanel
                 }
 
                 @Override
-                protected void onSelectionChanged(TagSet aNewSelection)
+                protected void onSelectionChanged(de.tudarmstadt.ukp.clarin.webanno.model.TagSet aNewSelection)
                 {
                     if (aNewSelection != null) {
                         // TagSetSelectionForm.this.getModelObject().tagSet = new TagSet();
@@ -190,8 +188,8 @@ public class ProjectTagSetsPanel
             add(fileUpload = new FileUploadField("content", new Model()));
             add(importTagsetFormat = new DropDownChoice<String>("importTagsetFormat",
                     new Model<String>(selectedExporTagsetFormat),
-                    Arrays.asList(new String[] { ExportedTagSetConstants.JSON_FORMAT,
-                            ExportedTagSetConstants.TAB_FORMAT })));
+                    Arrays.asList(new String[] { ExportedTagSetConstant.JSON_FORMAT,
+                            ExportedTagSetConstant.TAB_FORMAT })));
             add(new Button("import", new ResourceModel("label"))
             {
 
@@ -208,7 +206,7 @@ public class ProjectTagSetsPanel
 
                     if (isNotEmpty(uploadedFiles)) {
                         if (importTagsetFormat.getModelObject().equals(
-                                ExportedTagSetConstants.JSON_FORMAT)) {
+                                ExportedTagSetConstant.JSON_FORMAT)) {
                             for (FileUpload tagFile : uploadedFiles) {
                                 InputStream tagInputStream;
                                 try {
@@ -216,42 +214,40 @@ public class ProjectTagSetsPanel
                                     String text = IOUtils.toString(tagInputStream, "UTF-8");
 
                                     MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
-                                    ExportedTagSets importedTagSet = jsonConverter
+                                    TagSet importedTagSet = jsonConverter
                                             .getObjectMapper().readValue(text,
-                                                    ExportedTagSets.class);
-                                    List<ExportedTagSetContent> importedTagSets = importedTagSet
-                                            .getTagSets();
-
+                                                    TagSet.class);
                                     AnnotationType type = null;
-                                    if (!annotationService.existsType(importedTagSets.get(0)
-                                            .getTypeName(), importedTagSets.get(0).getType())) {
+                                    if (!annotationService.existsType(importedTagSet
+                                            .getTypeName(), importedTagSet.getType())) {
                                         type = new AnnotationType();
-                                        type.setDescription(importedTagSets.get(0)
+                                        type.setDescription(importedTagSet
                                                 .getTypeDescription());
-                                        type.setName(importedTagSets.get(0).getTypeName());
-                                        type.setType(importedTagSets.get(0).getType());
+                                        type.setName(importedTagSet.getTypeName());
+                                        type.setType(importedTagSet.getType());
                                         annotationService.createType(type);
                                     }
                                     else {
-                                        type = annotationService.getType(importedTagSets.get(0)
-                                                .getTypeName(), importedTagSets.get(0).getType());
+                                        type = annotationService.getType(importedTagSet
+                                                .getTypeName(), importedTagSet.getType());
                                     }
 
-                                    for (ExportedTagSetContent tagSet : importedTagSets) {
+                                    if(importedTagSet!=null){
 
                                         // Override existing tagset
                                         if (annotationService.existTagSet(type, project)) {
                                             annotationService.removeTagSet(annotationService
                                                     .getTagSet(type, project));
                                         }
-                                        TagSet newTagSet = new TagSet();
-                                        newTagSet.setDescription(tagSet.getDescription());
-                                        newTagSet.setName(tagSet.getName());
-                                        newTagSet.setLanguage(tagSet.getLanguage());
+                                        de.tudarmstadt.ukp.clarin.webanno.model.TagSet newTagSet =
+                                                new de.tudarmstadt.ukp.clarin.webanno.model.TagSet();
+                                        newTagSet.setDescription(importedTagSet.getDescription());
+                                        newTagSet.setName(importedTagSet.getName());
+                                        newTagSet.setLanguage(importedTagSet.getLanguage());
                                         newTagSet.setProject(project);
                                         newTagSet.setType(type);
                                         annotationService.createTagSet(newTagSet, user);
-                                        for (de.tudarmstadt.ukp.clarin.webanno.export.model.Tag tag : tagSet
+                                        for (de.tudarmstadt.ukp.clarin.webanno.export.model.Tag tag : importedTagSet
                                                 .getTags()) {
                                             Tag newTag = new Tag();
                                             newTag.setDescription(tag.getDescription());
@@ -270,7 +266,7 @@ public class ProjectTagSetsPanel
                             }
                         }
                         else if (importTagsetFormat.getModelObject().equals(
-                                ExportedTagSetConstants.TAB_FORMAT)) {
+                                ExportedTagSetConstant.TAB_FORMAT)) {
                             for (FileUpload tagFile : uploadedFiles) {
                                 InputStream tagInputStream;
                                 try {
@@ -287,7 +283,7 @@ public class ProjectTagSetsPanel
                                     String tagsetType = "";
                                     String tagsetTypeName = "";
                                     String tagsetTypeDescription = "";
-                                    TagSet tagSet = null;
+                                    de.tudarmstadt.ukp.clarin.webanno.model.TagSet tagSet = null;
                                     for (String key : listOfTagsFromFile) {
                                         // the first key is the tagset name and its description
                                         if (i == 0) {
@@ -326,7 +322,7 @@ public class ProjectTagSetsPanel
                                                 annotationService.removeTagSet(annotationService
                                                         .getTagSet(type, project));
                                             }
-                                            tagSet = new TagSet();
+                                            tagSet = new de.tudarmstadt.ukp.clarin.webanno.model.TagSet();
                                             tagSet.setName(tagSetName);
                                             tagSet.setDescription(tagSetDescription);
                                             tagSet.setLanguage(tagsetLanguage);
@@ -370,12 +366,12 @@ public class ProjectTagSetsPanel
     {
         private static final long serialVersionUID = -1L;
 
-        private TagSet tagSet;
+        private de.tudarmstadt.ukp.clarin.webanno.model.TagSet tagSet;
         private Tag tag;
     }
 
     private class TagSetDetailForm
-        extends Form<TagSet>
+        extends Form<de.tudarmstadt.ukp.clarin.webanno.model.TagSet>
     {
         private static final long serialVersionUID = -1L;
         TagSet tagSet;
@@ -385,7 +381,9 @@ public class ProjectTagSetsPanel
         @SuppressWarnings("unchecked")
         public TagSetDetailForm(String id)
         {
-            super(id, new CompoundPropertyModel<TagSet>(new EntityModel<TagSet>(new TagSet())));
+            super(id, new CompoundPropertyModel<de.tudarmstadt.ukp.clarin.webanno.model.TagSet>(new
+                    EntityModel<de.tudarmstadt.ukp.clarin.webanno.model.TagSet>(new
+                            de.tudarmstadt.ukp.clarin.webanno.model.TagSet())));
             // super(id);
             add(new TextField<String>("name").setRequired(true));
 
@@ -403,7 +401,7 @@ public class ProjectTagSetsPanel
                 @Override
                 public void onSubmit()
                 {
-                    TagSet tagSet = TagSetDetailForm.this.getModelObject();
+                    de.tudarmstadt.ukp.clarin.webanno.model.TagSet tagSet = TagSetDetailForm.this.getModelObject();
 
                     if (tagSet.getId() == 0) {
                         if (annotationService.existTagSet(tagSet.getType(),
@@ -439,21 +437,21 @@ public class ProjectTagSetsPanel
                 @Override
                 public void onSubmit()
                 {
-                    TagSet tagSet = TagSetDetailForm.this.getModelObject();
+                    de.tudarmstadt.ukp.clarin.webanno.model.TagSet tagSet = TagSetDetailForm.this.getModelObject();
                     if (tagSet.getId() != 0) {
                         annotationService.removeTagSet(tagSet);
                         TagSetDetailForm.this.setModelObject(null);
                         tagSelectionForm.setVisible(false);
                         tagDetailForm.setVisible(false);
                     }
-                    TagSetDetailForm.this.setModelObject(new TagSet());
+                    TagSetDetailForm.this.setModelObject(new de.tudarmstadt.ukp.clarin.webanno.model.TagSet());
                 }
             });
 
             add(exportTagsetFormat = (DropDownChoice<String>) new DropDownChoice<String>(
                     "exportTagsetFormat", new Model<String>(selectedExporTagsetFormat),
-                    Arrays.asList(new String[] { ExportedTagSetConstants.JSON_FORMAT,
-                            ExportedTagSetConstants.TAB_FORMAT })).add(new OnChangeAjaxBehavior()
+                    Arrays.asList(new String[] { ExportedTagSetConstant.JSON_FORMAT,
+                            ExportedTagSetConstant.TAB_FORMAT })).add(new OnChangeAjaxBehavior()
             {
 
                 @Override
@@ -472,7 +470,7 @@ public class ProjectTagSetsPanel
                 protected File load()
                 {
                     File exportFile = null;
-                    if (selectedExporTagsetFormat.equals(ExportedTagSetConstants.JSON_FORMAT)) {
+                    if (selectedExporTagsetFormat.equals(ExportedTagSetConstant.JSON_FORMAT)) {
                         try {
                             exportFile = File.createTempFile("exportedtagsets", ".json");
                         }
@@ -484,9 +482,8 @@ public class ProjectTagSetsPanel
                             error("Project not yet created. Please save project details first!");
                         }
                         else {
-                            List<ExportedTagSetContent> exportedTagSetscontent = new ArrayList<ExportedTagSetContent>();
-                            TagSet tagSet = tagSetDetailForm.getModelObject();
-                            ExportedTagSetContent exportedTagSetContent = new ExportedTagSetContent();
+                            de.tudarmstadt.ukp.clarin.webanno.model.TagSet tagSet = tagSetDetailForm.getModelObject();
+                            TagSet exportedTagSetContent = new TagSet();
                             exportedTagSetContent.setDescription(tagSet.getDescription());
                             exportedTagSetContent.setLanguage(tagSet.getLanguage());
                             exportedTagSetContent.setName(tagSet.getName());
@@ -505,14 +502,11 @@ public class ProjectTagSetsPanel
 
                             }
                             exportedTagSetContent.setTags(exportedTags);
-                            exportedTagSetscontent.add(exportedTagSetContent);
-                            ExportedTagSets exportedTagSet = new ExportedTagSets();
-                            exportedTagSet.setTagSets(exportedTagSetscontent);
                             MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
                             ApplicationUtils.setJsonConverter(jsonConverter);
 
                             try {
-                                ApplicationUtils.generateJson(exportedTagSet, exportFile);
+                                ApplicationUtils.generateJson(exportedTagSetContent, exportFile);
                             }
                             catch (IOException e) {
                                 error("File Path not found or No permision to save the file!");
@@ -522,8 +516,8 @@ public class ProjectTagSetsPanel
 
                         }
                     }
-                    else if (selectedExporTagsetFormat.equals(ExportedTagSetConstants.TAB_FORMAT)) {
-                        TagSet tagSet = tagSetDetailForm.getModelObject();
+                    else if (selectedExporTagsetFormat.equals(ExportedTagSetConstant.TAB_FORMAT)) {
+                        de.tudarmstadt.ukp.clarin.webanno.model.TagSet tagSet = tagSetDetailForm.getModelObject();
                         try {
                             exportFile = File.createTempFile("exportedtagsets", ".txt");
                         }

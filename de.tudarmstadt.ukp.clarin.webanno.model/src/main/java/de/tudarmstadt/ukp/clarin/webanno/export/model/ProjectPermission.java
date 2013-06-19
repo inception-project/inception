@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,28 +15,37 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.export.model;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.codehaus.jackson.annotate.JsonProperty;
+import org.codehaus.jackson.annotate.JsonPropertyOrder;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 /**
- * Response for the {@code getDocument} command.
+ * Project permissions information to be exported/imported
+ * @author Seid Muhie Yimam
+ *
  */
-public class ExportedTagSets
+@JsonPropertyOrder(value = { "level", "user"})
+public class ProjectPermission
 {
-
-    @JsonProperty("tag_sets")
-    private List<ExportedTagSetContent> tagSets = new ArrayList<ExportedTagSetContent>();
-
-    public List<ExportedTagSetContent> getTagSets()
+    @JsonProperty("level")
+    PermissionLevel level;
+    @JsonProperty("user")
+    String user;
+    public PermissionLevel getLevel()
     {
-        return tagSets;
+        return level;
+    }
+    public void setLevel(PermissionLevel level)
+    {
+        this.level = level;
+    }
+    public String getUser()
+    {
+        return user;
+    }
+    public void setUser(String user)
+    {
+        this.user = user;
     }
 
-    public void setTagSets(List<ExportedTagSetContent> aTagSets)
-    {
-        tagSets = aTagSets;
     }
-
-}

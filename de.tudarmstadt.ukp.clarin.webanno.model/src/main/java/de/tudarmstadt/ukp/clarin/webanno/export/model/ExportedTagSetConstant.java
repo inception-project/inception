@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.export.model;
  * @author Seid Muhie Yimam
  *
  */
-public class ExportedTagSetConstants
+public class ExportedTagSetConstant
 {
     /**
      * Expor/import tagsets in json format

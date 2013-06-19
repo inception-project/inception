@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.page.project;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
@@ -39,14 +40,20 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.ProjectPermission;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.tcf.TcfWriter;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dao.DaoUtils;
@@ -73,7 +80,7 @@ public class ExportPanel
     public ExportPanel(String id, final Model<Project> aProjectModel)
     {
         super(id);
-       // final Project project = aProjectModel.getObject();
+        // final Project project = aProjectModel.getObject();
 
         add(new Button("send", new ResourceModel("label"))
         {
@@ -82,7 +89,7 @@ public class ExportPanel
             @Override
             public boolean isVisible()
             {
-              return  projectRepository.isRemoteProject(aProjectModel.getObject());
+                return projectRepository.isRemoteProject(aProjectModel.getObject());
 
             }
 
@@ -103,7 +110,8 @@ public class ExportPanel
                     File metaInfDir = new File(exportTempDir + "/META_INF");
                     FileUtils.forceMkdir(metaInfDir);
 
-                    boolean curationDocumentExist = isCurationDocumentExists(aProjectModel.getObject());
+                    boolean curationDocumentExist = isCurationDocumentExists(aProjectModel
+                            .getObject());
 
                     if (!curationDocumentExist) {
                         error("No curation document created yet for this document");
@@ -117,9 +125,8 @@ public class ExportPanel
                                 + ".zip"));
 
                         @SuppressWarnings("deprecation")
-                        FileEntity reqEntity = new FileEntity(new File(
-                                exportTempDir.getAbsolutePath() + ".zip"),
-                                "application/octet-stream");
+                        FileEntity reqEntity = new FileEntity(new File(exportTempDir
+                                .getAbsolutePath() + ".zip"), "application/octet-stream");
 
                         httppost.setEntity(reqEntity);
 
@@ -173,7 +180,8 @@ public class ExportPanel
                     exportTempDir.delete();
                     exportTempDir.mkdirs();
 
-                    boolean curationDocumentExist = isCurationDocumentExists(aProjectModel.getObject());
+                    boolean curationDocumentExist = isCurationDocumentExists(aProjectModel
+                            .getObject());
 
                     if (!curationDocumentExist) {
                         error("No curation document created yet for this document");
@@ -194,16 +202,125 @@ public class ExportPanel
 
                 return exportFile;
             }
-        }){
+        })
+        {
             private static final long serialVersionUID = 5630612543039605914L;
 
             @Override
             public boolean isVisible()
             {
-              return   isCurationDocumentExists(aProjectModel.getObject());
+                return isCurationDocumentExists(aProjectModel.getObject());
 
             }
         }).setOutputMarkupId(true);
+
+        add(new DownloadLink("exportProject", new LoadableDetachableModel<File>()
+        {
+            private static final long serialVersionUID = 840863954694163375L;
+
+            @Override
+            protected File load()
+            {
+                File exportFile = null;
+                try {
+                    exportFile = File.createTempFile("exportedproject", ".json");
+                }
+                catch (IOException e1) {
+                    error("Unable to create temporary File!!");
+
+                }
+                if (aProjectModel.getObject().getId() == 0) {
+                    error("Project not yet created. Please save project details first!");
+                }
+                else {
+                    de.tudarmstadt.ukp.clarin.webanno.export.model.Project project = new de.tudarmstadt.ukp.clarin.webanno.export.model.Project();
+                    project.setDescription(aProjectModel.getObject().getDescription());
+                    project.setName(aProjectModel.getObject().getName());
+                    project.setReverse(aProjectModel.getObject().isReverseDependencyDirection());
+
+                    List<TagSet> tagsets = new ArrayList<TagSet>();
+                    // add TagSets to the project
+                    for (de.tudarmstadt.ukp.clarin.webanno.model.TagSet tagSet : annotationService
+                            .listTagSets(aProjectModel.getObject())) {
+                        TagSet exportedTagSetContent = new TagSet();
+                        exportedTagSetContent.setDescription(tagSet.getDescription());
+                        exportedTagSetContent.setLanguage(tagSet.getLanguage());
+                        exportedTagSetContent.setName(tagSet.getName());
+
+                        exportedTagSetContent.setType(tagSet.getType().getType());
+                        exportedTagSetContent.setTypeName(tagSet.getType().getName());
+                        exportedTagSetContent.setTypeDescription(tagSet.getType().getDescription());
+
+                        List<de.tudarmstadt.ukp.clarin.webanno.export.model.Tag> exportedTags = new ArrayList<de.tudarmstadt.ukp.clarin.webanno.export.model.Tag>();
+                        for (Tag tag : annotationService.listTags(tagSet)) {
+                            de.tudarmstadt.ukp.clarin.webanno.export.model.Tag exportedTag = new de.tudarmstadt.ukp.clarin.webanno.export.model.Tag();
+                            exportedTag.setDescription(tag.getDescription());
+                            exportedTag.setName(tag.getName());
+                            exportedTags.add(exportedTag);
+                        }
+                        exportedTagSetContent.setTags(exportedTags);
+                        tagsets.add(exportedTagSetContent);
+                    }
+
+                    project.setTagSets(tagsets);
+
+                    List<SourceDocument> sourceDocuments = new ArrayList<SourceDocument>();
+                    List<AnnotationDocument> annotationDocuments = new ArrayList<AnnotationDocument>();
+
+                    // add source documents to a project
+                    for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : projectRepository
+                            .listSourceDocuments(aProjectModel.getObject())) {
+                        SourceDocument sourceDocumentToExport = new SourceDocument();
+                        sourceDocumentToExport.setFormat(sourceDocument.getFormat());
+                        sourceDocumentToExport.setName(sourceDocument.getName());
+                        sourceDocumentToExport.setState(sourceDocument.getState());
+
+                        // add annotation document to Project
+                        for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : projectRepository
+                                .listAnnotationDocument(sourceDocument)) {
+                            AnnotationDocument annotationDocumentToExport = new AnnotationDocument();
+                            annotationDocumentToExport.setName(annotationDocument.getName());
+                            annotationDocumentToExport.setState(annotationDocument.getState());
+                            annotationDocumentToExport.setUser(annotationDocument.getUser()
+                                    .getUsername());
+                            annotationDocuments.add(annotationDocumentToExport);
+                        }
+                        sourceDocuments.add(sourceDocumentToExport);
+                    }
+                    project.setSourceDocuments(sourceDocuments);
+                    project.setAnnotationDocuments(annotationDocuments);
+
+                    List<ProjectPermission> projectPermissions = new ArrayList<ProjectPermission>();
+
+                    // add project permissions to the project
+                    for (User user : projectRepository
+                            .listProjectUsersWithPermissions(aProjectModel.getObject())) {
+                        for (de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission permission : projectRepository
+                                .listProjectPermisionLevel(user, aProjectModel.getObject())) {
+                            ProjectPermission permissionToExport = new ProjectPermission();
+                            permissionToExport.setLevel(permission.getLevel());
+                            permissionToExport.setUser(user.getUsername());
+                            projectPermissions.add(permissionToExport);
+                        }
+                    }
+
+                    project.setProjectPermissions(projectPermissions);
+
+                    MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
+                    ApplicationUtils.setJsonConverter(jsonConverter);
+
+                    try {
+                        ApplicationUtils.generateJson(project, exportFile);
+                    }
+                    catch (IOException e) {
+                        error("File Path not found or No permision to save the file!");
+                    }
+                    info("TagSets successfully exported to :" + exportFile.getAbsolutePath());
+
+                }
+                return exportFile;
+            }
+        }).setOutputMarkupId(true));
     }
 
     /**
@@ -224,9 +341,10 @@ public class ExportPanel
         User user = projectRepository.getUser(username);
 
         // Get all the source documents from the project
-        List<SourceDocument> documents = projectRepository.listSourceDocuments(aProject);
+        List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = projectRepository
+                .listSourceDocuments(aProject);
 
-        for (SourceDocument sourceDocument : documents) {
+        for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
 
             // If the curation document is exist (either finished or in progress
             if (sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)
@@ -237,11 +355,14 @@ public class ExportPanel
             }
         }
     }
-    private boolean isCurationDocumentExists(Project aProject){
-        boolean curationDocumentExist = false;
-        List<SourceDocument> documents = projectRepository.listSourceDocuments(aProject);
 
-        for (SourceDocument sourceDocument : documents) {
+    private boolean isCurationDocumentExists(Project aProject)
+    {
+        boolean curationDocumentExist = false;
+        List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = projectRepository
+                .listSourceDocuments(aProject);
+
+        for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
 
             // If the curation document is exist (either finished or in progress
             if (sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)

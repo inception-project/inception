@@ -75,6 +75,17 @@ public class Project
         name = aName;
     }
 
+
+    public String getDescription()
+    {
+        return description;
+    }
+
+    public void setDescription(String description)
+    {
+        this.description = description;
+    }
+
     public boolean isReverseDependencyDirection()
     {
         return reverseDependencyDirection;
