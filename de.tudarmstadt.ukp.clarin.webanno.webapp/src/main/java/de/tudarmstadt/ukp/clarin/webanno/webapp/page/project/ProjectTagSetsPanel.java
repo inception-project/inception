@@ -443,6 +443,7 @@ public class ProjectTagSetsPanel
                         TagSetDetailForm.this.setModelObject(null);
                         tagSelectionForm.setVisible(false);
                         tagDetailForm.setVisible(false);
+                        TagSetDetailForm.this.setVisible(false);
                     }
                     TagSetDetailForm.this.setModelObject(new de.tudarmstadt.ukp.clarin.webanno.model.TagSet());
                 }
