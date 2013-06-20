@@ -117,7 +117,9 @@ public class ExportPanel
                         error("No curation document created yet for this document");
                     }
                     else {
+                        // copy curated documents into the export folder
                         copyCuratedDocuments(aProjectModel.getObject(), exportTempDir);
+                        // copy META_INF contents from the project directory to the export folder
                         FileUtils.copyDirectory(new File(projectRepository.getDir(), "/project/"
                                 + aProjectModel.getObject().getId() + "/META_INF"), metaInfDir);
 
@@ -221,9 +223,15 @@ public class ExportPanel
             @Override
             protected File load()
             {
-                File exportFile = null;
+                File exportTempDir = null;
+                // all metadata and project settings data from the database as JSON file
+                File projectSettings = null;
                 try {
-                    exportFile = File.createTempFile("exportedproject", ".json");
+                    projectSettings = File.createTempFile("exportedproject", ".json");
+                    // Directory to store source documents and annotation documents
+                    exportTempDir = File.createTempFile("webanno-project", "export");
+                    exportTempDir.delete();
+                    exportTempDir.mkdirs();
                 }
                 catch (IOException e1) {
                     error("Unable to create temporary File!!");
@@ -233,92 +241,26 @@ public class ExportPanel
                     error("Project not yet created. Please save project details first!");
                 }
                 else {
-                    de.tudarmstadt.ukp.clarin.webanno.export.model.Project project = new de.tudarmstadt.ukp.clarin.webanno.export.model.Project();
-                    project.setDescription(aProjectModel.getObject().getDescription());
-                    project.setName(aProjectModel.getObject().getName());
-                    project.setReverse(aProjectModel.getObject().isReverseDependencyDirection());
-
-                    List<TagSet> tagsets = new ArrayList<TagSet>();
-                    // add TagSets to the project
-                    for (de.tudarmstadt.ukp.clarin.webanno.model.TagSet tagSet : annotationService
-                            .listTagSets(aProjectModel.getObject())) {
-                        TagSet exportedTagSetContent = new TagSet();
-                        exportedTagSetContent.setDescription(tagSet.getDescription());
-                        exportedTagSetContent.setLanguage(tagSet.getLanguage());
-                        exportedTagSetContent.setName(tagSet.getName());
-
-                        exportedTagSetContent.setType(tagSet.getType().getType());
-                        exportedTagSetContent.setTypeName(tagSet.getType().getName());
-                        exportedTagSetContent.setTypeDescription(tagSet.getType().getDescription());
-
-                        List<de.tudarmstadt.ukp.clarin.webanno.export.model.Tag> exportedTags = new ArrayList<de.tudarmstadt.ukp.clarin.webanno.export.model.Tag>();
-                        for (Tag tag : annotationService.listTags(tagSet)) {
-                            de.tudarmstadt.ukp.clarin.webanno.export.model.Tag exportedTag = new de.tudarmstadt.ukp.clarin.webanno.export.model.Tag();
-                            exportedTag.setDescription(tag.getDescription());
-                            exportedTag.setName(tag.getName());
-                            exportedTags.add(exportedTag);
-                        }
-                        exportedTagSetContent.setTags(exportedTags);
-                        tagsets.add(exportedTagSetContent);
-                    }
-
-                    project.setTagSets(tagsets);
-
-                    List<SourceDocument> sourceDocuments = new ArrayList<SourceDocument>();
-                    List<AnnotationDocument> annotationDocuments = new ArrayList<AnnotationDocument>();
-
-                    // add source documents to a project
-                    for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : projectRepository
-                            .listSourceDocuments(aProjectModel.getObject())) {
-                        SourceDocument sourceDocumentToExport = new SourceDocument();
-                        sourceDocumentToExport.setFormat(sourceDocument.getFormat());
-                        sourceDocumentToExport.setName(sourceDocument.getName());
-                        sourceDocumentToExport.setState(sourceDocument.getState());
-
-                        // add annotation document to Project
-                        for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : projectRepository
-                                .listAnnotationDocument(sourceDocument)) {
-                            AnnotationDocument annotationDocumentToExport = new AnnotationDocument();
-                            annotationDocumentToExport.setName(annotationDocument.getName());
-                            annotationDocumentToExport.setState(annotationDocument.getState());
-                            annotationDocumentToExport.setUser(annotationDocument.getUser()
-                                    .getUsername());
-                            annotationDocuments.add(annotationDocumentToExport);
-                        }
-                        sourceDocuments.add(sourceDocumentToExport);
-                    }
-                    project.setSourceDocuments(sourceDocuments);
-                    project.setAnnotationDocuments(annotationDocuments);
-
-                    List<ProjectPermission> projectPermissions = new ArrayList<ProjectPermission>();
-
-                    // add project permissions to the project
-                    for (User user : projectRepository
-                            .listProjectUsersWithPermissions(aProjectModel.getObject())) {
-                        for (de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission permission : projectRepository
-                                .listProjectPermisionLevel(user, aProjectModel.getObject())) {
-                            ProjectPermission permissionToExport = new ProjectPermission();
-                            permissionToExport.setLevel(permission.getLevel());
-                            permissionToExport.setUser(user.getUsername());
-                            projectPermissions.add(permissionToExport);
-                        }
-                    }
-
-                    project.setProjectPermissions(projectPermissions);
-
-                    MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
-                    ApplicationUtils.setJsonConverter(jsonConverter);
-
-                    try {
-                        ApplicationUtils.generateJson(project, exportFile);
-                    }
-                    catch (IOException e) {
-                        error("File Path not found or No permision to save the file!");
-                    }
-                    info("TagSets successfully exported to :" + exportFile.getAbsolutePath());
-
+                    copyProjectSettings(aProjectModel.getObject(), projectSettings, exportTempDir);
                 }
-                return exportFile;
+
+                try {
+                    copySourceDocuments(aProjectModel.getObject(), exportTempDir);
+                }
+                catch (FileNotFoundException e) {
+                    info(e.getMessage());
+                }
+                catch (IOException e) {
+                    info(e.getMessage());
+                }
+                try {
+                    DaoUtils.zipFolder(exportTempDir, new File(exportTempDir.getAbsolutePath()
+                            + ".zip"));
+                }
+                catch (Exception e) {
+                    info(e.getMessage());
+                }
+                return new File (exportTempDir.getAbsolutePath()+".zip");
             }
         }).setOutputMarkupId(true));
     }
@@ -356,6 +298,24 @@ public class ExportPanel
         }
     }
 
+    /**
+     * Copy source documents from the file system of this project to the export folder
+     */
+    private void copySourceDocuments(Project aProject, File aCopyDir) throws IOException
+    {
+        File sourceDocumentDir = new File(aCopyDir + "/source");
+        FileUtils.forceMkdir(sourceDocumentDir);
+        // Get all the source documents from the project
+        List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = projectRepository
+                .listSourceDocuments(aProject);
+
+        for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
+            FileUtils.copyFileToDirectory(
+                    projectRepository.exportSourceDocument(sourceDocument, aProject), sourceDocumentDir);
+        }
+
+    }
+
     private boolean isCurationDocumentExists(Project aProject)
     {
         boolean curationDocumentExist = false;
@@ -372,5 +332,91 @@ public class ExportPanel
             }
         }
         return curationDocumentExist;
+    }
+
+    private void copyProjectSettings(Project aProject, File aProjectSettings, File aExportTempDir){
+        de.tudarmstadt.ukp.clarin.webanno.export.model.Project project = new de.tudarmstadt.ukp.clarin.webanno.export.model.Project();
+        project.setDescription(aProject.getDescription());
+        project.setName(aProject.getName());
+        project.setReverse(aProject.isReverseDependencyDirection());
+
+        List<TagSet> tagsets = new ArrayList<TagSet>();
+        // add TagSets to the project
+        for (de.tudarmstadt.ukp.clarin.webanno.model.TagSet tagSet : annotationService
+                .listTagSets(aProject)) {
+            TagSet exportedTagSetContent = new TagSet();
+            exportedTagSetContent.setDescription(tagSet.getDescription());
+            exportedTagSetContent.setLanguage(tagSet.getLanguage());
+            exportedTagSetContent.setName(tagSet.getName());
+
+            exportedTagSetContent.setType(tagSet.getType().getType());
+            exportedTagSetContent.setTypeName(tagSet.getType().getName());
+            exportedTagSetContent.setTypeDescription(tagSet.getType().getDescription());
+
+            List<de.tudarmstadt.ukp.clarin.webanno.export.model.Tag> exportedTags = new ArrayList<de.tudarmstadt.ukp.clarin.webanno.export.model.Tag>();
+            for (Tag tag : annotationService.listTags(tagSet)) {
+                de.tudarmstadt.ukp.clarin.webanno.export.model.Tag exportedTag = new de.tudarmstadt.ukp.clarin.webanno.export.model.Tag();
+                exportedTag.setDescription(tag.getDescription());
+                exportedTag.setName(tag.getName());
+                exportedTags.add(exportedTag);
+            }
+            exportedTagSetContent.setTags(exportedTags);
+            tagsets.add(exportedTagSetContent);
+        }
+
+        project.setTagSets(tagsets);
+
+        List<SourceDocument> sourceDocuments = new ArrayList<SourceDocument>();
+        List<AnnotationDocument> annotationDocuments = new ArrayList<AnnotationDocument>();
+
+        // add source documents to a project
+        for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : projectRepository
+                .listSourceDocuments(aProject)) {
+            SourceDocument sourceDocumentToExport = new SourceDocument();
+            sourceDocumentToExport.setFormat(sourceDocument.getFormat());
+            sourceDocumentToExport.setName(sourceDocument.getName());
+            sourceDocumentToExport.setState(sourceDocument.getState());
+
+            // add annotation document to Project
+            for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : projectRepository
+                    .listAnnotationDocument(sourceDocument)) {
+                AnnotationDocument annotationDocumentToExport = new AnnotationDocument();
+                annotationDocumentToExport.setName(annotationDocument.getName());
+                annotationDocumentToExport.setState(annotationDocument.getState());
+                annotationDocumentToExport.setUser(annotationDocument.getUser()
+                        .getUsername());
+                annotationDocuments.add(annotationDocumentToExport);
+            }
+            sourceDocuments.add(sourceDocumentToExport);
+        }
+        project.setSourceDocuments(sourceDocuments);
+        project.setAnnotationDocuments(annotationDocuments);
+
+        List<ProjectPermission> projectPermissions = new ArrayList<ProjectPermission>();
+
+        // add project permissions to the project
+        for (User user : projectRepository
+                .listProjectUsersWithPermissions(aProject)) {
+            for (de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission permission : projectRepository
+                    .listProjectPermisionLevel(user, aProject)) {
+                ProjectPermission permissionToExport = new ProjectPermission();
+                permissionToExport.setLevel(permission.getLevel());
+                permissionToExport.setUser(user.getUsername());
+                projectPermissions.add(permissionToExport);
+            }
+        }
+
+        project.setProjectPermissions(projectPermissions);
+
+        MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
+        ApplicationUtils.setJsonConverter(jsonConverter);
+
+        try {
+            ApplicationUtils.generateJson(project, aProjectSettings);
+            FileUtils.copyFileToDirectory(aProjectSettings, aExportTempDir);
+        }
+        catch (IOException e) {
+            error("File Path not found or No permision to save the file!");
+        }
     }
 }

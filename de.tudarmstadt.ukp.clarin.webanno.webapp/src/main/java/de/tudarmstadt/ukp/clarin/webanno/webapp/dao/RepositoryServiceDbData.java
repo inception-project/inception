@@ -407,6 +407,13 @@ public class RepositoryServiceDbData
 
     }
 
+  @Override
+public  File exportSourceDocument(SourceDocument aDocument, Project aProject){
+      File documentUri = new File(dir.getAbsolutePath() + PROJECT + aProject.getId()
+              + DOCUMENT + aDocument.getId() + SOURCE);
+      return new File(documentUri,aDocument.getName());
+    }
+
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public AnnotationDocument getAnnotationDocument(SourceDocument aDocument, User aUser)

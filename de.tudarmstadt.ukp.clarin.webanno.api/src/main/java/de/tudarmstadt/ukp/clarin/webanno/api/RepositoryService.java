@@ -178,6 +178,12 @@ public interface RepositoryService
         ClassNotFoundException;
 
     /**
+     * Exports source documents of a given Project. This is used to copy projects from one
+     * application/release to anothor.
+     */
+    File exportSourceDocument(SourceDocument document, Project project);
+
+    /**
      * Get an {@link AnnotationDocument} object from the database using the {@link SourceDocument}
      * and {@link User} Objects. If {@code getAnnotationDocument} fails, it will be created anew
      *
