@@ -172,8 +172,29 @@ public class ConllReader
                 if(dependencyFunction.get(i)!=null){
                 Dependency outDependency = new Dependency(aJCas);
                 outDependency.setDependencyType(dependencyFunction.get(i));
-                outDependency.setBegin(tokensStored.get("t_" + i).getBegin());
-                outDependency.setEnd(tokensStored.get("t_" + i).getEnd());
+
+                // if span A has (start,end)= (20, 26) and B has (start,end)= (30, 36)
+                // arc drawn from A to B, dependency will have (start, end) = (20, 36)
+                // arc drawn from B to A, still dependency will have (start, end) = (20, 36)
+                int begin = 0, end = 0;
+                // if not ROOT
+                if (dependencyDependent.get(i) != 0) {
+                begin = tokensStored.get("t_" + i).getBegin()>
+                tokensStored.get("t_" + dependencyDependent.get(i)).getBegin()?
+                        tokensStored.get("t_" + dependencyDependent.get(i)).getBegin()
+                        :tokensStored.get("t_" + i).getBegin();
+                 end = tokensStored.get("t_" + i).getEnd()<
+                tokensStored.get("t_" + dependencyDependent.get(i)).getEnd()?
+                        tokensStored.get("t_" + dependencyDependent.get(i)).getEnd()
+                        :tokensStored.get("t_" + i).getEnd();
+                }
+                else{
+                    begin = tokensStored.get("t_" + i).getBegin();
+                     end = tokensStored.get("t_" + i).getEnd();
+                }
+
+                outDependency.setBegin(begin);
+                outDependency.setEnd(end);
                 outDependency.setGovernor(tokensStored.get("t_" + i));
                 if (dependencyDependent.get(i) == 0) {
                     outDependency.setDependent(tokensStored.get("t_" + i));
