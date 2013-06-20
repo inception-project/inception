@@ -414,6 +414,12 @@ public  File exportSourceDocument(SourceDocument aDocument, Project aProject){
       return new File(documentUri,aDocument.getName());
     }
 
+  @Override
+  public File exportAnnotationDocument(SourceDocument aDocument, Project aProject, User aUser){
+      File documentUri = new File(dir.getAbsolutePath() + PROJECT + aProject.getId()
+              + DOCUMENT + aDocument.getId() + ANNOTATION);
+      return new File(documentUri,aUser.getUsername()+".ser");
+  }
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public AnnotationDocument getAnnotationDocument(SourceDocument aDocument, User aUser)

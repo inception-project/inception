@@ -182,6 +182,11 @@ public interface RepositoryService
      * application/release to anothor.
      */
     File exportSourceDocument(SourceDocument document, Project project);
+    /**
+     * Export a Serialized CAS annotation document from the file system
+     * @return
+     */
+    File exportAnnotationDocument(SourceDocument document, Project project, User user);
 
     /**
      * Get an {@link AnnotationDocument} object from the database using the {@link SourceDocument}

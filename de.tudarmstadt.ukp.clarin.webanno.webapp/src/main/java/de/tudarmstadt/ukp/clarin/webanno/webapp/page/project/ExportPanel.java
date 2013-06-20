@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -247,12 +248,16 @@ public class ExportPanel
                 try {
                     copySourceDocuments(aProjectModel.getObject(), exportTempDir);
                 }
-                catch (FileNotFoundException e) {
+                catch (IOException e) {
                     info(e.getMessage());
+                }
+                try {
+                    copyAnnotationDocuments(aProjectModel.getObject(), exportTempDir);
                 }
                 catch (IOException e) {
                     info(e.getMessage());
                 }
+
                 try {
                     DaoUtils.zipFolder(exportTempDir, new File(exportTempDir.getAbsolutePath()
                             + ".zip"));
@@ -312,6 +317,28 @@ public class ExportPanel
         for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
             FileUtils.copyFileToDirectory(
                     projectRepository.exportSourceDocument(sourceDocument, aProject), sourceDocumentDir);
+        }
+    }
+
+    /**
+     * Copy annotation document as Serialized CAS from the file system of this project to the export folder
+     */
+    private void copyAnnotationDocuments(Project aProject, File aCopyDir) throws IOException
+    {
+        List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = projectRepository
+                .listSourceDocuments(aProject);
+
+        for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
+            for(de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument
+                    annotationDocument:projectRepository.listAnnotationDocument(sourceDocument)){
+                File annotationDocumentDir = new File(aCopyDir.getAbsolutePath()+"/annotatiopn/"+FilenameUtils.getBaseName(sourceDocument.getName()));
+                FileUtils.forceMkdir(annotationDocumentDir);
+                File annotationFile = projectRepository.exportAnnotationDocument(sourceDocument, aProject, annotationDocument.getUser());
+               if (annotationFile.exists()) {
+                FileUtils.copyFileToDirectory(annotationFile, annotationDocumentDir);
+            }
+            }
+
         }
 
     }
