@@ -248,6 +248,7 @@ public class ExportPanel
                         copySourceDocuments(aProjectModel.getObject(), exportTempDir);
                         copyAnnotationDocuments(aProjectModel.getObject(), exportTempDir);
                         copyProjectLog(aProjectModel.getObject(), exportTempDir);
+                        copyGuideLine(aProjectModel.getObject(), exportTempDir);
                         DaoUtils.zipFolder(exportTempDir, new File(exportTempDir.getAbsolutePath()
                                 + ".zip"));
                     }
@@ -322,6 +323,21 @@ public class ExportPanel
             FileUtils.copyFileToDirectory(
                     projectRepository.exportProjectLog(aProject), logDir);
 
+        }
+    }
+
+    /**
+     * Copy Project guidelines from the file system of this project to the export folder
+     */
+    private void copyGuideLine(Project aProject, File aCopyDir) throws IOException
+    {
+        File guidelineDir = new File(aCopyDir + "/guideline");
+        FileUtils.forceMkdir(guidelineDir);
+        File annotationGuidlines = projectRepository.exportGuideLines(aProject);
+        if(annotationGuidlines.exists()) {
+            for (File annotationGuideline : annotationGuidlines.listFiles()) {
+                FileUtils.copyFileToDirectory(annotationGuideline, guidelineDir);
+            }
         }
     }
 

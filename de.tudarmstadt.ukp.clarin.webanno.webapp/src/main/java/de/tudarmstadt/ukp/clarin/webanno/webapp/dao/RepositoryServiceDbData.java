@@ -428,6 +428,10 @@ public  File exportSourceDocument(SourceDocument aDocument, Project aProject){
     }
 
     @Override
+    public File exportGuideLines(Project aProject){
+        return new File(dir.getAbsolutePath() + PROJECT + aProject.getId() + GUIDELINE);
+    }
+    @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public AnnotationDocument getAnnotationDocument(SourceDocument aDocument, User aUser)
     {
