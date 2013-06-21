@@ -242,13 +242,13 @@ public class ExportPanel
                     error("Project not yet created. Please save project details first!");
                 }
                 else {
-                    copyProjectSettings(aProjectModel.getObject(), projectSettings, exportTempDir);
-
                     try {
+                        copyProjectSettings(aProjectModel.getObject(), projectSettings, exportTempDir);
                         copySourceDocuments(aProjectModel.getObject(), exportTempDir);
                         copyAnnotationDocuments(aProjectModel.getObject(), exportTempDir);
                         copyProjectLog(aProjectModel.getObject(), exportTempDir);
                         copyGuideLine(aProjectModel.getObject(), exportTempDir);
+                        copyProjectMetaInf(aProjectModel.getObject(), exportTempDir);
                         DaoUtils.zipFolder(exportTempDir, new File(exportTempDir.getAbsolutePath()
                                 + ".zip"));
                     }
@@ -339,6 +339,21 @@ public class ExportPanel
                 FileUtils.copyFileToDirectory(annotationGuideline, guidelineDir);
             }
         }
+    }
+
+
+    /**
+     * Copy Project guidelines from the file system of this project to the export folder
+     */
+    private void copyProjectMetaInf(Project aProject, File aCopyDir) throws IOException
+    {
+        File metaInfDir = new File(aCopyDir + "/META_INF");
+        FileUtils.forceMkdir(metaInfDir);
+        File annotationGuidlines = projectRepository.exportProjectMetaInf(aProject);
+        if(annotationGuidlines.exists()) {
+            FileUtils.copyDirectory(annotationGuidlines, metaInfDir);
+        }
+
     }
 
     /**

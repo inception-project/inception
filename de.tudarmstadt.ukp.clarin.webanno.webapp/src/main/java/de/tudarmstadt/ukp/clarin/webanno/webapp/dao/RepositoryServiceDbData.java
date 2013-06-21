@@ -124,6 +124,7 @@ public class RepositoryServiceDbData
     private static final String GUIDELINE = "/guideline/";
     private static final String ANNOTATION = "/annotation";
     private static final String SETTINGS = "/settings/";
+    private static final String META_INF = "/META_INF/";
 
     private static final String CURATION_USER = "CURATION_USER";
 
@@ -431,6 +432,12 @@ public  File exportSourceDocument(SourceDocument aDocument, Project aProject){
     public File exportGuideLines(Project aProject){
         return new File(dir.getAbsolutePath() + PROJECT + aProject.getId() + GUIDELINE);
     }
+
+    @Override
+    public File exportProjectMetaInf(Project aProject){
+        return new File(dir.getAbsolutePath() + PROJECT + aProject.getId() + META_INF);
+    }
+
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public AnnotationDocument getAnnotationDocument(SourceDocument aDocument, User aUser)

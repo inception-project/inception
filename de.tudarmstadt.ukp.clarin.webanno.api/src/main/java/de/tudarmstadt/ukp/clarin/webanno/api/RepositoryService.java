@@ -198,6 +198,8 @@ public interface RepositoryService
      * Export the associated project guideline for this {@link Project} while copying a project
      */
     File exportGuideLines(Project project);
+
+    File exportProjectMetaInf(Project project);
     /**
      * Get an {@link AnnotationDocument} object from the database using the {@link SourceDocument}
      * and {@link User} Objects. If {@code getAnnotationDocument} fails, it will be created anew
