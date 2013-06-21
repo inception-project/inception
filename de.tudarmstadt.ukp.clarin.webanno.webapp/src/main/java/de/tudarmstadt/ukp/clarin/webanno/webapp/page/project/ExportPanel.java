@@ -243,29 +243,19 @@ public class ExportPanel
                 }
                 else {
                     copyProjectSettings(aProjectModel.getObject(), projectSettings, exportTempDir);
-                }
 
-                try {
-                    copySourceDocuments(aProjectModel.getObject(), exportTempDir);
+                    try {
+                        copySourceDocuments(aProjectModel.getObject(), exportTempDir);
+                        copyAnnotationDocuments(aProjectModel.getObject(), exportTempDir);
+                        copyProjectLog(aProjectModel.getObject(), exportTempDir);
+                        DaoUtils.zipFolder(exportTempDir, new File(exportTempDir.getAbsolutePath()
+                                + ".zip"));
+                    }
+                    catch (Exception e) {
+                        info(e.getMessage());
+                    }
                 }
-                catch (IOException e) {
-                    info(e.getMessage());
-                }
-                try {
-                    copyAnnotationDocuments(aProjectModel.getObject(), exportTempDir);
-                }
-                catch (IOException e) {
-                    info(e.getMessage());
-                }
-
-                try {
-                    DaoUtils.zipFolder(exportTempDir, new File(exportTempDir.getAbsolutePath()
-                            + ".zip"));
-                }
-                catch (Exception e) {
-                    info(e.getMessage());
-                }
-                return new File (exportTempDir.getAbsolutePath()+".zip");
+                return new File(exportTempDir.getAbsolutePath() + ".zip");
             }
         }).setOutputMarkupId(true));
     }
@@ -317,6 +307,21 @@ public class ExportPanel
         for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
             FileUtils.copyFileToDirectory(
                     projectRepository.exportSourceDocument(sourceDocument, aProject), sourceDocumentDir);
+        }
+    }
+
+
+    /**
+     * Copy Project logs from the file system of this project to the export folder
+     */
+    private void copyProjectLog(Project aProject, File aCopyDir) throws IOException
+    {
+        File logDir = new File(aCopyDir + "/log");
+        FileUtils.forceMkdir(logDir);
+        if(projectRepository.exportProjectLog(aProject).exists()){
+            FileUtils.copyFileToDirectory(
+                    projectRepository.exportProjectLog(aProject), logDir);
+
         }
     }
 

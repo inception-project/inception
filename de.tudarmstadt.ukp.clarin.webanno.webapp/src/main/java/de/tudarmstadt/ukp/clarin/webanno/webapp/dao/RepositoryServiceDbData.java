@@ -420,6 +420,13 @@ public  File exportSourceDocument(SourceDocument aDocument, Project aProject){
               + DOCUMENT + aDocument.getId() + ANNOTATION);
       return new File(documentUri,aUser.getUsername()+".ser");
   }
+
+    @Override
+    public File exportProjectLog(Project aProject)
+    {
+        return new File(dir.getAbsolutePath() + PROJECT + "project-" + aProject.getId() + ".log");
+    }
+
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public AnnotationDocument getAnnotationDocument(SourceDocument aDocument, User aUser)

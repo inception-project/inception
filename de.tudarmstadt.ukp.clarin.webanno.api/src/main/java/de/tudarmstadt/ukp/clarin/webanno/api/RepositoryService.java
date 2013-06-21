@@ -189,6 +189,12 @@ public interface RepositoryService
     File exportAnnotationDocument(SourceDocument document, Project project, User user);
 
     /**
+     * Export the associated project log for this {@link Project} while copying a project
+     * @param project
+     * @return
+     */
+    File exportProjectLog(Project project);
+    /**
      * Get an {@link AnnotationDocument} object from the database using the {@link SourceDocument}
      * and {@link User} Objects. If {@code getAnnotationDocument} fails, it will be created anew
      *
