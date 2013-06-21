@@ -124,7 +124,7 @@ public class RepositoryServiceDbData
     private static final String GUIDELINE = "/guideline/";
     private static final String ANNOTATION = "/annotation";
     private static final String SETTINGS = "/settings/";
-    private static final String META_INF = "/META_INF/";
+    private static final String META_INF = "/META-INF/";
 
     private static final String CURATION_USER = "CURATION_USER";
 
@@ -1308,6 +1308,6 @@ public  File exportSourceDocument(SourceDocument aDocument, Project aProject){
     @Override
     public boolean isRemoteProject(Project project)
     {
-        return new File(dir, PROJECT + project.getId() + "/META_INF").exists();
+        return new File(dir, PROJECT + project.getId() + META_INF).exists();
     }
 }

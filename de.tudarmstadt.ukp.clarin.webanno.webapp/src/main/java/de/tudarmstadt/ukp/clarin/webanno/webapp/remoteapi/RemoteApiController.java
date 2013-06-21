@@ -63,6 +63,7 @@ public class RemoteApiController
     public static final String PRODUCES_JSON = "application/json";
     public static final String PRODUCES_XML = "application/xml";
     public static final String CONSUMES_URLENCODED = "application/x-www-form-urlencoded";
+    public static final String META_INF = "META-INF/";
 
     @Resource(name = "documentRepository")
     private RepositoryService projectRepository;
@@ -155,7 +156,7 @@ public class RemoteApiController
             // IF the current filename is META-INF/webanno/source-meta-data.properties store it
             // as
             // project meta data
-            else if (entry.toString().replace("/", "").equals("META_INF/webanno/source-meta-data.properties".replace("/", ""))) {
+            else if (entry.toString().replace("/", "").equals(META_INF+"webanno/source-meta-data.properties".replace("/", ""))) {
                 InputStream zipStream = zip.getInputStream(entry);
                 projectRepository.savePropertiesFile(project, zipStream, entry.toString());
 

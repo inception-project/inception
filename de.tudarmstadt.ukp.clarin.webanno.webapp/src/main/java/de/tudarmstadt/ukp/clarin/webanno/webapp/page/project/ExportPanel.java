@@ -71,11 +71,14 @@ public class ExportPanel
 {
     private static final long serialVersionUID = 2116717853865353733L;
 
+    private static final String META_INF = "/META-INF";
+
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
 
     @SpringBean(name = "documentRepository")
     private RepositoryService projectRepository;
+
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public ExportPanel(String id, final Model<Project> aProjectModel)
@@ -108,7 +111,7 @@ public class ExportPanel
                     exportTempDir.delete();
                     exportTempDir.mkdirs();
 
-                    File metaInfDir = new File(exportTempDir + "/META_INF");
+                    File metaInfDir = new File(exportTempDir + META_INF);
                     FileUtils.forceMkdir(metaInfDir);
 
                     boolean curationDocumentExist = isCurationDocumentExists(aProjectModel
@@ -122,7 +125,7 @@ public class ExportPanel
                         copyCuratedDocuments(aProjectModel.getObject(), exportTempDir);
                         // copy META_INF contents from the project directory to the export folder
                         FileUtils.copyDirectory(new File(projectRepository.getDir(), "/project/"
-                                + aProjectModel.getObject().getId() + "/META_INF"), metaInfDir);
+                                + aProjectModel.getObject().getId() + META_INF), metaInfDir);
 
                         DaoUtils.zipFolder(exportTempDir, new File(exportTempDir.getAbsolutePath()
                                 + ".zip"));
@@ -347,7 +350,7 @@ public class ExportPanel
      */
     private void copyProjectMetaInf(Project aProject, File aCopyDir) throws IOException
     {
-        File metaInfDir = new File(aCopyDir + "/META_INF");
+        File metaInfDir = new File(aCopyDir + META_INF);
         FileUtils.forceMkdir(metaInfDir);
         File annotationGuidlines = projectRepository.exportProjectMetaInf(aProject);
         if(annotationGuidlines.exists()) {
