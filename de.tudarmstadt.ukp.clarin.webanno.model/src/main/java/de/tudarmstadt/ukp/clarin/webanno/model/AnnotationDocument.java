@@ -53,9 +53,7 @@ public class AnnotationDocument
     @JoinColumn(name = "project")
     private Project project;
 
-    @ManyToOne
-    @JoinColumn(name = "user")
-    private User user;
+    private String user;
 
     @ManyToOne
     @JoinColumn(name = "document")
@@ -105,12 +103,12 @@ public class AnnotationDocument
         project = aProject;
     }
 
-    public User getUser()
+    public String getUser()
     {
         return user;
     }
 
-    public void setUser(User aUser)
+    public void setUser(String aUser)
     {
         user = aUser;
     }

@@ -15,7 +15,6 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,6 +42,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
@@ -99,7 +99,7 @@ public class RemoteApiController
     {
         LOG.info("Creating project [" + aName + "]");
 
-        if(!isZipStream(aFile.getInputStream())){
+        if(!ApplicationUtils.isZipStream(aFile.getInputStream())){
                 throw new InvalidFileNameException("", "is an invalid Zip file");
         }
 
@@ -120,13 +120,13 @@ public class RemoteApiController
             ProjectPermission permission = new ProjectPermission();
             permission.setLevel(PermissionLevel.ADMIN);
             permission.setProject(project);
-            permission.setUser(user);
+            permission.setUser(username);
             projectRepository.createProjectPermission(permission);
 
             permission = new ProjectPermission();
             permission.setLevel(PermissionLevel.USER);
             permission.setProject(project);
-            permission.setUser(user);
+            permission.setUser(username);
             projectRepository.createProjectPermission(permission);
         }
         // Existing project
@@ -194,30 +194,6 @@ public class RemoteApiController
         projectRepository.createSourceDocument(document, user);
         // Import source document to the project repository folder
         projectRepository.uploadSourceDocument(zipStream, document, project.getId(), user);
-
+        ApplicationUtils g;
     }
-
-    // The magic bytes for ZIP
-    // see http://notepad2.blogspot.de/2012/07/java-detect-if-stream-or-file-is-zip.html
-    private byte[] MAGIC = { 'P', 'K', 0x3, 0x4 };
-    private boolean isZipStream(InputStream in) {
-        if (!in.markSupported()) {
-         in = new BufferedInputStream(in);
-        }
-        boolean isZip = true;
-        try {
-         in.mark(MAGIC.length);
-         for (byte element : MAGIC) {
-          if (element != (byte) in.read()) {
-           isZip = false;
-           break;
-          }
-         }
-         in.reset();
-        } catch (IOException e) {
-         isZip = false;
-        }
-        return isZip;
-       }
-
 }

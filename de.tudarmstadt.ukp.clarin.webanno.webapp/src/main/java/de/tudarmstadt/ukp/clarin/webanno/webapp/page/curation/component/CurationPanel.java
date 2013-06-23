@@ -232,7 +232,7 @@ public class CurationPanel
                                 List<AnnotationDocument> annotationDocuments = repository
                                         .listAnnotationDocument(project, sourceDocument);
                                 for (AnnotationDocument annotationDocument : annotationDocuments) {
-                                    if (annotationDocument.getUser().getUsername().equals(username)) {
+                                    if (annotationDocument.getUser().equals(username)) {
                                         clickedAnnotationDocument = annotationDocument;
                                         break;
                                     }
@@ -460,7 +460,7 @@ public class CurationPanel
 
         // get cases from repository
         for (AnnotationDocument annotationDocument : annotationDocuments) {
-            String username = annotationDocument.getUser().getUsername();
+            String username = annotationDocument.getUser();
             if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)
                     || username.equals(CURATION_USER)) {
                 try {

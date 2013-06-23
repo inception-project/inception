@@ -96,7 +96,7 @@ public class CurationBuilder
         Map<String, JCas> jCases = new HashMap<String, JCas>();
         AnnotationDocument randomAnnotationDocument = null;
         for (AnnotationDocument annotationDocument : annotationDocuments) {
-            String username = annotationDocument.getUser().getUsername();
+            String username = annotationDocument.getUser();
             if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
                 try {
                     JCas jCas = repository.getAnnotationDocumentContent(annotationDocument);

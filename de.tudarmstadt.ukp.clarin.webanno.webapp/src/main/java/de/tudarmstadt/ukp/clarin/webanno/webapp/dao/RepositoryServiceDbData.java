@@ -220,11 +220,11 @@ public class RepositoryServiceDbData
         throws IOException
     {
         entityManager.persist(aPermission);
-        createLog(aPermission.getProject(), aPermission.getUser()).info(
+        createLog(aPermission.getProject(), getUser(aPermission.getUser())).info(
                 " New Permission created on Project[" + aPermission.getProject().getName()
-                        + "] for user [" + aPermission.getUser().getUsername()
-                        + "] with permission [" + aPermission.getLevel() + "]" + "]");
-        createLog(aPermission.getProject(), aPermission.getUser()).removeAllAppenders();
+                        + "] for user [" + aPermission.getUser() + "] with permission ["
+                        + aPermission.getLevel() + "]" + "]");
+        createLog(aPermission.getProject(), getUser(aPermission.getUser())).removeAllAppenders();
     }
 
     @Override
@@ -282,7 +282,7 @@ public class RepositoryServiceDbData
         List<ProjectPermission> projectPermissions = entityManager
                 .createQuery(
                         "FROM ProjectPermission WHERE user = :user AND " + "project =:project",
-                        ProjectPermission.class).setParameter("user", aUser)
+                        ProjectPermission.class).setParameter("user", aUser.getUsername())
                 .setParameter("project", aProject).getResultList();
         // if at least one permission level exist
         if (projectPermissions.size() > 0) {
@@ -303,7 +303,7 @@ public class RepositoryServiceDbData
                     .createQuery(
                             "FROM ProjectPermission WHERE user = :user AND "
                                     + "project =:project AND level =:level",
-                            ProjectPermission.class).setParameter("user", aUser)
+                            ProjectPermission.class).setParameter("user", aUser.getUsername())
                     .setParameter("project", aProject).setParameter("level", aLevel)
                     .getSingleResult();
             return true;
@@ -408,19 +408,21 @@ public class RepositoryServiceDbData
 
     }
 
-  @Override
-public  File exportSourceDocument(SourceDocument aDocument, Project aProject){
-      File documentUri = new File(dir.getAbsolutePath() + PROJECT + aProject.getId()
-              + DOCUMENT + aDocument.getId() + SOURCE);
-      return new File(documentUri,aDocument.getName());
+    @Override
+    public File exportSourceDocument(SourceDocument aDocument, Project aProject)
+    {
+        File documentUri = new File(dir.getAbsolutePath() + PROJECT + aProject.getId() + DOCUMENT
+                + aDocument.getId() + SOURCE);
+        return new File(documentUri, aDocument.getName());
     }
 
-  @Override
-  public File exportAnnotationDocument(SourceDocument aDocument, Project aProject, User aUser){
-      File documentUri = new File(dir.getAbsolutePath() + PROJECT + aProject.getId()
-              + DOCUMENT + aDocument.getId() + ANNOTATION);
-      return new File(documentUri,aUser.getUsername()+".ser");
-  }
+    @Override
+    public File exportAnnotationDocument(SourceDocument aDocument, Project aProject, User aUser)
+    {
+        File documentUri = new File(dir.getAbsolutePath() + PROJECT + aProject.getId() + DOCUMENT
+                + aDocument.getId() + ANNOTATION);
+        return new File(documentUri, aUser.getUsername() + ".ser");
+    }
 
     @Override
     public File exportProjectLog(Project aProject)
@@ -429,12 +431,14 @@ public  File exportSourceDocument(SourceDocument aDocument, Project aProject){
     }
 
     @Override
-    public File exportGuideLines(Project aProject){
+    public File exportGuideLines(Project aProject)
+    {
         return new File(dir.getAbsolutePath() + PROJECT + aProject.getId() + GUIDELINE);
     }
 
     @Override
-    public File exportProjectMetaInf(Project aProject){
+    public File exportProjectMetaInf(Project aProject)
+    {
         return new File(dir.getAbsolutePath() + PROJECT + aProject.getId() + META_INF);
     }
 
@@ -456,8 +460,8 @@ public  File exportSourceDocument(SourceDocument aDocument, Project aProject){
     public JCas getAnnotationDocumentContent(AnnotationDocument aAnnotationDocument)
         throws IOException, UIMAException, ClassNotFoundException
     {
-        return getAnnotationContent(aAnnotationDocument.getDocument(), aAnnotationDocument
-                .getUser().getUsername());
+        return getAnnotationContent(aAnnotationDocument.getDocument(),
+                aAnnotationDocument.getUser());
     }
 
     @Override
@@ -486,7 +490,7 @@ public  File exportSourceDocument(SourceDocument aDocument, Project aProject){
     {
         return entityManager
                 .createQuery("FROM ProjectPermission WHERE user =:user AND " + "project =:project",
-                        ProjectPermission.class).setParameter("user", aUser)
+                        ProjectPermission.class).setParameter("user", aUser.getUsername())
                 .setParameter("project", aProject).getSingleResult();
     }
 
@@ -497,7 +501,7 @@ public  File exportSourceDocument(SourceDocument aDocument, Project aProject){
     {
         return entityManager
                 .createQuery("FROM ProjectPermission WHERE user =:user AND " + "project =:project",
-                        ProjectPermission.class).setParameter("user", aUser)
+                        ProjectPermission.class).setParameter("user", aUser.getUsername())
                 .setParameter("project", aProject).getResultList();
     }
 
@@ -505,23 +509,34 @@ public  File exportSourceDocument(SourceDocument aDocument, Project aProject){
     public List<User> listProjectUsersWithPermissions(Project aProject)
     {
 
-        return entityManager
+        List<String> usernames = entityManager
                 .createQuery(
                         "SELECT DISTINCT user FROM ProjectPermission WHERE "
-                                + "project =:project ORDER BY username ASC", User.class)
+                                + "project =:project ORDER BY user ASC", String.class)
                 .setParameter("project", aProject).getResultList();
+
+        List<User> users = new ArrayList<User>();
+        for (String username : usernames) {
+            users.add(getUser(username));
+        }
+        return users;
     }
 
     @Override
     public List<User> listProjectUsersWithPermissions(Project aProject,
             PermissionLevel aPermissionLevel)
     {
-        return entityManager
+        List<String> usernames = entityManager
                 .createQuery(
                         "SELECT DISTINCT user FROM ProjectPermission WHERE "
-                                + "project =:project AND level =:level ORDER BY username ASC",
-                        User.class).setParameter("project", aProject)
+                                + "project =:project AND level =:level ORDER BY user ASC",
+                        String.class).setParameter("project", aProject)
                 .setParameter("level", aPermissionLevel.getId()).getResultList();
+        List<User> users = new ArrayList<User>();
+        for (String username : usernames) {
+            users.add(getUser(username));
+        }
+        return users;
     }
 
     @Override
@@ -530,7 +545,7 @@ public  File exportSourceDocument(SourceDocument aDocument, Project aProject){
     {
         return entityManager
                 .createQuery("FROM ProjectPermission WHERE user =:user AND " + "project =:project",
-                        ProjectPermission.class).setParameter("user", aUser)
+                        ProjectPermission.class).setParameter("user", aUser.getUsername())
                 .setParameter("project", aProject).getSingleResult();
     }
 
@@ -647,10 +662,10 @@ public  File exportSourceDocument(SourceDocument aDocument, Project aProject){
             SourceDocument aDocument)
     {
         // Get all annotators in the project
-        List<User> users = entityManager
+        List<String> users = entityManager
                 .createQuery(
                         "SELECT DISTINCT user FROM ProjectPermission WHERE project = :project "
-                                + "AND level = :level", User.class)
+                                + "AND level = :level", String.class)
                 .setParameter("project", aProject)
                 .setParameter("level", PermissionLevel.USER.getId()).getResultList();
 
@@ -673,7 +688,8 @@ public  File exportSourceDocument(SourceDocument aDocument, Project aProject){
     {
         return entityManager
                 .createQuery(
-                        "FROM AnnotationDocument WHERE project = :project AND document = :document", AnnotationDocument.class)
+                        "FROM AnnotationDocument WHERE project = :project AND document = :document",
+                        AnnotationDocument.class)
                 .setParameter("project", aSourceDocument.getProject())
                 .setParameter("document", aSourceDocument).getResultList();
     }
@@ -789,11 +805,12 @@ public  File exportSourceDocument(SourceDocument aDocument, Project aProject){
         throws IOException
     {
         entityManager.remove(projectPermission);
-        createLog(projectPermission.getProject(), projectPermission.getUser()).info(
+        createLog(projectPermission.getProject(), getUser(projectPermission.getUser())).info(
                 " Removed Project Permission [" + projectPermission.getLevel() + "] for the USer ["
-                        + projectPermission.getUser().getUsername() + "] From project ["
+                        + projectPermission.getUser() + "] From project ["
                         + projectPermission.getProject().getId() + "]");
-        createLog(projectPermission.getProject(), projectPermission.getUser()).removeAllAppenders();
+        createLog(projectPermission.getProject(), getUser(projectPermission.getUser()))
+                .removeAllAppenders();
 
     }
 

@@ -291,7 +291,7 @@ public class ProjectUsersPanel
                                     selectedProject.getObject(), level)) {
                                 ProjectPermission projectPermission = new ProjectPermission();
                                 projectPermission.setLevel(level);
-                                projectPermission.setUser(selectedUser);
+                                projectPermission.setUser(selectedUser.getUsername());
                                 projectPermission.setProject(selectedProject.getObject());
                                 try {
                                     projectRepository.createProjectPermission(projectPermission);
@@ -355,7 +355,7 @@ public class ProjectUsersPanel
                         for (User user : users.getModelObject()) {
                             ProjectPermission projectPermission = new ProjectPermission();
                             projectPermission.setProject(selectedProject.getObject());
-                            projectPermission.setUser(user);
+                            projectPermission.setUser(user.getUsername());
                             projectPermission.setLevel(PermissionLevel.USER);
                             try {
                                 projectRepository.createProjectPermission(projectPermission);

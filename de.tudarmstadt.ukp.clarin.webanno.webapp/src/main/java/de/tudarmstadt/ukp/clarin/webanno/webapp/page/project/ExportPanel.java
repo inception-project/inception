@@ -19,11 +19,16 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.page.project;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -35,6 +40,8 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.apache.uima.UIMAException;
 import org.apache.wicket.markup.html.form.Button;
+import org.apache.wicket.markup.html.form.upload.FileUpload;
+import org.apache.wicket.markup.html.form.upload.FileUploadField;
 import org.apache.wicket.markup.html.link.DownloadLink;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.LoadableDetachableModel;
@@ -51,6 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.TagSet;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
@@ -72,6 +80,7 @@ public class ExportPanel
     private static final long serialVersionUID = 2116717853865353733L;
 
     private static final String META_INF = "/META-INF";
+    private static final String EXPORTED_PROJECT = "exportedproject";
 
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
@@ -79,6 +88,8 @@ public class ExportPanel
     @SpringBean(name = "documentRepository")
     private RepositoryService projectRepository;
 
+    private FileUploadField fileUpload;
+    private FileUpload uploadedFile;
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public ExportPanel(String id, final Model<Project> aProjectModel)
@@ -231,7 +242,7 @@ public class ExportPanel
                 // all metadata and project settings data from the database as JSON file
                 File projectSettings = null;
                 try {
-                    projectSettings = File.createTempFile("exportedproject", ".json");
+                    projectSettings = File.createTempFile(EXPORTED_PROJECT, ".json");
                     // Directory to store source documents and annotation documents
                     exportTempDir = File.createTempFile("webanno-project", "export");
                     exportTempDir.delete();
@@ -246,7 +257,8 @@ public class ExportPanel
                 }
                 else {
                     try {
-                        copyProjectSettings(aProjectModel.getObject(), projectSettings, exportTempDir);
+                        copyProjectSettings(aProjectModel.getObject(), projectSettings,
+                                exportTempDir);
                         copySourceDocuments(aProjectModel.getObject(), exportTempDir);
                         copyAnnotationDocuments(aProjectModel.getObject(), exportTempDir);
                         copyProjectLog(aProjectModel.getObject(), exportTempDir);
@@ -262,6 +274,67 @@ public class ExportPanel
                 return new File(exportTempDir.getAbsolutePath() + ".zip");
             }
         }).setOutputMarkupId(true));
+
+        add(fileUpload = new FileUploadField("content", new Model()));
+
+        add(new Button("import", new ResourceModel("label"))
+        {
+
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public void onSubmit()
+            {
+                uploadedFile = fileUpload.getFileUpload();
+                if (uploadedFile != null) {
+                    try {
+                        if (ApplicationUtils.isZipStream(uploadedFile.getInputStream())) {
+                            File file = uploadedFile.writeToTempFile();
+                            ZipFile zip = new ZipFile(file);
+                            InputStream projectInputStream = null;
+                            for (Enumeration zipEnumerate = zip.entries(); zipEnumerate
+                                    .hasMoreElements();) {
+                                ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
+                                if (entry.toString().replace("/", "").startsWith(EXPORTED_PROJECT)
+                                        && entry.toString().replace("/", "").endsWith(".json")) {
+                                    projectInputStream = zip.getInputStream(entry);
+                                    break;
+                                }
+                            }
+                            // projectInputStream = uploadedFile.getInputStream();
+                            String text = IOUtils.toString(projectInputStream, "UTF-8");
+                            MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
+                            de.tudarmstadt.ukp.clarin.webanno.export.model.Project importedProjectSetting = jsonConverter
+                                    .getObjectMapper()
+                                    .readValue(
+                                            text,
+                                            de.tudarmstadt.ukp.clarin.webanno.export.model.Project.class);
+                            if (projectRepository.existsProject(importedProjectSetting.getName())) {
+                                error("Project already exist");
+                            }
+                            else {
+                                Project importedProject = createProject(importedProjectSetting);
+                                createSourceDocument(importedProjectSetting, importedProject);
+                                createAnnotationDocument(importedProjectSetting, importedProject);
+                                createProjectPermission(importedProjectSetting, importedProject);
+                                for(TagSet tagset:importedProjectSetting.getTagSets()){
+                                addTagset(importedProject, tagset);
+                                }
+                            }
+                        }
+                        else {
+                            error("Invalid ZIP file");
+                        }
+                    }
+                    catch (IOException e) {
+                        error("Error Importing TagSet " + ExceptionUtils.getRootCauseMessage(e));
+                    }
+                }
+                else if (uploadedFile == null) {
+                    error("Please choose appropriate project in zip format");
+                }
+            }
+        });
     }
 
     /**
@@ -300,7 +373,8 @@ public class ExportPanel
     /**
      * Copy source documents from the file system of this project to the export folder
      */
-    private void copySourceDocuments(Project aProject, File aCopyDir) throws IOException
+    private void copySourceDocuments(Project aProject, File aCopyDir)
+        throws IOException
     {
         File sourceDocumentDir = new File(aCopyDir + "/source");
         FileUtils.forceMkdir(sourceDocumentDir);
@@ -310,21 +384,21 @@ public class ExportPanel
 
         for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
             FileUtils.copyFileToDirectory(
-                    projectRepository.exportSourceDocument(sourceDocument, aProject), sourceDocumentDir);
+                    projectRepository.exportSourceDocument(sourceDocument, aProject),
+                    sourceDocumentDir);
         }
     }
-
 
     /**
      * Copy Project logs from the file system of this project to the export folder
      */
-    private void copyProjectLog(Project aProject, File aCopyDir) throws IOException
+    private void copyProjectLog(Project aProject, File aCopyDir)
+        throws IOException
     {
         File logDir = new File(aCopyDir + "/log");
         FileUtils.forceMkdir(logDir);
-        if(projectRepository.exportProjectLog(aProject).exists()){
-            FileUtils.copyFileToDirectory(
-                    projectRepository.exportProjectLog(aProject), logDir);
+        if (projectRepository.exportProjectLog(aProject).exists()) {
+            FileUtils.copyFileToDirectory(projectRepository.exportProjectLog(aProject), logDir);
 
         }
     }
@@ -332,50 +406,55 @@ public class ExportPanel
     /**
      * Copy Project guidelines from the file system of this project to the export folder
      */
-    private void copyGuideLine(Project aProject, File aCopyDir) throws IOException
+    private void copyGuideLine(Project aProject, File aCopyDir)
+        throws IOException
     {
         File guidelineDir = new File(aCopyDir + "/guideline");
         FileUtils.forceMkdir(guidelineDir);
         File annotationGuidlines = projectRepository.exportGuideLines(aProject);
-        if(annotationGuidlines.exists()) {
+        if (annotationGuidlines.exists()) {
             for (File annotationGuideline : annotationGuidlines.listFiles()) {
                 FileUtils.copyFileToDirectory(annotationGuideline, guidelineDir);
             }
         }
     }
 
-
     /**
      * Copy Project guidelines from the file system of this project to the export folder
      */
-    private void copyProjectMetaInf(Project aProject, File aCopyDir) throws IOException
+    private void copyProjectMetaInf(Project aProject, File aCopyDir)
+        throws IOException
     {
         File metaInfDir = new File(aCopyDir + META_INF);
         FileUtils.forceMkdir(metaInfDir);
         File annotationGuidlines = projectRepository.exportProjectMetaInf(aProject);
-        if(annotationGuidlines.exists()) {
+        if (annotationGuidlines.exists()) {
             FileUtils.copyDirectory(annotationGuidlines, metaInfDir);
         }
 
     }
 
     /**
-     * Copy annotation document as Serialized CAS from the file system of this project to the export folder
+     * Copy annotation document as Serialized CAS from the file system of this project to the export
+     * folder
      */
-    private void copyAnnotationDocuments(Project aProject, File aCopyDir) throws IOException
+    private void copyAnnotationDocuments(Project aProject, File aCopyDir)
+        throws IOException
     {
         List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = projectRepository
                 .listSourceDocuments(aProject);
 
         for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
-            for(de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument
-                    annotationDocument:projectRepository.listAnnotationDocument(sourceDocument)){
-                File annotationDocumentDir = new File(aCopyDir.getAbsolutePath()+"/annotatiopn/"+FilenameUtils.getBaseName(sourceDocument.getName()));
+            for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : projectRepository
+                    .listAnnotationDocument(sourceDocument)) {
+                File annotationDocumentDir = new File(aCopyDir.getAbsolutePath() + "/annotatiopn/"
+                        + FilenameUtils.getBaseName(sourceDocument.getName()));
                 FileUtils.forceMkdir(annotationDocumentDir);
-                File annotationFile = projectRepository.exportAnnotationDocument(sourceDocument, aProject, annotationDocument.getUser());
-               if (annotationFile.exists()) {
-                FileUtils.copyFileToDirectory(annotationFile, annotationDocumentDir);
-            }
+                File annotationFile = projectRepository.exportAnnotationDocument(sourceDocument,
+                        aProject, projectRepository.getUser(annotationDocument.getUser()));
+                if (annotationFile.exists()) {
+                    FileUtils.copyFileToDirectory(annotationFile, annotationDocumentDir);
+                }
             }
 
         }
@@ -400,7 +479,8 @@ public class ExportPanel
         return curationDocumentExist;
     }
 
-    private void copyProjectSettings(Project aProject, File aProjectSettings, File aExportTempDir){
+    private void copyProjectSettings(Project aProject, File aProjectSettings, File aExportTempDir)
+    {
         de.tudarmstadt.ukp.clarin.webanno.export.model.Project project = new de.tudarmstadt.ukp.clarin.webanno.export.model.Project();
         project.setDescription(aProject.getDescription());
         project.setName(aProject.getName());
@@ -449,8 +529,7 @@ public class ExportPanel
                 AnnotationDocument annotationDocumentToExport = new AnnotationDocument();
                 annotationDocumentToExport.setName(annotationDocument.getName());
                 annotationDocumentToExport.setState(annotationDocument.getState());
-                annotationDocumentToExport.setUser(annotationDocument.getUser()
-                        .getUsername());
+                annotationDocumentToExport.setUser(annotationDocument.getUser());
                 annotationDocuments.add(annotationDocumentToExport);
             }
             sourceDocuments.add(sourceDocumentToExport);
@@ -461,8 +540,7 @@ public class ExportPanel
         List<ProjectPermission> projectPermissions = new ArrayList<ProjectPermission>();
 
         // add project permissions to the project
-        for (User user : projectRepository
-                .listProjectUsersWithPermissions(aProject)) {
+        for (User user : projectRepository.listProjectUsersWithPermissions(aProject)) {
             for (de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission permission : projectRepository
                     .listProjectPermisionLevel(user, aProject)) {
                 ProjectPermission permissionToExport = new ProjectPermission();
@@ -483,6 +561,106 @@ public class ExportPanel
         }
         catch (IOException e) {
             error("File Path not found or No permision to save the file!");
+        }
+    }
+
+    private void addTagset(Project aProjecct, TagSet importedTagSet)
+        throws IOException
+    {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = projectRepository.getUser(username);
+        AnnotationType type = null;
+        if (!annotationService.existsType(importedTagSet.getTypeName(), importedTagSet.getType())) {
+            type = new AnnotationType();
+            type.setDescription(importedTagSet.getTypeDescription());
+            type.setName(importedTagSet.getTypeName());
+            type.setType(importedTagSet.getType());
+            annotationService.createType(type);
+        }
+        else {
+            type = annotationService
+                    .getType(importedTagSet.getTypeName(), importedTagSet.getType());
+        }
+
+        if (importedTagSet != null) {
+
+            de.tudarmstadt.ukp.clarin.webanno.model.TagSet newTagSet = new de.tudarmstadt.ukp.clarin.webanno.model.TagSet();
+            newTagSet.setDescription(importedTagSet.getDescription());
+            newTagSet.setName(importedTagSet.getName());
+            newTagSet.setLanguage(importedTagSet.getLanguage());
+            newTagSet.setProject(aProjecct);
+            newTagSet.setType(type);
+            annotationService.createTagSet(newTagSet, user);
+            for (de.tudarmstadt.ukp.clarin.webanno.export.model.Tag tag : importedTagSet.getTags()) {
+                Tag newTag = new Tag();
+                newTag.setDescription(tag.getDescription());
+                newTag.setName(tag.getName());
+                newTag.setTagSet(newTagSet);
+                annotationService.createTag(newTag, user);
+            }
+            info("TagSet successfully imported. Refresh page to see the imported TagSet.");
+        }
+    }
+
+    private Project createProject(de.tudarmstadt.ukp.clarin.webanno.export.model.Project aProject)
+        throws IOException
+    {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = projectRepository.getUser(username);
+        Project project = new Project();
+        project.setName(aProject.getName());
+        project.setDescription(aProject.getDescription());
+        project.setReverseDependencyDirection(aProject.isReverse());
+        projectRepository.createProject(project, user);
+        return project;
+    }
+
+    private void createSourceDocument(
+            de.tudarmstadt.ukp.clarin.webanno.export.model.Project aImportedProjectSetting,
+            Project aImportedProject) throws IOException
+    {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = projectRepository.getUser(username);
+        for (SourceDocument importedSourceDocument : aImportedProjectSetting.getSourceDocuments()) {
+            de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument = new de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument();
+            sourceDocument.setFormat(importedSourceDocument.getFormat());
+            sourceDocument.setName(importedSourceDocument.getName());
+            sourceDocument.setState(importedSourceDocument.getState());
+            sourceDocument.setProject(aImportedProject);
+            projectRepository.createSourceDocument(sourceDocument, user);
+        }
+    }
+
+    private void createAnnotationDocument(
+            de.tudarmstadt.ukp.clarin.webanno.export.model.Project aImportedProjectSetting,
+            Project aImportedProject) throws IOException
+    {
+        for (AnnotationDocument importedAnnotationDocument : aImportedProjectSetting.getAnnotationDocuments()) {
+            de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument = new
+                    de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument();
+            annotationDocument.setName(importedAnnotationDocument.getName());
+            annotationDocument.setState(annotationDocument.getState());
+            annotationDocument.setProject(aImportedProject);
+            annotationDocument.setUser(annotationDocument.getUser());
+            annotationDocument.setDocument(projectRepository.getSourceDocument(importedAnnotationDocument.getName(),
+                    aImportedProject));
+            projectRepository.createAnnotationDocument(annotationDocument);
+        }
+    }
+
+    private void createProjectPermission(
+            de.tudarmstadt.ukp.clarin.webanno.export.model.Project aImportedProjectSetting,
+            Project aImportedProject) throws IOException
+    {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = projectRepository.getUser(username);
+        for (ProjectPermission importedPermission : aImportedProjectSetting.getProjectPermissions()) {
+            de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission permission = new
+                    de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission();
+           permission.setLevel(importedPermission.getLevel());
+           permission.setProject(aImportedProject);
+           permission.setUser(importedPermission.getUser());
+            projectRepository.createProjectPermission(permission);
         }
     }
 }

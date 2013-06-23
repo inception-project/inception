@@ -655,7 +655,7 @@ public class BratAjaxCasController
             aAnnotationDocument = new AnnotationDocument();
             aAnnotationDocument.setDocument(aDocument);
             aAnnotationDocument.setName(aDocument.getName());
-            aAnnotationDocument.setUser(aUser);
+            aAnnotationDocument.setUser(aUser.getUsername());
             aAnnotationDocument.setProject(aProject);
         }
 

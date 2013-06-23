@@ -15,9 +15,11 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringWriter;
 import java.lang.reflect.ParameterizedType;
 import java.util.Arrays;
@@ -287,6 +289,28 @@ public class ApplicationUtils
             abAnnotatorModel.setAnnotationLayers(new HashSet<TagSet>(aAnnotationService
                     .listTagSets(abAnnotatorModel.getProject())));
         }
-
     }
+
+    // The magic bytes for ZIP
+    // see http://notepad2.blogspot.de/2012/07/java-detect-if-stream-or-file-is-zip.html
+    private static byte[] MAGIC = { 'P', 'K', 0x3, 0x4 };
+    public static  boolean isZipStream(InputStream in) {
+        if (!in.markSupported()) {
+         in = new BufferedInputStream(in);
+        }
+        boolean isZip = true;
+        try {
+         in.mark(MAGIC.length);
+         for (byte element : MAGIC) {
+          if (element != (byte) in.read()) {
+           isZip = false;
+           break;
+          }
+         }
+         in.reset();
+        } catch (IOException e) {
+         isZip = false;
+        }
+        return isZip;
+       }
 }

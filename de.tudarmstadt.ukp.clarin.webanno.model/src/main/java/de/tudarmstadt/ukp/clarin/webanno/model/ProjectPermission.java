@@ -47,9 +47,7 @@ public class ProjectPermission
     @Type(type="de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevelType")
     private PermissionLevel level;
 
-    @ManyToOne
-    @JoinColumn(name = "user")
-    private User user;
+    private String user;
 
     @ManyToOne
     @JoinColumn(name = "project")
@@ -75,12 +73,12 @@ public class ProjectPermission
         this.level = level;
     }
 
-    public User getUser()
+    public String getUser()
     {
         return user;
     }
 
-    public void setUser(User aUser)
+    public void setUser(String aUser)
     {
         user = aUser;
     }

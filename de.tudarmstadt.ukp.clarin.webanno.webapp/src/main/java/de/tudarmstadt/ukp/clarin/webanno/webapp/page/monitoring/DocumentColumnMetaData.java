@@ -191,7 +191,7 @@ public class DocumentColumnMetaData
                 annotationDocument.setDocument(document);
                 annotationDocument.setName(document.getName());
                 annotationDocument.setProject(project);
-                annotationDocument.setUser(user);
+                annotationDocument.setUser(user.getUsername());
                 annotationDocument.setState(state);
                 projectRepositoryService.createAnnotationDocument(annotationDocument);
             }
@@ -243,7 +243,7 @@ public class DocumentColumnMetaData
                         annotationDocument.setDocument(document);
                         annotationDocument.setName(document.getName());
                         annotationDocument.setProject(project);
-                        annotationDocument.setUser(user);
+                        annotationDocument.setUser(user.getUsername());
                         annotationDocument.setState(AnnotationDocumentStateTransition
                                 .transition(AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
                         projectRepositoryService.createAnnotationDocument(annotationDocument);
