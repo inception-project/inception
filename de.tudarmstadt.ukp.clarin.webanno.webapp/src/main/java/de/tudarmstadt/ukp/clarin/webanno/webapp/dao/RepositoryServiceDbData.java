@@ -667,7 +667,7 @@ public class RepositoryServiceDbData
                         "SELECT DISTINCT user FROM ProjectPermission WHERE project = :project "
                                 + "AND level = :level", String.class)
                 .setParameter("project", aProject)
-                .setParameter("level", PermissionLevel.USER.getId()).getResultList();
+                .setParameter("level", PermissionLevel.USER).getResultList();
 
         // Bail out already. HQL doesn't seem to like queries with an empty parameter right of "in"
         if (users.isEmpty()) {
