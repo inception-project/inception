@@ -285,7 +285,7 @@ public class CurationPanel
                                 List<AnnotationDocument> annotationDocuments = repository
                                         .listAnnotationDocument(project, sourceDocument);
                                 for (AnnotationDocument annotationDocument : annotationDocuments) {
-                                    if (annotationDocument.getUser().getUsername().equals(username)) {
+                                    if (annotationDocument.getUser().equals(username)) {
                                         clickedAnnotationDocument = annotationDocument;
                                         break;
                                     }
