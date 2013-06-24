@@ -414,7 +414,15 @@ public class BratAjaxCasController
         throws UIMAException, IOException
     {
 
-        delteArcFromCas(aUIData, aBratAnnotatorModel);
+        String annotationType = BratAjaxCasUtil.getAnnotationType(aUIData.getType());
+        
+        if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
+            ArcAdapter.getDependencyAdapter().deleteFromCas(aUIData, aBratAnnotatorModel);
+        }
+        else if (annotationType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
+            ChainAdapter.getCoreferenceChainAdapter().deleteFromCas(aUIData.getjCas(),
+                    aUIData.getOrigin());
+        }
 
         GetDocumentResponse response = new GetDocumentResponse();
         addBratResponses(response, aBratAnnotatorModel, aUIData);
