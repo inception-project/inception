@@ -531,7 +531,7 @@ public class RepositoryServiceDbData
                         "SELECT DISTINCT user FROM ProjectPermission WHERE "
                                 + "project =:project AND level =:level ORDER BY user ASC",
                         String.class).setParameter("project", aProject)
-                .setParameter("level", aPermissionLevel.getId()).getResultList();
+                .setParameter("level", aPermissionLevel).getResultList();
         List<User> users = new ArrayList<User>();
         for (String username : usernames) {
             users.add(getUser(username));
