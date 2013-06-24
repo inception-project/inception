@@ -215,8 +215,8 @@ public class BratAnnotator
                 final IRequestParameters request = getRequest().getPostParameters();
 
                 Object result = null;
-                BratAjaxCasController controller = new BratAjaxCasController(
-                        repository, annotationService);
+                BratAjaxCasController controller = new BratAjaxCasController(repository,
+                        annotationService);
 
                 if (request.getParameterValue("action").toString().equals("whoami")) {
                     result = controller.whoami();
@@ -326,9 +326,17 @@ public class BratAnnotator
                 }
                 else if (request.getParameterValue("action").toString().equals("deleteSpan")) {
                     if (!isDocumentFinished()) {
-                        result = deleteSpan(request, bratAnnotatorModel.getUser(), uIData);
-                        info("Annotation [" + request.getParameterValue("type").toString()
-                                + "]has been deleted");
+                        String type = request.getParameterValue("type").toString();
+                        String annotationType = BratAjaxCasUtil.getAnnotationType(type);
+                        if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
+                            result = deleteSpan(request, bratAnnotatorModel.getUser(), uIData);
+                            info("POS annotations can't be deleted!");
+                        }
+                        else {
+                            result = deleteSpan(request, bratAnnotatorModel.getUser(), uIData);
+                            info("Annotation [" + request.getParameterValue("type").toString()
+                                    + "]has been deleted");
+                        }
                     }
                     else {
                         error("This document is already closed. Please ask admin to re-open");
@@ -417,12 +425,11 @@ public class BratAnnotator
             BratAnnotatorUIData aUIData)
     {
         Object result = null;
-        BratAjaxCasController controller = new BratAjaxCasController( repository,
-                annotationService);
+        BratAjaxCasController controller = new BratAjaxCasController(repository, annotationService);
 
         try {
             {
-                setAttributesForDocument( aUIData);
+                setAttributesForDocument(aUIData);
             }
             aUIData.setGetDocument(true);
             result = controller.getDocumentResponse(bratAnnotatorModel, aUIData);
@@ -451,8 +458,7 @@ public class BratAnnotator
     {
 
         Object result = null;
-        BratAjaxCasController controller = new BratAjaxCasController( repository,
-                annotationService);
+        BratAjaxCasController controller = new BratAjaxCasController(repository, annotationService);
         String offsets = aRequest.getParameterValue("offsets").toString();
 
         try {
@@ -508,8 +514,7 @@ public class BratAnnotator
     {
 
         Object result = null;
-        BratAjaxCasController controller = new BratAjaxCasController( repository,
-                annotationService);
+        BratAjaxCasController controller = new BratAjaxCasController(repository, annotationService);
         try {
             setAttributesForDocument(aUIData);
             aUIData.setOrigin(aRequest.getParameterValue("origin").toInt());
@@ -540,8 +545,7 @@ public class BratAnnotator
     {
 
         Object result = null;
-        BratAjaxCasController controller = new BratAjaxCasController( repository,
-                annotationService);
+        BratAjaxCasController controller = new BratAjaxCasController(repository, annotationService);
 
         try {
             setAttributesForDocument(aUIData);
@@ -578,8 +582,7 @@ public class BratAnnotator
     {
 
         Object result = null;
-        BratAjaxCasController controller = new BratAjaxCasController(repository,
-                annotationService);
+        BratAjaxCasController controller = new BratAjaxCasController(repository, annotationService);
 
         try {
             String offsets = aRequest.getParameterValue("offsets").toString();
@@ -588,7 +591,7 @@ public class BratAnnotator
                     OffsetsList.class);
             int start = offsetLists.get(0).getBegin();
             int end = offsetLists.get(0).getEnd();
-            setAttributesForDocument( aUIData);
+            setAttributesForDocument(aUIData);
             aUIData.setAnnotationOffsetStart(BratAjaxCasUtil.getAnnotationBeginOffset(
                     aUIData.getjCas(), bratAnnotatorModel.getSentenceAddress())
                     + start);
@@ -628,8 +631,7 @@ public class BratAnnotator
     {
 
         Object result = null;
-        BratAjaxCasController controller = new BratAjaxCasController(repository,
-                annotationService);
+        BratAjaxCasController controller = new BratAjaxCasController(repository, annotationService);
 
         try {
             setAttributesForDocument(aUIData);
@@ -667,8 +669,7 @@ public class BratAnnotator
      * @throws IOException
      */
     @SuppressWarnings("unchecked")
-    public void setAttributesForDocument(
-            BratAnnotatorUIData aUIData)
+    public void setAttributesForDocument(BratAnnotatorUIData aUIData)
         throws UIMAException, IOException
     {
 
@@ -687,7 +688,7 @@ public class BratAnnotator
                 bratAnnotatorModel.setFirstSentenceAddress(bratAnnotatorModel.getSentenceAddress());
 
                 AnnotationPreference preference = new AnnotationPreference();
-                ApplicationUtils.setAnnotationPreference(preference, username,repository,
+                ApplicationUtils.setAnnotationPreference(preference, username, repository,
                         annotationService, bratAnnotatorModel, Mode.ANNOTATION);
             }
             catch (DataRetrievalFailureException ex) {
@@ -725,7 +726,7 @@ public class BratAnnotator
             if (bratAnnotatorModel.getProject().getId() != currentprojectId) {
                 AnnotationPreference preference = new AnnotationPreference();
                 try {
-                    ApplicationUtils.setAnnotationPreference(preference, username,repository,
+                    ApplicationUtils.setAnnotationPreference(preference, username, repository,
                             annotationService, bratAnnotatorModel, Mode.ANNOTATION);
                 }
                 catch (BeansException e) {
