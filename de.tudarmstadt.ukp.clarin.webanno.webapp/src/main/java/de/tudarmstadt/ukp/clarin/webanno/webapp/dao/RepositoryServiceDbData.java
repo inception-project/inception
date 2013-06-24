@@ -252,7 +252,7 @@ public class RepositoryServiceDbData
                                     + " AND document = :document AND user = :user",
                             AnnotationDocument.class)
                     .setParameter("project", aDocument.getProject())
-                    .setParameter("document", aDocument).setParameter("user", aUser)
+                    .setParameter("document", aDocument).setParameter("user", aUser.getUsername())
                     .getSingleResult();
             return true;
         }
@@ -451,7 +451,7 @@ public class RepositoryServiceDbData
                 .createQuery(
                         "FROM AnnotationDocument WHERE document = :document AND " + "user =:user"
                                 + " AND project = :project", AnnotationDocument.class)
-                .setParameter("document", aDocument).setParameter("user", aUser)
+                .setParameter("document", aDocument).setParameter("user", aUser.getUsername())
                 .setParameter("project", aDocument.getProject()).getSingleResult();
     }
 
@@ -641,7 +641,7 @@ public class RepositoryServiceDbData
                             "FROM AnnotationDocument WHERE document = :document AND "
                                     + "project = :project AND user =:user",
                             AnnotationDocument.class).setParameter("document", aDocument)
-                    .setParameter("project", aProject).setParameter("user", aUser)
+                    .setParameter("project", aProject).setParameter("user", aUser.getUsername())
                     .getSingleResult();
             if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
                 return true;

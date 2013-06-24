@@ -81,6 +81,10 @@ public class ExportPanel
 
     private static final String META_INF = "/META-INF";
     private static final String EXPORTED_PROJECT = "exportedproject";
+    private static final String SOURCE = "/source";
+    private static final String LOG = "/log";
+    private static final String GUIDELINE = "/guideline";
+    private static final String ANNOTATION = "/annotatiopn/";
 
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
@@ -301,6 +305,7 @@ public class ExportPanel
                                     break;
                                 }
                             }
+
                             // projectInputStream = uploadedFile.getInputStream();
                             String text = IOUtils.toString(projectInputStream, "UTF-8");
                             MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
@@ -317,9 +322,13 @@ public class ExportPanel
                                 createSourceDocument(importedProjectSetting, importedProject);
                                 createAnnotationDocument(importedProjectSetting, importedProject);
                                 createProjectPermission(importedProjectSetting, importedProject);
-                                for(TagSet tagset:importedProjectSetting.getTagSets()){
-                                addTagset(importedProject, tagset);
+                                for (TagSet tagset : importedProjectSetting.getTagSets()) {
+                                    createTagset(importedProject, tagset);
                                 }
+                                // add source document content
+                                createSourceDocumentContent(zip, importedProject);
+                                // add annotation document content
+                                createAnnotationDocumentContent(zip, importedProject);
                             }
                         }
                         else {
@@ -327,7 +336,7 @@ public class ExportPanel
                         }
                     }
                     catch (IOException e) {
-                        error("Error Importing TagSet " + ExceptionUtils.getRootCauseMessage(e));
+                        error("Error Importing Project " + ExceptionUtils.getRootCauseMessage(e));
                     }
                 }
                 else if (uploadedFile == null) {
@@ -376,7 +385,7 @@ public class ExportPanel
     private void copySourceDocuments(Project aProject, File aCopyDir)
         throws IOException
     {
-        File sourceDocumentDir = new File(aCopyDir + "/source");
+        File sourceDocumentDir = new File(aCopyDir + SOURCE);
         FileUtils.forceMkdir(sourceDocumentDir);
         // Get all the source documents from the project
         List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = projectRepository
@@ -395,7 +404,7 @@ public class ExportPanel
     private void copyProjectLog(Project aProject, File aCopyDir)
         throws IOException
     {
-        File logDir = new File(aCopyDir + "/log");
+        File logDir = new File(aCopyDir + LOG);
         FileUtils.forceMkdir(logDir);
         if (projectRepository.exportProjectLog(aProject).exists()) {
             FileUtils.copyFileToDirectory(projectRepository.exportProjectLog(aProject), logDir);
@@ -409,7 +418,7 @@ public class ExportPanel
     private void copyGuideLine(Project aProject, File aCopyDir)
         throws IOException
     {
-        File guidelineDir = new File(aCopyDir + "/guideline");
+        File guidelineDir = new File(aCopyDir + GUIDELINE);
         FileUtils.forceMkdir(guidelineDir);
         File annotationGuidlines = projectRepository.exportGuideLines(aProject);
         if (annotationGuidlines.exists()) {
@@ -447,8 +456,8 @@ public class ExportPanel
         for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
             for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : projectRepository
                     .listAnnotationDocument(sourceDocument)) {
-                File annotationDocumentDir = new File(aCopyDir.getAbsolutePath() + "/annotatiopn/"
-                        + FilenameUtils.getBaseName(sourceDocument.getName()));
+                File annotationDocumentDir = new File(aCopyDir.getAbsolutePath() + ANNOTATION
+                        + sourceDocument.getName());
                 FileUtils.forceMkdir(annotationDocumentDir);
                 File annotationFile = projectRepository.exportAnnotationDocument(sourceDocument,
                         aProject, projectRepository.getUser(annotationDocument.getUser()));
@@ -564,7 +573,7 @@ public class ExportPanel
         }
     }
 
-    private void addTagset(Project aProjecct, TagSet importedTagSet)
+    private void createTagset(Project aProjecct, TagSet importedTagSet)
         throws IOException
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -598,7 +607,7 @@ public class ExportPanel
                 newTag.setTagSet(newTagSet);
                 annotationService.createTag(newTag, user);
             }
-            info("TagSet successfully imported. Refresh page to see the imported TagSet.");
+            info("Tagset [" + newTagSet.getName() + "] successfully imported.");
         }
     }
 
@@ -617,7 +626,8 @@ public class ExportPanel
 
     private void createSourceDocument(
             de.tudarmstadt.ukp.clarin.webanno.export.model.Project aImportedProjectSetting,
-            Project aImportedProject) throws IOException
+            Project aImportedProject)
+        throws IOException
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = projectRepository.getUser(username);
@@ -633,34 +643,74 @@ public class ExportPanel
 
     private void createAnnotationDocument(
             de.tudarmstadt.ukp.clarin.webanno.export.model.Project aImportedProjectSetting,
-            Project aImportedProject) throws IOException
+            Project aImportedProject)
+        throws IOException
     {
-        for (AnnotationDocument importedAnnotationDocument : aImportedProjectSetting.getAnnotationDocuments()) {
-            de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument = new
-                    de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument();
+        for (AnnotationDocument importedAnnotationDocument : aImportedProjectSetting
+                .getAnnotationDocuments()) {
+            de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument = new de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument();
             annotationDocument.setName(importedAnnotationDocument.getName());
             annotationDocument.setState(annotationDocument.getState());
             annotationDocument.setProject(aImportedProject);
             annotationDocument.setUser(annotationDocument.getUser());
-            annotationDocument.setDocument(projectRepository.getSourceDocument(importedAnnotationDocument.getName(),
-                    aImportedProject));
+            annotationDocument.setDocument(projectRepository.getSourceDocument(
+                    importedAnnotationDocument.getName(), aImportedProject));
             projectRepository.createAnnotationDocument(annotationDocument);
         }
     }
 
     private void createProjectPermission(
             de.tudarmstadt.ukp.clarin.webanno.export.model.Project aImportedProjectSetting,
-            Project aImportedProject) throws IOException
+            Project aImportedProject)
+        throws IOException
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = projectRepository.getUser(username);
         for (ProjectPermission importedPermission : aImportedProjectSetting.getProjectPermissions()) {
-            de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission permission = new
-                    de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission();
-           permission.setLevel(importedPermission.getLevel());
-           permission.setProject(aImportedProject);
-           permission.setUser(importedPermission.getUser());
+            de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission permission = new de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission();
+            permission.setLevel(importedPermission.getLevel());
+            permission.setProject(aImportedProject);
+            permission.setUser(importedPermission.getUser());
             projectRepository.createProjectPermission(permission);
+        }
+    }
+
+    private void createSourceDocumentContent(ZipFile zip, Project aProject)
+        throws IOException
+    {
+        for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
+            ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
+            if (entry.toString().startsWith(SOURCE)) {
+                String fileName = entry.toString().replace(SOURCE, "").replace("/", "");
+                de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument = projectRepository
+                        .getSourceDocument(fileName, aProject);
+                File sourceFilePath = projectRepository.exportSourceDocument(sourceDocument,
+                        aProject);
+                FileUtils.copyInputStreamToFile(zip.getInputStream(entry), sourceFilePath);
+            }
+        }
+    }
+
+    private void createAnnotationDocumentContent(ZipFile zip, Project aProject)
+        throws IOException
+    {
+        for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
+            ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
+            if (entry.toString().startsWith(ANNOTATION)) {
+                String fileName = entry.toString().replace(ANNOTATION, "");
+
+                // the user annotated the document is file name minus extension (anno1.ser)
+                String username = FilenameUtils.getBaseName(fileName).replace(".ser", "");
+
+                // name of the annotation document
+                fileName = fileName.replace(FilenameUtils.getName(fileName), "").replace("/", "");
+                de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument = projectRepository
+                        .getSourceDocument(fileName, aProject);
+                File annotationFilePath = projectRepository.exportAnnotationDocument(
+                        sourceDocument, aProject, projectRepository.getUser(username));
+
+                FileUtils.copyInputStreamToFile(zip.getInputStream(entry), annotationFilePath);
+            }
         }
     }
 }
