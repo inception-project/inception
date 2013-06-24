@@ -47,7 +47,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * A class that is used to create Brat Span to CAS and vice-versa
- *
+ * 
  * @author Seid Muhie Yimam
  * @author Richard Eckart de Castilho
  */
@@ -58,7 +58,7 @@ public class SpanAdapter
     /**
      * Prefix of the label value for Brat to make sure that different annotation types can use the
      * same label, e.g. a POS tag "N" and a named entity type "N".
-     *
+     * 
      * This is used to differentiate the different types in the brat annotation/visualization. The
      * prefix will not stored in the CAS(striped away at {@link BratAjaxCasController#getType} )
      */
@@ -105,7 +105,7 @@ public class SpanAdapter
     }
 
     /**
-     *
+     * 
      * @see #setAddPosToToken(boolean)
      */
     public boolean isAddPosToToken()
@@ -115,7 +115,7 @@ public class SpanAdapter
 
     /**
      * Attach POS to a Token layer
-     *
+     * 
      * @param aAddPosToToken
      */
     public void setAddPosToToken(boolean aAddPosToToken)
@@ -124,7 +124,7 @@ public class SpanAdapter
     }
 
     /**
-     *
+     * 
      * @see #addLemmaToToken
      */
     public boolean isAddLemmaToToken()
@@ -134,7 +134,7 @@ public class SpanAdapter
 
     /**
      * Attach Lemma to a Token layer
-     *
+     * 
      * @param aAddLemmaToToken
      */
     public void setAddLemmaToToken(boolean aAddLemmaToToken)
@@ -145,7 +145,7 @@ public class SpanAdapter
     /**
      * Add annotations from the CAS, which is controlled by the window size, to the brat response
      * {@link GetDocumentResponse}
-     *
+     * 
      * @param aJcas
      *            The JCAS object containing annotations
      * @param aResponse
@@ -158,7 +158,7 @@ public class SpanAdapter
             BratAnnotatorModel aBratAnnotatorModel)
     {
         // Remove prefixes from response if it is in curation mode
-        if(aBratAnnotatorModel.getMode().equals(Mode.CURATION)) {
+        if (aBratAnnotatorModel.getMode().equals(Mode.CURATION)) {
             typePrefix = "";
         }
         // The first sentence address in the display window!
@@ -189,7 +189,7 @@ public class SpanAdapter
 
     /**
      * a helper method to the {@link #addToBrat(JCas, GetDocumentResponse, BratAnnotatorModel)}
-     *
+     * 
      * @param aSentence
      *            The current sentence in the CAS annotation, with annotations
      * @param aResponse
@@ -214,7 +214,7 @@ public class SpanAdapter
 
     /**
      * Update the CAS with new/modification of span annotations from brat
-     *
+     * 
      * @param aLabelValue
      *            the value of the annotation for the span
      * @param aUIData
@@ -269,7 +269,7 @@ public class SpanAdapter
                 CasUtil.selectCovered(aCas, tokenType, aBegin, aEnd).get(0)
                         .setFeatureValue(posFeature, newAnnotation);
             }
-         // Attach the Lemma to a Token
+            // Attach the Lemma to a Token
             if (addLemmaToToken) {
                 Type tokenType = CasUtil.getType(aCas, Token.class.getName());
                 Feature lemmaFeature = tokenType.getFeatureByBaseName("lemma");
@@ -282,7 +282,7 @@ public class SpanAdapter
 
     /**
      * Delete a span annotation from CAS
-     *
+     * 
      * @param aJCas
      *            the CAS object
      * @param aId
@@ -298,7 +298,7 @@ public class SpanAdapter
     /**
      * Stores, for every tokens, the start and end position offsets : used for multiple span
      * annotations
-     *
+     * 
      * @return map of tokens begin and end positions
      */
     private static Map<Integer, Integer> offsets(JCas aJcas)
@@ -341,7 +341,7 @@ public class SpanAdapter
     /**
      * If the annotation type is limited to only a single token, but brat sends multiple tokens,
      * split them up
-     *
+     * 
      * @return Map of start and end offsets for the multiple token span
      */
 
@@ -361,7 +361,7 @@ public class SpanAdapter
 
     /**
      * Convenience method to get an adapter for part-of-speech.
-     *
+     * 
      * NOTE: This is not meant to stay. It's just a convenience during refactoring!
      */
     public static final SpanAdapter getPosAdapter()
@@ -375,7 +375,7 @@ public class SpanAdapter
 
     /**
      * Convenience method to get an adapter for lemma.
-     *
+     * 
      * NOTE: This is not meant to stay. It's just a convenience during refactoring!
      */
     public static final SpanAdapter getLemmaAdapter()
@@ -389,7 +389,7 @@ public class SpanAdapter
 
     /**
      * Convenience method to get an adapter for named entity.
-     *
+     * 
      * NOTE: This is not meant to stay. It's just a convenience during refactoring!
      */
     public static final SpanAdapter getNamedEntityAdapter()
@@ -400,9 +400,10 @@ public class SpanAdapter
         return adapter;
     }
 
-	@Override
-	public String getLabelFeatureName() {
-		// TODO Auto-generated method stub
-		return labelFeatureName;
-	}
+    @Override
+    public String getLabelFeatureName()
+    {
+        // TODO Auto-generated method stub
+        return labelFeatureName;
+    }
 }
