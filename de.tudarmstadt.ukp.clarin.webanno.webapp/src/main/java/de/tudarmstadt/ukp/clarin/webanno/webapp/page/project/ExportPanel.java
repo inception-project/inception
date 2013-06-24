@@ -281,7 +281,7 @@ public class ExportPanel
 
         add(fileUpload = new FileUploadField("content", new Model()));
 
-        add(new Button("import", new ResourceModel("label"))
+        add(new Button("importProject", new ResourceModel("label"))
         {
 
             private static final long serialVersionUID = 1L;
@@ -329,6 +329,13 @@ public class ExportPanel
                                 createSourceDocumentContent(zip, importedProject);
                                 // add annotation document content
                                 createAnnotationDocumentContent(zip, importedProject);
+                                // create project log
+                                createProjectLog(zip, importedProject);
+                                // create project guideline
+                                createProjectGuideline(zip, importedProject);
+                                // cretae project META-INF
+                                createProjectMetaInf(zip, importedProject);
+
                             }
                         }
                         else {
@@ -436,9 +443,9 @@ public class ExportPanel
     {
         File metaInfDir = new File(aCopyDir + META_INF);
         FileUtils.forceMkdir(metaInfDir);
-        File annotationGuidlines = projectRepository.exportProjectMetaInf(aProject);
-        if (annotationGuidlines.exists()) {
-            FileUtils.copyDirectory(annotationGuidlines, metaInfDir);
+        File metaInf = projectRepository.exportProjectMetaInf(aProject);
+        if (metaInf.exists()) {
+            FileUtils.copyDirectory(metaInf, metaInfDir);
         }
 
     }
@@ -607,7 +614,6 @@ public class ExportPanel
                 newTag.setTagSet(newTagSet);
                 annotationService.createTag(newTag, user);
             }
-            info("Tagset [" + newTagSet.getName() + "] successfully imported.");
         }
     }
 
@@ -650,9 +656,9 @@ public class ExportPanel
                 .getAnnotationDocuments()) {
             de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument = new de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument();
             annotationDocument.setName(importedAnnotationDocument.getName());
-            annotationDocument.setState(annotationDocument.getState());
+            annotationDocument.setState(importedAnnotationDocument.getState());
             annotationDocument.setProject(aImportedProject);
-            annotationDocument.setUser(annotationDocument.getUser());
+            annotationDocument.setUser(importedAnnotationDocument.getUser());
             annotationDocument.setDocument(projectRepository.getSourceDocument(
                     importedAnnotationDocument.getName(), aImportedProject));
             projectRepository.createAnnotationDocument(annotationDocument);
@@ -713,4 +719,42 @@ public class ExportPanel
             }
         }
     }
+
+    private void createProjectGuideline(ZipFile zip, Project aProject)
+            throws IOException
+        {
+            for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
+                ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
+                if (entry.toString().startsWith(GUIDELINE)) {
+                    File guidelineDir =  projectRepository.exportGuideLines(aProject);
+                    FileUtils.forceMkdir(guidelineDir);
+                    FileUtils.copyInputStreamToFile(zip.getInputStream(entry),new File(guidelineDir, FilenameUtils.getName(entry.getName())));
+                }
+            }
+        }
+
+    private void createProjectMetaInf(ZipFile zip, Project aProject)
+            throws IOException
+        {
+            for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
+                ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
+                if (entry.toString().startsWith(META_INF)) {
+                    File metaInfDir =  new File(projectRepository.exportProjectMetaInf(aProject), FilenameUtils.getPath(entry.getName().replace(META_INF, "")));
+                    // where the file reside in the META-INF/... directory
+                    FileUtils.forceMkdir(metaInfDir);
+                    FileUtils.copyInputStreamToFile(zip.getInputStream(entry), new File(metaInfDir, FilenameUtils.getName(entry.getName())));
+                }
+            }
+        }
+
+    private void createProjectLog(ZipFile zip, Project aProject)
+            throws IOException
+        {
+            for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
+                ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
+                if (entry.toString().startsWith(LOG)) {
+                    FileUtils.copyInputStreamToFile(zip.getInputStream(entry), projectRepository.exportProjectLog(aProject));
+                }
+            }
+        }
 }

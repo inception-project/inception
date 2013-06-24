@@ -6,28 +6,37 @@
   either express or implied. # See the License for the specific language governing permissions and # limitations under
   the License. #
 -->
-<html xmlns="http://www.w3.org/1999/xhtml"
-	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-<wicket:panel>
-	<fieldset class="ui-widget-content ui-corner-all">
-		<legend>Sending curated documents to CLARIN and Exporting curated documents to a file system</legend>
-		<div class="buttons">
-			<input type="submit" wicket:id="send" value="Export curated documents to CLARIN workspace" />
-			<input type="submit"wicket:id="export" value="Export curated documents to the file system"/>
-			<input type="submit"wicket:id="exportProject" value="Export the whole project into the File system"/>
-		</div>
-		<div>
-		<table class="hfill">
-							<tr>
-								<td><label>Project:</label></td>
-								<td class="hfill"><input wicket:id="content" type="file"
-									multiple /></td>
-							</tr>
-						</table>
-						<div class="buttons">
-							<input type="submit" wicket:id="import" />
-						</div>
-		</div>
-	</fieldset>
-</wicket:panel>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+  <wicket:panel>
+    <fieldset class="ui-widget-content ui-corner-all">
+      <legend>
+        Export
+      </legend>
+      <div class="buttons">
+        <input type="submit" wicket:id="send" value="Export curated documents to CLARIN workspace" />
+        <input type="submit"wicket:id="export" value="Export curated documents to the file system"/>
+        <input type="submit"wicket:id="exportProject" value="Export the whole project into the File system"/>
+      </div>
+    </fieldset>
+    <fieldset class="ui-widget-content ui-corner-all">
+      <legend>
+        Import Project
+      </legend>
+      <div>
+        <table class="hfill">
+          <tr>
+            <td class="hfill">
+              <label>
+                Project (Exported WebAnno project in ZIP format ONLY):
+              </label>
+              <input wicket:id="content" type="file" multiple />
+            </td>
+          </tr>
+        </table>
+        <div class="buttons">
+          <input type="submit" wicket:id="importProject" />
+        </div>
+      </div>
+    </fieldset>
+  </wicket:panel>
 </html>
