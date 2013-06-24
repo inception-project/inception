@@ -120,7 +120,7 @@ public class ArcAdapter
      *            Data model for brat annotations
      */
     @Override
-    public void addToBrat(JCas aJcas, GetDocumentResponse aResponse,
+    public void render(JCas aJcas, GetDocumentResponse aResponse,
             BratAnnotatorModel aBratAnnotatorModel)
     {
 
@@ -157,7 +157,7 @@ public class ArcAdapter
     }
 
     /**
-     * a helper method to the {@link #addToBrat(JCas, GetDocumentResponse, BratAnnotatorModel)}
+     * a helper method to the {@link #render(JCas, GetDocumentResponse, BratAnnotatorModel)}
      * 
      * @param aSentence
      *            The current sentence in the CAS annotation, with annotations
@@ -204,7 +204,7 @@ public class ArcAdapter
      * @param aReverse
      *            If arc direction are in reverse direction, from Dependent to Governor
      */
-    public void addToCas(String aLabelValue, BratAnnotatorUIData aUIData,
+    public void add(String aLabelValue, BratAnnotatorUIData aUIData,
             BratAnnotatorModel aBratAnnotatorModel, boolean aReverse)
     {
         int originAddress;
@@ -320,7 +320,7 @@ public class ArcAdapter
      * @param aJCas
      * @param aId
      */
-    public void deleteFromCas(BratAnnotatorUIData aUIData, BratAnnotatorModel aBratAnnotatorModel)
+    public void delete(BratAnnotatorUIData aUIData, BratAnnotatorModel aBratAnnotatorModel)
     {
         int originAddress;
         int targetAddress;

@@ -154,7 +154,7 @@ public class SpanAdapter
      *            Data model for brat annotations
      */
     @Override
-    public void addToBrat(JCas aJcas, GetDocumentResponse aResponse,
+    public void render(JCas aJcas, GetDocumentResponse aResponse,
             BratAnnotatorModel aBratAnnotatorModel)
     {
         // Remove prefixes from response if it is in curation mode
@@ -188,7 +188,7 @@ public class SpanAdapter
     }
 
     /**
-     * a helper method to the {@link #addToBrat(JCas, GetDocumentResponse, BratAnnotatorModel)}
+     * a helper method to the {@link #render(JCas, GetDocumentResponse, BratAnnotatorModel)}
      * 
      * @param aSentence
      *            The current sentence in the CAS annotation, with annotations
@@ -220,7 +220,7 @@ public class SpanAdapter
      * @param aUIData
      *            Other information obtained from brat such as the start and end offsets
      */
-    public void addToCas(String aLabelValue, BratAnnotatorUIData aUIData)
+    public void add(String aLabelValue, BratAnnotatorUIData aUIData)
     {
         Map<Integer, Integer> offsets = offsets(aUIData.getjCas());
 
@@ -242,7 +242,7 @@ public class SpanAdapter
     }
 
     /**
-     * A Helper method to {@link #addToCas(String, BratAnnotatorUIData)}
+     * A Helper method to {@link #add(String, BratAnnotatorUIData)}
      */
     private void updateCas(CAS aCas, int aBegin, int aEnd, String aValue)
     {
@@ -288,7 +288,7 @@ public class SpanAdapter
      * @param aId
      *            the low-level address of the span annotation.
      */
-    public void deleteFromCas(JCas aJCas, int aRef)
+    public void delete(JCas aJCas, int aRef)
     {
         FeatureStructure fs = (FeatureStructure) BratAjaxCasUtil.selectAnnotationByAddress(aJCas,
                 FeatureStructure.class, aRef);

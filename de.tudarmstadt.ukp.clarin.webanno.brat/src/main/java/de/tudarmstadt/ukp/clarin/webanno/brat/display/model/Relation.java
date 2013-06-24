@@ -36,12 +36,14 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.BeanAsArraySerializer;
 public class Relation
 {
     private int id;
+    
     /**
      * The type of the relation between two spans
      */
     private String type;
+
     /**
-     * The initial/destination span annotations as shown in the examle above
+     * The initial/destination span annotations as shown in the example above
      */
     List<Argument> arguments = new ArrayList<Argument>();
 

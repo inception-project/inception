@@ -33,7 +33,7 @@ public interface TypeAdapter
      * @param aBratAnnotatorModel
      *            Data model for brat annotations
      */
-    void addToBrat(JCas aJcas, GetDocumentResponse aResponse, BratAnnotatorModel aBratAnnotatorModel);
+    void render(JCas aJcas, GetDocumentResponse aResponse, BratAnnotatorModel aBratAnnotatorModel);
 
     /**
      * 

@@ -150,14 +150,14 @@ public class BratAnnotationDocumentVisualizer
         casToBratJson.addTokenToResponse(jCas, response, bratAnnotatorDataModel);
         casToBratJson.addSentenceToResponse(jCas, response, bratAnnotatorDataModel);
         // If POS annotation exist in CAS 
-        SpanAdapter.getPosAdapter().addToBrat(jCas, response, bratAnnotatorDataModel);
-        ChainAdapter.getCoreferenceLinkAdapter().addToBrat(jCas, response, bratAnnotatorDataModel);
+        SpanAdapter.getPosAdapter().render(jCas, response, bratAnnotatorDataModel);
+        ChainAdapter.getCoreferenceLinkAdapter().render(jCas, response, bratAnnotatorDataModel);
         // If Lemma Layer Exist in CAS 
-        SpanAdapter.getLemmaAdapter().addToBrat(jCas, response, bratAnnotatorDataModel);
+        SpanAdapter.getLemmaAdapter().render(jCas, response, bratAnnotatorDataModel);
         // IF Named Entity layer exist in CAS 
-        SpanAdapter.getNamedEntityAdapter().addToBrat(jCas, response, bratAnnotatorDataModel);
-        ArcAdapter.getDependencyAdapter().addToBrat(jCas, response, bratAnnotatorDataModel);
-        ChainAdapter.getCoreferenceChainAdapter().addToBrat(jCas, response, bratAnnotatorDataModel);
+        SpanAdapter.getNamedEntityAdapter().render(jCas, response, bratAnnotatorDataModel);
+        ArcAdapter.getDependencyAdapter().render(jCas, response, bratAnnotatorDataModel);
+        ChainAdapter.getCoreferenceChainAdapter().render(jCas, response, bratAnnotatorDataModel);
 
         // Serialize BRAT object model to JSON
         try {

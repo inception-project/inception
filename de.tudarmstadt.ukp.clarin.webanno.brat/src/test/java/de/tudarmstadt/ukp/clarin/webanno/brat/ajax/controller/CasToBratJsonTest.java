@@ -224,13 +224,13 @@ public class CasToBratJsonTest
         casToBratJson.addTokenToResponse(jCas, response, bratannotatorModel);
         casToBratJson.addSentenceToResponse(jCas, response, bratannotatorModel);
 
-        SpanAdapter.getPosAdapter().addToBrat(jCas, response, bratannotatorModel);
-        ChainAdapter.getCoreferenceLinkAdapter().addToBrat(jCas, response, bratannotatorModel);
+        SpanAdapter.getPosAdapter().render(jCas, response, bratannotatorModel);
+        ChainAdapter.getCoreferenceLinkAdapter().render(jCas, response, bratannotatorModel);
 
-        SpanAdapter.getLemmaAdapter().addToBrat(jCas, response, bratannotatorModel);
-        SpanAdapter.getNamedEntityAdapter().addToBrat(jCas, response, bratannotatorModel);
-        ArcAdapter.getDependencyAdapter().addToBrat(jCas, response, bratannotatorModel);
-        ChainAdapter.getCoreferenceChainAdapter().addToBrat(jCas, response, bratannotatorModel);
+        SpanAdapter.getLemmaAdapter().render(jCas, response, bratannotatorModel);
+        SpanAdapter.getNamedEntityAdapter().render(jCas, response, bratannotatorModel);
+        ArcAdapter.getDependencyAdapter().render(jCas, response, bratannotatorModel);
+        ChainAdapter.getCoreferenceChainAdapter().render(jCas, response, bratannotatorModel);
 
         ApplicationUtils.generateJson(response, new File(jsonFilePath));
 

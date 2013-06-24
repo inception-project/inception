@@ -58,6 +58,9 @@ public class ChainAdapter
     implements TypeAdapter
 {
     private Log LOG = LogFactory.getLog(getClass());
+
+    public static final String EXPLETIVE = "expletive";
+
     /**
      * Prefix of the label value for Brat to make sure that different annotation types can use the
      * same label, e.g. a POS tag "N" and a named entity type "N".
@@ -97,8 +100,8 @@ public class ChainAdapter
         typePrefix = aTypePrefix;
         labelFeatureName = aLabelFeatureName;
         annotationTypeName = aTypeName;
-        this.chainFirstFeatureName = aFirstFeatureName;
-        this.linkNextFeatureName = aNextFeatureName;
+        chainFirstFeatureName = aFirstFeatureName;
+        linkNextFeatureName = aNextFeatureName;
     }
 
     /**
@@ -132,12 +135,10 @@ public class ChainAdapter
     /**
      * If true, It is drawing of arcs for coreference chains, otherwise it is a span annotation for
      * coreference links
-     * 
-     * @param isChain
      */
-    public void setChain(boolean isChain)
+    public void setChain(boolean aIsChain)
     {
-        this.isChain = isChain;
+        isChain = aIsChain;
     }
 
     /**
@@ -152,7 +153,7 @@ public class ChainAdapter
      *            Data model for brat annotations
      */
     @Override
-    public void addToBrat(JCas aJcas, GetDocumentResponse aResponse,
+    public void render(JCas aJcas, GetDocumentResponse aResponse,
             BratAnnotatorModel aBratAnnotatorModel)
     {
         // The first sentence address in the display window!
@@ -168,6 +169,9 @@ public class ChainAdapter
                         aBratAnnotatorModel.getWindowSize()));
         int i = aBratAnnotatorModel.getSentenceAddress();
 
+        int windowBegin = firstSentence.getBegin();
+        int windowEnd = lastSentence.getEnd();
+
         // Loop based on window size
         // j, controlling variable to display sentences based on window size
         // i, address of each sentences
@@ -177,11 +181,10 @@ public class ChainAdapter
                 Sentence sentence = (Sentence) BratAjaxCasUtil.selectAnnotationByAddress(aJcas,
                         FeatureStructure.class, i);
                 if (isChain) {
-                    updateChainResponse(sentence, aResponse, firstSentence.getBegin(),
-                            lastSentence.getEnd());
+                    renderChains(sentence, aResponse, windowBegin, windowEnd);
                 }
                 else {
-                    updateLinkResponse(sentence, aResponse, firstSentence.getBegin());
+                    renderLinks(sentence, aResponse, windowBegin);
                 }
                 break;
             }
@@ -189,11 +192,10 @@ public class ChainAdapter
                 Sentence sentence = (Sentence) BratAjaxCasUtil.selectAnnotationByAddress(aJcas,
                         FeatureStructure.class, i);
                 if (isChain) {
-                    updateChainResponse(sentence, aResponse, firstSentence.getBegin(),
-                            lastSentence.getEnd());
+                    renderChains(sentence, aResponse, windowBegin, windowEnd);
                 }
                 else {
-                    updateLinkResponse(sentence, aResponse, firstSentence.getBegin());
+                    renderLinks(sentence, aResponse, windowBegin);
                 }
                 i = BratAjaxCasUtil.getFollowingSentenceAddress(aJcas, i);
             }
@@ -202,7 +204,7 @@ public class ChainAdapter
     }
 
     /**
-     * a helper method to the {@link #addToBrat(JCas, GetDocumentResponse, BratAnnotatorModel)}
+     * a helper method to the {@link #render(JCas, GetDocumentResponse, BratAnnotatorModel)}
      * 
      * @param aSentence
      *            The current sentence in the CAS annotation, with annotations
@@ -213,7 +215,7 @@ public class ChainAdapter
      *            be <b>X-Y</b>, where <b>X</b> is the offset of the annotated span and <b>Y</b> is
      *            aFirstSentenceOffset
      */
-    private void updateLinkResponse(Sentence aSentence, GetDocumentResponse aResponse,
+    private void renderLinks(Sentence aSentence, GetDocumentResponse aResponse,
             int aFirstSentenceOffset)
     {
         Type type = CasUtil.getType(aSentence.getCAS(), annotationTypeName);
@@ -229,49 +231,38 @@ public class ChainAdapter
      * 
      * @param aSentence
      * @param aResponse
-     * @param aFirstSentenceOffset
-     * @param aLastSentenceOffset
-     *            The offset of the last sentence in the current display window
+     * @param aWindowBegin
+     *            begin of the render window
+     * @param aWindowEnd
+     *            end of the render window The offset of the last sentence in the current display
+     *            window
      * @param aReverse
      */
-    private void updateChainResponse(Sentence aSentence, GetDocumentResponse aResponse,
-            int aFirstSentenceOffset, int aLastSentenceOffset)
+    private void renderChains(Sentence aSentence, GetDocumentResponse aResponse, int aWindowBegin,
+            int aWindowEnd)
     {
-
         Type type = CasUtil.getType(aSentence.getCAS(), annotationTypeName);
         Feature first = type.getFeatureByBaseName(chainFirstFeatureName);
 
         int i = 1;// used for different display colors of chains
         for (FeatureStructure fs : CasUtil.selectFS(aSentence.getCAS(), type)) {
-            AnnotationFS linkFs = (AnnotationFS) fs.getFeatureValue(first); // The first link in the
+            // The first link in the
+            AnnotationFS linkFs = (AnnotationFS) fs.getFeatureValue(first);
 
             Feature next = linkFs.getType().getFeatureByBaseName(linkNextFeatureName);
             Feature labelFeature = linkFs.getType().getFeatureByBaseName(labelFeatureName);
             while (linkFs != null) {
-                int begin = linkFs.getBegin();
-                int end = linkFs.getEnd();
-
-                if (aFirstSentenceOffset <= begin && aLastSentenceOffset >= end) {
-                    if (linkFs.getStringValue(labelFeature) != null
-                            && linkFs.getStringValue(labelFeature).equals("expletive")) {
-                        List<Argument> argumentList = getArgument(linkFs, linkFs);
-
-                        aResponse
-                                .addRelation(new Relation(((FeatureStructureImpl) linkFs)
-                                        .getAddress(), i + typePrefix
-                                        + linkFs.getStringValue(labelFeature), argumentList));
+                // Render only links within the render window
+                if (aWindowBegin <= linkFs.getBegin() && aWindowEnd >= linkFs.getEnd()) {
+                    if (EXPLETIVE.equals(linkFs.getStringValue(labelFeature))) {
+                        aResponse.addRelation(createLink(linkFs, linkFs, i));
                         linkFs = (AnnotationFS) linkFs.getFeatureValue(next);
                         continue;
                     }
                     AnnotationFS nextLink = (AnnotationFS) linkFs.getFeatureValue(next);
 
                     if (nextLink != null) {
-                        List<Argument> argumentList = getArgument(linkFs, nextLink);
-
-                        aResponse
-                                .addRelation(new Relation(((FeatureStructureImpl) linkFs)
-                                        .getAddress(), i + typePrefix
-                                        + linkFs.getStringValue(labelFeature), argumentList));
+                        aResponse.addRelation(createLink(linkFs, nextLink, i));
                     }
                 }
                 linkFs = (AnnotationFS) linkFs.getFeatureValue(next);
@@ -284,11 +275,29 @@ public class ChainAdapter
     }
 
     /**
+     * Create a link relation.
+     * 
+     * @param aFrom
+     *            source span
+     * @param aTo
+     *            target span
+     * @param aColorIndex
+     *            used for different display colors of chains
+     */
+    private Relation createLink(AnnotationFS aFrom, AnnotationFS aTo, int aColorIndex)
+    {
+        Feature labelFeature = aFrom.getType().getFeatureByBaseName(labelFeatureName);
+        List<Argument> argumentList = getArgument(aFrom, aTo);
+        return new Relation(((FeatureStructureImpl) aFrom).getAddress(), aColorIndex + typePrefix
+                + aFrom.getStringValue(labelFeature), argumentList);
+    }
+
+    /**
      * Argument lists for the chain annotation
      * 
      * @return
      */
-    private List<Argument> getArgument(FeatureStructure aOriginFs, FeatureStructure aTargetFs)
+    private static List<Argument> getArgument(FeatureStructure aOriginFs, FeatureStructure aTargetFs)
     {
         return asList(new Argument("Arg1", ((FeatureStructureImpl) aOriginFs).getAddress()),
                 new Argument("Arg2", ((FeatureStructureImpl) aTargetFs).getAddress()));
@@ -302,7 +311,7 @@ public class ChainAdapter
      * @param aUIData
      *            Other information obtained from brat such as the start and end offsets
      */
-    public void addToCas(String aLabelValue, BratAnnotatorUIData aUIData)
+    public void add(String aLabelValue, BratAnnotatorUIData aUIData)
     {
         Map<Integer, Integer> offsets = offsets(aUIData.getjCas());
 
@@ -338,7 +347,7 @@ public class ChainAdapter
     }
 
     /**
-     * A Helper method to {@link #addToCas(String, BratAnnotatorUIData)}
+     * A Helper method to {@link #add(String, BratAnnotatorUIData)}
      */
     private void updateCoreferenceLinkCas(CAS aCas, int aBegin, int aEnd, String aValue)
     {
@@ -363,7 +372,7 @@ public class ChainAdapter
     }
 
     /**
-     * A Helper method to {@link #addToCas(String, BratAnnotatorUIData)}
+     * A Helper method to {@link #add(String, BratAnnotatorUIData)}
      */
     // Updating a coreference.
     // CASE 1: Chain does not exist yet
@@ -708,7 +717,7 @@ public class ChainAdapter
      * @param aType
      * @param aUIData
      */
-    public void deleteFromCas(JCas aJCas, int aRef)
+    public void delete(JCas aJCas, int aRef)
     {
         if (isChain) {
             Type type = CasUtil.getType(aJCas.getCas(), annotationTypeName);
