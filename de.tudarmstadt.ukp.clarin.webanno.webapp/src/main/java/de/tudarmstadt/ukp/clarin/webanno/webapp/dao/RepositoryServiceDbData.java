@@ -91,12 +91,12 @@ import eu.clarin.weblicht.wlfxb.io.WLFormatException;
 public class RepositoryServiceDbData
     implements RepositoryService
 {
-    public static Logger createLog(Project aProject, User aUser)
+    public static Logger createLog(Project aProject, String aUser)
         throws IOException
     {
         Logger logger = Logger.getLogger(RepositoryService.class);
         String targetLog = dir.getAbsolutePath() + PROJECT + "project-" + aProject.getId() + ".log";
-        FileAppender apndr = new FileAppender(new PatternLayout("%d [" + aUser.getUsername()
+        FileAppender apndr = new FileAppender(new PatternLayout("%d [" + aUser
                 + "] %m%n"), targetLog, true);
         logger.addAppender(apndr);
         logger.setLevel((Level) Level.ALL);
@@ -208,10 +208,10 @@ public class RepositoryServiceDbData
         entityManager.persist(aProject);
         String path = dir.getAbsolutePath() + PROJECT + aProject.getId();
         FileUtils.forceMkdir(new File(path));
-        createLog(aProject, aUser)
+        createLog(aProject, aUser.getUsername())
                 .info(" Created  Project [" + aProject.getName() + "] with ID [" + aProject.getId()
                         + "]");
-        createLog(aProject, aUser).removeAllAppenders();
+        createLog(aProject, aUser.getUsername()).removeAllAppenders();
     }
 
     @Override
@@ -220,11 +220,11 @@ public class RepositoryServiceDbData
         throws IOException
     {
         entityManager.persist(aPermission);
-        createLog(aPermission.getProject(), getUser(aPermission.getUser())).info(
+        createLog(aPermission.getProject(), aPermission.getUser()).info(
                 " New Permission created on Project[" + aPermission.getProject().getName()
                         + "] for user [" + aPermission.getUser() + "] with permission ["
                         + aPermission.getLevel() + "]" + "]");
-        createLog(aPermission.getProject(), getUser(aPermission.getUser())).removeAllAppenders();
+        createLog(aPermission.getProject(), aPermission.getUser()).removeAllAppenders();
     }
 
     @Override
@@ -389,10 +389,10 @@ public class RepositoryServiceDbData
                 .toExternalForm());
         runPipeline(cas, writer);
 
-        createLog(aProject, aUser).info(
+        createLog(aProject, aUser.getUsername()).info(
                 " Exported file [" + aDocument.getName() + "] with ID [" + aDocument.getId()
                         + "] from Project[" + aProject.getId() + "]");
-        createLog(aProject, aUser).removeAllAppenders();
+        createLog(aProject, aUser.getUsername()).removeAllAppenders();
 
         if (exportTempDir.listFiles().length > 1) {
             try {
@@ -400,7 +400,7 @@ public class RepositoryServiceDbData
                         new File(exportTempDir.getAbsolutePath() + ".zip"));
             }
             catch (Exception e) {
-                createLog(aProject, aUser).info("Unable to create Zip File");
+                createLog(aProject, aUser.getUsername()).info("Unable to create Zip File");
             }
             return new File(exportTempDir.getAbsolutePath() + ".zip");
         }
@@ -417,11 +417,11 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public File exportAnnotationDocument(SourceDocument aDocument, Project aProject, User aUser)
+    public File exportAnnotationDocument(SourceDocument aDocument, Project aProject, String aUser)
     {
         File documentUri = new File(dir.getAbsolutePath() + PROJECT + aProject.getId() + DOCUMENT
                 + aDocument.getId() + ANNOTATION);
-        return new File(documentUri, aUser.getUsername() + ".ser");
+        return new File(documentUri, aUser + ".ser");
     }
 
     @Override
@@ -766,7 +766,7 @@ public class RepositoryServiceDbData
             FileUtils.forceDelete(new File(path));
         }
         catch (FileNotFoundException e) {
-            createLog(aProject, aUser).warn(
+            createLog(aProject, aUser.getUsername()).warn(
                     "Project directory to be deleted was not found: [" + path + "]. Ignoring.");
         }
 
@@ -775,9 +775,9 @@ public class RepositoryServiceDbData
         }
         // remove metadata from DB
         entityManager.remove(aProject);
-        createLog(aProject, aUser).info(
+        createLog(aProject, aUser.getUsername()).info(
                 " Removed Project [" + aProject.getName() + "] with ID [" + aProject.getId() + "]");
-        createLog(aProject, aUser).removeAllAppenders();
+        createLog(aProject, aUser.getUsername()).removeAllAppenders();
 
     }
 
@@ -805,11 +805,11 @@ public class RepositoryServiceDbData
         throws IOException
     {
         entityManager.remove(projectPermission);
-        createLog(projectPermission.getProject(), getUser(projectPermission.getUser())).info(
+        createLog(projectPermission.getProject(), projectPermission.getUser()).info(
                 " Removed Project Permission [" + projectPermission.getLevel() + "] for the USer ["
                         + projectPermission.getUser() + "] From project ["
                         + projectPermission.getProject().getId() + "]");
-        createLog(projectPermission.getProject(), getUser(projectPermission.getUser()))
+        createLog(projectPermission.getProject(), projectPermission.getUser())
                 .removeAllAppenders();
 
     }
@@ -832,10 +832,10 @@ public class RepositoryServiceDbData
         if (new File(path).exists()) {
             FileUtils.forceDelete(new File(path));
         }
-        createLog(aDocument.getProject(), aUser).info(
+        createLog(aDocument.getProject(), aUser.getUsername()).info(
                 " Removed Document [" + aDocument.getName() + "] with ID [" + aDocument.getId()
                         + "] from Project [" + aDocument.getProject().getId() + "]");
-        createLog(aDocument.getProject(), aUser).removeAllAppenders();
+        createLog(aDocument.getProject(), aUser.getUsername()).removeAllAppenders();
 
     }
 
@@ -901,11 +901,11 @@ public class RepositoryServiceDbData
         property.save(new FileOutputStream(new File(propertiesPath,
                 annotationPreferencePropertiesFileName)), null);
 
-        createLog(aProject, getUser(aUsername)).info(
+        createLog(aProject, aUsername).info(
                 " Saved preferences file [" + annotationPreferencePropertiesFileName
                         + "] for project [" + aProject.getName() + "] with ID [" + aProject.getId()
                         + "] to location: [" + propertiesPath + "]");
-        createLog(aProject, getUser(aUsername)).removeAllAppenders();
+        createLog(aProject, aUsername).removeAllAppenders();
 
     }
 
@@ -932,10 +932,10 @@ public class RepositoryServiceDbData
             closeQuietly(is);
         }
 
-        createLog(aDocument.getProject(), aUser).info(
+        createLog(aDocument.getProject(), aUser.getUsername()).info(
                 " Imported file [" + aDocument.getName() + "] with ID [" + aDocument.getId()
                         + "] to Project [" + aDocument.getProject().getId() + "]");
-        createLog(aDocument.getProject(), aUser).removeAllAppenders();
+        createLog(aDocument.getProject(), aUser.getUsername()).removeAllAppenders();
 
     }
 
@@ -960,10 +960,10 @@ public class RepositoryServiceDbData
             closeQuietly(aIs);
         }
 
-        createLog(aDocument.getProject(), aUser).info(
+        createLog(aDocument.getProject(), aUser.getUsername()).info(
                 " Imported file [" + aDocument.getName() + "] with ID [" + aDocument.getId()
                         + "] to Project [" + aDocument.getProject().getId() + "]");
-        createLog(aDocument.getProject(), aUser).removeAllAppenders();
+        createLog(aDocument.getProject(), aUser.getUsername()).removeAllAppenders();
 
     }
 
@@ -1167,11 +1167,11 @@ public class RepositoryServiceDbData
 
                 // Now write the new version to "<username>.ser" or CURATION_USER.ser
                 writeContent(aDocument, aJcas, aUserName);
-                createLog(aDocument.getProject(), aUser).info(
+                createLog(aDocument.getProject(), aUser.getUsername()).info(
                         " Updated annotation file [" + aDocument.getName() + "] " + "with ID ["
                                 + aDocument.getId() + "] in project ID ["
                                 + aDocument.getProject().getId() + "]");
-                createLog(aDocument.getProject(), aUser).removeAllAppenders();
+                createLog(aDocument.getProject(), aUser.getUsername()).removeAllAppenders();
 
                 // If the saving was successful, we delete the old version
                 if (oldVersion.exists()) {
@@ -1250,12 +1250,12 @@ public class RepositoryServiceDbData
                         // Remove these old files
                         for (File file : toRemove) {
                             FileUtils.forceDelete(file);
-                            createLog(aDocument.getProject(), aUser).info(
+                            createLog(aDocument.getProject(), aUser.getUsername()).info(
                                     "Removed surplus history file [" + file.getName() + "] "
                                             + " for document with ID [" + aDocument.getId()
                                             + "] in project ID [" + aDocument.getProject().getId()
                                             + "]");
-                            createLog(aDocument.getProject(), aUser).removeAllAppenders();
+                            createLog(aDocument.getProject(), aUser.getUsername()).removeAllAppenders();
                         }
                     }
 
@@ -1264,12 +1264,12 @@ public class RepositoryServiceDbData
                         for (File file : history) {
                             if ((file.lastModified() + backupKeepTime) < now) {
                                 FileUtils.forceDelete(file);
-                                createLog(aDocument.getProject(), aUser).info(
+                                createLog(aDocument.getProject(), aUser.getUsername()).info(
                                         "Removed outdated history file [" + file.getName() + "] "
                                                 + " for document with ID [" + aDocument.getId()
                                                 + "] in project ID ["
                                                 + aDocument.getProject().getId() + "]");
-                                createLog(aDocument.getProject(), aUser).removeAllAppenders();
+                                createLog(aDocument.getProject(), aUser.getUsername()).removeAllAppenders();
                             }
                         }
                     }

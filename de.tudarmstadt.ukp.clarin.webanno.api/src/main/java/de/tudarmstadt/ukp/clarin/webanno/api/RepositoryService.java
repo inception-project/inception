@@ -186,7 +186,7 @@ public interface RepositoryService
      * Export a Serialized CAS annotation document from the file system
      * @return
      */
-    File exportAnnotationDocument(SourceDocument document, Project project, User user);
+    File exportAnnotationDocument(SourceDocument document, Project project, String user);
 
     /**
      * Export the associated project log for this {@link Project} while copying a project

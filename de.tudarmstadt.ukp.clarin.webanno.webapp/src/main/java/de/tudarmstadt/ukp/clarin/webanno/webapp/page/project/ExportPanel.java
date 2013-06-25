@@ -467,7 +467,7 @@ public class ExportPanel
                         + sourceDocument.getName());
                 FileUtils.forceMkdir(annotationDocumentDir);
                 File annotationFile = projectRepository.exportAnnotationDocument(sourceDocument,
-                        aProject, projectRepository.getUser(annotationDocument.getUser()));
+                        aProject, annotationDocument.getUser());
                 if (annotationFile.exists()) {
                     FileUtils.copyFileToDirectory(annotationFile, annotationDocumentDir);
                 }
@@ -713,7 +713,7 @@ public class ExportPanel
                 de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument = projectRepository
                         .getSourceDocument(fileName, aProject);
                 File annotationFilePath = projectRepository.exportAnnotationDocument(
-                        sourceDocument, aProject, projectRepository.getUser(username));
+                        sourceDocument, aProject, username);
 
                 FileUtils.copyInputStreamToFile(zip.getInputStream(entry), annotationFilePath);
             }
