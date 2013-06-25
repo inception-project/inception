@@ -330,6 +330,18 @@ public class RepositoryServiceDbData
         }
     }
 
+   @Override
+   public boolean existUser(String username){
+
+       try{
+           getUser(username);
+           return true;
+       }
+       catch(NoResultException e){
+           return false;
+       }
+    }
+
     /**
      * A new directory is created using UUID so that every exported file will reside in its own
      * directory. This is useful as the written file can have multiple extensions based on the
@@ -516,8 +528,11 @@ public class RepositoryServiceDbData
                 .setParameter("project", aProject).getResultList();
 
         List<User> users = new ArrayList<User>();
+
         for (String username : usernames) {
-            users.add(getUser(username));
+            if(existUser(username)) {
+                users.add(getUser(username));
+            }
         }
         return users;
     }
@@ -534,7 +549,9 @@ public class RepositoryServiceDbData
                 .setParameter("level", aPermissionLevel).getResultList();
         List<User> users = new ArrayList<User>();
         for (String username : usernames) {
-            users.add(getUser(username));
+            if(existUser(username)) {
+                users.add(getUser(username));
+            }
         }
         return users;
     }

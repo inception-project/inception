@@ -160,6 +160,11 @@ public interface RepositoryService
      * can decide to override or throw an exception/message to the cleint
      */
     boolean existSourceDocument(Project project, String fileName);
+    /**
+     * If the user is in the database (exclude some historycal users that have annotations in the system)
+     * @return
+     */
+    boolean existUser(String username);
 
     /**
      * Exports an {@link AnnotationDocument } CAS Object as TCF/TXT/XMI... file formats.
