@@ -614,17 +614,6 @@ public class ProjectTagSetsPanel
                 }
             });
 
-            add(new Button("new", new ResourceModel("label"))
-            {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                public void onSubmit()
-                {
-                    TagDetailForm.this.setDefaultModelObject(new Tag());
-                }
-            });
-
             add(new Button("remove", new ResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;
@@ -697,6 +686,17 @@ public class ProjectTagSetsPanel
                     }
                 }
             }).setOutputMarkupId(true);
+
+            add(new Button("new", new ResourceModel("label"))
+            {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public void onSubmit()
+                {
+                    tagDetailForm.setDefaultModelObject(new Tag());
+                }
+            });
         }
     }
 
