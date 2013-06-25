@@ -16,6 +16,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -43,6 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -247,6 +249,19 @@ public class AnnotationPage
                 List<SourceDocument> listOfSourceDocuements = repository
                         .listSourceDocuments(annotator.bratAnnotatorModel.getProject());
 
+                String username = SecurityContextHolder.getContext().getAuthentication().getName();
+                User user = repository.getUser(username);
+
+               List<SourceDocument> sourceDocumentsinIgnorState = new ArrayList<SourceDocument>();
+                for (SourceDocument sourceDocuemtn : listOfSourceDocuements) {
+                    if(repository.getAnnotationDocument(sourceDocuemtn, user).getState().equals(
+                            AnnotationDocumentState.IGNORE)){
+                        sourceDocumentsinIgnorState.add(sourceDocuemtn);
+                    }
+                }
+
+                listOfSourceDocuements.removeAll(sourceDocumentsinIgnorState);
+
                 // Index of the current source document in the list
                 int currentDocumentIndex = listOfSourceDocuements
                         .indexOf(annotator.bratAnnotatorModel.getDocument());
@@ -285,6 +300,19 @@ public class AnnotationPage
                 // List of all Source Documents in the project
                 List<SourceDocument> listOfSourceDocuements = repository
                         .listSourceDocuments(annotator.bratAnnotatorModel.getProject());
+
+                String username = SecurityContextHolder.getContext().getAuthentication().getName();
+                User user = repository.getUser(username);
+
+               List<SourceDocument> sourceDocumentsinIgnorState = new ArrayList<SourceDocument>();
+                for (SourceDocument sourceDocuemtn : listOfSourceDocuements) {
+                    if(repository.getAnnotationDocument(sourceDocuemtn, user).getState().equals(
+                            AnnotationDocumentState.IGNORE)){
+                        sourceDocumentsinIgnorState.add(sourceDocuemtn);
+                    }
+                }
+
+                listOfSourceDocuements.removeAll(sourceDocumentsinIgnorState);
 
                 // Index of the current source document in the list
                 int currentDocumentIndex = listOfSourceDocuements
