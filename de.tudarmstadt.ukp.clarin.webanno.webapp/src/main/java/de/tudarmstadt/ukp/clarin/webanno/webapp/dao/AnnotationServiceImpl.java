@@ -255,7 +255,7 @@ public class AnnotationServiceImpl
 
         initializeType(
                 de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.POS,
-                "Stuttgart-Tübingen-Tag-Set \nGerman Part of Speech tagset"
+                "Stuttgart-Tübingen-Tag-Set \nGerman Part of Speech tagset "
                         + "STTS Tag Table (1995/1999): "
                         + "http://www.ims.uni-stuttgart.de/projekte/corplex/TagSets/stts-table.html",
                 "span", "STTS", "de", posTags, posTagDescriptions, aProject, aUser);

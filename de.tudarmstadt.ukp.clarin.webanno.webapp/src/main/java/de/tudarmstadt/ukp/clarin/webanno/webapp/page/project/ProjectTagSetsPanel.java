@@ -533,16 +533,17 @@ public class ProjectTagSetsPanel
                             osw = new OutputStreamWriter(os, "UTF-8");
                             bw = new BufferedWriter(osw);
                             bw.write(tagSet.getName() + "\t"
-                                    + tagSet.getDescription().replace("\n", "").replace("\r", "")
+                                    + tagSet.getDescription().replace("\n", " ").replace("\r", " ")
                                     + "\n");
                             bw.write(tagSet.getType().getType() + "\t" + " \n");
                             bw.write(tagSet.getType().getName()
                                     + "\t"
-                                    + tagSet.getType().getDescription().replace("\n", "")
-                                            .replace("\r", "") + "\n");
+                                    + tagSet.getType().getDescription().replace("\n", " ")
+                                            .replace("\r", " ") + "\n");
                             bw.write(tagSet.getLanguage() + "\t" + " \n");
                             for (Tag tag : annotationService.listTags(tagSet)) {
-                                bw.write(tag.getName() + "\t" + tag.getDescription() + "\n");
+                                bw.write(tag.getName() + "\t" + tag.getDescription()
+                                        .replace("\n", "").replace("\r", " ") + "\n");
                             }
 
                             bw.flush();
