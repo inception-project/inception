@@ -370,11 +370,16 @@ public class MonitoringPage
                             }
                         }
 
+                        // Users with some annotations of this type
+                        int usersWithAnnotation = 0;
                         for (SourceDocument sourceDocument : sourceDocumentsWithAnnotations) {
                             TwoPairedKappa twoPairedKappa = new TwoPairedKappa(project,
                                     projectRepository);
+
                             Set<String> allANnotations = twoPairedKappa.getAllAnnotations(users,
                                     sourceDocument, type);
+                            if(allANnotations.size() != 0){
+                                usersWithAnnotation++;
                             Map<String, Map<String, String>> userAnnotations = twoPairedKappa
                                     .initializeAnnotations(users, allANnotations);
                             userAnnotations = twoPairedKappa.updateUserAnnotations(users,
@@ -387,13 +392,16 @@ public class MonitoringPage
                                     results[i][j] = results[i][j] + thisSourceDocumentResult[i][j];
                                 }
                             }
+                            }
                         }
 
                         // get average agreement value across documents
-                        for (int i = 0; i < users.size(); i++) {
-                            for (int j = 0; j < users.size(); j++) {
-                                results[i][j] = results[i][j]
-                                        / sourceDocumentsWithAnnotations.size();
+                        if(usersWithAnnotation != 0) {
+                            for (int i = 0; i < users.size(); i++) {
+                                for (int j = 0; j < users.size(); j++) {
+                                    results[i][j] = results[i][j]
+                                            / usersWithAnnotation;
+                                }
                             }
                         }
 
