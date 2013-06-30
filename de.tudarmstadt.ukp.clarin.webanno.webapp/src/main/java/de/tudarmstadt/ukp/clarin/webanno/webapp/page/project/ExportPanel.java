@@ -82,9 +82,14 @@ public class ExportPanel
     private static final String META_INF = "/META-INF";
     private static final String EXPORTED_PROJECT = "exportedproject";
     private static final String SOURCE = "/source";
+    private static final String CURATION_AS_SERIALISED_CAS = "/curation_ser";
+    private static final String CURATION = "/curation";
     private static final String LOG = "/log";
     private static final String GUIDELINE = "/guideline";
-    private static final String ANNOTATION = "/annotatiopn/";
+    private static final String ANNOTATION_AS_SERIALISED_CAS = "/annotation_ser/";
+    private static final String ANNOTATION = "/annotation/";
+
+    private static final String CURATION_USER = "CURATION_USER";
 
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
@@ -268,6 +273,7 @@ public class ExportPanel
                         copyProjectLog(aProjectModel.getObject(), exportTempDir);
                         copyGuideLine(aProjectModel.getObject(), exportTempDir);
                         copyProjectMetaInf(aProjectModel.getObject(), exportTempDir);
+                        copyCuratedDocuments(aProjectModel.getObject(), exportTempDir);
                         DaoUtils.zipFolder(exportTempDir, new File(exportTempDir.getAbsolutePath()
                                 + ".zip"));
                     }
@@ -329,6 +335,8 @@ public class ExportPanel
                                 createSourceDocumentContent(zip, importedProject);
                                 // add annotation document content
                                 createAnnotationDocumentContent(zip, importedProject);
+                                // create curation document content
+                                createCurationDocumentContent(zip, importedProject);
                                 // create project log
                                 createProjectLog(zip, importedProject);
                                 // create project guideline
@@ -370,6 +378,12 @@ public class ExportPanel
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = projectRepository.getUser(username);
 
+        File curationCasDir = new File(aCopyDir + CURATION_AS_SERIALISED_CAS);
+        FileUtils.forceMkdir(curationCasDir);
+
+        File curationDir = new File(aCopyDir + CURATION);
+        FileUtils.forceMkdir(curationDir);
+
         // Get all the source documents from the project
         List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = projectRepository
                 .listSourceDocuments(aProject);
@@ -379,9 +393,14 @@ public class ExportPanel
             // If the curation document is exist (either finished or in progress
             if (sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)
                     || sourceDocument.getState().equals(SourceDocumentState.CURATION_IN_PROGRESS)) {
-                File tcfFile = projectRepository.exportAnnotationDocument(sourceDocument, aProject,
+
+                File CurationFileAsSerialisedCas = projectRepository.exportAnnotationDocument(
+                        sourceDocument, aProject, CURATION_USER);
+                File curationFile = projectRepository.exportAnnotationDocument(sourceDocument, aProject,
                         user, TcfWriter.class, sourceDocument.getName(), Mode.CURATION);
-                FileUtils.copyFileToDirectory(tcfFile, aCopyDir);
+
+                FileUtils.copyFileToDirectory(curationFile, curationDir);
+                FileUtils.copyFileToDirectory(CurationFileAsSerialisedCas, curationCasDir);
             }
         }
     }
@@ -453,23 +472,41 @@ public class ExportPanel
     /**
      * Copy annotation document as Serialized CAS from the file system of this project to the export
      * folder
+     *
+     * @throws ClassNotFoundException
+     * @throws WLFormatException
+     * @throws UIMAException
      */
     private void copyAnnotationDocuments(Project aProject, File aCopyDir)
-        throws IOException
+        throws IOException, UIMAException, WLFormatException, ClassNotFoundException
     {
         List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = projectRepository
                 .listSourceDocuments(aProject);
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = projectRepository.getUser(username);
 
         for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
             for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : projectRepository
                     .listAnnotationDocument(sourceDocument)) {
+
+                File annotationDocumentAsSerialisedCasDir = new File(aCopyDir.getAbsolutePath() + ANNOTATION_AS_SERIALISED_CAS
+                        + sourceDocument.getName());
                 File annotationDocumentDir = new File(aCopyDir.getAbsolutePath() + ANNOTATION
                         + sourceDocument.getName());
+
+                FileUtils.forceMkdir(annotationDocumentAsSerialisedCasDir);
                 FileUtils.forceMkdir(annotationDocumentDir);
-                File annotationFile = projectRepository.exportAnnotationDocument(sourceDocument,
-                        aProject, annotationDocument.getUser());
-                if (annotationFile.exists()) {
+
+                File annotationFileAsSerialisedCas = projectRepository.exportAnnotationDocument(
+                        sourceDocument, aProject, annotationDocument.getUser());
+                Class writer = projectRepository.getWritableFormats().get(sourceDocument.getFormat());
+                File annotationFile = projectRepository.exportAnnotationDocument(
+                        sourceDocument, aProject, user, writer, sourceDocument.getName(),
+                        Mode.ANNOTATION);
+                if (annotationFileAsSerialisedCas.exists()) {
+                    FileUtils.copyFileToDirectory(annotationFileAsSerialisedCas, annotationDocumentAsSerialisedCasDir);
                     FileUtils.copyFileToDirectory(annotationFile, annotationDocumentDir);
+
                 }
             }
 
@@ -702,8 +739,8 @@ public class ExportPanel
     {
         for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
             ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
-            if (entry.toString().startsWith(ANNOTATION)) {
-                String fileName = entry.toString().replace(ANNOTATION, "");
+            if (entry.toString().startsWith(ANNOTATION_AS_SERIALISED_CAS)) {
+                String fileName = entry.toString().replace(ANNOTATION_AS_SERIALISED_CAS, "");
 
                 // the user annotated the document is file name minus extension (anno1.ser)
                 String username = FilenameUtils.getBaseName(fileName).replace(".ser", "");
@@ -720,41 +757,68 @@ public class ExportPanel
         }
     }
 
-    private void createProjectGuideline(ZipFile zip, Project aProject)
+    private void createCurationDocumentContent(ZipFile zip, Project aProject)
             throws IOException
         {
             for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
                 ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
-                if (entry.toString().startsWith(GUIDELINE)) {
-                    File guidelineDir =  projectRepository.exportGuideLines(aProject);
-                    FileUtils.forceMkdir(guidelineDir);
-                    FileUtils.copyInputStreamToFile(zip.getInputStream(entry),new File(guidelineDir, FilenameUtils.getName(entry.getName())));
+                if (entry.toString().startsWith(CURATION_AS_SERIALISED_CAS)) {
+                    String fileName = entry.toString().replace(CURATION_AS_SERIALISED_CAS, "");
+
+                    // the user annotated the document is file name minus extension (anno1.ser)
+                    String username = FilenameUtils.getBaseName(fileName).replace(".ser", "");
+
+                    // name of the annotation document
+                    fileName = fileName.replace(FilenameUtils.getName(fileName), "").replace("/", "");
+                    de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument = projectRepository
+                            .getSourceDocument(fileName, aProject);
+                    File annotationFilePath = projectRepository.exportAnnotationDocument(
+                            sourceDocument, aProject, username);
+
+                    FileUtils.copyInputStreamToFile(zip.getInputStream(entry), annotationFilePath);
                 }
             }
         }
+
+    private void createProjectGuideline(ZipFile zip, Project aProject)
+        throws IOException
+    {
+        for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
+            ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
+            if (entry.toString().startsWith(GUIDELINE)) {
+                File guidelineDir = projectRepository.exportGuideLines(aProject);
+                FileUtils.forceMkdir(guidelineDir);
+                FileUtils.copyInputStreamToFile(zip.getInputStream(entry), new File(guidelineDir,
+                        FilenameUtils.getName(entry.getName())));
+            }
+        }
+    }
 
     private void createProjectMetaInf(ZipFile zip, Project aProject)
-            throws IOException
-        {
-            for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
-                ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
-                if (entry.toString().startsWith(META_INF)) {
-                    File metaInfDir =  new File(projectRepository.exportProjectMetaInf(aProject), FilenameUtils.getPath(entry.getName().replace(META_INF, "")));
-                    // where the file reside in the META-INF/... directory
-                    FileUtils.forceMkdir(metaInfDir);
-                    FileUtils.copyInputStreamToFile(zip.getInputStream(entry), new File(metaInfDir, FilenameUtils.getName(entry.getName())));
-                }
+        throws IOException
+    {
+        for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
+            ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
+            if (entry.toString().startsWith(META_INF)) {
+                File metaInfDir = new File(projectRepository.exportProjectMetaInf(aProject),
+                        FilenameUtils.getPath(entry.getName().replace(META_INF, "")));
+                // where the file reside in the META-INF/... directory
+                FileUtils.forceMkdir(metaInfDir);
+                FileUtils.copyInputStreamToFile(zip.getInputStream(entry), new File(metaInfDir,
+                        FilenameUtils.getName(entry.getName())));
             }
         }
+    }
 
     private void createProjectLog(ZipFile zip, Project aProject)
-            throws IOException
-        {
-            for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
-                ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
-                if (entry.toString().startsWith(LOG)) {
-                    FileUtils.copyInputStreamToFile(zip.getInputStream(entry), projectRepository.exportProjectLog(aProject));
-                }
+        throws IOException
+    {
+        for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
+            ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
+            if (entry.toString().startsWith(LOG)) {
+                FileUtils.copyInputStreamToFile(zip.getInputStream(entry),
+                        projectRepository.exportProjectLog(aProject));
             }
         }
+    }
 }
