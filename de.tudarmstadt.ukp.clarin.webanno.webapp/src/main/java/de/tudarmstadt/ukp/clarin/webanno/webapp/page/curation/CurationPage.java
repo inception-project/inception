@@ -374,7 +374,7 @@ public class CurationPage
         reCreateMergeCas.setResizable(true);
         reCreateMergeCas.setWidthUnit("px");
         reCreateMergeCas.setHeightUnit("px");
-        reCreateMergeCas.setTitle("Are you sure you want to re-create Merge CAS? All annotation will be lost!");
+        reCreateMergeCas.setTitle("are you sure? all curation annotations for this document will be lost");
 
         add(new AjaxLink<Void>("showreCreateMergeCasModal")
         {
