@@ -375,14 +375,9 @@ public class ExportPanel
         throws FileNotFoundException, UIMAException, IOException, WLFormatException,
         ClassNotFoundException
     {
+
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = projectRepository.getUser(username);
-
-        File curationCasDir = new File(aCopyDir + CURATION_AS_SERIALISED_CAS);
-        FileUtils.forceMkdir(curationCasDir);
-
-        File curationDir = new File(aCopyDir + CURATION);
-        FileUtils.forceMkdir(curationDir);
 
         // Get all the source documents from the project
         List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = projectRepository
@@ -390,14 +385,21 @@ public class ExportPanel
 
         for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
 
+            File curationCasDir = new File(aCopyDir + CURATION_AS_SERIALISED_CAS+sourceDocument.getName());
+            FileUtils.forceMkdir(curationCasDir);
+
+            File curationDir = new File(aCopyDir + CURATION+sourceDocument.getName());
+            FileUtils.forceMkdir(curationDir);
+
             // If the curation document is exist (either finished or in progress
             if (sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)
                     || sourceDocument.getState().equals(SourceDocumentState.CURATION_IN_PROGRESS)) {
 
                 File CurationFileAsSerialisedCas = projectRepository.exportAnnotationDocument(
                         sourceDocument, aProject, CURATION_USER);
-                File curationFile = projectRepository.exportAnnotationDocument(sourceDocument, aProject,
-                        user, TcfWriter.class, sourceDocument.getName(), Mode.CURATION);
+                File curationFile = projectRepository.exportAnnotationDocument(sourceDocument,
+                        aProject, user, TcfWriter.class,
+                        sourceDocument.getName(), Mode.CURATION);
 
                 FileUtils.copyFileToDirectory(curationFile, curationDir);
                 FileUtils.copyFileToDirectory(CurationFileAsSerialisedCas, curationCasDir);
@@ -482,15 +484,13 @@ public class ExportPanel
     {
         List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = projectRepository
                 .listSourceDocuments(aProject);
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = projectRepository.getUser(username);
 
         for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
             for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : projectRepository
                     .listAnnotationDocument(sourceDocument)) {
 
-                File annotationDocumentAsSerialisedCasDir = new File(aCopyDir.getAbsolutePath() + ANNOTATION_AS_SERIALISED_CAS
-                        + sourceDocument.getName());
+                File annotationDocumentAsSerialisedCasDir = new File(aCopyDir.getAbsolutePath()
+                        + ANNOTATION_AS_SERIALISED_CAS + sourceDocument.getName());
                 File annotationDocumentDir = new File(aCopyDir.getAbsolutePath() + ANNOTATION
                         + sourceDocument.getName());
 
@@ -499,12 +499,14 @@ public class ExportPanel
 
                 File annotationFileAsSerialisedCas = projectRepository.exportAnnotationDocument(
                         sourceDocument, aProject, annotationDocument.getUser());
-                Class writer = projectRepository.getWritableFormats().get(sourceDocument.getFormat());
-                File annotationFile = projectRepository.exportAnnotationDocument(
-                        sourceDocument, aProject, user, writer, sourceDocument.getName(),
-                        Mode.ANNOTATION);
+                Class writer = projectRepository.getWritableFormats().get(
+                        sourceDocument.getFormat());
+                File annotationFile = projectRepository.exportAnnotationDocument(sourceDocument,
+                        aProject, projectRepository.getUser(annotationDocument.getUser()), writer,
+                        sourceDocument.getName(), Mode.ANNOTATION);
                 if (annotationFileAsSerialisedCas.exists()) {
-                    FileUtils.copyFileToDirectory(annotationFileAsSerialisedCas, annotationDocumentAsSerialisedCasDir);
+                    FileUtils.copyFileToDirectory(annotationFileAsSerialisedCas,
+                            annotationDocumentAsSerialisedCasDir);
                     FileUtils.copyFileToDirectory(annotationFile, annotationDocumentDir);
 
                 }
@@ -758,27 +760,27 @@ public class ExportPanel
     }
 
     private void createCurationDocumentContent(ZipFile zip, Project aProject)
-            throws IOException
-        {
-            for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
-                ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
-                if (entry.toString().startsWith(CURATION_AS_SERIALISED_CAS)) {
-                    String fileName = entry.toString().replace(CURATION_AS_SERIALISED_CAS, "");
+        throws IOException
+    {
+        for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
+            ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
+            if (entry.toString().startsWith(CURATION_AS_SERIALISED_CAS)) {
+                String fileName = entry.toString().replace(CURATION_AS_SERIALISED_CAS, "");
 
-                    // the user annotated the document is file name minus extension (anno1.ser)
-                    String username = FilenameUtils.getBaseName(fileName).replace(".ser", "");
+                // the user annotated the document is file name minus extension (anno1.ser)
+                String username = FilenameUtils.getBaseName(fileName).replace(".ser", "");
 
-                    // name of the annotation document
-                    fileName = fileName.replace(FilenameUtils.getName(fileName), "").replace("/", "");
-                    de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument = projectRepository
-                            .getSourceDocument(fileName, aProject);
-                    File annotationFilePath = projectRepository.exportAnnotationDocument(
-                            sourceDocument, aProject, username);
+                // name of the annotation document
+                fileName = fileName.replace(FilenameUtils.getName(fileName), "").replace("/", "");
+                de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument = projectRepository
+                        .getSourceDocument(fileName, aProject);
+                File annotationFilePath = projectRepository.exportAnnotationDocument(
+                        sourceDocument, aProject, username);
 
-                    FileUtils.copyInputStreamToFile(zip.getInputStream(entry), annotationFilePath);
-                }
+                FileUtils.copyInputStreamToFile(zip.getInputStream(entry), annotationFilePath);
             }
         }
+    }
 
     private void createProjectGuideline(ZipFile zip, Project aProject)
         throws IOException
