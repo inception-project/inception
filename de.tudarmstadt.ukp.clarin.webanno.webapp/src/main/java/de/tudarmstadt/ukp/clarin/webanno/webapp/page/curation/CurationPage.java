@@ -24,11 +24,14 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.IHeaderResponse;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.beans.BeansException;
 import org.springframework.dao.DataRetrievalFailureException;
@@ -98,6 +101,9 @@ public class CurationPage
 
     // Open the dialog window on first load
     boolean firstLoad = true;
+
+    private NumberTextField<Integer> gotoPageTextField;
+    private int gotoPageAddress = -1;
 
     public CurationPage()
     {
@@ -340,6 +346,87 @@ public class CurationPage
 
             }
         });
+
+        gotoPageTextField = (NumberTextField<Integer>) new NumberTextField<Integer>("gotoPageText",
+                new Model<Integer>(10));
+        gotoPageTextField.setType(Integer.class);
+        add(gotoPageTextField);
+        gotoPageTextField.add(new AjaxFormComponentUpdatingBehavior("onchange")
+        {
+
+            @Override
+            protected void onUpdate(AjaxRequestTarget target)
+            {
+                JCas mergeJCas = null;
+                    try {
+                        mergeJCas = repository.getCurationDocumentContent(bratAnnotatorModel
+                                .getDocument());
+                    }
+                    catch (UIMAException e) {
+                        error(ExceptionUtils.getRootCause(e));
+                    }
+                    catch (ClassNotFoundException e) {
+                        error(ExceptionUtils.getRootCause(e));
+                    }
+                    catch (IOException e) {
+                        error(e.getMessage());
+                    }
+                gotoPageAddress = BratAjaxCasUtil.getSentenceAddress(mergeJCas, gotoPageTextField
+                                .getModelObject());
+
+            }
+        });
+
+        add(new AjaxLink<Void>("gotoPageLink")
+        {
+            private static final long serialVersionUID = 7496156015186497496L;
+
+            @Override
+            public void onClick(AjaxRequestTarget target)
+            {
+                if (gotoPageAddress == -2) {
+                    target.appendJavaScript("alert('This sentence number is either negative or beyond the last sentence number!')");
+                }
+                else if (bratAnnotatorModel.getDocument() != null) {
+
+                    if (gotoPageAddress == -1) {
+                        // Not Updated, default used
+                        JCas mergeJCas = null;
+                        try {
+                            mergeJCas = repository.getCurationDocumentContent(bratAnnotatorModel
+                                    .getDocument());
+                        }
+                        catch (UIMAException e) {
+                            error(ExceptionUtils.getRootCause(e));
+                        }
+                        catch (ClassNotFoundException e) {
+                            error(ExceptionUtils.getRootCause(e));
+                        }
+                        catch (IOException e) {
+                            error(e.getMessage());
+                        }
+                        gotoPageAddress = BratAjaxCasUtil.getSentenceAddress(mergeJCas, 10);
+                    }
+                    if (bratAnnotatorModel.getSentenceAddress() != gotoPageAddress) {
+                        bratAnnotatorModel.setSentenceAddress(gotoPageAddress);
+
+                        // transform jcas to objects for wicket components
+                        CurationBuilder builder = new CurationBuilder(repository);
+                        curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
+                        curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
+                        updatePanel(curationContainer);
+                        target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                    }
+                    else {
+                        target.appendJavaScript("alert('This sentence is on the same page!')");
+                    }
+                }
+                else {
+                    target.appendJavaScript("alert('Please open a document first!')");
+                }
+            }
+        });
+
 
         final ModalWindow finishCurationModal;
         add(finishCurationModal = new ModalWindow("finishCurationModal"));
