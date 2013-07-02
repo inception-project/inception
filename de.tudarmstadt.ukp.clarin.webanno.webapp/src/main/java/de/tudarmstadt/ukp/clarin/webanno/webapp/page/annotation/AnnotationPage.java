@@ -2,13 +2,13 @@
  * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,14 +24,17 @@ import java.util.List;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.IHeaderResponse;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.link.DownloadLink;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
@@ -85,6 +88,7 @@ public class AnnotationPage
     private AnnotationService annotationService;
 
     private DownloadLink export;
+    WebMarkupContainer markup;
     private int windowSize;
 
     private NumberTextField<Integer> gotoPageTextField;
@@ -93,6 +97,7 @@ public class AnnotationPage
     // Open the dialog window on first load
     boolean firstLoad = true;
 
+    @SuppressWarnings("deprecation")
     public AnnotationPage()
     {
         openDataMOdel = new OpenDocumentModel();
@@ -135,8 +140,11 @@ public class AnnotationPage
                                 && openDataMOdel.getDocument() != null) {
                             String collection = "#" + openDataMOdel.getProject().getName() + "/";
                             String document = openDataMOdel.getDocument().getName();
-                            target.appendJavaScript("window.location.hash = '" + collection
-                                    + document + "';");
+                            target.add(markup.setOutputMarkupId(true));
+                            target.appendJavaScript("window.location.hash = '"
+                                    + collection
+                                    + document
+                                    + "';Wicket.Window.unloadConfirmation=false;window.location.reload()");
                         }
                         else {
                             // A hack, the dialog opens for the first time, and if no document is
@@ -254,11 +262,11 @@ public class AnnotationPage
                 String username = SecurityContextHolder.getContext().getAuthentication().getName();
                 User user = repository.getUser(username);
 
-               List<SourceDocument> sourceDocumentsinIgnorState = new ArrayList<SourceDocument>();
+                List<SourceDocument> sourceDocumentsinIgnorState = new ArrayList<SourceDocument>();
                 for (SourceDocument sourceDocuemtn : listOfSourceDocuements) {
-                    if(repository.existsAnnotationDocument(sourceDocuemtn, user) &&
-                            repository.getAnnotationDocument(sourceDocuemtn, user).getState().equals(
-                            AnnotationDocumentState.IGNORE)){
+                    if (repository.existsAnnotationDocument(sourceDocuemtn, user)
+                            && repository.getAnnotationDocument(sourceDocuemtn, user).getState()
+                                    .equals(AnnotationDocumentState.IGNORE)) {
                         sourceDocumentsinIgnorState.add(sourceDocuemtn);
                     }
                 }
@@ -307,11 +315,11 @@ public class AnnotationPage
                 String username = SecurityContextHolder.getContext().getAuthentication().getName();
                 User user = repository.getUser(username);
 
-               List<SourceDocument> sourceDocumentsinIgnorState = new ArrayList<SourceDocument>();
+                List<SourceDocument> sourceDocumentsinIgnorState = new ArrayList<SourceDocument>();
                 for (SourceDocument sourceDocuemtn : listOfSourceDocuements) {
-                    if(repository.existsAnnotationDocument(sourceDocuemtn, user) &&
-                            repository.getAnnotationDocument(sourceDocuemtn, user).getState().equals(
-                            AnnotationDocumentState.IGNORE)){
+                    if (repository.existsAnnotationDocument(sourceDocuemtn, user)
+                            && repository.getAnnotationDocument(sourceDocuemtn, user).getState()
+                                    .equals(AnnotationDocumentState.IGNORE)) {
                         sourceDocumentsinIgnorState.add(sourceDocuemtn);
                     }
                 }
@@ -558,18 +566,68 @@ public class AnnotationPage
         yesNoModal.setHeightUnit("px");
         yesNoModal.setTitle("Are you sure you want to finish annotating?");
 
-        add(new AjaxLink<Void>("showYesNoModal")
+        AjaxLink<Void> showYesNoModal;
+
+        markup = new WebMarkupContainer("finishImage");
+        markup.add(new AttributeModifier("src", true, new LoadableDetachableModel<String>()
+        {
+            private static final long serialVersionUID = 1562727305401900776L;
+
+            @Override
+            protected String load()
+            {
+                String username = SecurityContextHolder.getContext().getAuthentication().getName();
+                User user = repository.getUser(username);
+
+                if (openDataMOdel.getProject() != null && openDataMOdel.getDocument() != null) {
+                    if (repository.getAnnotationDocument(openDataMOdel.getDocument(), user)
+                            .getState().equals(AnnotationDocumentState.FINISHED)) {
+                        return "images/accept.png";
+                    }
+                    else {
+                        return "images/cog.png";
+                    }
+                }
+                else {
+                    return "images/cog.png";
+                }
+
+            }
+        }));
+
+        add(showYesNoModal = new AjaxLink<Void>("showYesNoModal")
         {
             private static final long serialVersionUID = 7496156015186497496L;
 
             @Override
             public void onClick(AjaxRequestTarget target)
             {
-                yesNoModal.setContent(new YesNoModalPanel(yesNoModal.getContentId(), openDataMOdel,
-                        yesNoModal, Mode.ANNOTATION));
-                yesNoModal.show(target);
+                String username = SecurityContextHolder.getContext().getAuthentication().getName();
+                User user = repository.getUser(username);
+                if (repository.getAnnotationDocument(openDataMOdel.getDocument(), user).getState()
+                        .equals(AnnotationDocumentState.FINISHED)) {
+                    target.appendJavaScript("alert('Document already closed!')");
+                }
+                else {
+                    yesNoModal.setContent(new YesNoModalPanel(yesNoModal.getContentId(),
+                            openDataMOdel, yesNoModal, Mode.ANNOTATION));
+                    yesNoModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
+                    {
+                        private static final long serialVersionUID = -1746088901018629567L;
+
+                        @Override
+                        public void onClose(AjaxRequestTarget target)
+                        {
+                            target.add(markup.setOutputMarkupId(true));
+                            target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                        }
+                    });
+                    yesNoModal.show(target);
+                }
+
             }
         });
+        showYesNoModal.add(markup);
     }
 
     @Override
@@ -590,7 +648,7 @@ public class AnnotationPage
             String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
             User user = repository.getUser(username);
-            BratAjaxCasController controller = new BratAjaxCasController( repository,
+            BratAjaxCasController controller = new BratAjaxCasController(repository,
                     annotationService);
             jCas = controller.getJCas(aDocument, aProject, user);
         }
