@@ -415,7 +415,7 @@ public class BratAjaxCasController
     {
 
         String annotationType = BratAjaxCasUtil.getAnnotationType(aUIData.getType());
-        
+
         if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
             ArcAdapter.getDependencyAdapter().delete(aUIData, aBratAnnotatorModel);
         }
@@ -545,7 +545,7 @@ public class BratAjaxCasController
         if (aMode.equals(Mode.ANNOTATION)) {
             repository.createAnnotationDocumentContent(aJcas, aSourceDocument, aUser);
         }
-        else if (aMode.equals(Mode.CURATION)||aMode.equals(Mode.CURATIONANNOTATION)) {
+        else if (aMode.equals(Mode.CURATION)||aMode.equals(Mode.MERGE)) {
             repository.createCurationDocumentContent(aJcas, aSourceDocument, aUser);
         }
     }

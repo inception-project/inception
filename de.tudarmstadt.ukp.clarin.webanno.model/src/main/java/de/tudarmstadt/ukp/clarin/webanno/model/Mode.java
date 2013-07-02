@@ -14,12 +14,32 @@
  * limitations under the License.
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.model;
+
 /**
  * Subjects of interest, either annotation or curation.
+ *
  * @author Seid Muhie Yimam
  *
  */
 public enum Mode
 {
-ANNOTATION, CURATION, CURATIONANNOTATION;
+    /**
+     * This mode is used when the user is in the annotation page of WebAnno and perform any of the
+     * tasks such as creating annotation document, setting annotation preference, exporting file and
+     * so on.
+     *
+     */
+    ANNOTATION,
+    /**
+     * This mode is used when the user is in the curation page of WebAnno and perform any of the
+     * tasks such as creating curation document, setting annotation preference, exporting file and
+     * so on.
+     *
+     */
+    CURATION,
+    /**
+     * This mode is used when the user is in the curation page of WebAnno but makes an explicit
+     * annotation in addition to adjudicating annotations from users.
+     */
+    MERGE;
 }
