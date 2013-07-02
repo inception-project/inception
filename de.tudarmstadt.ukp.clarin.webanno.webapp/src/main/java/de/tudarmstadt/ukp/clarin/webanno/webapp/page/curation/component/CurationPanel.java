@@ -405,7 +405,7 @@ public class CurationPanel
         throws IOException, UIMAException, ClassNotFoundException
     {
 
-        String spanType = aRequest.getParameterValue("spanType").toString()
+        String spanType = aRequest.getParameterValue("type").toString()
                 .replace("_(" + AnnotationState.AGREE.name() + ")", "")
                 .replace("_(" + AnnotationState.USE.name() + ")", "")
                 .replace("_(" + AnnotationState.DISAGREE.name() + ")", "")
@@ -584,7 +584,7 @@ public class CurationPanel
          * addresses, username)); mergeUserSegment.setCollectionData("{}");
          * mergeUserSegment.setDocumentResponse(getStringDocumentResponse(response));
          */
-        bratAnnotatorModel.setMode(Mode.CURATIONANNOTATION);
+        bratAnnotatorModel.setMode(Mode.MERGE);
         mergeVisualizer.setModelObject(bratAnnotatorModel);
         mergeVisualizer.reloadContent(target);
 
