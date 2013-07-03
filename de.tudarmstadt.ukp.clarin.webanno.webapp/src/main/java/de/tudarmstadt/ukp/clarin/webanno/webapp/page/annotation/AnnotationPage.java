@@ -88,7 +88,7 @@ public class AnnotationPage
     private AnnotationService annotationService;
 
     private DownloadLink export;
-    WebMarkupContainer markup;
+    WebMarkupContainer finish;
     private int windowSize;
 
     private NumberTextField<Integer> gotoPageTextField;
@@ -138,9 +138,11 @@ public class AnnotationPage
                     {
                         if (openDataMOdel.getProject() != null
                                 && openDataMOdel.getDocument() != null) {
+                            annotator.bratAnnotatorModel.setDocument(openDataMOdel.getDocument());
+                            annotator.bratAnnotatorModel.setProject(openDataMOdel.getProject());
                             String collection = "#" + openDataMOdel.getProject().getName() + "/";
                             String document = openDataMOdel.getDocument().getName();
-                            target.add(markup.setOutputMarkupId(true));
+                            target.add(finish.setOutputMarkupId(true));
                             target.appendJavaScript("window.location.hash = '"
                                     + collection
                                     + document
@@ -284,12 +286,15 @@ public class AnnotationPage
                 else {
                     annotator.bratAnnotatorModel.setDocumentName(listOfSourceDocuements.get(
                             currentDocumentIndex - 1).getName());
-                    // target.add(annotator);
+                    annotator.bratAnnotatorModel.setDocument(listOfSourceDocuements.get(
+                            currentDocumentIndex - 1));
+
                     String project = "#" + annotator.bratAnnotatorModel.getProject().getName()
                             + "/";
                     String document = listOfSourceDocuements.get(currentDocumentIndex - 1)
                             .getName();
                     String rewriteUrl = project + document;
+                    target.add(finish.setOutputMarkupId(true));
                     target.appendJavaScript("window.location.hash = '" + rewriteUrl
                             + "'; Wicket.Window.unloadConfirmation=false;window.location.reload()");
                 }
@@ -330,19 +335,21 @@ public class AnnotationPage
                 int currentDocumentIndex = listOfSourceDocuements
                         .indexOf(annotator.bratAnnotatorModel.getDocument());
 
-                // If the first the document
+                // If the first document
                 if (currentDocumentIndex == listOfSourceDocuements.size() - 1) {
                     target.appendJavaScript("alert('This is the last document!')");
                 }
                 else {
                     annotator.bratAnnotatorModel.setDocumentName(listOfSourceDocuements.get(
                             currentDocumentIndex + 1).getName());
-                    // target.add(annotator);
+                    annotator.bratAnnotatorModel.setDocument(listOfSourceDocuements.get(
+                            currentDocumentIndex + 1));
                     String project = "#" + annotator.bratAnnotatorModel.getProject().getName()
                             + "/";
                     String document = listOfSourceDocuements.get(currentDocumentIndex + 1)
                             .getName();
                     String rewriteUrl = project + document;
+                    target.add(finish.setOutputMarkupId(true));
                     target.appendJavaScript("window.location.hash = '" + rewriteUrl
                             + "'; Wicket.Window.unloadConfirmation=false;window.location.reload()");
                 }
@@ -568,8 +575,8 @@ public class AnnotationPage
 
         AjaxLink<Void> showYesNoModal;
 
-        markup = new WebMarkupContainer("finishImage");
-        markup.add(new AttributeModifier("src", true, new LoadableDetachableModel<String>()
+        finish = new WebMarkupContainer("finishImage");
+        finish.add(new AttributeModifier("src", true, new LoadableDetachableModel<String>()
         {
             private static final long serialVersionUID = 1562727305401900776L;
 
@@ -579,17 +586,19 @@ public class AnnotationPage
                 String username = SecurityContextHolder.getContext().getAuthentication().getName();
                 User user = repository.getUser(username);
 
-                if (openDataMOdel.getProject() != null && openDataMOdel.getDocument() != null) {
-                    if (repository.getAnnotationDocument(openDataMOdel.getDocument(), user)
+                if (annotator.bratAnnotatorModel.getProject() != null
+                        && annotator.bratAnnotatorModel.getDocument() != null) {
+                    if (repository.existsAnnotationDocument(annotator.bratAnnotatorModel.getDocument(), user) && repository
+                            .getAnnotationDocument(annotator.bratAnnotatorModel.getDocument(), user)
                             .getState().equals(AnnotationDocumentState.FINISHED)) {
-                        return "images/accept.png";
+                        return "images/cancel.png";
                     }
                     else {
-                        return "images/cog.png";
+                        return "images/accept.png";
                     }
                 }
                 else {
-                    return "images/cog.png";
+                    return "images/accept.png";
                 }
 
             }
@@ -618,7 +627,7 @@ public class AnnotationPage
                         @Override
                         public void onClose(AjaxRequestTarget target)
                         {
-                            target.add(markup.setOutputMarkupId(true));
+                            target.add(finish.setOutputMarkupId(true));
                             target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
                         }
                     });
@@ -627,7 +636,7 @@ public class AnnotationPage
 
             }
         });
-        showYesNoModal.add(markup);
+        showYesNoModal.add(finish);
     }
 
     @Override
