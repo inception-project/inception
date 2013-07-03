@@ -83,7 +83,9 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.Curation
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.project.SettingsPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.statistics.TwoPairedKappa;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.support.ChartImageResource;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.support.DynamicColumnMetaData;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.support.EntityModel;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.support.TableDataProvider;
 
 /**
  * Monitoring To display different monitoring and statistics measurements tabularly and graphically.
@@ -432,7 +434,7 @@ public class MonitoringPage
                         List<IColumn<?>> columns = new ArrayList<IColumn<?>>();
 
                         for (int m = 0; m < provider.getColumnCount(); m++) {
-                            columns.add(new AgreementColumnMetaData(provider, m));
+                            columns.add(new DynamicColumnMetaData(provider, m));
                         }
                         agreementTable.remove();
                         agreementTable = new DefaultDataTable("agreementTable", columns, provider,
@@ -530,7 +532,7 @@ public class MonitoringPage
             List<IColumn<?>> columns = new ArrayList<IColumn<?>>();
 
             for (int m = 0; m < provider.getColumnCount(); m++) {
-                columns.add(new AgreementColumnMetaData(provider, m));
+                columns.add(new DynamicColumnMetaData(provider, m));
             }
             add(agreementTable = new DefaultDataTable("agreementTable", columns, provider, 10));
         }

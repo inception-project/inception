@@ -2,13 +2,13 @@
  * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,6 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.crowdsource.CrowdSourcePage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.CurationPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.monitoring.MonitoringPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.project.ProjectPage;
@@ -55,6 +56,7 @@ public class WelcomePage
     AjaxLink annotation;
     AjaxLink monitoring;
     AjaxLink usremanagement;
+    AjaxLink crowdSource;
 
     public WelcomePage()
     {
@@ -200,6 +202,41 @@ public class WelcomePage
                 };
         MetaDataRoleAuthorizationStrategy.authorize(usremanagement, Component.RENDER, "ROLE_ADMIN");
         add(usremanagement);
+
+
+        // Add crowdsource link
+        // Only Admins can see this link
+
+        boolean crowdSourceAdded = false;
+        crowdSource = new AjaxLink<Void>("crowdSource")
+        {
+            private static final long serialVersionUID = 7496156015186497496L;
+
+            @Override
+            public void onClick(AjaxRequestTarget target)
+            {
+                setResponsePage(CrowdSourcePage.class);
+            }
+        };
+
+        for (Project project : projectRepository.listProjects()) {
+
+            if (ApplicationUtils.isProjectAdmin(project, projectRepository, user)
+                    || ApplicationUtils.isCurator(project, projectRepository, user)) {
+                add(crowdSource);
+                crowdSourceAdded = true;
+                break;
+            }
+        }
+        if (ApplicationUtils.isSuperAdmin(projectRepository, user) && !crowdSourceAdded) {
+            add(crowdSource);
+        }
+        else if (!crowdSourceAdded) {
+
+            add(crowdSource);
+            crowdSource.setVisible(false);
+
+        }
     }
 
     private static final long serialVersionUID = -530084892002620197L;

@@ -47,6 +47,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.support.EmbeddableImage;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.support.TableDataProvider;
 
 /**
  * Build dynamic columns for the user's annotation documents status {@link DataGridView}
