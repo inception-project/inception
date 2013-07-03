@@ -33,11 +33,13 @@ import org.apache.wicket.extensions.markup.html.repeater.data.table.AbstractColu
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DefaultDataTable;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.AbstractReadOnlyModel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.resource.ContextRelativeResource;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
@@ -90,7 +92,7 @@ public class CrowdSourcePage
             columnHeaders.add("project");
             columnHeaders.add("document");
             columnHeaders.add("status");
-            columnHeaders.add("edit");
+            columnHeaders.add("Settings");
 
             List<List<String>> rowData = new ArrayList<List<String>>();
 
@@ -244,6 +246,41 @@ public class CrowdSourcePage
         add(new Label("link"));
         add(new Label("status"));
 
+        // send document crowd flower and get back status and link
+        add(new Button("upload", new ResourceModel("label"))
+        {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public void onSubmit()
+            {
+                // Get the source document here
+                // create annotation document for CROWD_USER
+                // Get the JCAS
+                // Convert it to approprate crowdfloweer format
+                // Get template
+                // Get gold
+                // Send to crowd flower
+            }
+        });
+
+        // update the status of this source document from crowd
+        add(new Button("update", new ResourceModel("label"))
+        {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public void onSubmit()
+            {
+                // Get the source document here
+                // create annotation document for CROWD_USER
+                // Get the JCAS
+                // Convert it to approprate crowdfloweer format
+                // Get template
+                // Get gold
+                // Send to crowd flower
+            }
+        });
     }
 }
 
