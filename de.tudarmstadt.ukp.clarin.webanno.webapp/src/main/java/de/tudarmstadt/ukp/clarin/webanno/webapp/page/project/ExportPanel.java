@@ -383,7 +383,6 @@ public class ExportPanel
     {
 
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = projectRepository.getUser(username);
 
         // Get all the source documents from the project
         List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = projectRepository
@@ -391,10 +390,11 @@ public class ExportPanel
 
         for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
 
-            File curationCasDir = new File(aCopyDir + CURATION_AS_SERIALISED_CAS+sourceDocument.getName());
+            File curationCasDir = new File(aCopyDir + CURATION_AS_SERIALISED_CAS
+                    + sourceDocument.getName());
             FileUtils.forceMkdir(curationCasDir);
 
-            File curationDir = new File(aCopyDir + CURATION+sourceDocument.getName());
+            File curationDir = new File(aCopyDir + CURATION + sourceDocument.getName());
             FileUtils.forceMkdir(curationDir);
 
             // If the curation document is exist (either finished or in progress
@@ -403,12 +403,17 @@ public class ExportPanel
 
                 File CurationFileAsSerialisedCas = projectRepository.exportAnnotationDocument(
                         sourceDocument, aProject, CURATION_USER);
-                File curationFile = projectRepository.exportAnnotationDocument(sourceDocument,
-                        aProject, username, TcfWriter.class,
-                        sourceDocument.getName(), Mode.CURATION);
-
-                FileUtils.copyFileToDirectory(curationFile, curationDir);
-                FileUtils.copyFileToDirectory(CurationFileAsSerialisedCas, curationCasDir);
+                File curationFile = null;
+                if (CurationFileAsSerialisedCas.exists()) {
+                    curationFile = projectRepository.exportAnnotationDocument(sourceDocument,
+                            aProject, username, TcfWriter.class, sourceDocument.getName(),
+                            Mode.CURATION);
+                }
+                // in Case they didn't exist
+                if (CurationFileAsSerialisedCas.exists()) {
+                    FileUtils.copyFileToDirectory(curationFile, curationDir);
+                    FileUtils.copyFileToDirectory(CurationFileAsSerialisedCas, curationCasDir);
+                }
             }
         }
     }
@@ -495,32 +500,38 @@ public class ExportPanel
             for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : projectRepository
                     .listAnnotationDocument(sourceDocument)) {
 
-                // copy annotation document only for ACTIVE users and the state of the annotation document
+                // copy annotation document only for ACTIVE users and the state of the annotation
+                // document
                 // is not NEW/IGNOR
-                if(userRepository.get(annotationDocument.getUser()) != null
+                if (userRepository.get(annotationDocument.getUser()) != null
                         && !annotationDocument.getState().equals(AnnotationDocumentState.NEW)
-                        && !annotationDocument.getState().equals(AnnotationDocumentState.IGNORE) ){
-                File annotationDocumentAsSerialisedCasDir = new File(aCopyDir.getAbsolutePath()
-                        + ANNOTATION_AS_SERIALISED_CAS + sourceDocument.getName());
-                File annotationDocumentDir = new File(aCopyDir.getAbsolutePath() + ANNOTATION
-                        + sourceDocument.getName());
+                        && !annotationDocument.getState().equals(AnnotationDocumentState.IGNORE)) {
+                    File annotationDocumentAsSerialisedCasDir = new File(aCopyDir.getAbsolutePath()
+                            + ANNOTATION_AS_SERIALISED_CAS + sourceDocument.getName());
+                    File annotationDocumentDir = new File(aCopyDir.getAbsolutePath() + ANNOTATION
+                            + sourceDocument.getName());
 
-                FileUtils.forceMkdir(annotationDocumentAsSerialisedCasDir);
-                FileUtils.forceMkdir(annotationDocumentDir);
+                    FileUtils.forceMkdir(annotationDocumentAsSerialisedCasDir);
+                    FileUtils.forceMkdir(annotationDocumentDir);
 
-                File annotationFileAsSerialisedCas = projectRepository.exportAnnotationDocument(
-                        sourceDocument, aProject, annotationDocument.getUser());
-                Class writer = projectRepository.getWritableFormats().get(
-                        sourceDocument.getFormat());
-                File annotationFile = projectRepository.exportAnnotationDocument(sourceDocument,
-                        aProject, annotationDocument.getUser(), writer,
-                        sourceDocument.getName(), Mode.ANNOTATION);
-                if (annotationFileAsSerialisedCas.exists()) {
-                    FileUtils.copyFileToDirectory(annotationFileAsSerialisedCas,
-                            annotationDocumentAsSerialisedCasDir);
-                    FileUtils.copyFileToDirectory(annotationFile, annotationDocumentDir);
+                    File annotationFileAsSerialisedCas = projectRepository
+                            .exportAnnotationDocument(sourceDocument, aProject,
+                                    annotationDocument.getUser());
 
-                }
+                    File annotationFile = null;
+                    if (annotationFileAsSerialisedCas.exists()) {
+                        Class writer = projectRepository.getWritableFormats().get(
+                                sourceDocument.getFormat());
+                        annotationFile = projectRepository.exportAnnotationDocument(sourceDocument,
+                                aProject, annotationDocument.getUser(), writer,
+                                sourceDocument.getName(), Mode.ANNOTATION);
+                    }
+                    if (annotationFileAsSerialisedCas.exists()) {
+                        FileUtils.copyFileToDirectory(annotationFileAsSerialisedCas,
+                                annotationDocumentAsSerialisedCasDir);
+                        FileUtils.copyFileToDirectory(annotationFile, annotationDocumentDir);
+
+                    }
                 }
             }
 
