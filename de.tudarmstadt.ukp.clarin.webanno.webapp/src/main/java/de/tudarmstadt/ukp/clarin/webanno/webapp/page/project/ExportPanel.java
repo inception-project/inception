@@ -2,13 +2,13 @@
  * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -54,11 +54,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.TagSet;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -97,6 +99,9 @@ public class ExportPanel
 
     @SpringBean(name = "documentRepository")
     private RepositoryService projectRepository;
+
+    @SpringBean(name = "userRepository")
+    private UserDao userRepository;
 
     private FileUploadField fileUpload;
     private FileUpload uploadedFile;
@@ -399,7 +404,7 @@ public class ExportPanel
                 File CurationFileAsSerialisedCas = projectRepository.exportAnnotationDocument(
                         sourceDocument, aProject, CURATION_USER);
                 File curationFile = projectRepository.exportAnnotationDocument(sourceDocument,
-                        aProject, user, TcfWriter.class,
+                        aProject, username, TcfWriter.class,
                         sourceDocument.getName(), Mode.CURATION);
 
                 FileUtils.copyFileToDirectory(curationFile, curationDir);
@@ -490,6 +495,11 @@ public class ExportPanel
             for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : projectRepository
                     .listAnnotationDocument(sourceDocument)) {
 
+                // copy annotation document only for ACTIVE users and the state of the annotation document
+                // is not NEW/IGNOR
+                if(userRepository.get(annotationDocument.getUser()) != null
+                        && !annotationDocument.getState().equals(AnnotationDocumentState.NEW)
+                        && !annotationDocument.getState().equals(AnnotationDocumentState.IGNORE) ){
                 File annotationDocumentAsSerialisedCasDir = new File(aCopyDir.getAbsolutePath()
                         + ANNOTATION_AS_SERIALISED_CAS + sourceDocument.getName());
                 File annotationDocumentDir = new File(aCopyDir.getAbsolutePath() + ANNOTATION
@@ -503,13 +513,14 @@ public class ExportPanel
                 Class writer = projectRepository.getWritableFormats().get(
                         sourceDocument.getFormat());
                 File annotationFile = projectRepository.exportAnnotationDocument(sourceDocument,
-                        aProject, projectRepository.getUser(annotationDocument.getUser()), writer,
+                        aProject, annotationDocument.getUser(), writer,
                         sourceDocument.getName(), Mode.ANNOTATION);
                 if (annotationFileAsSerialisedCas.exists()) {
                     FileUtils.copyFileToDirectory(annotationFileAsSerialisedCas,
                             annotationDocumentAsSerialisedCasDir);
                     FileUtils.copyFileToDirectory(annotationFile, annotationDocumentDir);
 
+                }
                 }
             }
 
