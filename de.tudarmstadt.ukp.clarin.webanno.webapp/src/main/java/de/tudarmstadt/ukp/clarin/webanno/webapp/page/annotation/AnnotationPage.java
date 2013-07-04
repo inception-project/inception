@@ -613,13 +613,13 @@ public class AnnotationPage
             {
                 String username = SecurityContextHolder.getContext().getAuthentication().getName();
                 User user = repository.getUser(username);
-                if (repository.getAnnotationDocument(openDataMOdel.getDocument(), user).getState()
+                if (repository.getAnnotationDocument(annotator.bratAnnotatorModel.getDocument(), user).getState()
                         .equals(AnnotationDocumentState.FINISHED)) {
                     target.appendJavaScript("alert('Document already closed!')");
                 }
                 else {
                     yesNoModal.setContent(new YesNoModalPanel(yesNoModal.getContentId(),
-                            openDataMOdel, yesNoModal, Mode.ANNOTATION));
+                            annotator.bratAnnotatorModel, yesNoModal, Mode.ANNOTATION));
                     yesNoModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
                     {
                         private static final long serialVersionUID = -1746088901018629567L;
@@ -628,7 +628,6 @@ public class AnnotationPage
                         public void onClose(AjaxRequestTarget target)
                         {
                             target.add(finish.setOutputMarkupId(true));
-                            target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
                         }
                     });
                     yesNoModal.show(target);
