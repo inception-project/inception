@@ -77,6 +77,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
+import de.tudarmstadt.ukp.clarin.webanno.model.CrowdJob;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -218,6 +219,17 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
+    public void createCrowdJob(CrowdJob aCrowdJob){
+        if (aCrowdJob.getId() == 0) {
+            entityManager.persist(aCrowdJob);
+        }
+        else{
+            entityManager.merge(aCrowdJob);
+        }
+    }
+
+    @Override
+    @Transactional
     public void createProjectPermission(ProjectPermission aPermission)
         throws IOException
     {
@@ -269,6 +281,19 @@ public class RepositoryServiceDbData
     {
         try {
             entityManager.createQuery("FROM Project WHERE name = :name", Project.class)
+                    .setParameter("name", aName).getSingleResult();
+            return true;
+        }
+        catch (NoResultException ex) {
+            return false;
+        }
+    }
+
+    @Override
+    @Transactional
+   public boolean existsCrowdJob(String aName){
+        try {
+            entityManager.createQuery("FROM CrowdJob WHERE name = :name", CrowdJob.class)
                     .setParameter("name", aName).getSingleResult();
             return true;
         }
@@ -575,7 +600,12 @@ public class RepositoryServiceDbData
         return entityManager.createQuery("FROM Project WHERE name = :name", Project.class)
                 .setParameter("name", aName).getSingleResult();
     }
-
+    @Override
+    @Transactional
+    public CrowdJob getCrowdJob(String aName){
+        return entityManager.createQuery("FROM CrowdJob WHERE name = :name", CrowdJob.class)
+                .setParameter("name", aName).getSingleResult();
+    }
     @Override
     public Project getProject(long aId)
     {
@@ -739,6 +769,11 @@ public class RepositoryServiceDbData
     }
 
     @Override
+    @Transactional
+    public List<CrowdJob> listCrowdJobs(){
+        return entityManager.createQuery("FROM CrowdJob", CrowdJob.class).getResultList();
+    }
+    @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public List<SourceDocument> listSourceDocuments(Project aProject)
     {
@@ -773,7 +808,6 @@ public class RepositoryServiceDbData
 
         for (SourceDocument document : listSourceDocuments(aProject)) {
             removeSourceDocument(document, aUser);
-
         }
 
         for (TagSet tagset : annotationService.listTagSets(aProject)) {
@@ -800,6 +834,11 @@ public class RepositoryServiceDbData
 
     }
 
+    @Override
+    @Transactional
+    public void removeCrowdJob(CrowdJob crowdProject){
+        entityManager.remove(entityManager.merge(crowdProject));
+    }
     @Override
     public void removeAnnotationGuideline(Project aProject, String aFileName)
         throws IOException

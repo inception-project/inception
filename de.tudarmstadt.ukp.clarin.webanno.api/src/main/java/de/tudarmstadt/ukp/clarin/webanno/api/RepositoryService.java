@@ -31,6 +31,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
+import de.tudarmstadt.ukp.clarin.webanno.model.CrowdJob;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -99,6 +100,12 @@ public interface RepositoryService
         throws IOException;
 
     /**
+     * Create a crowd Project which contains some source document. A crowd project contains source documents
+     * from {@link Project}(s), a {@link SourceDocument} belongs at most to one {@link CrowdJob}.
+     */
+    void createCrowdJob(CrowdJob crowdProject);
+
+    /**
      * creates a project permission, adding permission level for the user in the given project
      *
      * @param permission
@@ -141,6 +148,10 @@ public interface RepositoryService
      * @return
      */
     boolean existsProject(String name);
+    /**
+     * Check if a crowd project already exist or not
+     */
+    boolean existsCrowdJob(String name);
 
     /**
      * Check if a user have at least one {@link PermissionLevel } for this {@link Project}
@@ -289,6 +300,10 @@ public interface RepositoryService
      *         Exception is handled from the calling method.
      */
     Project getProject(String name);
+    /**
+     * Get a {@link CrowdJob} by its name
+     */
+    CrowdJob getCrowdJob(String name);
 
     /**
      * Get a project by its id.
@@ -415,6 +430,12 @@ public interface RepositoryService
     List<Project> listProjects();
 
     /**
+     * List {@link CrowdJob}s/Crowd Tasks in the system
+     * @return
+     */
+    List<CrowdJob> listCrowdJobs();
+
+    /**
      * List all source documents in a project. The source documents are the original TCF documents
      * imported.
      *
@@ -488,6 +509,12 @@ public interface RepositoryService
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     void removeProject(Project project, User aser)
         throws IOException;
+    /**
+     * remove a crowd project
+     * @param crowdProject
+     */
+
+    void removeCrowdJob(CrowdJob crowdProject);
 
     /**
      * ROLE_ADMINs or Projetc admins can remove source documents from a project. removing a a source
