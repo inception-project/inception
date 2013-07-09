@@ -52,6 +52,9 @@ public class CrowdJob
     @ManyToMany
     private Set<SourceDocument> documents = new HashSet<SourceDocument>();
 
+
+    private Project project;
+
     public long getId()
     {
         return id;
@@ -81,5 +84,16 @@ public class CrowdJob
     {
         this.documents = documents;
     }
+
+    public Project getProject()
+    {
+        return project;
+    }
+
+    public void setProject(Project project)
+    {
+        this.project = project;
+    }
+
 
 }

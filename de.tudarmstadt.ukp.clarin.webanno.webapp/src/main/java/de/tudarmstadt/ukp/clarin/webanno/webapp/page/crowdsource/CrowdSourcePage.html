@@ -11,8 +11,19 @@
     <wicket:extend>
       <table class="hfill">
         <tr style="vertical-align: top;">
-          <td width="40%">
+          <td width="50%">
             <form wicket:id="crowdSourceForm">
+              <fieldset class="ui-widget-content ui-corner-all">
+                <legend>
+                  CrowdFlower Projects
+                </legend>
+                <select wicket:id="project" class ="hfill">
+                </select>
+              </fieldset>
+            </form>
+          </td>
+          <td width="50%">
+            <form wicket:id="crowdJobForm">
               <fieldset class="ui-widget-content ui-corner-all">
                 <legend>
                   CrowdFlower Information
@@ -22,11 +33,12 @@
                 <div class="buttons">
                   <input type="submit" wicket:id="new" />
                 </div>
-
               </fieldset>
             </form>
           </td>
-          <td width="60%">
+        </tr>
+        <tr style="vertical-align: top;">
+          <td width="50%">
             <form wicket:id="crowdJobDetailForm">
               <fieldset class="ui-widget-content ui-corner-all">
                 <legend>
@@ -75,18 +87,7 @@
               </fieldset>
             </form>
           </td>
-          <!--
-            <td width="30%"> <form wicket:id="projectListForm"> <fieldset class="ui-widget-content ui-corner-all">
-            <legend>Crowd Projects</legend> <select wicket:id="project" size="10"></select> </fieldset> </form> </td>
-            <td width="30%"> <form wicket:id="documentChoiceForm"> <fieldset class="ui-widget-content ui-corner-all">
-            <legend>Documents</legend> <span wicket:id="document"></span> </fieldset> </form> </td>
-          -->
-
-        </tr>
-        <tr>
-          <td>
-          </td>
-          <td width="60%">
+          <td width="50%">
             <form wicket:id="crowdDocumentListForm">
               <fieldset class="ui-widget-content ui-corner-all">
                 <legend>

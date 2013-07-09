@@ -41,6 +41,7 @@ import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.CheckBoxMultipleChoice;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.markup.html.form.ListMultipleChoice;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.repeater.Item;
@@ -88,35 +89,96 @@ public class CrowdSourcePage
     private static final String CROWD_USER = "crowd_user";
 
     private CrowdJob selectedCrowdJob;
+    private Project selectedProject;
 
     boolean createCrowdJob = false;
 
     private ArrayList<SourceDocument> documents = new ArrayList<SourceDocument>();
 
     private class CrowdSourceForm
-        extends Form<Void>
+        extends Form<SelectionModel>
     {
         private static final long serialVersionUID = -1L;
 
         public CrowdSourceForm(String id)
         {
-            super(id);
+            super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
+            add(new ListChoice<Project>("project")
+            {
+                private static final long serialVersionUID = 1L;
+
+                {
+                    setChoices(new LoadableDetachableModel<List<Project>>()
+                    {
+                        private static final long serialVersionUID = 1L;
+
+                        @Override
+                        protected List<Project> load()
+                        {
+                            List<Project> allProjects = projectRepository.listProjects();
+                            List<Project> crowdProjects = new ArrayList<Project>();
+                            User user = userRepository.get(CROWD_USER);
+                            for (Project project : allProjects) {
+                                List<User> users = projectRepository
+                                        .listProjectUsersWithPermissions(project);
+                                if (users.contains(user)) {
+                                    crowdProjects.add(project);
+                                }
+                            }
+                            return crowdProjects;
+                        }
+                    });
+                    setChoiceRenderer(new ChoiceRenderer<Project>("name"));
+                    setNullValid(false);
+                }
+
+                @Override
+                protected void onSelectionChanged(Project aNewSelection)
+                {
+                    selectedProject = aNewSelection;
+                    crowdJobForm.setVisible(true);
+                    crowdDocumentListForm.setVisible(false);
+                    crowdJobDetailForm.setVisible(false);
+                    updateTable();
+
+                }
+
+                @Override
+                protected boolean wantOnSelectionChangedNotifications()
+                {
+                    return true;
+                }
+
+                @Override
+                protected CharSequence getDefaultChoice(String aSelectedValue)
+                {
+                    return "";
+                }
+            });
+        }
+    }
+
+    private class CrowdJobForm
+        extends Form<SelectionModel>
+    {
+        private static final long serialVersionUID = -1L;
+
+        public CrowdJobForm(String id)
+        {
+            super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
             List<String> columnHeaders = new ArrayList<String>();
-            columnHeaders.add("Project");
             columnHeaders.add("Document");
             columnHeaders.add("Status");
             columnHeaders.add("Task");
             columnHeaders.add("Edit Task");
 
             List<List<String>> rowData = new ArrayList<List<String>>();
-
-            List<CrowdJob> allCrowdProjects = projectRepository.listCrowdJobs();
-            for (CrowdJob crowdJob : allCrowdProjects) {
+            if (selectedProject != null && projectRepository.existsCrowdJob(selectedProject)) {
+                CrowdJob crowdJob = projectRepository.getCrowdJob(selectedProject);
                 // no Document is added yet
                 if (crowdJob.getDocuments().size() == 0) {
                     List<String> cellEntry = new ArrayList<String>();
 
-                    cellEntry.add("__");
                     cellEntry.add("__");
                     cellEntry.add("__");
                     cellEntry.add(crowdJob.getName());
@@ -127,8 +189,6 @@ public class CrowdSourcePage
                 else {
                     for (SourceDocument sourceDocument : crowdJob.getDocuments()) {
                         List<String> cellEntry = new ArrayList<String>();
-
-                        cellEntry.add(sourceDocument.getProject().getName());
                         cellEntry.add(sourceDocument.getName());
                         cellEntry.add(sourceDocument.getState().getName());
                         cellEntry.add(crowdJob.getName());
@@ -138,7 +198,6 @@ public class CrowdSourcePage
                     }
                 }
             }
-
             TableDataProvider provider = new TableDataProvider(columnHeaders, rowData);
             List<IColumn<?>> columns = new ArrayList<IColumn<?>>();
 
@@ -221,7 +280,7 @@ public class CrowdSourcePage
                         @Override
                         public Object getDisplayValue(SourceDocument aObject)
                         {
-                            return "[" + aObject.getProject().getName() + "] " + aObject.getName();
+                            return  aObject.getName();
                         }
                     });
                 }
@@ -246,6 +305,7 @@ public class CrowdSourcePage
                     // rename task
                     if (selectedCrowdJob != null && !projectRepository.existsCrowdJob(name)) {
                         selectedCrowdJob.setName(name);
+                        selectedCrowdJob.setProject(selectedProject);
                         projectRepository.createCrowdJob(selectedCrowdJob);
                         createCrowdJob = false;
                         updateTable();
@@ -255,6 +315,7 @@ public class CrowdSourcePage
                     else if (!projectRepository.existsCrowdJob(name)) {
                         CrowdJob crowdJob = new CrowdJob();
                         crowdJob.setName(name);
+                        selectedCrowdJob.setProject(selectedProject);
                         projectRepository.createCrowdJob(crowdJob);
                         selectedCrowdJob = crowdJob;
                         createCrowdJob = false;
@@ -393,9 +454,9 @@ public class CrowdSourcePage
                     // for each source document
                     // get annotation document for CROWD_USER
 
-                    //User user = userRepository.get(CROWD_USER);
-                   // AnnotationDocument annotationDocument =
-                     //       projectRepository.getAnnotationDocument(document, user)
+                    // User user = userRepository.get(CROWD_USER);
+                    // AnnotationDocument annotationDocument =
+                    // projectRepository.getAnnotationDocument(document, user)
                     // Get the JCAS
                     // Convert it to approprate crowdfloweer format
                     // Get template
@@ -436,19 +497,9 @@ public class CrowdSourcePage
                         protected List<SourceDocument> load()
                         {
                             List<SourceDocument> sourceDocuments = new ArrayList<SourceDocument>();
-
-                            List<Project> allProjects = projectRepository.listProjects();
-
-                            User user = userRepository.get(CROWD_USER);
-                            for (Project project : allProjects) {
-                                List<User> users = projectRepository
-                                        .listProjectUsersWithPermissions(project);
-                                if (users.contains(user)) {
-                                    for (SourceDocument sourceDocument : projectRepository
-                                            .listSourceDocuments(project)) {
-                                        sourceDocuments.add(sourceDocument);
-                                    }
-                                }
+                            for (SourceDocument sourceDocument : projectRepository
+                                    .listSourceDocuments(selectedProject)) {
+                                sourceDocuments.add(sourceDocument);
                             }
 
                             for (CrowdJob crowdJob : projectRepository.listCrowdJobs()) {
@@ -476,7 +527,7 @@ public class CrowdSourcePage
                         @Override
                         public Object getDisplayValue(SourceDocument aObject)
                         {
-                            return "[" + aObject.getProject().getName() + "] " + aObject.getName();
+                            return  aObject.getName();
                         }
                     });
                 }
@@ -519,9 +570,9 @@ public class CrowdSourcePage
 
     private void updateTable()
     {
-        remove(crowdSourceForm);
-        crowdSourceForm = new CrowdSourceForm("crowdSourceForm");
-        add(crowdSourceForm);
+        remove(crowdJobForm);
+        crowdJobForm = new CrowdJobForm("crowdJobForm");
+        add(crowdJobForm);
     }
 
     private class DocumentColumnMetaData
@@ -575,7 +626,7 @@ public class CrowdSourcePage
                         createCrowdJob = false;
                         aTarget.add(crowdJobDetailForm.setOutputMarkupId(true));
                         aTarget.appendJavaScript("window.location.reload()");
-                        aTarget.add(crowdSourceForm);
+                        aTarget.add(crowdJobForm);
 
                     }
                 });
@@ -595,6 +646,7 @@ public class CrowdSourcePage
         /*
          * private Project project; private SourceDocument document;
          */
+        Project project;
         String name;
         List<SourceDocument> documents;
         String link;
@@ -602,6 +654,7 @@ public class CrowdSourcePage
     }
 
     private CrowdSourceForm crowdSourceForm;
+    private CrowdJobForm crowdJobForm;
     private CrowdDocumentListForm crowdDocumentListForm;
     private CrowdProjectDetailForm crowdJobDetailForm;
 
@@ -610,6 +663,10 @@ public class CrowdSourcePage
     {
         crowdSourceForm = new CrowdSourceForm("crowdSourceForm");
         add(crowdSourceForm);
+
+        crowdJobForm = new CrowdJobForm("crowdJobForm");
+        crowdJobForm.setVisible(false);
+        add(crowdJobForm);
 
         crowdDocumentListForm = new CrowdDocumentListForm("crowdDocumentListForm");
         crowdDocumentListForm.setVisible(false);
