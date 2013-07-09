@@ -154,13 +154,6 @@ public interface RepositoryService
     boolean existsCrowdJob(String name);
 
     /**
-     * check if a crowd job exist for this project
-     * @param project
-     * @return
-     */
-    boolean existsCrowdJob(Project project);
-
-    /**
      * Check if a user have at least one {@link PermissionLevel } for this {@link Project}
      *
      * @return
@@ -442,7 +435,7 @@ public interface RepositoryService
      */
     List<CrowdJob> listCrowdJobs();
 
-    CrowdJob getCrowdJob(Project project);
+    List<CrowdJob> listCrowdJobs(Project project);
     /**
      * List all source documents in a project. The source documents are the original TCF documents
      * imported.

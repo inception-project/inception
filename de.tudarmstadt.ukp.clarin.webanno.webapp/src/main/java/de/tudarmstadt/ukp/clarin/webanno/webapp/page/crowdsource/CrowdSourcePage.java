@@ -173,9 +173,10 @@ public class CrowdSourcePage
             columnHeaders.add("Edit Task");
 
             List<List<String>> rowData = new ArrayList<List<String>>();
-            if (selectedProject != null && projectRepository.existsCrowdJob(selectedProject)) {
-                CrowdJob crowdJob = projectRepository.getCrowdJob(selectedProject);
+            if (selectedProject != null) {
+                List<CrowdJob> crowdJobs = projectRepository.listCrowdJobs(selectedProject);
                 // no Document is added yet
+                for (CrowdJob crowdJob : crowdJobs) {
                 if (crowdJob.getDocuments().size() == 0) {
                     List<String> cellEntry = new ArrayList<String>();
 
@@ -197,6 +198,7 @@ public class CrowdSourcePage
                         rowData.add(cellEntry);
                     }
                 }
+            }
             }
             TableDataProvider provider = new TableDataProvider(columnHeaders, rowData);
             List<IColumn<?>> columns = new ArrayList<IColumn<?>>();

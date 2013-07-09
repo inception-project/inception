@@ -303,17 +303,6 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    @Transactional
-   public boolean existsCrowdJob(Project aProject){
-        try {
-            getCrowdJob(aProject);
-            return true;
-        }
-        catch (NoResultException ex) {
-            return false;
-        }
-    }
-    @Override
     public boolean existProjectPermission(User aUser, Project aProject)
     {
 
@@ -787,9 +776,9 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public CrowdJob getCrowdJob(Project aProject){
+    public List<CrowdJob> listCrowdJobs(Project aProject){
         return entityManager.createQuery("FROM CrowdJob where project =:project", CrowdJob.class)
-                .setParameter("project", aProject).getSingleResult();
+                .setParameter("project", aProject).getResultList();
     }
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
