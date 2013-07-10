@@ -129,6 +129,8 @@ public class RepositoryServiceDbData
     private static final String SETTINGS = "/settings/";
     private static final String META_INF = "/META-INF/";
 
+    private static final String TEMPLATE = "/template/";
+
     private static final String CURATION_USER = "CURATION_USER";
 
     @PersistenceContext
@@ -523,6 +525,11 @@ public class RepositoryServiceDbData
         return new File(dir.getAbsolutePath() + PROJECT + aProject.getId() + GUIDELINE + aFilename);
     }
 
+    @Override
+    public   File getTemplate(String fileName) throws IOException{
+        FileUtils.forceMkdir(new File(dir.getAbsolutePath()+TEMPLATE));
+        return  new File(dir.getAbsolutePath()+TEMPLATE, fileName);
+    }
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public ProjectPermission getPermisionLevel(User aUser, Project aProject)

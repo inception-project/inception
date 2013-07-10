@@ -274,6 +274,12 @@ public interface RepositoryService
     File getGuideline(Project project, String fileName);
 
     /**
+     *
+     * Get a crowdFlower Template from the WebAnno root directory
+     */
+    File getTemplate(String fileName) throws IOException;
+
+    /**
      * For a given project, get the permission level(s) of the user if it is granted
      *
      * @param aUser
