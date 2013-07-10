@@ -2,13 +2,13 @@
  * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -42,9 +42,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
  * A class that is used to create Brat Arc to CAS relations and vice-versa
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 public class ArcAdapter
     implements TypeAdapter
@@ -52,7 +52,7 @@ public class ArcAdapter
     /**
      * Prefix of the label value for Brat to make sure that different annotation types can use the
      * same label, e.g. a POS tag "N" and a named entity type "N".
-     * 
+     *
      */
     private String typePrefix;
 
@@ -113,7 +113,7 @@ public class ArcAdapter
     /**
      * Add arc annotations from the CAS, which is controlled by the window size, to the brat
      * response {@link GetDocumentResponse}
-     * 
+     *
      * @param aJcas
      *            The JCAS object containing annotations
      * @param aResponse
@@ -160,7 +160,7 @@ public class ArcAdapter
 
     /**
      * a helper method to the {@link #render(JCas, GetDocumentResponse, BratAnnotatorModel)}
-     * 
+     *
      * @param aSentence
      *            The current sentence in the CAS annotation, with annotations
      * @param aResponse
@@ -198,42 +198,35 @@ public class ArcAdapter
 
     /**
      * Update the CAS with new/modification of arc annotations from brat
-     * 
+     *
      * @param aLabelValue
      *            the value of the annotation for the arc
-     * @param aUIData
-     *            Other information obtained from brat such as the start and end offsets
      * @param aReverse
      *            If arc direction are in reverse direction, from Dependent to Governor
      */
-    public void add(String aLabelValue, BratAnnotatorUIData aUIData,
+    public void add(String aLabelValue, int aOriginAddress, int aTargetAddress, JCas aJCas,
             BratAnnotatorModel aBratAnnotatorModel, boolean aReverse)
     {
-        int originAddress;
-        int targetAddress;
 
+        int temp;
+        // swap
         if (aReverse) {
-            originAddress = aUIData.getTarget();
-            targetAddress = aUIData.getOrigin();
-        }
-        else {
-            originAddress = aUIData.getOrigin();
-            targetAddress = aUIData.getTarget();
+            temp = aOriginAddress;
+            aOriginAddress = aTargetAddress;
+            aTargetAddress = temp;
         }
 
-        int beginOffset = BratAjaxCasUtil.selectAnnotationByAddress(aUIData.getjCas(),
+        int beginOffset = BratAjaxCasUtil.selectAnnotationByAddress(aJCas,
                 Sentence.class, aBratAnnotatorModel.getSentenceAddress()).getBegin();
         int endOffset = BratAjaxCasUtil.selectAnnotationByAddress(
-                aUIData.getjCas(),
+                aJCas,
                 Sentence.class,
-                BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(aUIData.getjCas(),
+                BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(aJCas,
                         aBratAnnotatorModel.getSentenceAddress(),
                         aBratAnnotatorModel.getWindowSize())).getEnd();
 
-        aUIData.setAnnotationOffsetStart(beginOffset);
-        aUIData.setAnnotationOffsetEnd(endOffset);
-        updateCas(aUIData.getjCas(), aUIData.getAnnotationOffsetStart(),
-                aUIData.getAnnotationOffsetEnd(), originAddress, targetAddress, aLabelValue);
+        updateCas(aJCas, beginOffset,
+                endOffset, aOriginAddress, aTargetAddress, aLabelValue);
     }
 
     /**
@@ -318,23 +311,18 @@ public class ArcAdapter
 
     /**
      * Delete arc annotation from CAS
-     * 
+     *
      * @param aJCas
      * @param aId
      */
-    public void delete(BratAnnotatorUIData aUIData, BratAnnotatorModel aBratAnnotatorModel)
+    public void delete(JCas aJCas, int aOriginAddress, int aTargetAddress, BratAnnotatorModel aBratAnnotatorModel)
     {
-        int originAddress;
-        int targetAddress;
-        JCas jCas = aUIData.getjCas();
-
+        JCas jCas = aJCas;
+        int temp;
         if (aBratAnnotatorModel.getProject().isReverseDependencyDirection()) {
-            originAddress = aUIData.getTarget();
-            targetAddress = aUIData.getOrigin();
-        }
-        else {
-            originAddress = aUIData.getOrigin();
-            targetAddress = aUIData.getTarget();
+            temp = aOriginAddress;
+            aOriginAddress = aTargetAddress;
+            aTargetAddress = temp;
         }
         FeatureStructure fsToDelete = null;
 
@@ -350,8 +338,8 @@ public class ArcAdapter
                     arcSpanFeature);
             FeatureStructure governorFs = fs.getFeatureValue(governorFeature).getFeatureValue(
                     arcSpanFeature);
-            if (((FeatureStructureImpl) dependentFs).getAddress() == originAddress
-                    && ((FeatureStructureImpl) governorFs).getAddress() == targetAddress) {
+            if (((FeatureStructureImpl) dependentFs).getAddress() == aOriginAddress
+                    && ((FeatureStructureImpl) governorFs).getAddress() == aTargetAddress) {
                 fsToDelete = fs;
                 break;
             }
@@ -361,7 +349,7 @@ public class ArcAdapter
 
     /**
      * Convenience method to get an adapter for Dependency Parsing.
-     * 
+     *
      * NOTE: This is not meant to stay. It's just a convenience during refactoring!
      */
     public static final ArcAdapter getDependencyAdapter()
@@ -376,7 +364,7 @@ public class ArcAdapter
 
     /**
      * Argument lists for the arc annotation
-     * 
+     *
      * @return
      */
     private List<Argument> getArgument(FeatureStructure aGovernorFs, FeatureStructure aDependentFs,
