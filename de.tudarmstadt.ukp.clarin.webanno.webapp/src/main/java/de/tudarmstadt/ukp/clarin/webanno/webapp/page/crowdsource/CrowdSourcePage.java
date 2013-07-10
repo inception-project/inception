@@ -240,6 +240,7 @@ public class CrowdSourcePage
             super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
 
             add(new TextField<String>("name").setRequired(true));
+            add(new TextField<String>("apiKey").setRequired(true));
 
             add(new Label("link"));
             add(new Label("status"));
@@ -403,6 +404,7 @@ public class CrowdSourcePage
                 @Override
                 public void onSubmit()
                 {
+                    String apiKey = CrowdProjectDetailForm.this.getModelObject().apiKey;
 
                     // Get the source document(2) here
                     List<SourceDocument> sourceDocuments = new ArrayList<SourceDocument>(
@@ -650,6 +652,7 @@ public class CrowdSourcePage
          */
         Project project;
         String name;
+        String apiKey;
         List<SourceDocument> documents;
         String link;
         String status;
