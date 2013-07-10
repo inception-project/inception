@@ -17,6 +17,7 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.webapp.page.crowdsource;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -26,9 +27,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
+import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -52,10 +56,14 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.resource.ContextRelativeResource;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.codehaus.jackson.JsonProcessingException;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.crowdflower.NamedEntityTaskManager;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.CrowdJob;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -87,6 +95,7 @@ public class CrowdSourcePage
     private UserDao userRepository;
 
     private static final String CROWD_USER = "crowd_user";
+    private static final String CROWD_NERTASK1_TEMPLATE = "NERtask1.template";
 
     private CrowdJob selectedCrowdJob;
     private Project selectedProject;
@@ -94,6 +103,8 @@ public class CrowdSourcePage
     boolean createCrowdJob = false;
 
     private ArrayList<SourceDocument> documents = new ArrayList<SourceDocument>();
+
+    private NamedEntityTaskManager namedEntityTaskManager;
 
     private class CrowdSourceForm
         extends Form<SelectionModel>
@@ -177,28 +188,28 @@ public class CrowdSourcePage
                 List<CrowdJob> crowdJobs = projectRepository.listCrowdJobs(selectedProject);
                 // no Document is added yet
                 for (CrowdJob crowdJob : crowdJobs) {
-                if (crowdJob.getDocuments().size() == 0) {
-                    List<String> cellEntry = new ArrayList<String>();
-
-                    cellEntry.add("__");
-                    cellEntry.add("__");
-                    cellEntry.add(crowdJob.getName());
-                    cellEntry.add(crowdJob.getName());
-
-                    rowData.add(cellEntry);
-                }
-                else {
-                    for (SourceDocument sourceDocument : crowdJob.getDocuments()) {
+                    if (crowdJob.getDocuments().size() == 0) {
                         List<String> cellEntry = new ArrayList<String>();
-                        cellEntry.add(sourceDocument.getName());
-                        cellEntry.add(sourceDocument.getState().getName());
+
+                        cellEntry.add("__");
+                        cellEntry.add("__");
                         cellEntry.add(crowdJob.getName());
                         cellEntry.add(crowdJob.getName());
 
                         rowData.add(cellEntry);
                     }
+                    else {
+                        for (SourceDocument sourceDocument : crowdJob.getDocuments()) {
+                            List<String> cellEntry = new ArrayList<String>();
+                            cellEntry.add(sourceDocument.getName());
+                            cellEntry.add(sourceDocument.getState().getName());
+                            cellEntry.add(crowdJob.getName());
+                            cellEntry.add(crowdJob.getName());
+
+                            rowData.add(cellEntry);
+                        }
+                    }
                 }
-            }
             }
             TableDataProvider provider = new TableDataProvider(columnHeaders, rowData);
             List<IColumn<?>> columns = new ArrayList<IColumn<?>>();
@@ -283,7 +294,7 @@ public class CrowdSourcePage
                         @Override
                         public Object getDisplayValue(SourceDocument aObject)
                         {
-                            return  aObject.getName();
+                            return aObject.getName();
                         }
                     });
                 }
@@ -406,15 +417,90 @@ public class CrowdSourcePage
                 {
                     String apiKey = CrowdProjectDetailForm.this.getModelObject().apiKey;
 
+                    if(namedEntityTaskManager == null)
+                    {
+                        namedEntityTaskManager = new NamedEntityTaskManager();
+                    }
+
+                    namedEntityTaskManager.setAPIKey(apiKey);
+
                     // Get the source document(2) here
                     List<SourceDocument> sourceDocuments = new ArrayList<SourceDocument>(
                             selectedCrowdJob.getDocuments());
+                    List<JCas> jCases = new ArrayList<JCas>();
+                    User user = userRepository.get(CROWD_USER);
+
                     // Get the JCASes for each source document
+                    for (SourceDocument sourceDocument : sourceDocuments) {
+                        AnnotationDocument annotationDocument;
+                        addJCas(jCases, user, sourceDocument);
+                    }
 
                     // Convert it to approprate crowdfloweer format
                     // Get template
                     // Get gold
                     // Send to crowd flower
+
+                    //Todo: Get the template
+                    try {
+                        String template = FileUtils.readFileToString(projectRepository.getTemplate(CROWD_NERTASK1_TEMPLATE));
+                        namedEntityTaskManager.uploadNewNERTask1(template, jCases, null);
+                    }
+                    catch (FileNotFoundException e)
+                    {
+                        error("Could not find the template file for NER task 1: " + e.getMessage());
+                    }
+                    catch (JsonProcessingException e) {
+                        error("Template for NER task 1 is mal formated: " + e.getMessage());
+                    }
+                    catch (IOException e) {
+                        error("There was a problem reading the NER task 1 template file: " + e.getMessage());
+                    }catch (Exception e) {
+                        error("Something went wrong uploading your document(s) to crowdflower.com: " + e.getMessage());
+                    }
+
+                }
+
+                private void addJCas(List<JCas> jCases, User user, SourceDocument sourceDocument)
+                {
+                    AnnotationDocument annotationDocument;
+                    JCas jCas;
+                    try {
+                        if (projectRepository.existsAnnotationDocument(sourceDocument, user)) {
+                            annotationDocument = projectRepository.getAnnotationDocument(
+                                    sourceDocument, user);
+
+                            jCas = projectRepository
+                                    .getAnnotationDocumentContent(annotationDocument);
+                            jCases.add(jCas);
+                        }
+                        else {
+                            annotationDocument = new AnnotationDocument();
+                            annotationDocument.setDocument(sourceDocument);
+                            annotationDocument.setUser(user.getUsername());
+                            annotationDocument.setProject(selectedProject);
+                            // annotationDocument.setState(AnnotationDocumentState.IN_PROGRESS);
+                            annotationDocument.setName(sourceDocument.getName());
+                            projectRepository.createAnnotationDocument(annotationDocument);
+
+                            jCas = BratAjaxCasUtil.getJCasFromFile(
+                                    projectRepository.getSourceDocumentContent(selectedProject,
+                                            sourceDocument),
+                                    projectRepository.getReadableFormats().get(
+                                            sourceDocument.getFormat()));
+                            projectRepository.createAnnotationDocumentContent(jCas, sourceDocument, user);
+                            jCases.add(jCas);
+                        }
+                    }
+                    catch (UIMAException e) {
+                        error(e.getMessage() + " : " + ExceptionUtils.getRootCauseMessage(e));
+                    }
+                    catch (IOException e) {
+                        error(e.getMessage());
+                    }
+                    catch (ClassNotFoundException e) {
+                        error(e.getMessage());
+                    }
                 }
 
                 @Override
@@ -531,7 +617,7 @@ public class CrowdSourcePage
                         @Override
                         public Object getDisplayValue(SourceDocument aObject)
                         {
-                            return  aObject.getName();
+                            return aObject.getName();
                         }
                     });
                 }

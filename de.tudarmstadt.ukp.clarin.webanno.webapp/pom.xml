@@ -24,6 +24,10 @@
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 			<artifactId>de.tudarmstadt.ukp.clarin.webanno.api</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+			<artifactId>de.tudarmstadt.ukp.clarin.webanno.crowdflower</artifactId>
+		</dependency>
 
 		<!-- WICKET DEPENDENCIES -->
 		<dependency>

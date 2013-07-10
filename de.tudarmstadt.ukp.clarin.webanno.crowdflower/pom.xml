@@ -16,6 +16,14 @@
   <artifactId>de.tudarmstadt.ukp.clarin.webanno.crowdflower</artifactId>
   <dependencies>
   	<dependency>
+		<groupId>org.apache.uima</groupId>
+		<artifactId>uimaj-core</artifactId>
+	</dependency>
+	<dependency>
+		<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+		<artifactId>de.tudarmstadt.ukp.dkpro.core.api.segmentation-asl</artifactId>
+	</dependency>
+  	<dependency>
   		<groupId>org.codehaus.jackson</groupId>
   		<artifactId>jackson-mapper-asl</artifactId>
   	</dependency>

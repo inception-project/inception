@@ -2,13 +2,13 @@
  * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,6 +32,7 @@ package de.tudarmstadt.ukp.clarin.webanno.crowdflower;
  * limitations under the License.
  ******************************************************************************/
 
+import java.io.Serializable;
 import java.util.Vector;
 
 import org.apache.commons.logging.Log;
@@ -53,8 +54,9 @@ import org.springframework.web.client.RestTemplate;
 * Abstracts away the details of communicating with crowdflower.com's API
 * @author Benjamin Milde
 */
-public class CrowdClient
+public class CrowdClient implements Serializable
 {
+    private static final long serialVersionUID = 1498011891972061297L;
     // Crowdflower API documentation: https://crowdflower.com/docs/api
     // for creating a new Job, data needs to be posted to that URL:
     static final String newJobURL = "https://api.crowdflower.com/v1/jobs.json?key={apiKey}";
@@ -71,7 +73,6 @@ public class CrowdClient
     static final String jobPaymentKey = "job[payment_cents]";
     private String apiKey = "";
 
-    private Log LOG = LogFactory.getLog(getClass());
 
     /**
      * This sets the API key to be used with Crowdflower. This has to be set to a valid key prior to any other requests to the API.
@@ -151,6 +152,8 @@ public class CrowdClient
     @SuppressWarnings("rawtypes")
     void uploadData(CrowdJob job, Vector data) throws Exception
     {
+        Log LOG = LogFactory.getLog(getClass());
+
         //Crowdflower wants a Multi-line JSON, with each line having a new JSON object
         //Thus we have to map each (raw) object in data individually to a JSON string
 
@@ -173,11 +176,11 @@ public class CrowdClient
         String result = "";
 
         if(job == null) {
-            LOG.info("Upload new data and create new job: " + jsonObjectCollection);
+            LOG.info("Upload new data and create new job: " + String.valueOf(jsonObjectCollection.length()) + " data items");
             result = restTemplate.postForObject(uploadDataURL, request, String.class, apiKey);
         }
         else {
-            LOG.info("Uploading new data to job: "+ job.getId() + ":" + jsonObjectCollection);
+            LOG.info("Uploading new data to job: "+ job.getId() + ": " + String.valueOf(jsonObjectCollection.length()) + " data items");
             result = restTemplate.postForObject(uploadDataWithJobURL, request, String.class, job.getId(), apiKey);
         }
         LOG.info("Upload response:" + result);
@@ -219,6 +222,8 @@ public class CrowdClient
 
     JsonNode orderJob(CrowdJob job, Vector<String> channels, int units, int payPerAssigment)
     {
+        Log LOG = LogFactory.getLog(getClass());
+
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.getMessageConverters().add(new MappingJacksonHttpMessageConverter());
         restTemplate.getMessageConverters().add(new FormHttpMessageConverter());
