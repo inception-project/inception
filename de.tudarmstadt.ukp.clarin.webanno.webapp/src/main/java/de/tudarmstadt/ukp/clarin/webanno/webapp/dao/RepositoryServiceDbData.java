@@ -129,7 +129,7 @@ public class RepositoryServiceDbData
     private static final String SETTINGS = "/settings/";
     private static final String META_INF = "/META-INF/";
 
-    private static final String TEMPLATE = "/template/";
+    private static final String TEMPLATE = "/crowdtemplates/";
 
     private static final String CURATION_USER = "CURATION_USER";
 
