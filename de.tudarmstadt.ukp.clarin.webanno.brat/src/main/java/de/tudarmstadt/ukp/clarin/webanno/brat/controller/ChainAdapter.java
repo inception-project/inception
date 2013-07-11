@@ -18,10 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
 import static java.util.Arrays.asList;
-import static org.uimafit.util.JCasUtil.select;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +37,7 @@ import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.uimafit.util.CasUtil;
 
+import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorUIData;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Argument;
@@ -49,7 +48,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * A class that is used to create Brat chain to CAS and vice-versa
@@ -314,10 +312,10 @@ public class ChainAdapter
     public void add(String aLabelValue, JCas aJCas, int aAnnotationOffsetStart,
             int aAnnotationOffsetEnd, int aOrigin, int aTarget)
     {
-        Map<Integer, Integer> offsets = offsets(aJCas);
+        Map<Integer, Integer> offsets = ApplicationUtils.offsets(aJCas);
 
         if (singleTokenBehavior) {
-            Map<Integer, Integer> splitedTokens = getSplitedTokens(offsets,
+            Map<Integer, Integer> splitedTokens = ApplicationUtils.getSplitedTokens(offsets,
                     aAnnotationOffsetStart, aAnnotationOffsetEnd);
             if (isChain) {
                 updateCoreferenceChainCas(aJCas, aOrigin,
@@ -336,7 +334,7 @@ public class ChainAdapter
                         aTarget, aLabelValue);
             }
             else {
-                int startAndEnd[] = getTokenStart(offsets, aAnnotationOffsetStart, aAnnotationOffsetEnd);
+                int startAndEnd[] = ApplicationUtils.getTokenStart(offsets, aAnnotationOffsetStart, aAnnotationOffsetEnd);
                 updateCoreferenceLinkCas(aJCas.getCas(),
                         startAndEnd[0], startAndEnd[1],
                         aLabelValue);
@@ -762,71 +760,6 @@ public class ChainAdapter
             aCas.removeFsFromIndexes(chain);
         }
     }
-
-    /**
-     * Stores, for every tokens, the start and end position offsets : used for multiple span
-     * annotations
-     *
-     * @return map of tokens begin and end positions
-     */
-    private static Map<Integer, Integer> offsets(JCas aJcas)
-    {
-        Map<Integer, Integer> offsets = new HashMap<Integer, Integer>();
-        for (Token token : select(aJcas, Token.class)) {
-            offsets.put(token.getBegin(), token.getEnd());
-        }
-        return offsets;
-    }
-
-    /**
-     * For multiple span, get the start and end offsets
-     */
-    private static int[] getTokenStart(Map<Integer, Integer> aOffset, int aStart, int aEnd)
-    {
-        Iterator<Integer> it = aOffset.keySet().iterator();
-        boolean startFound = false;
-        boolean endFound = false;
-        while (it.hasNext()) {
-            int tokenStart = it.next();
-            if (aStart >= tokenStart && aStart <= aOffset.get(tokenStart)) {
-                aStart = tokenStart;
-                startFound = true;
-                if (endFound) {
-                    break;
-                }
-            }
-            if (aEnd >= tokenStart && aEnd <= aOffset.get(tokenStart)) {
-                aEnd = aOffset.get(tokenStart);
-                endFound = true;
-                if (startFound) {
-                    break;
-                }
-            }
-        }
-        return new int[] { aStart, aEnd };
-    }
-
-    /**
-     * If the annotation type is limited to only a single token, but brat sends multiple tokens,
-     * split them up
-     *
-     * @return Map of start and end offsets for the multiple token span
-     */
-
-    private static Map<Integer, Integer> getSplitedTokens(Map<Integer, Integer> aOffset,
-            int aStart, int aEnd)
-    {
-        Map<Integer, Integer> startAndEndOfSplitedTokens = new HashMap<Integer, Integer>();
-        Iterator<Integer> it = aOffset.keySet().iterator();
-        while (it.hasNext()) {
-            int tokenStart = it.next();
-            if (aStart <= tokenStart && tokenStart <= aEnd) {
-                startAndEndOfSplitedTokens.put(tokenStart, aOffset.get(tokenStart));
-            }
-        }
-        return startAndEndOfSplitedTokens;
-    }
-
     /**
      * Convenience method to get an adapter for coreference Link.
      *

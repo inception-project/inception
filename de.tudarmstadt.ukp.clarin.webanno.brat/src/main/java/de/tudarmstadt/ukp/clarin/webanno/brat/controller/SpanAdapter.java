@@ -18,10 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
 import static java.util.Arrays.asList;
-import static org.uimafit.util.JCasUtil.select;
 
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -35,6 +32,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.uimafit.util.CasUtil;
 
+import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorUIData;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
@@ -222,17 +220,17 @@ public class SpanAdapter
      */
     public void add(String aLabelValue, JCas aJcas, int aAnnotationOffsetStart, int aAnnotationOffsetEnd)
     {
-        Map<Integer, Integer> offsets = offsets(aJcas);
+        Map<Integer, Integer> offsets = ApplicationUtils.offsets(aJcas);
 
         if (singleTokenBehavior) {
-            Map<Integer, Integer> splitedTokens = getSplitedTokens(offsets,
+            Map<Integer, Integer> splitedTokens = ApplicationUtils.getSplitedTokens(offsets,
                     aAnnotationOffsetStart, aAnnotationOffsetEnd);
             for (Integer start : splitedTokens.keySet()) {
                 updateCas(aJcas.getCas(), start, splitedTokens.get(start), aLabelValue);
             }
         }
         else {
-            int startAndEnd[] = getTokenStart(offsets, aAnnotationOffsetStart,
+            int startAndEnd[] = ApplicationUtils.getTokenStart(offsets, aAnnotationOffsetStart,
                     aAnnotationOffsetEnd);
             updateCas(aJcas.getCas(), startAndEnd[0],
                     startAndEnd[1], aLabelValue);
@@ -291,70 +289,6 @@ public class SpanAdapter
         FeatureStructure fs = (FeatureStructure) BratAjaxCasUtil.selectAnnotationByAddress(aJCas,
                 FeatureStructure.class, aRef);
         aJCas.removeFsFromIndexes(fs);
-    }
-
-    /**
-     * Stores, for every tokens, the start and end position offsets : used for multiple span
-     * annotations
-     *
-     * @return map of tokens begin and end positions
-     */
-    private static Map<Integer, Integer> offsets(JCas aJcas)
-    {
-        Map<Integer, Integer> offsets = new HashMap<Integer, Integer>();
-        for (Token token : select(aJcas, Token.class)) {
-            offsets.put(token.getBegin(), token.getEnd());
-        }
-        return offsets;
-    }
-
-    /**
-     * For multiple span, get the start and end offsets
-     */
-    private static int[] getTokenStart(Map<Integer, Integer> aOffset, int aStart, int aEnd)
-    {
-        Iterator<Integer> it = aOffset.keySet().iterator();
-        boolean startFound = false;
-        boolean endFound = false;
-        while (it.hasNext()) {
-            int tokenStart = it.next();
-            if (aStart >= tokenStart && aStart <= aOffset.get(tokenStart)) {
-                aStart = tokenStart;
-                startFound = true;
-                if (endFound) {
-                    break;
-                }
-            }
-            if (aEnd >= tokenStart && aEnd <= aOffset.get(tokenStart)) {
-                aEnd = aOffset.get(tokenStart);
-                endFound = true;
-                if (startFound) {
-                    break;
-                }
-            }
-        }
-        return new int[] { aStart, aEnd };
-    }
-
-    /**
-     * If the annotation type is limited to only a single token, but brat sends multiple tokens,
-     * split them up
-     *
-     * @return Map of start and end offsets for the multiple token span
-     */
-
-    private static Map<Integer, Integer> getSplitedTokens(Map<Integer, Integer> aOffset,
-            int aStart, int aEnd)
-    {
-        Map<Integer, Integer> startAndEndOfSplitedTokens = new HashMap<Integer, Integer>();
-        Iterator<Integer> it = aOffset.keySet().iterator();
-        while (it.hasNext()) {
-            int tokenStart = it.next();
-            if (aStart <= tokenStart && tokenStart <= aEnd) {
-                startAndEndOfSplitedTokens.put(tokenStart, aOffset.get(tokenStart));
-            }
-        }
-        return startAndEndOfSplitedTokens;
     }
 
     /**

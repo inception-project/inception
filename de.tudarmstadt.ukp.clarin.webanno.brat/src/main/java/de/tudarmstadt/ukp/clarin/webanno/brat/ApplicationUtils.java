@@ -2,13 +2,13 @@
  * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,6 +16,8 @@
  * limitations under the License.
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat;
+
+import static org.uimafit.util.JCasUtil.select;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -25,7 +27,9 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.lang.reflect.ParameterizedType;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +42,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.uima.jcas.JCas;
 import org.codehaus.jackson.JsonGenerator;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
@@ -55,6 +60,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 /**
  * This class Utility methods that can be used application wide
  * @author Seid Muhie Yimam
@@ -315,4 +321,69 @@ public class ApplicationUtils
         }
         return isZip;
        }
+
+    /**
+     * Stores, for every tokens, the start and end position offsets : used for multiple span
+     * annotations
+     *
+     * @return map of tokens begin and end positions
+     */
+    public static Map<Integer, Integer> offsets(JCas aJcas)
+    {
+        Map<Integer, Integer> offsets = new HashMap<Integer, Integer>();
+        for (Token token : select(aJcas, Token.class)) {
+            offsets.put(token.getBegin(), token.getEnd());
+        }
+        return offsets;
+    }
+
+    /**
+     * For multiple span, get the start and end offsets
+     */
+    public static int[] getTokenStart(Map<Integer, Integer> aOffset, int aStart, int aEnd)
+    {
+        Iterator<Integer> it = aOffset.keySet().iterator();
+        boolean startFound = false;
+        boolean endFound = false;
+        while (it.hasNext()) {
+            int tokenStart = it.next();
+            if (aStart >= tokenStart && aStart <= aOffset.get(tokenStart)) {
+                aStart = tokenStart;
+                startFound = true;
+                if (endFound) {
+                    break;
+                }
+            }
+            if (aEnd >= tokenStart && aEnd <= aOffset.get(tokenStart)) {
+                aEnd = aOffset.get(tokenStart);
+                endFound = true;
+                if (startFound) {
+                    break;
+                }
+            }
+        }
+        return new int[] { aStart, aEnd };
+    }
+
+    /**
+     * If the annotation type is limited to only a single token, but brat sends multiple tokens,
+     * split them up
+     *
+     * @return Map of start and end offsets for the multiple token span
+     */
+
+    public static Map<Integer, Integer> getSplitedTokens(Map<Integer, Integer> aOffset,
+            int aStart, int aEnd)
+    {
+        Map<Integer, Integer> startAndEndOfSplitedTokens = new HashMap<Integer, Integer>();
+        Iterator<Integer> it = aOffset.keySet().iterator();
+        while (it.hasNext()) {
+            int tokenStart = it.next();
+            if (aStart <= tokenStart && tokenStart <= aEnd) {
+                startAndEndOfSplitedTokens.put(tokenStart, aOffset.get(tokenStart));
+            }
+        }
+        return startAndEndOfSplitedTokens;
+    }
+
 }
