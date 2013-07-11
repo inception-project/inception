@@ -2,13 +2,13 @@
  * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -58,7 +58,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorUIData;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
@@ -73,7 +72,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.AnnotationOption;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.AnnotationState;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.BratCurationDocumentEditor;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.BratCurator;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.BratCurationVisualizer;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationContainer;
@@ -159,7 +158,7 @@ public class CurationPanel
 
         final BratAnnotatorModel bratAnnotatorModel = curationContainer.getBratAnnotatorModel();
 
-        final BratCurationDocumentEditor mergeVisualizer = new BratCurationDocumentEditor(
+        final BratCurator mergeVisualizer = new BratCurator(
                 "mergeView", new Model<BratAnnotatorModel>(bratAnnotatorModel))
         {
 
@@ -278,9 +277,7 @@ public class CurationPanel
 
                             if (annotationSelectionOrigin != null
                                     && annotationSelectionTarget != null) {
-                                BratAnnotatorUIData uIData = new BratAnnotatorUIData();
-                                uIData.setjCas(mergeJCas);
-                                uIData.setGetDocument(false);
+
                                 // TODO no coloring is done at all for arc annotation.
                                 // Do the same for arc colors (AGREE, USE,...
                                 AnnotationDocument clickedAnnotationDocument = null;
@@ -311,13 +308,10 @@ public class CurationPanel
                                 AnnotationFS fsClicked = (AnnotationFS) clickedJCas.getLowLevelCas().ll_getFSForRef(
                                         addressOriginClicked);
                                 arcType =  BratAjaxCasUtil.getAnnotationType(fsClicked.getType())+arcType;
-                                uIData.setType(arcType);
-                                uIData.setOrigin(addressOrigin);
-                                uIData.setTarget(addressTarget);
                                 BratAjaxCasController controller = new BratAjaxCasController(
                                         repository, annotationService);
                                 try {
-                                    controller.addArcToCas(bratAnnotatorModel, uIData);
+                                    controller.addArcToCas(bratAnnotatorModel, arcType, 0,0, addressOrigin,addressTarget, mergeJCas);
                                     controller.createAnnotationDocumentContent(
                                             bratAnnotatorModel.getMode(),
                                             bratAnnotatorModel.getDocument(),
@@ -420,21 +414,15 @@ public class CurationPanel
         // TODO temporarily solution to remove the the prefix from curation sentence annotation views
         spanType =  BratAjaxCasUtil.getAnnotationType(fsClicked.getType())+spanType;
 
-        BratAnnotatorUIData uIData = new BratAnnotatorUIData();
-        uIData.setjCas(aMergeJCas);
-        uIData.setGetDocument(false);
-        uIData.setType(spanType);
-        uIData.setAnnotationOffsetStart(fsClicked.getBegin());
-        uIData.setAnnotationOffsetEnd(fsClicked.getEnd());
         BratAjaxCasController controller = new BratAjaxCasController(repository, annotationService);
 
-        controller.addSpanToCas(uIData);
+        controller.addSpanToCas(aMergeJCas, fsClicked.getBegin(), fsClicked.getEnd(), spanType, 0, 0);
         controller.createAnnotationDocumentContent(aBratAnnotatorModel.getMode(),
                 aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser(), aMergeJCas);
     }
 
     protected void updateRightSide(AjaxRequestTarget target, MarkupContainer parent,
-            CurationContainer curationContainer, BratCurationDocumentEditor mergeVisualizer)
+            CurationContainer curationContainer, BratCurator mergeVisualizer)
     {
         SourceDocument sourceDocument = curationContainer.getBratAnnotatorModel().getDocument();
         Project project = curationContainer.getBratAnnotatorModel().getProject();
@@ -560,11 +548,8 @@ public class CurationPanel
                 JCas jCas = jCases.get(username);
 
                 GetDocumentResponse response = new GetDocumentResponse();
-                BratAnnotatorUIData uIData = new BratAnnotatorUIData();
-                uIData.setjCas(jCas);
-                uIData.setGetDocument(true);
 
-                BratAjaxCasController.addBratResponses(response, bratAnnotatorModel, uIData);
+                BratAjaxCasController.addBratResponses(response, bratAnnotatorModel, 0, jCas, true);
 
                 CurationUserSegmentForAnnotationDocument curationUserSegment2 = new CurationUserSegmentForAnnotationDocument();
                 curationUserSegment2.setCollectionData(getStringCollectionData(response, jCas,
