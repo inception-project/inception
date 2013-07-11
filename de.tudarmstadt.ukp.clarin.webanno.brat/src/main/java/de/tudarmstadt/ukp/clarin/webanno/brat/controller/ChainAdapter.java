@@ -640,22 +640,6 @@ public class ChainAdapter
     }
 
     /**
-     * Delete a chain annotation from CAS
-     *
-     * @param aJCas
-     *            the CAS object
-     * @param aId
-     *            the low-level address of the span annotation.
-     */
-    public void deleteLinkFromCas(JCas aJCas, int aRef)
-    {
-        FeatureStructure fsToRemove = (FeatureStructure) BratAjaxCasUtil.selectAnnotationByAddress(
-                aJCas, FeatureStructure.class, aRef);
-
-        aJCas.removeFsFromIndexes(fsToRemove);
-    }
-
-    /**
      * Update the Cas before deleting a link. This way, if a link is deleted at the middle, The
      * chain will be splitted into two. If the first link is deleted, the <b>First</b> link will be
      * shifted to the next one.
