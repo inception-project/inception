@@ -31,8 +31,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -82,6 +84,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectTimeStamp;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -99,8 +102,8 @@ public class RepositoryServiceDbData
     {
         Logger logger = Logger.getLogger(RepositoryService.class);
         String targetLog = dir.getAbsolutePath() + PROJECT + "project-" + aProject.getId() + ".log";
-        FileAppender apndr = new FileAppender(new PatternLayout("%d [" + aUser
-                + "] %m%n"), targetLog, true);
+        FileAppender apndr = new FileAppender(new PatternLayout("%d [" + aUser + "] %m%n"),
+                targetLog, true);
         logger.addAppender(apndr);
         logger.setLevel((Level) Level.ALL);
         return logger;
@@ -221,11 +224,12 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public void createCrowdJob(CrowdJob aCrowdJob){
+    public void createCrowdJob(CrowdJob aCrowdJob)
+    {
         if (aCrowdJob.getId() == 0) {
             entityManager.persist(aCrowdJob);
         }
-        else{
+        else {
             entityManager.merge(aCrowdJob);
         }
     }
@@ -255,6 +259,18 @@ public class RepositoryServiceDbData
             entityManager.merge(aDocument);
         }
 
+    }
+
+    @Override
+    @Transactional
+    public void createTimeStamp(ProjectTimeStamp aProjectTimeStamp)
+    {
+        if (aProjectTimeStamp.getId() == 0) {
+            entityManager.persist(aProjectTimeStamp);
+        }
+        else {
+            entityManager.merge(aProjectTimeStamp);
+        }
     }
 
     @Override
@@ -293,7 +309,8 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-   public boolean existsCrowdJob(String aName){
+    public boolean existsCrowdJob(String aName)
+    {
         try {
             entityManager.createQuery("FROM CrowdJob WHERE name = :name", CrowdJob.class)
                     .setParameter("name", aName).getSingleResult();
@@ -359,16 +376,35 @@ public class RepositoryServiceDbData
         }
     }
 
-   @Override
-   public boolean existUser(String username){
+    @Override
+    @Transactional
+    public boolean existsProjectTimeStamp(Project aProject, String aUsername)
+    {
+        try {
+            entityManager
+                    .createQuery(
+                            "FROM ProjectTimeStamp WHERE project = :project AND "
+                                    + "username =:username ", ProjectTimeStamp.class)
+                    .setParameter("project", aProject).setParameter("username", aUsername)
+                    .getSingleResult();
+            return true;
+        }
+        catch (NoResultException ex) {
+            return false;
+        }
+    }
 
-       try{
-           getUser(username);
-           return true;
-       }
-       catch(NoResultException e){
-           return false;
-       }
+    @Override
+    public boolean existUser(String username)
+    {
+
+        try {
+            getUser(username);
+            return true;
+        }
+        catch (NoResultException e) {
+            return false;
+        }
     }
 
     /**
@@ -526,10 +562,13 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public   File getTemplate(String fileName) throws IOException{
-        FileUtils.forceMkdir(new File(dir.getAbsolutePath()+TEMPLATE));
-        return  new File(dir.getAbsolutePath()+TEMPLATE, fileName);
+    public File getTemplate(String fileName)
+        throws IOException
+    {
+        FileUtils.forceMkdir(new File(dir.getAbsolutePath() + TEMPLATE));
+        return new File(dir.getAbsolutePath() + TEMPLATE, fileName);
     }
+
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public ProjectPermission getPermisionLevel(User aUser, Project aProject)
@@ -564,7 +603,7 @@ public class RepositoryServiceDbData
         List<User> users = new ArrayList<User>();
 
         for (String username : usernames) {
-            if(existUser(username)) {
+            if (existUser(username)) {
                 users.add(getUser(username));
             }
         }
@@ -583,7 +622,7 @@ public class RepositoryServiceDbData
                 .setParameter("level", aPermissionLevel).getResultList();
         List<User> users = new ArrayList<User>();
         for (String username : usernames) {
-            if(existUser(username)) {
+            if (existUser(username)) {
                 users.add(getUser(username));
             }
         }
@@ -607,12 +646,15 @@ public class RepositoryServiceDbData
         return entityManager.createQuery("FROM Project WHERE name = :name", Project.class)
                 .setParameter("name", aName).getSingleResult();
     }
+
     @Override
     @Transactional
-    public CrowdJob getCrowdJob(String aName){
+    public CrowdJob getCrowdJob(String aName)
+    {
         return entityManager.createQuery("FROM CrowdJob WHERE name = :name", CrowdJob.class)
                 .setParameter("name", aName).getSingleResult();
     }
+
     @Override
     public Project getProject(long aId)
     {
@@ -659,6 +701,14 @@ public class RepositoryServiceDbData
         return new File(path + "/" + aDocument.getName());
     }
 
+    @Override
+    @Transactional
+    public  ProjectTimeStamp getProjectTimeStamp(Project aProject, String aUsername){
+        return entityManager
+                .createQuery("FROM ProjectTimeStamp WHERE username = :username AND project =:project",
+                        ProjectTimeStamp.class).setParameter("username", aUsername)
+                .setParameter("project", aProject).getSingleResult();
+    }
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public User getUser(String aUsername)
@@ -722,8 +772,8 @@ public class RepositoryServiceDbData
                 .createQuery(
                         "SELECT DISTINCT user FROM ProjectPermission WHERE project = :project "
                                 + "AND level = :level", String.class)
-                .setParameter("project", aProject)
-                .setParameter("level", PermissionLevel.USER).getResultList();
+                .setParameter("project", aProject).setParameter("level", PermissionLevel.USER)
+                .getResultList();
 
         // Bail out already. HQL doesn't seem to like queries with an empty parameter right of "in"
         if (users.isEmpty()) {
@@ -777,16 +827,19 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public List<CrowdJob> listCrowdJobs(){
+    public List<CrowdJob> listCrowdJobs()
+    {
         return entityManager.createQuery("FROM CrowdJob", CrowdJob.class).getResultList();
     }
 
     @Override
     @Transactional
-    public List<CrowdJob> listCrowdJobs(Project aProject){
+    public List<CrowdJob> listCrowdJobs(Project aProject)
+    {
         return entityManager.createQuery("FROM CrowdJob where project =:project", CrowdJob.class)
                 .setParameter("project", aProject).getResultList();
     }
+
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public List<SourceDocument> listSourceDocuments(Project aProject)
@@ -850,9 +903,11 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public void removeCrowdJob(CrowdJob crowdProject){
+    public void removeCrowdJob(CrowdJob crowdProject)
+    {
         entityManager.remove(entityManager.merge(crowdProject));
     }
+
     @Override
     public void removeAnnotationGuideline(Project aProject, String aFileName)
         throws IOException
@@ -881,8 +936,7 @@ public class RepositoryServiceDbData
                 " Removed Project Permission [" + projectPermission.getLevel() + "] for the USer ["
                         + projectPermission.getUser() + "] From project ["
                         + projectPermission.getProject().getId() + "]");
-        createLog(projectPermission.getProject(), projectPermission.getUser())
-                .removeAllAppenders();
+        createLog(projectPermission.getProject(), projectPermission.getUser()).removeAllAppenders();
 
     }
 
@@ -1347,6 +1401,20 @@ public class RepositoryServiceDbData
                     }
                 }
             }
+            // update timestamp now
+            ProjectTimeStamp projectTimeStamp;
+            if(existsProjectTimeStamp(aDocument.getProject(), aUserName)){
+                projectTimeStamp = getProjectTimeStamp(aDocument.getProject(), aUserName);
+                projectTimeStamp.setTimestamp(new Timestamp(new Date().getTime()));
+            }
+            else{
+                projectTimeStamp = new ProjectTimeStamp();
+                projectTimeStamp.setProject(aDocument.getProject());
+                projectTimeStamp.setUsername(aUserName);
+                projectTimeStamp.setTimestamp(new Timestamp(new Date().getTime()));
+            }
+            createTimeStamp(projectTimeStamp);
+
         }
     }
 

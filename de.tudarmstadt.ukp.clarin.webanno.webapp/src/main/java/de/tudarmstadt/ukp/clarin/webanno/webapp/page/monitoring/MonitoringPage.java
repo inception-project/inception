@@ -2,13 +2,13 @@
  * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -112,6 +112,9 @@ public class MonitoringPage
      */
     public static final String DOCUMENT = "document:";
     public static final String SOURCE_DOCUMENT = "source document";
+    public static final String CURATION = "curation";
+
+    public static final String LAST_ACCESS = "last access:";
 
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
@@ -160,8 +163,8 @@ public class MonitoringPage
                             for (Project project : allProjects) {
                                 if (ApplicationUtils.isProjectAdmin(project, projectRepository,
                                         user)
-                                        || ApplicationUtils.isCurator(project,
-                                                projectRepository, user)) {
+                                        || ApplicationUtils.isCurator(project, projectRepository,
+                                                user)) {
                                     allowedProject.add(project);
                                 }
                             }
@@ -207,7 +210,7 @@ public class MonitoringPage
                         documentListAsColumnHeader.add(SOURCE_DOCUMENT);
 
                         // A column for curation user annotation document status
-                        documentListAsColumnHeader.add("curation");
+                        documentListAsColumnHeader.add(CURATION);
 
                         // List of users with USER permission level
                         List<User> usersWithPermissions = projectRepository
@@ -223,7 +226,7 @@ public class MonitoringPage
                             List<String> userAnnotationDocuments = new ArrayList<String>();
                             userAnnotationDocuments.add(DOCUMENT + document.getName());
 
-                // source Document status
+                            // source Document status
                             userAnnotationDocuments.add(SOURCE_DOCUMENT + "-" + DOCUMENT
                                     + document.getName());
 
@@ -239,6 +242,25 @@ public class MonitoringPage
 
                             userAnnotationDocumentStatusList.add(userAnnotationDocuments);
                         }
+
+                        // Add a timestamp row for every user.
+                        List<String> projectTimeStamp = new ArrayList<String>();
+                        projectTimeStamp.add(LAST_ACCESS); // first column
+                        projectTimeStamp.add(LAST_ACCESS);// Source document column
+                        projectTimeStamp.add(LAST_ACCESS);// curation column, not yet added TODO
+                        for (User user : usersWithPermissions) {
+                            if (projectRepository.existsProjectTimeStamp(project,
+                                    user.getUsername())) {
+                                projectTimeStamp.add(LAST_ACCESS+projectRepository
+                                        .getProjectTimeStamp(project, user.getUsername())
+                                        .getTimestamp().toString());
+                            }
+                            else{
+                                projectTimeStamp.add(LAST_ACCESS+"new");
+                            }
+                        }
+
+                        userAnnotationDocumentStatusList.add(projectTimeStamp);
 
                         TableDataProvider provider = new TableDataProvider(
                                 documentListAsColumnHeader, userAnnotationDocumentStatusList);
@@ -347,8 +369,8 @@ public class MonitoringPage
                         String type = getType(annotationTypes.getModelObject().getName());
                         String featureName = getFeatureName(annotationTypes.getModelObject()
                                 .getName());
-                        List<User> users = projectRepository
-                                .listProjectUsersWithPermissions(project, PermissionLevel.USER);
+                        List<User> users = projectRepository.listProjectUsersWithPermissions(
+                                project, PermissionLevel.USER);
                         double[][] results = new double[users.size()][users.size()];
 
                         List<SourceDocument> sourceDocuments = projectRepository
@@ -382,29 +404,29 @@ public class MonitoringPage
 
                             Set<String> allANnotations = twoPairedKappa.getAllAnnotations(users,
                                     sourceDocument, type);
-                            if(allANnotations.size() != 0){
+                            if (allANnotations.size() != 0) {
                                 usersWithAnnotation++;
-                            Map<String, Map<String, String>> userAnnotations = twoPairedKappa
-                                    .initializeAnnotations(users, allANnotations);
-                            userAnnotations = twoPairedKappa.updateUserAnnotations(users,
-                                    sourceDocument, type, featureName, userAnnotations);
-                            double[][] thisSourceDocumentResult = twoPairedKappa
-                                    .getAgreement(userAnnotations);
-                            // Update result per document
-                            for (int i = 0; i < users.size(); i++) {
-                                for (int j = 0; j < users.size(); j++) {
-                                    results[i][j] = results[i][j] + thisSourceDocumentResult[i][j];
+                                Map<String, Map<String, String>> userAnnotations = twoPairedKappa
+                                        .initializeAnnotations(users, allANnotations);
+                                userAnnotations = twoPairedKappa.updateUserAnnotations(users,
+                                        sourceDocument, type, featureName, userAnnotations);
+                                double[][] thisSourceDocumentResult = twoPairedKappa
+                                        .getAgreement(userAnnotations);
+                                // Update result per document
+                                for (int i = 0; i < users.size(); i++) {
+                                    for (int j = 0; j < users.size(); j++) {
+                                        results[i][j] = results[i][j]
+                                                + thisSourceDocumentResult[i][j];
+                                    }
                                 }
-                            }
                             }
                         }
 
                         // get average agreement value across documents
-                        if(usersWithAnnotation != 0) {
+                        if (usersWithAnnotation != 0) {
                             for (int i = 0; i < users.size(); i++) {
                                 for (int j = 0; j < users.size(); j++) {
-                                    results[i][j] = results[i][j]
-                                            / usersWithAnnotation;
+                                    results[i][j] = results[i][j] / usersWithAnnotation;
                                 }
                             }
                         }
@@ -422,7 +444,8 @@ public class MonitoringPage
                             agreementResult.add(user1.getUsername());
 
                             for (int j = 0; j < users.size(); j++) {
-                                agreementResult.add((double)Math.round(results[i][j]*100)/100 + "");
+                                agreementResult.add((double) Math.round(results[i][j] * 100) / 100
+                                        + "");
                             }
                             i++;
                             agreementResults.add(agreementResult);
@@ -536,12 +559,6 @@ public class MonitoringPage
             }
             add(agreementTable = new DefaultDataTable("agreementTable", columns, provider, 10));
         }
-    }
-
-    private class UsersModel
-        implements Serializable
-    {
-        public List<User> users;
     }
 
     private String getType(String aType)

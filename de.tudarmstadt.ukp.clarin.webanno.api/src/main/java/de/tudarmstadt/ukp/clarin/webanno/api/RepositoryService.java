@@ -36,6 +36,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectTimeStamp;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import eu.clarin.weblicht.wlfxb.io.WLFormatException;
@@ -100,8 +101,9 @@ public interface RepositoryService
         throws IOException;
 
     /**
-     * Create a crowd Project which contains some source document. A crowd project contains source documents
-     * from {@link Project}(s), a {@link SourceDocument} belongs at most to one {@link CrowdJob}.
+     * Create a crowd Project which contains some source document. A crowd project contains source
+     * documents from {@link Project}(s), a {@link SourceDocument} belongs at most to one
+     * {@link CrowdJob}.
      */
     void createCrowdJob(CrowdJob crowdProject);
 
@@ -132,6 +134,12 @@ public interface RepositoryService
         throws IOException;
 
     /**
+     * Create a time stamp of an annotation for a {@link Project} per user
+     * @param projectTimeStamp
+     */
+    void createTimeStamp(ProjectTimeStamp projectTimeStamp);
+
+    /**
      * A Method that checks if there is already an annotation document created for the source
      * document
      *
@@ -148,6 +156,7 @@ public interface RepositoryService
      * @return
      */
     boolean existsProject(String name);
+
     /**
      * Check if a crowd job already exist or not with its name
      */
@@ -173,8 +182,16 @@ public interface RepositoryService
      * can decide to override or throw an exception/message to the cleint
      */
     boolean existSourceDocument(Project project, String fileName);
+
     /**
-     * If the user is in the database (exclude some historycal users that have annotations in the system)
+     * Check if there exists an project timestamp for this user and {@link Project}.
+     * @return
+     */
+    boolean existsProjectTimeStamp(Project project, String username);
+    /**
+     * If the user is in the database (exclude some historycal users that have annotations in the
+     * system)
+     *
      * @return
      */
     boolean existUser(String username);
@@ -200,24 +217,29 @@ public interface RepositoryService
      * application/release to anothor.
      */
     File exportSourceDocument(SourceDocument document, Project project);
+
     /**
      * Export a Serialized CAS annotation document from the file system
+     *
      * @return
      */
     File exportAnnotationDocument(SourceDocument document, Project project, String user);
 
     /**
      * Export the associated project log for this {@link Project} while copying a project
+     *
      * @param project
      * @return
      */
     File exportProjectLog(Project project);
+
     /**
      * Export the associated project guideline for this {@link Project} while copying a project
      */
     File exportGuideLines(Project project);
 
     File exportProjectMetaInf(Project project);
+
     /**
      * Get an {@link AnnotationDocument} object from the database using the {@link SourceDocument}
      * and {@link User} Objects. If {@code getAnnotationDocument} fails, it will be created anew
@@ -277,7 +299,8 @@ public interface RepositoryService
      *
      * Get a crowdFlower Template from the WebAnno root directory
      */
-    File getTemplate(String fileName) throws IOException;
+    File getTemplate(String fileName)
+        throws IOException;
 
     /**
      * For a given project, get the permission level(s) of the user if it is granted
@@ -306,6 +329,7 @@ public interface RepositoryService
      *         Exception is handled from the calling method.
      */
     Project getProject(String name);
+
     /**
      * Get a {@link CrowdJob} by its name
      */
@@ -364,6 +388,13 @@ public interface RepositoryService
      */
     File getSourceDocumentContent(Project project, SourceDocument document);
 
+    /**
+     * Get a timestamp of for this {@link Project} of this username
+     * @param project
+     * @param usernamer
+     * @return
+     */
+    ProjectTimeStamp getProjectTimeStamp(Project project, String username);
     /**
      * Get a {@link User} object from the database based on the username.
      *
@@ -437,11 +468,13 @@ public interface RepositoryService
 
     /**
      * List {@link CrowdJob}s/Crowd Tasks in the system
+     *
      * @return
      */
     List<CrowdJob> listCrowdJobs();
 
     List<CrowdJob> listCrowdJobs(Project project);
+
     /**
      * List all source documents in a project. The source documents are the original TCF documents
      * imported.
@@ -516,8 +549,10 @@ public interface RepositoryService
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     void removeProject(Project project, User aser)
         throws IOException;
+
     /**
      * remove a crowd project
+     *
      * @param crowdProject
      */
 
