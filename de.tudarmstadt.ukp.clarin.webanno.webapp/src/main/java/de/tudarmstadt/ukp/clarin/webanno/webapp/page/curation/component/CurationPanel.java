@@ -72,8 +72,8 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.AnnotationOption;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.AnnotationState;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.BratCurator;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.BratCurationVisualizer;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.BratCurator;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationSegmentForSourceDocument;
@@ -401,7 +401,7 @@ public class CurationPanel
         throws IOException, UIMAException, ClassNotFoundException
     {
 
-        String spanType = aRequest.getParameterValue("type").toString()
+        String spanType = aRequest.getParameterValue("spanType").toString()
                 .replace("_(" + AnnotationState.AGREE.name() + ")", "")
                 .replace("_(" + AnnotationState.USE.name() + ")", "")
                 .replace("_(" + AnnotationState.DISAGREE.name() + ")", "")
