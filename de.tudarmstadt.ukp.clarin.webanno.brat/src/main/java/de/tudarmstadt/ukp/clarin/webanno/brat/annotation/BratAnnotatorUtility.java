@@ -42,7 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 public class BratAnnotatorUtility
 {
 
-    public static Object getDocument(String aCollection, String aDocumentName, User aUser,
+    public static Object getDocument(
             BratAnnotatorUIData aUIData, RepositoryService repository,
             AnnotationService annotationService, BratAnnotatorModel bratAnnotatorModel)
         throws ClassNotFoundException, IOException, UIMAException

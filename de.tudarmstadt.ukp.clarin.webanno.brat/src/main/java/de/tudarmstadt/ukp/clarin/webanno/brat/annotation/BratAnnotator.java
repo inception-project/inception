@@ -259,8 +259,7 @@ public class BratAnnotator
 
                         setAttributesForDocument(uIData);
 
-                        result = BratAnnotatorUtility.getDocument(collection, documentName,
-                                bratAnnotatorModel.getUser(), uIData, repository,
+                        result = BratAnnotatorUtility.getDocument(uIData, repository,
                                 annotationService, bratAnnotatorModel);
 
                         if (firstTimeDocumentOpened) {
@@ -289,8 +288,7 @@ public class BratAnnotator
                             info(e.getMessage());
                             String collection = request.getParameterValue("collection").toString();
                             String documentName = request.getParameterValue("document").toString();
-                            result = BratAnnotatorUtility.getDocument(collection, documentName,
-                                    bratAnnotatorModel.getUser(), uIData, repository,
+                            result = BratAnnotatorUtility.getDocument(uIData, repository,
                                     annotationService, bratAnnotatorModel);
                         }
 
@@ -316,10 +314,7 @@ public class BratAnnotator
                             String type = request.getParameterValue("type").toString();
                             String annotationType = BratAjaxCasUtil.getAnnotationType(type);
                             if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
-                                String collection = request.getParameterValue("collection").toString();
-                                String documentName = request.getParameterValue("document").toString();
-                                result = BratAnnotatorUtility.getDocument(collection, documentName,
-                                        bratAnnotatorModel.getUser(), uIData, repository,
+                                result = BratAnnotatorUtility.getDocument(uIData, repository,
                                         annotationService, bratAnnotatorModel);
                                 info("POS annotations can't be deleted!");
                             }
@@ -347,8 +342,7 @@ public class BratAnnotator
                                 .toString();
                         String documentName = request.getParameterValue("document")
                                 .toString();
-                        result = BratAnnotatorUtility.getDocument(collection, documentName,
-                                bratAnnotatorModel.getUser(), uIData, repository,
+                        result = BratAnnotatorUtility.getDocument(uIData, repository,
                                 annotationService, bratAnnotatorModel);
                     }
                 }
