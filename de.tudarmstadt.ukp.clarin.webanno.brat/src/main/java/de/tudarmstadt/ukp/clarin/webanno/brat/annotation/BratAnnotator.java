@@ -27,10 +27,10 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
-import org.apache.wicket.behavior.SimpleAttributeModifier;
 import org.apache.wicket.markup.html.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
@@ -109,12 +109,12 @@ public class BratAnnotator
         final FeedbackPanel feedbackPanel = new FeedbackPanel("feedbackPanel");
         add(feedbackPanel);
         feedbackPanel.setOutputMarkupId(true);
-        feedbackPanel.add(new SimpleAttributeModifier("class", "info"));
-        feedbackPanel.add(new SimpleAttributeModifier("class", "error"));
+        feedbackPanel.add(new AttributeModifier("class", "info"));
+        feedbackPanel.add(new AttributeModifier("class", "error"));
 
         // Add project and document information at the top
 
-        add(documentNameLabel = (Label) new Label("doumentName", new LoadableDetachableModel()
+        add(documentNameLabel = (Label) new Label("doumentName", new LoadableDetachableModel<String>()
         {
 
             private static final long serialVersionUID = 1L;
@@ -141,7 +141,7 @@ public class BratAnnotator
             }
         }).setOutputMarkupId(true));
 
-        add(numberOfPages = (Label) new Label("numberOfPages", new LoadableDetachableModel()
+        add(numberOfPages = (Label) new Label("numberOfPages", new LoadableDetachableModel<String>()
         {
 
             private static final long serialVersionUID = 1L;
@@ -286,8 +286,6 @@ public class BratAnnotator
 
                         catch (Exception e) {
                             info(e.getMessage());
-                            String collection = request.getParameterValue("collection").toString();
-                            String documentName = request.getParameterValue("document").toString();
                             result = BratAnnotatorUtility.getDocument(uIData, repository,
                                     annotationService, bratAnnotatorModel);
                         }
@@ -338,10 +336,6 @@ public class BratAnnotator
                     else {
                         setAttributesForDocument(uIData);
                         error("This document is already closed. Please ask admin to re-open");
-                        String collection = request.getParameterValue("collection")
-                                .toString();
-                        String documentName = request.getParameterValue("document")
-                                .toString();
                         result = BratAnnotatorUtility.getDocument(uIData, repository,
                                 annotationService, bratAnnotatorModel);
                     }
@@ -422,7 +416,7 @@ public class BratAnnotator
      * @throws IOException
      * @throws ClassNotFoundException
      */
-    @SuppressWarnings("unchecked")
+
     public void setAttributesForDocument(BratAnnotatorUIData aUIData)
         throws UIMAException, IOException, ClassNotFoundException
     {
@@ -455,7 +449,7 @@ public class BratAnnotator
      *
      * @throws IOException
      */
-    @SuppressWarnings("unchecked")
+
     public void setAttributesForGetCollection(String aProjectName)
         throws IOException
     {
