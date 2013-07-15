@@ -230,6 +230,9 @@ public class ManageUsersPage
                     if(userRepository.exists(DetailForm.this.getModelObject().getUsername())&& isCreate){
                         info("User already exists.");
                     }
+                    else if(DetailForm.this.getModelObject().getUsername().contains(" ")){
+                        info("User username should not contain SPACE character.");
+                    }
                     else if (ApplicationUtils
                             .isNameValid(DetailForm.this.getModelObject().getUsername())) {
                         actionSave();
