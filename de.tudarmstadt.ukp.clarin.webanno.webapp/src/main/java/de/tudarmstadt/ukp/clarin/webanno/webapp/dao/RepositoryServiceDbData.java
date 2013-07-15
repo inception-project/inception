@@ -703,12 +703,15 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public  ProjectTimeStamp getProjectTimeStamp(Project aProject, String aUsername){
+    public ProjectTimeStamp getProjectTimeStamp(Project aProject, String aUsername)
+    {
         return entityManager
-                .createQuery("FROM ProjectTimeStamp WHERE username = :username AND project =:project",
+                .createQuery(
+                        "FROM ProjectTimeStamp WHERE username = :username AND project =:project",
                         ProjectTimeStamp.class).setParameter("username", aUsername)
                 .setParameter("project", aProject).getSingleResult();
     }
+
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public User getUser(String aUsername)
@@ -880,6 +883,16 @@ public class RepositoryServiceDbData
         for (TagSet tagset : annotationService.listTagSets(aProject)) {
             annotationService.removeTagSet(tagset);
         }
+        // remove a timestamp entry for this project, if exists
+        for(User user: listProjectUsersWithPermissions(aProject)) {
+            if (existsProjectTimeStamp(aProject, user.getUsername())) {
+                entityManager.remove(getProjectTimeStamp(aProject, user.getUsername()));
+            }
+        }
+        // timestamp for the curator
+        if (existsProjectTimeStamp(aProject, CURATION_USER)) {
+            entityManager.remove(getProjectTimeStamp(aProject, CURATION_USER));
+        }
         // remove the project directory from the file system
         String path = dir.getAbsolutePath() + PROJECT + aProject.getId();
         try {
@@ -948,6 +961,13 @@ public class RepositoryServiceDbData
 
         for (AnnotationDocument annotationDocument : listAnnotationDocument(aDocument)) {
             removeAnnotationDocument(annotationDocument);
+        }
+        // remove it from the crowd job, if it belongs already
+        for (CrowdJob crowdJob : listCrowdJobs(aDocument.getProject())) {
+            if (crowdJob.getDocuments().contains(aDocument)) {
+                crowdJob.getDocuments().remove(aDocument);
+                entityManager.persist(crowdJob);
+            }
         }
 
         entityManager.remove(aDocument);
@@ -1381,7 +1401,8 @@ public class RepositoryServiceDbData
                                             + " for document with ID [" + aDocument.getId()
                                             + "] in project ID [" + aDocument.getProject().getId()
                                             + "]");
-                            createLog(aDocument.getProject(), aUser.getUsername()).removeAllAppenders();
+                            createLog(aDocument.getProject(), aUser.getUsername())
+                                    .removeAllAppenders();
                         }
                     }
 
@@ -1395,7 +1416,8 @@ public class RepositoryServiceDbData
                                                 + " for document with ID [" + aDocument.getId()
                                                 + "] in project ID ["
                                                 + aDocument.getProject().getId() + "]");
-                                createLog(aDocument.getProject(), aUser.getUsername()).removeAllAppenders();
+                                createLog(aDocument.getProject(), aUser.getUsername())
+                                        .removeAllAppenders();
                             }
                         }
                     }
@@ -1403,11 +1425,11 @@ public class RepositoryServiceDbData
             }
             // update timestamp now
             ProjectTimeStamp projectTimeStamp;
-            if(existsProjectTimeStamp(aDocument.getProject(), aUserName)){
+            if (existsProjectTimeStamp(aDocument.getProject(), aUserName)) {
                 projectTimeStamp = getProjectTimeStamp(aDocument.getProject(), aUserName);
                 projectTimeStamp.setTimestamp(new Timestamp(new Date().getTime()));
             }
-            else{
+            else {
                 projectTimeStamp = new ProjectTimeStamp();
                 projectTimeStamp.setProject(aDocument.getProject());
                 projectTimeStamp.setUsername(aUserName);
