@@ -401,7 +401,7 @@ public class CurationPanel
         throws IOException, UIMAException, ClassNotFoundException
     {
 
-        String spanType = aRequest.getParameterValue("spanType").toString()
+        String spanType = aRequest.getParameterValue("type").toString()
                 .replace("_(" + AnnotationState.AGREE.name() + ")", "")
                 .replace("_(" + AnnotationState.USE.name() + ")", "")
                 .replace("_(" + AnnotationState.DISAGREE.name() + ")", "")

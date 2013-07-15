@@ -23,7 +23,7 @@ var CurationMod = (function($, window, undefined) {
 				dispatcher.post('ajax', [ {
 					action: 'selectSpanForMerge',
 					id: id,
-					spanType: editedSpan.type,
+					type: editedSpan.type,
 				}, 'serverResult']);
 			}
 			// TODO check for arcs
