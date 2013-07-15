@@ -386,4 +386,22 @@ public class ApplicationUtils
         return startAndEndOfSplitedTokens;
     }
 
+    /**
+     * Check if the name is valid, SPecial characters are not allowed as a project/user name
+     * as it will conflict with file naming system
+     */
+    public static boolean isNameValid(String aName)
+    {
+        if (aName.contains("^") || aName.contains("/")
+                || aName.contains("\\") || aName.contains("&")
+                || aName.contains("*") || aName.contains("?")
+                || aName.contains("+") || aName.contains("$")
+                || aName.contains("!") || aName.contains("[")
+                || aName.contains("]")) {
+            return false;
+        }
+        else {
+            return true;
+        }
+    }
 }

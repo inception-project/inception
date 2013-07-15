@@ -2,13 +2,13 @@
  * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -393,7 +393,7 @@ public class ProjectPage
                             error("Project with this name already exist !");
                             LOG.error("Project with this name already exist !");
                         }
-                        else if (isProjectNameValid(project.getName())) {
+                        else if (ApplicationUtils.isNameValid(project.getName())) {
                             try {
                                 String username = SecurityContextHolder.getContext()
                                         .getAuthentication().getName();
@@ -417,7 +417,7 @@ public class ProjectPage
                     // This is updating Project details
                     else {
                         // Invalid Project name, restore
-                        if (!isProjectNameValid(project.getName()) && !projectExist) {
+                        if (!ApplicationUtils.isNameValid(project.getName()) && !projectExist) {
 
                             // Maintain already loaded project and selected Users
                             // Hence Illegal Project modification (limited privilege, illegal
@@ -463,28 +463,6 @@ public class ProjectPage
                     }
                 }
             });
-        }
-
-        /**
-         * Check if the Project name is valid, SPecial characters are not allowed as a project name
-         * as it will conflict with file naming system
-         *
-         * @param aProjectName
-         * @return
-         */
-        public boolean isProjectNameValid(String aProjectName)
-        {
-            if (aProjectName.contains("^") || aProjectName.contains("/")
-                    || aProjectName.contains("\\") || aProjectName.contains("&")
-                    || aProjectName.contains("*") || aProjectName.contains("?")
-                    || aProjectName.contains("+") || aProjectName.contains("$")
-                    || aProjectName.contains("!") || aProjectName.contains("[")
-                    || aProjectName.contains("]")) {
-                return false;
-            }
-            else {
-                return true;
-            }
         }
     }
 }

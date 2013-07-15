@@ -2,13 +2,13 @@
  * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -46,6 +46,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.ApplicationPageBase;
@@ -53,6 +54,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome.WelcomePage;
 
 /**
  * Manage Application wide Users.
+ *
  * @author Seid Muhie Yimam
  * @author Richard Eckart de Castilho
  *
@@ -68,6 +70,7 @@ public class ManageUsersPage
     @SpringBean(name = "documentRepository")
     private RepositoryService projectRepository;
 
+    boolean isCreate = false;
     private class SelectionForm
         extends Form<SelectionModel>
     {
@@ -224,7 +227,16 @@ public class ManageUsersPage
                 @Override
                 public void onSubmit()
                 {
-                    actionSave();
+                    if(userRepository.exists(DetailForm.this.getModelObject().getUsername())&& isCreate){
+                        info("User already exists.");
+                    }
+                    else if (ApplicationUtils
+                            .isNameValid(DetailForm.this.getModelObject().getUsername())) {
+                        actionSave();
+                    }
+                    else {
+                        info("Username should not contain special character.");
+                    }
                 }
             });
             add(new Button("cancel", new ResourceModel("label"))
@@ -276,6 +288,7 @@ public class ManageUsersPage
             detailForm.setModelObject(aNewSelection);
             detailForm.setVisible(true);
             detailForm.get("username").setEnabled(false);
+            isCreate = false;
         }
         else {
             detailForm.setVisible(false);
@@ -288,6 +301,7 @@ public class ManageUsersPage
         detailForm.setModelObject(new User());
         detailForm.setVisible(true);
         detailForm.get("username").setEnabled(true);
+        isCreate = true;
     }
 
     public void actionDelete()
