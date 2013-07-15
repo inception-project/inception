@@ -159,10 +159,7 @@ public class BratCurator
                 }
 
                 else if (request.getParameterValue("action").toString().equals("getDocument")) {
-                    String collection = request.getParameterValue("collection").toString();
-                    String documentName = request.getParameterValue("document").toString();
-                    result = BratAnnotatorUtility.getDocument(collection, documentName,
-                            getModelObject().getUser(), uIData, repository, annotationService, getModelObject());
+                    result = BratAnnotatorUtility.getDocument(uIData, repository, annotationService, getModelObject());
                 }
                 else if (request.getParameterValue("action").toString().equals("createSpan")) {
                     try {
@@ -176,10 +173,7 @@ public class BratCurator
 
                     catch (Exception e) {
                         info(e);
-                        String collection = request.getParameterValue("collection").toString();
-                        String documentName = request.getParameterValue("document").toString();
-                        result = BratAnnotatorUtility.getDocument(collection, documentName,
-                                getModelObject().getUser(), uIData, repository, annotationService, getModelObject());
+                        result = BratAnnotatorUtility.getDocument(uIData, repository, annotationService, getModelObject());
                     }
 
                 }
@@ -204,10 +198,7 @@ public class BratCurator
                     String type = request.getParameterValue("type").toString();
                     String annotationType = BratAjaxCasUtil.getAnnotationType(type);
                     if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
-                        String collection = request.getParameterValue("collection").toString();
-                        String documentName = request.getParameterValue("document").toString();
-                        result = BratAnnotatorUtility.getDocument(collection, documentName,
-                                getModelObject().getUser(), uIData, repository,
+                        result = BratAnnotatorUtility.getDocument(uIData, repository,
                                 annotationService, getModelObject());
                         info("POS annotations can't be deleted!");
                     }
@@ -325,8 +316,6 @@ public class BratCurator
         {
             JCas jCas = null;
             try {
-                BratAjaxCasController controller = new BratAjaxCasController(
-                        repository, annotationService);
                 if(getModelObject().getDocument() != null) {
                 	jCas = repository.getCurationDocumentContent(getModelObject().getDocument());
                 }
