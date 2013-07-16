@@ -116,6 +116,7 @@ public class CurationPage
     {
         openDataModel = new OpenDocumentModel();
         bratAnnotatorModel = new BratAnnotatorModel();
+        bratAnnotatorModel.setMode(Mode.CURATION);
         reMerge = new ReMergeCasModel();
 
         curationContainer = new CurationContainer();

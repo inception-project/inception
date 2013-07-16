@@ -129,22 +129,22 @@ public class BratAnnotator
             {
                 boolean hasChanged = false;
                 BratAnnotatorUIData uIData = new BratAnnotatorUIData();
-               if(getModelObject().getDocument() != null) {
-                try {
-                    uIData.setjCas(getCas(getModelObject().getProject(),
-                            getModelObject().getUser(), getModelObject().getDocument(),
-                            getModelObject().getMode()));
+                if (getModelObject().getDocument() != null) {
+                    try {
+                        uIData.setjCas(getCas(getModelObject().getProject(), getModelObject()
+                                .getUser(), getModelObject().getDocument(), getModelObject()
+                                .getMode()));
+                    }
+                    catch (UIMAException e1) {
+                        error(ExceptionUtils.getRootCause(e1));
+                    }
+                    catch (IOException e1) {
+                        error(ExceptionUtils.getRootCause(e1));
+                    }
+                    catch (ClassNotFoundException e1) {
+                        error(ExceptionUtils.getRootCause(e1));
+                    }
                 }
-                catch (UIMAException e1) {
-                    error(ExceptionUtils.getRootCause(e1));
-                }
-                catch (IOException e1) {
-                    error(ExceptionUtils.getRootCause(e1));
-                }
-                catch (ClassNotFoundException e1) {
-                    error(ExceptionUtils.getRootCause(e1));
-                }
-            }
 
                 final IRequestParameters request = getRequest().getPostParameters();
 
@@ -163,7 +163,8 @@ public class BratAnnotator
                         result = controller.loadConf();
                     }
                     else if (request.getParameterValue("action").toString()
-                            .equals("getCollectionInformation") && getModelObject().getProject()!=null) {
+                            .equals("getCollectionInformation")
+                            && getModelObject().getProject() != null) {
                         result = controller.getCollectionInformation(getModelObject().getProject()
                                 .getName(), getModelObject().getAnnotationLayers());
 
@@ -291,7 +292,7 @@ public class BratAnnotator
     {
         super.renderHead(aResponse);
 
-        String[] script = new String[] { "dispatcher = new Dispatcher();"
+        String[] annotatorScript = new String[] { "dispatcher = new Dispatcher();"
                 // Each visualizer talks to its own Wicket component instance
                 + "dispatcher.ajaxUrl = '"
                 + controller.getCallbackUrl()
@@ -305,19 +306,32 @@ public class BratAnnotator
                 + "var visualizerUI = new VisualizerUI(dispatcher, visualizer.svg);"
                 + "var annotatorUI = new AnnotatorUI(dispatcher, visualizer.svg);"
                 + "var spinner = new Spinner(dispatcher, '#spinner');"
-                + "var logger = new AnnotationLog(dispatcher);" + "dispatcher.post('init');"
-        // + "window.location.hash = '" + rewriteUrl + "';"
-        // + "dispatcher.post('setCollection', ['"+collection+"', '"+document+"', {}]);"
-        // + "dispatcher.post('clearSVG', []);"
-        // + "dispatcher.post('current', ['"+collection+"', '1234', {}, true]);"
-        // +
-        // "dispatcher.post('ajax', [{action: 'getCollectionInformation',collection: '"+collection+"'}, 'collectionLoaded', {collection: '"+collection+"',keep: true}]);"
-        // + "dispatcher.post('collectionChanged');"
-        };
+                + "var logger = new AnnotationLog(dispatcher);" + "dispatcher.post('init');" };
 
-        // This doesn't work with head.js because the onLoad event is fired before all the
-        // JavaScript references are loaded.
-        aResponse.renderOnLoadJavaScript("\n" + StringUtils.join(script, "\n"));
+        String[] curatorScript = new String[] { "dispatcher = new Dispatcher();"
+                // Each visualizer talks to its own Wicket component instance
+                + "dispatcher.ajaxUrl = '"
+                + controller.getCallbackUrl()
+                + "'; "
+                // We attach the JSON send back from the server to this HTML element
+                // because we cannot directly pass it from Wicket to the caller in ajax.js.
+                + "dispatcher.wicketId = '"
+                + vis.getMarkupId()
+                + "'; "
+                // + "var urlMonitor = new URLMonitor(dispatcher); "
+                + "var ajax = new Ajax(dispatcher);" + "var ajax_" + vis.getMarkupId() + " = ajax;"
+                + "var visualizer = new Visualizer(dispatcher, '" + vis.getMarkupId() + "');"
+                + "var visualizerUI = new VisualizerUI(dispatcher, visualizer.svg);"
+                + "var annotatorUI = new AnnotatorUI(dispatcher, visualizer.svg);"
+                + "var spinner = new Spinner(dispatcher, '#spinner');"
+                + "var logger = new AnnotationLog(dispatcher);" + "dispatcher.post('init');" };
+
+        if (getModelObject().getMode().equals(Mode.ANNOTATION)) { // works with the URLMonitor
+            aResponse.renderOnLoadJavaScript("\n" + StringUtils.join(annotatorScript, "\n"));
+        }
+        else {
+            aResponse.renderOnLoadJavaScript("\n" + StringUtils.join(curatorScript, "\n"));
+        }
     }
 
     public void reloadContent(AjaxRequestTarget aTarget)
