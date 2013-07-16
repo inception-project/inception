@@ -158,8 +158,8 @@ public class CurationPanel
 
         final BratAnnotatorModel bratAnnotatorModel = curationContainer.getBratAnnotatorModel();
 
-        final BratAnnotator mergeVisualizer = new BratAnnotator(
-                "mergeView", new Model<BratAnnotatorModel>(bratAnnotatorModel))
+        final BratAnnotator mergeVisualizer = new BratAnnotator("mergeView",
+                new Model<BratAnnotatorModel>(bratAnnotatorModel))
         {
 
             private static final long serialVersionUID = 7279648231521710155L;
@@ -292,7 +292,8 @@ public class CurationPanel
                                 }
                                 JCas clickedJCas = null;
                                 try {
-                                    clickedJCas = repository.getAnnotationDocumentContent(clickedAnnotationDocument);
+                                    clickedJCas = repository
+                                            .getAnnotationDocumentContent(clickedAnnotationDocument);
                                 }
                                 catch (UIMAException e1) {
                                     // TODO Auto-generated catch block
@@ -306,13 +307,15 @@ public class CurationPanel
                                     // TODO Auto-generated catch block
                                     e1.printStackTrace();
                                 }
-                                AnnotationFS fsClicked = (AnnotationFS) clickedJCas.getLowLevelCas().ll_getFSForRef(
-                                        addressOriginClicked);
-                                arcType =  BratAjaxCasUtil.getAnnotationType(fsClicked.getType())+arcType;
+                                AnnotationFS fsClicked = (AnnotationFS) clickedJCas
+                                        .getLowLevelCas().ll_getFSForRef(addressOriginClicked);
+                                arcType = BratAjaxCasUtil.getAnnotationType(fsClicked.getType())
+                                        + arcType;
                                 BratAjaxCasController controller = new BratAjaxCasController(
                                         repository, annotationService);
                                 try {
-                                    controller.addArcToCas(bratAnnotatorModel, arcType, 0,0, addressOrigin,addressTarget, mergeJCas);
+                                    controller.addArcToCas(bratAnnotatorModel, arcType, 0, 0,
+                                            addressOrigin, addressTarget, mergeJCas);
                                     controller.createAnnotationDocumentContent(
                                             bratAnnotatorModel.getMode(),
                                             bratAnnotatorModel.getDocument(),
@@ -374,11 +377,13 @@ public class CurationPanel
                 // add subcomponents to the component
                 item.add(click);
                 String colorCode = curationSegmentItem.getSentenceState().getColorCode();
-/*                if (curationSegmentItem.isCurrentSentence()) {
-                    item.add(AttributeModifier.append("style", "border: 4px solid black;"));
-                }*/
+                /*
+                 * if (curationSegmentItem.isCurrentSentence()) {
+                 * item.add(AttributeModifier.append("style", "border: 4px solid black;")); }
+                 */
                 if (colorCode != null) {
-                    item.add(AttributeModifier.append("style", "background-color: "+colorCode+";"));
+                    item.add(AttributeModifier.append("style", "background-color: " + colorCode
+                            + ";"));
                 }
 
                 Label currentSentence = new AjaxLabel("sentence", curationSegmentItem.getText(),
@@ -412,12 +417,14 @@ public class CurationPanel
         JCas clickedJCas = repository.getAnnotationDocumentContent(aAnnotationDocument);
         AnnotationFS fsClicked = (AnnotationFS) clickedJCas.getLowLevelCas().ll_getFSForRef(
                 aAddress);
-        // TODO temporarily solution to remove the the prefix from curation sentence annotation views
-        spanType =  BratAjaxCasUtil.getAnnotationType(fsClicked.getType())+spanType;
+        // TODO temporarily solution to remove the the prefix from curation sentence annotation
+        // views
+        spanType = BratAjaxCasUtil.getAnnotationType(fsClicked.getType()) + spanType;
 
         BratAjaxCasController controller = new BratAjaxCasController(repository, annotationService);
 
-        controller.addSpanToCas(aMergeJCas, fsClicked.getBegin(), fsClicked.getEnd(), spanType, 0, 0);
+        controller.addSpanToCas(aMergeJCas, fsClicked.getBegin(), fsClicked.getEnd(), spanType, 0,
+                0);
         controller.createAnnotationDocumentContent(aBratAnnotatorModel.getMode(),
                 aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser(), aMergeJCas);
     }
@@ -446,34 +453,11 @@ public class CurationPanel
             // TODO Auto-generated catch block
             e1.printStackTrace();
         }
-        User userLoggedIn = repository.getUser(SecurityContextHolder.getContext()
-                .getAuthentication().getName());
 
         // get cases from repository
-        for (AnnotationDocument annotationDocument : annotationDocuments) {
-            String username = annotationDocument.getUser();
-            if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)
-                    || username.equals(CURATION_USER)) {
-                try {
-                    JCas jCas = repository.getAnnotationDocumentContent(annotationDocument);
-                    jCases.put(username, jCas);
-
-                    // cleanup annotationSelections
-                    annotationSelectionByUsernameAndAddress.put(username,
-                            new HashMap<Integer, AnnotationSelection>());
-                }
-                catch (Exception e) {
-                    LOG.error("Unable to load document [" + annotationDocument + "]", e);
-                    error("Unable to load document [" + annotationDocument + "]: "
-                            + ExceptionUtils.getRootCauseMessage(e));
-                }
-            }
-        }
+        getCases(jCases, annotationDocuments);
         // add mergeJCas separately
         jCases.put(CURATION_USER, mergeJCas);
-
-        // create cas for merge panel
-        int numUsers = jCases.size();
 
         // get differing feature structures
         List<Type> entryTypes = CurationBuilder.getEntryTypes(mergeJCas,
@@ -489,89 +473,16 @@ public class CurationPanel
         }
 
         // fill lookup variable for annotation selections
-        for (AnnotationOption annotationOption : annotationOptions) {
-            for (AnnotationSelection annotationSelection : annotationOption
-                    .getAnnotationSelections()) {
-                for (String username : annotationSelection.getAddressByUsername().keySet()) {
-                    if (!username.equals(CURATION_USER)) {
-                        Integer address = annotationSelection.getAddressByUsername().get(username);
-                        annotationSelectionByUsernameAndAddress.get(username).put(address,
-                                annotationSelection);
-                    }
-                }
-            }
-        }
+        fillLookupVariables(annotationOptions);
 
         List<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<CurationUserSegmentForAnnotationDocument>();
 
-        BratAnnotatorModel bratAnnotatorModel = new BratAnnotatorModel();// .getModelObject();
-        bratAnnotatorModel.setDocument(sourceDocument);
-        bratAnnotatorModel.setProject(sourceDocument.getProject());
-        bratAnnotatorModel.setUser(userLoggedIn);
-        bratAnnotatorModel.setFirstSentenceAddress(curationSegment.getSentenceAddress().get(
-                CURATION_USER));
-        bratAnnotatorModel.setLastSentenceAddress(curationSegment.getSentenceAddress().get(
-                CURATION_USER));
-        bratAnnotatorModel.setSentenceAddress(curationSegment.getSentenceAddress().get(
-                CURATION_USER));
-        AnnotationPreference preference = new AnnotationPreference();
-        try {
-            ApplicationUtils.setAnnotationPreference(preference, userLoggedIn.getUsername(), repository,
-                    annotationService, bratAnnotatorModel, Mode.CURATION);
-        }
-        catch (BeansException e) {
-           error(ExceptionUtils.getRootCause(e));
-        }
-        catch (FileNotFoundException e) {
-            error(ExceptionUtils.getRootCause(e));
-        }
-        catch (IOException e) {
-            error(ExceptionUtils.getRootCause(e));
-        }
-        bratAnnotatorModel.setMode(Mode.CURATION);
+        BratAnnotatorModel bratAnnotatorModel = setBratAnnotatorModel(sourceDocument);
 
-        boolean hasDiff = false;
-        List<String> usernamesSorted = new LinkedList<String>(jCases.keySet());
-        Collections.sort(usernamesSorted);
-        for (String username : usernamesSorted) {
-            if (!username.equals(CURATION_USER)) {
-                Map<Integer, AnnotationSelection> annotationSelectionByAddress = new HashMap<Integer, AnnotationSelection>();
-                for (AnnotationOption annotationOption : annotationOptions) {
-                    for (AnnotationSelection annotationSelection : annotationOption
-                            .getAnnotationSelections()) {
-                        if (annotationSelection.getAddressByUsername().containsKey(username)) {
-                            Integer address = annotationSelection.getAddressByUsername().get(
-                                    username);
-                            annotationSelectionByAddress.put(address, annotationSelection);
-                        }
-                    }
-                }
-                JCas jCas = jCases.get(username);
-
-                GetDocumentResponse response = new GetDocumentResponse();
-
-                BratAjaxCasController.addBratResponses(response, bratAnnotatorModel, 0, jCas, true);
-
-                CurationUserSegmentForAnnotationDocument curationUserSegment2 = new CurationUserSegmentForAnnotationDocument();
-                curationUserSegment2.setCollectionData(getStringCollectionData(response, jCas,
-                        annotationSelectionByAddress, username, numUsers));
-                curationUserSegment2.setDocumentResponse(getStringDocumentResponse(response));
-                curationUserSegment2.setUsername(username);
-
-                sentences.add(curationUserSegment2);
-            }
-        }
-
+        populateCurationSentences(jCases, sentences, bratAnnotatorModel, annotationOptions);
         // update sentence list on the right side
         sentenceListView.setModelObject(sentences);
 
-        /*
-         * CurationUserSegment2 mergeUserSegment = new CurationUserSegment2(); GetDocumentResponse
-         * response = getDocumentResponse(mergeJCas, CURATION_USER, bratAnnotatorModel);
-         * //mergeUserSegment.setCollectionData(getStringCollectionData(response, mergeJCas,
-         * addresses, username)); mergeUserSegment.setCollectionData("{}");
-         * mergeUserSegment.setDocumentResponse(getStringDocumentResponse(response));
-         */
         bratAnnotatorModel.setMode(Mode.MERGE);
         mergeVisualizer.setModelObject(bratAnnotatorModel);
         mergeVisualizer.reloadContent(target);
@@ -678,4 +589,112 @@ public class CurationPanel
         return entityType;
     }
 
+    private void getCases(Map<String, JCas> aJCases, List<AnnotationDocument> aAnnotationDocuments)
+    {
+        for (AnnotationDocument annotationDocument : aAnnotationDocuments) {
+            String username = annotationDocument.getUser();
+            if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)
+                    || username.equals(CURATION_USER)) {
+                try {
+                    JCas jCas = repository.getAnnotationDocumentContent(annotationDocument);
+                    aJCases.put(username, jCas);
+
+                    // cleanup annotationSelections
+                    annotationSelectionByUsernameAndAddress.put(username,
+                            new HashMap<Integer, AnnotationSelection>());
+                }
+                catch (Exception e) {
+                    LOG.error("Unable to load document [" + annotationDocument + "]", e);
+                    error("Unable to load document [" + annotationDocument + "]: "
+                            + ExceptionUtils.getRootCauseMessage(e));
+                }
+            }
+        }
+    }
+
+    private void fillLookupVariables(List<AnnotationOption> aAnnotationOptions)
+    {
+        // fill lookup variable for annotation selections
+        for (AnnotationOption annotationOption : aAnnotationOptions) {
+            for (AnnotationSelection annotationSelection : annotationOption
+                    .getAnnotationSelections()) {
+                for (String username : annotationSelection.getAddressByUsername().keySet()) {
+                    if (!username.equals(CURATION_USER)) {
+                        Integer address = annotationSelection.getAddressByUsername().get(username);
+                        annotationSelectionByUsernameAndAddress.get(username).put(address,
+                                annotationSelection);
+                    }
+                }
+            }
+        }
+    }
+
+    private void populateCurationSentences(Map<String, JCas> aJCases,
+            List<CurationUserSegmentForAnnotationDocument> aSentences,
+            BratAnnotatorModel bratAnnotatorModel, List<AnnotationOption> aAnnotationOptions)
+    {
+        List<String> usernamesSorted = new LinkedList<String>(aJCases.keySet());
+        Collections.sort(usernamesSorted);
+        int numUsers = aJCases.size();
+        for (String username : usernamesSorted) {
+            if (!username.equals(CURATION_USER)) {
+                Map<Integer, AnnotationSelection> annotationSelectionByAddress = new HashMap<Integer, AnnotationSelection>();
+                for (AnnotationOption annotationOption : aAnnotationOptions) {
+                    for (AnnotationSelection annotationSelection : annotationOption
+                            .getAnnotationSelections()) {
+                        if (annotationSelection.getAddressByUsername().containsKey(username)) {
+                            Integer address = annotationSelection.getAddressByUsername().get(
+                                    username);
+                            annotationSelectionByAddress.put(address, annotationSelection);
+                        }
+                    }
+                }
+                JCas jCas = aJCases.get(username);
+
+                GetDocumentResponse response = new GetDocumentResponse();
+
+                BratAjaxCasController.addBratResponses(response, bratAnnotatorModel, 0, jCas, true);
+
+                CurationUserSegmentForAnnotationDocument curationUserSegment2 = new CurationUserSegmentForAnnotationDocument();
+                curationUserSegment2.setCollectionData(getStringCollectionData(response, jCas,
+                        annotationSelectionByAddress, username, numUsers));
+                curationUserSegment2.setDocumentResponse(getStringDocumentResponse(response));
+                curationUserSegment2.setUsername(username);
+
+                aSentences.add(curationUserSegment2);
+            }
+        }
+    }
+
+    public BratAnnotatorModel setBratAnnotatorModel(SourceDocument aSourceDocument)
+    {
+        User userLoggedIn = repository.getUser(SecurityContextHolder.getContext()
+                .getAuthentication().getName());
+        BratAnnotatorModel bratAnnotatorModel = new BratAnnotatorModel();// .getModelObject();
+        bratAnnotatorModel.setDocument(aSourceDocument);
+        bratAnnotatorModel.setProject(aSourceDocument.getProject());
+        bratAnnotatorModel.setUser(userLoggedIn);
+        bratAnnotatorModel.setFirstSentenceAddress(curationSegment.getSentenceAddress().get(
+                CURATION_USER));
+        bratAnnotatorModel.setLastSentenceAddress(curationSegment.getSentenceAddress().get(
+                CURATION_USER));
+        bratAnnotatorModel.setSentenceAddress(curationSegment.getSentenceAddress().get(
+                CURATION_USER));
+        bratAnnotatorModel.setMode(Mode.CURATION);
+        AnnotationPreference preference = new AnnotationPreference();
+        try {
+            ApplicationUtils.setAnnotationPreference(preference, userLoggedIn.getUsername(),
+                    repository, annotationService, bratAnnotatorModel, Mode.CURATION);
+        }
+        catch (BeansException e) {
+            error(ExceptionUtils.getRootCause(e));
+        }
+        catch (FileNotFoundException e) {
+            error(ExceptionUtils.getRootCause(e));
+        }
+        catch (IOException e) {
+            error(ExceptionUtils.getRootCause(e));
+        }
+        return bratAnnotatorModel;
+    }
 }
