@@ -284,13 +284,9 @@ public class CurationPage
                             curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
                             updatePanel(curationContainer);
                             // target.add(curationPanel) should work!
-                            String collection = "#" + openDataModel.getProject().getName() + "/";
-                            String document = openDataModel.getDocument().getName();
                             target.add(finish.setOutputMarkupId(true));
-                            target.appendJavaScript("window.location.hash = '"
-                                    + collection
-                                    + document
-                                    + "';Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                            target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+
                         }
                         else if (openDataModel.getDocument() == null) {
                             setResponsePage(WelcomePage.class);

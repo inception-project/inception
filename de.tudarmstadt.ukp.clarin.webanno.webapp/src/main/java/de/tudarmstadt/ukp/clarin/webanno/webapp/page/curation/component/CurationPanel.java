@@ -168,6 +168,7 @@ public class CurationPanel
             protected void onChange(AjaxRequestTarget aTarget)
             {
                 updateRightSide(aTarget, sentenceOuterView, curationContainer, this);
+
             }
         };
         // reset sentenceAddress and lastSentenceAddress to the orginal once
@@ -573,8 +574,7 @@ public class CurationPanel
          */
         bratAnnotatorModel.setMode(Mode.MERGE);
         mergeVisualizer.setModelObject(bratAnnotatorModel);
-        //mergeVisualizer.reloadContent(target);
-        target.add(mergeVisualizer);
+        mergeVisualizer.reloadContent(target);
 
         // send response to the client
         parent.addOrReplace(sentenceListView);
