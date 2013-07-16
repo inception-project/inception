@@ -57,6 +57,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
@@ -73,7 +74,6 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.AnnotationSelectio
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.AnnotationState;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.BratCurationVisualizer;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.BratCurator;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationSegmentForSourceDocument;
@@ -158,7 +158,7 @@ public class CurationPanel
 
         final BratAnnotatorModel bratAnnotatorModel = curationContainer.getBratAnnotatorModel();
 
-        final BratCurator mergeVisualizer = new BratCurator(
+        final BratAnnotator mergeVisualizer = new BratAnnotator(
                 "mergeView", new Model<BratAnnotatorModel>(bratAnnotatorModel))
         {
 
@@ -422,7 +422,7 @@ public class CurationPanel
     }
 
     protected void updateRightSide(AjaxRequestTarget target, MarkupContainer parent,
-            CurationContainer curationContainer, BratCurator mergeVisualizer)
+            CurationContainer curationContainer, BratAnnotator mergeVisualizer)
     {
         SourceDocument sourceDocument = curationContainer.getBratAnnotatorModel().getDocument();
         Project project = curationContainer.getBratAnnotatorModel().getProject();
@@ -573,7 +573,8 @@ public class CurationPanel
          */
         bratAnnotatorModel.setMode(Mode.MERGE);
         mergeVisualizer.setModelObject(bratAnnotatorModel);
-        mergeVisualizer.reloadContent(target);
+        //mergeVisualizer.reloadContent(target);
+        target.add(mergeVisualizer);
 
         // send response to the client
         parent.addOrReplace(sentenceListView);

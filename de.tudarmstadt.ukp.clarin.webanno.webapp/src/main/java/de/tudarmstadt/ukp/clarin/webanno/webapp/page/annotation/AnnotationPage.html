@@ -131,93 +131,19 @@
 				</li>
 			</ul>
 		</div>
-		<div id="messagepullup" class="messages" style="display: none" />
-		<div id="commentpopup" />
-		<div id="document_name">
-			<input readonly="readonly" />
-		</div>
-
-		<!-- <span id="document_ctime"/> -->
-		<div wicket:id=annotationLayerModal></div>
+	
+      <span wicket:id="doumentName"></span>
+      <div style="text-align: center;color: maroon;" wicket:id="numberOfPages">
+      </div>
+      
+      		<div wicket:id=annotationLayerModal></div>
 		<div wicket:id=exportModal></div>
 		<div wicket:id=guidelineModal></div>
 		<div wicket:id=openDocumentsModal></div>
 		<div wicket:id=yesNoModal></div>
 
 		<div class="hfill" wicket:id="embedder1"></div>
-
-		<!-- Span dialog (view+edit) -->
-		<form id="span_form" class="dialog" title="Span">
-			<!-- Span dialog annotated text -->
-			<fieldset id="span_selected_fset">
-				<legend> Text </legend>
-				<a target="brat_linked" id="span_highlight_link" href="#"> Link
-				</a>
-				<div id="span_selected" />
-			</fieldset>
-			<!-- Span dialog search links -->
-			<fieldset id="span_search_fieldset">
-				<legend> Search </legend>
-				<div id="span_search_links" />
-			</fieldset>
-			<!-- Span dialog type selector -->
-			<fieldset>
-				<div id="entity_and_event_wrapper" class="split_wrapper">
-					<div id="span_entity_section" class="wrapper_half_left">
-						<div id="entity_label" class="label-like">Entity type</div>
-						<div id="entity_types" class="scroll_wrapper_upper">
-							<div class="scroller" />
-						</div>
-					</div>
-				</div>
-			</fieldset>
-			<!-- Span dialog normalization -->
-			<fieldset id="norm_fieldset">
-				<legend> Normalization </legend>
-				<div id="norm_container">
-					<select id="span_norm_db" /> <a id="span_norm_db_link"
-						target="brat_linked" href="#" title="Search DB"> <img
-						src="static/img/Fugue-shadowless-magnifier.png"
-						style="vertical-align: middle" />
-					</a> <span class="span_norm_label"> ID: </span> <input
-						id="span_norm_id" class="span_norm_id_input" style="width: 20%" />
-					<span class="span_norm_label"> Ref: </span> <input
-						id="span_norm_txt" class="span_norm_txt_input" readonly="readonly"
-						style="width: 45%" placeholder="Click here to search" /> <a
-						id="span_norm_ref_link" target="brat_linked" href="#"
-						title="See in DB"> <img
-						src="static/img/Fugue-shadowless-external.png"
-						style="vertical-align: middle" />
-					</a> <input id="clear_norm_button" type="button" value="&#x2715;"
-						title="Clear normalization" />
-				</div>
-			</fieldset>
-		</form>
-		<!-- Arc dialog -->
-		<form id="arc_form" class="dialog" title="Arc">
-			<fieldset id="arc_origin_fset">
-				<legend> From </legend>
-				<a target="brat_linked" id="arc_highlight_link" href="#"> Link </a>
-				<div id="arc_origin" />
-			</fieldset>
-
-			<fieldset id="arc_target_fset">
-				<legend> To </legend>
-				<div id="arc_target" />
-			</fieldset>
-
-			<div id="arc_roles" class="scroll_fset">
-				<fieldset>
-					<legend> Type </legend>
-					<div class="scroller" />
-				</fieldset>
-			</div>
-
-		</form>
-
-		<div id="waiter" class="dialog" title="Please wait">
-			<img src="static/img/spinner.gif" />
-		</div>
+			
 	</wicket:extend>
 </body>
 </html>

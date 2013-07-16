@@ -425,14 +425,14 @@ public class BratAjaxCasUtil
      */
     public static int getSentenceNumber(JCas aJcas, int aSentenceAddress)
     {
-        int sentenceAddress = 0;
+        int sentenceNumber = 0;
         for (Sentence sentence : select(aJcas, Sentence.class)) {
             if (sentence.getAddress() == aSentenceAddress) {
                 break;
             }
-            sentenceAddress++;
+            sentenceNumber++;
         }
-        return sentenceAddress;
+        return sentenceNumber;
 
     }
 
