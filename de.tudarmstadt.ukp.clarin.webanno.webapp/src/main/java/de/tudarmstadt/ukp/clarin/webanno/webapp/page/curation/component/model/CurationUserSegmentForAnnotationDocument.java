@@ -2,13 +2,13 @@
  * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,8 +18,11 @@
 package de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model;
 
 import java.io.Serializable;
+import java.util.Map;
 
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.AnnotationSelection;
 
 /**
  * A Model comprises of document and collection brat responses togehter with the username that will
@@ -36,6 +39,10 @@ public class CurationUserSegmentForAnnotationDocument
     private String documentResponse;
     private String collectionData = "{}";
     private String username = "";
+    //NEw Additions
+    private BratAnnotatorModel bratAnnotatorModel;
+    private  AnnotationSelection annotationSelection;
+    private Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress;
 
     public String getDocumentResponse()
     {
@@ -72,5 +79,37 @@ public class CurationUserSegmentForAnnotationDocument
     {
         username = aUsername;
     }
+
+    public BratAnnotatorModel getBratAnnotatorModel()
+    {
+        return bratAnnotatorModel;
+    }
+
+    public void setBratAnnotatorModel(BratAnnotatorModel bratAnnotatorModel)
+    {
+        this.bratAnnotatorModel = bratAnnotatorModel;
+    }
+
+    public AnnotationSelection getAnnotationSelection()
+    {
+        return annotationSelection;
+    }
+
+    public void setAnnotationSelection(AnnotationSelection annotationSelection)
+    {
+        this.annotationSelection = annotationSelection;
+    }
+
+    public Map<String, Map<Integer, AnnotationSelection>> getAnnotationSelectionByUsernameAndAddress()
+    {
+        return annotationSelectionByUsernameAndAddress;
+    }
+
+    public void setAnnotationSelectionByUsernameAndAddress(
+            Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress)
+    {
+        this.annotationSelectionByUsernameAndAddress = annotationSelectionByUsernameAndAddress;
+    }
+
 
 }
