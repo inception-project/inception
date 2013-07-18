@@ -31,7 +31,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.Type;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
@@ -44,7 +43,6 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.codehaus.jackson.JsonGenerator;
 import org.springframework.beans.BeansException;
@@ -58,7 +56,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -260,35 +257,6 @@ public class CurationPanel
         textListView.setOutputMarkupId(true);
         textOuterView.add(textListView);
 
-    }
-
-    public static void createSpan(IRequestParameters aRequest,
-            BratAnnotatorModel aBratAnnotatorModel, JCas aMergeJCas,
-            AnnotationDocument aAnnotationDocument, int aAddress, RepositoryService repository,
-            AnnotationService annotationService)
-        throws IOException, UIMAException, ClassNotFoundException
-    {
-
-        String spanType = aRequest.getParameterValue("type").toString()
-                .replace("_(" + AnnotationState.AGREE.name() + ")", "")
-                .replace("_(" + AnnotationState.USE.name() + ")", "")
-                .replace("_(" + AnnotationState.DISAGREE.name() + ")", "")
-                .replace("_(" + AnnotationState.DO_NOT_USE.name() + ")", "")
-                .replace("_(" + AnnotationState.NOT_SUPPORTED.name() + ")", "");
-
-        JCas clickedJCas = repository.getAnnotationDocumentContent(aAnnotationDocument);
-        AnnotationFS fsClicked = (AnnotationFS) clickedJCas.getLowLevelCas().ll_getFSForRef(
-                aAddress);
-        // TODO temporarily solution to remove the the prefix from curation sentence annotation
-        // views
-        spanType = BratAjaxCasUtil.getAnnotationType(fsClicked.getType()) + spanType;
-
-        BratAjaxCasController controller = new BratAjaxCasController(repository, annotationService);
-
-        controller.addSpanToCas(aMergeJCas, fsClicked.getBegin(), fsClicked.getEnd(), spanType, 0,
-                0);
-        controller.createAnnotationDocumentContent(aBratAnnotatorModel.getMode(),
-                aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser(), aMergeJCas);
     }
 
     protected void updateRightSide(AjaxRequestTarget target, SentenceContainer parent,
