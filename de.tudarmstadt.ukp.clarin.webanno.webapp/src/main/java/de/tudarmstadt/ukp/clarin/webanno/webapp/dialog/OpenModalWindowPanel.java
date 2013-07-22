@@ -196,6 +196,15 @@ public class OpenModalWindowPanel
             }
         }
 
+        else if (aSubject.equals(mode.CORRECTION)) {
+            for (Project project : projectRepository.listProjects()) {
+                if (ApplicationUtils.isMember(project, projectRepository, user) &&
+                        project.getMode().equals(Mode.CORRECTION)) {
+                    allowedProject.add(project);
+                }
+            }
+        }
+
         return allowedProject;
     }
 

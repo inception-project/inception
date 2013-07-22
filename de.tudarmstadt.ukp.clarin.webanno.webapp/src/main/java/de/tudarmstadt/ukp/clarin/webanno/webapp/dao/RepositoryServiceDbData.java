@@ -135,6 +135,7 @@ public class RepositoryServiceDbData
     private static final String TEMPLATE = "/crowdtemplates/";
 
     private static final String CURATION_USER = "CURATION_USER";
+    private static final String CORRECTION_USER = "CORRECTION_USER";
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -1033,10 +1034,11 @@ public class RepositoryServiceDbData
                 + aUsername;
         // append existing preferences for the other mode
         if (new File(propertiesPath, annotationPreferencePropertiesFileName).exists()) {
-            aSubject = aSubject.equals(Mode.ANNOTATION) ? Mode.CURATION : Mode.ANNOTATION;
+           // aSubject = aSubject.equals(Mode.ANNOTATION) ? Mode.CURATION : Mode.ANNOTATION;
             for (Entry<Object, Object> entry : loadUserSettings(aUsername, aProject).entrySet()) {
                 String key = entry.getKey().toString();
-                if (key.substring(0, key.indexOf(".")).equals(aSubject.toString())) {
+                // Maintain other Modes of annotations confs than this one
+                if (!key.substring(0, key.indexOf(".")).equals(aSubject.toString())) {
                     property.put(entry.getKey(), entry.getValue());
                 }
             }
@@ -1261,10 +1263,22 @@ public class RepositoryServiceDbData
 
     @Override
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
+    public void createCorrectionDocumentContent(JCas aJcas, SourceDocument aDocument, User aUser)
+            throws IOException{
+        createAnnotationContent(aDocument, aJcas, CORRECTION_USER, aUser);
+    }
+    @Override
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     public void createCurationDocumentContent(JCas aJcas, SourceDocument aDocument, User aUser)
         throws IOException
     {
         createAnnotationContent(aDocument, aJcas, CURATION_USER, aUser);
+    }
+
+    @Override
+    public JCas getCorrectionDocumentContent(SourceDocument aDocument) throws UIMAException,
+    IOException, ClassNotFoundException{
+        return getAnnotationContent(aDocument, CORRECTION_USER);
     }
 
     @Override

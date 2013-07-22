@@ -27,8 +27,6 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
-import org.apache.uima.cas.Type;
-import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -47,25 +45,18 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.AnnotationOption;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.BratCuratorUtility;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.CasDiff;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationSegmentForSourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationUserSegmentForAnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.SentenceContainer;
 
 /**
  * Main Panel for the curation page. It displays a box with the complete text on the left side and a
  * box for a selected sentence on the right side.
  *
  * @author Andreas Straninger
+ * @author Seid Muhie Yimam
  */
 public class CurationPanel
     extends Panel
@@ -85,7 +76,7 @@ public class CurationPanel
 
     public final static String CURATION_USER = "CURATION_USER";
 
-    private SentenceContainer sentenceOuterView;
+    private CurationSegmentPanel sentenceOuterView;
     private BratAnnotator mergeVisualizer;
 
     /**
@@ -93,8 +84,6 @@ public class CurationPanel
      * username from which the span has been selected
      */
     private Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress = new HashMap<String, Map<Integer, AnnotationSelection>>();
-
-    private ListView<CurationUserSegmentForAnnotationDocument> sentenceListView;
 
     private CurationSegmentForSourceDocument curationSegment;
 
@@ -152,7 +141,7 @@ public class CurationPanel
             curationUserSegmentForAnnotationDocument.setBratAnnotatorModel(bratAnnotatorModel);
             sentences.add(curationUserSegmentForAnnotationDocument);
         }
-        sentenceOuterView = new SentenceContainer("sentenceOuterView",
+        sentenceOuterView = new CurationSegmentPanel("sentenceOuterView",
                 new Model<LinkedList<CurationUserSegmentForAnnotationDocument>>(sentences))
         {
             private static final long serialVersionUID = 2583509126979792202L;
@@ -160,8 +149,20 @@ public class CurationPanel
             @Override
             protected void onChange(AjaxRequestTarget aTarget)
             {
-                // aTarget.add(mergeVisualizer);
-                updateRightSide(aTarget, this, curationContainer, mergeVisualizer);
+                try {
+                    BratCuratorUtility.updatePanel(aTarget, this, curationContainer,
+                            mergeVisualizer, repository, annotationSelectionByUsernameAndAddress,
+                            curationSegment, annotationService, jsonConverter);
+                }
+                catch (UIMAException e) {
+                    ExceptionUtils.getRootCause(e);
+                }
+                catch (ClassNotFoundException e) {
+                    e.getMessage();
+                }
+                catch (IOException e) {
+                    e.getMessage();
+                }
             }
         };
 
@@ -178,7 +179,21 @@ public class CurationPanel
             protected void onChange(AjaxRequestTarget aTarget)
             {
                 aTarget.add(sentenceOuterView);
-                updateRightSide(aTarget, sentenceOuterView, curationContainer, this);
+                try {
+                    BratCuratorUtility.updatePanel(aTarget, sentenceOuterView,
+                            curationContainer, this, repository,
+                            annotationSelectionByUsernameAndAddress, curationSegment,
+                            annotationService, jsonConverter);
+                }
+                catch (UIMAException e) {
+                    ExceptionUtils.getRootCause(e);
+                }
+                catch (ClassNotFoundException e) {
+                    e.getMessage();
+                }
+                catch (IOException e) {
+                    e.getMessage();
+                }
             }
         };
         // reset sentenceAddress and lastSentenceAddress to the orginal once
@@ -199,11 +214,24 @@ public class CurationPanel
                 {
 
                     @Override
-                    protected void respond(AjaxRequestTarget target)
+                    protected void respond(AjaxRequestTarget aTarget)
                     {
                         curationSegment = curationSegmentItem;
-                        updateRightSide(target, sentenceOuterView, curationContainer,
-                                mergeVisualizer);
+                        try {
+                            BratCuratorUtility.updatePanel(aTarget, sentenceOuterView,
+                                    curationContainer, mergeVisualizer, repository,
+                                    annotationSelectionByUsernameAndAddress, curationSegment,
+                                    annotationService, jsonConverter);
+                        }
+                        catch (UIMAException e) {
+                            ExceptionUtils.getRootCause(e);
+                        }
+                        catch (ClassNotFoundException e) {
+                            e.getMessage();
+                        }
+                        catch (IOException e) {
+                            e.getMessage();
+                        }
                         List<CurationSegmentForSourceDocument> segments = curationContainer
                                 .getCurationSegments();
                         for (CurationSegmentForSourceDocument segment : segments) {
@@ -212,8 +240,8 @@ public class CurationPanel
                         }
                         textListView.setModelObject(segments);
                         textOuterView.addOrReplace(textListView);
-                        target.add(textOuterView);
-                        target.add(sentenceOuterView);
+                        aTarget.add(textOuterView);
+                        aTarget.add(sentenceOuterView);
                         // target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
                     }
 
@@ -246,68 +274,4 @@ public class CurationPanel
         textOuterView.add(textListView);
 
     }
-
-    protected void updateRightSide(AjaxRequestTarget target, SentenceContainer parent,
-            CurationContainer curationContainer, BratAnnotator mergeVisualizer)
-    {
-        SourceDocument sourceDocument = curationContainer.getBratAnnotatorModel().getDocument();
-        Project project = curationContainer.getBratAnnotatorModel().getProject();
-        List<AnnotationDocument> annotationDocuments = repository.listAnnotationDocument(project,
-                sourceDocument);
-        Map<String, JCas> jCases = new HashMap<String, JCas>();
-        JCas mergeJCas = null;
-        try {
-            mergeJCas = repository.getCurationDocumentContent(sourceDocument);
-            // get cases from repository
-            BratCuratorUtility.getCases(jCases, annotationDocuments, repository,
-                    annotationSelectionByUsernameAndAddress);
-
-            // add mergeJCas separately
-            jCases.put(CURATION_USER, mergeJCas);
-
-            // get differing feature structures
-            List<Type> entryTypes = CurationBuilder.getEntryTypes(mergeJCas,
-                    curationContainer.getBratAnnotatorModel());
-            List<AnnotationOption> annotationOptions = null;
-            try {
-                annotationOptions = CasDiff.doDiff(entryTypes, jCases, curationSegment.getBegin(),
-                        curationSegment.getEnd());
-            }
-            catch (Exception e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-
-            // fill lookup variable for annotation selections
-            BratCuratorUtility.fillLookupVariables(annotationOptions,
-                    annotationSelectionByUsernameAndAddress);
-
-            LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<CurationUserSegmentForAnnotationDocument>();
-
-            BratAnnotatorModel bratAnnotatorModel = BratCuratorUtility.setBratAnnotatorModel(
-                    sourceDocument, repository, curationSegment, annotationService);
-
-            BratCuratorUtility.populateCurationSentences(jCases, sentences, bratAnnotatorModel,
-                    annotationOptions, annotationSelectionByUsernameAndAddress, jsonConverter);
-            // update sentence list on the right side
-            parent.setModelObject(sentences);
-
-            bratAnnotatorModel.setMode(Mode.MERGE);
-            mergeVisualizer.setModelObject(bratAnnotatorModel);
-            mergeVisualizer.reloadContent(target);
-
-            target.add(parent);
-        }
-        catch (UIMAException e1) {
-            error(ExceptionUtils.getRootCause(e1));
-        }
-        catch (IOException e1) {
-            error(e1.getMessage());
-        }
-        catch (ClassNotFoundException e1) {
-            error(e1.getMessage());
-        }
-
-    }
-
 }

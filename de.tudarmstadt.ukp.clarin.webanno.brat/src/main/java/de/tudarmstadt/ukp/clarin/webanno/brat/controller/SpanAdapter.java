@@ -157,8 +157,8 @@ public class SpanAdapter
     public void render(JCas aJcas, GetDocumentResponse aResponse,
             BratAnnotatorModel aBratAnnotatorModel)
     {
-        // Remove prefixes from response if it is in curation mode
-        if (aBratAnnotatorModel.getMode().equals(Mode.CURATION)) {
+        // Remove prefixes from response if it is in curation mode or Correction Mode
+        if (aBratAnnotatorModel.getMode().equals(Mode.CURATION) || aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)) {
             typePrefix = "";
         }
         // The first sentence address in the display window!

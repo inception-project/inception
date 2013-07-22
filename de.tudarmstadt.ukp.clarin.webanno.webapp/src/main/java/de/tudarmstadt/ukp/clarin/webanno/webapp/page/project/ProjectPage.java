@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.page.project;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -35,6 +36,7 @@ import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.ListChoice;
+import org.apache.wicket.markup.html.form.RadioChoice;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
@@ -50,6 +52,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -368,6 +371,8 @@ public class ProjectPage
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
             // Add check box to enable/disable arc directions of dependency parsing
             add(new CheckBox("reverseDependencyDirection"));
+           add(new RadioChoice<Mode>(
+                    "mode", Arrays.asList(new Mode[]{Mode.ANNOTATION, Mode.CORRECTION})));
             add(new Button("save", new ResourceModel("label"))
             {
 

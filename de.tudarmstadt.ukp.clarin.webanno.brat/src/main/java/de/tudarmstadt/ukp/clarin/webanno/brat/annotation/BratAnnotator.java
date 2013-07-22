@@ -338,12 +338,12 @@ public class BratAnnotator
     {
         String[] script = new String[] { "dispatcher.post('clearSVG', []);"
                 + "dispatcher.post('current', ['"
-                + collection
+                + getCollection()
                 + "', '1234', {}, true]);"
                 // start ajax call, which requests the collection (and the document) from the server
                 // and renders the svg
                 + "dispatcher.post('ajax', [{action: 'getCollectionInformation',collection: '"
-                + collection + "'}, 'collectionLoaded', {collection: '" + collection
+                + getCollection() + "'}, 'collectionLoaded', {collection: '" + getCollection()
                 + "',keep: true}]);"
         // + "dispatcher.post('collectionChanged');"
         };
@@ -353,7 +353,7 @@ public class BratAnnotator
     private JCas getCas(Project aProject, User user, SourceDocument aDocument, Mode aMode)
         throws UIMAException, IOException, ClassNotFoundException
     {
-        if (aMode.equals(Mode.ANNOTATION)) {
+        if (aMode.equals(Mode.ANNOTATION) ||aMode.equals(Mode.CORRECTION) || aMode.equals(Mode.CORRECTION_MERGE)) {
             BratAjaxCasController controller = new BratAjaxCasController(repository,
                     annotationService);
 
@@ -375,4 +375,16 @@ public class BratAnnotator
         }
 
     }
+
+    public String getCollection()
+    {
+        return collection;
+    }
+
+    public void setCollection(String collection)
+    {
+        this.collection = collection;
+    }
+
+
 }

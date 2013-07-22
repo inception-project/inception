@@ -27,8 +27,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.IRequestParameters;
 import org.codehaus.jackson.JsonGenerator;
 import org.springframework.beans.BeansException;
@@ -39,6 +41,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
@@ -50,7 +53,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.CurationSegmentPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.AnnotationState;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationBuilder;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationSegmentForSourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationUserSegmentForAnnotationDocument;
 
@@ -140,9 +146,17 @@ public class BratCuratorUtility
                     break;
                 }
             }
+
             JCas clickedJCas = null;
             try {
-                clickedJCas = repository.getAnnotationDocumentContent(clickedAnnotationDocument);
+                if (aCurationUserSegment.getBratAnnotatorModel().getMode().equals(Mode.CORRECTION)) {
+                    clickedJCas = repository.getCorrectionDocumentContent(aCurationUserSegment
+                            .getBratAnnotatorModel().getDocument());
+                }
+                else {
+                    clickedJCas = repository
+                            .getAnnotationDocumentContent(clickedAnnotationDocument);
+                }
             }
             catch (UIMAException e1) {
                 // TODO Auto-generated catch block
@@ -178,8 +192,8 @@ public class BratCuratorUtility
 
     public static void createSpan(IRequestParameters aRequest,
             BratAnnotatorModel aBratAnnotatorModel, JCas aMergeJCas,
-            AnnotationDocument aAnnotationDocument, int aAddress, RepositoryService repository,
-            AnnotationService annotationService)
+            AnnotationDocument aAnnotationDocument, int aAddress, RepositoryService aRepository,
+            AnnotationService aAnnotationService)
         throws IOException, UIMAException, ClassNotFoundException
     {
 
@@ -190,14 +204,23 @@ public class BratCuratorUtility
                 .replace("_(" + AnnotationState.DO_NOT_USE.name() + ")", "")
                 .replace("_(" + AnnotationState.NOT_SUPPORTED.name() + ")", "");
 
-        JCas clickedJCas = repository.getAnnotationDocumentContent(aAnnotationDocument);
+        JCas clickedJCas;
+        if (aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)) {
+            clickedJCas = aRepository.getCorrectionDocumentContent(aBratAnnotatorModel
+                    .getDocument());
+        }
+        else {
+            clickedJCas = aRepository.getAnnotationDocumentContent(aAnnotationDocument);
+        }
         AnnotationFS fsClicked = (AnnotationFS) clickedJCas.getLowLevelCas().ll_getFSForRef(
                 aAddress);
-        // TODO temporarily solution to remove the the prefix from curation sentence annotation
+        // TODO temporarily solution to remove the the prefix from curation
+        // sentence annotation
         // views
         spanType = BratAjaxCasUtil.getAnnotationType(fsClicked.getType()) + spanType;
 
-        BratAjaxCasController controller = new BratAjaxCasController(repository, annotationService);
+        BratAjaxCasController controller = new BratAjaxCasController(aRepository,
+                aAnnotationService);
 
         controller.addSpanToCas(aMergeJCas, fsClicked.getBegin(), fsClicked.getEnd(), spanType, 0,
                 0);
@@ -276,16 +299,43 @@ public class BratCuratorUtility
         return bratAnnotatorModel;
     }
 
-    public static void fillLookupVariables(List<AnnotationOption> aAnnotationOptions,
-            Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress)
+    public static BratAnnotatorModel setCorrectionBratAnnotatorModel(
+            BratAnnotatorModel aBratAnnotatorModel, RepositoryService aRepository,
+            CurationSegmentForSourceDocument aCurationSegment, AnnotationService aAnnotationService)
+        throws BeansException, FileNotFoundException, IOException
+    {
+        User userLoggedIn = aRepository.getUser(SecurityContextHolder.getContext()
+                .getAuthentication().getName());
+        BratAnnotatorModel bratAnnotatorModel = new BratAnnotatorModel();// .getModelObject();
+        bratAnnotatorModel.setDocument(aBratAnnotatorModel.getDocument());
+        bratAnnotatorModel.setProject(aBratAnnotatorModel.getProject());
+        bratAnnotatorModel.setUser(userLoggedIn);
+        bratAnnotatorModel.setFirstSentenceAddress(aBratAnnotatorModel.getFirstSentenceAddress());
+        bratAnnotatorModel.setLastSentenceAddress(aBratAnnotatorModel.getLastSentenceAddress());
+        bratAnnotatorModel.setSentenceAddress(aBratAnnotatorModel.getSentenceAddress());
+        bratAnnotatorModel.setAnnotationLayers(aBratAnnotatorModel.getAnnotationLayers());
+        bratAnnotatorModel.setWindowSize(aBratAnnotatorModel.getWindowSize());
+        bratAnnotatorModel.setMode(Mode.CORRECTION_MERGE);
+        return bratAnnotatorModel;
+    }
+
+    public static void fillLookupVariables(
+            List<AnnotationOption> aAnnotationOptions,
+            Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
+            BratAnnotatorModel bratAnnotatorModel)
     {
         // fill lookup variable for annotation selections
         for (AnnotationOption annotationOption : aAnnotationOptions) {
             for (AnnotationSelection annotationSelection : annotationOption
                     .getAnnotationSelections()) {
                 for (String username : annotationSelection.getAddressByUsername().keySet()) {
-                    if (!username.equals(CURATION_USER)) {
+                    if ((!username.equals(CURATION_USER) && bratAnnotatorModel.getMode().equals(
+                            Mode.CURATION))
+                            || (username.equals(CURATION_USER) && bratAnnotatorModel.getMode()
+                                    .equals(Mode.CORRECTION))) {
                         Integer address = annotationSelection.getAddressByUsername().get(username);
+                        // aAnnotationSelectionByUsernameAndAddress.put(username, new
+                        // HashMap<Integer, AnnotationSelection>());
                         aAnnotationSelectionByUsernameAndAddress.get(username).put(address,
                                 annotationSelection);
                     }
@@ -297,7 +347,7 @@ public class BratCuratorUtility
     public static void populateCurationSentences(
             Map<String, JCas> aJCases,
             List<CurationUserSegmentForAnnotationDocument> aSentences,
-            BratAnnotatorModel bratAnnotatorModel,
+            BratAnnotatorModel aBratAnnotatorModel,
             List<AnnotationOption> aAnnotationOptions,
             Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
             MappingJacksonHttpMessageConverter aJsonConverter)
@@ -307,8 +357,12 @@ public class BratCuratorUtility
         Collections.sort(usernamesSorted);
         int numUsers = aJCases.size();
         for (String username : usernamesSorted) {
-            if (!username.equals(CURATION_USER)) {
+            if ((!username.equals(CURATION_USER) && aBratAnnotatorModel.getMode().equals(
+                    Mode.CURATION))
+                    || (username.equals(CURATION_USER) && aBratAnnotatorModel.getMode().equals(
+                            Mode.CORRECTION))) {
                 Map<Integer, AnnotationSelection> annotationSelectionByAddress = new HashMap<Integer, AnnotationSelection>();
+
                 for (AnnotationOption annotationOption : aAnnotationOptions) {
                     for (AnnotationSelection annotationSelection : annotationOption
                             .getAnnotationSelections()) {
@@ -323,15 +377,17 @@ public class BratCuratorUtility
 
                 GetDocumentResponse response = new GetDocumentResponse();
 
-                BratAjaxCasController.addBratResponses(response, bratAnnotatorModel, 0, jCas, true);
+                BratAjaxCasController
+                        .addBratResponses(response, aBratAnnotatorModel, 0, jCas, true);
 
                 CurationUserSegmentForAnnotationDocument curationUserSegment2 = new CurationUserSegmentForAnnotationDocument();
                 curationUserSegment2.setCollectionData(getStringCollectionData(response, jCas,
-                        annotationSelectionByAddress, username, numUsers, aJsonConverter));
+                        annotationSelectionByAddress, username, numUsers, aJsonConverter,
+                        aBratAnnotatorModel, aAnnotationOptions));
                 curationUserSegment2.setDocumentResponse(getStringDocumentResponse(response,
                         aJsonConverter));
                 curationUserSegment2.setUsername(username);
-                curationUserSegment2.setBratAnnotatorModel(bratAnnotatorModel);
+                curationUserSegment2.setBratAnnotatorModel(aBratAnnotatorModel);
                 curationUserSegment2
                         .setAnnotationSelectionByUsernameAndAddress(aAnnotationSelectionByUsernameAndAddress);
 
@@ -356,11 +412,34 @@ public class BratCuratorUtility
 
     private static String getStringCollectionData(GetDocumentResponse response, JCas jCas,
             Map<Integer, AnnotationSelection> annotationSelectionByAddress, String username,
-            int numUsers, MappingJacksonHttpMessageConverter aJsonConverter)
+            int numUsers, MappingJacksonHttpMessageConverter aJsonConverter,
+            BratAnnotatorModel aBratAnnotatorModel, List<AnnotationOption> aAnnotationOptions)
         throws IOException
     {
         Map<String, Map<String, Object>> entityTypes = new HashMap<String, Map<String, Object>>();
+        if (aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)) {
+            getCorrectionEntities(response,annotationSelectionByAddress,aAnnotationOptions, numUsers, entityTypes);
+        }
+        else {
+            getCurationEntities(response, annotationSelectionByAddress, numUsers, entityTypes);
+        }
 
+        Map<Object, Object> collection = new HashMap<Object, Object>();
+        collection.put("entity_types", entityTypes.values());
+
+        String collData = "{}";
+        StringWriter out = new StringWriter();
+        JsonGenerator jsonGenerator = aJsonConverter.getObjectMapper().getJsonFactory()
+                .createJsonGenerator(out);
+        jsonGenerator.writeObject(collection);
+        collData = out.toString();
+        return collData;
+    }
+
+    private static void getCurationEntities(GetDocumentResponse response,
+            Map<Integer, AnnotationSelection> annotationSelectionByAddress, int numUsers,
+            Map<String, Map<String, Object>> entityTypes)
+    {
         for (Entity entity : response.getEntities()) {
             // check if either address of entity has no changes ...
             // ... or if entity has already been clicked on
@@ -404,16 +483,142 @@ public class BratCuratorUtility
             }
 
         }
+    }
 
-        Map<Object, Object> collection = new HashMap<Object, Object>();
-        collection.put("entity_types", entityTypes.values());
+    private static void getCorrectionEntities(GetDocumentResponse response,
+            Map<Integer, AnnotationSelection> annotationSelectionByAddress,
+            List<AnnotationOption> aAnnotationOptions, int numUsers,
+            Map<String, Map<String, Object>> entityTypes)
+    {
+        for (Entity entity : response.getEntities()) {
+            // check if either address of entity has no changes ...
+            // ... or if entity has already been clicked on
+            int address = entity.getId();
+            AnnotationOption annotationOption = null;
+            AnnotationSelection annotationSelection = annotationSelectionByAddress.get(address);
+            for (AnnotationOption annotationOption2 : aAnnotationOptions) {
+                for(AnnotationSelection annotationSelection2:annotationOption2.getAnnotationSelections()){
+                    if(annotationSelection2.getAddressByUsername().containsKey(CURATION_USER) &&
+                    annotationSelection2.getAddressByUsername().get(CURATION_USER) == address) {
+                        annotationOption = annotationOption2;
+                        break;
+                    }
 
-        String collData = "{}";
-        StringWriter out = new StringWriter();
-        JsonGenerator jsonGenerator = aJsonConverter.getObjectMapper().getJsonFactory()
-                .createJsonGenerator(out);
-        jsonGenerator.writeObject(collection);
-        collData = out.toString();
-        return collData;
+                }
+            }
+            AnnotationState newState = null;
+            if (annotationSelection == null) {
+                newState = AnnotationState.NOT_SUPPORTED;
+
+            }
+            else if (annotationSelection.getAddressByUsername().size() == numUsers) {
+                newState = AnnotationState.AGREE;
+
+            }
+            else if (annotationOption.getAnnotationSelections().size() == 1) {
+                newState = AnnotationState.DISAGREE;
+            }
+            else if (annotationOption.getAnnotationSelections().size() == 2) {
+                newState = AnnotationState.DO_NOT_USE;
+            }
+            if (newState != null) {
+                String type = entity.getType() + "_(" + newState.name() + ")";
+                String label = entity.getType();
+                entity.setType(type);
+                entityTypes.put(type, BratCuratorUtility.getEntity(type, label, newState));
+            }
+
+        }
+    }
+
+    public static void updatePanel(
+            AjaxRequestTarget aTarget,
+            CurationSegmentPanel aParent,
+            CurationContainer aCurationContainer,
+            BratAnnotator aMergeVisualizer,
+            RepositoryService aRepository,
+            Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
+            CurationSegmentForSourceDocument aCurationSegment,
+            AnnotationService aAnnotationService, MappingJacksonHttpMessageConverter aJsonConverter)
+        throws UIMAException, ClassNotFoundException, IOException
+    {
+        SourceDocument sourceDocument = aCurationContainer.getBratAnnotatorModel().getDocument();
+        Project project = aCurationContainer.getBratAnnotatorModel().getProject();
+        List<AnnotationDocument> annotationDocuments = aRepository.listAnnotationDocument(project,
+                sourceDocument);
+        Map<String, JCas> jCases = new HashMap<String, JCas>();
+        JCas annotatorCas = null;
+        // this is a CORRECTION project
+        if (aCurationContainer.getBratAnnotatorModel().getMode().equals(Mode.CORRECTION)) {
+            annotatorCas = aRepository.getCorrectionDocumentContent(sourceDocument);
+
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
+
+            User user = aRepository.getUser(username);
+            AnnotationDocument annotationDocument = aRepository.getAnnotationDocument(
+                    sourceDocument, user);
+            jCases.put(user.getUsername(),
+                    aRepository.getAnnotationDocumentContent(annotationDocument));
+            aAnnotationSelectionByUsernameAndAddress.put(CURATION_USER,
+                    new HashMap<Integer, AnnotationSelection>());
+        }
+        else {
+            annotatorCas = aRepository.getCurationDocumentContent(sourceDocument);
+            // get cases from repository
+            BratCuratorUtility.getCases(jCases, annotationDocuments, aRepository,
+                    aAnnotationSelectionByUsernameAndAddress);
+        }
+        // add mergeJCas separately
+        jCases.put(CURATION_USER, annotatorCas);
+
+        // get differing feature structures
+        List<Type> entryTypes = CurationBuilder.getEntryTypes(annotatorCas,
+                aCurationContainer.getBratAnnotatorModel());
+        List<AnnotationOption> annotationOptions = null;
+        try {
+            annotationOptions = CasDiff.doDiff(entryTypes, jCases, aCurationSegment.getBegin(),
+                    aCurationSegment.getEnd());
+        }
+        catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        // fill lookup variable for annotation selections
+        BratCuratorUtility.fillLookupVariables(annotationOptions,
+                aAnnotationSelectionByUsernameAndAddress,
+                aCurationContainer.getBratAnnotatorModel());
+
+        LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<CurationUserSegmentForAnnotationDocument>();
+
+        BratAnnotatorModel bratAnnotatorModel = null;
+        if (!aCurationContainer.getBratAnnotatorModel().getMode().equals(Mode.CORRECTION)) {
+            bratAnnotatorModel = BratCuratorUtility.setBratAnnotatorModel(sourceDocument,
+                    aRepository, aCurationSegment, aAnnotationService);
+            BratCuratorUtility.populateCurationSentences(jCases, sentences, bratAnnotatorModel,
+                    annotationOptions, aAnnotationSelectionByUsernameAndAddress, aJsonConverter);
+            // update sentence list on the right side
+            aParent.setModelObject(sentences);
+            bratAnnotatorModel.setMode(Mode.CURATION_MERGE);
+            aMergeVisualizer.setModelObject(bratAnnotatorModel);
+            aMergeVisualizer.reloadContent(aTarget);
+
+            aTarget.add(aParent);
+        }
+        else {
+            BratCuratorUtility.populateCurationSentences(jCases, sentences,
+                    aCurationContainer.getBratAnnotatorModel(), annotationOptions,
+                    aAnnotationSelectionByUsernameAndAddress, aJsonConverter);
+            // update sentence list on the right side
+            bratAnnotatorModel = setCorrectionBratAnnotatorModel(
+                    aCurationContainer.getBratAnnotatorModel(), aRepository, aCurationSegment,
+                    aAnnotationService);
+            aParent.setModelObject(sentences);
+            aMergeVisualizer.setModelObject(bratAnnotatorModel);
+            aMergeVisualizer.reloadContent(aTarget);
+
+            aTarget.add(aParent);
+        }
+
     }
 }

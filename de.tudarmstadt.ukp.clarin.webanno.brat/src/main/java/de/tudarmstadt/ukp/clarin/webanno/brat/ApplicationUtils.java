@@ -267,7 +267,7 @@ public class ApplicationUtils
                 int index = property.lastIndexOf(".");
                String propertyName = property.substring(index + 1);
                 String mode = property.substring(0, index);
-                if (wrapper.isWritableProperty(propertyName) && mode.equals(aMode.name())) {
+                if (wrapper.isWritableProperty(propertyName) && mode.equals(aMode.getName())) {
 
                     if (AnnotationPreference.class.getDeclaredField(propertyName).getGenericType() instanceof ParameterizedType) {
                         List<String> value = Arrays.asList(StringUtils.replaceChars(

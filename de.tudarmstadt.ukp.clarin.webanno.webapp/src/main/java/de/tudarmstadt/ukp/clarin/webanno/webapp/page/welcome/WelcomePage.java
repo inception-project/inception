@@ -30,6 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.correction.CorrectionPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.crowdsource.CrowdSourcePage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.CurationPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.monitoring.MonitoringPage;
@@ -57,6 +58,7 @@ public class WelcomePage
     AjaxLink monitoring;
     AjaxLink usremanagement;
     AjaxLink crowdSource;
+    AjaxLink correction;
 
     public WelcomePage()
     {
@@ -237,6 +239,37 @@ public class WelcomePage
             crowdSource.setVisible(false);
 
         }
+
+        // Add correction Link
+        // Only Admins or curators can see this link
+        boolean correctionAdded = false;
+        correction = new AjaxLink<Void>("correction")
+        {
+            private static final long serialVersionUID = 7496156015186497496L;
+
+            @Override
+            public void onClick(AjaxRequestTarget target)
+            {
+                setResponsePage(CorrectionPage.class);
+            }
+        };
+        for (Project project : projectRepository.listProjects()) {
+
+            if (ApplicationUtils.isCurator(project, projectRepository, user)) {
+                add(correction);
+                correctionAdded = true;
+                break;
+            }
+
+        }
+        if (ApplicationUtils.isSuperAdmin(projectRepository, user) && !projectSettingAdded) {
+            add(correction);
+        }
+        else if (!correctionAdded) {
+            add(correction);
+            correction.setVisible(false);
+        }
+
     }
 
     private static final long serialVersionUID = -530084892002620197L;

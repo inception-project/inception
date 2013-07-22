@@ -78,6 +78,13 @@ public interface RepositoryService
         throws IOException;
 
     /**
+     * Create an annotation document under a special user named "CORRECTION_USER"
+     */
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
+    void createCorrectionDocumentContent(JCas jCas, SourceDocument document, User user)
+        throws IOException;
+
+    /**
      * Create a curation annotation document under a special user named as "CURATION_USER"
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
@@ -265,6 +272,8 @@ public interface RepositoryService
     JCas getAnnotationDocumentContent(AnnotationDocument annotationDocument)
         throws UIMAException, IOException, ClassNotFoundException;
 
+    JCas getCorrectionDocumentContent(SourceDocument document)
+            throws UIMAException, IOException, ClassNotFoundException;
     /**
      * Get a curation document for the given {@link SourceDocument}
      */

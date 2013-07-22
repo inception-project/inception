@@ -61,13 +61,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.AnnotationPreferenceModalPanel;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.ExportModalWindowPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.GuidelineModalWindowPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenDocumentModel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenModalWindowPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.YesNoModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.AnnotationLayersModalPanel;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.ExportModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome.WelcomePage;
 
 /**
@@ -294,91 +294,21 @@ public class AnnotationPage
                 openDocumentsModal.show(target);
             }
         });
-        // dialog window to select annotation layer preferences
-        final ModalWindow annotationLayerSelectionModal;
-        add(annotationLayerSelectionModal = new ModalWindow("annotationLayerModal"));
-        annotationLayerSelectionModal.setOutputMarkupId(true);
-        annotationLayerSelectionModal.setInitialWidth(440);
-        annotationLayerSelectionModal.setInitialHeight(250);
-        annotationLayerSelectionModal.setResizable(true);
-        annotationLayerSelectionModal.setWidthUnit("px");
-        annotationLayerSelectionModal.setHeightUnit("px");
-        annotationLayerSelectionModal
-                .setTitle("Annotation Layer and window size configuration Window");
 
-        add(new AjaxLink<Void>("showannotationLayerModal")
+        add(new AnnotationLayersModalPanel("annotationLayersModalPanel",
+                new Model<BratAnnotatorModel>(bratAnnotatorModel))
         {
-            private static final long serialVersionUID = 7496156015186497496L;
+            private static final long serialVersionUID = -4657965743173979437L;
 
-            @Override
-            public void onClick(AjaxRequestTarget target)
-            {
-                if (bratAnnotatorModel.getProject() == null) {
-                    target.appendJavaScript("alert('Please open a project first!')");
-                }
-                else {
-
-                    annotationLayerSelectionModal.setContent(new AnnotationPreferenceModalPanel(
-                            annotationLayerSelectionModal.getContentId(),
-                            annotationLayerSelectionModal, bratAnnotatorModel));
-
-                    annotationLayerSelectionModal
-                            .setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
-                            {
-                                private static final long serialVersionUID = 1643342179335627082L;
-
-                                @Override
-                                public void onClose(AjaxRequestTarget target)
-                                {
-                                    // target.add(annotator);
-                                    target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
-                                }
-                            });
-                    annotationLayerSelectionModal.show(target);
-                }
-
-            }
+        @Override
+        protected void onChange(AjaxRequestTarget aTarget)
+        {
+            aTarget.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+        }
         });
 
-        final ModalWindow exportModal;
-        add(exportModal = new ModalWindow("exportModal"));
-
-        exportModal.setCookieName("modal-1");
-        exportModal.setInitialWidth(550);
-        exportModal.setInitialHeight(450);
-        exportModal.setResizable(true);
-        exportModal.setWidthUnit("px");
-        exportModal.setHeightUnit("px");
-        exportModal.setTitle("Export Annotated data to a given Format");
-
-        exportModal.setPageCreator(new ModalWindow.PageCreator()
-        {
-            private static final long serialVersionUID = -2827824968207807739L;
-
-            @Override
-            public Page createPage()
-            {
-                return new ExportModalWindowPage(exportModal, bratAnnotatorModel);
-            }
-
-        });
-        add(new AjaxLink<Void>("showExportModal")
-        {
-            private static final long serialVersionUID = 7496156015186497496L;
-
-            @Override
-            public void onClick(AjaxRequestTarget target)
-            {
-                if (bratAnnotatorModel.getDocument() == null) {
-                    target.appendJavaScript("alert('Please open a document first!')");
-                }
-                else {
-                    exportModal.show(target);
-                }
-
-            }
-        });
-
+        add(new ExportModalPanel("exportModalPanel",
+                new Model<BratAnnotatorModel>(bratAnnotatorModel)));
         // Show the previous document, if exist
         add(new AjaxLink<Void>("showPreviousDocument")
         {

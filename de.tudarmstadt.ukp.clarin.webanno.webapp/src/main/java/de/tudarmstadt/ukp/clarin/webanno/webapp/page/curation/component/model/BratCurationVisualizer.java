@@ -25,6 +25,7 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratVisualizer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 
 /**
  * Wicket panel for visualizing an annotated sentence in brat. When a user
@@ -43,8 +44,14 @@ public class BratCurationVisualizer extends BratVisualizer {
 
 	public BratCurationVisualizer(String id, IModel<CurationUserSegmentForAnnotationDocument> aModel) {
 		super(id, aModel);
-
-		Label label = new Label("username", getModelObject().getUsername());
+		String username;
+		if(getModelObject().getBratAnnotatorModel().getMode().equals(Mode.CORRECTION)){
+		    username = "Automated";
+		}
+        else {
+            username = getModelObject().getUsername();
+        }
+		Label label = new Label("username", username);
 		add(label);
         controller = new AbstractDefaultAjaxBehavior() {
 

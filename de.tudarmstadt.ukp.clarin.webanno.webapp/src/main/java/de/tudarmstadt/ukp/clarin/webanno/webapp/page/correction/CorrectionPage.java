@@ -15,16 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation;
+package de.tudarmstadt.ukp.clarin.webanno.webapp.page.correction;
+
+import static org.uimafit.util.JCasUtil.select;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import javax.persistence.NoResultException;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
@@ -39,6 +47,7 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.beans.BeansException;
 import org.springframework.dao.DataRetrievalFailureException;
+import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import wicket.contrib.input.events.EventType;
@@ -48,54 +57,58 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenDocumentModel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenModalWindowPanel;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.ReCreateMergeCASModalPanel;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.ReMergeCasModel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.YesNoModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.AnnotationLayersModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.ExportModalPanel;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.CurationPanel;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.AnnotationSelection;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.BratCuratorUtility;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.CurationSegmentPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationContainer;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationSegmentForSourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationUserSegmentForAnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.project.SettingsPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome.WelcomePage;
+import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
- * This is the main class for the curation page. It contains an interface which displays differences
- * between user annotations for a specific document. The interface provides a tool for merging these
- * annotations and storing them as a new annotation.
+ * This is the main class for the correction page. Displays in the lower panel the Automatically
+ * annotated document and in the upper panel the corrected annotation
  *
- * @author Andreas Straninger
  * @author Seid Muhie Yimam
  */
-public class CurationPage
+public class CorrectionPage
     extends SettingsPageBase
 {
     private static final long serialVersionUID = 1378872465851908515L;
 
+    @SpringBean(name = "jsonConverter")
+    private MappingJacksonHttpMessageConverter jsonConverter;
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
 
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
 
-    private CurationPanel curationPanel;
     private OpenDocumentModel openDataModel;
-
-    private ReMergeCasModel reMerge;
 
     private CurationContainer curationContainer;
     private BratAnnotatorModel bratAnnotatorModel;
 
-    public Label numberOfPages;
+    private Label numberOfPages;
     private Label documentNameLabel;
 
     private int sentenceNumber = 1;
@@ -112,19 +125,90 @@ public class CurationPage
 
     WebMarkupContainer finish;
 
+    private CurationSegmentPanel sentenceOuterView;
+    private BratAnnotator mergeVisualizer;
+
+    private Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress = new HashMap<String, Map<Integer, AnnotationSelection>>();
+
+    private CurationSegmentForSourceDocument curationSegment = new CurationSegmentForSourceDocument();
+
+
     @SuppressWarnings("deprecation")
-    public CurationPage()
+    public CorrectionPage()
     {
         openDataModel = new OpenDocumentModel();
         bratAnnotatorModel = new BratAnnotatorModel();
-        bratAnnotatorModel.setMode(Mode.CURATION);
-        reMerge = new ReMergeCasModel();
+        bratAnnotatorModel.setMode(Mode.CORRECTION);
+
+        LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<CurationUserSegmentForAnnotationDocument>();
+        CurationUserSegmentForAnnotationDocument curationUserSegmentForAnnotationDocument = new CurationUserSegmentForAnnotationDocument();
+        if (bratAnnotatorModel.getDocument() != null) {
+            curationUserSegmentForAnnotationDocument
+                    .setAnnotationSelectionByUsernameAndAddress(annotationSelectionByUsernameAndAddress);
+            curationUserSegmentForAnnotationDocument.setBratAnnotatorModel(bratAnnotatorModel);
+            sentences.add(curationUserSegmentForAnnotationDocument);
+        }
+        sentenceOuterView = new CurationSegmentPanel("sentenceOuterView",
+                new Model<LinkedList<CurationUserSegmentForAnnotationDocument>>(sentences))
+        {
+            private static final long serialVersionUID = 2583509126979792202L;
+
+            @Override
+            public void onChange(AjaxRequestTarget aTarget)
+            {
+                try {
+                    BratCuratorUtility.updatePanel(aTarget, this, curationContainer,
+                            mergeVisualizer, repository, annotationSelectionByUsernameAndAddress,
+                            curationSegment, annotationService, jsonConverter);
+                }
+                catch (UIMAException e) {
+                    ExceptionUtils.getRootCause(e);
+                }
+                catch (ClassNotFoundException e) {
+                    e.getMessage();
+                }
+                catch (IOException e) {
+                    e.getMessage();
+                }
+            }
+        };
+
+        sentenceOuterView.setOutputMarkupId(true);
+        add(sentenceOuterView);
+        mergeVisualizer = new BratAnnotator("mergeView", new Model<BratAnnotatorModel>(
+                bratAnnotatorModel))
+        {
+
+            private static final long serialVersionUID = 7279648231521710155L;
+
+            @Override
+            protected void onChange(AjaxRequestTarget aTarget)
+            {
+                aTarget.add(sentenceOuterView);
+                try {
+                    BratCuratorUtility.updatePanel(aTarget, sentenceOuterView, curationContainer,
+                            this, repository, annotationSelectionByUsernameAndAddress,
+                            curationSegment, annotationService, jsonConverter);
+                }
+                catch (UIMAException e) {
+                    ExceptionUtils.getRootCause(e);
+                }
+                catch (ClassNotFoundException e) {
+                    e.getMessage();
+                }
+                catch (IOException e) {
+                    e.getMessage();
+                }
+            }
+        };
+        // reset sentenceAddress and lastSentenceAddress to the orginal once
+
+        mergeVisualizer.setOutputMarkupId(true);
+        add(mergeVisualizer);
 
         curationContainer = new CurationContainer();
         curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
-        curationPanel = new CurationPanel("curationPanel", curationContainer);
-        curationPanel.setOutputMarkupId(true);
-        add(curationPanel);
+
 
         add(documentNameLabel = (Label) new Label("doumentName", new LoadableDetachableModel()
         {
@@ -165,7 +249,7 @@ public class CurationPage
 
                     JCas mergeJCas = null;
                     try {
-                        mergeJCas = repository.getCurationDocumentContent(bratAnnotatorModel
+                        mergeJCas = repository.getCorrectionDocumentContent(bratAnnotatorModel
                                 .getDocument());
 
                         totalNumberOfSentence = BratAjaxCasUtil.getNumberOfPages(mergeJCas,
@@ -195,6 +279,9 @@ public class CurationPage
                         return "";
                     }
                     catch (ClassNotFoundException e) {
+                        return "";
+                    }
+                    catch (FileNotFoundException e) {
                         return "";
                     }
                     catch (IOException e) {
@@ -229,7 +316,7 @@ public class CurationPage
             public void onClick(AjaxRequestTarget aTarget)
             {
                 openDocumentsModal.setContent(new OpenModalWindowPanel(openDocumentsModal
-                        .getContentId(), openDataModel, openDocumentsModal, Mode.CURATION));
+                        .getContentId(), openDataModel, openDocumentsModal, Mode.CORRECTION));
                 openDocumentsModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
                 {
                     private static final long serialVersionUID = -1746088901018629567L;
@@ -244,38 +331,19 @@ public class CurationPage
                         // If this source document has at least one annotation document "FINISHED",
                         // and curation not yet
                         // finished on it
-                        if (openDataModel.getDocument() != null
-                                && repository.existsFinishedAnnotation(openDataModel.getDocument(),
-                                        openDataModel.getProject())) {
-                            // Update source document state to CURRATION_INPROGRESS, if it was not
-                            // ANNOTATION_FINISHED
-                            if (!openDataModel.getDocument().getState()
-                                    .equals(SourceDocumentState.CURATION_FINISHED)) {
-                                openDataModel.getDocument().setState(
-                                        SourceDocumentState.CURATION_IN_PROGRESS);
-                            }
-                            try {
-                                repository.createSourceDocument(openDataModel.getDocument(), user);
-                            }
-                            catch (IOException e) {
-                                error("Unable to update source document "
-                                        + ExceptionUtils.getRootCauseMessage(e));
-                            }
+                        if (openDataModel.getDocument() != null) {
 
                             // Get settings from preferences, if available
                             // TEST - set window size to 10
 
-                            bratAnnotatorModel.setDocument(openDataModel.getDocument());
-                            bratAnnotatorModel.setProject(openDataModel.getProject());
-
                             try {
-                                initBratAnnotatorDataModel();
-                                CurationBuilder builder = new CurationBuilder(repository,
-                                        annotationService);
-                                curationContainer = builder
-                                        .buildCurationContainer(bratAnnotatorModel);
-                                curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
-                                updatePanel(curationContainer);
+
+                                bratAnnotatorModel.setDocument(openDataModel.getDocument());
+                                bratAnnotatorModel.setProject(openDataModel.getProject());
+
+                                init();
+
+                                update(target);
 
 
                             }
@@ -291,7 +359,7 @@ public class CurationPage
 
                             // target.add(curationPanel) should work!
                             target.add(finish.setOutputMarkupId(true));
-                            target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                           // target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
 
                         }
                         else if (openDataModel.getDocument() == null) {
@@ -302,6 +370,7 @@ public class CurationPage
                                     + openDataModel.getDocument().getName() + "]')");
                         }
                         target.add(documentNameLabel);
+                        target.add(numberOfPages);
                     }
                 });
                 openDocumentsModal.show(aTarget);
@@ -316,25 +385,8 @@ public class CurationPage
         @Override
         protected void onChange(AjaxRequestTarget aTarget)
         {
-              CurationBuilder builder = new CurationBuilder(repository,
-                                            annotationService);
-                                    try {
-                                        curationContainer = builder
-                                                .buildCurationContainer(bratAnnotatorModel);
-                                    }
-                                    catch (UIMAException e) {
-                                        ExceptionUtils.getRootCauseMessage(e);
-                                    }
-                                    catch (ClassNotFoundException e) {
-                                        error(e.getMessage());
-                                    }
-                                    catch (IOException e) {
-                                        error(e.getMessage());
-                                    }
-                                    curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
-                                    updatePanel(curationContainer);
-                                    aTarget.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
-
+            curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
+            update(aTarget);
         }
         });
 
@@ -353,7 +405,7 @@ public class CurationPage
             {
                 JCas mergeJCas = null;
                 try {
-                    mergeJCas = repository.getCurationDocumentContent(bratAnnotatorModel
+                    mergeJCas = repository.getCorrectionDocumentContent(bratAnnotatorModel
                             .getDocument());
                 }
                 catch (UIMAException e) {
@@ -387,7 +439,7 @@ public class CurationPage
                         // Not Updated, default used
                         JCas mergeJCas = null;
                         try {
-                            mergeJCas = repository.getCurationDocumentContent(bratAnnotatorModel
+                            mergeJCas = repository.getCorrectionDocumentContent(bratAnnotatorModel
                                     .getDocument());
                         }
                         catch (UIMAException e) {
@@ -404,11 +456,9 @@ public class CurationPage
                     if (bratAnnotatorModel.getSentenceAddress() != gotoPageAddress) {
                         bratAnnotatorModel.setSentenceAddress(gotoPageAddress);
 
-                        CurationBuilder builder = new CurationBuilder(repository,
-                                annotationService);
+                        CurationBuilder builder = new CurationBuilder(repository, annotationService);
                         try {
-                            curationContainer = builder
-                                    .buildCurationContainer(bratAnnotatorModel);
+                            curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                         }
                         catch (UIMAException e) {
                             ExceptionUtils.getRootCauseMessage(e);
@@ -420,9 +470,8 @@ public class CurationPage
                             error(e.getMessage());
                         }
                         curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
-                        updatePanel(curationContainer);
-                        target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
-                    }
+                        update(target);
+                        }
                     else {
                         target.appendJavaScript("alert('This sentence is on the same page!')");
                     }
@@ -508,77 +557,6 @@ public class CurationPage
 
         showFinishCurationModal.add(finish);
 
-        final ModalWindow reCreateMergeCas;
-        add(reCreateMergeCas = new ModalWindow("reCreateMergeCasModal"));
-        reCreateMergeCas.setOutputMarkupId(true);
-
-        reCreateMergeCas.setInitialWidth(400);
-        reCreateMergeCas.setInitialHeight(50);
-        reCreateMergeCas.setResizable(true);
-        reCreateMergeCas.setWidthUnit("px");
-        reCreateMergeCas.setHeightUnit("px");
-        reCreateMergeCas
-                .setTitle("are you sure? all curation annotations for this document will be lost");
-
-        add(new AjaxLink<Void>("showreCreateMergeCasModal")
-        {
-            private static final long serialVersionUID = 7496156015186497496L;
-
-            @Override
-            public void onClick(AjaxRequestTarget target)
-            {
-                reCreateMergeCas.setContent(new ReCreateMergeCASModalPanel(reCreateMergeCas
-                        .getContentId(), reCreateMergeCas, reMerge));
-                reCreateMergeCas.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
-                {
-
-                    private static final long serialVersionUID = 4816615910398625993L;
-
-                    @Override
-                    public void onClose(AjaxRequestTarget target)
-                    {
-                        if (reMerge.isReMerege()) {
-                            try {
-                                repository.removeCurationDocumentContent(bratAnnotatorModel
-                                        .getDocument());
-                                initBratAnnotatorDataModel();
-                                CurationBuilder builder = new CurationBuilder(repository,
-                                        annotationService);
-                                try {
-                                    curationContainer = builder
-                                            .buildCurationContainer(bratAnnotatorModel);
-                                }
-                                catch (UIMAException e) {
-                                    ExceptionUtils.getRootCauseMessage(e);
-                                }
-                                catch (ClassNotFoundException e) {
-                                    error(e.getMessage());
-                                }
-                                catch (IOException e) {
-                                    error(e.getMessage());
-                                }
-                                curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
-                                updatePanel(curationContainer);
-                                target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
-                                target.appendJavaScript("alert('remerege finished!')");
-                            }
-                            catch (IOException e) {
-                                error("Unable to delete the serialized Curation CAS object "
-                                        + e.getMessage());
-                            }
-                            catch (UIMAException e) {
-                                error(ExceptionUtils.getRootCause(e));
-                            }
-                            catch (ClassNotFoundException e) {
-                                error(ExceptionUtils.getRootCause(e));
-                            }
-
-                        }
-                    }
-                });
-                reCreateMergeCas.show(target);
-            }
-        });
         // Show the next page of this document
         add(new AjaxLink<Void>("showNext")
         {
@@ -594,7 +572,7 @@ public class CurationPage
                 if (bratAnnotatorModel.getDocument() != null) {
                     JCas mergeJCas = null;
                     try {
-                        mergeJCas = repository.getCurationDocumentContent(bratAnnotatorModel
+                        mergeJCas = repository.getCorrectionDocumentContent(bratAnnotatorModel
                                 .getDocument());
                     }
                     catch (UIMAException e) {
@@ -613,11 +591,9 @@ public class CurationPage
                     if (bratAnnotatorModel.getSentenceAddress() != nextSentenceAddress) {
                         bratAnnotatorModel.setSentenceAddress(nextSentenceAddress);
 
-                        CurationBuilder builder = new CurationBuilder(repository,
-                                annotationService);
+                        CurationBuilder builder = new CurationBuilder(repository, annotationService);
                         try {
-                            curationContainer = builder
-                                    .buildCurationContainer(bratAnnotatorModel);
+                            curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                         }
                         catch (UIMAException e) {
                             ExceptionUtils.getRootCauseMessage(e);
@@ -629,9 +605,8 @@ public class CurationPage
                             error(e.getMessage());
                         }
                         curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
-                        updatePanel(curationContainer);
-                        target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
-                    }
+                        update(target);
+                        }
 
                     else {
                         target.appendJavaScript("alert('This is last page!')");
@@ -655,7 +630,7 @@ public class CurationPage
 
                     JCas mergeJCas = null;
                     try {
-                        mergeJCas = repository.getCurationDocumentContent(bratAnnotatorModel
+                        mergeJCas = repository.getCorrectionDocumentContent(bratAnnotatorModel
                                 .getDocument());
                     }
                     catch (UIMAException e) {
@@ -675,11 +650,9 @@ public class CurationPage
                     if (bratAnnotatorModel.getSentenceAddress() != previousSentenceAddress) {
                         bratAnnotatorModel.setSentenceAddress(previousSentenceAddress);
 
-                        CurationBuilder builder = new CurationBuilder(repository,
-                                annotationService);
+                        CurationBuilder builder = new CurationBuilder(repository, annotationService);
                         try {
-                            curationContainer = builder
-                                    .buildCurationContainer(bratAnnotatorModel);
+                            curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                         }
                         catch (UIMAException e) {
                             ExceptionUtils.getRootCauseMessage(e);
@@ -691,9 +664,8 @@ public class CurationPage
                             error(e.getMessage());
                         }
                         curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
-                        updatePanel(curationContainer);
-                        target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
-                    }
+                        update(target);
+                        }
                     else {
                         target.appendJavaScript("alert('This is First Page!')");
                     }
@@ -717,11 +689,9 @@ public class CurationPage
                         bratAnnotatorModel.setSentenceAddress(bratAnnotatorModel
                                 .getFirstSentenceAddress());
 
-                        CurationBuilder builder = new CurationBuilder(repository,
-                                annotationService);
+                        CurationBuilder builder = new CurationBuilder(repository, annotationService);
                         try {
-                            curationContainer = builder
-                                    .buildCurationContainer(bratAnnotatorModel);
+                            curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                         }
                         catch (UIMAException e) {
                             ExceptionUtils.getRootCauseMessage(e);
@@ -733,9 +703,7 @@ public class CurationPage
                             error(e.getMessage());
                         }
                         curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
-                        updatePanel(curationContainer);
-                        target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
-
+                        update(target);
                     }
                     else {
                         target.appendJavaScript("alert('This is first page!')");
@@ -757,7 +725,7 @@ public class CurationPage
                 if (bratAnnotatorModel.getDocument() != null) {
                     JCas mergeJCas = null;
                     try {
-                        mergeJCas = repository.getCurationDocumentContent(bratAnnotatorModel
+                        mergeJCas = repository.getCorrectionDocumentContent(bratAnnotatorModel
                                 .getDocument());
                     }
                     catch (UIMAException e) {
@@ -777,11 +745,9 @@ public class CurationPage
                         bratAnnotatorModel
                                 .setSentenceAddress(lastDisplayWindowBeginingSentenceAddress);
 
-                        CurationBuilder builder = new CurationBuilder(repository,
-                                annotationService);
+                        CurationBuilder builder = new CurationBuilder(repository, annotationService);
                         try {
-                            curationContainer = builder
-                                    .buildCurationContainer(bratAnnotatorModel);
+                            curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                         }
                         catch (UIMAException e) {
                             ExceptionUtils.getRootCauseMessage(e);
@@ -793,9 +759,7 @@ public class CurationPage
                             error(e.getMessage());
                         }
                         curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
-                        updatePanel(curationContainer);
-                        target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
-
+                        update(target);
                     }
                     else {
                         target.appendJavaScript("alert('This is last Page!')");
@@ -808,19 +772,8 @@ public class CurationPage
         }.add(new InputBehavior(new KeyType[] { KeyType.End }, EventType.click)));
     }
 
-    // Update the curation panel.
-
-    private void updatePanel(CurationContainer aCurationContainer)
-    {
-        // remove old panel, create new one, add it
-        remove(curationPanel);
-        curationPanel = new CurationPanel("curationPanel", aCurationContainer);
-        curationPanel.setOutputMarkupId(true);
-        add(curationPanel);
-    }
-
     /**
-     * for the first time, open the <b>open document dialog</b>
+     * for the first time the page is accessed, open the <b>open document dialog</b>
      */
     @Override
     public void renderHead(IHeaderResponse response)
@@ -834,17 +787,18 @@ public class CurationPage
     }
 
     @SuppressWarnings("unchecked")
-    private void initBratAnnotatorDataModel()
+    private void init()
         throws UIMAException, ClassNotFoundException, IOException
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User userLoggedIn = repository.getUser(SecurityContextHolder.getContext()
+        User logedInUser = repository.getUser(SecurityContextHolder.getContext()
                 .getAuthentication().getName());
         JCas jCas = null;
         try {
             AnnotationDocument logedInUserAnnotationDocument = repository.getAnnotationDocument(
-                    bratAnnotatorModel.getDocument(), userLoggedIn);
+                    bratAnnotatorModel.getDocument(), logedInUser);
             jCas = repository.getAnnotationDocumentContent(logedInUserAnnotationDocument);
+
         }
         catch (UIMAException e) {
             throw e;
@@ -862,13 +816,21 @@ public class CurationPage
             BratAjaxCasController controller = new BratAjaxCasController(repository,
                     annotationService);
             jCas = controller.getJCas(bratAnnotatorModel.getDocument(), bratAnnotatorModel
-                    .getDocument().getProject(), userLoggedIn);
+                    .getDocument().getProject(), logedInUser);
+            // This is the auto annotation, save it under CURATION_USER
+            repository.createCorrectionDocumentContent(jCas, bratAnnotatorModel.getDocument(), logedInUser);
+            // remove all annotation so that the user can correct from the auto annotation
+            clearJcasAnnotations(jCas, bratAnnotatorModel.getDocument(), logedInUser);
         }
         catch (NoResultException e) {
             BratAjaxCasController controller = new BratAjaxCasController(repository,
                     annotationService);
             jCas = controller.getJCas(bratAnnotatorModel.getDocument(), bratAnnotatorModel
-                    .getDocument().getProject(), userLoggedIn);
+                    .getDocument().getProject(), logedInUser);
+            // This is the auto annotation, save it under CURATION_USER
+            repository.createCorrectionDocumentContent(jCas, bratAnnotatorModel.getDocument(), logedInUser);
+            // remove all annotation so that the user can correct from the auto annotation
+            clearJcasAnnotations(jCas, bratAnnotatorModel.getDocument(), logedInUser);
         }
 
         if (bratAnnotatorModel.getSentenceAddress() == -1
@@ -884,7 +846,7 @@ public class CurationPage
 
                 AnnotationPreference preference = new AnnotationPreference();
                 ApplicationUtils.setAnnotationPreference(preference, username, repository,
-                        annotationService, bratAnnotatorModel, Mode.CURATION);
+                        annotationService, bratAnnotatorModel, Mode.CORRECTION);
             }
             catch (DataRetrievalFailureException ex) {
                 throw ex;
@@ -899,10 +861,53 @@ public class CurationPage
                 throw e;
             }
         }
+        bratAnnotatorModel.setUser(logedInUser);
 
-        bratAnnotatorModel.setUser(userLoggedIn);
+        curationSegment.setBegin(BratAjaxCasUtil.getAnnotationBeginOffset(jCas, bratAnnotatorModel.getFirstSentenceAddress()));
+        curationSegment.setEnd(BratAjaxCasUtil.getAnnotationBeginOffset(jCas, bratAnnotatorModel.getLastSentenceAddress()));
 
         currentprojectId = bratAnnotatorModel.getProject().getId();
         currentDocumentId = bratAnnotatorModel.getDocument().getId();
+    }
+
+    private void clearJcasAnnotations(JCas aJCas, SourceDocument aSourceDocument, User aUser)
+        throws IOException
+    {
+        List<Annotation> annotationsToRemove = new ArrayList<Annotation>();
+        for (Annotation a : select(aJCas, Annotation.class)) {
+            if (!(a instanceof Token || a instanceof Sentence || a instanceof DocumentMetaData)) {
+                annotationsToRemove.add(a);
+            }
+        }
+        for (Annotation annotation : annotationsToRemove) {
+            aJCas.removeFsFromIndexes(annotation);
+        }
+        repository.createAnnotationDocumentContent(aJCas, aSourceDocument, aUser);
+    }
+
+    private void update(AjaxRequestTarget target)
+    {
+        try {
+            BratCuratorUtility.updatePanel(target, sentenceOuterView,
+                    curationContainer, mergeVisualizer, repository,
+                    annotationSelectionByUsernameAndAddress, curationSegment,
+                    annotationService, jsonConverter);
+        }
+        catch (UIMAException e) {
+         error(ExceptionUtils.getRootCauseMessage(e));
+        }
+        catch (ClassNotFoundException e) {
+            error(e.getMessage());
+        }
+        catch (IOException e) {
+            error(e.getMessage());
+        }
+        target.add(sentenceOuterView);
+        target.add(numberOfPages);
+
+
+        mergeVisualizer.setModelObject(bratAnnotatorModel);
+        mergeVisualizer.setCollection("#" + bratAnnotatorModel.getProject().getName() + "/");
+        mergeVisualizer.reloadContent(target);
     }
 }

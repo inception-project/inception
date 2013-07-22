@@ -32,6 +32,7 @@ import org.odlabs.wiquery.ui.themes.WiQueryCoreThemeResourceReference;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.Myresources;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.correction.CorrectionPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.crowdsource.CrowdSourcePage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.CurationPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.login.LoginPage;
@@ -81,11 +82,12 @@ public class WicketApplication
             mountPage("/annotation.html", AnnotationPage.class);
 
             mountPage("/curation.html", CurationPage.class);
-            mountPage("/projectpage.html", ProjectPage.class);
             mountPage("/projectsetting.html", ProjectPage.class);
             mountPage("/monitoring.html", MonitoringPage.class);
             mountPage("/users.html", ManageUsersPage.class);
             mountPage("/crowdsource.html", CrowdSourcePage.class);
+
+            mountPage("/correction.html", CorrectionPage.class);
 
             mountResource("/client/lib/head.load.min.js",
                     new JavaScriptResourceReference(Myresources.class, "client/lib/head.load.min.js"));

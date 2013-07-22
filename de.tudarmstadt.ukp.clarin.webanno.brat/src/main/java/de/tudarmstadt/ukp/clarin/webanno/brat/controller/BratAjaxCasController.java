@@ -26,7 +26,6 @@ import javax.annotation.Resource;
 import javax.persistence.NoResultException;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
@@ -564,10 +563,10 @@ public class BratAjaxCasController
             User aUser, JCas aJcas)
         throws IOException
     {
-        if (aMode.equals(Mode.ANNOTATION)) {
+        if (aMode.equals(Mode.ANNOTATION)||aMode.equals(Mode.CORRECTION) ||aMode.equals(Mode.CORRECTION_MERGE) ) {
             repository.createAnnotationDocumentContent(aJcas, aSourceDocument, aUser);
         }
-        else if (aMode.equals(Mode.CURATION) || aMode.equals(Mode.MERGE)) {
+        else if (aMode.equals(Mode.CURATION) || aMode.equals(Mode.CURATION_MERGE)) {
             repository.createCurationDocumentContent(aJcas, aSourceDocument, aUser);
         }
     }
@@ -652,14 +651,14 @@ public class BratAjaxCasController
         try {
             annotationDocument = repository.getAnnotationDocument(aDocument, aUser);
             if (annotationDocument.getState().equals(AnnotationDocumentState.NEW)) {
-                jCas = createCasFirstTime(aDocument, annotationDocument, aProject, aUser);
+                jCas = createCasFirstTime(aDocument, annotationDocument, aProject, aUser, repository);
             }
             jCas = repository.getAnnotationDocumentContent(annotationDocument);
 
         }
         // it is new, create it and get CAS object
         catch (NoResultException ex) {
-            jCas = createCasFirstTime(aDocument, annotationDocument, aProject, aUser);
+            jCas = createCasFirstTime(aDocument, annotationDocument, aProject, aUser, repository);
         }
         catch (DataRetrievalFailureException e) {
             throw e;
@@ -667,8 +666,8 @@ public class BratAjaxCasController
         return jCas;
     }
 
-    private JCas createCasFirstTime(SourceDocument aDocument,
-            AnnotationDocument aAnnotationDocument, Project aProject, User aUser)
+    public static JCas createCasFirstTime(SourceDocument aDocument,
+            AnnotationDocument aAnnotationDocument, Project aProject, User aUser, RepositoryService repository)
         throws UIMAException, ClassNotFoundException, IOException
     {
         JCas jCas;
@@ -688,17 +687,13 @@ public class BratAjaxCasController
                     aDocument), repository.getReadableFormats().get(aDocument.getFormat()));
         }
         catch (UIMAException uEx) {
-            LOG.info("Invalid TCF file: " + ExceptionUtils.getRootCauseMessage(uEx));
             throw uEx;
 
         }
         catch (ClassNotFoundException e) {
-            LOG.info("The Class name in the properties is not found " + ":"
-                    + ExceptionUtils.getRootCauseMessage(e));
             throw e;
         }
         catch (IOException e) {
-            LOG.info("Unable to get the CAS object  " + ":" + ExceptionUtils.getRootCauseMessage(e));
             throw e;
         }
         repository.createAnnotationDocument(aAnnotationDocument);

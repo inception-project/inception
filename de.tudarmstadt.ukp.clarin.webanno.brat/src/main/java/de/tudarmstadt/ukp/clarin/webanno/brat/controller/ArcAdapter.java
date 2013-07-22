@@ -127,7 +127,7 @@ public class ArcAdapter
     {
 
         // Remove prefixes from response if it is in curation mode
-        if (aBratAnnotatorModel.getMode().equals(Mode.CURATION)) {
+        if (aBratAnnotatorModel.getMode().equals(Mode.CURATION) || aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)) {
             typePrefix = "";
         }
 
