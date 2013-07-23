@@ -84,7 +84,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
-import de.tudarmstadt.ukp.clarin.webanno.model.ProjectTimeStamp;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -264,18 +263,6 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public void createTimeStamp(ProjectTimeStamp aProjectTimeStamp)
-    {
-        if (aProjectTimeStamp.getId() == 0) {
-            entityManager.persist(aProjectTimeStamp);
-        }
-        else {
-            entityManager.merge(aProjectTimeStamp);
-        }
-    }
-
-    @Override
-    @Transactional
     public boolean existsAnnotationDocument(SourceDocument aDocument, User aUser)
     {
         try {
@@ -382,13 +369,19 @@ public class RepositoryServiceDbData
     public boolean existsProjectTimeStamp(Project aProject, String aUsername)
     {
         try {
-            entityManager
+
+            Date timestamp = entityManager
                     .createQuery(
-                            "FROM ProjectTimeStamp WHERE project = :project AND "
-                                    + "username =:username ", ProjectTimeStamp.class)
-                    .setParameter("project", aProject).setParameter("username", aUsername)
+                            "SELECT max(timestamp) FROM AnnotationDocument WHERE project = :project "
+                                    + " AND user = :user", Date.class)
+                    .setParameter("project", aProject).setParameter("user", aUsername)
                     .getSingleResult();
-            return true;
+            if (timestamp != null) {
+                return true;
+            }
+            else {
+                return false;
+            }
         }
         catch (NoResultException ex) {
             return false;
@@ -704,13 +697,14 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public ProjectTimeStamp getProjectTimeStamp(Project aProject, String aUsername)
+    public Date getProjectTimeStamp(Project aProject, String aUsername)
     {
         return entityManager
                 .createQuery(
-                        "FROM ProjectTimeStamp WHERE username = :username AND project =:project",
-                        ProjectTimeStamp.class).setParameter("username", aUsername)
-                .setParameter("project", aProject).getSingleResult();
+                        "SELECT max(timestamp) FROM AnnotationDocument WHERE project = :project "
+                                + " AND user = :user", Date.class)
+                .setParameter("project", aProject).setParameter("user", aUsername)
+                .getSingleResult();
     }
 
     @Override
@@ -885,7 +879,7 @@ public class RepositoryServiceDbData
             annotationService.removeTagSet(tagset);
         }
         // remove a timestamp entry for this project, if exists
-        for(User user: listProjectUsersWithPermissions(aProject)) {
+        for (User user : listProjectUsersWithPermissions(aProject)) {
             if (existsProjectTimeStamp(aProject, user.getUsername())) {
                 entityManager.remove(getProjectTimeStamp(aProject, user.getUsername()));
             }
@@ -1034,7 +1028,7 @@ public class RepositoryServiceDbData
                 + aUsername;
         // append existing preferences for the other mode
         if (new File(propertiesPath, annotationPreferencePropertiesFileName).exists()) {
-           // aSubject = aSubject.equals(Mode.ANNOTATION) ? Mode.CURATION : Mode.ANNOTATION;
+            // aSubject = aSubject.equals(Mode.ANNOTATION) ? Mode.CURATION : Mode.ANNOTATION;
             for (Entry<Object, Object> entry : loadUserSettings(aUsername, aProject).entrySet()) {
                 String key = entry.getKey().toString();
                 // Maintain other Modes of annotations confs than this one
@@ -1264,9 +1258,11 @@ public class RepositoryServiceDbData
     @Override
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     public void createCorrectionDocumentContent(JCas aJcas, SourceDocument aDocument, User aUser)
-            throws IOException{
+        throws IOException
+    {
         createAnnotationContent(aDocument, aJcas, CORRECTION_USER, aUser);
     }
+
     @Override
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     public void createCurationDocumentContent(JCas aJcas, SourceDocument aDocument, User aUser)
@@ -1276,8 +1272,9 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public JCas getCorrectionDocumentContent(SourceDocument aDocument) throws UIMAException,
-    IOException, ClassNotFoundException{
+    public JCas getCorrectionDocumentContent(SourceDocument aDocument)
+        throws UIMAException, IOException, ClassNotFoundException
+    {
         return getAnnotationContent(aDocument, CORRECTION_USER);
     }
 
@@ -1437,19 +1434,11 @@ public class RepositoryServiceDbData
                     }
                 }
             }
+
             // update timestamp now
-            ProjectTimeStamp projectTimeStamp;
-            if (existsProjectTimeStamp(aDocument.getProject(), aUserName)) {
-                projectTimeStamp = getProjectTimeStamp(aDocument.getProject(), aUserName);
-                projectTimeStamp.setTimestamp(new Timestamp(new Date().getTime()));
-            }
-            else {
-                projectTimeStamp = new ProjectTimeStamp();
-                projectTimeStamp.setProject(aDocument.getProject());
-                projectTimeStamp.setUsername(aUserName);
-                projectTimeStamp.setTimestamp(new Timestamp(new Date().getTime()));
-            }
-            createTimeStamp(projectTimeStamp);
+            AnnotationDocument annotationDocument = getAnnotationDocument(aDocument, aUser);
+            annotationDocument.setTimestamp(new Timestamp(new Date().getTime()));
+            createAnnotationDocument(annotationDocument);
 
         }
     }

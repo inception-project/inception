@@ -259,8 +259,7 @@ public class MonitoringPage
                                                 + new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
                                                         .format(projectRepository
                                                                 .getProjectTimeStamp(project,
-                                                                        user.getUsername())
-                                                                .getTimestamp()));
+                                                                        user.getUsername())));
                             }
                             else {
                                 projectTimeStamp.add(LAST_ACCESS + "__");

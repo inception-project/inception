@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -36,7 +37,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
-import de.tudarmstadt.ukp.clarin.webanno.model.ProjectTimeStamp;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import eu.clarin.weblicht.wlfxb.io.WLFormatException;
@@ -139,12 +139,6 @@ public interface RepositoryService
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER','ROLE_REMOTE')")
     void createSourceDocument(SourceDocument document, User user)
         throws IOException;
-
-    /**
-     * Create a time stamp of an annotation for a {@link Project} per user
-     * @param projectTimeStamp
-     */
-    void createTimeStamp(ProjectTimeStamp projectTimeStamp);
 
     /**
      * A Method that checks if there is already an annotation document created for the source
@@ -403,7 +397,7 @@ public interface RepositoryService
      * @param usernamer
      * @return
      */
-    ProjectTimeStamp getProjectTimeStamp(Project project, String username);
+    Date getProjectTimeStamp(Project project, String username);
     /**
      * Get a {@link User} object from the database based on the username.
      *
