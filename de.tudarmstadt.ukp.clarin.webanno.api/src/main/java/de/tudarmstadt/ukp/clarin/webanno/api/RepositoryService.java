@@ -252,6 +252,10 @@ public interface RepositoryService
     AnnotationDocument getAnnotationDocument(SourceDocument document, User user);
 
     /**
+     * Get an apiKey to upload document to crowdFlower, that is stored in settings.properties
+     */
+    String getApiKey();
+    /**
      * If already created, returns the CAS object either for document annotation for example in
      * {@link de.tudarmstadt.ukp.clarin.webanno.brat.ajax.controller.BratAjaxCasController#getDocument}
      * or for exporting the annotated document as TCF files as in
