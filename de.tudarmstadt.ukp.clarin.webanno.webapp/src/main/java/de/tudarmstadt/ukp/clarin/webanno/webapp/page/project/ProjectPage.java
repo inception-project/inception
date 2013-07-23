@@ -17,12 +17,20 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.webapp.page.project;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -39,6 +47,8 @@ import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.markup.html.form.RadioChoice;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
+import org.apache.wicket.markup.html.form.upload.FileUpload;
+import org.apache.wicket.markup.html.form.upload.FileUploadField;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -46,16 +56,17 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
-import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.support.EntityModel;
 
@@ -137,6 +148,7 @@ public class ProjectPage
                             // if global admin, show all projects
                             for (Authority authority : authorities) {
                                 if (authority.getRole().equals("ROLE_ADMIN")) {
+                                    sortProjects(allProjects);
                                     return allProjects;
                                 }
                             }
@@ -148,7 +160,22 @@ public class ProjectPage
                                     allowedProject.add(project);
                                 }
                             }
+                            sortProjects(allowedProject);
+
                             return allowedProject;
+                        }
+
+                        private void sortProjects(List<Project> allowedProject)
+                        {
+                            // sort projects by name
+                            Collections.sort(allowedProject, new Comparator<Project>()
+                            {
+                                @Override
+                                public int compare(Project proj1, Project proj2)
+                                {
+                                    return (proj1.getName().toLowerCase()).compareTo(proj2.getName().toLowerCase());
+                                }
+                            });
                         }
                     });
                     setChoiceRenderer(new ChoiceRenderer<Project>("name"));
@@ -190,6 +217,110 @@ public class ProjectPage
         private List<String> documents;
         private List<String> permissionLevels;
         private User user;
+    }
+
+    private class ImportProjectForm
+        extends Form<Void>
+    {
+
+        private FileUploadField fileUpload;
+        private FileUpload uploadedFile;
+
+        public ImportProjectForm(String id)
+        {
+            super(id);
+            add(fileUpload = new FileUploadField("content", new Model()));
+
+            add(new Button("importProject", new ResourceModel("label"))
+            {
+
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public void onSubmit()
+                {
+                    uploadedFile = fileUpload.getFileUpload();
+                    if (uploadedFile != null) {
+                        try {
+                            if (ApplicationUtils.isZipStream(uploadedFile.getInputStream())) {
+                                File file = uploadedFile.writeToTempFile();
+                                ZipFile zip = new ZipFile(file);
+                                InputStream projectInputStream = null;
+                                for (Enumeration zipEnumerate = zip.entries(); zipEnumerate
+                                        .hasMoreElements();) {
+                                    ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
+                                    if (entry.toString().replace("/", "")
+                                            .startsWith(ApplicationUtils.EXPORTED_PROJECT)
+                                            && entry.toString().replace("/", "").endsWith(".json")) {
+                                        projectInputStream = zip.getInputStream(entry);
+                                        break;
+                                    }
+                                }
+
+                                // projectInputStream = uploadedFile.getInputStream();
+                                String text = IOUtils.toString(projectInputStream, "UTF-8");
+                                MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
+                                de.tudarmstadt.ukp.clarin.webanno.export.model.Project importedProjectSetting = jsonConverter
+                                        .getObjectMapper()
+                                        .readValue(
+                                                text,
+                                                de.tudarmstadt.ukp.clarin.webanno.export.model.Project.class);
+                                if (projectRepository.existsProject(importedProjectSetting
+                                        .getName())) {
+                                    error("Project already exist");
+                                }
+                                else {
+                                    Project importedProject = ApplicationUtils.createProject(
+                                            importedProjectSetting, projectRepository);
+                                    ApplicationUtils.createSourceDocument(importedProjectSetting,
+                                            importedProject, projectRepository);
+                                    ApplicationUtils.createAnnotationDocument(
+                                            importedProjectSetting, importedProject,
+                                            projectRepository);
+                                    ApplicationUtils.createProjectPermission(
+                                            importedProjectSetting, importedProject,
+                                            projectRepository);
+                                    for (TagSet tagset : importedProjectSetting.getTagSets()) {
+                                        ApplicationUtils.createTagset(importedProject, tagset,
+                                                projectRepository, annotationService);
+                                    }
+                                    // add source document content
+                                    ApplicationUtils.createSourceDocumentContent(zip,
+                                            importedProject, projectRepository);
+                                    // add annotation document content
+                                    ApplicationUtils.createAnnotationDocumentContent(zip,
+                                            importedProject, projectRepository);
+                                    // create curation document content
+                                    ApplicationUtils.createCurationDocumentContent(zip,
+                                            importedProject, projectRepository);
+                                    // create project log
+                                    ApplicationUtils.createProjectLog(zip, importedProject,
+                                            projectRepository);
+                                    // create project guideline
+                                    ApplicationUtils.createProjectGuideline(zip, importedProject,
+                                            projectRepository);
+                                    // cretae project META-INF
+                                    ApplicationUtils.createProjectMetaInf(zip, importedProject,
+                                            projectRepository);
+
+                                }
+                            }
+                            else {
+                                error("Invalid ZIP file");
+                            }
+                        }
+                        catch (IOException e) {
+                            error("Error Importing Project "
+                                    + ExceptionUtils.getRootCauseMessage(e));
+                        }
+                    }
+                    else if (uploadedFile == null) {
+                        error("Please choose appropriate project in zip format");
+                    }
+                }
+            });
+        }
+
     }
 
     private class ProjectDetailForm
@@ -344,6 +475,7 @@ public class ProjectPage
 
     private ProjectSelectionForm projectSelectionForm;
     private ProjectDetailForm projectDetailForm;
+    private ImportProjectForm importProjectForm;
     // Fix for Issue "refresh for "new project" in project configuration (Bug #141) "
     boolean createProject = false;
 
@@ -354,8 +486,13 @@ public class ProjectPage
         projectDetailForm = new ProjectDetailForm("projectDetailForm");
         projectDetailForm.setVisible(false);
 
-        add(projectSelectionForm);
+        importProjectForm = new ImportProjectForm("importProjectForm");
+
+        add(projectSelectionForm.add(importProjectForm));
         add(projectDetailForm);
+
+        MetaDataRoleAuthorizationStrategy.authorize(importProjectForm, Component.RENDER,
+                "ROLE_ADMIN");
     }
 
     private class ProjectDetailsPanel
@@ -371,8 +508,8 @@ public class ProjectPage
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
             // Add check box to enable/disable arc directions of dependency parsing
             add(new CheckBox("reverseDependencyDirection"));
-           add(new RadioChoice<Mode>(
-                    "mode", Arrays.asList(new Mode[]{Mode.ANNOTATION, Mode.CORRECTION})));
+            add(new RadioChoice<Mode>("mode", Arrays.asList(new Mode[] { Mode.ANNOTATION,
+                    Mode.CORRECTION })));
             add(new Button("save", new ResourceModel("label"))
             {
 

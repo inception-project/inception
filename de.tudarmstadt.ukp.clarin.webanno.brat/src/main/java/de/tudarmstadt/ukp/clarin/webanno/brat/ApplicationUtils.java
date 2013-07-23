@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.lang.reflect.ParameterizedType;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -35,10 +36,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.StringTokenizer;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import javax.persistence.NoResultException;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -48,16 +52,21 @@ import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.BeansException;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
+import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -70,6 +79,14 @@ public class ApplicationUtils
 {
 
     private static MappingJacksonHttpMessageConverter jsonConverter;
+
+    private static final String META_INF = "/META-INF";
+    private static final String SOURCE = "/source";
+    private static final String ANNOTATION_AS_SERIALISED_CAS = "/annotation_ser/";
+    private static final String CURATION_AS_SERIALISED_CAS = "/curation_ser";
+    private static final String GUIDELINE = "/guideline";
+    private static final String LOG_DIR = "/log";
+    public static final String EXPORTED_PROJECT = "exportedproject";
 
     public static void setJsonConverter(MappingJacksonHttpMessageConverter aJsonConverter)
     {
@@ -404,4 +421,209 @@ public class ApplicationUtils
             return true;
         }
     }
+
+    public static void createTagset(Project aProjecct, de.tudarmstadt.ukp.clarin.webanno.export.model.TagSet importedTagSet, RepositoryService aRepository, AnnotationService aAnnotationService)
+            throws IOException
+        {
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
+            User user = aRepository.getUser(username);
+            AnnotationType type = null;
+            if (!aAnnotationService.existsType(importedTagSet.getTypeName(), importedTagSet.getType())) {
+                type = new AnnotationType();
+                type.setDescription(importedTagSet.getTypeDescription());
+                type.setName(importedTagSet.getTypeName());
+                type.setType(importedTagSet.getType());
+                aAnnotationService.createType(type);
+            }
+            else {
+                type = aAnnotationService
+                        .getType(importedTagSet.getTypeName(), importedTagSet.getType());
+            }
+
+            if (importedTagSet != null) {
+
+                de.tudarmstadt.ukp.clarin.webanno.model.TagSet newTagSet = new de.tudarmstadt.ukp.clarin.webanno.model.TagSet();
+                newTagSet.setDescription(importedTagSet.getDescription());
+                newTagSet.setName(importedTagSet.getName());
+                newTagSet.setLanguage(importedTagSet.getLanguage());
+                newTagSet.setProject(aProjecct);
+                newTagSet.setType(type);
+                aAnnotationService.createTagSet(newTagSet, user);
+                for (de.tudarmstadt.ukp.clarin.webanno.export.model.Tag tag : importedTagSet.getTags()) {
+                    Tag newTag = new Tag();
+                    newTag.setDescription(tag.getDescription());
+                    newTag.setName(tag.getName());
+                    newTag.setTagSet(newTagSet);
+                    aAnnotationService.createTag(newTag, user);
+                }
+            }
+        }
+
+        public static Project createProject(de.tudarmstadt.ukp.clarin.webanno.export.model.Project aProject, RepositoryService aRepository)
+            throws IOException
+        {
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
+            User user = aRepository.getUser(username);
+            Project project = new Project();
+            project.setName(aProject.getName());
+            project.setDescription(aProject.getDescription());
+            project.setReverseDependencyDirection(aProject.isReverse());
+            aRepository.createProject(project, user);
+            return project;
+        }
+
+        public static void createSourceDocument(
+                de.tudarmstadt.ukp.clarin.webanno.export.model.Project aImportedProjectSetting,
+                Project aImportedProject, RepositoryService aRepository )
+            throws IOException
+        {
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
+            User user = aRepository.getUser(username);
+            for (SourceDocument importedSourceDocument : aImportedProjectSetting.getSourceDocuments()) {
+                de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument = new de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument();
+                sourceDocument.setFormat(importedSourceDocument.getFormat());
+                sourceDocument.setName(importedSourceDocument.getName());
+                sourceDocument.setState(importedSourceDocument.getState());
+                sourceDocument.setProject(aImportedProject);
+                aRepository.createSourceDocument(sourceDocument, user);
+            }
+        }
+
+        public static void createAnnotationDocument(
+                de.tudarmstadt.ukp.clarin.webanno.export.model.Project aImportedProjectSetting,
+                Project aImportedProject, RepositoryService aRepository)
+            throws IOException
+        {
+            for (AnnotationDocument importedAnnotationDocument : aImportedProjectSetting
+                    .getAnnotationDocuments()) {
+                de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument = new de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument();
+                annotationDocument.setName(importedAnnotationDocument.getName());
+                annotationDocument.setState(importedAnnotationDocument.getState());
+                annotationDocument.setProject(aImportedProject);
+                annotationDocument.setUser(importedAnnotationDocument.getUser());
+                annotationDocument.setDocument(aRepository.getSourceDocument(
+                        importedAnnotationDocument.getName(), aImportedProject));
+                aRepository.createAnnotationDocument(annotationDocument);
+            }
+        }
+
+        public static void createProjectPermission(
+                de.tudarmstadt.ukp.clarin.webanno.export.model.Project aImportedProjectSetting,
+                Project aImportedProject, RepositoryService aRepository)
+            throws IOException
+        {
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
+            User user = aRepository.getUser(username);
+            for (de.tudarmstadt.ukp.clarin.webanno.export.model.ProjectPermission importedPermission : aImportedProjectSetting.getProjectPermissions()) {
+                de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission permission = new de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission();
+                permission.setLevel(importedPermission.getLevel());
+                permission.setProject(aImportedProject);
+                permission.setUser(importedPermission.getUser());
+                aRepository.createProjectPermission(permission);
+            }
+        }
+
+        public static void createSourceDocumentContent(ZipFile zip, Project aProject, RepositoryService aRepository)
+            throws IOException
+        {
+            for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
+                ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
+                if (entry.toString().startsWith(SOURCE)) {
+                    String fileName = entry.toString().replace(SOURCE, "").replace("/", "");
+                    de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument = aRepository
+                            .getSourceDocument(fileName, aProject);
+                    File sourceFilePath = aRepository.exportSourceDocument(sourceDocument,
+                            aProject);
+                    FileUtils.copyInputStreamToFile(zip.getInputStream(entry), sourceFilePath);
+                }
+            }
+        }
+
+        public static  void createAnnotationDocumentContent(ZipFile zip, Project aProject, RepositoryService aRepository)
+            throws IOException
+        {
+            for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
+                ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
+                if (entry.toString().startsWith(ANNOTATION_AS_SERIALISED_CAS)) {
+                    String fileName = entry.toString().replace(ANNOTATION_AS_SERIALISED_CAS, "");
+
+                    // the user annotated the document is file name minus extension (anno1.ser)
+                    String username = FilenameUtils.getBaseName(fileName).replace(".ser", "");
+
+                    // name of the annotation document
+                    fileName = fileName.replace(FilenameUtils.getName(fileName), "").replace("/", "");
+                    de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument = aRepository
+                            .getSourceDocument(fileName, aProject);
+                    File annotationFilePath = aRepository.exportAnnotationDocument(
+                            sourceDocument, aProject, username);
+
+                    FileUtils.copyInputStreamToFile(zip.getInputStream(entry), annotationFilePath);
+                }
+            }
+        }
+
+        public static void createCurationDocumentContent(ZipFile zip, Project aProject, RepositoryService aRepository)
+            throws IOException
+        {
+            for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
+                ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
+                if (entry.toString().startsWith(CURATION_AS_SERIALISED_CAS)) {
+                    String fileName = entry.toString().replace(CURATION_AS_SERIALISED_CAS, "");
+
+                    // the user annotated the document is file name minus extension (anno1.ser)
+                    String username = FilenameUtils.getBaseName(fileName).replace(".ser", "");
+
+                    // name of the annotation document
+                    fileName = fileName.replace(FilenameUtils.getName(fileName), "").replace("/", "");
+                    de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument = aRepository
+                            .getSourceDocument(fileName, aProject);
+                    File annotationFilePath = aRepository.exportAnnotationDocument(
+                            sourceDocument, aProject, username);
+
+                    FileUtils.copyInputStreamToFile(zip.getInputStream(entry), annotationFilePath);
+                }
+            }
+        }
+
+        public static void createProjectGuideline(ZipFile zip, Project aProject, RepositoryService aRepository)
+            throws IOException
+        {
+            for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
+                ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
+                if (entry.toString().startsWith(GUIDELINE)) {
+                    File guidelineDir = aRepository.exportGuideLines(aProject);
+                    FileUtils.forceMkdir(guidelineDir);
+                    FileUtils.copyInputStreamToFile(zip.getInputStream(entry), new File(guidelineDir,
+                            FilenameUtils.getName(entry.getName())));
+                }
+            }
+        }
+
+        public static void createProjectMetaInf(ZipFile zip, Project aProject, RepositoryService aRepository)
+            throws IOException
+        {
+            for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
+                ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
+                if (entry.toString().startsWith(META_INF)) {
+                    File metaInfDir = new File(aRepository.exportProjectMetaInf(aProject),
+                            FilenameUtils.getPath(entry.getName().replace(META_INF, "")));
+                    // where the file reside in the META-INF/... directory
+                    FileUtils.forceMkdir(metaInfDir);
+                    FileUtils.copyInputStreamToFile(zip.getInputStream(entry), new File(metaInfDir,
+                            FilenameUtils.getName(entry.getName())));
+                }
+            }
+        }
+
+        public static void createProjectLog(ZipFile zip, Project aProject, RepositoryService aRepository)
+            throws IOException
+        {
+            for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
+                ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
+                if (entry.toString().startsWith(LOG_DIR)) {
+                    FileUtils.copyInputStreamToFile(zip.getInputStream(entry),
+                            aRepository.exportProjectLog(aProject));
+                }
+            }
+        }
 }
