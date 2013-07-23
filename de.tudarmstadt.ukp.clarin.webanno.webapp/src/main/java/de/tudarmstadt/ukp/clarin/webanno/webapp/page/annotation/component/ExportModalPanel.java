@@ -26,8 +26,14 @@ import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.ExportModalWindowPage;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.correction.CorrectionPage;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.CurationPage;
 
 /**
+ * A panel used for {@link AnnotationPage} {@link CurationPage} and {@link CorrectionPage}
+ * consisting of a link to export annotated data
+ *
  * @author Seid Muhie Yimam
  *
  */

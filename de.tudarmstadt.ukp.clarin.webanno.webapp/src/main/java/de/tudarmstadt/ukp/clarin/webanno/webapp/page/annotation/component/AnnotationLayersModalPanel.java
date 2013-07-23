@@ -23,10 +23,17 @@ import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.AnnotationPreferenceModalPanel;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.correction.CorrectionPage;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.CurationPage;
 
 /**
+ * A panel used by {@link AnnotationPage} {@link CurationPage} and {@link CorrectionPage} consisting
+ * of a link to open {@link ModalWindow} to set {@link AnnotationPreference}
+ *
  * @author Seid Muhie Yimam
  *
  */
