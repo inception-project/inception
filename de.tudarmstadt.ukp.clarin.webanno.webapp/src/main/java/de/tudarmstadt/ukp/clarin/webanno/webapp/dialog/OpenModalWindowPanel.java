@@ -183,7 +183,8 @@ public class OpenModalWindowPanel
 
         if (aSubject.equals(mode.ANNOTATION)) {
             for (Project project : projectRepository.listProjects()) {
-                if (ApplicationUtils.isMember(project, projectRepository, user)) {
+                if (ApplicationUtils.isMember(project, projectRepository, user)  &&
+                        project.getMode().equals(Mode.ANNOTATION)) {
                     allowedProject.add(project);
                 }
             }
