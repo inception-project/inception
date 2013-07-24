@@ -33,13 +33,11 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
-import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.IHeaderResponse;
-import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.model.LoadableDetachableModel;
@@ -64,13 +62,13 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenDocumentModel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenModalWindowPanel;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.YesNoModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.AnnotationLayersModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.ExportModalPanel;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.FinishImage;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.FinishLink;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.BratCuratorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.CurationSegmentPanel;
@@ -123,7 +121,7 @@ public class CorrectionPage
     private NumberTextField<Integer> gotoPageTextField;
     private int gotoPageAddress = -1;
 
-    WebMarkupContainer finish;
+    private FinishImage finish;
 
     private CurationSegmentPanel sentenceOuterView;
     private BratAnnotator mergeVisualizer;
@@ -354,9 +352,9 @@ public class CorrectionPage
                                 error(ExceptionUtils.getRootCause(e));
                             }
 
-                            // target.add(curationPanel) should work!
+                            finish.setModelObject(bratAnnotatorModel);
                             target.add(finish.setOutputMarkupId(true));
-                            // target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                         //    target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
 
                         }
                         else if (openDataModel.getDocument() == null) {
@@ -492,80 +490,21 @@ public class CorrectionPage
             }
         });
 
-        finish = new WebMarkupContainer("finishImage");
-        finish.add(new AttributeModifier("src", true, new LoadableDetachableModel<String>()
+        finish = new FinishImage("finishImage", new LoadableDetachableModel<BratAnnotatorModel>()
         {
-            private static final long serialVersionUID = 1562727305401900776L;
+            private static final long serialVersionUID = -2737326878793568454L;
 
             @Override
-            protected String load()
+            protected BratAnnotatorModel load()
             {
+                return bratAnnotatorModel;
+            }});
 
-                if (bratAnnotatorModel.getProject() != null
-                        && bratAnnotatorModel.getDocument() != null) {
-                    if (repository
-                            .getSourceDocument(bratAnnotatorModel.getDocument().getName(),
-                                    bratAnnotatorModel.getDocument().getProject()).getState()
-                            .equals(SourceDocumentState.CURATION_FINISHED)) {
-                        return "images/cancel.png";
-                    }
-                    else {
-                        return "images/accept.png";
-                    }
-                }
-                else {
-                    return "images/accept.png";
-                }
-
-            }
-        }));
-
-        final ModalWindow finishCurationModal;
-        add(finishCurationModal = new ModalWindow("finishCurationModal"));
-        finishCurationModal.setOutputMarkupId(true);
-
-        finishCurationModal.setInitialWidth(400);
-        finishCurationModal.setInitialHeight(50);
-        finishCurationModal.setResizable(true);
-        finishCurationModal.setWidthUnit("px");
-        finishCurationModal.setHeightUnit("px");
-        finishCurationModal.setTitle("Are you sure you want to finish curating?");
-
-        AjaxLink<Void> showFinishCurationModal;
-        add(showFinishCurationModal = new AjaxLink<Void>("showFinishCurationModal")
+        add(new FinishLink("showYesNoModalPanel",
+                new Model<BratAnnotatorModel>(bratAnnotatorModel), finish)
         {
-            private static final long serialVersionUID = 7496156015186497496L;
-
-            @Override
-            public void onClick(AjaxRequestTarget target)
-            {
-                if (repository
-                        .getSourceDocument(bratAnnotatorModel.getDocument().getName(),
-                                bratAnnotatorModel.getDocument().getProject()).getState()
-                        .equals(SourceDocumentState.CURATION_FINISHED)) {
-                    target.appendJavaScript("alert('Document already closed!')");
-                }
-                else {
-                    finishCurationModal
-                            .setContent(new YesNoModalPanel(finishCurationModal.getContentId(),
-                                    bratAnnotatorModel, finishCurationModal, Mode.CURATION));
-                    finishCurationModal
-                            .setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
-                            {
-                                private static final long serialVersionUID = -1746088901018629567L;
-
-                                @Override
-                                public void onClose(AjaxRequestTarget target)
-                                {
-                                    target.add(finish.setOutputMarkupId(true));
-                                }
-                            });
-                    finishCurationModal.show(target);
-                }
-            }
+            private static final long serialVersionUID = -4657965743173979437L;
         });
-
-        showFinishCurationModal.add(finish);
 
         // Show the next page of this document
         add(new AjaxLink<Void>("showNext")

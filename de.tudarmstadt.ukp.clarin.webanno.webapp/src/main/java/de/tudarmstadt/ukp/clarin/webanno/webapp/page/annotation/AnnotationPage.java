@@ -26,14 +26,12 @@ import javax.persistence.NoResultException;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
-import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.IHeaderResponse;
-import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.link.DownloadLink;
@@ -63,10 +61,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.GuidelineModalWindowPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenDocumentModel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenModalWindowPanel;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.YesNoModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.AnnotationLayersModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.ExportModalPanel;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.FinishLink;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.FinishImage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome.WelcomePage;
 
 /**
@@ -94,7 +93,7 @@ public class AnnotationPage
     private AnnotationService annotationService;
 
     private DownloadLink export;
-    WebMarkupContainer finish;
+    FinishImage finish;
     private int windowSize;
 
     private NumberTextField<Integer> gotoPageTextField;
@@ -645,81 +644,13 @@ public class AnnotationPage
             }
         });
 
-        final ModalWindow yesNoModal;
-        add(yesNoModal = new ModalWindow("yesNoModal"));
-        yesNoModal.setOutputMarkupId(true);
+        finish = new FinishImage("finishImage",  new Model<BratAnnotatorModel>(bratAnnotatorModel));
 
-        yesNoModal.setInitialWidth(400);
-        yesNoModal.setInitialHeight(50);
-        yesNoModal.setResizable(true);
-        yesNoModal.setWidthUnit("px");
-        yesNoModal.setHeightUnit("px");
-        yesNoModal.setTitle("Are you sure you want to finish annotating?");
-
-        AjaxLink<Void> showYesNoModal;
-
-        finish = new WebMarkupContainer("finishImage");
-        finish.add(new AttributeModifier("src", true, new LoadableDetachableModel<String>()
+        add(new FinishLink("showYesNoModalPanel",
+                new Model<BratAnnotatorModel>(bratAnnotatorModel), finish)
         {
-            private static final long serialVersionUID = 1562727305401900776L;
-
-            @Override
-            protected String load()
-            {
-                String username = SecurityContextHolder.getContext().getAuthentication().getName();
-                User user = repository.getUser(username);
-
-                if (bratAnnotatorModel.getProject() != null
-                        && bratAnnotatorModel.getDocument() != null) {
-                    if (repository.existsAnnotationDocument(bratAnnotatorModel.getDocument(), user)
-                            && repository
-                                    .getAnnotationDocument(bratAnnotatorModel.getDocument(), user)
-                                    .getState().equals(AnnotationDocumentState.FINISHED)) {
-                        return "images/cancel.png";
-                    }
-                    else {
-                        return "images/accept.png";
-                    }
-                }
-                else {
-                    return "images/accept.png";
-                }
-
-            }
-        }));
-
-        add(showYesNoModal = new AjaxLink<Void>("showYesNoModal")
-        {
-            private static final long serialVersionUID = 7496156015186497496L;
-
-            @Override
-            public void onClick(AjaxRequestTarget target)
-            {
-                String username = SecurityContextHolder.getContext().getAuthentication().getName();
-                User user = repository.getUser(username);
-                if (repository.getAnnotationDocument(bratAnnotatorModel.getDocument(), user)
-                        .getState().equals(AnnotationDocumentState.FINISHED)) {
-                    target.appendJavaScript("alert('Document already closed!')");
-                }
-                else {
-                    yesNoModal.setContent(new YesNoModalPanel(yesNoModal.getContentId(),
-                            bratAnnotatorModel, yesNoModal, Mode.ANNOTATION));
-                    yesNoModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
-                    {
-                        private static final long serialVersionUID = -1746088901018629567L;
-
-                        @Override
-                        public void onClose(AjaxRequestTarget target)
-                        {
-                            target.add(finish.setOutputMarkupId(true));
-                        }
-                    });
-                    yesNoModal.show(target);
-                }
-
-            }
+            private static final long serialVersionUID = -4657965743173979437L;
         });
-        showYesNoModal.add(finish);
     }
 
     @Override
