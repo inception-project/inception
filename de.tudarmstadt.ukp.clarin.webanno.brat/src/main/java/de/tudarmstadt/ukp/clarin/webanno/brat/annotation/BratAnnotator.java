@@ -24,10 +24,10 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
-import org.apache.wicket.behavior.SimpleAttributeModifier;
 import org.apache.wicket.markup.html.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
@@ -101,7 +101,6 @@ public class BratAnnotator
         return (BratAnnotatorModel) getDefaultModelObject();
     }
 
-    @SuppressWarnings("deprecation")
     public BratAnnotator(String id, IModel<BratAnnotatorModel> aModel)
     {
         super(id, aModel);
@@ -118,8 +117,8 @@ public class BratAnnotator
         final FeedbackPanel feedbackPanel = new FeedbackPanel("feedbackPanel");
         add(feedbackPanel);
         feedbackPanel.setOutputMarkupId(true);
-        feedbackPanel.add(new SimpleAttributeModifier("class", "info"));
-        feedbackPanel.add(new SimpleAttributeModifier("class", "error"));
+        feedbackPanel.add(new AttributeModifier("class", "info"));
+        feedbackPanel.add(new AttributeModifier("class", "error"));
 
         controller = new AbstractDefaultAjaxBehavior()
         {
