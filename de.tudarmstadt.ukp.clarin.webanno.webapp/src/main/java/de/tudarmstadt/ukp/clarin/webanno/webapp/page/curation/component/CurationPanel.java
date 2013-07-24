@@ -32,6 +32,7 @@ import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
 import org.apache.wicket.markup.ComponentTag;
+import org.apache.wicket.markup.html.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.list.ListItem;
@@ -78,6 +79,10 @@ public class CurationPanel
 
     private CurationSegmentPanel sentenceOuterView;
     private BratAnnotator mergeVisualizer;
+
+    private BratAnnotatorModel bratAnnotatorModel;
+
+    boolean firstLoad = true;
 
     /**
      * Map for tracking curated spans. Key contains the address of the span, the value contains the
@@ -131,7 +136,7 @@ public class CurationPanel
          * sentenceOuterView.setOutputMarkupId(true); add(sentenceOuterView);
          */
 
-        final BratAnnotatorModel bratAnnotatorModel = curationContainer.getBratAnnotatorModel();
+        bratAnnotatorModel = curationContainer.getBratAnnotatorModel();
 
         LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<CurationUserSegmentForAnnotationDocument>();
         CurationUserSegmentForAnnotationDocument curationUserSegmentForAnnotationDocument = new CurationUserSegmentForAnnotationDocument();
@@ -272,6 +277,18 @@ public class CurationPanel
         // add subcomponents to the component
         textListView.setOutputMarkupId(true);
         textOuterView.add(textListView);
+    }
 
+    @Override
+    public void renderHead(IHeaderResponse response)
+    {
+        if(firstLoad){
+            firstLoad = false;
+        }
+        else if(bratAnnotatorModel.getProject() != null){
+           // mergeVisualizer.setModelObject(bratAnnotatorModel);
+            mergeVisualizer.setCollection("#" + bratAnnotatorModel.getProject().getName() + "/");
+            mergeVisualizer.reloadContent(response);
+        }
     }
 }
