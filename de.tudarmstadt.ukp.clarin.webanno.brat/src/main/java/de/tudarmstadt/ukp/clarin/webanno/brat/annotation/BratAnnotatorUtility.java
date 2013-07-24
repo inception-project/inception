@@ -32,6 +32,8 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.OffsetsList;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
@@ -212,6 +214,29 @@ public class BratAnnotatorUtility
                     bratAnnotatorModel.getDocument(), bratAnnotatorModel.getWindowSize()));
         }
         return result;
+    }
+
+    public static boolean isDocumentFinished(RepositoryService aRepository, BratAnnotatorModel aBratAnnotatorModel)
+    {
+        // if annotationDocument is finished, disable editing
+        boolean finished = false;
+        try {
+            if (aRepository
+                    .getAnnotationDocument(aBratAnnotatorModel.getDocument(),
+                            aBratAnnotatorModel.getUser()).getState()
+                    .equals(AnnotationDocumentState.FINISHED)
+                    || aBratAnnotatorModel.getDocument().getState()
+                            .equals(SourceDocumentState.CURATION_FINISHED)
+                    || aBratAnnotatorModel.getDocument().getState()
+                            .equals(SourceDocumentState.CURATION_IN_PROGRESS)) {
+                finished = true;
+            }
+        }
+        catch (Exception e) {
+            finished = false;
+        }
+
+        return finished;
     }
 
 }

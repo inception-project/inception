@@ -59,7 +59,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.GuidelineModalWindowPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenDocumentModel;
@@ -832,28 +831,6 @@ public class AnnotationPage
         }
     }
 
-    private boolean isDocumentFinished()
-    {
-        // if annotationDocument is finished, disable editing
-        boolean finished = false;
-        try {
-            if (repository
-                    .getAnnotationDocument(bratAnnotatorModel.getDocument(),
-                            bratAnnotatorModel.getUser()).getState()
-                    .equals(AnnotationDocumentState.FINISHED)
-                    || bratAnnotatorModel.getDocument().getState()
-                            .equals(SourceDocumentState.CURATION_FINISHED)
-                    || bratAnnotatorModel.getDocument().getState()
-                            .equals(SourceDocumentState.CURATION_IN_PROGRESS)) {
-                finished = true;
-            }
-        }
-        catch (Exception e) {
-            finished = false;
-        }
-
-        return finished;
-    }
 
     private JCas getCas(Project aProject, User user, SourceDocument aDocument)
         throws UIMAException, IOException, ClassNotFoundException

@@ -24,10 +24,10 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
-import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
+import org.apache.wicket.behavior.SimpleAttributeModifier;
 import org.apache.wicket.markup.html.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
@@ -101,6 +101,7 @@ public class BratAnnotator
         return (BratAnnotatorModel) getDefaultModelObject();
     }
 
+    @SuppressWarnings("deprecation")
     public BratAnnotator(String id, IModel<BratAnnotatorModel> aModel)
     {
         super(id, aModel);
@@ -117,8 +118,8 @@ public class BratAnnotator
         final FeedbackPanel feedbackPanel = new FeedbackPanel("feedbackPanel");
         add(feedbackPanel);
         feedbackPanel.setOutputMarkupId(true);
-        feedbackPanel.add(new AttributeModifier("class", "info"));
-        feedbackPanel.add(new AttributeModifier("class", "error"));
+        feedbackPanel.add(new SimpleAttributeModifier("class", "info"));
+        feedbackPanel.add(new SimpleAttributeModifier("class", "error"));
 
         controller = new AbstractDefaultAjaxBehavior()
         {
@@ -174,7 +175,8 @@ public class BratAnnotator
                         result = BratAnnotatorUtility.getDocument(uIData, repository,
                                 annotationService, getModelObject());
                     }
-                    else if (request.getParameterValue("action").toString().equals("createSpan")) {
+                    else if (!BratAnnotatorUtility.isDocumentFinished(repository, getModelObject())){
+                     if (request.getParameterValue("action").toString().equals("createSpan")) {
                         try {
                             result = BratAnnotatorUtility.createSpan(request, getModelObject()
                                     .getUser(), uIData, repository, annotationService,
@@ -237,6 +239,12 @@ public class BratAnnotator
                                 + "]has been deleted");
                         hasChanged = true;
                     }
+                    }
+                    else{
+                        result = BratAnnotatorUtility.getDocument(uIData, repository,
+                                annotationService, getModelObject());
+                        error("This document is already closed. Please ask admin to re-open");
+                    }
 
                 }
                 catch (ClassNotFoundException e) {
@@ -274,6 +282,7 @@ public class BratAnnotator
                 if (hasChanged) {
                     onChange(aTarget);
                 }
+                aTarget.add(feedbackPanel);
             }
         };
 
