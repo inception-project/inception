@@ -342,6 +342,22 @@ public class BratAnnotator
         }
     }
 
+    public void reloadContent(IHeaderResponse aResponse)
+    {
+        String[] script = new String[] { "dispatcher.post('clearSVG', []);"
+                + "dispatcher.post('current', ['"
+                + getCollection()
+                + "', '1234', {}, true]);"
+                // start ajax call, which requests the collection (and the document) from the server
+                // and renders the svg
+                + "dispatcher.post('ajax', [{action: 'getCollectionInformation',collection: '"
+                + getCollection() + "'}, 'collectionLoaded', {collection: '" + getCollection()
+                + "',keep: true}]);"
+        // + "dispatcher.post('collectionChanged');"
+        };
+        aResponse.renderOnLoadJavaScript("\n" + StringUtils.join(script, "\n"));
+    }
+
     public void reloadContent(AjaxRequestTarget aTarget)
     {
         String[] script = new String[] { "dispatcher.post('clearSVG', []);"

@@ -354,7 +354,7 @@ public class CorrectionPage
 
                             finish.setModelObject(bratAnnotatorModel);
                             target.add(finish.setOutputMarkupId(true));
-                         //    target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                            target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
 
                         }
                         else if (openDataModel.getDocument() == null) {
@@ -385,10 +385,10 @@ public class CorrectionPage
                     setCurationSegmentBeginEnd();
                 }
                 catch (UIMAException e) {
-                 error(ExceptionUtils.getRootCauseMessage(e));
+                    error(ExceptionUtils.getRootCauseMessage(e));
                 }
                 catch (ClassNotFoundException e) {
-                  error(e.getMessage());
+                    error(e.getMessage());
                 }
                 catch (IOException e) {
                     error(e.getMessage());
@@ -498,7 +498,8 @@ public class CorrectionPage
             protected BratAnnotatorModel load()
             {
                 return bratAnnotatorModel;
-            }});
+            }
+        });
 
         add(new FinishLink("showYesNoModalPanel",
                 new Model<BratAnnotatorModel>(bratAnnotatorModel), finish)
@@ -737,6 +738,14 @@ public class CorrectionPage
             firstLoad = false;
         }
         response.renderOnLoadJavaScript(jQueryString);
+        if(bratAnnotatorModel.getProject() != null){
+
+            mergeVisualizer.setModelObject(bratAnnotatorModel);
+            mergeVisualizer.setCollection("#" + bratAnnotatorModel.getProject().getName() + "/");
+            mergeVisualizer.reloadContent(response);
+
+        }
+
     }
 
     @SuppressWarnings("unchecked")
@@ -876,4 +885,5 @@ public class CorrectionPage
         mergeVisualizer.setCollection("#" + bratAnnotatorModel.getProject().getName() + "/");
         mergeVisualizer.reloadContent(target);
     }
+
 }
