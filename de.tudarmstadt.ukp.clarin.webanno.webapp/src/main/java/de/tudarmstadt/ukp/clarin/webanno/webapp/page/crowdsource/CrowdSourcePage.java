@@ -252,6 +252,8 @@ public class CrowdSourcePage
 
             add(new TextField<String>("name").setRequired(true));
 
+            add(new TextField<String>("apiKey"));
+
             add(new Label("link"));
             add(new Label("status"));
 
@@ -319,6 +321,7 @@ public class CrowdSourcePage
                     if (selectedCrowdJob != null && !projectRepository.existsCrowdJob(name)) {
                         selectedCrowdJob.setName(name);
                         selectedCrowdJob.setProject(selectedProject);
+                        selectedCrowdJob.setApiKey(crowdJobDetailForm.getModelObject().apiKey);
                         projectRepository.createCrowdJob(selectedCrowdJob);
                         createCrowdJob = false;
                         updateTable();
@@ -335,6 +338,8 @@ public class CrowdSourcePage
                         updateTable();
                     }
                     else {
+                        selectedCrowdJob.setApiKey(crowdJobDetailForm.getModelObject().apiKey);
+                        projectRepository.createCrowdJob(selectedCrowdJob);
                         error("Task [" + name + " ] already created!");
                     }
                 }
@@ -420,7 +425,8 @@ public class CrowdSourcePage
                         namedEntityTaskManager = new NamedEntityTaskManager();
                     }
 
-                    namedEntityTaskManager.setAPIKey(projectRepository.getApiKey());
+                   // namedEntityTaskManager.setAPIKey(projectRepository.getApiKey());
+                    namedEntityTaskManager.setAPIKey(selectedCrowdJob.getApiKey());
 
                     // Get the source document(2) here
                     List<SourceDocument> sourceDocuments = new ArrayList<SourceDocument>(
@@ -709,6 +715,7 @@ public class CrowdSourcePage
                         selectedCrowdJob = projectRepository.getCrowdJob(value);
                         SelectionModel selectionModel = new SelectionModel();
                         selectionModel.name = selectedCrowdJob.getName();
+                        selectionModel.apiKey = selectedCrowdJob.getApiKey();
                         crowdJobDetailForm.setModelObject(selectionModel);
                         crowdJobDetailForm.setVisible(true);
                         createCrowdJob = false;

@@ -59,6 +59,8 @@ public class CrowdJob
     @JoinColumn(name = "project")
     private Project project;
 
+    @JoinColumn(name = "api_key")
+    private String apiKey;
 
     public long getId()
     {
@@ -98,6 +100,16 @@ public class CrowdJob
     public void setProject(Project project)
     {
         this.project = project;
+    }
+
+    public String getApiKey()
+    {
+        return apiKey;
+    }
+
+    public void setApiKey(String apiKey)
+    {
+        this.apiKey = apiKey;
     }
 
 
