@@ -95,6 +95,31 @@ public class ProjectPage
     @SpringBean(name = "documentRepository")
     private RepositoryService projectRepository;
 
+
+    private ProjectSelectionForm projectSelectionForm;
+    private ProjectDetailForm projectDetailForm;
+    private ImportProjectForm importProjectForm;
+
+    private boolean createProject = false;
+
+    private RadioChoice<Mode> projectType;
+
+    public ProjectPage()
+    {
+        projectSelectionForm = new ProjectSelectionForm("projectSelectionForm");
+
+        projectDetailForm = new ProjectDetailForm("projectDetailForm");
+        projectDetailForm.setVisible(false);
+
+        importProjectForm = new ImportProjectForm("importProjectForm");
+
+        add(projectSelectionForm.add(importProjectForm));
+        add(projectDetailForm);
+
+        MetaDataRoleAuthorizationStrategy.authorize(importProjectForm, Component.RENDER,
+                "ROLE_ADMIN");
+    }
+
     private class ProjectSelectionForm
         extends Form<SelectionModel>
     {
@@ -118,6 +143,9 @@ public class ProjectPage
                     createProject = true;
                     projectDetailForm.setVisible(true);
                     ProjectSelectionForm.this.setVisible(true);
+                    if (projectType != null) {
+                        projectType.setEnabled(createProject);
+                    }
                 }
             });
 
@@ -190,6 +218,9 @@ public class ProjectPage
                         projectDetailForm.setModelObject(aNewSelection);
                         projectDetailForm.setVisible(true);
                         ProjectSelectionForm.this.setVisible(true);
+                    }
+                    if (projectType != null) {
+                        projectType.setEnabled(createProject);
                     }
                 }
 
@@ -473,33 +504,12 @@ public class ProjectPage
         };
     }
 
-    private ProjectSelectionForm projectSelectionForm;
-    private ProjectDetailForm projectDetailForm;
-    private ImportProjectForm importProjectForm;
-    // Fix for Issue "refresh for "new project" in project configuration (Bug #141) "
-    boolean createProject = false;
-
-    public ProjectPage()
-    {
-        projectSelectionForm = new ProjectSelectionForm("projectSelectionForm");
-
-        projectDetailForm = new ProjectDetailForm("projectDetailForm");
-        projectDetailForm.setVisible(false);
-
-        importProjectForm = new ImportProjectForm("importProjectForm");
-
-        add(projectSelectionForm.add(importProjectForm));
-        add(projectDetailForm);
-
-        MetaDataRoleAuthorizationStrategy.authorize(importProjectForm, Component.RENDER,
-                "ROLE_ADMIN");
-    }
-
     private class ProjectDetailsPanel
         extends Panel
     {
         private static final long serialVersionUID = 1118880151557285316L;
 
+        @SuppressWarnings("unchecked")
         public ProjectDetailsPanel(String id)
         {
             super(id);
@@ -508,8 +518,8 @@ public class ProjectPage
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
             // Add check box to enable/disable arc directions of dependency parsing
             add(new CheckBox("reverseDependencyDirection"));
-            add(new RadioChoice<Mode>("mode", Arrays.asList(new Mode[] { Mode.ANNOTATION,
-                    Mode.CORRECTION })));
+            add(projectType = (RadioChoice<Mode>) new RadioChoice<Mode>("mode", Arrays.asList(new Mode[] { Mode.ANNOTATION,
+                    Mode.CORRECTION })).setEnabled(createProject));
             add(new Button("save", new ResourceModel("label"))
             {
 
