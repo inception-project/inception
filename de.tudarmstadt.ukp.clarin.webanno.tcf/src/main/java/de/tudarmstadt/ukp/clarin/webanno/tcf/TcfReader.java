@@ -271,8 +271,8 @@ public class TcfReader
                         else {
                             getUimaContext().getLogger().log(Level.INFO, "There is no pos for this token, added is -- as a pos");
                             governerPos = new POS(aJCas);
-                            governerPos.setBegin(aTokens.get(governorTokens[0]).getBegin());
-                            governerPos.setEnd(aTokens.get(governorTokens[0]).getEnd());
+                            governerPos.setBegin(aTokens.get(governorTokens[0].getID()).getBegin());
+                            governerPos.setEnd(aTokens.get(governorTokens[0].getID()).getEnd());
                             governerPos.setPosValue("--");
                             governerPos.addToIndexes();
                             aTokens.get(governorTokens[0].getID()).setPos(governerPos);
