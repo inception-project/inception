@@ -2,13 +2,13 @@
  * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,7 +22,10 @@ import static org.apache.commons.io.IOUtils.closeQuietly;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -320,9 +323,8 @@ public class TcfReader
 
             NamedEntity outNamedEntity = new NamedEntity(aJCas);
 
-            outNamedEntity.setBegin(aTokens.get(namedEntityTokens[0].getID()).getBegin());
-            outNamedEntity.setEnd(aTokens.get(
-                    namedEntityTokens[namedEntityTokens.length - 1].getID()).getEnd());
+            outNamedEntity.setBegin(getOffsets(namedEntityTokens, aTokens)[0]);
+            outNamedEntity.setEnd(getOffsets(namedEntityTokens, aTokens)[1]);
             outNamedEntity.setValue(entity.getType());
             outNamedEntity.addToIndexes();
         }
@@ -390,8 +392,8 @@ public class TcfReader
             }
 
             String[] referenceTokens = sbTokens.toString().split(" ");
-            int begin = aTokens.get(referenceTokens[0]).getBegin();
-            int end = aTokens.get(referenceTokens[referenceTokens.length - 1]).getEnd();
+            int begin = getOffsets(referenceTokens, aTokens)[0];
+            int end = getOffsets(referenceTokens, aTokens)[1];
 
             CoreferenceLink link = new CoreferenceLink(aJcas);
             link.setBegin(begin);
@@ -405,5 +407,37 @@ public class TcfReader
             aReferencesMap.put(link.getAddress(), link);
 
         }
+    }
+
+    /**
+     * Get the start and end offsets of a span annotation
+     * @param aSpanTokens list of span {@link eu.clarin.weblicht.wlfxb.tc.api.Token}s
+     * @param aAllTokens all available tokens in the file
+     */
+    private int[] getOffsets( eu.clarin.weblicht.wlfxb.tc.api.Token[] aSpanTokens,
+            Map<String, Token> aAllTokens){
+       List<Integer> beginPositions = new ArrayList<Integer>();
+       List<Integer> endPositions = new ArrayList<Integer>();
+        for (eu.clarin.weblicht.wlfxb.tc.api.Token token : aSpanTokens) {
+            beginPositions.add(aAllTokens.get(token.getID()).getBegin());
+            endPositions.add(aAllTokens.get(token.getID()).getEnd());
+    }
+        return new int[] {(Collections.min(beginPositions)), (Collections.max(endPositions))};
+    }
+
+    /**
+     * Get the start and end offsets of a span annotation
+     * @param aSpanTokens list of span token ids. [t_3,_t_5, t_1]
+     * @param aAllTokens all available tokens in the file
+     */
+    private int[] getOffsets( String[] aSpanTokens,
+            Map<String, Token> aAllTokens){
+       List<Integer> beginPositions = new ArrayList<Integer>();
+       List<Integer> endPositions = new ArrayList<Integer>();
+        for (String token : aSpanTokens) {
+            beginPositions.add(aAllTokens.get(token).getBegin());
+            endPositions.add(aAllTokens.get(token).getEnd());
+    }
+        return new int[] {(Collections.min(beginPositions)), (Collections.max(endPositions))};
     }
 }
