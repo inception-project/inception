@@ -223,28 +223,7 @@ public class MonitoringPage
                         }
 
                         List<List<String>> userAnnotationDocumentStatusList = new ArrayList<List<String>>();
-
-                        for (SourceDocument document : documents) {
-                            List<String> userAnnotationDocuments = new ArrayList<String>();
-                            userAnnotationDocuments.add(DOCUMENT + document.getName());
-
-                            // source Document status
-                            userAnnotationDocuments.add(SOURCE_DOCUMENT + "-" + DOCUMENT
-                                    + document.getName());
-
-                            // Curation Document status
-                            userAnnotationDocuments.add(CurationPanel.CURATION_USER + "-"
-                                    + DOCUMENT + document.getName());
-
-                            for (User user : usersWithPermissions) {
-                                // annotation document status for this annotator
-                                userAnnotationDocuments.add(user.getUsername() + "-" + DOCUMENT
-                                        + document.getName());
-                            }
-
-                            userAnnotationDocumentStatusList.add(userAnnotationDocuments);
-                        }
-
+                        
                         // Add a timestamp row for every user.
                         List<String> projectTimeStamp = new ArrayList<String>();
                         projectTimeStamp.add(LAST_ACCESS + LAST_ACCESS_ROW); // first column
@@ -267,6 +246,28 @@ public class MonitoringPage
                         }
 
                         userAnnotationDocumentStatusList.add(projectTimeStamp);
+
+
+                        for (SourceDocument document : documents) {
+                            List<String> userAnnotationDocuments = new ArrayList<String>();
+                            userAnnotationDocuments.add(DOCUMENT + document.getName());
+
+                            // source Document status
+                            userAnnotationDocuments.add(SOURCE_DOCUMENT + "-" + DOCUMENT
+                                    + document.getName());
+
+                            // Curation Document status
+                            userAnnotationDocuments.add(CurationPanel.CURATION_USER + "-"
+                                    + DOCUMENT + document.getName());
+
+                            for (User user : usersWithPermissions) {
+                                // annotation document status for this annotator
+                                userAnnotationDocuments.add(user.getUsername() + "-" + DOCUMENT
+                                        + document.getName());
+                            }
+
+                            userAnnotationDocumentStatusList.add(userAnnotationDocuments);
+                        }
 
                         TableDataProvider provider = new TableDataProvider(
                                 documentListAsColumnHeader, userAnnotationDocumentStatusList);
