@@ -2,13 +2,13 @@
  * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.webapp.dao;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -74,7 +75,8 @@ public class AnnotationServiceImpl
 
         RepositoryServiceDbData.createLog(aTagSet.getProject(), aUser.getUsername()).info(
                 " Added tagset  [" + aTagSet.getName() + "] with ID [" + aTagSet.getId() + "]");
-        RepositoryServiceDbData.createLog(aTagSet.getProject(), aUser.getUsername()).removeAllAppenders();
+        RepositoryServiceDbData.createLog(aTagSet.getProject(), aUser.getUsername())
+                .removeAllAppenders();
     }
 
     @Override
@@ -101,13 +103,14 @@ public class AnnotationServiceImpl
     @Transactional(noRollbackFor = NoResultException.class)
     public boolean existTagSet(AnnotationType aType, Project aProject)
     {
-        try{
-         entityManager
-                .createQuery("FROM TagSet WHERE type = :type AND project = :project", TagSet.class)
-                .setParameter("type", aType).setParameter("project", aProject).getSingleResult();
-         return true;
+        try {
+            entityManager
+                    .createQuery("FROM TagSet WHERE type = :type AND project = :project",
+                            TagSet.class).setParameter("type", aType)
+                    .setParameter("project", aProject).getSingleResult();
+            return true;
         }
-        catch (NoResultException e){
+        catch (NoResultException e) {
             return false;
 
         }
@@ -117,38 +120,41 @@ public class AnnotationServiceImpl
     @Transactional
     public TagSet getTagSet(AnnotationType aType, Project aProject)
     {
-        return entityManager.createQuery("FROM TagSet WHERE type = :type AND project =:project", TagSet.class)
-                .setParameter("type", aType)
-                .setParameter("project", aProject).getSingleResult();
+        return entityManager
+                .createQuery("FROM TagSet WHERE type = :type AND project =:project", TagSet.class)
+                .setParameter("type", aType).setParameter("project", aProject).getSingleResult();
     }
 
     @Override
     @Transactional
-    public TagSet getTagSet(long aId){
+    public TagSet getTagSet(long aId)
+    {
         return entityManager.createQuery("FROM TagSet WHERE id = :id", TagSet.class)
                 .setParameter("id", aId).getSingleResult();
     }
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-   public AnnotationType getType(String aName, String aType){
-      return  entityManager
-        .createQuery("From AnnotationType where name = :name AND type = :type",
-                AnnotationType.class).setParameter("name", aName)
-        .setParameter("type", aType).getSingleResult();
+    public AnnotationType getType(String aName, String aType)
+    {
+        return entityManager
+                .createQuery("From AnnotationType where name = :name AND type = :type",
+                        AnnotationType.class).setParameter("name", aName)
+                .setParameter("type", aType).getSingleResult();
     }
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public boolean existsType (String aName, String aType)
+    public boolean existsType(String aName, String aType)
     {
-        try{ entityManager
-                .createQuery("From AnnotationType where name = :name AND type = :type",
-                        AnnotationType.class).setParameter("name", aName)
-                .setParameter("type", aType).getSingleResult();
-        return true;
+        try {
+            entityManager
+                    .createQuery("From AnnotationType where name = :name AND type = :type",
+                            AnnotationType.class).setParameter("name", aName)
+                    .setParameter("type", aType).getSingleResult();
+            return true;
         }
-        catch(NoResultException e){
+        catch (NoResultException e) {
             return false;
         }
     }
@@ -270,25 +276,31 @@ public class AnnotationServiceImpl
                 "SUBJC3", "SUBJI", "SUBJI2", "CP", "PD", "RE", "CD", "DA", "SVP", "OP", "MO", "JU",
                 "CVC", "NG", "SB", "SBP", "AG", "PM", "OCRC", "OG", "SUBJI3", "VOK", "ZEIT", "$",
                 "--", "OC", "OA", "MNR", "NK", "RC", "EP", "CC", "CM", "UC", "AC", "PNC" };
-        initializeType(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.DEPENDENCY, "Dependency annotation", "relation",
-                "Tiger", "de", depTags, depTags, aProject, aUser);
+        initializeType(
+                de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.DEPENDENCY,
+                "Dependency annotation", "relation", "Tiger", "de", depTags, depTags, aProject,
+                aUser);
 
-        initializeType(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.NAMEDENTITY, "Named Entity annotation", "span",
-                "NER_WebAnno", "de", new String[] { "PER", "PERderiv", "PERpart", "LOC",
-                        "LOCderiv", "LOCpart", "ORG", "ORGderiv", "ORGpart", "OTH", "OTHderiv",
-                        "OTHpart" }, new String[] { "Person", "Person derivative",
-                        "Hyphenated part  is person", "Location derivatives",
+        initializeType(
+                de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.NAMEDENTITY,
+                "Named Entity annotation", "span", "NER_WebAnno", "de", new String[] { "PER",
+                        "PERderiv", "PERpart", "LOC", "LOCderiv", "LOCpart", "ORG", "ORGderiv",
+                        "ORGpart", "OTH", "OTHderiv", "OTHpart" }, new String[] { "Person",
+                        "Person derivative", "Hyphenated part  is person", "Location derivatives",
                         "Location derivative", "Hyphenated part  is location", "Organization",
                         "Organization derivative", "Hyphenated part  is organization",
                         "Other: Every name that is not a location, person or organisation",
                         "Other derivative", "Hyphenated part  is Other" }, aProject, aUser);
 
-        initializeType(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.COREFRELTYPE, "coreference type annotation", "span",
-                "BART", "de", new String[] { "nam" }, new String[] { "nam" }, aProject, aUser);
+        initializeType(
+                de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.COREFRELTYPE,
+                "coreference type annotation", "span", "BART", "de", new String[] { "nam" },
+                new String[] { "nam" }, aProject, aUser);
 
-        initializeType(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.COREFERENCE, "coreference annotation", "relation",
-                "TuebaDZ", "de", new String[] { "anaphoric" }, new String[] { "anaphoric" },
-                aProject, aUser);
+        initializeType(
+                de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.COREFERENCE,
+                "coreference annotation", "relation", "TuebaDZ", "de",
+                new String[] { "anaphoric" }, new String[] { "anaphoric" }, aProject, aUser);
     }
 
     @Override
@@ -297,6 +309,18 @@ public class AnnotationServiceImpl
     {
         return entityManager.createQuery("FROM AnnotationType ORDER BY name", AnnotationType.class)
                 .getResultList();
+    }
+
+    @Override
+    @Transactional
+    public List<AnnotationType> listAnnotationType(Project aProject)
+    {
+        List<TagSet> tagSets = listTagSets(aProject);
+        List<AnnotationType> annotationTypes = new ArrayList<AnnotationType>();
+        for (TagSet tagSet : tagSets) {
+            annotationTypes.add(tagSet.getType());
+        }
+        return annotationTypes;
     }
 
     @Override
