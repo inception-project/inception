@@ -124,6 +124,78 @@ public class MonitoringPage
     @SpringBean(name = "documentRepository")
     private RepositoryService projectRepository;
 
+    private ProjectSelectionForm projectSelectionForm;
+    private MonitoringDetailForm monitoringDetailForm;
+    private Image annotatorsProgressImage;
+    private Image annotatorsProgressPercentageImage;
+    private DefaultDataTable annotationDocumentStatusTable;
+    private DefaultDataTable agreementTable;
+    private Label projectName;
+    private RepeatingView projectRepeator;
+    private AgreementForm agreementForm;
+    private AnnotationTypeSelectionForm annotationTypeSelectionForm;
+
+    public MonitoringPage()
+        throws UIMAException, IOException, ClassNotFoundException
+    {
+        projectSelectionForm = new ProjectSelectionForm("projectSelectionForm");
+
+        monitoringDetailForm = new MonitoringDetailForm("monitoringDetailForm");
+        // monitoringDetailForm.setVisible(false);
+        agreementForm = new AgreementForm("agreementForm", new Model<AnnotationType>(),
+                new Model<Project>());
+        agreementForm.setVisible(false);
+        add(agreementForm);
+
+        annotationTypeSelectionForm = new AnnotationTypeSelectionForm("annotationTypeSelectionForm");
+        annotationTypeSelectionForm.setVisible(false);
+        add(annotationTypeSelectionForm);
+
+        annotatorsProgressImage = new NonCachingImage("annotator");
+        annotatorsProgressImage.setOutputMarkupPlaceholderTag(true);
+        annotatorsProgressImage.setVisible(false);
+
+        annotatorsProgressPercentageImage = new NonCachingImage("annotatorPercentage");
+        annotatorsProgressPercentageImage.setOutputMarkupPlaceholderTag(true);
+        annotatorsProgressPercentageImage.setVisible(false);
+
+
+        add(projectSelectionForm);
+        projectName = new Label("projectName", "");
+
+        Project project = projectRepository.listProjects().get(0);
+
+        List<List<String>> userAnnotationDocumentLists = new ArrayList<List<String>>();
+        List<SourceDocument> dc = projectRepository.listSourceDocuments(project);
+        for (User user : projectRepository.listProjectUsersWithPermissions(project)) {
+            List<String> userAnnotationDocument = new ArrayList<String>();
+            userAnnotationDocument.add("");
+            for (int i = 0; i < dc.size(); i++) {
+                userAnnotationDocument.add("");
+            }
+            userAnnotationDocumentLists.add(userAnnotationDocument);
+        }
+        List<String> documentListAsColumnHeader = new ArrayList<String>();
+        documentListAsColumnHeader.add("Users");
+        for (SourceDocument d : dc) {
+            documentListAsColumnHeader.add(d.getName());
+        }
+        TableDataProvider prov = new TableDataProvider(documentListAsColumnHeader,
+                userAnnotationDocumentLists);
+
+        List<IColumn<?>> cols = new ArrayList<IColumn<?>>();
+
+        for (int i = 0; i < prov.getColumnCount(); i++) {
+            cols.add(new DocumentColumnMetaData(prov, i, new Project(), projectRepository));
+        }
+        annotationDocumentStatusTable = new DefaultDataTable("rsTable", cols, prov, 2);
+        monitoringDetailForm.setVisible(false);
+        add(monitoringDetailForm.add(annotatorsProgressImage).add(annotatorsProgressPercentageImage)
+                .add(projectName)
+                .add(annotationDocumentStatusTable));
+        annotationDocumentStatusTable.setVisible(false);
+    }
+
     private class ProjectSelectionForm
         extends Form<SelectionModel>
     {
@@ -189,6 +261,7 @@ public class MonitoringPage
                         ProjectSelectionForm.this.setVisible(true);
 
                         final Map<String, Integer> annotatorsProgress = new HashMap<String, Integer>();
+                        final Map<String, Integer> annotatorsProgressInPercent = new HashMap<String, Integer>();
                         final Project project = aNewSelection;
                         List<SourceDocument> documents = projectRepository
                                 .listSourceDocuments(project);
@@ -197,13 +270,18 @@ public class MonitoringPage
 
                         // Annotator's Progress
                         if (project != null) {
-                            annotatorsProgress.putAll(getAnnotatorsProgres(project));
+                            annotatorsProgressInPercent.putAll(getPercentageOfFinishedDocumentsPerUser(project));
+                            annotatorsProgress.putAll(getFinishedDocumentsPerUser(project));
                         }
                         projectName.setDefaultModelObject(project.getName());
 
                         annotatorsProgressImage.setImageResource(createProgressChart(
                                 annotatorsProgress, totalDocuments));
                         annotatorsProgressImage.setVisible(true);
+
+                        annotatorsProgressPercentageImage.setImageResource(createProgressChart(
+                                annotatorsProgressInPercent, 100));
+                        annotatorsProgressPercentageImage.setVisible(true);
 
                         List<String> documentListAsColumnHeader = new ArrayList<String>();
                         documentListAsColumnHeader.add("Documents");
@@ -223,7 +301,7 @@ public class MonitoringPage
                         }
 
                         List<List<String>> userAnnotationDocumentStatusList = new ArrayList<List<String>>();
-                        
+
                         // Add a timestamp row for every user.
                         List<String> projectTimeStamp = new ArrayList<String>();
                         projectTimeStamp.add(LAST_ACCESS + LAST_ACCESS_ROW); // first column
@@ -233,12 +311,10 @@ public class MonitoringPage
                         for (User user : usersWithPermissions) {
                             if (projectRepository.existsProjectTimeStamp(project,
                                     user.getUsername())) {
-                                projectTimeStamp
-                                        .add(LAST_ACCESS
-                                                + new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
-                                                        .format(projectRepository
-                                                                .getProjectTimeStamp(project,
-                                                                        user.getUsername())));
+                                projectTimeStamp.add(LAST_ACCESS
+                                        + new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
+                                                .format(projectRepository.getProjectTimeStamp(
+                                                        project, user.getUsername())));
                             }
                             else {
                                 projectTimeStamp.add(LAST_ACCESS + "__");
@@ -246,7 +322,6 @@ public class MonitoringPage
                         }
 
                         userAnnotationDocumentStatusList.add(projectTimeStamp);
-
 
                         for (SourceDocument document : documents) {
                             List<String> userAnnotationDocuments = new ArrayList<String>();
@@ -287,12 +362,19 @@ public class MonitoringPage
                             protected void onEvent(AjaxRequestTarget aTarget)
                             {
                                 annotatorsProgress.clear();
-                                annotatorsProgress.putAll(getAnnotatorsProgres(project));
-                                annotatorsProgressImage.setImageResource(createProgressChart(
-                                        annotatorsProgress, totalDocuments));
+                                annotatorsProgress.putAll(getFinishedDocumentsPerUser(project));
                                 annotatorsProgressImage.setImageResource(createProgressChart(
                                         annotatorsProgress, totalDocuments));
                                 aTarget.add(annotatorsProgressImage.setOutputMarkupId(true));
+
+
+                                annotatorsProgressInPercent.clear();
+                                annotatorsProgressInPercent.putAll(getPercentageOfFinishedDocumentsPerUser(project));
+                                annotatorsProgressPercentageImage.setImageResource(createProgressChart(
+                                        annotatorsProgressInPercent, 100));
+                                aTarget.add(annotatorsProgressPercentageImage.setOutputMarkupId(true));
+
+
 
                                 final Map<Project, Integer> projectsProgressPerClosedDocument = getClosedDocumentsInProject();
                                 monitoringDetailForm.remove(projectRepeator);
@@ -488,13 +570,13 @@ public class MonitoringPage
         }
     };
 
-    private Map<String, Integer> getAnnotatorsProgres(Project project)
+    private Map<String, Integer> getFinishedDocumentsPerUser(Project aProject)
     {
         Map<String, Integer> annotatorsProgress = new HashMap<String, Integer>();
-        if (project != null) {
-            for (User user : projectRepository.listProjectUsersWithPermissions(project)) {
-                for (SourceDocument document : projectRepository.listSourceDocuments(project)) {
-                    if (projectRepository.isAnnotationFinished(document, project, user)) {
+        if (aProject != null) {
+            for (User user : projectRepository.listProjectUsersWithPermissions(aProject)) {
+                for (SourceDocument document : projectRepository.listSourceDocuments(aProject)) {
+                    if (projectRepository.isAnnotationFinished(document, aProject, user)) {
                         if (annotatorsProgress.get(user.getUsername()) == null) {
                             annotatorsProgress.put(user.getUsername(), 1);
                         }
@@ -507,6 +589,33 @@ public class MonitoringPage
                 if (annotatorsProgress.get(user.getUsername()) == null) {
                     annotatorsProgress.put(user.getUsername(), 0);
                 }
+            }
+        }
+        return annotatorsProgress;
+    }
+
+    private Map<String, Integer> getPercentageOfFinishedDocumentsPerUser(Project aProject)
+    {
+        Map<String, Integer> annotatorsProgress = new HashMap<String, Integer>();
+        if (aProject != null) {
+            for (User user : projectRepository.listProjectUsersWithPermissions(aProject)) {
+                int finished = 0;
+                int ignored = 0;
+                int totalDocs = 0;
+                for (SourceDocument document : projectRepository.listSourceDocuments(aProject)) {
+                    totalDocs++;
+                    if (projectRepository.isAnnotationFinished(document, aProject, user)) {
+                        finished++;
+                    }
+                    else if (projectRepository.existsAnnotationDocument(document, user)) {
+                        AnnotationDocument annotationDocument = projectRepository
+                                .getAnnotationDocument(document, user);
+                        if (annotationDocument.getState().equals(AnnotationDocumentState.IGNORE)) {
+                            ignored++;
+                        }
+                    }
+                }
+                annotatorsProgress.put(user.getUsername(), (int)Math.round((double)(finished*100)/(totalDocs-ignored)));
             }
         }
         return annotatorsProgress;
@@ -660,70 +769,6 @@ public class MonitoringPage
             }
         }
         return projectsProgressPerClosedDocument;
-    }
-
-    private ProjectSelectionForm projectSelectionForm;
-    private MonitoringDetailForm monitoringDetailForm;
-    private Image annotatorsProgressImage;
-    private DefaultDataTable annotationDocumentStatusTable;
-    private DefaultDataTable agreementTable;
-    private Label projectName;
-    private RepeatingView projectRepeator;
-    private AgreementForm agreementForm;
-    private AnnotationTypeSelectionForm annotationTypeSelectionForm;
-
-    public MonitoringPage()
-        throws UIMAException, IOException, ClassNotFoundException
-    {
-        projectSelectionForm = new ProjectSelectionForm("projectSelectionForm");
-
-        monitoringDetailForm = new MonitoringDetailForm("monitoringDetailForm");
-        // monitoringDetailForm.setVisible(false);
-        agreementForm = new AgreementForm("agreementForm", new Model<AnnotationType>(),
-                new Model<Project>());
-        agreementForm.setVisible(false);
-        add(agreementForm);
-
-        annotationTypeSelectionForm = new AnnotationTypeSelectionForm("annotationTypeSelectionForm");
-        annotationTypeSelectionForm.setVisible(false);
-        add(annotationTypeSelectionForm);
-
-        annotatorsProgressImage = new NonCachingImage("annotator");
-        annotatorsProgressImage.setOutputMarkupPlaceholderTag(true);
-        annotatorsProgressImage.setVisible(false);
-        add(projectSelectionForm);
-        projectName = new Label("projectName", "");
-
-        Project project = projectRepository.listProjects().get(0);
-
-        List<List<String>> userAnnotationDocumentLists = new ArrayList<List<String>>();
-        List<SourceDocument> dc = projectRepository.listSourceDocuments(project);
-        for (User user : projectRepository.listProjectUsersWithPermissions(project)) {
-            List<String> userAnnotationDocument = new ArrayList<String>();
-            userAnnotationDocument.add("");
-            for (int i = 0; i < dc.size(); i++) {
-                userAnnotationDocument.add("");
-            }
-            userAnnotationDocumentLists.add(userAnnotationDocument);
-        }
-        List<String> documentListAsColumnHeader = new ArrayList<String>();
-        documentListAsColumnHeader.add("Users");
-        for (SourceDocument d : dc) {
-            documentListAsColumnHeader.add(d.getName());
-        }
-        TableDataProvider prov = new TableDataProvider(documentListAsColumnHeader,
-                userAnnotationDocumentLists);
-
-        List<IColumn<?>> cols = new ArrayList<IColumn<?>>();
-
-        for (int i = 0; i < prov.getColumnCount(); i++) {
-            cols.add(new DocumentColumnMetaData(prov, i, new Project(), projectRepository));
-        }
-        annotationDocumentStatusTable = new DefaultDataTable("rsTable", cols, prov, 2);
-        monitoringDetailForm.setVisible(false);
-        add(monitoringDetailForm.add(annotatorsProgressImage).add(projectName)
-                .add(annotationDocumentStatusTable));
-        annotationDocumentStatusTable.setVisible(false);
     }
 
     private JFreeChart createPieChart(Map<String, Integer> chartValues)

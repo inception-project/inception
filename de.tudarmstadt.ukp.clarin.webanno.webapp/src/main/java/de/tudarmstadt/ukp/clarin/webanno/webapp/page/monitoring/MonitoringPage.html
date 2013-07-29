@@ -49,10 +49,22 @@
 								<span wicket:id="projectName"></span>
 							</div>
 						</fieldset>
-						<fieldset class="ui-widget-content ui-corner-all">
-							<legend>Progress</legend>
-							<img wicket:id="annotator" alt="Annotation Progress"></img>
-						</fieldset>
+						<table  class="hfill" >
+						 <tr>
+						   <td>
+							<fieldset class="ui-widget-content ui-corner-all">
+								<legend>Progress</legend>
+								<img wicket:id="annotator" alt="Annotation Progress"></img>
+							</fieldset>
+							</td>
+							<td>
+							<fieldset class="ui-widget-content ui-corner-all">
+								<legend>percentage</legend>
+								<img wicket:id="annotatorPercentage" alt="Annotation Progress percentage"></img>
+							</fieldset>
+							</td>
+						 </tr>
+						</table>
 						<fieldset class="ui-widget-content ui-corner-all">
 							<legend>Document status</legend>
 							<table wicket:id="rsTable" class="hfill"></table>
