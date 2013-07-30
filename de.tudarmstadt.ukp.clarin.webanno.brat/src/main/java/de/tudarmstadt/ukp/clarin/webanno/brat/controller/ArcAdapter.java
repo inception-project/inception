@@ -270,15 +270,15 @@ public class ArcAdapter
             AnnotationFS dependentFS;
             AnnotationFS governorFS;
             if (aValue.equals("ROOT")) {
-                dependentFS = (AnnotationFS) BratAjaxCasUtil.selectAnnotationByAddress(aJCas,
+                governorFS = (AnnotationFS) BratAjaxCasUtil.selectAnnotationByAddress(aJCas,
                         FeatureStructure.class, aOriginAddress);
-                governorFS = dependentFS;
+                dependentFS = governorFS;
             }
             else {
                 dependentFS = (AnnotationFS) BratAjaxCasUtil.selectAnnotationByAddress(aJCas,
-                        FeatureStructure.class, aOriginAddress);
-                governorFS = (AnnotationFS) BratAjaxCasUtil.selectAnnotationByAddress(aJCas,
                         FeatureStructure.class, aTargetAddress);
+                governorFS = (AnnotationFS) BratAjaxCasUtil.selectAnnotationByAddress(aJCas,
+                        FeatureStructure.class, aOriginAddress);
             }
             // if span A has (start,end)= (20, 26) and B has (start,end)= (30, 36)
             // arc drawn from A to B, dependency will have (start, end) = (20, 36)
@@ -338,8 +338,8 @@ public class ArcAdapter
                     arcSpanFeature);
             FeatureStructure governorFs = fs.getFeatureValue(governorFeature).getFeatureValue(
                     arcSpanFeature);
-            if (((FeatureStructureImpl) dependentFs).getAddress() == aOriginAddress
-                    && ((FeatureStructureImpl) governorFs).getAddress() == aTargetAddress) {
+            if (((FeatureStructureImpl) governorFs).getAddress() == aOriginAddress
+                    && ((FeatureStructureImpl) dependentFs).getAddress() == aTargetAddress) {
                 fsToDelete = fs;
                 break;
             }
@@ -371,12 +371,12 @@ public class ArcAdapter
             boolean arevers)
     {
         if (arevers) {
-            return asList(new Argument("Arg1", ((FeatureStructureImpl) aGovernorFs).getAddress()),
-                    new Argument("Arg2", ((FeatureStructureImpl) aDependentFs).getAddress()));
-        }
-        else {
             return asList(new Argument("Arg1", ((FeatureStructureImpl) aDependentFs).getAddress()),
                     new Argument("Arg2", ((FeatureStructureImpl) aGovernorFs).getAddress()));
+        }
+        else {
+            return asList(new Argument("Arg1", ((FeatureStructureImpl) aGovernorFs).getAddress()),
+                    new Argument("Arg2", ((FeatureStructureImpl) aDependentFs).getAddress()));
         }
     }
 

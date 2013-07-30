@@ -329,7 +329,7 @@ public class BratAjaxCasController
 
     public CreateArcResponse createArcResponse(BratAnnotatorModel aBratAnnotatorModel,
             int aAnnotationOffsetStart, JCas aJCas, boolean aIsGetDocument, String aType,
-            int aAnnotationOffsetEnd, int aOriginAddress, int aTargetAddress )
+            int aAnnotationOffsetEnd, int aOriginAddress, int aTargetAddress)
         throws UIMAException, IOException
     {
 
@@ -498,7 +498,7 @@ public class BratAjaxCasController
 
         if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
             ArcAdapter.getDependencyAdapter().add(aLabelValue, aOriginAddress, aTargetAddress,
-                    aJCas, aBratAnnotatorModel, false);
+                    aJCas, aBratAnnotatorModel, aBratAnnotatorModel.getProject().isReverseDependencyDirection());
         }
         else if (annotationType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
             ChainAdapter.getCoreferenceChainAdapter().add(aLabelValue, aJCas,
