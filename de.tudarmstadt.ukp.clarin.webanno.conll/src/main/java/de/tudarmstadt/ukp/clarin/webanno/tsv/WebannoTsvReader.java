@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package de.tudarmstadt.ukp.clarin.webanno.conll;
+package de.tudarmstadt.ukp.clarin.webanno.tsv;
 
 import static org.apache.commons.io.IOUtils.closeQuietly;
 
@@ -46,7 +46,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
- * Reads a specific Conll File (9 TAB separated) annotation and change it to CAS object. Example of
+ * Reads a specific TSV File (9 TAB separated) annotation and change it to CAS object. Example of
  * Input Files: 1 Heutzutage heutzutage ADV _ _ 2 ADV _ _ First column: token Number, in a sentence
  * second Column: the token third column: the lemma forth column: the POS fifth/sixth xolumn: Not
  * Yet known seventh column: the target token for a dependency parsing eighth column: the function
@@ -57,7 +57,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  * @author Seid Muhie Yimam
  *
  */
-public class ConllReader
+public class WebannoTsvReader
     extends JCasResourceCollectionReader_ImplBase
 {
 
@@ -87,9 +87,9 @@ public class ConllReader
             if (line.isEmpty()) {
                 continue;
             }
-            if (count != 9) {// not a proper conll file
-                getUimaContext().getLogger().log(Level.INFO, "This is not valid conll File");
-                throw new IOException("This is not valid conll File");
+            if (count != 9) {// not a proper TSV file
+                getUimaContext().getLogger().log(Level.INFO, "This is not valid TSV File");
+                throw new IOException("This is not valid TSV File");
             }
             StringTokenizer lineTk = new StringTokenizer(line, "\t");
 

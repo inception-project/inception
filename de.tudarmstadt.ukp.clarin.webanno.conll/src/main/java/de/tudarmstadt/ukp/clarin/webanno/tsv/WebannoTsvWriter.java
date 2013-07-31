@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package de.tudarmstadt.ukp.clarin.webanno.conll;
+package de.tudarmstadt.ukp.clarin.webanno.tsv;
 
 import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.uimafit.util.JCasUtil.select;
@@ -39,7 +39,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
- * Writes a specific Conll File (9 TAB separated) annotation from the CAS object. Example of output
+ * Writes a specific TSV File (9 TAB separated) annotation from the CAS object. Example of output
  * file: 1 Heutzutage heutzutage ADV _ _ 2 ADV _ _ First column: token Number, in a sentence second
  * Column: the token third column: the lemma forth column: the POS fifth/sixth xolumn: Named Entity
  * annotations in BIO(the sixth column is used to encode nested Named Entity) seventh column: the
@@ -52,7 +52,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  *
  */
 
-public class ConllWriter
+public class WebannoTsvWriter
     extends JCasFileWriter_ImplBase
 {
 
@@ -64,7 +64,7 @@ public class ConllWriter
     private String encoding;
 
     public static final String PARAM_FILENAME_SUFFIX = "filenameSuffix";
-    @ConfigurationParameter(name = PARAM_FILENAME_SUFFIX, mandatory = true, defaultValue = ".conll")
+    @ConfigurationParameter(name = PARAM_FILENAME_SUFFIX, mandatory = true, defaultValue = ".tsv")
     private String filenameSuffix;
 
     @Override

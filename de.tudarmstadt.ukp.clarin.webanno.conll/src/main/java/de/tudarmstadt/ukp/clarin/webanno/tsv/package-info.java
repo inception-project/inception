@@ -18,4 +18,4 @@
 /**
  * Provides classes for the conversion of conll file to and from Brat response formats
  */
-package de.tudarmstadt.ukp.clarin.webanno.conll;
+package de.tudarmstadt.ukp.clarin.webanno.tsv;

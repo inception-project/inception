@@ -30,6 +30,9 @@ import org.apache.uima.collection.CollectionReader;
 import org.junit.Test;
 import org.uimafit.component.xwriter.CASDumpWriter;
 
+import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsvReader;
+import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsvWriter;
+
 public class ConllReaderWriterTest
 {
     @Test
@@ -37,12 +40,12 @@ public class ConllReaderWriterTest
     public void test()
         throws Exception
     {
-        CollectionReader reader = createCollectionReader(ConllReader.class, ConllReader.PARAM_PATH,
-                new File("src/test/resources/conll/").getAbsolutePath(), ConllReader.PARAM_PATTERNS,
+        CollectionReader reader = createCollectionReader(WebannoTsvReader.class, WebannoTsvReader.PARAM_PATH,
+                new File("src/test/resources/conll/").getAbsolutePath(), WebannoTsvReader.PARAM_PATTERNS,
                 new String[] { "[+]fk003_2006_08_ZH1.conll10" });
 
-        AnalysisEngineDescription writer = createPrimitiveDescription(ConllWriter.class,
-                ConllWriter.PARAM_PATH, "target/test-output", ConllWriter.PARAM_STRIP_EXTENSION,
+        AnalysisEngineDescription writer = createPrimitiveDescription(WebannoTsvWriter.class,
+                WebannoTsvWriter.PARAM_PATH, "target/test-output", WebannoTsvWriter.PARAM_STRIP_EXTENSION,
                 true);
 
         AnalysisEngineDescription dumper = createPrimitiveDescription(CASDumpWriter.class,
