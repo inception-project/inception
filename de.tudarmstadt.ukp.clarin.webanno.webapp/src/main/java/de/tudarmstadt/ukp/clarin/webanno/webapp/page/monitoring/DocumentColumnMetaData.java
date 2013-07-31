@@ -316,7 +316,8 @@ public class DocumentColumnMetaData
         boolean allAnnotationDocumentStateFinished = true;
         for (AnnotationDocument annotationDocument : projectRepositoryService
                 .listAnnotationDocument(aProject, aSourceDocument)) {
-            if (!annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
+            if (!(annotationDocument.getState().equals(AnnotationDocumentState.FINISHED) || annotationDocument
+                    .getState().equals(AnnotationDocumentState.IGNORE))) {
                 allAnnotationDocumentStateFinished = false;
                 break;
             }
@@ -324,20 +325,29 @@ public class DocumentColumnMetaData
         if (allAnnotationDocumentStateFinished) {
             String username = SecurityContextHolder.getContext().getAuthentication().getName();
             User user = projectRepositoryService.getUser(username);
-
-            aSourceDocument
-                    .setState(SourceDocumentStateTransition
-                            .transition(SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED));
-            projectRepositoryService.createSourceDocument(aSourceDocument, user);
+            if (!(aSourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED) || aSourceDocument
+                    .getState().equals(SourceDocumentState.CURATION_IN_PROGRESS))) {
+                aSourceDocument
+                        .setState(SourceDocumentStateTransition
+                                .transition(SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED));
+                projectRepositoryService.createSourceDocument(aSourceDocument, user);
+            }
         }
         else {
             String username = SecurityContextHolder.getContext().getAuthentication().getName();
             User user = projectRepositoryService.getUser(username);
 
-            aSourceDocument
-                    .setState(SourceDocumentStateTransition
-                            .transition(SourceDocumentStateTransition.ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS));
-            projectRepositoryService.createSourceDocument(aSourceDocument, user);
+            SourceDocumentStateTransition stateTransition = null;
+            if (aSourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
+                stateTransition = SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS;
+            }
+            if (aSourceDocument.getState().equals(SourceDocumentState.ANNOTATION_FINISHED)) {
+                stateTransition = SourceDocumentStateTransition.ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS;
+            }
+            if (stateTransition != null) {
+                aSourceDocument.setState(SourceDocumentStateTransition.transition(stateTransition));
+                projectRepositoryService.createSourceDocument(aSourceDocument, user);
+            }
         }
     }
 
@@ -358,7 +368,11 @@ public class DocumentColumnMetaData
                 .transition(aAnnotationDocumentStateTransition));
         projectRepositoryService.createAnnotationDocument(annotationDocument);
         try {
-            changeSourceDocumentState(project, aSourceDocument);
+            // update state of source document if the transition is not new-ignore viceversa
+            if (!(annotationDocument.getState().equals(AnnotationDocumentState.NEW) || annotationDocument
+                    .getState().equals(AnnotationDocumentState.IGNORE))) {
+                changeSourceDocumentState(project, aSourceDocument);
+            }
         }
         catch (IOException e) {
             LOG.info("Unable to change state of the document");

@@ -673,6 +673,7 @@ public class MonitoringPage
 
     private void updateAgreementTabel(AjaxRequestTarget aTarget)
     {
+        if (annotationTypes.getModelObject() != null){
         Project project = projectSelectionForm.getModelObject().project;
         if (project != null) {// application is starting
             // TODO the type conversion will not be needed when the type is stored in
@@ -772,6 +773,7 @@ public class MonitoringPage
             agreementTable = new DefaultDataTable("agreementTable", columns, provider, 10);
             agreementForm.add(agreementTable);
             aTarget.add(agreementForm);
+        }
         }
     }
 

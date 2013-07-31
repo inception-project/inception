@@ -76,6 +76,7 @@ import org.uimafit.factory.JCasFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
@@ -110,6 +111,9 @@ public class RepositoryServiceDbData
 
     @Resource(name = "annotationService")
     private AnnotationService annotationService;
+
+    @Resource(name = "userRepository")
+    private UserDao userRepository;
 
     @Value(value = "${backup.keep.time}")
     private long backupKeepTime;
@@ -785,6 +789,16 @@ public class RepositoryServiceDbData
         if (users.isEmpty()) {
             return new ArrayList<AnnotationDocument>();
         }
+
+        // check if the username is in the Users database (imported projects might have username
+        // in the ProjectPermission entry while it is not in the Users database
+        List<String> notInUsers = new ArrayList<String>();
+        for (String user : users) {
+            if(!userRepository.exists(user)) {
+                notInUsers.add(user);
+            }
+        }
+        users.removeAll(notInUsers);
 
         return entityManager
                 .createQuery(
