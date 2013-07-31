@@ -234,7 +234,7 @@
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 			<artifactId>
-				de.tudarmstadt.ukp.clarin.webanno.conll
+				de.tudarmstadt.ukp.clarin.webanno.tsv
 			</artifactId>
 		</dependency>
 		<dependency>

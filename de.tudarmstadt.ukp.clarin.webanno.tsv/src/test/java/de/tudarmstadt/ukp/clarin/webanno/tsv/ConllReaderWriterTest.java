@@ -2,20 +2,20 @@
  * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package de.tudarmstadt.ukp.clarin.webanno.conll;
+package de.tudarmstadt.ukp.clarin.webanno.tsv;
 
 import static org.junit.Assert.assertEquals;
 import static org.uimafit.factory.AnalysisEngineFactory.createPrimitiveDescription;
@@ -30,9 +30,6 @@ import org.apache.uima.collection.CollectionReader;
 import org.junit.Test;
 import org.uimafit.component.xwriter.CASDumpWriter;
 
-import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsvReader;
-import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsvWriter;
-
 public class ConllReaderWriterTest
 {
     @Test
@@ -41,8 +38,8 @@ public class ConllReaderWriterTest
         throws Exception
     {
         CollectionReader reader = createCollectionReader(WebannoTsvReader.class, WebannoTsvReader.PARAM_PATH,
-                new File("src/test/resources/conll/").getAbsolutePath(), WebannoTsvReader.PARAM_PATTERNS,
-                new String[] { "[+]fk003_2006_08_ZH1.conll10" });
+                new File("src/test/resources/tsv/").getAbsolutePath(), WebannoTsvReader.PARAM_PATTERNS,
+                new String[] { "[+]fk003_2006_08_ZH1.tsv" });
 
         AnalysisEngineDescription writer = createPrimitiveDescription(WebannoTsvWriter.class,
                 WebannoTsvWriter.PARAM_PATH, "target/test-output", WebannoTsvWriter.PARAM_STRIP_EXTENSION,
@@ -54,9 +51,9 @@ public class ConllReaderWriterTest
         runPipeline(reader, writer, dumper);
 
         String reference = FileUtils.readFileToString(new File(
-                "src/test/resources/conll/fk003_2006_08_ZH1.conll10"), "UTF-8");
+                "src/test/resources/tsv/fk003_2006_08_ZH1.tsv"), "UTF-8");
         String actual = FileUtils.readFileToString(
-                new File("target/test-output/fk003_2006_08_ZH1.conll"), "UTF-8");
+                new File("target/test-output/fk003_2006_08_ZH1.tsv"), "UTF-8");
         assertEquals(reference, actual);
     }
 }
