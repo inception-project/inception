@@ -2,13 +2,13 @@
  * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,6 +31,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.CheckBoxMultipleChoice;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
@@ -46,6 +47,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -100,7 +102,26 @@ public class AnnotationPreferenceModalPanel
             windowSizeField.setType(Integer.class);
             windowSizeField.setMinimum(1);
             add(windowSizeField);
-            add(new CheckBox("displayLemma"));
+            add(new CheckBox("displayLemma")    {
+                private static final long serialVersionUID = 6875270671499921169L;
+
+                @Override
+                public boolean isVisible()
+                {
+                    return bratAnnotatorModel.getMode().equals(Mode.ANNOTATION);
+                }
+            });
+            add(new Label("displayLemmaLabel", "Display Lemma:") {
+
+                private static final long serialVersionUID = -22913373405728018L;
+
+                @Override
+                public boolean isVisible()
+                {
+                    return bratAnnotatorModel.getMode().equals(Mode.ANNOTATION);
+                }
+            });
+
 
             add(tagSets = (CheckBoxMultipleChoice<TagSet>) new CheckBoxMultipleChoice<TagSet>(
                     "annotationLayers")
@@ -122,7 +143,27 @@ public class AnnotationPreferenceModalPanel
                 }
             });
             // Add a Checkbox to enable/disable automatic page navigations while annotating
-            add(new CheckBox("scrollPage"));
+            add(new CheckBox("scrollPage")  {
+
+                private static final long serialVersionUID = -7060686321783986572L;
+
+                @Override
+                public boolean isVisible()
+                {
+                    return bratAnnotatorModel.getMode().equals(Mode.ANNOTATION);
+                }
+            });
+
+            add(new Label("scrollPageLabel", "Auto-scroll document while annotating :") {
+                private static final long serialVersionUID = 7687134329746897190L;
+
+                @Override
+                public boolean isVisible()
+                {
+                    return bratAnnotatorModel.getMode().equals(Mode.ANNOTATION);
+                }
+            });
+
 
             add(new AjaxSubmitLink("saveButton")
             {
