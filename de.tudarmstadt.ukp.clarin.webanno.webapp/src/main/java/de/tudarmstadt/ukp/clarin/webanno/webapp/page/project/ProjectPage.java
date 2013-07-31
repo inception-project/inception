@@ -273,9 +273,12 @@ public class ProjectPage
                     uploadedFile = fileUpload.getFileUpload();
                     if (uploadedFile != null) {
                         try {
+
                             if (ApplicationUtils.isZipStream(uploadedFile.getInputStream())) {
-                                File file = uploadedFile.writeToTempFile();
-                                ZipFile zip = new ZipFile(file);
+
+                                File zipFfile = uploadedFile.writeToTempFile();
+                                 if(ApplicationUtils.isZipValidWebanno(zipFfile)){
+                                ZipFile zip = new ZipFile(zipFfile);
                                 InputStream projectInputStream = null;
                                 for (Enumeration zipEnumerate = zip.entries(); zipEnumerate
                                         .hasMoreElements();) {
@@ -335,6 +338,10 @@ public class ProjectPage
                                             projectRepository);
 
                                 }
+                                 }
+                                 else{
+                                     error("Incompatible to webanno ZIP file");
+                                 }
                             }
                             else {
                                 error("Invalid ZIP file");

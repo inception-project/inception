@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.StringTokenizer;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
 import javax.persistence.NoResultException;
@@ -339,6 +340,26 @@ public class ApplicationUtils
         return isZip;
        }
 
+    /**
+     * Check if the zip file is webanno compatible
+     *
+     */
+    public static  boolean isZipValidWebanno(File aZipFile) throws ZipException, IOException {
+
+        boolean isZipValidWebanno = false;
+        ZipFile zip = new ZipFile(aZipFile);
+        for (Enumeration zipEnumerate = zip.entries(); zipEnumerate
+                .hasMoreElements();) {
+            ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
+            if (entry.toString().replace("/", "")
+                    .startsWith(ApplicationUtils.EXPORTED_PROJECT)
+                    && entry.toString().replace("/", "").endsWith(".json")) {
+                isZipValidWebanno = true;
+                break;
+            }
+        }
+        return isZipValidWebanno;
+       }
     /**
      * Stores, for every tokens, the start and end position offsets : used for multiple span
      * annotations
