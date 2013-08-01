@@ -334,9 +334,13 @@ public class AnnotationServiceImpl
     @Transactional
     public List<Tag> listTags(TagSet aTagSet)
     {
-        return entityManager
+        List<Tag> tags = entityManager
                 .createQuery("FROM Tag WHERE tagSet = :tagSet ORDER BY name ASC", Tag.class)
                 .setParameter("tagSet", aTagSet).getResultList();
+        for(int i=0;i<tags.size();i++){
+            tags.get(i).setName(tags.get(i).getName().toUpperCase());
+        }
+        return tags;
     }
 
     @Override

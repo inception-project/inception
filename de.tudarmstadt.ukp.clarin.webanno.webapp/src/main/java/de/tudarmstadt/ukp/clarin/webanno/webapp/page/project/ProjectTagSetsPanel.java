@@ -2,13 +2,13 @@
  * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -560,17 +560,14 @@ public class ProjectTagSetsPanel
                             os = (OutputStream) new FileOutputStream(exportFile);
                             osw = new OutputStreamWriter(os, "UTF-8");
                             bw = new BufferedWriter(osw);
-                            bw.write(tagSet.getName()
-                                    + "\t"
+                            bw.write(tagSet.getName() + "\t"
                                     + tagSet.getDescription().replace("\n", "\\n") + "\n");
                             bw.write(tagSet.getType().getType() + "\t" + " \n");
-                            bw.write(tagSet.getType().getName()
-                                    + "\t"
+                            bw.write(tagSet.getType().getName() + "\t"
                                     + tagSet.getType().getDescription().replace("\n", "\\n") + "\n");
                             bw.write(tagSet.getLanguage() + "\t" + " \n");
                             for (Tag tag : annotationService.listTags(tagSet)) {
-                                bw.write(tag.getName()
-                                        + "\t"
+                                bw.write(tag.getName() + "\t"
                                         + tag.getDescription().replace("\n", "\\n") + "\n");
                             }
 
@@ -690,7 +687,16 @@ public class ProjectTagSetsPanel
                             return annotationService.listTags(tagSetDetailForm.getModelObject());
                         }
                     });
-                    setChoiceRenderer(new ChoiceRenderer<Tag>("name", "id"));
+                    setChoiceRenderer(new ChoiceRenderer<Tag>()
+                    {
+                        private static final long serialVersionUID = 4696303692557735150L;
+
+                        @Override
+                        public Object getDisplayValue(Tag aObject)
+                        {
+                            return aObject.getName().toUpperCase();
+                        }
+                    });
                     setNullValid(false);
 
                 }
