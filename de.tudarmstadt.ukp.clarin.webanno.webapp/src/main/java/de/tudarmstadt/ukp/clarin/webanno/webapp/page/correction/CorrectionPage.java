@@ -69,6 +69,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.Annota
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.ExportModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.FinishImage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.FinishLink;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.GuidelineModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.BratCuratorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.CurationSegmentPanel;
@@ -724,6 +725,9 @@ public class CorrectionPage
                 }
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.End }, EventType.click)));
+
+        add(new GuidelineModalPanel("guidelineModalPanel",
+                new Model<BratAnnotatorModel>(bratAnnotatorModel)));
     }
 
     /**

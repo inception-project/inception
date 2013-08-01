@@ -26,7 +26,6 @@ import javax.persistence.NoResultException;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
-import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
@@ -58,14 +57,14 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.GuidelineModalWindowPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenDocumentModel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenModalWindowPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.AnnotationLayersModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.ExportModalPanel;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.FinishLink;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.FinishImage;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.FinishLink;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.GuidelineModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome.WelcomePage;
 
 /**
@@ -561,38 +560,8 @@ public class AnnotationPage
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.End }, EventType.click)));
 
-        final ModalWindow guidelineModal;
-        add(guidelineModal = new ModalWindow("guidelineModal"));
-
-        guidelineModal.setInitialWidth(550);
-        guidelineModal.setInitialHeight(450);
-        guidelineModal.setResizable(true);
-        guidelineModal.setWidthUnit("px");
-        guidelineModal.setHeightUnit("px");
-        guidelineModal.setTitle("Open Annotation Guideline, in separate window");
-
-        guidelineModal.setPageCreator(new ModalWindow.PageCreator()
-        {
-            private static final long serialVersionUID = -2827824968207807739L;
-
-            @Override
-            public Page createPage()
-            {
-                return new GuidelineModalWindowPage(guidelineModal, bratAnnotatorModel.getProject());
-            }
-
-        });
-        add(new AjaxLink<Void>("showGuidelineModal")
-        {
-            private static final long serialVersionUID = 7496156015186497496L;
-
-            @Override
-            public void onClick(AjaxRequestTarget target)
-            {
-                guidelineModal.show(target);
-
-            }
-        });
+        add(new GuidelineModalPanel("guidelineModalPanel",
+                new Model<BratAnnotatorModel>(bratAnnotatorModel)));
 
         gotoPageTextField = (NumberTextField<Integer>) new NumberTextField<Integer>("gotoPageText",
                 new Model<Integer>(10));

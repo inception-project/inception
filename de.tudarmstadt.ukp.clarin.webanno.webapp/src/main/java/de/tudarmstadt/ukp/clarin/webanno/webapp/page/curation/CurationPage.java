@@ -62,6 +62,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.ReMergeCasModel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.YesNoModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.AnnotationLayersModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.ExportModalPanel;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.GuidelineModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationContainer;
@@ -277,13 +278,12 @@ public class CurationPage
                                 curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
                                 updatePanel(curationContainer);
 
-
                             }
                             catch (UIMAException e) {
                                 error(ExceptionUtils.getRootCause(e));
                             }
                             catch (ClassNotFoundException e) {
-                                error(ExceptionUtils.getRootCause(e));
+                                error("Unable to find the reader/writer class [" +e.getMessage()+"]" );
                             }
                             catch (IOException e) {
                                 error(ExceptionUtils.getRootCause(e));
@@ -507,6 +507,9 @@ public class CurationPage
         });
 
         showFinishCurationModal.add(finish);
+
+        add(new GuidelineModalPanel("guidelineModalPanel",
+                new Model<BratAnnotatorModel>(bratAnnotatorModel)));
 
         final ModalWindow reCreateMergeCas;
         add(reCreateMergeCas = new ModalWindow("reCreateMergeCasModal"));
