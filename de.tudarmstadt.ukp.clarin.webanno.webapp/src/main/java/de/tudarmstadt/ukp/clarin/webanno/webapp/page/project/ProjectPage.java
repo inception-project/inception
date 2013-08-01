@@ -95,7 +95,6 @@ public class ProjectPage
     @SpringBean(name = "documentRepository")
     private RepositoryService projectRepository;
 
-
     private ProjectSelectionForm projectSelectionForm;
     private ProjectDetailForm projectDetailForm;
     private ImportProjectForm importProjectForm;
@@ -201,7 +200,8 @@ public class ProjectPage
                                 @Override
                                 public int compare(Project proj1, Project proj2)
                                 {
-                                    return (proj1.getName().toLowerCase()).compareTo(proj2.getName().toLowerCase());
+                                    return (proj1.getName().toLowerCase()).compareTo(proj2
+                                            .getName().toLowerCase());
                                 }
                             });
                         }
@@ -277,33 +277,30 @@ public class ProjectPage
                             if (ApplicationUtils.isZipStream(uploadedFile.getInputStream())) {
 
                                 File zipFfile = uploadedFile.writeToTempFile();
-                                 if(ApplicationUtils.isZipValidWebanno(zipFfile)){
-                                ZipFile zip = new ZipFile(zipFfile);
-                                InputStream projectInputStream = null;
-                                for (Enumeration zipEnumerate = zip.entries(); zipEnumerate
-                                        .hasMoreElements();) {
-                                    ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
-                                    if (entry.toString().replace("/", "")
-                                            .startsWith(ApplicationUtils.EXPORTED_PROJECT)
-                                            && entry.toString().replace("/", "").endsWith(".json")) {
-                                        projectInputStream = zip.getInputStream(entry);
-                                        break;
+                                if (ApplicationUtils.isZipValidWebanno(zipFfile)) {
+                                    ZipFile zip = new ZipFile(zipFfile);
+                                    InputStream projectInputStream = null;
+                                    for (Enumeration zipEnumerate = zip.entries(); zipEnumerate
+                                            .hasMoreElements();) {
+                                        ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
+                                        if (entry.toString().replace("/", "")
+                                                .startsWith(ApplicationUtils.EXPORTED_PROJECT)
+                                                && entry.toString().replace("/", "")
+                                                        .endsWith(".json")) {
+                                            projectInputStream = zip.getInputStream(entry);
+                                            break;
+                                        }
                                     }
-                                }
 
-                                // projectInputStream = uploadedFile.getInputStream();
-                                String text = IOUtils.toString(projectInputStream, "UTF-8");
-                                MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
-                                de.tudarmstadt.ukp.clarin.webanno.export.model.Project importedProjectSetting = jsonConverter
-                                        .getObjectMapper()
-                                        .readValue(
-                                                text,
-                                                de.tudarmstadt.ukp.clarin.webanno.export.model.Project.class);
-                                if (projectRepository.existsProject(importedProjectSetting
-                                        .getName())) {
-                                    error("Project already exist");
-                                }
-                                else {
+                                    // projectInputStream = uploadedFile.getInputStream();
+                                    String text = IOUtils.toString(projectInputStream, "UTF-8");
+                                    MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
+                                    de.tudarmstadt.ukp.clarin.webanno.export.model.Project importedProjectSetting = jsonConverter
+                                            .getObjectMapper()
+                                            .readValue(
+                                                    text,
+                                                    de.tudarmstadt.ukp.clarin.webanno.export.model.Project.class);
+
                                     Project importedProject = ApplicationUtils.createProject(
                                             importedProjectSetting, projectRepository);
                                     ApplicationUtils.createSourceDocument(importedProjectSetting,
@@ -336,12 +333,10 @@ public class ProjectPage
                                     // cretae project META-INF
                                     ApplicationUtils.createProjectMetaInf(zip, importedProject,
                                             projectRepository);
-
                                 }
-                                 }
-                                 else{
-                                     error("Incompatible to webanno ZIP file");
-                                 }
+                                else {
+                                    error("Incompatible to webanno ZIP file");
+                                }
                             }
                             else {
                                 error("Invalid ZIP file");
@@ -525,8 +520,9 @@ public class ProjectPage
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
             // Add check box to enable/disable arc directions of dependency parsing
             add(new CheckBox("reverseDependencyDirection"));
-            add(projectType = (RadioChoice<Mode>) new RadioChoice<Mode>("mode", Arrays.asList(new Mode[] { Mode.ANNOTATION,
-                    Mode.CORRECTION })).setEnabled(createProject));
+            add(projectType = (RadioChoice<Mode>) new RadioChoice<Mode>("mode",
+                    Arrays.asList(new Mode[] { Mode.ANNOTATION, Mode.CORRECTION }))
+                    .setEnabled(createProject));
             add(new Button("save", new ResourceModel("label"))
             {
 
