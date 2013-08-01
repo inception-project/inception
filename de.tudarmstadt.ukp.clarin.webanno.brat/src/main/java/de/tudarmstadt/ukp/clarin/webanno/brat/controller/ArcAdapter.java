@@ -247,8 +247,8 @@ public class ArcAdapter
                     arcSpanFeature);
             FeatureStructure governorFs = fs.getFeatureValue(governorFeature).getFeatureValue(
                     arcSpanFeature);
-            if (((FeatureStructureImpl) dependentFs).getAddress() == aOriginAddress
-                    && ((FeatureStructureImpl) governorFs).getAddress() == aTargetAddress
+            if (((FeatureStructureImpl) dependentFs).getAddress() == aTargetAddress
+                    && ((FeatureStructureImpl) governorFs).getAddress() == aOriginAddress
                     && !aValue.equals(AnnotationTypeConstant.ROOT)) {
 
                 // It is update of arc value, update it
