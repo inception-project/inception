@@ -33,19 +33,20 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.OffsetsList;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
  * A helper class for {@link BratAnnotator} and CurationEditor
+ *
  * @author Seid Muhie Yimam
  *
  */
 public class BratAnnotatorUtility
 {
 
-    public static Object getDocument(
-            BratAnnotatorUIData aUIData, RepositoryService repository,
+    public static Object getDocument(BratAnnotatorUIData aUIData, RepositoryService repository,
             AnnotationService annotationService, BratAnnotatorModel bratAnnotatorModel)
         throws ClassNotFoundException, IOException, UIMAException
     {
@@ -216,12 +217,19 @@ public class BratAnnotatorUtility
         return result;
     }
 
-    public static boolean isDocumentFinished(RepositoryService aRepository, BratAnnotatorModel aBratAnnotatorModel)
+    public static boolean isDocumentFinished(RepositoryService aRepository,
+            BratAnnotatorModel aBratAnnotatorModel)
     {
         // if annotationDocument is finished, disable editing
         boolean finished = false;
         try {
-            if (aRepository
+            if(aBratAnnotatorModel.getMode().equals(Mode.CURATION)){
+                if (aBratAnnotatorModel.getDocument().getState()
+                        .equals(SourceDocumentState.CURATION_FINISHED)) {
+                    finished = true;
+                }
+            }
+            else if (aRepository
                     .getAnnotationDocument(aBratAnnotatorModel.getDocument(),
                             aBratAnnotatorModel.getUser()).getState()
                     .equals(AnnotationDocumentState.FINISHED)
@@ -238,5 +246,4 @@ public class BratAnnotatorUtility
 
         return finished;
     }
-
 }

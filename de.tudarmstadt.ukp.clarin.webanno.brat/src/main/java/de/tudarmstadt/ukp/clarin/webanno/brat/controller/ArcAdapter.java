@@ -34,7 +34,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorUIData;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Argument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Relation;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -125,11 +124,6 @@ public class ArcAdapter
     public void render(JCas aJcas, GetDocumentResponse aResponse,
             BratAnnotatorModel aBratAnnotatorModel)
     {
-
-        // Remove prefixes from response if it is in curation mode
-        if (aBratAnnotatorModel.getMode().equals(Mode.CURATION) || aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)) {
-            typePrefix = "";
-        }
 
         boolean reverse = aBratAnnotatorModel.getProject().isReverseDependencyDirection();
         // The first sentence address in the display window!

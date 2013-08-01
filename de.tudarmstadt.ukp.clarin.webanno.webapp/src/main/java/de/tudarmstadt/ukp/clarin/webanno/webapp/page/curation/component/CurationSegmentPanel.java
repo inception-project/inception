@@ -122,8 +122,8 @@ public class CurationSegmentPanel
                     @Override
                     protected void onSelectAnnotationForMerge(AjaxRequestTarget aTarget)
                     {
-                        if (BratAnnotatorUtility
-                                .isDocumentFinished(repository, curationUserSegment.getBratAnnotatorModel())) {
+                        if (BratAnnotatorUtility.isDocumentFinished(repository,
+                                curationUserSegment.getBratAnnotatorModel())) {
                             error("This document is already closed. Please ask admin to re-open");
                             aTarget.appendJavaScript("alert('This document is already closed. Please ask admin to re-open')");
                         }
@@ -170,7 +170,7 @@ public class CurationSegmentPanel
                             }
                             onChange(aTarget);
                         }
-                       // aTarget.add(feedbackPanel);
+                        // aTarget.add(feedbackPanel);
                     }
                 };
                 curationVisualizer.setOutputMarkupId(true);

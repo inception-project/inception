@@ -44,7 +44,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -172,7 +171,7 @@ public class BratCuratorUtility
             }
             AnnotationFS fsClicked = (AnnotationFS) clickedJCas.getLowLevelCas().ll_getFSForRef(
                     addressOriginClicked);
-            arcType = BratAjaxCasUtil.getAnnotationType(fsClicked.getType()) + arcType;
+           // arcType = BratAjaxCasUtil.getAnnotationType(fsClicked.getType()) + arcType;
             BratAjaxCasController controller = new BratAjaxCasController(repository,
                     annotationService);
             try {
@@ -217,7 +216,7 @@ public class BratCuratorUtility
         // TODO temporarily solution to remove the the prefix from curation
         // sentence annotation
         // views
-        spanType = BratAjaxCasUtil.getAnnotationType(fsClicked.getType()) + spanType;
+      //  spanType = BratAjaxCasUtil.getAnnotationType(fsClicked.getType()) + spanType;
 
         BratAjaxCasController controller = new BratAjaxCasController(aRepository,
                 aAnnotationService);
@@ -296,26 +295,6 @@ public class BratCuratorUtility
         AnnotationPreference preference = new AnnotationPreference();
         ApplicationUtils.setAnnotationPreference(preference, userLoggedIn.getUsername(),
                 aRepository, aAnnotationService, bratAnnotatorModel, Mode.CURATION);
-        return bratAnnotatorModel;
-    }
-
-    public static BratAnnotatorModel setCorrectionBratAnnotatorModel(
-            BratAnnotatorModel aBratAnnotatorModel, RepositoryService aRepository,
-            CurationSegmentForSourceDocument aCurationSegment, AnnotationService aAnnotationService)
-        throws BeansException, FileNotFoundException, IOException
-    {
-        User userLoggedIn = aRepository.getUser(SecurityContextHolder.getContext()
-                .getAuthentication().getName());
-        BratAnnotatorModel bratAnnotatorModel = new BratAnnotatorModel();// .getModelObject();
-        bratAnnotatorModel.setDocument(aBratAnnotatorModel.getDocument());
-        bratAnnotatorModel.setProject(aBratAnnotatorModel.getProject());
-        bratAnnotatorModel.setUser(userLoggedIn);
-        bratAnnotatorModel.setFirstSentenceAddress(aBratAnnotatorModel.getFirstSentenceAddress());
-        bratAnnotatorModel.setLastSentenceAddress(aBratAnnotatorModel.getLastSentenceAddress());
-        bratAnnotatorModel.setSentenceAddress(aBratAnnotatorModel.getSentenceAddress());
-        bratAnnotatorModel.setAnnotationLayers(aBratAnnotatorModel.getAnnotationLayers());
-        bratAnnotatorModel.setWindowSize(aBratAnnotatorModel.getWindowSize());
-        bratAnnotatorModel.setMode(Mode.CORRECTION_MERGE);
         return bratAnnotatorModel;
     }
 
@@ -595,30 +574,20 @@ public class BratCuratorUtility
         if (!aCurationContainer.getBratAnnotatorModel().getMode().equals(Mode.CORRECTION)) {
             bratAnnotatorModel = BratCuratorUtility.setBratAnnotatorModel(sourceDocument,
                     aRepository, aCurationSegment, aAnnotationService);
+        }
+        else {
+            bratAnnotatorModel = aCurationContainer.getBratAnnotatorModel();
+        }
+
             BratCuratorUtility.populateCurationSentences(jCases, sentences, bratAnnotatorModel,
                     annotationOptions, aAnnotationSelectionByUsernameAndAddress, aJsonConverter);
             // update sentence list on the right side
             aParent.setModelObject(sentences);
-            bratAnnotatorModel.setMode(Mode.CURATION_MERGE);
             aMergeVisualizer.setModelObject(bratAnnotatorModel);
             aMergeVisualizer.reloadContent(aTarget);
 
             aTarget.add(aParent);
-        }
-        else {
-            BratCuratorUtility.populateCurationSentences(jCases, sentences,
-                    aCurationContainer.getBratAnnotatorModel(), annotationOptions,
-                    aAnnotationSelectionByUsernameAndAddress, aJsonConverter);
-            // update sentence list on the right side
-            bratAnnotatorModel = setCorrectionBratAnnotatorModel(
-                    aCurationContainer.getBratAnnotatorModel(), aRepository, aCurationSegment,
-                    aAnnotationService);
-            aParent.setModelObject(sentences);
-            aMergeVisualizer.setModelObject(bratAnnotatorModel);
-            aMergeVisualizer.reloadContent(aTarget);
 
-            aTarget.add(aParent);
-        }
 
     }
 }
