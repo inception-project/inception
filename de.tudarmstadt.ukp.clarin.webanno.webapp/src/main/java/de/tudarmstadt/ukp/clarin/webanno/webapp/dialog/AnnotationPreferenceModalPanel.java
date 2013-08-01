@@ -111,8 +111,7 @@ public class AnnotationPreferenceModalPanel
                     return bratAnnotatorModel.getMode().equals(Mode.ANNOTATION);
                 }
             });
-            add(new Label("displayLemmaLabel", "Display Lemma:") {
-
+            add(new Label("displayLemmaLabel", "Display Lemma:"){
                 private static final long serialVersionUID = -22913373405728018L;
 
                 @Override
@@ -143,14 +142,14 @@ public class AnnotationPreferenceModalPanel
                 }
             });
             // Add a Checkbox to enable/disable automatic page navigations while annotating
-            add(new CheckBox("scrollPage")  {
-
-                private static final long serialVersionUID = -7060686321783986572L;
+            add(new CheckBox("scrollPage"){
+                private static final long serialVersionUID = 8103688361110230362L;
 
                 @Override
                 public boolean isVisible()
                 {
-                    return bratAnnotatorModel.getMode().equals(Mode.ANNOTATION);
+                    return
+                            !bratAnnotatorModel.getMode().equals(Mode.CURATION);
                 }
             });
 
@@ -160,7 +159,7 @@ public class AnnotationPreferenceModalPanel
                 @Override
                 public boolean isVisible()
                 {
-                    return bratAnnotatorModel.getMode().equals(Mode.ANNOTATION);
+                    return !bratAnnotatorModel.getMode().equals(Mode.CURATION);
                 }
             });
 

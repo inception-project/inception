@@ -126,6 +126,7 @@ public class AnnotationPage
             protected void onChange(AjaxRequestTarget aTarget)
             {
                 // updateRightSide(aTarget, sentenceOuterView, curationContainer, this);
+                aTarget.add(numberOfPages);
             }
         };
         annotator.setOutputMarkupId(true);
