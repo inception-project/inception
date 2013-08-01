@@ -65,6 +65,17 @@ public class SpanAdapter
     private String typePrefix;
 
     /**
+     * A field that takes the name of the feature which should be set, e.e. "pos" or "lemma".
+     */
+    private String attachFeature;
+
+    /**
+     * A field that takes the name of the annotation to attach to, e.g.
+     * "de.tudarmstadt...type.Token" (Token.class.getName())
+     */
+    private String attachType;
+
+    /**
      * The UIMA type name.
      */
     private String annotationTypeName;
@@ -75,14 +86,15 @@ public class SpanAdapter
     private String labelFeatureName;
 
     private boolean singleTokenBehavior = false;
-    private boolean addPosToToken;
-    private boolean addLemmaToToken;
 
-    public SpanAdapter(String aTypePrefix, String aTypeName, String aLabelFeatureName)
+
+    public SpanAdapter(String aTypePrefix, String aTypeName, String aLabelFeatureName, String aAttachFeature, String aAttachType)
     {
         typePrefix = aTypePrefix;
         labelFeatureName = aLabelFeatureName;
         annotationTypeName = aTypeName;
+        attachFeature = aAttachFeature;
+        attachType = aAttachType;
     }
 
     /**
@@ -103,45 +115,6 @@ public class SpanAdapter
     {
         return singleTokenBehavior;
     }
-
-    /**
-     *
-     * @see #setAddPosToToken(boolean)
-     */
-    public boolean isAddPosToToken()
-    {
-        return addPosToToken;
-    }
-
-    /**
-     * Attach POS to a Token layer
-     *
-     * @param aAddPosToToken
-     */
-    public void setAddPosToToken(boolean aAddPosToToken)
-    {
-        addPosToToken = aAddPosToToken;
-    }
-
-    /**
-     *
-     * @see #addLemmaToToken
-     */
-    public boolean isAddLemmaToToken()
-    {
-        return addLemmaToToken;
-    }
-
-    /**
-     * Attach Lemma to a Token layer
-     *
-     * @param aAddLemmaToToken
-     */
-    public void setAddLemmaToToken(boolean aAddLemmaToToken)
-    {
-        addLemmaToToken = aAddLemmaToToken;
-    }
-
     /**
      * Add annotations from the CAS, which is controlled by the window size, to the brat response
      * {@link GetDocumentResponse}
@@ -158,7 +131,8 @@ public class SpanAdapter
             BratAnnotatorModel aBratAnnotatorModel)
     {
         // Remove prefixes from response if it is in curation mode or Correction Mode
-        if (aBratAnnotatorModel.getMode().equals(Mode.CURATION) || aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)) {
+        if (aBratAnnotatorModel.getMode().equals(Mode.CURATION)
+                || aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)) {
             typePrefix = "";
         }
         // The first sentence address in the display window!
@@ -218,7 +192,8 @@ public class SpanAdapter
      * @param aLabelValue
      *            the value of the annotation for the span
      */
-    public void add(String aLabelValue, JCas aJcas, int aAnnotationOffsetStart, int aAnnotationOffsetEnd)
+    public void add(String aLabelValue, JCas aJcas, int aAnnotationOffsetStart,
+            int aAnnotationOffsetEnd)
     {
         Map<Integer, Integer> offsets = ApplicationUtils.offsets(aJcas);
 
@@ -232,8 +207,7 @@ public class SpanAdapter
         else {
             int startAndEnd[] = ApplicationUtils.getTokenStart(offsets, aAnnotationOffsetStart,
                     aAnnotationOffsetEnd);
-            updateCas(aJcas.getCas(), startAndEnd[0],
-                    startAndEnd[1], aLabelValue);
+            updateCas(aJcas.getCas(), startAndEnd[0], startAndEnd[1], aLabelValue);
         }
     }
 
@@ -258,19 +232,12 @@ public class SpanAdapter
         if (!duplicate) {
             AnnotationFS newAnnotation = aCas.createAnnotation(type, aBegin, aEnd);
             newAnnotation.setStringValue(feature, aValue);
-            // Attach the POS to a Token
-            if (addPosToToken) {
-                Type tokenType = CasUtil.getType(aCas, Token.class.getName());
-                Feature posFeature = tokenType.getFeatureByBaseName("pos");
-                CasUtil.selectCovered(aCas, tokenType, aBegin, aEnd).get(0)
+
+            if (attachFeature!=null) {
+                Type theType = CasUtil.getType(aCas, attachType);
+                Feature posFeature = theType.getFeatureByBaseName(attachFeature);
+                CasUtil.selectCovered(aCas, theType, aBegin, aEnd).get(0)
                         .setFeatureValue(posFeature, newAnnotation);
-            }
-            // Attach the Lemma to a Token
-            if (addLemmaToToken) {
-                Type tokenType = CasUtil.getType(aCas, Token.class.getName());
-                Feature lemmaFeature = tokenType.getFeatureByBaseName("lemma");
-                CasUtil.selectCovered(aCas, tokenType, aBegin, aEnd).get(0)
-                        .setFeatureValue(lemmaFeature, newAnnotation);
             }
             aCas.addFsToIndexes(newAnnotation);
         }
@@ -299,9 +266,8 @@ public class SpanAdapter
     public static final SpanAdapter getPosAdapter()
     {
         SpanAdapter adapter = new SpanAdapter(AnnotationTypeConstant.POS_PREFIX,
-                POS.class.getName(), AnnotationTypeConstant.POS_FEATURENAME);
+                POS.class.getName(), AnnotationTypeConstant.POS_FEATURENAME,"pos",Token.class.getName());
         adapter.setSingleTokenBehavior(true);
-        adapter.setAddPosToToken(true);
         return adapter;
     }
 
@@ -313,9 +279,8 @@ public class SpanAdapter
     public static final SpanAdapter getLemmaAdapter()
     {
         SpanAdapter adapter = new SpanAdapter("", Lemma.class.getName(),
-                AnnotationTypeConstant.LEMMA_FEATURENAME);
+                AnnotationTypeConstant.LEMMA_FEATURENAME,"lemma", Token.class.getName());
         adapter.setSingleTokenBehavior(true);
-        adapter.setAddLemmaToToken(true);
         return adapter;
     }
 
@@ -327,7 +292,7 @@ public class SpanAdapter
     public static final SpanAdapter getNamedEntityAdapter()
     {
         SpanAdapter adapter = new SpanAdapter(AnnotationTypeConstant.NAMEDENTITY_PREFIX,
-                NamedEntity.class.getName(), AnnotationTypeConstant.NAMEDENTITY_FEATURENAME);
+                NamedEntity.class.getName(), AnnotationTypeConstant.NAMEDENTITY_FEATURENAME,null,null);
         adapter.setSingleTokenBehavior(false);
         return adapter;
     }
