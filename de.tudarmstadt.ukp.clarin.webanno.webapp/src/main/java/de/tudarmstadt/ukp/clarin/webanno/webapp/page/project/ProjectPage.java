@@ -23,8 +23,6 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -175,7 +173,7 @@ public class ProjectPage
                             // if global admin, show all projects
                             for (Authority authority : authorities) {
                                 if (authority.getRole().equals("ROLE_ADMIN")) {
-                                    sortProjects(allProjects);
+                                    ApplicationUtils.sortProjects(allProjects);
                                     return allProjects;
                                 }
                             }
@@ -187,23 +185,8 @@ public class ProjectPage
                                     allowedProject.add(project);
                                 }
                             }
-                            sortProjects(allowedProject);
-
+                            ApplicationUtils.sortProjects(allowedProject);
                             return allowedProject;
-                        }
-
-                        private void sortProjects(List<Project> allowedProject)
-                        {
-                            // sort projects by name
-                            Collections.sort(allowedProject, new Comparator<Project>()
-                            {
-                                @Override
-                                public int compare(Project proj1, Project proj2)
-                                {
-                                    return (proj1.getName().toLowerCase()).compareTo(proj2
-                                            .getName().toLowerCase());
-                                }
-                            });
                         }
                     });
                     setChoiceRenderer(new ChoiceRenderer<Project>("name"));

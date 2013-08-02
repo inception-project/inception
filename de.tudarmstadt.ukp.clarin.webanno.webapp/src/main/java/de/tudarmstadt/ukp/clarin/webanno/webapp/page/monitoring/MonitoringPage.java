@@ -229,6 +229,7 @@ public class MonitoringPage
                             // if global admin, show all projects
                             for (Authority authority : authorities) {
                                 if (authority.getRole().equals("ROLE_ADMIN")) {
+                                    ApplicationUtils.sortProjects(allProjects);
                                     return allProjects;
                                 }
                             }
@@ -242,6 +243,8 @@ public class MonitoringPage
                                     allowedProject.add(project);
                                 }
                             }
+
+                            ApplicationUtils.sortProjects(allowedProject);
                             return allowedProject;
                         }
                     });
@@ -673,107 +676,108 @@ public class MonitoringPage
 
     private void updateAgreementTabel(AjaxRequestTarget aTarget)
     {
-        if (annotationTypes.getModelObject() != null){
-        Project project = projectSelectionForm.getModelObject().project;
-        if (project != null) {// application is starting
-            // TODO the type conversion will not be needed when the type is stored in
-            // the
-            // database
+        if (annotationTypes.getModelObject() != null) {
+            Project project = projectSelectionForm.getModelObject().project;
+            if (project != null) {// application is starting
+                // TODO the type conversion will not be needed when the type is stored in
+                // the
+                // database
 
-            String type = getType(annotationTypes.getModelObject().getName());
-            String featureName = getFeatureName(annotationTypes.getModelObject().getName());
-            List<User> users = projectRepository.listProjectUsersWithPermissions(project,
-                    PermissionLevel.USER);
-            double[][] results = new double[users.size()][users.size()];
+                String type = getType(annotationTypes.getModelObject().getName());
+                String featureName = getFeatureName(annotationTypes.getModelObject().getName());
+                List<User> users = projectRepository.listProjectUsersWithPermissions(project,
+                        PermissionLevel.USER);
+                double[][] results = new double[users.size()][users.size()];
 
-            List<SourceDocument> sourceDocuments = projectRepository.listSourceDocuments(project);
+                List<SourceDocument> sourceDocuments = projectRepository
+                        .listSourceDocuments(project);
 
-            // Filter source documents that have annotation document already.
-            List<SourceDocument> sourceDocumentsWithAnnotations = new ArrayList<SourceDocument>();
-            for (SourceDocument sourceDocument : sourceDocuments) {
-                boolean exist = true;
-                for (User user : users) {
-                    AnnotationDocument annotationDocument = projectRepository
-                            .getAnnotationDocument(sourceDocument, user);
-                    if (!annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
-                        exist = false;
-                        break;
+                // Filter source documents that have annotation document already.
+                List<SourceDocument> sourceDocumentsWithAnnotations = new ArrayList<SourceDocument>();
+                for (SourceDocument sourceDocument : sourceDocuments) {
+                    boolean exist = true;
+                    for (User user : users) {
+                        AnnotationDocument annotationDocument = projectRepository
+                                .getAnnotationDocument(sourceDocument, user);
+                        if (!annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
+                            exist = false;
+                            break;
+                        }
+                    }
+                    if (exist) {
+                        sourceDocumentsWithAnnotations.add(sourceDocument);
                     }
                 }
-                if (exist) {
-                    sourceDocumentsWithAnnotations.add(sourceDocument);
-                }
-            }
 
-            // Users with some annotations of this type
-            int usersWithAnnotation = 0;
-            for (SourceDocument sourceDocument : sourceDocumentsWithAnnotations) {
-                TwoPairedKappa twoPairedKappa = new TwoPairedKappa(project, projectRepository);
+                // Users with some annotations of this type
+                int usersWithAnnotation = 0;
+                for (SourceDocument sourceDocument : sourceDocumentsWithAnnotations) {
+                    TwoPairedKappa twoPairedKappa = new TwoPairedKappa(project, projectRepository);
 
-                Set<String> allANnotations = twoPairedKappa.getAllAnnotations(users,
-                        sourceDocument, type);
-                if (allANnotations.size() != 0) {
-                    usersWithAnnotation++;
-                    Map<String, Map<String, String>> userAnnotations = twoPairedKappa
-                            .initializeAnnotations(users, allANnotations);
-                    userAnnotations = twoPairedKappa.updateUserAnnotations(users, sourceDocument,
-                            type, featureName, userAnnotations);
-                    double[][] thisSourceDocumentResult = twoPairedKappa
-                            .getAgreement(userAnnotations);
-                    // Update result per document
-                    for (int i = 0; i < users.size(); i++) {
-                        for (int j = 0; j < users.size(); j++) {
-                            double thisDocumentResult = Double.compare(
-                                    thisSourceDocumentResult[i][j], Double.NaN) == 0 ? 1
-                                    : thisSourceDocumentResult[i][j];
+                    Set<String> allANnotations = twoPairedKappa.getAllAnnotations(users,
+                            sourceDocument, type);
+                    if (allANnotations.size() != 0) {
+                        usersWithAnnotation++;
+                        Map<String, Map<String, String>> userAnnotations = twoPairedKappa
+                                .initializeAnnotations(users, allANnotations);
+                        userAnnotations = twoPairedKappa.updateUserAnnotations(users,
+                                sourceDocument, type, featureName, userAnnotations);
+                        double[][] thisSourceDocumentResult = twoPairedKappa
+                                .getAgreement(userAnnotations);
+                        // Update result per document
+                        for (int i = 0; i < users.size(); i++) {
+                            for (int j = 0; j < users.size(); j++) {
+                                double thisDocumentResult = Double.compare(
+                                        thisSourceDocumentResult[i][j], Double.NaN) == 0 ? 1
+                                        : thisSourceDocumentResult[i][j];
 
-                            results[i][j] = results[i][j] + thisDocumentResult;
+                                results[i][j] = results[i][j] + thisDocumentResult;
+                            }
                         }
                     }
                 }
-            }
 
-            // get average agreement value across documents
-            if (usersWithAnnotation != 0) {
-                for (int i = 0; i < users.size(); i++) {
-                    for (int j = 0; j < users.size(); j++) {
-                        results[i][j] = results[i][j] / usersWithAnnotation;
+                // get average agreement value across documents
+                if (usersWithAnnotation != 0) {
+                    for (int i = 0; i < users.size(); i++) {
+                        for (int j = 0; j < users.size(); j++) {
+                            results[i][j] = results[i][j] / usersWithAnnotation;
+                        }
                     }
                 }
-            }
 
-            List<String> usersListAsColumnHeader = new ArrayList<String>();
-            usersListAsColumnHeader.add("users");
+                List<String> usersListAsColumnHeader = new ArrayList<String>();
+                usersListAsColumnHeader.add("users");
 
-            for (User user : users) {
-                usersListAsColumnHeader.add(user.getUsername());
-            }
-            List<List<String>> agreementResults = new ArrayList<List<String>>();
-            int i = 0;
-            for (User user1 : users) {
-                List<String> agreementResult = new ArrayList<String>();
-                agreementResult.add(user1.getUsername());
-
-                for (int j = 0; j < users.size(); j++) {
-                    agreementResult.add((double) Math.round(results[i][j] * 100) / 100 + "");
+                for (User user : users) {
+                    usersListAsColumnHeader.add(user.getUsername());
                 }
-                i++;
-                agreementResults.add(agreementResult);
+                List<List<String>> agreementResults = new ArrayList<List<String>>();
+                int i = 0;
+                for (User user1 : users) {
+                    List<String> agreementResult = new ArrayList<String>();
+                    agreementResult.add(user1.getUsername());
+
+                    for (int j = 0; j < users.size(); j++) {
+                        agreementResult.add((double) Math.round(results[i][j] * 100) / 100 + "");
+                    }
+                    i++;
+                    agreementResults.add(agreementResult);
+                }
+
+                TableDataProvider provider = new TableDataProvider(usersListAsColumnHeader,
+                        agreementResults);
+
+                List<IColumn<?>> columns = new ArrayList<IColumn<?>>();
+
+                for (int m = 0; m < provider.getColumnCount(); m++) {
+                    columns.add(new DynamicColumnMetaData(provider, m));
+                }
+                agreementTable.remove();
+                agreementTable = new DefaultDataTable("agreementTable", columns, provider, 10);
+                agreementForm.add(agreementTable);
+                aTarget.add(agreementForm);
             }
-
-            TableDataProvider provider = new TableDataProvider(usersListAsColumnHeader,
-                    agreementResults);
-
-            List<IColumn<?>> columns = new ArrayList<IColumn<?>>();
-
-            for (int m = 0; m < provider.getColumnCount(); m++) {
-                columns.add(new DynamicColumnMetaData(provider, m));
-            }
-            agreementTable.remove();
-            agreementTable = new DefaultDataTable("agreementTable", columns, provider, 10);
-            agreementForm.add(agreementTable);
-            aTarget.add(agreementForm);
-        }
         }
     }
 

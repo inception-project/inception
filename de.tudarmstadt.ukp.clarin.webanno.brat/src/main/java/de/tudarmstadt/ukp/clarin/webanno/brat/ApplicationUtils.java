@@ -27,6 +27,8 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.lang.reflect.ParameterizedType;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -708,5 +710,22 @@ public class ApplicationUtils
         }
         return finishedAnnotationDocumentExist;
 
+    }
+    /**
+     * Sort a project by its name
+     * @param allowedProject
+     */
+    public static void sortProjects(List<Project> allowedProject)
+    {
+        // sort projects by name
+        Collections.sort(allowedProject, new Comparator<Project>()
+        {
+            @Override
+            public int compare(Project proj1, Project proj2)
+            {
+                return (proj1.getName().toLowerCase()).compareTo(proj2
+                        .getName().toLowerCase());
+            }
+        });
     }
 }

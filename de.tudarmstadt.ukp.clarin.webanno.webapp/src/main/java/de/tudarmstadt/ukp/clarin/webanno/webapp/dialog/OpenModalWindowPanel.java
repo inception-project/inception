@@ -42,7 +42,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -131,8 +130,9 @@ public class OpenModalWindowPanel
                         @Override
                         protected List<Project> load()
                         {
-
-                            return getAllowedProjects(mode);
+                            List<Project> projects = getAllowedProjects(mode);
+                            ApplicationUtils.sortProjects(projects);
+                            return projects;
                         }
                     });
                     setChoiceRenderer(new ChoiceRenderer<Project>("name"));
