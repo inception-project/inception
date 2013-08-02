@@ -652,8 +652,8 @@ public class CorrectionPage
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down }, EventType.click)));
 
-        
-        
+
+
         // Show the next page of this document
         add(new AjaxLink<Void>("showNext")
         {
@@ -994,7 +994,7 @@ public class CorrectionPage
                 .get(followingSentence.size() - 1).getAddress();
         curationSegment.setBegin(BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
                 bratAnnotatorModel.getSentenceAddress()));
-        curationSegment.setEnd(BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
+        curationSegment.setEnd(BratAjaxCasUtil.getAnnotationEndOffset(jCas,
                 lastSentenceAddressInDisplayWindow));
 
     }
