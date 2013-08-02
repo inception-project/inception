@@ -429,6 +429,9 @@ public class RepositoryServiceDbData
         if (aMode.equals(Mode.ANNOTATION)) {
             serializedCaseFileName = aUser + ".ser";
         }
+        else if(aMode.equals(Mode.CORRECTION)) {
+            serializedCaseFileName = CORRECTION_USER + ".ser";
+        }
         else {
             serializedCaseFileName = CURATION_USER + ".ser";
         }

@@ -78,14 +78,15 @@ public class ExportPanel
     private static final String META_INF = "/META-INF";
     public static final String EXPORTED_PROJECT = "exportedproject";
     private static final String SOURCE = "/source";
-    private static final String CURATION_AS_SERIALISED_CAS = "/curation_ser";
-    private static final String CURATION = "/curation";
+    private static final String CURATION_AS_SERIALISED_CAS = "/curation_ser/";
+    private static final String CURATION = "/curation/";
     private static final String LOG = "/log";
     private static final String GUIDELINE = "/guideline";
     private static final String ANNOTATION_AS_SERIALISED_CAS = "/annotation_ser/";
     private static final String ANNOTATION = "/annotation/";
 
     private static final String CURATION_USER = "CURATION_USER";
+    private static final String CORRECTION_USER = "CORRECTION_USER";
 
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
@@ -333,6 +334,24 @@ public class ExportPanel
                     FileUtils.copyFileToDirectory(CurationFileAsSerialisedCas, curationCasDir);
                 }
             }
+
+            // If this project is a correction project, add the auto-annotated CAS to same folder as
+            // CURATION
+            if(aProject.getMode().equals(Mode.CORRECTION)){
+                File CorrectionFileAsSerialisedCas = projectRepository.exportAnnotationDocument(
+                        sourceDocument, aProject, CORRECTION_USER);
+                File correctionFile = null;
+                if (CorrectionFileAsSerialisedCas.exists()) {
+                    correctionFile = projectRepository.exportAnnotationDocument(sourceDocument,
+                            aProject, username, TcfWriter.class, sourceDocument.getName(),
+                            Mode.CORRECTION);
+                }
+                // in Case they didn't exist
+                if (CorrectionFileAsSerialisedCas.exists()) {
+                    FileUtils.copyFileToDirectory(correctionFile, curationDir);
+                    FileUtils.copyFileToDirectory(CorrectionFileAsSerialisedCas, curationCasDir);
+                }
+            }
         }
     }
 
@@ -481,6 +500,7 @@ public class ExportPanel
         project.setDescription(aProject.getDescription());
         project.setName(aProject.getName());
         project.setReverse(aProject.isReverseDependencyDirection());
+        project.setMode(aProject.getMode());
 
         List<TagSet> tagsets = new ArrayList<TagSet>();
         // add TagSets to the project

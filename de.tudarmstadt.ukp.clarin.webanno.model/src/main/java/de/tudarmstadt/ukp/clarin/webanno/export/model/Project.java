@@ -2,13 +2,13 @@
  * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,13 +23,15 @@ import java.util.List;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.annotate.JsonPropertyOrder;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+
 /**
  * All required contents of a project to be exported.
  * @author Seid Muhie Yimam
  *
  */
 @JsonPropertyOrder(value = { "name", "description", "reverse", "type", "typeName",
-        "typeDescription" ,"tags" })
+        "typeDescription" ,"tags","mode" })
 public class Project
 {
     @JsonProperty("name")
@@ -38,6 +40,8 @@ public class Project
     String description;
     @JsonProperty("reverse")
     boolean reverse;
+    @JsonProperty("mode")
+    private Mode mode = Mode.ANNOTATION;
 
     @JsonProperty("source_documents")
     private List<SourceDocument> sourceDocuments = new ArrayList<SourceDocument>();
@@ -120,6 +124,16 @@ public class Project
     public void setTagSets(List<TagSet> tagSets)
     {
         this.tagSets = tagSets;
+    }
+
+    public Mode getMode()
+    {
+        return mode;
+    }
+
+    public void setMode(Mode mode)
+    {
+        this.mode = mode;
     }
 
 }

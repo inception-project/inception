@@ -510,6 +510,7 @@ public class ApplicationUtils
         project.setName(projectName);
         project.setDescription(aProject.getDescription());
         project.setReverseDependencyDirection(aProject.isReverse());
+        project.setMode(aProject.getMode());
         aRepository.createProject(project, user);
         return project;
     }
@@ -559,6 +560,7 @@ public class ApplicationUtils
             annotationDocument.setState(importedAnnotationDocument.getState());
             annotationDocument.setProject(aImportedProject);
             annotationDocument.setUser(importedAnnotationDocument.getUser());
+            annotationDocument.setTimestamp(importedAnnotationDocument.getTimestamp());
             annotationDocument.setDocument(aRepository.getSourceDocument(
                     importedAnnotationDocument.getName(), aImportedProject));
             aRepository.createAnnotationDocument(annotationDocument);
