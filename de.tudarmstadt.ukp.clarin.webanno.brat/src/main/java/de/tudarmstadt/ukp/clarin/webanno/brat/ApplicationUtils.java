@@ -61,6 +61,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -73,7 +74,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
- * This class Utility methods that can be used application wide
+ * This class contains Utility methods that can be used application wide
  *
  * @author Seid Muhie Yimam
  *
@@ -685,5 +686,27 @@ public class ApplicationUtils
                         aRepository.exportProjectLog(aProject));
             }
         }
+    }
+    /**
+     * Return true if there exist at least one annotation document FINISHED for annotation for this
+     * {@link SourceDocument}
+     *
+     * @param aSourceDocument
+     * @param aUser
+     * @return
+     */
+    public static boolean existFinishedDocument(de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument aSourceDocument, User aUser, RepositoryService aRepository, Project aProject)
+    {
+        List<de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument> annotationDocuments = aRepository.listAnnotationDocument(
+                aProject, aSourceDocument);
+        boolean finishedAnnotationDocumentExist = false;
+        for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : annotationDocuments) {
+            if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
+                finishedAnnotationDocumentExist = true;
+                break;
+            }
+        }
+        return finishedAnnotationDocumentExist;
+
     }
 }

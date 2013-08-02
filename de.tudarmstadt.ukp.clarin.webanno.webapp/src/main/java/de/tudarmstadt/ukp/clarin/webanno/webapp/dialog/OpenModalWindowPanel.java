@@ -279,7 +279,7 @@ public class OpenModalWindowPanel
                                         noCurationDocuments.add(sourceDocument);
                                     }
                                     else if (mode.equals(Mode.CURATION)
-                                            && !existFinishedDocument(sourceDocument, user)) {
+                                            && !ApplicationUtils.existFinishedDocument(sourceDocument, user, projectRepository, selectedProject)) {
                                         noCurationDocuments.add(sourceDocument);
                                     }
 
@@ -327,29 +327,6 @@ public class OpenModalWindowPanel
                 }
             }).add(new ResizableBehavior());
         }
-    }
-
-    /**
-     * Return true if there exist at least one annotation document exist for this
-     * {@link SourceDocument}
-     *
-     * @param aSourceDocument
-     * @param aUser
-     * @return
-     */
-    private boolean existFinishedDocument(SourceDocument aSourceDocument, User aUser)
-    {
-        List<AnnotationDocument> annotationDocuments = projectRepository.listAnnotationDocument(
-                selectedProject, aSourceDocument);
-        boolean finishedAnnotationDocumentExist = false;
-        for (AnnotationDocument annotationDocument : annotationDocuments) {
-            if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
-                finishedAnnotationDocumentExist = true;
-                break;
-            }
-        }
-        return finishedAnnotationDocumentExist;
-
     }
 
     private class ButtonsForm

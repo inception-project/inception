@@ -61,6 +61,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -283,6 +284,9 @@ public class CorrectionPage
                     catch (UIMAException e) {
                         return "";
                     }
+                    catch(DataRetrievalFailureException e){
+                    	 return "";
+                    }
                     catch (ClassNotFoundException e) {
                         return "";
                     }
@@ -355,10 +359,10 @@ public class CorrectionPage
                                 error(ExceptionUtils.getRootCause(e));
                             }
                             catch (ClassNotFoundException e) {
-                                error(ExceptionUtils.getRootCause(e));
+                                error(e.getMessage());
                             }
                             catch (IOException e) {
-                                error(ExceptionUtils.getRootCause(e));
+                                error(e.getMessage());
                             }
 
                             finish.setModelObject(bratAnnotatorModel);
@@ -516,6 +520,140 @@ public class CorrectionPage
             private static final long serialVersionUID = -4657965743173979437L;
         });
 
+     // Show the previous document, if exist
+        add(new AjaxLink<Void>("showPreviousDocument")
+        {
+            private static final long serialVersionUID = 7496156015186497496L;
+
+            /**
+             * Get the current beginning sentence address and add on it the size of the display
+             * window
+             */
+            @Override
+            public void onClick(AjaxRequestTarget target)
+            {
+                // List of all Source Documents in the project
+                List<SourceDocument> listOfSourceDocuements = repository
+                        .listSourceDocuments(bratAnnotatorModel.getProject());
+
+                String username = SecurityContextHolder.getContext().getAuthentication().getName();
+                User user = repository.getUser(username);
+
+                List<SourceDocument> sourceDocumentsinIgnorState = new ArrayList<SourceDocument>();
+                for (SourceDocument sourceDocument : listOfSourceDocuements) {
+                    if (repository.existsAnnotationDocument(sourceDocument, user)
+                            && repository.getAnnotationDocument(sourceDocument, user).getState()
+                                    .equals(AnnotationDocumentState.IGNORE)) {
+                        sourceDocumentsinIgnorState.add(sourceDocument);
+                    }
+                }
+
+                listOfSourceDocuements.removeAll(sourceDocumentsinIgnorState);
+
+                // Index of the current source document in the list
+                int currentDocumentIndex = listOfSourceDocuements.indexOf(bratAnnotatorModel
+                        .getDocument());
+
+                // If the first the document
+                if (currentDocumentIndex == 0) {
+                    target.appendJavaScript("alert('This is the first document!')");
+                }
+                else {
+                    bratAnnotatorModel.setDocumentName(listOfSourceDocuements.get(
+                            currentDocumentIndex - 1).getName());
+                    bratAnnotatorModel.setDocument(listOfSourceDocuements
+                            .get(currentDocumentIndex - 1));
+                    try {
+                        init();
+                        setCurationSegmentBeginEnd();
+                        update(target);
+
+                    }
+                    catch (UIMAException e) {
+                        error(ExceptionUtils.getRootCause(e));
+                    }
+                    catch (ClassNotFoundException e) {
+                        error(ExceptionUtils.getRootCause(e));
+                    }
+                    catch (IOException e) {
+                        error(ExceptionUtils.getRootCause(e));
+                    }
+
+                    finish.setModelObject(bratAnnotatorModel);
+                    target.add(finish.setOutputMarkupId(true));
+                    target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                    }
+            }
+        }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up }, EventType.click)));
+
+        // Show the next document if exist
+        add(new AjaxLink<Void>("showNextDocument")
+        {
+            private static final long serialVersionUID = 7496156015186497496L;
+
+            /**
+             * Get the current beginning sentence address and add on it the size of the display
+             * window
+             */
+            @Override
+            public void onClick(AjaxRequestTarget target)
+            {
+                // List of all Source Documents in the project
+                List<SourceDocument> listOfSourceDocuements = repository
+                        .listSourceDocuments(bratAnnotatorModel.getProject());
+
+                String username = SecurityContextHolder.getContext().getAuthentication().getName();
+                User user = repository.getUser(username);
+
+                List<SourceDocument> sourceDocumentsinIgnorState = new ArrayList<SourceDocument>();
+                for (SourceDocument sourceDocument : listOfSourceDocuements) {
+                    if (repository.existsAnnotationDocument(sourceDocument, user)
+                            && repository.getAnnotationDocument(sourceDocument, user).getState()
+                                    .equals(AnnotationDocumentState.IGNORE)) {
+                        sourceDocumentsinIgnorState.add(sourceDocument);
+                    }
+                }
+
+                listOfSourceDocuements.removeAll(sourceDocumentsinIgnorState);
+
+                // Index of the current source document in the list
+                int currentDocumentIndex = listOfSourceDocuements.indexOf(bratAnnotatorModel
+                        .getDocument());
+
+                // If the first document
+                if (currentDocumentIndex == listOfSourceDocuements.size() - 1) {
+                    target.appendJavaScript("alert('This is the last document!')");
+                }
+                else {
+                    bratAnnotatorModel.setDocumentName(listOfSourceDocuements.get(
+                            currentDocumentIndex + 1).getName());
+                    bratAnnotatorModel.setDocument(listOfSourceDocuements
+                            .get(currentDocumentIndex + 1));
+                    try {
+                        init();
+                        setCurationSegmentBeginEnd();
+                        update(target);
+
+                    }
+                    catch (UIMAException e) {
+                        error(ExceptionUtils.getRootCause(e));
+                    }
+                    catch (ClassNotFoundException e) {
+                        error(ExceptionUtils.getRootCause(e));
+                    }
+                    catch (IOException e) {
+                        error(ExceptionUtils.getRootCause(e));
+                    }
+
+                    finish.setModelObject(bratAnnotatorModel);
+                    target.add(finish.setOutputMarkupId(true));
+                    target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+}
+            }
+        }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down }, EventType.click)));
+
+        
+        
         // Show the next page of this document
         add(new AjaxLink<Void>("showNext")
         {
