@@ -32,11 +32,12 @@ import javax.persistence.TemporalType;
 import javax.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.Type;
+
 /**
- * A persistence object for meta-data of annotation documents. The content of annotation document is stored
- * in a file system as {@link SerializedCas}
+ * A persistence object for meta-data of annotation documents. The content of annotation document is
+ * stored in a file system.
+ * 
  * @author Seid Muhie Yimam
- *
  */
 @Entity
 @Table(name = "annotation_document", uniqueConstraints = { @UniqueConstraint(columnNames = {

@@ -64,11 +64,10 @@ public interface RepositoryService
     void createAnnotationDocument(AnnotationDocument annotationDocument);
 
     /**
-     * Creates an annotation document which is CAS object seriealized in xmi format using the
-     * {@link SerializedCasWriter}. The {@link AnnotationDocument} is stored in the
+     * Creates an annotation document. The {@link AnnotationDocument} is stored in the
      * webanno.home/project/Project.id/document/document.id/annotation/username.ser. annotated
      * documents are stored per project, user and document
-     *
+     * 
      * @param user
      *            The User who perform this operation
      */

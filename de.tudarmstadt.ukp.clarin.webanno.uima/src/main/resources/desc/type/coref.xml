@@ -39,5 +39,42 @@
         </featureDescription>
       </features>
     </typeDescription>
+		<typeDescription>
+			<name>de.tudarmstadt.ukp.dkpro.core.api.metadata.type.TagsetDescription</name>
+			<description>Information about a tagset (controlled vocabulary).</description>
+			<supertypeName>uima.tcas.Annotation</supertypeName>
+			<features>
+				<featureDescription>
+					<name>layer</name>
+					<description>The layer to which the tagset applies. This is
+						typically the name of an UIMA type such as
+						"de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS".</description>
+					<rangeTypeName>uima.cas.String</rangeTypeName>
+				</featureDescription>
+				<featureDescription>
+					<name>name</name>
+					<description>The name of the tagset.</description>
+					<rangeTypeName>uima.cas.String</rangeTypeName>
+				</featureDescription>
+				<featureDescription>
+					<name>tags</name>
+					<description>Descriptions of the tags belonging to this tagset.</description>
+					<rangeTypeName>uima.cas.FSArray</rangeTypeName>
+					<elementType>de.tudarmstadt.ukp.dkpro.core.api.metadata.type.TagDescription</elementType>
+				</featureDescription>
+			</features>
+		</typeDescription>
+		<typeDescription>
+			<name>de.tudarmstadt.ukp.dkpro.core.api.metadata.type.TagDescription</name>
+			<description>Description of an individual tag.</description>
+			<supertypeName>uima.cas.TOP</supertypeName>
+			<features>
+				<featureDescription>
+					<name>name</name>
+					<description>The name of the tag.</description>
+					<rangeTypeName>uima.cas.String</rangeTypeName>
+				</featureDescription>
+			</features>
+		</typeDescription>
   </types>
 </typeSystemDescription>

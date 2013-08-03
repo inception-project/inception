@@ -25,21 +25,20 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.IOUtils;
 
-import de.tudarmstadt.ukp.dkpro.core.io.bincas.SerializedCasWriter;
-
 /**
- * a Util class for {@link RepositoryServiceDbData} and {@link AnnotationServiceImpl} classes
+ * A utility class for {@link RepositoryServiceDbData} and {@link AnnotationServiceImpl} classes
+ * 
  * @author Seid Muhie Yimam
- *
  */
 public class DaoUtils
 {
     private static String srcPath;
+    
     /**
-    * While exporting annotation documents, some of the writers generate multiple outputs, such as the
-    * the {@link SerializedCasWriter}. This method generates a zip file if the exported file do
-    * contain multiple file output
-    */
+     * While exporting annotation documents, some of the writers generate multiple outputs, e.g. a
+     * type system file in addition to the annotation data. This method generates a zip file if the
+     * exported file do contain multiple file output
+     */
     public static void zipFolder(File srcFolder, File destZipFile)
         throws Exception
     {
