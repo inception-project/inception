@@ -31,6 +31,31 @@ public class NamedEntityTask1Data
     String markertext_gold = "";
     String markertext_gold_reason = "";
 
+    String document = "";
+
+    @JsonProperty("document")
+    public String getDocument()
+    {
+        return document;
+    }
+
+    public void setDocument(String document)
+    {
+        this.document = document;
+    }
+
+    @JsonProperty("offset")
+    public int getOffset()
+    {
+        return offset;
+    }
+
+    public void setOffset(int offset)
+    {
+        this.offset = offset;
+    }
+    int offset = 0;
+
     //constructor for normal data
     NamedEntityTask1Data(String text)
     {

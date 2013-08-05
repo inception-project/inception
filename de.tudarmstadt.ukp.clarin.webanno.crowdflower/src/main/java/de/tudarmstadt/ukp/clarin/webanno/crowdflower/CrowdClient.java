@@ -176,7 +176,7 @@ public class CrowdClient implements Serializable
         String result = "";
 
         if(job == null) {
-            LOG.info("Upload new data and create new job: " + String.valueOf(jsonObjectCollection.length()) + " data items");
+            LOG.info("Upload new data and create new job: " + String.valueOf(data.size()) + " data items");
             result = restTemplate.postForObject(uploadDataURL, request, String.class, apiKey);
         }
         else {
