@@ -309,8 +309,8 @@ public class MonitoringPage
                         // Add a timestamp row for every user.
                         List<String> projectTimeStamp = new ArrayList<String>();
                         projectTimeStamp.add(LAST_ACCESS + LAST_ACCESS_ROW); // first column
-                        projectTimeStamp.add(LAST_ACCESS + "__");// Source document column
-                        projectTimeStamp.add(LAST_ACCESS + "__");// curation column, not yet added
+                        projectTimeStamp.add(LAST_ACCESS + "");// Source document column
+                        projectTimeStamp.add(LAST_ACCESS + "");// curation column, not yet added
                                                                  // TODO
                         for (User user : usersWithPermissions) {
                             if (projectRepository.existsProjectTimeStamp(project,
