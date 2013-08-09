@@ -338,7 +338,8 @@ public class BratAjaxCasController
 
         GetDocumentResponse response = new GetDocumentResponse();
 
-        addBratResponses(response, aBratAnnotatorModel, aAnnotationOffsetStart, aJCas, aIsGetDocument);
+        addBratResponses(response, aBratAnnotatorModel, aAnnotationOffsetStart, aJCas,
+                aIsGetDocument);
 
         CreateArcResponse createArcResponse = new CreateArcResponse();
 
@@ -498,7 +499,8 @@ public class BratAjaxCasController
 
         if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
             ArcAdapter.getDependencyAdapter().add(aLabelValue, aOriginAddress, aTargetAddress,
-                    aJCas, aBratAnnotatorModel, aBratAnnotatorModel.getProject().isReverseDependencyDirection());
+                    aJCas, aBratAnnotatorModel,
+                    aBratAnnotatorModel.getProject().isReverseDependencyDirection());
         }
         else if (annotationType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
             ChainAdapter.getCoreferenceChainAdapter().add(aLabelValue, aJCas,
@@ -563,7 +565,8 @@ public class BratAjaxCasController
             User aUser, JCas aJcas)
         throws IOException
     {
-        if (aMode.equals(Mode.ANNOTATION)||aMode.equals(Mode.CORRECTION) ||aMode.equals(Mode.CORRECTION_MERGE) ) {
+        if (aMode.equals(Mode.ANNOTATION) || aMode.equals(Mode.CORRECTION)
+                || aMode.equals(Mode.CORRECTION_MERGE)) {
             repository.createAnnotationDocumentContent(aJcas, aSourceDocument, aUser);
         }
         else if (aMode.equals(Mode.CURATION) || aMode.equals(Mode.CURATION_MERGE)) {
@@ -650,10 +653,14 @@ public class BratAjaxCasController
         JCas jCas = null;
         try {
             annotationDocument = repository.getAnnotationDocument(aDocument, aUser);
-            if (annotationDocument.getState().equals(AnnotationDocumentState.NEW)) {
-                jCas = createCasFirstTime(aDocument, annotationDocument, aProject, aUser, repository);
+            if (annotationDocument.getState().equals(AnnotationDocumentState.NEW)
+                    && !repository.existsJCas(aUser.getUsername(), aDocument)) {
+                jCas = createCasFirstTime(aDocument, annotationDocument, aProject, aUser,
+                        repository);
             }
-            jCas = repository.getAnnotationDocumentContent(annotationDocument);
+            else {
+                jCas = repository.getAnnotationDocumentContent(annotationDocument);
+            }
 
         }
         // it is new, create it and get CAS object
@@ -667,7 +674,8 @@ public class BratAjaxCasController
     }
 
     public static JCas createCasFirstTime(SourceDocument aDocument,
-            AnnotationDocument aAnnotationDocument, Project aProject, User aUser, RepositoryService repository)
+            AnnotationDocument aAnnotationDocument, Project aProject, User aUser,
+            RepositoryService repository)
         throws UIMAException, ClassNotFoundException, IOException
     {
         JCas jCas;

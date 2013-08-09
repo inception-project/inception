@@ -304,6 +304,18 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
+    public boolean existsJCas(String aUsername, SourceDocument aSourceDocument) throws IOException
+    {
+        if (new File(getAnnotationFolder(aSourceDocument), aUsername + ".ser").exists()) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    @Override
+    @Transactional
     public boolean existsCrowdJob(String aName)
     {
         try {
@@ -429,7 +441,7 @@ public class RepositoryServiceDbData
         if (aMode.equals(Mode.ANNOTATION)) {
             serializedCaseFileName = aUser + ".ser";
         }
-        else if(aMode.equals(Mode.CORRECTION)) {
+        else if (aMode.equals(Mode.CORRECTION)) {
             serializedCaseFileName = CORRECTION_USER + ".ser";
         }
         else {
@@ -537,7 +549,8 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public String getApiKey(){
+    public String getApiKey()
+    {
         return apiKey;
     }
 
@@ -797,7 +810,7 @@ public class RepositoryServiceDbData
         // in the ProjectPermission entry while it is not in the Users database
         List<String> notInUsers = new ArrayList<String>();
         for (String user : users) {
-            if(!userRepository.exists(user)) {
+            if (!userRepository.exists(user)) {
                 notInUsers.add(user);
             }
         }

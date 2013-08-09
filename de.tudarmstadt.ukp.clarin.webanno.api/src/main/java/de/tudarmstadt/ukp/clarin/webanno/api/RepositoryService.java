@@ -31,6 +31,7 @@ import org.apache.uima.jcas.JCas;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.model.CrowdJob;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -156,6 +157,13 @@ public interface RepositoryService
      * @return
      */
     boolean existsProject(String name);
+    /**
+     * check if the JCAS for the {@link User} and {@link SourceDocument} in this {@link Project} exists
+     * It is important as {@link AnnotationDocument} entry can be populated as {@link AnnotationDocumentState#NEW}
+     * from the MonitoringPage before the user actually open the document for annotation;.
+     * @throws IOException
+     */
+    boolean existsJCas(String username, SourceDocument sourceDocument) throws IOException;
 
     /**
      * Check if a crowd job already exist or not with its name
