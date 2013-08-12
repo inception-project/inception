@@ -55,19 +55,19 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.support.TableDataProvider;
  * @author Seid Muhie Yimam
  *
  */
-public class DocumentColumnMetaData
+public class DocumentStatusColumnMetaData
     extends AbstractColumn<List<String>>
 {
 
     private RepositoryService projectRepositoryService;
-    private static final Log LOG = LogFactory.getLog(DocumentColumnMetaData.class);
+    private static final Log LOG = LogFactory.getLog(DocumentStatusColumnMetaData.class);
 
     private static final long serialVersionUID = 1L;
     private int columnNumber;
 
     private Project project;
 
-    public DocumentColumnMetaData(final TableDataProvider prov, final int colNumber,
+    public DocumentStatusColumnMetaData(final TableDataProvider prov, final int colNumber,
             Project aProject, RepositoryService aProjectreRepositoryService)
     {
         super(new AbstractReadOnlyModel<String>()
@@ -259,7 +259,8 @@ public class DocumentColumnMetaData
                         projectRepositoryService.createAnnotationDocument(annotationDocument);
 
                         try {
-                            changeSourceDocumentState(project, document);
+                            changeSourceDocumentState(project, document,
+                                    AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS);
                         }
                         catch (IOException e) {
                             LOG.info("Unable to change state of the document");
@@ -309,7 +310,8 @@ public class DocumentColumnMetaData
      * @param aSourceDocument
      * @throws IOException
      */
-    private void changeSourceDocumentState(Project aProject, SourceDocument aSourceDocument)
+    private void changeSourceDocumentState(Project aProject, SourceDocument aSourceDocument,
+            AnnotationDocumentStateTransition atTransition)
         throws IOException
     {
 
@@ -341,7 +343,11 @@ public class DocumentColumnMetaData
             if (aSourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
                 stateTransition = SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS;
             }
-            if (aSourceDocument.getState().equals(SourceDocumentState.ANNOTATION_FINISHED)) {
+            else if (aSourceDocument.getState().equals(SourceDocumentState.ANNOTATION_FINISHED)) {
+                stateTransition = SourceDocumentStateTransition.ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS;
+            }
+            else if (atTransition
+                    .equals(AnnotationDocumentStateTransition.ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS)) {
                 stateTransition = SourceDocumentStateTransition.ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS;
             }
             if (stateTransition != null) {
@@ -371,7 +377,8 @@ public class DocumentColumnMetaData
             // update state of source document if the transition is not new-ignore viceversa
             if (!(annotationDocument.getState().equals(AnnotationDocumentState.NEW) || annotationDocument
                     .getState().equals(AnnotationDocumentState.IGNORE))) {
-                changeSourceDocumentState(project, aSourceDocument);
+                changeSourceDocumentState(project, aSourceDocument,
+                        aAnnotationDocumentStateTransition);
             }
         }
         catch (IOException e) {

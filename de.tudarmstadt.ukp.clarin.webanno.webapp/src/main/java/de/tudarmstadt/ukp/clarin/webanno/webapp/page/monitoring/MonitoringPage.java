@@ -187,7 +187,7 @@ public class MonitoringPage
         List<IColumn<?>> cols = new ArrayList<IColumn<?>>();
 
         for (int i = 0; i < prov.getColumnCount(); i++) {
-            cols.add(new DocumentColumnMetaData(prov, i, new Project(), projectRepository));
+            cols.add(new DocumentStatusColumnMetaData(prov, i, new Project(), projectRepository));
         }
         annotationDocumentStatusTable = new DefaultDataTable("rsTable", cols, prov, 2);
         monitoringDetailForm.setVisible(false);
@@ -355,7 +355,7 @@ public class MonitoringPage
                         List<IColumn<?>> columns = new ArrayList<IColumn<?>>();
 
                         for (int i = 0; i < provider.getColumnCount(); i++) {
-                            columns.add(new DocumentColumnMetaData(provider, i, project,
+                            columns.add(new DocumentStatusColumnMetaData(provider, i, project,
                                     projectRepository));
                         }
                         annotationDocumentStatusTable.remove();
