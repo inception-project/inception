@@ -284,8 +284,8 @@ public class CorrectionPage
                     catch (UIMAException e) {
                         return "";
                     }
-                    catch(DataRetrievalFailureException e){
-                    	 return "";
+                    catch (DataRetrievalFailureException e) {
+                        return "";
                     }
                     catch (ClassNotFoundException e) {
                         return "";
@@ -520,7 +520,7 @@ public class CorrectionPage
             private static final long serialVersionUID = -4657965743173979437L;
         });
 
-     // Show the previous document, if exist
+        // Show the previous document, if exist
         add(new AjaxLink<Void>("showPreviousDocument")
         {
             private static final long serialVersionUID = 7496156015186497496L;
@@ -582,7 +582,7 @@ public class CorrectionPage
                     finish.setModelObject(bratAnnotatorModel);
                     target.add(finish.setOutputMarkupId(true));
                     target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
-                    }
+                }
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up }, EventType.click)));
 
@@ -648,11 +648,9 @@ public class CorrectionPage
                     finish.setModelObject(bratAnnotatorModel);
                     target.add(finish.setOutputMarkupId(true));
                     target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
-}
+                }
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down }, EventType.click)));
-
-
 
         // Show the next page of this document
         add(new AjaxLink<Void>("showNext")
@@ -989,9 +987,12 @@ public class CorrectionPage
                 bratAnnotatorModel.getProject(), bratAnnotatorModel.getUser());
         Sentence sentence = (Sentence) jCas.getLowLevelCas().ll_getFSForRef(
                 bratAnnotatorModel.getSentenceAddress());
-        List<Sentence> followingSentence = selectFollowing(jCas, Sentence.class, sentence, bratAnnotatorModel.getWindowSize());
-        int lastSentenceAddressInDisplayWindow = followingSentence
-                .get(followingSentence.size() - 1).getAddress();
+        List<Sentence> followingSentences = selectFollowing(jCas, Sentence.class, sentence,
+                bratAnnotatorModel.getWindowSize());
+        // Check also, when getting the last sentence address in the display window, if this is the
+        // last sentence or the ONLY sentence in the document
+        int lastSentenceAddressInDisplayWindow = followingSentences.size() == 0 ? sentence
+                .getAddress() : followingSentences.get(followingSentences.size() - 1).getAddress();
         curationSegment.setBegin(BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
                 bratAnnotatorModel.getSentenceAddress()));
         curationSegment.setEnd(BratAjaxCasUtil.getAnnotationEndOffset(jCas,
