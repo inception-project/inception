@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -688,62 +689,54 @@ public class MonitoringPage
                 List<User> users = projectRepository.listProjectUsersWithPermissions(project,
                         PermissionLevel.USER);
                 double[][] results = new double[users.size()][users.size()];
+                //initialize results with zero
+                for (int m = 0; m < users.size(); m++) {
+                    for (int j = 0; j < users.size(); j++) {
+                        results[m][j] = 0.0;
+                    }
+                }
 
                 List<SourceDocument> sourceDocuments = projectRepository
                         .listSourceDocuments(project);
 
-                // Filter source documents that have annotation document already.
-                List<SourceDocument> sourceDocumentsWithAnnotations = new ArrayList<SourceDocument>();
-                for (SourceDocument sourceDocument : sourceDocuments) {
-                    boolean exist = true;
-                    for (User user : users) {
-                        AnnotationDocument annotationDocument = projectRepository
-                                .getAnnotationDocument(sourceDocument, user);
-                        if (!annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
-                            exist = false;
-                            break;
-                        }
-                    }
-                    if (exist) {
-                        sourceDocumentsWithAnnotations.add(sourceDocument);
-                    }
-                }
 
                 // Users with some annotations of this type
-                int usersWithAnnotation = 0;
-                for (SourceDocument sourceDocument : sourceDocumentsWithAnnotations) {
-                    TwoPairedKappa twoPairedKappa = new TwoPairedKappa(project, projectRepository);
+
+                Map<String, Map<String, String>> allUserAnnotations = new TreeMap<String, Map<String,String>>();
+                TwoPairedKappa twoPairedKappa = new TwoPairedKappa(project, projectRepository);
+                for (SourceDocument sourceDocument : sourceDocuments) {
 
                     Set<String> allANnotations = twoPairedKappa.getAllAnnotations(users,
                             sourceDocument, type);
                     if (allANnotations.size() != 0) {
-                        usersWithAnnotation++;
                         Map<String, Map<String, String>> userAnnotations = twoPairedKappa
                                 .initializeAnnotations(users, allANnotations);
                         userAnnotations = twoPairedKappa.updateUserAnnotations(users,
                                 sourceDocument, type, featureName, userAnnotations);
-                        double[][] thisSourceDocumentResult = twoPairedKappa
-                                .getAgreement(userAnnotations);
-                        // Update result per document
-                        for (int i = 0; i < users.size(); i++) {
-                            for (int j = 0; j < users.size(); j++) {
-                                double thisDocumentResult = Double.compare(
-                                        thisSourceDocumentResult[i][j], Double.NaN) == 0 ? 1
-                                        : thisSourceDocumentResult[i][j];
 
-                                results[i][j] = results[i][j] + thisDocumentResult;
+                        // merge annotations from different object for this user
+                        for(String username: userAnnotations.keySet()){
+                            if(allUserAnnotations.get(username) != null){
+                                allUserAnnotations.get(username).putAll(userAnnotations.get(username));
+                            }
+                            else{
+                                allUserAnnotations.put(username, userAnnotations.get(username));
                             }
                         }
+
+                        for(User user:users){
+                            allUserAnnotations.get(user.getUsername()).putAll(userAnnotations.get(user.getUsername()));
+                        }
+
+
                     }
                 }
 
-                // get average agreement value across documents
-                if (usersWithAnnotation != 0) {
-                    for (int i = 0; i < users.size(); i++) {
-                        for (int j = 0; j < users.size(); j++) {
-                            results[i][j] = results[i][j] / usersWithAnnotation;
-                        }
-                    }
+
+                if(twoPairedKappa
+                        .getAgreement(allUserAnnotations).length != 0) {
+                    results = twoPairedKappa
+                            .getAgreement(allUserAnnotations);
                 }
 
                 List<String> usersListAsColumnHeader = new ArrayList<String>();

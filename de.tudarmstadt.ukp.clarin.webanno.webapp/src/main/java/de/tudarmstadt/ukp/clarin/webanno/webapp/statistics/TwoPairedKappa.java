@@ -2,13 +2,13 @@
  * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -37,6 +37,7 @@ import org.uimafit.util.CasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -47,6 +48,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.AnnotationStudy;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.IAnnotationStudy;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.TwoRaterKappaAgreement;
+
 /**
  * For a given source document, return user annotations for a given UIMA type. This is a Map of
  * users with a nested map which contains the concatenations of annotation offsets and UIMA features
@@ -97,21 +99,25 @@ public class TwoPairedKappa
             AnnotationDocument annotationDocument = repositoryService.getAnnotationDocument(
                     aSourceDocument, user);
             JCas jCas = null;
-            try {
-                jCas = repositoryService.getAnnotationDocumentContent(annotationDocument);
-            }
-            catch (UIMAException e) {
-                LOG.info(ExceptionUtils.getRootCause(e));
-            }
-            catch (IOException e) {
-                LOG.info(ExceptionUtils.getRootCause(e));
-            }
-            catch (ClassNotFoundException e) {
-                LOG.info(ExceptionUtils.getRootCause(e));
-            }
-            Type type = CasUtil.getType(jCas.getCas(), aType);
-            for (AnnotationFS fs : CasUtil.select(jCas.getCas(), type)) {
-                annotationPositions.add(fs.getBegin() + "" + fs.getEnd());
+            if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
+                try {
+                    jCas = repositoryService.getAnnotationDocumentContent(annotationDocument);
+                }
+                catch (UIMAException e) {
+                    LOG.info(ExceptionUtils.getRootCause(e));
+                }
+                catch (IOException e) {
+                    LOG.info(ExceptionUtils.getRootCause(e));
+                }
+                catch (ClassNotFoundException e) {
+                    LOG.info(ExceptionUtils.getRootCause(e));
+                }
+
+                Type type = CasUtil.getType(jCas.getCas(), aType);
+                for (AnnotationFS fs : CasUtil.select(jCas.getCas(), type)) {
+                    annotationPositions.add(aSourceDocument.getId() + "" + fs.getBegin() + ""
+                            + fs.getEnd());
+                }
             }
         }
         return annotationPositions;
@@ -172,28 +178,31 @@ public class TwoPairedKappa
                     aSourceDocument, user);
 
             JCas jCas = null;
-            try {
-                jCas = repositoryService.getAnnotationDocumentContent(annotationDocument);
-            }
-            catch (UIMAException e) {
-                LOG.info(ExceptionUtils.getRootCause(e));
-            }
-            catch (IOException e) {
-                LOG.info(ExceptionUtils.getRootCause(e));
-            }
-            catch (ClassNotFoundException e) {
-                LOG.info(ExceptionUtils.getRootCause(e));
-            }
+            if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
+                try {
+                    jCas = repositoryService.getAnnotationDocumentContent(annotationDocument);
+                }
+                catch (UIMAException e) {
+                    LOG.info(ExceptionUtils.getRootCause(e));
+                }
+                catch (IOException e) {
+                    LOG.info(ExceptionUtils.getRootCause(e));
+                }
+                catch (ClassNotFoundException e) {
+                    LOG.info(ExceptionUtils.getRootCause(e));
+                }
 
-            Type type = CasUtil.getType(jCas.getCas(), aType);
+                Type type = CasUtil.getType(jCas.getCas(), aType);
 
-            for (AnnotationFS fs : CasUtil.select(jCas.getCas(), type)) {
-                Feature labelFeature = fs.getType().getFeatureByBaseName(aLableFeatureName);
-                // update the already initialised EMPTY annotation with actual annotations,
-                // when exist
-                if(fs.getStringValue(labelFeature)!=null) {
-                    aUserAnnotations.get(user.getUsername()).put(fs.getBegin() + "" + fs.getEnd(),
+                for (AnnotationFS fs : CasUtil.select(jCas.getCas(), type)) {
+                    Feature labelFeature = fs.getType().getFeatureByBaseName(aLableFeatureName);
+                    // update the already initialised EMPTY annotation with actual annotations,
+                    // when exist
+                    if (fs.getStringValue(labelFeature) != null) {
+                        aUserAnnotations.get(user.getUsername()).put(
+                                aSourceDocument.getId() + "" + fs.getBegin() + "" + fs.getEnd(),
                                 fs.getStringValue(labelFeature));
+                    }
                 }
             }
         }
@@ -205,6 +214,7 @@ public class TwoPairedKappa
     {
         int i = 0;
         double[][] results = new double[aUserAnnotations.size()][aUserAnnotations.size()];
+
         for (String user1 : aUserAnnotations.keySet()) {
             int j = 0;
             for (String user2 : aUserAnnotations.keySet()) {
