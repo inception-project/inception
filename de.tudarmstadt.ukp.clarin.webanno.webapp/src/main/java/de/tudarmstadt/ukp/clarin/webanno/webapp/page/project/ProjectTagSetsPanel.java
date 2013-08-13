@@ -196,9 +196,8 @@ public class ProjectTagSetsPanel
         extends Form<String>
     {
 
-        /**
-         * @param id
-         */
+        private static final long serialVersionUID = 5286655225171641733L;
+
         public ImportTagSetForm(String id)
         {
             super(id);
@@ -209,7 +208,6 @@ public class ProjectTagSetsPanel
                             ExportedTagSetConstant.TAB_FORMAT })));
             add(new Button("import", new ResourceModel("label"))
             {
-
                 private static final long serialVersionUID = 1L;
 
                 @Override
@@ -367,9 +365,9 @@ public class ProjectTagSetsPanel
                                 }
                             }
                         }
-                        SelectionModel selectionModel = new SelectionModel();
-                        selectionModel.tagSet = selectionModelTagSet;
-                        tagSetSelectionForm.setModelObject(selectionModel);
+                        tagSetSelectionForm.setModelObject(new SelectionModel());
+                        tagSelectionForm.setVisible(false);
+                        tagDetailForm.setVisible(false);
                     }
                     else if (isEmpty(uploadedFiles)) {
                         error("Please choose file with tagset before uploading");
@@ -557,18 +555,24 @@ public class ProjectTagSetsPanel
                         OutputStreamWriter osw;
                         BufferedWriter bw;
                         try {
+                            String typeDescription = tagSet.getType().getDescription() == null ? ""
+                                    : tagSet.getType().getDescription();
+                            String tagSetDescription = tagSet.getDescription() == null ? ""
+                                    : tagSet.getDescription();
                             os = (OutputStream) new FileOutputStream(exportFile);
                             osw = new OutputStreamWriter(os, "UTF-8");
                             bw = new BufferedWriter(osw);
                             bw.write(tagSet.getName() + "\t"
-                                    + tagSet.getDescription().replace("\n", "\\n") + "\n");
+                                    + tagSetDescription.replace("\n", "\\n") + "\n");
                             bw.write(tagSet.getType().getType() + "\t" + " \n");
                             bw.write(tagSet.getType().getName() + "\t"
-                                    + tagSet.getType().getDescription().replace("\n", "\\n") + "\n");
+                                    + typeDescription.replace("\n", "\\n") + "\n");
                             bw.write(tagSet.getLanguage() + "\t" + " \n");
                             for (Tag tag : annotationService.listTags(tagSet)) {
+                                String tagDescription = tag.getDescription() == null ? "" : tag
+                                        .getDescription();
                                 bw.write(tag.getName() + "\t"
-                                        + tag.getDescription().replace("\n", "\\n") + "\n");
+                                        + tagDescription.replace("\n", "\\n") + "\n");
                             }
 
                             bw.flush();
