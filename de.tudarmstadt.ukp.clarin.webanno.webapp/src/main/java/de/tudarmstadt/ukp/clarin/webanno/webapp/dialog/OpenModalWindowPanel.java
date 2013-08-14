@@ -92,8 +92,10 @@ public class OpenModalWindowPanel
         this.mode = aSubject;
         username = SecurityContextHolder.getContext().getAuthentication().getName();
         user = projectRepository.getUser(username);
-        if (getAllowedProjects(aSubject).size() > 0) {
-            selectedProject = getAllowedProjects(aSubject).get(0);
+        if (getAllowedProjects(mode).size() > 0) {
+            List<Project> projects = getAllowedProjects(mode);
+            ApplicationUtils.sortProjects(projects);
+            selectedProject = projects.get(0);
         }
 
         this.openDataModel = aOpenDataModel;
