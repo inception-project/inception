@@ -230,7 +230,6 @@ public class MonitoringPage
                             // if global admin, show all projects
                             for (Authority authority : authorities) {
                                 if (authority.getRole().equals("ROLE_ADMIN")) {
-                                    ApplicationUtils.sortProjects(allProjects);
                                     return allProjects;
                                 }
                             }
@@ -244,8 +243,6 @@ public class MonitoringPage
                                     allowedProject.add(project);
                                 }
                             }
-
-                            ApplicationUtils.sortProjects(allowedProject);
                             return allowedProject;
                         }
                     });

@@ -61,7 +61,6 @@ import org.codehaus.jackson.JsonProcessingException;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.crowdflower.NamedEntityTaskManager;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -137,8 +136,6 @@ public class CrowdSourcePage
                                     crowdProjects.add(project);
                                 }
                             }
-
-                            ApplicationUtils.sortProjects(crowdProjects);
                             return crowdProjects;
                         }
                     });

@@ -858,7 +858,7 @@ public class RepositoryServiceDbData
     @Transactional
     public List<Project> listProjects()
     {
-        return entityManager.createQuery("FROM Project", Project.class).getResultList();
+        return entityManager.createQuery("FROM Project  ORDER BY name ASC ", Project.class).getResultList();
     }
 
     @Override

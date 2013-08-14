@@ -93,9 +93,7 @@ public class OpenModalWindowPanel
         username = SecurityContextHolder.getContext().getAuthentication().getName();
         user = projectRepository.getUser(username);
         if (getAllowedProjects(mode).size() > 0) {
-            List<Project> projects = getAllowedProjects(mode);
-            ApplicationUtils.sortProjects(projects);
-            selectedProject = projects.get(0);
+            selectedProject =getAllowedProjects(mode).get(0);
         }
 
         this.openDataModel = aOpenDataModel;
@@ -132,9 +130,7 @@ public class OpenModalWindowPanel
                         @Override
                         protected List<Project> load()
                         {
-                            List<Project> projects = getAllowedProjects(mode);
-                            ApplicationUtils.sortProjects(projects);
-                            return projects;
+                            return getAllowedProjects(mode);
                         }
                     });
                     setChoiceRenderer(new ChoiceRenderer<Project>("name"));
