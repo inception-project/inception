@@ -90,8 +90,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.io.JCasFileWriter_ImplBase;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
-import de.tudarmstadt.ukp.dkpro.core.io.bincas.SerializedCasReader;
-import de.tudarmstadt.ukp.dkpro.core.io.bincas.SerializedCasWriter;
 import eu.clarin.weblicht.wlfxb.io.WLFormatException;
 
 public class RepositoryServiceDbData
@@ -449,8 +447,8 @@ public class RepositoryServiceDbData
         }
 
         CollectionReader reader = CollectionReaderFactory
-                .createCollectionReader(SerializedCasReader.class, SerializedCasReader.PARAM_PATH,
-                        annotationFolder, SerializedCasReader.PARAM_PATTERNS, new String[] { "[+]"
+                .createCollectionReader(BinaryCasReader.class, BinaryCasReader.PARAM_PATH,
+                        annotationFolder, BinaryCasReader.PARAM_PATTERNS, new String[] { "[+]"
                                 + serializedCaseFileName });
         if (!reader.hasNext()) {
             throw new FileNotFoundException("Annotation file [" + serializedCaseFileName
@@ -1153,8 +1151,9 @@ public class RepositoryServiceDbData
         try {
             File targetPath = getAnnotationFolder(aDocument);
             AnalysisEngine writer = AnalysisEngineFactory.createPrimitive(
-                    SerializedCasWriter.class, SerializedCasWriter.PARAM_PATH, targetPath,
-                    SerializedCasWriter.PARAM_USE_DOCUMENT_ID, true);
+                    BinaryCasWriter.class, BinaryCasWriter.PARAM_PATH, targetPath,
+                    BinaryCasWriter.PARAM_FILENAME_SUFFIX, ".ser",
+                    BinaryCasWriter.PARAM_USE_DOCUMENT_ID, true);
             DocumentMetaData md;
             try {
                 md = DocumentMetaData.get(aJcas);
@@ -1502,8 +1501,8 @@ public class RepositoryServiceDbData
             try {
                 CAS cas = JCasFactory.createJCas().getCas();
                 CollectionReader reader = CollectionReaderFactory.createCollectionReader(
-                        SerializedCasReader.class, SerializedCasReader.PARAM_PATH,
-                        annotationFolder, SerializedCasReader.PARAM_PATTERNS, new String[] { "[+]"
+                        BinaryCasReader.class, BinaryCasReader.PARAM_PATH,
+                        annotationFolder, BinaryCasReader.PARAM_PATTERNS, new String[] { "[+]"
                                 + file });
                 if (!reader.hasNext()) {
                     throw new FileNotFoundException("Annotation document of user [" + aUsername
