@@ -27,7 +27,11 @@ public enum AnnotationState
 	/**
 	 * All annotators and the curated document have the same annotation.
 	 */
-	AGREE("#3421db"),
+	AGREE("#eeeeee"),
+	/**
+	 * color for the arc annotation that is in agreement
+	 */
+	AGREE_ARC("#000000"),
 	/**
 	 * Annotators have annotated differently. Curated document not yet has any annotations.
 	 */
