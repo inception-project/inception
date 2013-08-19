@@ -105,7 +105,7 @@ public class DocumentStatusColumnMetaData
             SourceDocument document = projectRepositoryService.getSourceDocument(
                     value.substring(value.indexOf(":") + 1), project);
             SourceDocumentState state = document.getState();
-            String iconNameForState;
+            String iconNameForState = SourceDocumentState.NEW.toString();
             // If state is annotation finished or annotation in progress, curation is not yet
             // started
             if (state.equals(SourceDocumentState.ANNOTATION_FINISHED)) {
@@ -114,8 +114,11 @@ public class DocumentStatusColumnMetaData
             else if (state.equals(SourceDocumentState.ANNOTATION_IN_PROGRESS)) {
                 iconNameForState = SourceDocumentState.NEW.toString();
             }
-            else {
-                iconNameForState = state.toString();
+            else if (state.equals(SourceDocumentState.CURATION_IN_PROGRESS)) {
+                iconNameForState = AnnotationDocumentState.IN_PROGRESS.toString();
+            }
+            else if (state.equals(SourceDocumentState.CURATION_FINISHED)) {
+                iconNameForState = AnnotationDocumentState.FINISHED.toString();
             }
             aCellItem.add(new EmbeddableImage(componentId, new ContextRelativeResource(
                     "/images_small/" + iconNameForState + ".png")));
