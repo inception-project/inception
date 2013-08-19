@@ -54,7 +54,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
@@ -65,6 +64,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.ReCreateMergeCASModalPane
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.ReMergeCasModel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.YesNoModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.AnnotationLayersModalPanel;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.ExportModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.GuidelineModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.CurationPanel;
@@ -78,7 +78,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome.WelcomePage;
  * displays differences between user annotations for a specific document. The
  * interface provides a tool for merging these annotations and storing them as a
  * new annotation.
- * 
+ *
  * @author Andreas Straninger
  * @author Seid Muhie Yimam
  */
@@ -100,7 +100,7 @@ public class CurationPage extends SettingsPageBase {
 	private BratAnnotatorModel bratAnnotatorModel;
 
 	public Label numberOfPages;
-	private Label documentNameLabel;
+	private DocumentNamePanel documentNamePanel;
 
 	private int sentenceNumber = 1;
 	private int totalNumberOfSentence;
@@ -129,31 +129,8 @@ public class CurationPage extends SettingsPageBase {
 		curationPanel.setOutputMarkupId(true);
 		add(curationPanel);
 
-		add(documentNameLabel = (Label) new Label("doumentName",
-				new LoadableDetachableModel() {
-
-					private static final long serialVersionUID = 1L;
-
-					@Override
-					protected String load() {
-						String projectName;
-						String documentName;
-						if (bratAnnotatorModel.getProject() == null) {
-							projectName = "/";
-						} else {
-							projectName = bratAnnotatorModel.getProject()
-									.getName() + "/";
-						}
-						if (bratAnnotatorModel.getDocument() == null) {
-							documentName = "";
-						} else {
-							documentName = bratAnnotatorModel.getDocument()
-									.getName();
-						}
-						return projectName + documentName;
-
-					}
-				}).setOutputMarkupId(true));
+        add(documentNamePanel = new DocumentNamePanel("documentNamePanel",
+                new Model<BratAnnotatorModel>(bratAnnotatorModel)));
 
 		add(numberOfPages = (Label) new Label("numberOfPages",
 				new LoadableDetachableModel() {
@@ -317,7 +294,7 @@ public class CurationPage extends SettingsPageBase {
 											+ openDataModel.getDocument()
 													.getName() + "]')");
 								}
-								target.add(documentNameLabel);
+								target.add(documentNamePanel.setOutputMarkupId(true));
 							}
 						});
 				openDocumentsModal.show(aTarget);

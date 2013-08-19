@@ -68,6 +68,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenDocumentModel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenModalWindowPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.AnnotationLayersModalPanel;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.ExportModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.FinishImage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.FinishLink;
@@ -110,7 +111,7 @@ public class CorrectionPage
     private BratAnnotatorModel bratAnnotatorModel;
 
     private Label numberOfPages;
-    private Label documentNameLabel;
+    private DocumentNamePanel documentNamePanel;
 
     private int sentenceNumber = 1;
     private int totalNumberOfSentence;
@@ -216,32 +217,8 @@ public class CorrectionPage
         curationContainer = new CurationContainer();
         curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
 
-        add(documentNameLabel = (Label) new Label("doumentName", new LoadableDetachableModel()
-        {
-
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            protected String load()
-            {
-                String projectName;
-                String documentName;
-                if (bratAnnotatorModel.getProject() == null) {
-                    projectName = "/";
-                }
-                else {
-                    projectName = bratAnnotatorModel.getProject().getName() + "/";
-                }
-                if (bratAnnotatorModel.getDocument() == null) {
-                    documentName = "";
-                }
-                else {
-                    documentName = bratAnnotatorModel.getDocument().getName();
-                }
-                return projectName + documentName;
-
-            }
-        }).setOutputMarkupId(true));
+        add(documentNamePanel = new DocumentNamePanel("documentNamePanel",
+                new Model<BratAnnotatorModel>(bratAnnotatorModel)));
 
         add(numberOfPages = (Label) new Label("numberOfPages", new LoadableDetachableModel()
         {
@@ -377,7 +354,7 @@ public class CorrectionPage
                             target.appendJavaScript("alert('Annotation in progress for document ["
                                     + openDataModel.getDocument().getName() + "]')");
                         }
-                        target.add(documentNameLabel);
+                        target.add(documentNamePanel.setOutputMarkupId(true));
                         target.add(numberOfPages);
                     }
                 });

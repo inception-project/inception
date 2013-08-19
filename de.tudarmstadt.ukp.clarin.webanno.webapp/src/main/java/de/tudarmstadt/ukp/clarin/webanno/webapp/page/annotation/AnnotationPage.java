@@ -61,6 +61,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenDocumentModel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenModalWindowPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.AnnotationLayersModalPanel;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.ExportModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.FinishImage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.FinishLink;
@@ -102,7 +103,7 @@ public class AnnotationPage
     boolean firstLoad = true;
 
     private Label numberOfPages;
-    private Label documentNameLabel;
+    private DocumentNamePanel documentNamePanel;
 
     private long currentDocumentId;
     private long currentprojectId;
@@ -135,33 +136,8 @@ public class AnnotationPage
         bratAnnotatorModel.setMode(Mode.ANNOTATION);
         add(annotator);
 
-        add(documentNameLabel = (Label) new Label("doumentName",
-                new LoadableDetachableModel<String>()
-                {
-
-                    private static final long serialVersionUID = 1L;
-
-                    @Override
-                    protected String load()
-                    {
-                        String projectName;
-                        String documentName;
-                        if (bratAnnotatorModel.getProject() == null) {
-                            projectName = "/";
-                        }
-                        else {
-                            projectName = bratAnnotatorModel.getProject().getName() + "/";
-                        }
-                        if (bratAnnotatorModel.getDocument() == null) {
-                            documentName = "";
-                        }
-                        else {
-                            documentName = bratAnnotatorModel.getDocument().getName();
-                        }
-                        return projectName + documentName;
-
-                    }
-                }).setOutputMarkupId(true));
+        add(documentNamePanel = new DocumentNamePanel("documentNamePanel",
+                new Model<BratAnnotatorModel>(bratAnnotatorModel)));
 
         add(numberOfPages = (Label) new Label("numberOfPages",
                 new LoadableDetachableModel<String>()
@@ -259,17 +235,17 @@ public class AnnotationPage
                             bratAnnotatorModel.setDocument(openDataModel.getDocument());
                             bratAnnotatorModel.setProject(openDataModel.getProject());
                             try {
-                                //setAttributesForGetCollection();
+                                // setAttributesForGetCollection();
                                 setAttributesForDocument();
                             }
                             catch (IOException e) {
-                               error(e.getMessage());
+                                error(e.getMessage());
                             }
                             catch (UIMAException e) {
                                 error(ExceptionUtils.getRootCauseMessage(e));
                             }
                             catch (ClassNotFoundException e) {
-                               error(e.getMessage());
+                                error(e.getMessage());
                             }
                             String collection = "#" + openDataModel.getProject().getName() + "/";
                             String document = openDataModel.getDocument().getName();
@@ -298,15 +274,15 @@ public class AnnotationPage
         {
             private static final long serialVersionUID = -4657965743173979437L;
 
-        @Override
-        protected void onChange(AjaxRequestTarget aTarget)
-        {
-            aTarget.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
-        }
+            @Override
+            protected void onChange(AjaxRequestTarget aTarget)
+            {
+                aTarget.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+            }
         });
 
-        add(new ExportModalPanel("exportModalPanel",
-                new Model<BratAnnotatorModel>(bratAnnotatorModel)));
+        add(new ExportModalPanel("exportModalPanel", new Model<BratAnnotatorModel>(
+                bratAnnotatorModel)));
         // Show the previous document, if exist
         add(new AjaxLink<Void>("showPreviousDocument")
         {
@@ -351,17 +327,17 @@ public class AnnotationPage
                     bratAnnotatorModel.setDocument(listOfSourceDocuements
                             .get(currentDocumentIndex - 1));
                     try {
-                        //setAttributesForGetCollection();
+                        // setAttributesForGetCollection();
                         setAttributesForDocument();
                     }
                     catch (IOException e) {
-                       error(e.getMessage());
+                        error(e.getMessage());
                     }
                     catch (UIMAException e) {
                         error(ExceptionUtils.getRootCauseMessage(e));
                     }
                     catch (ClassNotFoundException e) {
-                       error(e.getMessage());
+                        error(e.getMessage());
                     }
                     String project = "#" + bratAnnotatorModel.getProject().getName() + "/";
                     String document = listOfSourceDocuements.get(currentDocumentIndex - 1)
@@ -418,18 +394,19 @@ public class AnnotationPage
                     bratAnnotatorModel.setDocument(listOfSourceDocuements
                             .get(currentDocumentIndex + 1));
                     try {
-                        //setAttributesForGetCollection();
+                        // setAttributesForGetCollection();
                         setAttributesForDocument();
                     }
                     catch (IOException e) {
-                       error(e.getMessage());
+                        error(e.getMessage());
                     }
                     catch (UIMAException e) {
                         error(ExceptionUtils.getRootCauseMessage(e));
                     }
                     catch (ClassNotFoundException e) {
-                       error(e.getMessage());
-                    };
+                        error(e.getMessage());
+                    }
+                    ;
                     String project = "#" + bratAnnotatorModel.getProject().getName() + "/";
                     String document = listOfSourceDocuements.get(currentDocumentIndex + 1)
                             .getName();
@@ -561,8 +538,8 @@ public class AnnotationPage
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.End }, EventType.click)));
 
-        add(new GuidelineModalPanel("guidelineModalPanel",
-                new Model<BratAnnotatorModel>(bratAnnotatorModel)));
+        add(new GuidelineModalPanel("guidelineModalPanel", new Model<BratAnnotatorModel>(
+                bratAnnotatorModel)));
 
         gotoPageTextField = (NumberTextField<Integer>) new NumberTextField<Integer>("gotoPageText",
                 new Model<Integer>(10));
@@ -614,7 +591,7 @@ public class AnnotationPage
             }
         });
 
-        finish = new FinishImage("finishImage",  new Model<BratAnnotatorModel>(bratAnnotatorModel));
+        finish = new FinishImage("finishImage", new Model<BratAnnotatorModel>(bratAnnotatorModel));
 
         add(new FinishLink("showYesNoModalPanel",
                 new Model<BratAnnotatorModel>(bratAnnotatorModel), finish)
@@ -695,26 +672,24 @@ public class AnnotationPage
         currentDocumentId = bratAnnotatorModel.getDocument().getId();
     }
 
-/*    *//**
+    /*    *//**
      * Set different attributes for
      * {@link BratAjaxCasController#getCollectionInformation(String, ArrayList) }
      *
      * @throws IOException
-     *//*
-
-    public void setAttributesForGetCollection()
-        throws IOException
-    {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-
-        if (bratAnnotatorModel.getProject().getId() != currentprojectId) {
-            AnnotationPreference preference = new AnnotationPreference();
-            ApplicationUtils.setAnnotationPreference(preference, username, repository,
-                    annotationService, bratAnnotatorModel, Mode.ANNOTATION);
-        }
-        currentprojectId = bratAnnotatorModel.getProject().getId();
-
-    }*/
+     */
+    /*
+     *
+     * public void setAttributesForGetCollection() throws IOException { String username =
+     * SecurityContextHolder.getContext().getAuthentication().getName();
+     *
+     * if (bratAnnotatorModel.getProject().getId() != currentprojectId) { AnnotationPreference
+     * preference = new AnnotationPreference(); ApplicationUtils.setAnnotationPreference(preference,
+     * username, repository, annotationService, bratAnnotatorModel, Mode.ANNOTATION); }
+     * currentprojectId = bratAnnotatorModel.getProject().getId();
+     *
+     * }
+     */
 
     boolean isDocumentOpenedFirstTime(String aCollection, String adocumentName)
     {
@@ -731,7 +706,6 @@ public class AnnotationPage
             return true;
         }
     }
-
 
     private JCas getCas(Project aProject, User user, SourceDocument aDocument)
         throws UIMAException, IOException, ClassNotFoundException
