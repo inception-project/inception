@@ -296,4 +296,10 @@ public class NamedEntityTaskManager implements Serializable
         LOG.info("Done, finished uploading data to #" + job.getId());
         return job.getId();
     }
+
+    String getURLforID(String jobID)
+    {
+        return "https://crowdflower.com/jobs/"+jobID+"/";
+    }
+
 }
