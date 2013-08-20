@@ -429,11 +429,11 @@ public class BratCuratorUtility
             AnnotationSelection annotationSelection = annotationSelectionByAddress.get(address);
             AnnotationState newState = null;
             if (aMode.equals(Mode.CORRECTION)) {
-                newState = getCurationState(annotationSelectionByAddress, aAnnotationOptions,
+                newState = getCorrectionState(annotationSelectionByAddress, aAnnotationOptions,
                         numUsers, entity);
             }
             else {
-                newState = getState(numUsers, annotationSelection);
+                newState = getCurationState(numUsers, annotationSelection);
             }
             targetAnnotations.put(entity.getId(), entity.getType() + "_(" + newState.name() + ")");
         }
@@ -443,7 +443,13 @@ public class BratCuratorUtility
             int address = entity.getId();
             AnnotationSelection annotationSelection = annotationSelectionByAddress.get(address);
             AnnotationState newState = null;
-            newState = getState(numUsers, annotationSelection);
+            if (aMode.equals(Mode.CORRECTION)) {
+                newState = getCorrectionState(annotationSelectionByAddress, aAnnotationOptions,
+                        numUsers, entity);
+            }
+            else {
+                newState = getCurationState(numUsers, annotationSelection);
+            }
             if (newState != null) {
                 String type = entity.getType() + "_(" + newState.name() + ")";
                 String label = entity.getType();
@@ -489,7 +495,7 @@ public class BratCuratorUtility
         }
     }
 
-    private static AnnotationState getState(int numUsers, AnnotationSelection annotationSelection)
+    private static AnnotationState getCurationState(int numUsers, AnnotationSelection annotationSelection)
     {
         AnnotationState newState;
         if (annotationSelection == null) {
@@ -531,7 +537,7 @@ public class BratCuratorUtility
         int address = relation.getId();
         AnnotationSelection annotationSelection = annotationSelectionByAddress.get(address);
         AnnotationState newState = null;
-        newState = getState(numUsers, annotationSelection);
+        newState = getCurationState(numUsers, annotationSelection);
         if (newState != null) {
             String type = relation.getType() + "_(" + newState.name() + ")";
             String label = relation.getType().replace(AnnotationTypeConstant.POS_PREFIX, "")
@@ -568,7 +574,7 @@ public class BratCuratorUtility
         return arcs;
     }
 
-    private static AnnotationState getCurationState(
+    private static AnnotationState getCorrectionState(
             Map<Integer, AnnotationSelection> annotationSelectionByAddress,
             List<AnnotationOption> aAnnotationOptions, int numUsers, Entity entity)
     {
