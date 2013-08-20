@@ -147,12 +147,11 @@ public class NamedEntityTaskManager implements Serializable
                         goldTokens.add(strToken);
                     }
 
-
-                    //standard case: no gold elements
+                    //Standard case: no gold elements
                     String strGold = "[]";
                     String strGoldReason = noGoldNER1Reason;
 
-                    //case where we have gold elements and want to give feedback to the crowd user
+                    //Case where we have gold elements and want to give feedback to the crowd user
                     if(goldElems.size() > 0)
                     {
                         strGold = buildTask1GoldElem(textBuilder, goldElems);
@@ -161,6 +160,10 @@ public class NamedEntityTaskManager implements Serializable
 
                     task1Data.setMarkertext_gold(strGold);
                     task1Data.setMarkertext_gold_reason(strGoldReason);
+
+                    // Marker flag for crowdflower that this data is gold data.
+                    // Still need to click on "convert uploaded gold" manually in the interface.
+                    task1Data.set_golden("TRUE");
                 }
 
                 data.add(task1Data);
