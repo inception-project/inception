@@ -48,6 +48,7 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.markup.html.form.ListMultipleChoice;
 import org.apache.wicket.markup.html.form.TextField;
+import org.apache.wicket.markup.html.link.ExternalLink;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.AbstractReadOnlyModel;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -274,12 +275,12 @@ public class CrowdSourcePage
      * Details of a crowdsource project
      *
      */
+
     private class CrowdProjectDetailForm
         extends Form<SelectionModel>
     {
         private static final long serialVersionUID = -1L;
 
-        @SuppressWarnings({ "unchecked", "rawtypes" })
         public CrowdProjectDetailForm(String id)
         {
             super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
@@ -287,8 +288,32 @@ public class CrowdSourcePage
             add(new TextField<String>("name").setRequired(true));
 
             add(new TextField<String>("apiKey"));
+            ExternalLink link;
 
-            add(new Label("link"));
+            IModel<String> model=new LoadableDetachableModel<String>() {
+                private static final long serialVersionUID = -2140663269255140643L;
+
+                @Override
+                protected String load() {
+                    if(selectedCrowdJob != null) {
+                        return selectedCrowdJob.getLink();
+                    }
+                    else {
+                        return "";
+                    }
+                }
+            };
+
+            add(link = new ExternalLink("link", model));
+
+            link.add(new Label("label", new LoadableDetachableModel<String>() {
+                private static final long   serialVersionUID    = 1L;
+                @Override
+                protected String load() {
+                        return selectedCrowdJob.getLink();
+                }
+            }));
+
             add(new Label("status"));
 
             add(new ListMultipleChoice<SourceDocument>("documents")
@@ -555,7 +580,11 @@ public class CrowdSourcePage
                     //Todo: Get the template
                     try {
                         String template = FileUtils.readFileToString(projectRepository.getTemplate(CROWD_NERTASK1_TEMPLATE));
-                        namedEntityTaskManager.uploadNewNERTask1(template, jCases, goldJCases);
+
+                        String strdD = namedEntityTaskManager.uploadNewNERTask1(template, jCases, goldJCases);
+                        selectedCrowdJob.setTask1Id(strdD);
+                        selectedCrowdJob.setLink(namedEntityTaskManager.getURLforID(strdD));
+                        projectRepository.createCrowdJob(selectedCrowdJob);
                     }
                     catch (FileNotFoundException e)
                     {
@@ -912,6 +941,9 @@ public class CrowdSourcePage
                         SelectionModel selectionModel = new SelectionModel();
                         selectionModel.name = selectedCrowdJob.getName();
                         selectionModel.apiKey = selectedCrowdJob.getApiKey();
+                        selectionModel.link = selectedCrowdJob.getLink();
+                        selectionModel.status = selectedCrowdJob.getStatus();
+
                         crowdJobDetailForm.setModelObject(selectionModel);
                         crowdJobDetailForm.setVisible(true);
                         createCrowdJob = false;

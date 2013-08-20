@@ -62,6 +62,19 @@ public class CrowdJob
     @JoinColumn(name = "api_key")
     private String apiKey;
 
+    @JoinColumn(name = "link")
+    private String link;
+
+    @JoinColumn(name = "status")
+    private String status;
+
+    @JoinColumn(name = "task1_id")
+    private String task1Id;
+
+    @JoinColumn(name = "task2_id")
+    private String task2Id;
+
+
     public long getId()
     {
         return id;
@@ -110,6 +123,46 @@ public class CrowdJob
     public void setApiKey(String apiKey)
     {
         this.apiKey = apiKey;
+    }
+
+    public String getLink()
+    {
+        return link;
+    }
+
+    public void setLink(String link)
+    {
+        this.link = link;
+    }
+
+    public String getStatus()
+    {
+        return status;
+    }
+
+    public void setStatus(String status)
+    {
+        this.status = status;
+    }
+
+    public String getTask1Id()
+    {
+        return task1Id;
+    }
+
+    public void setTask1Id(String task1Id)
+    {
+        this.task1Id = task1Id;
+    }
+
+    public String getTask2Id()
+    {
+        return task2Id;
+    }
+
+    public void setTask2Id(String task2Id)
+    {
+        this.task2Id = task2Id;
     }
 
 

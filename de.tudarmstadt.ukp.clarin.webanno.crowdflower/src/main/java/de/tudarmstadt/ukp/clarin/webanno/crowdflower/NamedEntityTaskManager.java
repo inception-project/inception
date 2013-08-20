@@ -297,7 +297,7 @@ public class NamedEntityTaskManager implements Serializable
         return job.getId();
     }
 
-    String getURLforID(String jobID)
+   public String getURLforID(String jobID)
     {
         return "https://crowdflower.com/jobs/"+jobID+"/";
     }
