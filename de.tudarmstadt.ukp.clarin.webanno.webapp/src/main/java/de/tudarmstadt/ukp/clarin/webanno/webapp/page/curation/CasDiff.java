@@ -32,6 +32,7 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
+import org.uimafit.util.CasUtil;
 
 /**
  * Class for finding clusters of equal annotations. Equal annotations are grouped into
@@ -69,8 +70,9 @@ public class CasDiff {
 
                 // instead cas.getAnnotationIndex(aEntryType) also
                 // cas.getIndexRepository().getAllIndexedFS(aType)
-                for (AnnotationFS annotationFS : selectCovered(cas, aEntryType,
-                        aBegin, aEnd)) {
+                // #610 - fetch type by name as type instance may be bound to a different CAS
+                Type localType = CasUtil.getType(cas, aEntryType.getName());
+                for (AnnotationFS annotationFS : selectCovered(cas, localType, aBegin, aEnd)) {
                     Integer begin = annotationFS.getBegin();
                     Integer end = annotationFS.getEnd();
 
