@@ -23,7 +23,9 @@ import static org.uimafit.util.JCasUtil.selectCovered;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
@@ -101,6 +103,14 @@ public class WebannoTsvWriter
                         .getAddress(), dependecny.getGovernor().getAddress());
             }
 
+            // List of governors (heads), that will be used, if ROOT is not explicitly added,
+            // we should add it.
+            List<Integer> governorAddresses = new ArrayList<Integer>();
+
+            for (Dependency dependecny : selectCovered(Dependency.class, sentence)) {
+                governorAddresses.add(dependecny.getGovernor().getAddress());
+            }
+
             int i = 1;
             for (Token token : selectCovered(Token.class, sentence)) {
                 dependencyMap.put(token.getAddress(), i);
@@ -167,13 +177,19 @@ public class WebannoTsvWriter
                     secondNamedEntity = "O";
                 }
 
+                String type = dependencyTypeMap.get(token.getAddress()) == null ? "_"
+                        : dependencyTypeMap.get(token.getAddress());
+
                 if (dependentMap.get(token.getAddress()) != null) {
                     if (dependencyMap.get(dependentMap.get(token.getAddress())) != null) {
                         dependent = "" + dependencyMap.get(dependentMap.get(token.getAddress()));
                     }
                 }
-                String type = dependencyTypeMap.get(token.getAddress()) == null ? "_"
-                        : dependencyTypeMap.get(token.getAddress());
+                // ROOT was not explicitly mentioned in the annotation
+                else if(governorAddresses.contains(token.getAddress())){
+                    dependent = "0";
+                    type = "ROOT";
+                }
 
                 if (dependentMap.get(token.getAddress()) != null
                         && dependencyMap.get(dependentMap.get(token.getAddress())) != null
