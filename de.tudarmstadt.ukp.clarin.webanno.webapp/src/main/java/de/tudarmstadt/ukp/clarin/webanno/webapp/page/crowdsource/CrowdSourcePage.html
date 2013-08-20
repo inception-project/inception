@@ -80,13 +80,19 @@
                   </select>
                 </div>
 
-                <label>
-                  Place holder for gold data and template upload goes HERE
-                </label>
+ 				<div>
+                  <label>
+                    Gold Documents:
+                  </label>
+                  <select wicket:id="goldDocuments" class ="hfill">
+                  </select>
+                </div>
+                
                 <div class="buttons">
                   <input type="submit" wicket:id="save" />
                   <input type="submit" wicket:id="remove" />
-                  <input type="submit" wicket:id="add" />
+                  <input type="submit" wicket:id="addDocuments" /> 
+                  <input type="submit" wicket:id="addGoldDocuments" /> 
                   <input type="submit" wicket:id="removeDocument" />
                   <input type="submit" wicket:id="uploadT1" />
                   <input type="submit" wicket:id="uploadT2" />
@@ -100,6 +106,22 @@
               <fieldset class="ui-widget-content ui-corner-all">
                 <legend>
                   Available documents
+                </legend>
+                <div>
+                  <span wicket:id="documents" class="hfill">
+                  </span>
+                </div>
+                <div class="buttons">
+                  <input type="submit" wicket:id="add" />
+                  <input type="submit" wicket:id="cancel" />
+                </div>
+              </fieldset>
+            </form>
+            
+             <form wicket:id="goldDocumentListForm">
+              <fieldset class="ui-widget-content ui-corner-all">
+                <legend>
+                  Gold documents
                 </legend>
                 <div>
                   <span wicket:id="documents" class="hfill">

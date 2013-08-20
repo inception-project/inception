@@ -67,6 +67,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.CrowdJob;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.project.SettingsPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.support.EmbeddableImage;
@@ -98,6 +99,7 @@ public class CrowdSourcePage
     private static final String CROWD_NERTASK1_TEMPLATE = "NERtask1.template";
 
     private CrowdJob selectedCrowdJob;
+    List<SourceDocument> goldDocuments = new ArrayList<SourceDocument>();
     private Project selectedProject;
 
     boolean createCrowdJob = false;
@@ -105,6 +107,38 @@ public class CrowdSourcePage
     private ArrayList<SourceDocument> documents = new ArrayList<SourceDocument>();
 
     private NamedEntityTaskManager namedEntityTaskManager;
+
+    private CrowdSourceForm crowdSourceForm;
+    private CrowdJobForm crowdJobForm;
+    private CrowdDocumentListForm crowdDocumentListForm;
+    private GoldDocumentListForm goldDocumentListForm;
+    private CrowdProjectDetailForm crowdJobDetailForm;
+
+    public CrowdSourcePage()
+        throws UIMAException, IOException, ClassNotFoundException
+    {
+        crowdSourceForm = new CrowdSourceForm("crowdSourceForm");
+        add(crowdSourceForm);
+
+        crowdJobForm = new CrowdJobForm("crowdJobForm");
+        crowdJobForm.setVisible(false);
+        add(crowdJobForm);
+
+        crowdDocumentListForm = new CrowdDocumentListForm("crowdDocumentListForm");
+        crowdDocumentListForm.setVisible(false);
+        add(crowdDocumentListForm);
+
+        goldDocumentListForm = new GoldDocumentListForm("goldDocumentListForm");
+        goldDocumentListForm.setVisible(false);
+        add(goldDocumentListForm);
+        /*
+         * projectListForm = new ProjectListForm("projectListForm");
+         * projectListForm.setVisible(false); add(projectListForm);
+         */
+        crowdJobDetailForm = new CrowdProjectDetailForm("crowdJobDetailForm");
+        crowdJobDetailForm.setVisible(false);
+        add(crowdJobDetailForm);
+    }
 
     private class CrowdSourceForm
         extends Form<SelectionModel>
@@ -308,6 +342,55 @@ public class CrowdSourcePage
                 }
             }).setOutputMarkupId(true);
 
+            add(new ListMultipleChoice<SourceDocument>("goldDocuments")
+            {
+                private static final long serialVersionUID = 1L;
+
+                {
+                    setChoices(new LoadableDetachableModel<List<SourceDocument>>()
+                    {
+                        private static final long serialVersionUID = 1L;
+
+                        @Override
+                        protected List<SourceDocument> load()
+                        {
+                            // List<SourceDocument> documents = new ArrayList<SourceDocument>();
+
+                            if (goldDocuments.size() != 0) {
+                                Collections.sort(goldDocuments, new Comparator<SourceDocument>()
+                                {
+                                    @Override
+                                    public int compare(SourceDocument doc1, SourceDocument doc2)
+                                    {
+                                        return (doc1.getProject().getName() + doc1.getName())
+                                                .compareTo(doc2.getProject().getName()
+                                                        + doc2.getName());
+                                    }
+                                });
+                            }
+                            return goldDocuments;
+                        }
+                    });
+                    setChoiceRenderer(new ChoiceRenderer<SourceDocument>()
+                    {
+                        private static final long serialVersionUID = 4332411944787665963L;
+
+                        @Override
+                        public Object getDisplayValue(SourceDocument aObject)
+                        {
+                            return aObject.getName();
+                        }
+                    });
+                }
+
+                @Override
+                public boolean isVisible()
+                {
+                    return !createCrowdJob;
+
+                }
+            }).setOutputMarkupId(true);
+
             // save the crowd task
             add(new Button("save", new ResourceModel("label"))
             {
@@ -367,7 +450,7 @@ public class CrowdSourcePage
             });
 
             // add documents to the crowd source project
-            add(new Button("add", new ResourceModel("label"))
+            add(new Button("addDocuments", new ResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;
 
@@ -375,6 +458,25 @@ public class CrowdSourcePage
                 public void onSubmit()
                 {
                     crowdDocumentListForm.setVisible(true);
+                }
+
+                @Override
+                public boolean isVisible()
+                {
+                    return !createCrowdJob;
+
+                }
+            });
+
+            // add documents to the crowd source project
+            add(new Button("addGoldDocuments", new ResourceModel("label"))
+            {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public void onSubmit()
+                {
+                    goldDocumentListForm.setVisible(true);
                 }
 
                 @Override
@@ -436,8 +538,13 @@ public class CrowdSourcePage
 
                     // Get the JCASes for each source document
                     for (SourceDocument sourceDocument : sourceDocuments) {
-                        AnnotationDocument annotationDocument;
                         addJCas(jCases, user, sourceDocument);
+                    }
+
+                    // Get the JCASes for each gold document
+                    List<JCas> goldJCases = new ArrayList<JCas>();
+                    for (SourceDocument sourceDocument : goldDocuments) {
+                        addJCas(goldJCases, user, sourceDocument);
                     }
 
                     // Convert it to approprate crowdfloweer format
@@ -448,7 +555,7 @@ public class CrowdSourcePage
                     //Todo: Get the template
                     try {
                         String template = FileUtils.readFileToString(projectRepository.getTemplate(CROWD_NERTASK1_TEMPLATE));
-                        namedEntityTaskManager.uploadNewNERTask1(template, jCases, null);
+                        namedEntityTaskManager.uploadNewNERTask1(template, jCases, goldJCases);
                     }
                     catch (FileNotFoundException e)
                     {
@@ -462,55 +569,6 @@ public class CrowdSourcePage
                     }catch (Exception e) {
                         error("Something went wrong uploading your document(s) to crowdflower.com: " + e.getMessage());
                     }
-
-                }
-
-                private void addJCas(List<JCas> jCases, User user, SourceDocument sourceDocument)
-                {
-                    AnnotationDocument annotationDocument;
-                    JCas jCas;
-                    try {
-                        if (projectRepository.existsAnnotationDocument(sourceDocument, user)) {
-                            annotationDocument = projectRepository.getAnnotationDocument(
-                                    sourceDocument, user);
-
-                            jCas = projectRepository
-                                    .getAnnotationDocumentContent(annotationDocument);
-                            jCases.add(jCas);
-                        }
-                        else {
-                            annotationDocument = new AnnotationDocument();
-                            annotationDocument.setDocument(sourceDocument);
-                            annotationDocument.setUser(user.getUsername());
-                            annotationDocument.setProject(selectedProject);
-                            // annotationDocument.setState(AnnotationDocumentState.IN_PROGRESS);
-                            annotationDocument.setName(sourceDocument.getName());
-                            projectRepository.createAnnotationDocument(annotationDocument);
-
-                            jCas = BratAjaxCasUtil.getJCasFromFile(
-                                    projectRepository.getSourceDocumentContent(selectedProject,
-                                            sourceDocument),
-                                    projectRepository.getReadableFormats().get(
-                                            sourceDocument.getFormat()));
-                            projectRepository.createAnnotationDocumentContent(jCas, sourceDocument, user);
-                            jCases.add(jCas);
-                        }
-                    }
-                    catch (UIMAException e) {
-                        error(e.getMessage() + " : " + ExceptionUtils.getRootCauseMessage(e));
-                    }
-                    catch (IOException e) {
-                        error(e.getMessage());
-                    }
-                    catch (ClassNotFoundException e) {
-                        error(e.getMessage());
-                    }
-                }
-
-                @Override
-                public boolean isVisible()
-                {
-                    return !createCrowdJob;
 
                 }
             });
@@ -569,6 +627,48 @@ public class CrowdSourcePage
         }
     }
 
+    private void addJCas(List<JCas> jCases, User user, SourceDocument sourceDocument)
+    {
+        AnnotationDocument annotationDocument;
+        JCas jCas;
+        try {
+            if (projectRepository.existsAnnotationDocument(sourceDocument, user)) {
+                annotationDocument = projectRepository.getAnnotationDocument(
+                        sourceDocument, user);
+
+                jCas = projectRepository
+                        .getAnnotationDocumentContent(annotationDocument);
+                jCases.add(jCas);
+            }
+            else {
+                annotationDocument = new AnnotationDocument();
+                annotationDocument.setDocument(sourceDocument);
+                annotationDocument.setUser(user.getUsername());
+                annotationDocument.setProject(selectedProject);
+                // annotationDocument.setState(AnnotationDocumentState.IN_PROGRESS);
+                annotationDocument.setName(sourceDocument.getName());
+                projectRepository.createAnnotationDocument(annotationDocument);
+
+                jCas = BratAjaxCasUtil.getJCasFromFile(
+                        projectRepository.getSourceDocumentContent(selectedProject,
+                                sourceDocument),
+                        projectRepository.getReadableFormats().get(
+                                sourceDocument.getFormat()));
+                projectRepository.createAnnotationDocumentContent(jCas, sourceDocument, user);
+                jCases.add(jCas);
+            }
+        }
+        catch (UIMAException e) {
+            error(e.getMessage() + " : " + ExceptionUtils.getRootCauseMessage(e));
+        }
+        catch (IOException e) {
+            error(e.getMessage());
+        }
+        catch (ClassNotFoundException e) {
+            error(e.getMessage());
+        }
+    }
+
     private class CrowdDocumentListForm
         extends Form<SelectionModel>
     {
@@ -593,9 +693,13 @@ public class CrowdSourcePage
                             List<SourceDocument> sourceDocuments = new ArrayList<SourceDocument>();
                             for (SourceDocument sourceDocument : projectRepository
                                     .listSourceDocuments(selectedProject)) {
-                                sourceDocuments.add(sourceDocument);
+                                // if not a GOLD data!
+                                if(!sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
+                                    sourceDocuments.add(sourceDocument);
+                                }
                             }
 
+                            // filter already added documents
                             for (CrowdJob crowdJob : projectRepository.listCrowdJobs()) {
                                 sourceDocuments.removeAll(new ArrayList<SourceDocument>(crowdJob
                                         .getDocuments()));
@@ -643,7 +747,7 @@ public class CrowdSourcePage
                         selectedCrowdJob.setDocuments(new HashSet<SourceDocument>(sourceDocuments));
                         projectRepository.createCrowdJob(selectedCrowdJob);
                     }
-                    crowdDocumentListForm.setVisible(false);
+                    CrowdDocumentListForm.this.setVisible(false);
                     updateTable();
                 }
             });
@@ -655,12 +759,104 @@ public class CrowdSourcePage
                 @Override
                 public void onSubmit()
                 {
-                    crowdDocumentListForm.setVisible(false);
+                    CrowdDocumentListForm.this.setVisible(false);
                 }
             });
         }
 
     }
+
+    private class GoldDocumentListForm
+    extends Form<SelectionModel>
+{
+    private static final long serialVersionUID = 293213755095594897L;
+
+    public GoldDocumentListForm(String id)
+    {
+        super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
+
+        add(new CheckBoxMultipleChoice<SourceDocument>("documents")
+        {
+            private static final long serialVersionUID = 1L;
+
+            {
+                setChoices(new LoadableDetachableModel<List<SourceDocument>>()
+                {
+                    private static final long serialVersionUID = -6821990375210752730L;
+
+                    @Override
+                    protected List<SourceDocument> load()
+                    {
+                        List<SourceDocument> sourceDocuments = new ArrayList<SourceDocument>();
+                        for (SourceDocument sourceDocument : projectRepository
+                                .listSourceDocuments(selectedProject)) {
+                            if(sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
+                                sourceDocuments.add(sourceDocument);
+                            }
+                        }
+
+                        for (CrowdJob crowdJob : projectRepository.listCrowdJobs()) {
+                            sourceDocuments.removeAll(new ArrayList<SourceDocument>(crowdJob
+                                    .getDocuments()));
+                        }
+
+                        Collections.sort(sourceDocuments, new Comparator<SourceDocument>()
+                        {
+                            @Override
+                            public int compare(SourceDocument doc1, SourceDocument doc2)
+                            {
+                                return (doc1.getProject().getName() + doc1.getName())
+                                        .compareTo(doc2.getProject().getName() + doc2.getName());
+                            }
+                        });
+
+                        return sourceDocuments;
+                    }
+                });
+                setChoiceRenderer(new ChoiceRenderer<SourceDocument>()
+                {
+                    private static final long serialVersionUID = 5990012140581607347L;
+
+                    @Override
+                    public Object getDisplayValue(SourceDocument aObject)
+                    {
+                        return aObject.getName();
+                    }
+                });
+            }
+        }).setOutputMarkupId(true);
+        // add documents to the crowd source job
+        add(new Button("add", new ResourceModel("label"))
+        {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public void onSubmit()
+            {
+
+                List<SourceDocument> goldsSourceDocuments = GoldDocumentListForm.this
+                        .getModelObject().documents;
+                if (goldsSourceDocuments != null) {
+                    goldDocuments.clear();
+                    goldDocuments.addAll(goldsSourceDocuments);
+                }
+                GoldDocumentListForm.this.setVisible(false);
+            }
+        });
+        // add documents to the crowd source project
+        add(new Button("cancel", new ResourceModel("label"))
+        {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public void onSubmit()
+            {
+                GoldDocumentListForm.this.setVisible(false);
+            }
+        });
+    }
+
+}
 
     private void updateTable()
     {
@@ -745,34 +941,8 @@ public class CrowdSourcePage
         String name;
         String apiKey;
         List<SourceDocument> documents;
+        List<SourceDocument> goldDocuments;
         String link;
         String status;
-    }
-
-    private CrowdSourceForm crowdSourceForm;
-    private CrowdJobForm crowdJobForm;
-    private CrowdDocumentListForm crowdDocumentListForm;
-    private CrowdProjectDetailForm crowdJobDetailForm;
-
-    public CrowdSourcePage()
-        throws UIMAException, IOException, ClassNotFoundException
-    {
-        crowdSourceForm = new CrowdSourceForm("crowdSourceForm");
-        add(crowdSourceForm);
-
-        crowdJobForm = new CrowdJobForm("crowdJobForm");
-        crowdJobForm.setVisible(false);
-        add(crowdJobForm);
-
-        crowdDocumentListForm = new CrowdDocumentListForm("crowdDocumentListForm");
-        crowdDocumentListForm.setVisible(false);
-        add(crowdDocumentListForm);
-        /*
-         * projectListForm = new ProjectListForm("projectListForm");
-         * projectListForm.setVisible(false); add(projectListForm);
-         */
-        crowdJobDetailForm = new CrowdProjectDetailForm("crowdJobDetailForm");
-        crowdJobDetailForm.setVisible(false);
-        add(crowdJobDetailForm);
     }
 }
