@@ -53,8 +53,6 @@ public class NamedEntityTaskManager implements Serializable
     public NamedEntityTaskManager()
     {
         crowdclient = new CrowdClient();
-        //TODO set API key
-        //crowdclient.setApiKey()
     }
 
     /**
@@ -99,7 +97,6 @@ public class NamedEntityTaskManager implements Serializable
         for (JCas documentJCas : documentsJCas)
         {
             int offset = i;
-            //String text = "";
 
             for (Sentence sentence : select(documentJCas, Sentence.class)) {
 
@@ -144,18 +141,9 @@ public class NamedEntityTaskManager implements Serializable
                             strTokens.add(new String(t.getCoveredText()));
                         }
 
-                        textBuilder.setLength(0);
-                        textBuilder.append("{\"s\":");
-                        textBuilder.append(namedEntity.getBegin());
-                        textBuilder.append(",\"e\":");
-                        textBuilder.append(namedEntity.getEnd());
-                        textBuilder.append("}");
-
-                        //JSON named enitity marker for the gold data. The JSON here gets enclosed into the data JSON that is uploaded
-                        //String posElem = "{\"s\":"+strBegin+",\"e\":"+strEnd+"}";
                         String strToken = concatWithSeperator(strTokens," ");
 
-                        goldElems.add(new String(textBuilder));
+                        goldElems.add(buildTask1TokenJSON(textBuilder, namedEntity));
                         goldTokens.add(strToken);
                     }
 
@@ -167,28 +155,12 @@ public class NamedEntityTaskManager implements Serializable
                     //case where we have gold elements and want to give feedback to the crowd user
                     if(goldElems.size() > 0)
                     {
-                        textBuilder.setLength(0);
-                        //strGold = "["+concatWithSeperator(goldElems,",")+"]";
-                        textBuilder.append("[");
-                        textBuilder.append(concatWithSeperator(goldElems,","));
-                        textBuilder.append("]");
-                        strGold = new String(textBuilder);
-
-                        textBuilder.setLength(0);
-                        textBuilder.append("Der Text beinhaltet ");
-                        textBuilder.append(goldTokens.size());
-                        textBuilder.append(" Named Entiti(es): ");
-                        textBuilder.append(escapeHtml(concatWithSeperator(goldTokens,", ")));
-                        textBuilder.append(goldNER1ReasonHints);
-
-                        strGoldReason = new String(textBuilder);
-                        //strGoldReason = "Der Text beinhaltet " + String.valueOf(goldTokens.size()) + " Named Entiti(es): " + concatWithSeperator(goldTokens,", ");
-                        //strGoldReason += goldNER1ReasonHints;
+                        strGold = buildTask1GoldElem(textBuilder, goldElems);
+                        strGoldReason = buildTask1GoldElemReason(textBuilder, goldTokens);
                     }
 
-                    task1Data.setMarkertext_gold_reason(strGoldReason);
                     task1Data.setMarkertext_gold(strGold);
-
+                    task1Data.setMarkertext_gold_reason(strGoldReason);
                 }
 
                 data.add(task1Data);
@@ -198,6 +170,76 @@ public class NamedEntityTaskManager implements Serializable
         return data;
     }
 
+    /**
+     * Helper method for generateTask1Data, builds a string that explains to the user which named entities he had to select
+     *
+     * @param textBuilder
+     * @param goldTokens
+     * @return
+     */
+    private String buildTask1GoldElemReason(StringBuilder textBuilder, ArrayList<String> goldTokens)
+    {
+        String strGoldReason;
+        textBuilder.setLength(0);
+        textBuilder.append("Der Text beinhaltet ");
+        textBuilder.append(goldTokens.size());
+        textBuilder.append(" Named Entiti(es): ");
+        textBuilder.append(escapeHtml(concatWithSeperator(goldTokens,", ")));
+        textBuilder.append(goldNER1ReasonHints);
+
+        strGoldReason = new String(textBuilder);
+        return strGoldReason;
+    }
+
+    /**
+     * Helper method for generateTask1Data, concatenates all JSON formatted
+     * tokens (sorted by position) which is then the gold solution and contains
+     * markers to all NE in the text fragment.
+     *
+     * This same format is produced by the JS in the crowdflower.com task1.
+     *
+     * @param textBuilder
+     * @param goldElems
+     * @return
+     */
+    private String buildTask1GoldElem(StringBuilder textBuilder, ArrayList<String> goldElems)
+    {
+        String strGold;
+        textBuilder.setLength(0);
+        //strGold = "["+concatWithSeperator(goldElems,",")+"]";
+        textBuilder.append("[");
+        textBuilder.append(concatWithSeperator(goldElems,","));
+        textBuilder.append("]");
+        strGold = new String(textBuilder);
+        return strGold;
+    }
+
+    /**
+     * Helper method for generateTask1Data, builds a single JSON formatted elemented describing
+     * start and end position of a named entity.
+     * @param textBuilder
+     * @param namedEntity
+     * @return
+     */
+    private String buildTask1TokenJSON(StringBuilder textBuilder, NamedEntity namedEntity)
+    {
+        //JSON named enitity marker for the gold data. The JSON here gets enclosed into the data JSON that is uploaded
+        //"{\"s\":"+begin+",\"e\":"+end+"}"
+
+        textBuilder.setLength(0);
+        textBuilder.append("{\"s\":");
+        textBuilder.append(namedEntity.getBegin());
+        textBuilder.append(",\"e\":");
+        textBuilder.append(namedEntity.getEnd());
+        textBuilder.append("}");
+
+        return new String(textBuilder);
+    }
+
+    /**
+     * Set apiKey to the underlying Crowdclient which manages the crowdflower.com REST-protocol
+     * @param key
+     */
     public void setAPIKey(String key)
     {
         Log LOG = LogFactory.getLog(getClass());
@@ -205,7 +247,19 @@ public class NamedEntityTaskManager implements Serializable
         crowdclient.setApiKey(key);
     }
 
-    public String uploadNewNERTask1(String template, List<JCas>documentsJCas , List<JCas>goldsJCas) throws JsonProcessingException, IOException, Exception
+    /**
+     * Upload a new NER task1 (german) to crowdflower.com. This method is called from the crowd page and is the starting point for a new task1 upload.
+     * @param template
+     * @param documentsJCas
+     * @param goldsJCas
+     * @return
+     * @throws JsonProcessingException
+     * @throws IOException
+     * @throws Exception
+     */
+
+    public String uploadNewNERTask1(String template, List<JCas>documentsJCas , List<JCas>goldsJCas)
+            throws JsonProcessingException, IOException, Exception
     {
         Log LOG = LogFactory.getLog(getClass());
         LOG.info("Creating new Job for Ner task 1.");
@@ -239,5 +293,4 @@ public class NamedEntityTaskManager implements Serializable
         LOG.info("Done, finished uploading data to #" + job.getId());
         return job.getId();
     }
-
 }
