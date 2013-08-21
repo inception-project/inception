@@ -135,6 +135,7 @@ public class BratCuratorUtility
         AnnotationSelection annotationSelectionTarget = aCurationUserSegment
                 .getAnnotationSelectionByUsernameAndAddress().get(username)
                 .get(addressTargetClicked);
+
         Integer addressOrigin = annotationSelectionOrigin.getAddressByUsername().get(CURATION_USER);
         Integer addressTarget = annotationSelectionTarget.getAddressByUsername().get(CURATION_USER);
 
@@ -175,15 +176,21 @@ public class BratCuratorUtility
                 // TODO Auto-generated catch block
                 e1.printStackTrace();
             }
-            AnnotationFS fsClicked = (AnnotationFS) clickedJCas.getLowLevelCas().ll_getFSForRef(
-                    addressOriginClicked);
+           // AnnotationFS fsClicked = (AnnotationFS) clickedJCas.getLowLevelCas().ll_getFSForRef(
+             //       addressOriginClicked);
             // arcType = BratAjaxCasUtil.getAnnotationType(fsClicked.getType())
             // + arcType;
+
+            AnnotationFS originFs = (AnnotationFS) clickedJCas.getLowLevelCas().ll_getFSForRef(
+                    addressOrigin);
+            AnnotationFS targetFs = (AnnotationFS) clickedJCas.getLowLevelCas().ll_getFSForRef(
+                    addressTarget);
             BratAjaxCasController controller = new BratAjaxCasController(repository,
                     annotationService);
             try {
+
                 controller.addArcToCas(aCurationUserSegment.getBratAnnotatorModel(), arcType, 0, 0,
-                        addressOrigin, addressTarget, aJcas);
+                        originFs, targetFs, aJcas);
                 controller.createAnnotationDocumentContent(aCurationUserSegment
                         .getBratAnnotatorModel().getMode(), aCurationUserSegment
                         .getBratAnnotatorModel().getDocument(), aCurationUserSegment
@@ -215,17 +222,13 @@ public class BratCuratorUtility
         }
         AnnotationFS fsClicked = (AnnotationFS) clickedJCas.getLowLevelCas().ll_getFSForRef(
                 aAddress);
-        // TODO temporarily solution to remove the the prefix from curation
-        // sentence annotation
-        // views
-        // spanType = BratAjaxCasUtil.getAnnotationType(fsClicked.getType()) +
-        // spanType;
 
         BratAjaxCasController controller = new BratAjaxCasController(aRepository,
                 aAnnotationService);
-
-        controller.addSpanToCas(aMergeJCas, fsClicked.getBegin(), fsClicked.getEnd(), spanType, 0,
-                0);
+        // When curation and correction for coref chain are implmented, null should be replaced by
+        // the correct origin and target AnnotationFS
+        controller.addSpanToCas(aMergeJCas, fsClicked.getBegin(), fsClicked.getEnd(), spanType, null,
+                null);
         controller.createAnnotationDocumentContent(aBratAnnotatorModel.getMode(),
                 aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser(), aMergeJCas);
     }
@@ -429,8 +432,8 @@ public class BratCuratorUtility
             AnnotationSelection annotationSelection = annotationSelectionByAddress.get(address);
             AnnotationState newState = null;
             if (aMode.equals(Mode.CORRECTION)) {
-                newState = getCorrectionState(annotationSelectionByAddress, aAnnotationOptions,
-                        numUsers, entity);
+                newState = getCorrectionState(annotationSelection, aAnnotationOptions,
+                        numUsers, address);
             }
             else {
                 newState = getCurationState(numUsers, annotationSelection);
@@ -444,8 +447,8 @@ public class BratCuratorUtility
             AnnotationSelection annotationSelection = annotationSelectionByAddress.get(address);
             AnnotationState newState = null;
             if (aMode.equals(Mode.CORRECTION)) {
-                newState = getCorrectionState(annotationSelectionByAddress, aAnnotationOptions,
-                        numUsers, entity);
+                newState = getCorrectionState(annotationSelection, aAnnotationOptions,
+                        numUsers, address);
             }
             else {
                 newState = getCurationState(numUsers, annotationSelection);
@@ -463,9 +466,10 @@ public class BratCuratorUtility
                     if (argument.getToken() == entity.getId()) {// has outgoing
                                                                 // arc
                         hasArc = true;
-                        List<RelationType> relations = getCurationRelations(response,
+                        List<RelationType> relations = getRelationTypes(response,
                                 annotationSelectionByAddress, numUsers, relation,
-                                targetAnnotations.get(relation.getArguments().get(1).getToken()));
+                                targetAnnotations.get(relation.getArguments().get(1).getToken()),
+                                aAnnotationOptions, aMode, entity);
                         Map<String, Object> enityTypeWithArcs = BratCuratorUtility.getEntity(type,
                                 label, newState);
                         if (entityTypes.get(type) == null
@@ -495,7 +499,8 @@ public class BratCuratorUtility
         }
     }
 
-    private static AnnotationState getCurationState(int numUsers, AnnotationSelection annotationSelection)
+    private static AnnotationState getCurationState(int numUsers,
+            AnnotationSelection annotationSelection)
     {
         AnnotationState newState;
         if (annotationSelection == null) {
@@ -530,14 +535,21 @@ public class BratCuratorUtility
         return newState;
     }
 
-    private static List<RelationType> getCurationRelations(GetDocumentResponse response,
+    private static List<RelationType> getRelationTypes(GetDocumentResponse response,
             Map<Integer, AnnotationSelection> annotationSelectionByAddress, int numUsers,
-            Relation relation, String arcTarget)
+            Relation relation, String arcTarget, List<AnnotationOption> aAnnotationOptions,
+            Mode aMode, Entity aEntity)
     {
         int address = relation.getId();
         AnnotationSelection annotationSelection = annotationSelectionByAddress.get(address);
         AnnotationState newState = null;
-        newState = getCurationState(numUsers, annotationSelection);
+        if (aMode.equals(Mode.CORRECTION)) {
+            newState = getCorrectionState(annotationSelection, aAnnotationOptions,
+                    numUsers, address);
+        }
+        else {
+            newState = getCurationState(numUsers, annotationSelection);
+        }
         if (newState != null) {
             String type = relation.getType() + "_(" + newState.name() + ")";
             String label = relation.getType().replace(AnnotationTypeConstant.POS_PREFIX, "")
@@ -575,12 +587,11 @@ public class BratCuratorUtility
     }
 
     private static AnnotationState getCorrectionState(
-            Map<Integer, AnnotationSelection> annotationSelectionByAddress,
-            List<AnnotationOption> aAnnotationOptions, int numUsers, Entity entity)
+            AnnotationSelection annotationSelection,
+            List<AnnotationOption> aAnnotationOptions, int numUsers, int address)
     {
-        int address = entity.getId();
         AnnotationOption annotationOption = null;
-        AnnotationSelection annotationSelection = annotationSelectionByAddress.get(address);
+
         for (AnnotationOption annotationOption2 : aAnnotationOptions) {
             for (AnnotationSelection annotationSelection2 : annotationOption2
                     .getAnnotationSelections()) {
