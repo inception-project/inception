@@ -266,23 +266,23 @@ public class OpenModalWindowPanel
                                 // Remove from the list source documents that are in IGNORE state OR
                                 // that do not have at least one annotation document marked as
                                 // finished for curation dialog
-                                List<SourceDocument> noCurationDocuments = new ArrayList<SourceDocument>();
+                                List<SourceDocument> excludeDocuments = new ArrayList<SourceDocument>();
                                 for (SourceDocument sourceDocument : allDocuments) {
-                                    if (projectRepository.existsAnnotationDocument(sourceDocument,
+                                    if (mode.equals(Mode.ANNOTATION) && projectRepository.existsAnnotationDocument(sourceDocument,
                                             user)
                                             && projectRepository
                                                     .getAnnotationDocument(sourceDocument, user)
                                                     .getState()
                                                     .equals(AnnotationDocumentState.IGNORE)) {
-                                        noCurationDocuments.add(sourceDocument);
+                                        excludeDocuments.add(sourceDocument);
                                     }
                                     else if (mode.equals(Mode.CURATION)
                                             && !ApplicationUtils.existFinishedDocument(sourceDocument, user, projectRepository, selectedProject)) {
-                                        noCurationDocuments.add(sourceDocument);
+                                        excludeDocuments.add(sourceDocument);
                                     }
 
                                 }
-                                allDocuments.removeAll(noCurationDocuments);
+                                allDocuments.removeAll(excludeDocuments);
                                 return allDocuments;
                             }
                             else {
