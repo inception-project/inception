@@ -138,8 +138,8 @@ public class BratCuratorUtility
                 .getAnnotationSelectionByUsernameAndAddress().get(username)
                 .get(addressTargetClicked);
 
-        Integer addressOrigin = annotationSelectionOrigin.getAddressByUsername().get(CURATION_USER);
-        Integer addressTarget = annotationSelectionTarget.getAddressByUsername().get(CURATION_USER);
+        Integer addressOrigin = annotationSelectionOrigin.getAddressByUsername().get(username);
+        Integer addressTarget = annotationSelectionTarget.getAddressByUsername().get(username);
 
         if (annotationSelectionOrigin != null && annotationSelectionTarget != null) {
 
@@ -373,6 +373,14 @@ public class BratCuratorUtility
                 int lastSentenceAddress = aBratAnnotatorModel.getLastSentenceAddress();
                 if (aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)) {
                     userJCas = aJCases.get(logedUsername);
+
+                    aBratAnnotatorModel.setSentenceAddress(getSentenceAddress(aBratAnnotatorModel,
+                            jCas, userJCas));
+                    aBratAnnotatorModel.setLastSentenceAddress(getLastSentenceAddress(aBratAnnotatorModel,
+                            jCas, userJCas));
+                }
+                else if (aBratAnnotatorModel.getMode().equals(Mode.CURATION)) {
+                    userJCas = aJCases.get(CURATION_USER);
 
                     aBratAnnotatorModel.setSentenceAddress(getSentenceAddress(aBratAnnotatorModel,
                             jCas, userJCas));
