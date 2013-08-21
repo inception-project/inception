@@ -353,4 +353,44 @@ public class NamedEntityTaskManager implements Serializable
     {
         return "https://crowdflower.com/jobs/"+jobID+"/";
     }
+
+   public String getStatusString(String jobID1, String jobID2)
+   {
+       //first case: no job ids
+       if((jobID1 == null || jobID1.equals("")) && (jobID2 == null || jobID2.equals("")))
+       {
+           return "No jobs uploaded.";
+       }
+       else if(!(jobID1 == null || jobID1.equals("")) && (jobID2 == null || jobID2.equals("")))
+       {
+           JsonNode status = crowdclient.getStatus(jobID1);
+           int uploadedUnits = status.get("count").getIntValue();
+           boolean finsished = status.get("done").getBooleanValue();
+
+           return "Job1 has "+uploadedUnits+" uploaded units and is "+
+           (finsished ? " finished. You can continue with task 2." :
+               " not yet finished. Check the link for more information on crowdflower.com. You have to finish task1 before doing task2.");
+       }else
+       {
+           return "Todo: not yet implemented";
+       }
+   }
+
+   /**
+    * stub
+    * @param template
+    * @param jobID1
+    * @param documentsJCas
+    * @param goldsJCas
+    * @return
+    * @throws JsonProcessingException
+    * @throws IOException
+    * @throws Exception
+    */
+   public String uploadNewNERTask2(String template, String jobID1, List<JCas>documentsJCas , List<JCas>goldsJCas)
+           throws JsonProcessingException, IOException, Exception
+   {
+       return "";
+   }
+
 }

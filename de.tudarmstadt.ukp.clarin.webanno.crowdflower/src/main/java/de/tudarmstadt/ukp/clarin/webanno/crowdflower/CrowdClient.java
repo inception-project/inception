@@ -67,7 +67,8 @@ public class CrowdClient implements Serializable
     static final String orderJobURL = "https://api.crowdflower.com/v1/jobs/{jobid}/orders?key={apiKey}";
     static final String judgmentsURL = "https://api.crowdflower.com/v1/jobs/{jobid}/judgments.json?key={apiKey}";
     static final String channelsURL = "https://api.crowdflower.com/v1/jobs/{jobid}/channels?key={apiKey}";
-
+    static final String pingURL = "https://api.crowdflower.com/v1/jobs/{jobid}/units/ping.json?key={apiKey}";
+    
     static final String channelKey = "channels";
     static final String debitKey = "debit[units_count]";
     static final String jobPaymentKey = "job[payment_cents]";
@@ -272,4 +273,24 @@ public class CrowdClient implements Serializable
 
         //System.out.println(result);
     }
+    
+    /**
+     * Get the status of a job id. The resulting JSON will look like this if the query succeds:
+     * {"count":550,"done":true}
+     * or if there is an error (e.g. wrong job id):
+     * {"error": {"message":"We couldn't find what you were looking for."}}
+     * 
+     * @param jobid
+     */
+    
+    JsonNode getStatus(String jobId)
+    {
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.getMessageConverters().add(new MappingJacksonHttpMessageConverter());
+
+        JsonNode result = restTemplate.getForObject(pingURL, JsonNode.class, jobId, apiKey);
+
+        return result;
+    }
+    
 }
