@@ -245,10 +245,10 @@ public class SpanAdapter
      * @param aId
      *            the low-level address of the span annotation.
      */
-    public void delete(JCas aJCas, int aRef)
+    public void delete(JCas aJCas, AnnotationFS aRefFs)
     {
         FeatureStructure fs = (FeatureStructure) BratAjaxCasUtil.selectAnnotationByAddress(aJCas,
-                FeatureStructure.class, aRef);
+                FeatureStructure.class, ((FeatureStructureImpl)aRefFs).getAddress());
         aJCas.removeFsFromIndexes(fs);
     }
 

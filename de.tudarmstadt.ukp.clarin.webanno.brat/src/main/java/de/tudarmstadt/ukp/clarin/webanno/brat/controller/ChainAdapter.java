@@ -310,7 +310,7 @@ public class ChainAdapter
      *            the value of the annotation for the span
      */
     public void add(String aLabelValue, JCas aJCas, int aAnnotationOffsetStart,
-            int aAnnotationOffsetEnd, int aOrigin, int aTarget)
+            int aAnnotationOffsetEnd, AnnotationFS aOriginFs, AnnotationFS aTargetFs)
     {
         Map<Integer, Integer> offsets = ApplicationUtils.offsets(aJCas);
 
@@ -318,8 +318,8 @@ public class ChainAdapter
             Map<Integer, Integer> splitedTokens = ApplicationUtils.getSplitedTokens(offsets,
                     aAnnotationOffsetStart, aAnnotationOffsetEnd);
             if (isChain) {
-                updateCoreferenceChainCas(aJCas, aOrigin,
-                        aTarget, aLabelValue);
+                updateCoreferenceChainCas(aJCas, aOriginFs,
+                        aTargetFs, aLabelValue);
             }
             else {
                 for (Integer start : splitedTokens.keySet()) {
@@ -330,8 +330,8 @@ public class ChainAdapter
         }
         else {
             if (isChain) {
-                updateCoreferenceChainCas(aJCas, aOrigin,
-                        aTarget, aLabelValue);
+                updateCoreferenceChainCas(aJCas, aOriginFs,
+                        aTargetFs, aLabelValue);
             }
             else {
                 int startAndEnd[] = ApplicationUtils.getTokenStart(offsets, aAnnotationOffsetStart, aAnnotationOffsetEnd);
@@ -379,14 +379,14 @@ public class ChainAdapter
     // CASE 4b: we replace the link to an intermediate link -> chain is cut in two,
     // create new CorefChain pointing to the first link in new chain
     // CASE 5: Add link at the same position as existing -> just update type
-    private void updateCoreferenceChainCas(JCas aJcas, int aOrigin, int aTarget, String aValue)
+    private void updateCoreferenceChainCas(JCas aJcas, AnnotationFS aOriginFs, AnnotationFS aTargetFs, String aValue)
     {
         boolean modify = false;
 
         AnnotationFS originLink = (AnnotationFS) BratAjaxCasUtil.selectAnnotationByAddress(aJcas,
-                FeatureStructure.class, aOrigin);
+                FeatureStructure.class, ((FeatureStructureImpl)aOriginFs).getAddress());
         AnnotationFS targetLink = (AnnotationFS) BratAjaxCasUtil.selectAnnotationByAddress(aJcas,
-                FeatureStructure.class, aTarget);
+                FeatureStructure.class,  ((FeatureStructureImpl)aTargetFs).getAddress());
 
         // Currently support only anaphoric relation
         // Inverse direction
@@ -693,7 +693,7 @@ public class ChainAdapter
     /**
      * Remove an arc from a {@link CoreferenceChain}
      */
-    public void delete(JCas aJCas, int aRef)
+    public void delete(JCas aJCas, AnnotationFS aRefFs)
     {
         if (isChain) {
             Type type = CasUtil.getType(aJCas.getCas(), annotationTypeName);
@@ -703,7 +703,7 @@ public class ChainAdapter
             boolean found = false;
 
             AnnotationFS originCorefType = (AnnotationFS) BratAjaxCasUtil
-                    .selectAnnotationByAddress(aJCas, FeatureStructure.class, aRef);
+                    .selectAnnotationByAddress(aJCas, FeatureStructure.class, ((FeatureStructureImpl)aRefFs).getAddress());
             for (FeatureStructure fs : CasUtil.selectFS(aJCas.getCas(), type)) {
                 AnnotationFS linkFs = (AnnotationFS) fs.getFeatureValue(first);
                 Feature next = linkFs.getType().getFeatureByBaseName(linkNextFeatureName);
@@ -726,10 +726,10 @@ public class ChainAdapter
             removeInvalidChain(aJCas.getCas());
         }
         else {
-            ChainAdapter.getCoreferenceChainAdapter().updateCasBeforeDelete(aJCas, aRef);
+            ChainAdapter.getCoreferenceChainAdapter().updateCasBeforeDelete(aJCas, ((FeatureStructureImpl)aRefFs).getAddress());
 
             FeatureStructure fsToRemove = (FeatureStructure) BratAjaxCasUtil
-                    .selectAnnotationByAddress(aJCas, FeatureStructure.class, aRef);
+                    .selectAnnotationByAddress(aJCas, FeatureStructure.class, ((FeatureStructureImpl)aRefFs).getAddress());
 
             aJCas.removeFsFromIndexes(fsToRemove);
 

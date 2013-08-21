@@ -198,20 +198,20 @@ public class ArcAdapter
      * @param aReverse
      *            If arc direction are in reverse direction, from Dependent to Governor
      */
-    public void add(String aLabelValue, int aOriginAddress, int aTargetAddress, JCas aJCas,
+    public void add(String aLabelValue, AnnotationFS aOriginFs, AnnotationFS aTargetFs, JCas aJCas,
             BratAnnotatorModel aBratAnnotatorModel, boolean aReverse)
     {
 
-        int temp;
+        AnnotationFS temp;
         // swap
         if (aReverse) {
-            temp = aOriginAddress;
-            aOriginAddress = aTargetAddress;
-            aTargetAddress = temp;
+            temp = aOriginFs;
+            aOriginFs = aTargetFs;
+            aTargetFs = temp;
         }
 
-        int beginOffset = BratAjaxCasUtil.selectAnnotationByAddress(aJCas,
-                Sentence.class, aBratAnnotatorModel.getSentenceAddress()).getBegin();
+        int beginOffset = BratAjaxCasUtil.selectAnnotationByAddress(aJCas, Sentence.class,
+                aBratAnnotatorModel.getSentenceAddress()).getBegin();
         int endOffset = BratAjaxCasUtil.selectAnnotationByAddress(
                 aJCas,
                 Sentence.class,
@@ -219,15 +219,14 @@ public class ArcAdapter
                         aBratAnnotatorModel.getSentenceAddress(),
                         aBratAnnotatorModel.getWindowSize())).getEnd();
 
-        updateCas(aJCas, beginOffset,
-                endOffset, aOriginAddress, aTargetAddress, aLabelValue);
+        updateCas(aJCas, beginOffset, endOffset, aOriginFs, aTargetFs, aLabelValue);
     }
 
     /**
      * A Helper method to {@link #addToCas(String, BratAnnotatorUIData)}
      */
-    private void updateCas(JCas aJCas, int aBegin, int aEnd, int aOriginAddress,
-            int aTargetAddress, String aValue)
+    private void updateCas(JCas aJCas, int aBegin, int aEnd, AnnotationFS aOriginFs,
+            AnnotationFS aTargetFs, String aValue)
     {
         boolean duplicate = false;
 
@@ -247,8 +246,8 @@ public class ArcAdapter
                     arcSpanFeature);
             FeatureStructure governorFs = fs.getFeatureValue(governorFeature).getFeatureValue(
                     arcSpanFeature);
-            if (((FeatureStructureImpl) dependentFs).getAddress() == aTargetAddress
-                    && ((FeatureStructureImpl) governorFs).getAddress() == aOriginAddress
+            if (isDuplicate((AnnotationFS) governorFs, aOriginFs, (AnnotationFS) dependentFs,
+                    aTargetFs, fs.getStringValue(feature), aValue)
                     && !aValue.equals(AnnotationTypeConstant.ROOT)) {
 
                 // It is update of arc value, update it
@@ -265,14 +264,14 @@ public class ArcAdapter
             AnnotationFS governorFS;
             if (aValue.equals("ROOT")) {
                 governorFS = (AnnotationFS) BratAjaxCasUtil.selectAnnotationByAddress(aJCas,
-                        FeatureStructure.class, aOriginAddress);
+                        FeatureStructure.class, ((FeatureStructureImpl) aOriginFs).getAddress());
                 dependentFS = governorFS;
             }
             else {
                 dependentFS = (AnnotationFS) BratAjaxCasUtil.selectAnnotationByAddress(aJCas,
-                        FeatureStructure.class, aTargetAddress);
+                        FeatureStructure.class, ((FeatureStructureImpl) aTargetFs).getAddress());
                 governorFS = (AnnotationFS) BratAjaxCasUtil.selectAnnotationByAddress(aJCas,
-                        FeatureStructure.class, aOriginAddress);
+                        FeatureStructure.class, ((FeatureStructureImpl) aOriginFs).getAddress());
             }
             // if span A has (start,end)= (20, 26) and B has (start,end)= (30, 36)
             // arc drawn from A to B, dependency will have (start, end) = (20, 36)
@@ -309,18 +308,20 @@ public class ArcAdapter
      * @param aJCas
      * @param aId
      */
-    public void delete(JCas aJCas, int aOriginAddress, int aTargetAddress, BratAnnotatorModel aBratAnnotatorModel)
+    public void delete(JCas aJCas, AnnotationFS aOriginFs, AnnotationFS aTargetFs,
+            BratAnnotatorModel aBratAnnotatorModel, String aValu)
     {
         JCas jCas = aJCas;
-        int temp;
+        AnnotationFS temp;
         if (aBratAnnotatorModel.getProject().isReverseDependencyDirection()) {
-            temp = aOriginAddress;
-            aOriginAddress = aTargetAddress;
-            aTargetAddress = temp;
+            temp = aOriginFs;
+            aOriginFs = aTargetFs;
+            aTargetFs = temp;
         }
         FeatureStructure fsToDelete = null;
 
-        Type type = CasUtil.getType(jCas.getCas(), annotationTypeName);
+        Type type = CasUtil.getType(aJCas.getCas(), annotationTypeName);
+        Feature feature = type.getFeatureByBaseName(labelFeatureName);
         Feature dependentFeature = type.getFeatureByBaseName(dependentFeatureName);
         Feature governorFeature = type.getFeatureByBaseName(governorFeatureName);
 
@@ -332,8 +333,8 @@ public class ArcAdapter
                     arcSpanFeature);
             FeatureStructure governorFs = fs.getFeatureValue(governorFeature).getFeatureValue(
                     arcSpanFeature);
-            if (((FeatureStructureImpl) governorFs).getAddress() == aOriginAddress
-                    && ((FeatureStructureImpl) dependentFs).getAddress() == aTargetAddress) {
+            if (isDuplicate((AnnotationFS)governorFs, aOriginFs, (AnnotationFS)dependentFs,
+                    aTargetFs, aValu, fs.getStringValue(feature))) {
                 fsToDelete = fs;
                 break;
             }
@@ -371,6 +372,21 @@ public class ArcAdapter
         else {
             return asList(new Argument("Arg1", ((FeatureStructureImpl) aGovernorFs).getAddress()),
                     new Argument("Arg2", ((FeatureStructureImpl) aDependentFs).getAddress()));
+        }
+    }
+
+    private boolean isDuplicate(AnnotationFS aAnnotationFSOldOrigin,
+            AnnotationFS aAnnotationFSNewOrigin, AnnotationFS aAnnotationFSOldTarget,
+            AnnotationFS aAnnotationFSNewTarget, String aTypeOld, String aTypeNew)
+    {
+        if (aAnnotationFSOldOrigin.getBegin() == aAnnotationFSNewOrigin.getBegin()
+                && aAnnotationFSOldOrigin.getEnd() == aAnnotationFSNewOrigin.getEnd()
+                && aAnnotationFSOldTarget.getBegin() == aAnnotationFSNewTarget.getBegin()
+                && aAnnotationFSOldTarget.getEnd() == aAnnotationFSNewTarget.getEnd()) {
+            return true;
+        }
+        else {
+            return false;
         }
     }
 
