@@ -2,13 +2,13 @@
  * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -171,6 +171,7 @@ public class CasDiff {
 
         // check if types are equal
         Type type = fsNew.getType();
+        Type oldType = CasUtil.getType(fsOld.getCAS(), aType.getName());
         if (!fsOld.getType().toString().equals(type.toString())) {
             // if types differ add feature structure to diff
             compareResult.getDiffs().put(fsNew, fsOld);
@@ -178,14 +179,18 @@ public class CasDiff {
         }
 
         boolean agreeOnSubfeatures = true;
-        for (Feature feature : type.getFeatures()) {
+        List<Feature> fsNewFeatures = type.getFeatures();
+        List<Feature> fsOldFeatures = oldType.getFeatures();
+       for(int i =0; i<fsNewFeatures.size();i++){
+           Feature feature = fsNewFeatures.get(i);
+           Feature olFeature = fsOldFeatures.get(i);
             // features are present in both feature structures, fs1 and fs2
             // compare primitive values
             if (feature.getRange().isPrimitive()) {
 
                 // check int Values
                 if (feature.getRange().getName().equals("uima.cas.Integer")) {
-                    if (!(fsNew.getIntValue(feature) == fsOld.getIntValue(feature))) {
+                    if (!(fsNew.getIntValue(feature) == fsOld.getIntValue(olFeature))) {
                         //disagree
                         agreeOnSubfeatures = false;
                     } else {
@@ -201,7 +206,7 @@ public class CasDiff {
                     } else if (stringValue1 == null
                             || stringValue2 == null
                             || !fsNew.getStringValue(feature).equals(
-                                    fsOld.getStringValue(feature))) {
+                                    fsOld.getStringValue(olFeature))) {
                         // stringValue1 differs from stringValue2
 
                         // disagree
@@ -226,7 +231,7 @@ public class CasDiff {
                 // TODO assumtion: if feature is not primitive, it is a
                 // composite feature
                 FeatureStructure featureValue1 = fsNew.getFeatureValue(feature);
-                FeatureStructure featureValue2 = fsOld.getFeatureValue(feature);
+                FeatureStructure featureValue2 = fsOld.getFeatureValue(olFeature);
                 if(((AnnotationFS)featureValue1).getBegin()!=((AnnotationFS)featureValue2).getBegin()
                         ||((AnnotationFS)featureValue1).getEnd()!=((AnnotationFS)featureValue2).getEnd()){
                     agreeOnSubfeatures = false;
