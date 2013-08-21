@@ -914,15 +914,9 @@ public class RepositoryServiceDbData
         for (TagSet tagset : annotationService.listTagSets(aProject)) {
             annotationService.removeTagSet(tagset);
         }
-        // remove a timestamp entry for this project, if exists
-        for (User user : listProjectUsersWithPermissions(aProject)) {
-            if (existsProjectTimeStamp(aProject, user.getUsername())) {
-                entityManager.remove(getProjectTimeStamp(aProject, user.getUsername()));
-            }
-        }
-        // timestamp for the curator
-        if (existsProjectTimeStamp(aProject, CURATION_USER)) {
-            entityManager.remove(getProjectTimeStamp(aProject, CURATION_USER));
+        // remove, if exists, a crowdsource job created from this project
+        for(CrowdJob crowdJob: listCrowdJobs(aProject)){
+            removeCrowdJob(crowdJob);
         }
         // remove the project directory from the file system
         String path = dir.getAbsolutePath() + PROJECT + aProject.getId();
