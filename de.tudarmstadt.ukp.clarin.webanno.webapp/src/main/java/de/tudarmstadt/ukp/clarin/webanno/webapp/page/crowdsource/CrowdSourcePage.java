@@ -314,7 +314,13 @@ public class CrowdSourcePage
                 }
             }));
 
-            add(new Label("status"));
+            add(new Label("status", new LoadableDetachableModel<String>() {
+                private static final long   serialVersionUID    = 1L;
+                @Override
+                protected String load() {
+                        return selectedCrowdJob.getStatus();
+                }
+            }));
 
             add(new ListMultipleChoice<SourceDocument>("documents")
             {
@@ -584,6 +590,8 @@ public class CrowdSourcePage
                         String strdD = namedEntityTaskManager.uploadNewNERTask1(template, jCases, goldJCases);
                         selectedCrowdJob.setTask1Id(strdD);
                         selectedCrowdJob.setLink(namedEntityTaskManager.getURLforID(strdD));
+                        selectedCrowdJob.setStatus(namedEntityTaskManager.getStatusString(strdD, ""));
+                        selectedCrowdJob.setTask1Id(strdD);
                         projectRepository.createCrowdJob(selectedCrowdJob);
                     }
                     catch (FileNotFoundException e)
@@ -644,6 +652,12 @@ public class CrowdSourcePage
                     // Get gold
                     // Send to crowd flower
 
+                    String id1 = selectedCrowdJob.getTask1Id();
+                    String id2 = selectedCrowdJob.getTask2Id();
+
+                    String status = namedEntityTaskManager.getStatusString(id1 == null ? "":id1, id2==null?"":id2);
+                    selectedCrowdJob.setStatus(status);
+                    projectRepository.createCrowdJob(selectedCrowdJob);
                 }
 
                 @Override
