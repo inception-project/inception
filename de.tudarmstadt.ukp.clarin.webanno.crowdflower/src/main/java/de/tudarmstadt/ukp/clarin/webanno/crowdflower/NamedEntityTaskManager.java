@@ -23,8 +23,10 @@ import static org.uimafit.util.JCasUtil.selectCovered;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
 
@@ -87,20 +89,38 @@ public class NamedEntityTaskManager implements Serializable
   *                     This is needed so that continuous token numbers can be send to Crowdflower
   * @param generateGold
   * @return
+ * @throws Exception
   */
-    public Vector<NamedEntityTask1Data> generateTask1Data(List<JCas>documentsJCas, int goldOffset, boolean generateGold)
+    public Vector<NamedEntityTask1Data> generateTask1Data(List<JCas>documentsJCas, int goldOffset, boolean generateGold) throws Exception
     {
+        Log LOG = LogFactory.getLog(getClass());
         Vector<NamedEntityTask1Data> data = new Vector<NamedEntityTask1Data>();
         int i=goldOffset;
         StringBuilder textBuilder = new StringBuilder();
+        int docNo = 1;
+
+        DecimalFormat percentFormat = new DecimalFormat("0.00");
 
         for (JCas documentJCas : documentsJCas)
         {
             int offset = i;
+            int documentSize = documentJCas.size();
 
+            int sentenceNo = 1;
+            LOG.info("Generating data for document: " + docNo + "/" + documentsJCas.size());
+            LOG.info("Document size: " + documentSize);
             for (Sentence sentence : select(documentJCas, Sentence.class)) {
 
                 textBuilder.setLength(0);
+
+                //debug: output progress every 200 sentences
+                /*if(sentenceNo % 200 == 0) {
+                    LOG.info(percentFormat.format(((float)sentence.getBegin() / (float)documentSize)*1000.0)+"%");
+                }*/
+
+                //Maps our own token offsets (needed by JS in the crowdflower task) to Jcas offsets
+                HashMap<Integer,Integer> charOffsetStartMapping = new HashMap<Integer,Integer>();
+                HashMap<Integer,Integer> charOffsetEndMapping = new HashMap<Integer,Integer>();
 
                 for (Token token : selectCovered(Token.class, sentence)) {
 
@@ -111,6 +131,10 @@ public class NamedEntityTaskManager implements Serializable
                     textBuilder.append("\">");
                     textBuilder.append(escapeHtml(tokenString));
                     textBuilder.append(" </span>");
+
+                    charOffsetStartMapping.put(token.getBegin(), i);
+                    charOffsetEndMapping.put(token.getEnd(), i);
+
                     i++;
                 }
 
@@ -143,7 +167,7 @@ public class NamedEntityTaskManager implements Serializable
 
                         String strToken = concatWithSeperator(strTokens," ");
 
-                        goldElems.add(buildTask1TokenJSON(textBuilder, namedEntity));
+                        goldElems.add(buildTask1TokenJSON(textBuilder, namedEntity,charOffsetStartMapping,charOffsetEndMapping));
                         goldTokens.add(strToken);
                     }
 
@@ -167,7 +191,9 @@ public class NamedEntityTaskManager implements Serializable
                 }
 
                 data.add(task1Data);
+                sentenceNo++;
             }
+            docNo++;
         }
 
         return data;
@@ -223,17 +249,26 @@ public class NamedEntityTaskManager implements Serializable
      * @param textBuilder
      * @param namedEntity
      * @return
+     * @throws Exception
      */
-    private String buildTask1TokenJSON(StringBuilder textBuilder, NamedEntity namedEntity)
+    private String buildTask1TokenJSON(StringBuilder textBuilder, NamedEntity namedEntity, HashMap<Integer,Integer> charOffsetStartMapping, HashMap<Integer,Integer> charOffsetEndMapping) throws Exception
     {
         //JSON named enitity marker for the gold data. The JSON here gets enclosed into the data JSON that is uploaded
         //"{\"s\":"+begin+",\"e\":"+end+"}"
+        if(!charOffsetStartMapping.containsKey(namedEntity.getBegin())
+           || !charOffsetEndMapping.containsKey(namedEntity.getEnd()))
+        {
+            throw new Exception("Data generation error: char offset to token mapping is inconsistent. Contact developpers!");
+        }
+
+        int start = charOffsetStartMapping.get(namedEntity.getBegin());
+        int end = charOffsetEndMapping.get(namedEntity.getEnd());
 
         textBuilder.setLength(0);
         textBuilder.append("{\"s\":");
-        textBuilder.append(namedEntity.getBegin());
+        textBuilder.append(start);
         textBuilder.append(",\"e\":");
-        textBuilder.append(namedEntity.getEnd());
+        textBuilder.append(end);
         textBuilder.append("}");
 
         return new String(textBuilder);
@@ -248,6 +283,13 @@ public class NamedEntityTaskManager implements Serializable
         Log LOG = LogFactory.getLog(getClass());
         LOG.info("Using apiKey:" + key);
         crowdclient.setApiKey(key);
+    }
+
+    public String uploadNewNERTask2(String template, List<JCas>documentsJCas , List<JCas>goldsJCas, String task1Id)
+            throws JsonProcessingException, IOException, Exception
+    {
+        System.out.println();
+        return "";
     }
 
     /**
@@ -276,30 +318,39 @@ public class NamedEntityTaskManager implements Serializable
         //if we have gold data, than generate data for it
         if(goldsJCas != null && goldsJCas.size() > 0)
         {
-            goldData = generateTask1Data(documentsJCas,0,true);
+            LOG.info("Gold data available, generating gold data first.");
+            goldData = generateTask1Data(goldsJCas,0,true);
             goldOffset = goldData.size();
         }
 
+        LOG.info("Generate normal task data.");
         Vector<NamedEntityTask1Data> data = generateTask1Data(documentsJCas,goldOffset,false);
 
         Vector<NamedEntityTask1Data> mergedData = new Vector<NamedEntityTask1Data>();
 
         if(goldsJCas != null && goldsJCas.size() > 0)
         {
+
             mergedData.addAll(goldData);
         }
 
         mergedData.addAll(data);
 
+        LOG.info("Job data prepared, starting upload.");
         LOG.info("Uploading data to job #" + job.getId());
         crowdclient.uploadData(job,mergedData);
         LOG.info("Done, finished uploading data to #" + job.getId());
         return job.getId();
     }
 
+    /**
+     * Gets called from Crowdflower page to determine URL for a given job
+     * @param jobID
+     * @return
+     */
+
    public String getURLforID(String jobID)
     {
         return "https://crowdflower.com/jobs/"+jobID+"/";
     }
-
 }
