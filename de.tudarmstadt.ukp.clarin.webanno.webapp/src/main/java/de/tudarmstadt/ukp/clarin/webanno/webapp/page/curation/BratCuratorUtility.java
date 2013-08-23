@@ -746,9 +746,10 @@ public class BratCuratorUtility
                 annotationOptions, aAnnotationSelectionByUsernameAndAddress, aJsonConverter);
         // update sentence list on the right side
         aParent.setModelObject(sentences);
+        if (aCurationContainer.getBratAnnotatorModel().getMode().equals(Mode.CURATION)) {
         aMergeVisualizer.setModelObject(bratAnnotatorModel);
         aMergeVisualizer.reloadContent(aTarget);
-
+        }
         aTarget.add(aParent);
 
     }

@@ -171,6 +171,7 @@ public class CorrectionPage
                 catch (IOException e) {
                     e.getMessage();
                 }
+                mergeVisualizer.reloadContent(aTarget);
             }
         };
 
@@ -1013,7 +1014,7 @@ public class CorrectionPage
 
         mergeVisualizer.setModelObject(bratAnnotatorModel);
         mergeVisualizer.setCollection("#" + bratAnnotatorModel.getProject().getName() + "/");
-        mergeVisualizer.reloadContent(target);
+     //   mergeVisualizer.reloadContent(target);
     }
 
 }
