@@ -134,7 +134,6 @@ public class CorrectionPage
 
     private CurationSegmentForSourceDocument curationSegment = new CurationSegmentForSourceDocument();
 
-    @SuppressWarnings("deprecation")
     public CorrectionPage()
     {
         openDataModel = new OpenDocumentModel();
@@ -385,6 +384,7 @@ public class CorrectionPage
                     error(e.getMessage());
                 }
                 update(aTarget);
+                mergeVisualizer.reloadContent(aTarget);
             }
         });
 
@@ -1011,10 +1011,6 @@ public class CorrectionPage
         }
         target.add(sentenceOuterView);
         target.add(numberOfPages);
-
-        mergeVisualizer.setModelObject(bratAnnotatorModel);
-        mergeVisualizer.setCollection("#" + bratAnnotatorModel.getProject().getName() + "/");
-     //   mergeVisualizer.reloadContent(target);
     }
 
 }
