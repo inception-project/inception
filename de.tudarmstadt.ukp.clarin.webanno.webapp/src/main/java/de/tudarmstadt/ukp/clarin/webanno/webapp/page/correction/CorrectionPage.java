@@ -470,6 +470,7 @@ public class CorrectionPage
                         }
                         curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
                         update(target);
+                        mergeVisualizer.reloadContent(target);
                     }
                     else {
                         target.appendJavaScript("alert('This sentence is on the same page!')");
@@ -680,6 +681,7 @@ public class CorrectionPage
                         }
                         curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
                         update(target);
+                        mergeVisualizer.reloadContent(target);
                     }
 
                     else {
@@ -740,6 +742,7 @@ public class CorrectionPage
                         }
                         curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
                         update(target);
+                        mergeVisualizer.reloadContent(target);
                     }
                     else {
                         target.appendJavaScript("alert('This is First Page!')");
@@ -780,6 +783,7 @@ public class CorrectionPage
                         }
                         curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
                         update(target);
+                        mergeVisualizer.reloadContent(target);
                     }
                     else {
                         target.appendJavaScript("alert('This is first page!')");
@@ -837,6 +841,7 @@ public class CorrectionPage
                         }
                         curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
                         update(target);
+                        mergeVisualizer.reloadContent(target);
                     }
                     else {
                         target.appendJavaScript("alert('This is last Page!')");
