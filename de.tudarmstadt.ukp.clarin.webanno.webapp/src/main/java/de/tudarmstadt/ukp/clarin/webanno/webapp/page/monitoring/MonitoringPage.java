@@ -52,6 +52,9 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.axis.NumberTickUnit;
+import org.jfree.chart.axis.TickUnit;
+import org.jfree.chart.axis.TickUnits;
 import org.jfree.chart.labels.StandardPieSectionLabelGenerator;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PiePlot3D;
@@ -278,11 +281,11 @@ public class MonitoringPage
                         projectName.setDefaultModelObject(project.getName());
 
                         annotatorsProgressImage.setImageResource(createProgressChart(
-                                annotatorsProgress, totalDocuments));
+                                annotatorsProgress, totalDocuments, false));
                         annotatorsProgressImage.setVisible(true);
 
                         annotatorsProgressPercentageImage.setImageResource(createProgressChart(
-                                annotatorsProgressInPercent, 100));
+                                annotatorsProgressInPercent, 100, true));
                         annotatorsProgressPercentageImage.setVisible(true);
 
                         List<String> documentListAsColumnHeader = new ArrayList<String>();
@@ -366,7 +369,7 @@ public class MonitoringPage
                                 annotatorsProgress.clear();
                                 annotatorsProgress.putAll(getFinishedDocumentsPerUser(project));
                                 annotatorsProgressImage.setImageResource(createProgressChart(
-                                        annotatorsProgress, totalDocuments));
+                                        annotatorsProgress, totalDocuments, false));
                                 aTarget.add(annotatorsProgressImage.setOutputMarkupId(true));
 
                                 annotatorsProgressInPercent.clear();
@@ -374,7 +377,7 @@ public class MonitoringPage
                                         .putAll(getPercentageOfFinishedDocumentsPerUser(project));
                                 annotatorsProgressPercentageImage
                                         .setImageResource(createProgressChart(
-                                                annotatorsProgressInPercent, 100));
+                                                annotatorsProgressInPercent, 100, true));
                                 aTarget.add(annotatorsProgressPercentageImage
                                         .setOutputMarkupId(true));
 
@@ -797,7 +800,8 @@ public class MonitoringPage
         return chart;
     }
 
-    private ChartImageResource createProgressChart(Map<String, Integer> chartValues, int aMaxValue)
+    private ChartImageResource createProgressChart(Map<String, Integer> chartValues,
+    		int aMaxValue, boolean aIsPercentage)
     {
         // fill dataset
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
@@ -812,6 +816,14 @@ public class MonitoringPage
         plot.setInsets(new RectangleInsets(UnitType.ABSOLUTE, 0, 20, 0, 20));
         plot.getRangeAxis().setRange(0.0, aMaxValue);
         ((NumberAxis) plot.getRangeAxis()).setNumberFormatOverride(new DecimalFormat("0"));
+        
+        if(!aIsPercentage){
+	        TickUnits standardUnits = new TickUnits();
+	        NumberAxis tick = new NumberAxis();
+	        tick.setTickUnit(new NumberTickUnit(1));
+	        standardUnits.add(tick.getTickUnit());
+	        plot.getRangeAxis().setStandardTickUnits(standardUnits);
+        }
         plot.setOutlineVisible(false);
         plot.setBackgroundPaint(null);
 
