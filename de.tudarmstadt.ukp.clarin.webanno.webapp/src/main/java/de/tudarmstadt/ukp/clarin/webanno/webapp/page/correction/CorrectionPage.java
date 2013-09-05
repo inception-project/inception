@@ -157,9 +157,15 @@ public class CorrectionPage
             public void onChange(AjaxRequestTarget aTarget)
             {
                 try {
+                    // update begin/end of the curationsegment based on bratAnnotatorModel changes
+                    //(like sentence change in auto-scroll mode,....
+                    curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
+                    setCurationSegmentBeginEnd();
+
                     BratCuratorUtility.updatePanel(aTarget, this, curationContainer,
                             mergeVisualizer, repository, annotationSelectionByUsernameAndAddress,
                             curationSegment, annotationService, jsonConverter);
+
                 }
                 catch (UIMAException e) {
                     ExceptionUtils.getRootCause(e);

@@ -48,6 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Argument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Relation;
@@ -202,6 +203,15 @@ public class BratCuratorUtility
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
+
+            if (aCurationUserSegment.getBratAnnotatorModel().isScrollPage()) {
+                aCurationUserSegment.getBratAnnotatorModel().setSentenceAddress(
+                        BratAjaxCasUtil.getSentenceBeginAddress(
+                        aJcas, aCurationUserSegment.getBratAnnotatorModel().getSentenceAddress(),
+                        originFs.getBegin(), aCurationUserSegment.getBratAnnotatorModel().getProject(),
+                        aCurationUserSegment.getBratAnnotatorModel().getDocument(),
+                        aCurationUserSegment.getBratAnnotatorModel().getWindowSize()));
+            }
         }
     }
 
@@ -227,12 +237,21 @@ public class BratCuratorUtility
 
         BratAjaxCasController controller = new BratAjaxCasController(aRepository,
                 aAnnotationService);
-        // When curation and correction for coref chain are implmented, null should be replaced by
+        // When curation and correction for coref chain are implemented, null should be replaced by
         // the correct origin and target AnnotationFS
         controller.addSpanToCas(aMergeJCas, fsClicked.getBegin(), fsClicked.getEnd(), spanType,
                 null, null);
         controller.createAnnotationDocumentContent(aBratAnnotatorModel.getMode(),
                 aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser(), aMergeJCas);
+
+        if (aBratAnnotatorModel.isScrollPage()) {
+            aBratAnnotatorModel.setSentenceAddress(
+                    BratAjaxCasUtil.getSentenceBeginAddress(
+                            clickedJCas, aBratAnnotatorModel.getSentenceAddress(),
+                    fsClicked.getBegin(), aBratAnnotatorModel.getProject(),
+                    aBratAnnotatorModel.getDocument(),
+                    aBratAnnotatorModel.getWindowSize()));
+        }
     }
 
     /**
