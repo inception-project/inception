@@ -23,7 +23,6 @@ import static org.uimafit.util.JCasUtil.selectCovered;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -91,7 +90,7 @@ public class NamedEntityTaskManager implements Serializable
   * @return
  * @throws Exception
   */
-    public Vector<NamedEntityTask1Data> generateTask1Data(List<JCas>documentsJCas, int goldOffset, boolean generateGold) throws Exception
+    public Vector<NamedEntityTask1Data> generateTask1Data(List<JCas>documentsJCas, int goldOffset, boolean generateGold, int limit) throws Exception
     {
         Log LOG = LogFactory.getLog(getClass());
         Vector<NamedEntityTask1Data> data = new Vector<NamedEntityTask1Data>();
@@ -99,17 +98,23 @@ public class NamedEntityTaskManager implements Serializable
         StringBuilder textBuilder = new StringBuilder();
         int docNo = 1;
 
-        DecimalFormat percentFormat = new DecimalFormat("0.00");
+        //DecimalFormat percentFormat = new DecimalFormat("0.00");
 
+        jcasloop:
         for (JCas documentJCas : documentsJCas)
         {
             int offset = i;
             int documentSize = documentJCas.size();
 
-            int sentenceNo = 1;
+            int sentenceNo = 0;
             LOG.info("Generating data for document: " + docNo + "/" + documentsJCas.size());
             LOG.info("Document size: " + documentSize);
             for (Sentence sentence : select(documentJCas, Sentence.class)) {
+
+                //if global limit of sentences reached, abort whole iteration
+                if(limit != -1 && sentenceNo >= limit) {
+                    break jcasloop;
+                }
 
                 textBuilder.setLength(0);
 
@@ -292,6 +297,12 @@ public class NamedEntityTaskManager implements Serializable
         return "";
     }
 
+    public String uploadNewNERTask1(String template, List<JCas>documentsJCas , List<JCas>goldsJCas)
+            throws JsonProcessingException, IOException, Exception
+            {
+                return uploadNewNERTask1(template, documentsJCas , goldsJCas, -1 , -1);
+            }
+
     /**
      * Upload a new NER task1 (german) to crowdflower.com. This method is called from the crowd page and is the starting point for a new task1 upload.
      * @param template
@@ -303,13 +314,24 @@ public class NamedEntityTaskManager implements Serializable
      * @throws Exception
      */
 
-    public String uploadNewNERTask1(String template, List<JCas>documentsJCas , List<JCas>goldsJCas)
+    public String uploadNewNERTask1(String template, List<JCas>documentsJCas , List<JCas>goldsJCas, int useSents , int useGoldSents)
             throws JsonProcessingException, IOException, Exception
     {
         Log LOG = LogFactory.getLog(getClass());
         LOG.info("Creating new Job for Ner task 1.");
         CrowdJob job = createJob(template);
         LOG.info("Done, new job id is: "+job.getId()+". Now generating data for NER task 1");
+
+        //by default, allow only German speaking countries
+        //would be better to make this configurable
+
+        Vector<String> includedCountries = new Vector<String>();
+        includedCountries.add("DE");
+        includedCountries.add("AT");
+        includedCountries.add("CH");
+        job.setIncludedCountries(includedCountries);
+
+        crowdclient.updateAllowedCountries(job);
 
         int goldOffset = 0;
 
@@ -319,12 +341,12 @@ public class NamedEntityTaskManager implements Serializable
         if(goldsJCas != null && goldsJCas.size() > 0)
         {
             LOG.info("Gold data available, generating gold data first.");
-            goldData = generateTask1Data(goldsJCas,0,true);
+            goldData = generateTask1Data(goldsJCas,0,true, useGoldSents);
             goldOffset = goldData.size();
         }
 
         LOG.info("Generate normal task data.");
-        Vector<NamedEntityTask1Data> data = generateTask1Data(documentsJCas,goldOffset,false);
+        Vector<NamedEntityTask1Data> data = generateTask1Data(documentsJCas,goldOffset,false,useSents);
 
         Vector<NamedEntityTask1Data> mergedData = new Vector<NamedEntityTask1Data>();
 
@@ -361,11 +383,23 @@ public class NamedEntityTaskManager implements Serializable
        {
            return "No jobs uploaded.";
        }
+       //second case, got first job id
        else if(!(jobID1 == null || jobID1.equals("")) && (jobID2 == null || jobID2.equals("")))
        {
            JsonNode status = crowdclient.getStatus(jobID1);
-           int uploadedUnits = status.get("count").getIntValue();
-           boolean finsished = status.get("done").getBooleanValue();
+
+           int uploadedUnits = -1;
+           boolean finsished = false;
+
+           if(status.has("count") && status.has("done"))
+           {
+               uploadedUnits = status.get("count").getIntValue();
+               finsished = status.get("done").getBooleanValue();
+           }
+           else
+           {
+               return "Error retrieving status";
+           }
 
            return "Job1 has "+uploadedUnits+" uploaded units and is "+
            (finsished ? " finished. You can continue with task 2." :
@@ -390,6 +424,21 @@ public class NamedEntityTaskManager implements Serializable
    public String uploadNewNERTask2(String template, String jobID1, List<JCas>documentsJCas , List<JCas>goldsJCas)
            throws JsonProcessingException, IOException, Exception
    {
+       Log LOG = LogFactory.getLog(getClass());
+
+       //retrieve job id 1 data
+       CrowdJob job1 = crowdclient.retrieveJob(jobID1);
+       JsonNode judgments = crowdclient.retrieveJudgments(job1);
+
+       System.out.println(judgments);
+
+       /*
+       LOG.info("Creating new Job for Ner task 2.");
+       CrowdJob job = createJob(template);
+       LOG.info("Done, new job id is: "+job.getId()+". Now generating data for NER task 2");*/
+
+
+
        return "";
    }
 

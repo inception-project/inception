@@ -53,7 +53,7 @@
                 
                 <div>
                   <label>
-                    ApiKey
+                    ApiKey:
                   </label>
                   <input type="text" wicket:id="apiKey" />
                 </div>
@@ -71,21 +71,41 @@
                   <span wicket:id="status">
                   </span>
                 </div>
+                <br/>
                 <div>
                   <label>
                     Documents:
                   </label>
                   <select wicket:id="documents" class ="hfill">
                   </select>
+                  <label>
+                    Available sentences:
+                  </label>
+                  <span wicket:id="availSentences">
+                  </span>
+                  <label>
+                    Use:
+                  </label>
+                  <input type="text" wicket:id="useSents" />
                 </div>
-
+				<br/>
  				<div>
                   <label>
                     Gold Documents:
                   </label>
                   <select wicket:id="goldDocuments" class ="hfill">
                   </select>
+                  <label>
+                    Available sentences:
+                  </label>
+                  <span wicket:id="availGoldSentences">
+                  </span>
+                  <label>
+                    Use:
+                  </label>
+                  <input type="text" wicket:id="useGoldSents" />
                 </div>
+                <br/>
                 
                 <div class="buttons">
                   <input type="submit" wicket:id="save" />

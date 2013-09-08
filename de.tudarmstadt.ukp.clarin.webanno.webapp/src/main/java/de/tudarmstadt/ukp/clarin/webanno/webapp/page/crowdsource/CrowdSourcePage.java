@@ -17,6 +17,8 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.webapp.page.crowdsource;
 
+import static org.uimafit.util.JCasUtil.select;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
@@ -73,6 +75,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.project.SettingsPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.support.EmbeddableImage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.support.TableDataProvider;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
  * Crowdsource page used to setup and monitor crowd source projects.
@@ -98,6 +101,7 @@ public class CrowdSourcePage
 
     private static final String CROWD_USER = "crowd_user";
     private static final String CROWD_NERTASK1_TEMPLATE = "NERtask1.template";
+    private static final String CROWD_NERTASK2_TEMPLATE = "NERtask2.template";
 
     private CrowdJob selectedCrowdJob;
     List<SourceDocument> goldDocuments = new ArrayList<SourceDocument>();
@@ -281,6 +285,73 @@ public class CrowdSourcePage
     {
         private static final long serialVersionUID = -1L;
 
+        /**
+         * Returns jcases for source documents for the selected crowdjob
+         * @param user
+         * @return
+         */
+
+        private List<JCas> getSourceDocumentsJCases(User user)
+        {
+            // Get the source document(2) here
+            List<SourceDocument> sourceDocuments = new ArrayList<SourceDocument>(
+                    selectedCrowdJob.getDocuments());
+            List<JCas> jCases = new ArrayList<JCas>();
+
+            // Get the JCASes for each source document
+            for (SourceDocument sourceDocument : sourceDocuments) {
+                addJCas(jCases, user, sourceDocument);
+            }
+            return jCases;
+        }
+
+
+        /**
+         * Returns jcases for gold documents for the selected crowdjob
+         * @param user
+         * @return
+         */
+
+        private List<JCas> getGoldDocumentsJCases(User user)
+        {
+            List<JCas> goldJCases = new ArrayList<JCas>();
+            for (SourceDocument sourceDocument : goldDocuments) {
+                addJCas(goldJCases, user, sourceDocument);
+            }
+            return goldJCases;
+        }
+
+        private int getSourceDocumentsSentCount()
+        {
+            User user = userRepository.get(CROWD_USER);
+            List<JCas> jCases = getSourceDocumentsJCases(user);
+
+            int numSents = 0;
+
+            for(JCas cas : jCases)
+            {
+                numSents += select(cas, Sentence.class).size();
+            }
+
+            return numSents;
+        }
+
+        private int getGoldDocumentsSentCount()
+        {
+            User user = userRepository.get(CROWD_USER);
+            List<JCas> jCases = getGoldDocumentsJCases(user);
+
+            int numSents = 0;
+
+            for(JCas cas : jCases)
+            {
+                numSents += select(cas, Sentence.class).size();
+            }
+
+            return numSents;
+        }
+
+
         public CrowdProjectDetailForm(String id)
         {
             super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
@@ -288,6 +359,10 @@ public class CrowdSourcePage
             add(new TextField<String>("name").setRequired(true));
 
             add(new TextField<String>("apiKey"));
+
+            add(new TextField<String>("useSents"));
+            add(new TextField<String>("useGoldSents"));
+
             ExternalLink link;
 
             IModel<String> model=new LoadableDetachableModel<String>() {
@@ -319,6 +394,22 @@ public class CrowdSourcePage
                 @Override
                 protected String load() {
                         return selectedCrowdJob.getStatus();
+                }
+            }));
+
+            add(new Label("availSentences", new LoadableDetachableModel<String>() {
+                private static final long   serialVersionUID    = 1L;
+                @Override
+                protected String load() {
+                        return String.valueOf(getSourceDocumentsSentCount());
+                }
+            }));
+
+            add(new Label("availGoldSentences", new LoadableDetachableModel<String>() {
+                private static final long   serialVersionUID    = 1L;
+                @Override
+                protected String load() {
+                    return String.valueOf(getGoldDocumentsSentCount());
                 }
             }));
 
@@ -544,6 +635,8 @@ public class CrowdSourcePage
                 }
             });
 
+
+
             // send document to crowd flower and get back status and link
             add(new Button("uploadT1", new ResourceModel("label"))
             {
@@ -558,25 +651,13 @@ public class CrowdSourcePage
                         namedEntityTaskManager = new NamedEntityTaskManager();
                     }
 
-                   // namedEntityTaskManager.setAPIKey(projectRepository.getApiKey());
                     namedEntityTaskManager.setAPIKey(selectedCrowdJob.getApiKey());
-
-                    // Get the source document(2) here
-                    List<SourceDocument> sourceDocuments = new ArrayList<SourceDocument>(
-                            selectedCrowdJob.getDocuments());
-                    List<JCas> jCases = new ArrayList<JCas>();
                     User user = userRepository.get(CROWD_USER);
 
-                    // Get the JCASes for each source document
-                    for (SourceDocument sourceDocument : sourceDocuments) {
-                        addJCas(jCases, user, sourceDocument);
-                    }
+                    List<JCas> jCases = getSourceDocumentsJCases(user);
 
                     // Get the JCASes for each gold document
-                    List<JCas> goldJCases = new ArrayList<JCas>();
-                    for (SourceDocument sourceDocument : goldDocuments) {
-                        addJCas(goldJCases, user, sourceDocument);
-                    }
+                    List<JCas> goldJCases = getGoldDocumentsJCases(user);
 
                     // Convert it to approprate crowdfloweer format
                     // Get template
@@ -587,7 +668,24 @@ public class CrowdSourcePage
                     try {
                         String template = FileUtils.readFileToString(projectRepository.getTemplate(CROWD_NERTASK1_TEMPLATE));
 
-                        String strdD = namedEntityTaskManager.uploadNewNERTask1(template, jCases, goldJCases);
+                        String strUseSents = crowdJobDetailForm.getModelObject().useSents;
+                        String strUseGoldSents = crowdJobDetailForm.getModelObject().useGoldSents;
+
+                        //default value: use all available sentences
+                        int useSents = -1;
+                        int useGoldSents = -1;
+
+                        if(strUseSents != null && strUseSents != "" && isPositiveNumber(strUseSents))
+                        {
+                            useSents = Integer.valueOf(strUseSents);
+                        }
+
+                        if(strUseGoldSents != null && strUseGoldSents != "" && isPositiveNumber(strUseGoldSents))
+                        {
+                            useGoldSents = Integer.valueOf(strUseGoldSents);
+                        }
+
+                        String strdD = namedEntityTaskManager.uploadNewNERTask1(template, jCases, goldJCases, useSents, useGoldSents);
                         selectedCrowdJob.setTask1Id(strdD);
                         selectedCrowdJob.setLink(namedEntityTaskManager.getURLforID(strdD));
                         selectedCrowdJob.setStatus(namedEntityTaskManager.getStatusString(strdD, ""));
@@ -608,6 +706,7 @@ public class CrowdSourcePage
                     }
 
                 }
+
             });
 
             // send document to crowd flower and get back status and link
@@ -618,7 +717,45 @@ public class CrowdSourcePage
                 @Override
                 public void onSubmit()
                 {
-                    error("Task1 not yet completed");
+                    if(namedEntityTaskManager == null)
+                    {
+                        namedEntityTaskManager = new NamedEntityTaskManager();
+                    }
+
+                    namedEntityTaskManager.setAPIKey(selectedCrowdJob.getApiKey());
+                    User user = userRepository.get(CROWD_USER);
+
+                    List<JCas> jCases = getSourceDocumentsJCases(user);
+
+                    // Get the JCASes for each gold document
+                    List<JCas> goldJCases = getGoldDocumentsJCases(user);
+                    try{
+
+                    String task1ID = selectedCrowdJob.getTask1Id();
+
+                    if(task1ID == null)
+                    {
+                        error("Task1 not yet completed");
+                        return;
+                    }
+
+                    String template = FileUtils.readFileToString(projectRepository.getTemplate(CROWD_NERTASK2_TEMPLATE));
+                    String task2ID = namedEntityTaskManager.uploadNewNERTask2(template, task1ID, jCases, goldJCases);
+                    selectedCrowdJob.setTask2Id(task2ID);
+
+                    }catch (FileNotFoundException e)
+                    {
+                        error("Could not find the template file for NER task 1: " + e.getMessage());
+                    }
+                    catch (JsonProcessingException e) {
+                        error("Template for NER task 1 is mal formated: " + e.getMessage());
+                    }
+                    catch (IOException e) {
+                        error("There was a problem reading the NER task 1 template file: " + e.getMessage());
+                    }catch (Exception e) {
+                        error("Something went wrong uploading your document(s) to crowdflower.com: " + e.getMessage());
+                    }
+
                 }
 
                 @Override
@@ -668,6 +805,17 @@ public class CrowdSourcePage
                 }
             });
         }
+    }
+
+    private static boolean isPositiveNumber(String str)
+    {
+        for (char c : str.toCharArray())
+        {
+            if (!Character.isDigit(c)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void addJCas(List<JCas> jCases, User user, SourceDocument sourceDocument)
@@ -978,6 +1126,8 @@ public class CrowdSourcePage
     static private class SelectionModel
         implements Serializable
     {
+
+
         private static final long serialVersionUID = -1L;
 
         /*
@@ -986,6 +1136,8 @@ public class CrowdSourcePage
         Project project;
         String name;
         String apiKey;
+        String useSents;
+        String useGoldSents;
         List<SourceDocument> documents;
         List<SourceDocument> goldDocuments;
         String link;
