@@ -96,7 +96,7 @@ public class NamedEntityTaskManager implements Serializable
         Vector<NamedEntityTask1Data> data = new Vector<NamedEntityTask1Data>();
         int i=goldOffset;
         StringBuilder textBuilder = new StringBuilder();
-        int docNo = 1;
+        int docNo = 0;
 
         //DecimalFormat percentFormat = new DecimalFormat("0.00");
 
@@ -151,11 +151,16 @@ public class NamedEntityTaskManager implements Serializable
                 //System.out.println(text);
                 NamedEntityTask1Data task1Data = new NamedEntityTask1Data(text);
                 task1Data.setOffset(offset);
+                task1Data.setDocument("S"+String.valueOf(docNo));
 
                 if (generateGold)
                 {
                     ArrayList<String> goldElems = new ArrayList<String>();
                     ArrayList<String> goldTokens = new ArrayList<String>();
+                    ArrayList<String> goldTypes = new ArrayList<String>();
+
+                    int lastNeBegin = -1;
+                    int lastNeEnd = -1;
 
                     for (NamedEntity namedEntity : selectCovered(NamedEntity.class, sentence))
                     {
@@ -171,24 +176,70 @@ public class NamedEntityTaskManager implements Serializable
                         }
 
                         String strToken = concatWithSeperator(strTokens," ");
+                        String type = namedEntity.getValue();
 
-                        goldElems.add(buildTask1TokenJSON(textBuilder, namedEntity,charOffsetStartMapping,charOffsetEndMapping));
-                        goldTokens.add(strToken);
+                        //ignore partial NEs
+                        //if(!type.equals("ORGpart"))
+                        //{
+                            int neBegin = namedEntity.getBegin();
+                            int neEnd = namedEntity.getEnd();
+                            String strElem = buildTask1TokenJSON(textBuilder, namedEntity,charOffsetStartMapping,charOffsetEndMapping);
+
+                            LOG.debug("Checking new gold elem " + strElem + " Begin:" + neBegin + " End:" + neEnd);
+                            //nested NE's
+                            if(lastNeEnd != -1 && neBegin <= lastNeEnd)
+                            {
+                                LOG.debug("Nested NE! Last ne size: " + (lastNeEnd - lastNeBegin) + " this NE:" + (neEnd - neBegin));
+                                //this NE is bigger = better
+                                if((neEnd - neBegin) > (lastNeEnd - lastNeBegin))
+                                {
+                                    //remove last NE
+                                    goldElems.remove(goldElems.size()-1);
+                                    goldTokens.remove(goldElems.size()-1);
+                                    goldTypes.remove(goldElems.size()-1);
+
+                                    //add new NE
+                                    goldElems.add(strElem);
+                                    goldTokens.add(strToken);
+                                    goldTypes.add(type);
+
+                                    lastNeBegin = neBegin;
+                                    lastNeEnd = neEnd;
+                                }//else ignore this NE, keep last one
+                                else
+                                {
+                                    LOG.debug("Ignored elem " + strElem + " because it is a nested NE and previous NE is bigger");
+                                }
+                            }else{
+                                //standard case, no nested NE, or first NE
+                                goldElems.add(strElem);
+                                goldTokens.add(strToken);
+                                goldTypes.add(type);
+
+                                lastNeBegin = neBegin;
+                                lastNeEnd = neEnd;
+                            }
+                        //}
                     }
 
                     //Standard case: no gold elements
-                    String strGold = "[]";
+                    String strTypes = "[]";
+                    String strGold = "[\"none\"]";
                     String strGoldReason = noGoldNER1Reason;
 
                     //Case where we have gold elements and want to give feedback to the crowd user
                     if(goldElems.size() > 0)
                     {
                         strGold = buildTask1GoldElem(textBuilder, goldElems);
+                        strTypes = buildTask1GoldElem(textBuilder, goldTypes);
                         strGoldReason = buildTask1GoldElemReason(textBuilder, goldTokens);
                     }
 
                     task1Data.setMarkertext_gold(strGold);
                     task1Data.setMarkertext_gold_reason(strGoldReason);
+
+                    task1Data.setTypes(strTypes);
+                    task1Data.setDocument("G"+String.valueOf(docNo));
 
                     // Marker flag for crowdflower that this data is gold data.
                     // Still need to click on "convert uploaded gold" manually in the interface.

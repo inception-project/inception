@@ -30,6 +30,8 @@ public class NamedEntityTask1Data
     String markertext = "";
     String markertext_gold = "";
     String markertext_gold_reason = "";
+    String types = "";
+
 
     String document = "";
 
@@ -110,6 +112,17 @@ public class NamedEntityTask1Data
     public void setMarkertext_gold_reason(String markertext_gold_reason)
     {
         this.markertext_gold_reason = markertext_gold_reason;
+    }
+
+    @JsonProperty("types")
+    public String getTypes()
+    {
+        return types;
+    }
+
+    public void setTypes(String types)
+    {
+        this.types = types;
     }
 
 }
