@@ -53,7 +53,6 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.NumberTickUnit;
-import org.jfree.chart.axis.TickUnit;
 import org.jfree.chart.axis.TickUnits;
 import org.jfree.chart.labels.StandardPieSectionLabelGenerator;
 import org.jfree.chart.plot.CategoryPlot;
@@ -261,7 +260,10 @@ public class MonitoringPage
                         monitoringDetailForm.setVisible(true);
                         annotationTypeSelectionForm.setVisible(true);
                         monitoringDetailForm.setVisible(true);
-                        agreementForm.setVisible(true);
+
+                        annotationTypeSelectionForm.setModelObject(new SelectionModel());
+                        updateAgreementForm();
+
                         ProjectSelectionForm.this.setVisible(true);
 
                         final Map<String, Integer> annotatorsProgress = new HashMap<String, Integer>();
@@ -554,7 +556,7 @@ public class MonitoringPage
     }
 
     private class AgreementForm
-        extends Form
+        extends Form<DefaultDataTable>
     {
 
         @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -673,6 +675,16 @@ public class MonitoringPage
             }
         }
         return projectsProgressPerClosedDocument;
+    }
+
+    private void updateAgreementForm()
+    {
+        agreementForm.remove();
+        agreementForm = new AgreementForm("agreementForm", new Model<AnnotationType>(),
+                new Model<Project>());
+        agreementForm.setVisible(false);
+        add(agreementForm);
+        agreementForm.setVisible(true);
     }
 
     private void updateAgreementTabel(AjaxRequestTarget aTarget)
@@ -816,7 +828,7 @@ public class MonitoringPage
         plot.setInsets(new RectangleInsets(UnitType.ABSOLUTE, 0, 20, 0, 20));
         plot.getRangeAxis().setRange(0.0, aMaxValue);
         ((NumberAxis) plot.getRangeAxis()).setNumberFormatOverride(new DecimalFormat("0"));
-        
+
         if(!aIsPercentage){
 	        TickUnits standardUnits = new TickUnits();
 	        NumberAxis tick = new NumberAxis();
