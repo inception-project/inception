@@ -686,7 +686,7 @@ public class BratCuratorUtility
         else if (annotationOption.getAnnotationSelections().size() == 1) {
             newState = AnnotationState.DISAGREE;
         }
-        else if (annotationOption.getAnnotationSelections().size() == 2) {
+        else  {
             newState = AnnotationState.DO_NOT_USE;
         }
         return newState;
