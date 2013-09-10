@@ -1112,9 +1112,23 @@ var AnnotatorUI = (function($, window, undefined) {
 
         var $scroller = $();
         if (spanTypes[originType]) {
-          var arcTypes = spanTypes[originType].arcs;
+          // for chain annotation, a number, 1-12 is added at the begining
+          // to display different chains in different colors
+          // remove those numbers so that the arc role type will not be dup
+          // in the arc annotation dialog.
+          var uniqueTypes = [];
+          var arcTypes = [];
+        	
+          var arcTypesWithDuplications = spanTypes[originType].arcs;
           $scroller = $('#arc_roles .scroller').empty();
-
+          
+          $.each(arcTypesWithDuplications || [], function(arcTypeNo, arcDesc) {
+        	  var arcTypeName = arcDesc.type.replace(/\d+/,'');
+        	  if($.inArray(arcTypeName, uniqueTypes) == -1){
+        		  arcTypes.push(arcDesc);
+        		  uniqueTypes.push(arcTypeName);
+        	  }
+          });
           // lay them out into the form
           $.each(arcTypes || [], function(arcTypeNo, arcDesc) {
             if (arcDesc.targets && arcDesc.targets.indexOf(targetType) != -1) {
