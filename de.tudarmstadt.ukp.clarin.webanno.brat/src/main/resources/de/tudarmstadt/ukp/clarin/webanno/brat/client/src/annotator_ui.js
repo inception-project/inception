@@ -1285,9 +1285,9 @@ var AnnotatorUI = (function($, window, undefined) {
       };
 
       var deleteArc = function(evt) {
-        if (Configuration.confirmModeOn && !confirm("Are you sure you want to delete this annotation?")) {
+   /*     if (Configuration.confirmModeOn && !confirm("Are you sure you want to delete this annotation?")) {
           return;
-        }
+        }*/
         var eventDataId = $(evt.target).attr('data-arc-ed');
         dispatcher.post('hideForm');
         arcOptions.action = 'deleteArc';
@@ -2048,9 +2048,9 @@ var AnnotatorUI = (function($, window, undefined) {
       var rapidSpanForm = $('#rapid_span_form');
     
       var deleteSpan = function() {
-        if (Configuration.confirmModeOn && !confirm("Are you sure you want to delete this annotation?")) {
+    /*    if (Configuration.confirmModeOn && !confirm("Are you sure you want to delete this annotation?")) {
           return;
-        }
+        }*/
         $.extend(spanOptions, {
           action: 'deleteSpan',
           collection: coll,
