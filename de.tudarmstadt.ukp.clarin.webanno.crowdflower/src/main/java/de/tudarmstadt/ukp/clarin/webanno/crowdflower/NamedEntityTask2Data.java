@@ -29,9 +29,13 @@ public class NamedEntityTask2Data
     String text = "";
     String toDecide = "";
     String _golden = "";
-    String _ist_todecide_ein = "";
+
     String ist_todecide_ein_gold = "";
     String ist_todecide_ein_gold_reason = "";
+
+    String tokenOffset = "";
+    String document = "";
+    String posText = "";
 
     //constructor for normal data
     NamedEntityTask2Data(String text, String toDecide)
@@ -41,14 +45,18 @@ public class NamedEntityTask2Data
     }
 
     //constructor for gold data
-    NamedEntityTask2Data(String text, String toDecide,String _ist_todecide_ein, String _ist_todecide_ein_gold, String _ist_todecide_ein_gold_reason)
+    NamedEntityTask2Data(String text, String toDecide, String posText, String tokenOffset, String document, String ist_todecide_ein_gold, String ist_todecide_ein_gold_reason)
     {
            this.text = text;
            this.toDecide = toDecide;
-           this._ist_todecide_ein =  _ist_todecide_ein;
-           this.ist_todecide_ein_gold = _ist_todecide_ein_gold;
-           this.ist_todecide_ein_gold_reason = _ist_todecide_ein_gold_reason;
+
+           this.ist_todecide_ein_gold = ist_todecide_ein_gold;
+           this.ist_todecide_ein_gold_reason = ist_todecide_ein_gold_reason;
            this._golden = "TRUE";
+
+           this.tokenOffset = tokenOffset;
+           this.document = document;
+           this.posText = posText;
     }
 
     NamedEntityTask2Data()
@@ -87,18 +95,7 @@ public class NamedEntityTask2Data
         this._golden = _golden;
     }
 
-    @JsonProperty("_ist_todecide_ein")
-    public String get_ist_todecide_ein()
-    {
-        return _ist_todecide_ein;
-    }
-
-    public void set_ist_todecide_ein(String _ist_todecide_ein)
-    {
-        this._ist_todecide_ein = _ist_todecide_ein;
-    }
-
-    @JsonProperty("ist_todecide_ein_gold")
+    @JsonProperty("ist_todecide_eine_gold")
     public String get_ist_todecide_ein_gold()
     {
         return ist_todecide_ein_gold;
@@ -109,7 +106,7 @@ public class NamedEntityTask2Data
         this.ist_todecide_ein_gold = _ist_todecide_ein_gold;
     }
 
-    @JsonProperty("ist_todecide_ein_gold_reason")
+    @JsonProperty("ist_todecide_eine_gold_reason")
     public String get_ist_todecide_ein_gold_reason()
     {
         return ist_todecide_ein_gold_reason;
@@ -118,5 +115,38 @@ public class NamedEntityTask2Data
     public void set_ist_todecide_ein_gold_reason(String _ist_todecide_ein_gold_reason)
     {
         this.ist_todecide_ein_gold_reason = _ist_todecide_ein_gold_reason;
+    }
+
+    @JsonProperty("tokenOffset")
+    public String getTokenOffset()
+    {
+        return tokenOffset;
+    }
+
+    public void setTokenOffset(String tokenOffset)
+    {
+        this.tokenOffset = tokenOffset;
+    }
+
+    @JsonProperty("document")
+    public String getDocument()
+    {
+        return document;
+    }
+
+    public void setDocument(String document)
+    {
+        this.document = document;
+    }
+
+    @JsonProperty("posText")
+    public String getPosText()
+    {
+        return posText;
+    }
+
+    public void setPosText(String posText)
+    {
+        this.posText = posText;
     }
 }

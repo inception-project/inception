@@ -21,12 +21,16 @@ import static org.apache.commons.lang.StringEscapeUtils.escapeHtml;
 import static org.uimafit.util.JCasUtil.select;
 import static org.uimafit.util.JCasUtil.selectCovered;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Serializable;
+import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 import org.apache.commons.logging.Log;
@@ -35,6 +39,7 @@ import org.apache.uima.jcas.JCas;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.JsonProcessingException;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.ObjectWriter;
 
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -50,6 +55,19 @@ public class NamedEntityTaskManager implements Serializable
     private static final String noGoldNER1Reason = "Dieser Textabschnitt beinhaltet keine Named Entities (in solchen F&auml;llen m&uuml;ssen sie auf den daf&uuml;r vorgesehen Button klicken. Es reicht nicht aus nichts zu makieren). Sie k&ouml;nnen diese Meinung anfechten und uns erkl&auml;ren warum Sie meinen das dies falsch ist.\n";
     private static final String goldNER1ReasonHints = "\n <br/> Tipps: Wenn eine Named Entity l&auml;nger als ein Wort lang ist, m&uuml;ssen sie beim ersten Wort anfangen zu makieren und beim letzten Wort loslassen. Falsch ist: Klicken Sie stattdessen auf die W&ouml;rter einzeln, erzeugt dies mehrere einzelne Makierungen! Sie k&ouml;nnen auch nur bis z.B. zu der H&auml;lfte eines Wortes makieren, dies erfasst trotzdem das ganze Wort. \n";
 
+    private static final String bogusNER2Reason = "Wenn sie anderer Meinung sind, k&ouml;nnen Sie unsere Meinung anfechten.";
+
+    private static Map<String, String> task2NeMap;
+
+    static {
+        task2NeMap = new HashMap<String, String>();
+        task2NeMap.put("PER", "Person");
+        task2NeMap.put("ORG", "Organisation");
+        task2NeMap.put("ORGpart", "Organisation");
+        task2NeMap.put("LOC", "Ort");
+        task2NeMap.put("LOCderiv", "Ort");
+        task2NeMap.put("OTH", "Etwas anderes");
+    }
 
     public NamedEntityTaskManager()
     {
@@ -178,48 +196,45 @@ public class NamedEntityTaskManager implements Serializable
                         String strToken = concatWithSeperator(strTokens," ");
                         String type = namedEntity.getValue();
 
-                        //ignore partial NEs
-                        //if(!type.equals("ORGpart"))
-                        //{
-                            int neBegin = namedEntity.getBegin();
-                            int neEnd = namedEntity.getEnd();
-                            String strElem = buildTask1TokenJSON(textBuilder, namedEntity,charOffsetStartMapping,charOffsetEndMapping);
 
-                            LOG.debug("Checking new gold elem " + strElem + " Begin:" + neBegin + " End:" + neEnd);
-                            //nested NE's
-                            if(lastNeEnd != -1 && neBegin <= lastNeEnd)
+                        int neBegin = namedEntity.getBegin();
+                        int neEnd = namedEntity.getEnd();
+                        String strElem = buildTask1TokenJSON(textBuilder, namedEntity,charOffsetStartMapping,charOffsetEndMapping);
+
+                        LOG.debug("Checking new gold elem " + strElem + " Begin:" + neBegin + " End:" + neEnd);
+                        //nested NE's
+                        if(lastNeEnd != -1 && neBegin <= lastNeEnd)
+                        {
+                            LOG.debug("Nested NE! Last ne size: " + (lastNeEnd - lastNeBegin) + " this NE:" + (neEnd - neBegin));
+                            //this NE is bigger = better
+                            if((neEnd - neBegin) > (lastNeEnd - lastNeBegin))
                             {
-                                LOG.debug("Nested NE! Last ne size: " + (lastNeEnd - lastNeBegin) + " this NE:" + (neEnd - neBegin));
-                                //this NE is bigger = better
-                                if((neEnd - neBegin) > (lastNeEnd - lastNeBegin))
-                                {
-                                    //remove last NE
-                                    goldElems.remove(goldElems.size()-1);
-                                    goldTokens.remove(goldElems.size()-1);
-                                    goldTypes.remove(goldElems.size()-1);
+                                //remove last NE
+                                goldElems.remove(goldElems.size()-1);
+                                goldTokens.remove(goldElems.size()-1);
+                                goldTypes.remove(goldElems.size()-1);
 
-                                    //add new NE
-                                    goldElems.add(strElem);
-                                    goldTokens.add(strToken);
-                                    goldTypes.add(type);
-
-                                    lastNeBegin = neBegin;
-                                    lastNeEnd = neEnd;
-                                }//else ignore this NE, keep last one
-                                else
-                                {
-                                    LOG.debug("Ignored elem " + strElem + " because it is a nested NE and previous NE is bigger");
-                                }
-                            }else{
-                                //standard case, no nested NE, or first NE
+                                //add new NE
                                 goldElems.add(strElem);
                                 goldTokens.add(strToken);
                                 goldTypes.add(type);
 
                                 lastNeBegin = neBegin;
                                 lastNeEnd = neEnd;
+                            }//else ignore this NE, keep last one
+                            else
+                            {
+                                LOG.debug("Ignored elem " + strElem + " because it is a nested NE and previous NE is bigger");
                             }
-                        //}
+                        }else{
+                            //standard case, no nested NE, or first NE
+                            goldElems.add(strElem);
+                            goldTokens.add(strToken);
+                            goldTypes.add(type);
+
+                            lastNeBegin = neBegin;
+                            lastNeEnd = neEnd;
+                        }
                     }
 
                     //Standard case: no gold elements
@@ -442,10 +457,10 @@ public class NamedEntityTaskManager implements Serializable
            int uploadedUnits = -1;
            boolean finsished = false;
 
-           if(status.has("count") && status.has("done"))
+           if(status != null && status.has("count") && status.has("done"))
            {
-               uploadedUnits = status.get("count").getIntValue();
-               finsished = status.get("done").getBooleanValue();
+               uploadedUnits = status.path("count").getIntValue();
+               finsished = status.path("done").getBooleanValue();
            }
            else
            {
@@ -461,8 +476,87 @@ public class NamedEntityTaskManager implements Serializable
        }
    }
 
+
    /**
-    * stub
+    * Get the string char position of the i-th span from the HTML token spans that the crowdflower job task1 uses to display a textfragment.
+    * @param spans
+    * @param spannumber
+    * @return
+    * @throws Exception
+    */
+   private int getSpanPos(String spans, int spannumber) throws Exception
+   {
+       // find all occurrences <span> forward
+       int count = 0;
+       for (int i = -1; (i = spans.indexOf("<span ", i + 1)) != -1; ) {
+           if (spannumber==count)
+           {
+                   return i;
+           }
+           count++;
+       }
+       throw new Exception("Index not found:" + spannumber);
+   }
+
+
+   /**
+    * Extract certain spans from the HTML token spans that the crowdflower job task1 uses to display a textfragment.
+    * @param spans
+    * @param start
+    * @param end
+    * @return
+    * @throws Exception
+    */
+   private String extractSpan(String spans, int start, int end) throws Exception
+   {
+       int offset = getFirstSpanOffset(spans);
+
+       assert(start >= offset);
+       assert(end >= offset);
+
+       //to have a span beyond the last one
+       spans += "<span ";
+
+       int substart = getSpanPos(spans,start-offset);
+       int subend = getSpanPos(spans,end-offset+1);
+
+       return spans.substring(substart,subend);
+   }
+
+private int getFirstSpanOffset(String spans)
+{
+    String firstNum = "0";
+       boolean foundDigit = false;
+
+       //span beginn will look like: "<span id='token=num'>", so will just search the first number in the string
+
+       /*regex for this would be:
+       Pattern p = Pattern.compile("(^|\\s)([0-9]+)($|\\s)");
+       Matcher m = p.matcher(s);
+       if (m.find()) {
+           String num = m.group(2);
+       }*/
+
+       //but hey, extractSpan gets called a lot, this is probably much faster:
+
+       for(int i=0; i < spans.length(); i++)
+       {
+           if(Character.isDigit(spans.charAt(i)))
+           {
+               foundDigit = true;
+               firstNum = firstNum+Character.toString(spans.charAt(i));
+           }else if(foundDigit && !Character.isDigit(spans.charAt(i)))
+           {
+               break;
+           }
+       }
+
+       int offset = Integer.valueOf(firstNum);
+    return offset;
+}
+
+   /**
+    * Uploads a new task2 to Crowdflower, producing data for the new out of a task-1 ID.
     * @param template
     * @param jobID1
     * @param documentsJCas
@@ -472,25 +566,114 @@ public class NamedEntityTaskManager implements Serializable
     * @throws IOException
     * @throws Exception
     */
+
    public String uploadNewNERTask2(String template, String jobID1, List<JCas>documentsJCas , List<JCas>goldsJCas)
            throws JsonProcessingException, IOException, Exception
    {
        Log LOG = LogFactory.getLog(getClass());
 
+       LOG.info("retrieving data for job: " + jobID1);
+
        //retrieve job id 1 data
        CrowdJob job1 = crowdclient.retrieveJob(jobID1);
-       JsonNode judgments = crowdclient.retrieveJudgments(job1);
 
-       System.out.println(judgments);
+       //rawdata is a multiline JSON file
+       String rawdata = crowdclient.retrieveRawJudgments(job1);
 
-       /*
-       LOG.info("Creating new Job for Ner task 2.");
+       StringReader reader = new StringReader(rawdata);
+       BufferedReader br = new BufferedReader(reader);
+       String line;
+
+       //json object mapper
+       ObjectMapper mapper = new ObjectMapper();
+
+       //used to represent task2 data that is send as JSON to crowdflower
+       Vector<NamedEntityTask2Data> uploadData = new Vector<NamedEntityTask2Data>();
+
+       ObjectWriter writer = mapper.writer();
+
+       while((line=br.readLine())!=null)
+       {
+           JsonNode elem = mapper.readTree(line);
+           String text = elem.path("data").path("text").getTextValue();
+
+           System.out.println("text:" + text);
+
+           boolean isGold = !elem.path("data").path("_golden").isMissingNode();
+
+           if(isGold)
+           {
+               //System.out.println("goldelem:" + elem);
+               //produce gold data
+               String markertext_gold = elem.path("data").path("markertext_gold").getTextValue();
+               String types = elem.path("data").path("types").getTextValue();
+               String document = elem.path("data").path("document").getTextValue();
+
+               //System.out.println("markertext_gold:" + markertext_gold);
+               //System.out.println("types:" + types);
+
+               if(!types.equals("[]"))
+               {
+                   //sentence has atleast one NE
+                   List<String> NEtypes = Arrays.asList(types.substring(1, types.length()-1).split(","));
+
+                   List<Integer> startMarkers = new ArrayList<Integer>();
+                   List<Integer> endMarkers = new ArrayList<Integer>();
+                   List<String> strMarkers = new ArrayList<String>();
+
+                   List<String> NE = new ArrayList<String>();
+
+                   JsonNode markers = mapper.readTree(markertext_gold);
+
+                   for(JsonNode marker : markers)
+                   {
+                       strMarkers.add(writer.writeValueAsString(marker));
+                       int start = marker.path("s").getIntValue();
+                       int end = marker.path("e").getIntValue();
+                       startMarkers.add(start);
+                       endMarkers.add(end);
+                       NE.add(extractSpan(text, start, end));
+                   }
+
+                   //debug
+                   //System.out.println(NE);
+                   //System.out.println(NEtypes);
+                   for(int i = 0; i < NE.size(); i++)
+                   {
+                       //NamedEntityTask2Data(String text, String toDecide, String posText, String tokenOffset, String document, String ist_todecide_ein_gold, String ist_todecide_ein_gold_reason)
+                       NamedEntityTask2Data task2_datum = new NamedEntityTask2Data(text,NE.get(i),strMarkers.get(i),
+                               String.valueOf(getFirstSpanOffset(text)),document,task2NeMap.get(NEtypes.get(i)),bogusNER2Reason);
+                       uploadData.add(task2_datum);
+                   }
+
+               }//else ignore this sentence
+           }else
+           {
+               //System.out.println("elem:" + elem);
+               //majority voting for
+               for (JsonNode judgment : elem.path("results").path("judgments"))
+               {
+                   if(!judgment.path("data").path("markertext").isMissingNode())
+                   {
+                       String markertext = judgment.path("data").path("markertext").getTextValue();
+                       System.out.println("markertext votes:" + markertext);
+                   }else
+                   {
+                       LOG.warn("Warning, missing path in JSON result file from crowdflower: results/judgments");
+                   }
+               }
+           }
+       }
+
+       LOG.info("Data generation complete. Creating new Job for Ner task 2.");
        CrowdJob job = createJob(template);
-       LOG.info("Done, new job id is: "+job.getId()+". Now generating data for NER task 2");*/
+       LOG.info("Done, new job id is: "+job.getId()+". Now generating data for NER task 2");
 
+       crowdclient.uploadData(job,uploadData);
 
+       LOG.info("Done uploading data to task2 #"+job.getId()+".");
 
-       return "";
+       return job.getId();
    }
 
 }

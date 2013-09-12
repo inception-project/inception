@@ -32,8 +32,14 @@ package de.tudarmstadt.ukp.clarin.webanno.crowdflower;
  * limitations under the License.
  ******************************************************************************/
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import java.util.Vector;
+import java.util.zip.ZipInputStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -65,10 +71,14 @@ public class CrowdClient implements Serializable
     static final String uploadDataWithJobURL = "https://api.crowdflower.com/v1/jobs/{jobid}/upload.json?key={apiKey}";
     static final String uploadDataURL = "https://api.crowdflower.com/v1/jobs/upload.json?key={apiKey}";
     static final String orderJobURL = "https://api.crowdflower.com/v1/jobs/{jobid}/orders?key={apiKey}";
-    static final String judgmentsURL = "https://api.crowdflower.com/v1/jobs/{jobid}/judgments.json?key={apiKey}";
+
+    //unfortunatly, this doesnt produce the fully populated JSON with all judgments, just an aggregated version
+    //static final String judgmentsURL = "https://api.crowdflower.com/v1/jobs/{jobid}/judgments.json?key={apiKey}&full=true";
+    static final String judgmentsURL = "https://api.crowdflower.com/v1/jobs/{jobid}.csv?key={apiKey}&type=json&full=true";
+
     static final String channelsURL = "https://api.crowdflower.com/v1/jobs/{jobid}/channels?key={apiKey}";
     static final String pingURL = "https://api.crowdflower.com/v1/jobs/{jobid}/units/ping.json?key={apiKey}";
-    
+
     static final String channelKey = "channels";
     static final String debitKey = "debit[units_count]";
     static final String jobPaymentKey = "job[payment_cents]";
@@ -161,11 +171,15 @@ public class CrowdClient implements Serializable
         ObjectMapper mapper = new ObjectMapper();
         String jsonObjectCollection = "";
 
+        int count = 0;
         for(Object obj : data)
         {
+            count++;
             JsonNode jsonData = mapper.convertValue(obj, JsonNode.class);
             jsonObjectCollection += jsonData.toString() + "\n";
         }
+
+        //System.out.println("DEBUG: jsonObjectCollection = " + jsonObjectCollection);
 
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.getMessageConverters().add(new StringHttpMessageConverter());
@@ -177,11 +191,11 @@ public class CrowdClient implements Serializable
         String result = "";
 
         if(job == null) {
-            LOG.info("Upload new data and create new job: " + String.valueOf(data.size()) + " data items");
+            LOG.info("Upload new data and create new job: " + String.valueOf(count) + " data items");
             result = restTemplate.postForObject(uploadDataURL, request, String.class, apiKey);
         }
         else {
-            LOG.info("Uploading new data to job: "+ job.getId() + ": " + String.valueOf(jsonObjectCollection.length()) + " data items");
+            LOG.info("Uploading new data to job: "+ job.getId() + ": " + String.valueOf(count) + " data items");
             result = restTemplate.postForObject(uploadDataWithJobURL, request, String.class, job.getId(), apiKey);
         }
         LOG.info("Upload response:" + result);
@@ -246,18 +260,54 @@ public class CrowdClient implements Serializable
     }
 
     /**
+     * unzips all elements in the file represented by byte[]data. Needed by retrieveRawJudgments which will retrieve a zip-file with a single JSON
+     * @param data
+     * @return
+     * @throws IOException
+     */
+
+    byte[] unzip( final byte[] data ) throws IOException
+    {
+        final InputStream input = new ByteArrayInputStream( data );
+        final byte[] buffer = new byte[1024];
+
+        final ZipInputStream zip = new ZipInputStream( input );
+        final ByteArrayOutputStream out = new ByteArrayOutputStream(data.length);
+        int count = 0;
+
+        if ( zip.getNextEntry() != null )
+        {
+                    while((count = zip.read(buffer)) != -1) {
+                          out.write(buffer, 0, count);
+                   }
+        }
+
+        out.flush();
+        zip.close();
+        out.close();
+
+        return out.toByteArray();
+    }
+
+    /**
      * Retrieves raw judgments for a given job
      * @param job
      * @return
+     * @throws IOException
+     * @throws UnsupportedEncodingException
      */
-    JsonNode retrieveJudgments(CrowdJob job)
+    String retrieveRawJudgments(CrowdJob job) throws UnsupportedEncodingException, IOException
     {
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.getMessageConverters().add(new MappingJacksonHttpMessageConverter());
 
-        JsonNode result = restTemplate.getForObject(judgmentsURL, JsonNode.class, job.getId(), apiKey);
+        //Crowdflower sends back a zip file with a single JSON file, which make things a bit awkward here:
+        byte[] resultJsonZip = restTemplate.getForObject(judgmentsURL, byte[].class, job.getId(), apiKey);
+        String resultJsonString = new String(unzip(resultJsonZip), "UTF-8");
 
-        return result;
+        System.out.println("resultJsonString:" + resultJsonString);
+
+        return resultJsonString;
     }
 
     /**
@@ -273,16 +323,16 @@ public class CrowdClient implements Serializable
 
         //System.out.println(result);
     }
-    
+
     /**
      * Get the status of a job id. The resulting JSON will look like this if the query succeds:
      * {"count":550,"done":true}
      * or if there is an error (e.g. wrong job id):
      * {"error": {"message":"We couldn't find what you were looking for."}}
-     * 
+     *
      * @param jobid
      */
-    
+
     JsonNode getStatus(String jobId)
     {
         RestTemplate restTemplate = new RestTemplate();
@@ -292,5 +342,5 @@ public class CrowdClient implements Serializable
 
         return result;
     }
-    
+
 }

@@ -389,6 +389,15 @@ public class CrowdSourcePage
                 }
             }));
 
+            /*add(new Label("link2", new LoadableDetachableModel<String>() {
+                private static final long   serialVersionUID    = 1L;
+                @Override
+                protected String load() {
+                    //TODO: store link2 in selectedCrowdJob
+                    return "";
+                }
+            }));*/
+
             add(new Label("status", new LoadableDetachableModel<String>() {
                 private static final long   serialVersionUID    = 1L;
                 @Override
@@ -1141,6 +1150,7 @@ public class CrowdSourcePage
         List<SourceDocument> documents;
         List<SourceDocument> goldDocuments;
         String link;
+        String link2;
         String status;
     }
 }
