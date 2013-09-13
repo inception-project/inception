@@ -186,7 +186,7 @@ public class ArcAdapter
             Feature labelFeature = fs.getType().getFeatureByBaseName(labelFeatureName);
 
             aResponse.addRelation(new Relation(((FeatureStructureImpl) fs).getAddress(), typePrefix
-                    + fs.getStringValue(labelFeature).toUpperCase(), argumentList));
+                    + fs.getStringValue(labelFeature), argumentList));
         }
     }
 

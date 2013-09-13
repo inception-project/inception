@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
@@ -173,7 +172,7 @@ public class CasDiff {
         // check if types are equal
         Type type = fsNew.getType();
         Type oldType = CasUtil.getType(fsOld.getCAS(), aType.getName());
-        if (!(StringUtils.equalsIgnoreCase(fsOld.getType().toString(),type.toString()))) {
+        if (!(fsOld.getType().toString().equals(type.toString()))) {
             // if types differ add feature structure to diff
             compareResult.getDiffs().put(fsNew, fsOld);
             return compareResult;
@@ -206,7 +205,7 @@ public class CasDiff {
                         // Do nothing, null == null
                     } else if (stringValue1 == null
                             || stringValue2 == null
-                            || !(StringUtils.equalsIgnoreCase(fsNew.getStringValue(feature),
+                            || !(fsNew.getStringValue(feature).equals(
                                     fsOld.getStringValue(olFeature)))) {
                         // stringValue1 differs from stringValue2
 
@@ -238,7 +237,7 @@ public class CasDiff {
                     agreeOnSubfeatures = false;
                 }
                 if (featureValue1 != null && featureValue2 != null &&
-                        (StringUtils.equalsIgnoreCase(aType.toString(),featureValue1.getType().toString()))) {
+                        (aType.toString().equals(featureValue1.getType().toString()))) {
                     CompareResult compareResultSubfeatures = compareFeatureFS(aType,
                             featureValue1, featureValue2, diffFSNew);
                     compareResult.getDiffs().putAll(compareResultSubfeatures.getDiffs());

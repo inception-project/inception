@@ -698,7 +698,7 @@ public class ProjectTagSetsPanel
                         @Override
                         public Object getDisplayValue(Tag aObject)
                         {
-                            return aObject.getName().toUpperCase();
+                            return aObject.getName();
                         }
                     });
                     setNullValid(false);

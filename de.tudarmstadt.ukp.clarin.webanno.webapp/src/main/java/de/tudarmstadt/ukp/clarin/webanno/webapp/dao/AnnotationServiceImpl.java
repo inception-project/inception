@@ -338,7 +338,7 @@ public class AnnotationServiceImpl
                 .createQuery("FROM Tag WHERE tagSet = :tagSet ORDER BY name ASC", Tag.class)
                 .setParameter("tagSet", aTagSet).getResultList();
         for(int i=0;i<tags.size();i++){
-            tags.get(i).setName(tags.get(i).getName().toUpperCase());
+            tags.get(i).setName(tags.get(i).getName());
         }
         return tags;
     }

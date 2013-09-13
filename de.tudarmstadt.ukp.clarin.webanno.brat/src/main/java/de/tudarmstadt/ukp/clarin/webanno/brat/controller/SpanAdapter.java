@@ -175,7 +175,7 @@ public class SpanAdapter
 
             Feature labelFeature = fs.getType().getFeatureByBaseName(labelFeatureName);
             aResponse.addEntity(new Entity(((FeatureStructureImpl) fs).getAddress(), typePrefix
-                    + fs.getStringValue(labelFeature).toUpperCase(), asList(new Offsets(fs.getBegin()
+                    + fs.getStringValue(labelFeature), asList(new Offsets(fs.getBegin()
                     - aFirstSentenceOffset, fs.getEnd() - aFirstSentenceOffset))));
         }
     }
