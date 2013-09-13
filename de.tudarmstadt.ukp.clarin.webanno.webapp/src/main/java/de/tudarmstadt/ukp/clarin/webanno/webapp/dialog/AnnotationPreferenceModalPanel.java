@@ -53,7 +53,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 
 /**
- * Modal Window to configure {@link BratAnnotator#setAnnotationLayers(ArrayList), BratAnnotator#setWindowSize(int)...}
+ * Modal Window to configure {@link BratAnnotator#setAnnotationLayers(ArrayList),
+ * BratAnnotator#setWindowSize(int)...}
+ *
  * @author Seid Muhie Yimam
  * @author Richard Eckart de Castilho
  *
@@ -102,7 +104,8 @@ public class AnnotationPreferenceModalPanel
             windowSizeField.setType(Integer.class);
             windowSizeField.setMinimum(1);
             add(windowSizeField);
-            add(new CheckBox("displayLemma")    {
+            add(new CheckBox("displayLemma")
+            {
                 private static final long serialVersionUID = 6875270671499921169L;
 
                 @Override
@@ -111,7 +114,8 @@ public class AnnotationPreferenceModalPanel
                     return bratAnnotatorModel.getMode().equals(Mode.ANNOTATION);
                 }
             });
-            add(new Label("displayLemmaLabel", "Display Lemma:"){
+            add(new Label("displayLemmaLabel", "Display Lemma:")
+            {
                 private static final long serialVersionUID = -22913373405728018L;
 
                 @Override
@@ -120,7 +124,6 @@ public class AnnotationPreferenceModalPanel
                     return bratAnnotatorModel.getMode().equals(Mode.ANNOTATION);
                 }
             });
-
 
             add(tagSets = (CheckBoxMultipleChoice<TagSet>) new CheckBoxMultipleChoice<TagSet>(
                     "annotationLayers")
@@ -135,26 +138,33 @@ public class AnnotationPreferenceModalPanel
                         @Override
                         protected List<TagSet> load()
                         {
-                            return annotationService.listTagSets(bratAnnotatorModel.getProject());
+                            // disable corefernce annotation for correction/curation pages for 0.4.0
+                            // release
+                            List<TagSet> tagSets = annotationService.listTagSets(bratAnnotatorModel
+                                    .getProject());
+                            List<TagSet> corefTagSets = new ArrayList<TagSet>();
+                            for (TagSet tagSet : tagSets) {
+                                if (tagSet.getType().getName().equals("coreference type")
+                                        || tagSet.getType().getName().equals("coreference")) {
+                                    corefTagSets.add(tagSet);
+                                }
+                            }
+
+                            if (bratAnnotatorModel.getMode().equals(Mode.CORRECTION)
+                                    || bratAnnotatorModel.getMode().equals(Mode.CORRECTION)) {
+                                tagSets.removeAll(corefTagSets);
+                            }
+                            return tagSets;
+                         //   return annotationService.listTagSets(bratAnnotatorModel.getProject());
                         }
                     });
                     setChoiceRenderer(new ChoiceRenderer<TagSet>("name", "id"));
                 }
             });
             // Add a Checkbox to enable/disable automatic page navigations while annotating
-            add(new CheckBox("scrollPage"){
+            add(new CheckBox("scrollPage")
+            {
                 private static final long serialVersionUID = 8103688361110230362L;
-
-                @Override
-                public boolean isVisible()
-                {
-                    return
-                            !bratAnnotatorModel.getMode().equals(Mode.CURATION);
-                }
-            });
-
-            add(new Label("scrollPageLabel", "Auto-scroll document while annotating :") {
-                private static final long serialVersionUID = 7687134329746897190L;
 
                 @Override
                 public boolean isVisible()
@@ -163,6 +173,16 @@ public class AnnotationPreferenceModalPanel
                 }
             });
 
+            add(new Label("scrollPageLabel", "Auto-scroll document while annotating :")
+            {
+                private static final long serialVersionUID = 7687134329746897190L;
+
+                @Override
+                public boolean isVisible()
+                {
+                    return !bratAnnotatorModel.getMode().equals(Mode.CURATION);
+                }
+            });
 
             add(new AjaxSubmitLink("saveButton")
             {
@@ -185,8 +205,9 @@ public class AnnotationPreferenceModalPanel
                     String username = SecurityContextHolder.getContext().getAuthentication()
                             .getName();
                     try {
-                        projectRepository.saveUserSettings(username, bratAnnotatorModel.getProject(),
-                                bratAnnotatorModel.getMode(), preference);
+                        projectRepository.saveUserSettings(username,
+                                bratAnnotatorModel.getProject(), bratAnnotatorModel.getMode(),
+                                preference);
                     }
                     catch (FileNotFoundException e) {
                         error("Unable to save preferences in a property file: "

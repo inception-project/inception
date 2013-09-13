@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.lang.reflect.ParameterizedType;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -321,8 +322,25 @@ public class ApplicationUtils
         }
         // no preference found
         catch (Exception e) {
-            abAnnotatorModel.setAnnotationLayers(new HashSet<TagSet>(aAnnotationService
-                    .listTagSets(abAnnotatorModel.getProject())));
+
+            // disable corefernce annotation for correction/curation pages for 0.4.0 release
+            List<TagSet> tagSets = aAnnotationService.listTagSets(abAnnotatorModel.getProject());
+            List<TagSet> corefTagSets = new ArrayList<TagSet>();
+            for (TagSet tagSet : tagSets) {
+                if(tagSet.getType().getName().equals("coreference type")||
+                        tagSet.getType().getName().equals("coreference") ){
+                    corefTagSets.add(tagSet);
+                }
+            }
+
+            if(aMode.equals(Mode.CORRECTION) || aMode.equals(Mode.CORRECTION)){
+                tagSets.removeAll(corefTagSets);
+            }
+            abAnnotatorModel.setAnnotationLayers(new HashSet<TagSet>(tagSets));
+            /*
+             * abAnnotatorModel.setAnnotationLayers(new HashSet<TagSet>(aAnnotationService
+             * .listTagSets(abAnnotatorModel.getProject())));
+             */
         }
     }
 
