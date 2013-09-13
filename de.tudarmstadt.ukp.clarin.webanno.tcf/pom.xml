@@ -21,7 +21,7 @@
 	<parent>
 		<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 		<artifactId>de.tudarmstadt.ukp.clarin.webanno</artifactId>
-		<version>0.4.0-SNAPSHOT</version>
+		<version>0.4.0-rc2</version>
 	</parent>
 	<artifactId>de.tudarmstadt.ukp.clarin.webanno.tcf</artifactId>
 	<dependencies>
