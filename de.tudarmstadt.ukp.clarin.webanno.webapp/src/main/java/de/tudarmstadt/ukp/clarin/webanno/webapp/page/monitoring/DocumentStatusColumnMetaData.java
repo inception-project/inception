@@ -32,7 +32,6 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.AbstractReadOnlyModel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.resource.ContextRelativeResource;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -167,24 +166,6 @@ public class DocumentStatusColumnMetaData
                 }
             });
         }
-        else if (value.substring(0, value.indexOf(":")).equals(MonitoringPage.SOURCE_DOCUMENT)) {
-            SourceDocument document = projectRepositoryService.getSourceDocument(
-                    value.substring(value.indexOf(":") + 1), project);
-            aCellItem
-                    .add(new Label(componentId, new ResourceModel(document.getState().toString())));
-            aCellItem.add(AttributeModifier.append("class", "centering"));
-            aCellItem.add(new AjaxEventBehavior("onclick")
-            {
-                private static final long serialVersionUID = -3607394592031059409L;
-
-                @Override
-                protected void onEvent(AjaxRequestTarget aTarget)
-                {
-                    aTarget.appendJavaScript("alert('You cannot change the state of Source Documents')");
-                    aTarget.add(aCellItem);
-                }
-            });
-        }
         else {
             SourceDocument document = projectRepositoryService.getSourceDocument(
                     value.substring(value.indexOf(":") + 1), project);
@@ -261,13 +242,6 @@ public class DocumentStatusColumnMetaData
                                 .transition(AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
                         projectRepositoryService.createAnnotationDocument(annotationDocument);
 
-                        try {
-                            changeSourceDocumentState(project, document,
-                                    AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS);
-                        }
-                        catch (IOException e) {
-                            LOG.info("Unable to change state of the document");
-                        }
                     }
                     aTarget.add(aCellItem);
                 }
@@ -307,60 +281,6 @@ public class DocumentStatusColumnMetaData
     }
 
     /**
-     * Change the state of the source document when the annotation document is changed.
-     *
-     * @param aProject
-     * @param aSourceDocument
-     * @throws IOException
-     */
-    private void changeSourceDocumentState(Project aProject, SourceDocument aSourceDocument,
-            AnnotationDocumentStateTransition atTransition)
-        throws IOException
-    {
-
-        boolean allAnnotationDocumentStateFinished = true;
-        for (AnnotationDocument annotationDocument : projectRepositoryService
-                .listAnnotationDocument(aProject, aSourceDocument)) {
-            if (!(annotationDocument.getState().equals(AnnotationDocumentState.FINISHED) || annotationDocument
-                    .getState().equals(AnnotationDocumentState.IGNORE))) {
-                allAnnotationDocumentStateFinished = false;
-                break;
-            }
-        }
-        if (allAnnotationDocumentStateFinished) {
-            String username = SecurityContextHolder.getContext().getAuthentication().getName();
-            User user = projectRepositoryService.getUser(username);
-            if (!(aSourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED) || aSourceDocument
-                    .getState().equals(SourceDocumentState.CURATION_IN_PROGRESS))) {
-                aSourceDocument
-                        .setState(SourceDocumentStateTransition
-                                .transition(SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED));
-                projectRepositoryService.createSourceDocument(aSourceDocument, user);
-            }
-        }
-        else {
-            String username = SecurityContextHolder.getContext().getAuthentication().getName();
-            User user = projectRepositoryService.getUser(username);
-
-            SourceDocumentStateTransition stateTransition = null;
-            if (aSourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
-                stateTransition = SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS;
-            }
-            else if (aSourceDocument.getState().equals(SourceDocumentState.ANNOTATION_FINISHED)) {
-                stateTransition = SourceDocumentStateTransition.ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS;
-            }
-            else if (atTransition
-                    .equals(AnnotationDocumentStateTransition.ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS)) {
-                stateTransition = SourceDocumentStateTransition.ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS;
-            }
-            if (stateTransition != null) {
-                aSourceDocument.setState(SourceDocumentStateTransition.transition(stateTransition));
-                projectRepositoryService.createSourceDocument(aSourceDocument, user);
-            }
-        }
-    }
-
-    /**
      * change the state of an annotation document. used to re-open closed documents
      *
      * @param aSourceDocument
@@ -376,17 +296,6 @@ public class DocumentStatusColumnMetaData
         annotationDocument.setState(AnnotationDocumentStateTransition
                 .transition(aAnnotationDocumentStateTransition));
         projectRepositoryService.createAnnotationDocument(annotationDocument);
-        try {
-            // update state of source document if the transition is not new-ignore viceversa
-            if (!(annotationDocument.getState().equals(AnnotationDocumentState.NEW) || annotationDocument
-                    .getState().equals(AnnotationDocumentState.IGNORE))) {
-                changeSourceDocumentState(project, aSourceDocument,
-                        aAnnotationDocumentStateTransition);
-            }
-        }
-        catch (IOException e) {
-            LOG.info("Unable to change state of the document");
-        }
 
     }
 

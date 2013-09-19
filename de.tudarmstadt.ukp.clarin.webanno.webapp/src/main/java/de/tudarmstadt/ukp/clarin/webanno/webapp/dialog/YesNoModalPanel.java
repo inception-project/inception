@@ -32,7 +32,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
@@ -101,35 +100,6 @@ public class YesNoModalPanel
                         // createAnnotationDocument(...)
                         repository.createAnnotationDocument(annotationDocument);
 
-                        // check if other users are also finished annotation, hence
-                        // change source document state to FINISHED
-                        boolean othersFinished = true;
-                        for (User annotationUser : repository.listProjectUsersWithPermissions(bratAnnotatorModel
-                                .getProject())) {
-                            if (repository.existsAnnotationDocument(
-                                    bratAnnotatorModel.getDocument(), annotationUser)) {
-                                if (!repository
-                                        .getAnnotationDocument(bratAnnotatorModel.getDocument(),
-                                                annotationUser).getState()
-                                        .equals(AnnotationDocumentState.FINISHED)) {
-                                    othersFinished = false;
-                                    break;
-                                }
-                            }
-                        }
-
-                        if (othersFinished) {
-                            bratAnnotatorModel.getDocument().setState(
-                                    SourceDocumentState.ANNOTATION_FINISHED);
-                            try {
-                                repository.createSourceDocument(bratAnnotatorModel.getDocument(),
-                                        user);
-                            }
-                            catch (IOException e) {
-                                error("Unable to update source file "
-                                        + ExceptionUtils.getRootCauseMessage(e));
-                            }
-                        }
                     }
                     else {
 

@@ -115,7 +115,7 @@ public class MonitoringPage
      * The document column in the user-document status table
      */
     public static final String DOCUMENT = "document:";
-    public static final String SOURCE_DOCUMENT = "source document";
+
     public static final String CURATION = "curation";
 
     public static final String LAST_ACCESS = "last access:";
@@ -293,9 +293,6 @@ public class MonitoringPage
                         List<String> documentListAsColumnHeader = new ArrayList<String>();
                         documentListAsColumnHeader.add("Documents");
 
-                        // A column for source document states
-                        documentListAsColumnHeader.add(SOURCE_DOCUMENT);
-
                         // A column for curation user annotation document status
                         documentListAsColumnHeader.add(CURATION);
 
@@ -333,10 +330,6 @@ public class MonitoringPage
                         for (SourceDocument document : documents) {
                             List<String> userAnnotationDocuments = new ArrayList<String>();
                             userAnnotationDocuments.add(DOCUMENT + document.getName());
-
-                            // source Document status
-                            userAnnotationDocuments.add(SOURCE_DOCUMENT + "-" + DOCUMENT
-                                    + document.getName());
 
                             // Curation Document status
                             userAnnotationDocuments.add(CurationPanel.CURATION_USER + "-"

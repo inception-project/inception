@@ -255,11 +255,11 @@ public class BratAnnotatorUtility
             else if (aRepository
                     .getAnnotationDocument(aBratAnnotatorModel.getDocument(),
                             aBratAnnotatorModel.getUser()).getState()
-                    .equals(AnnotationDocumentState.FINISHED)
+                    .equals(AnnotationDocumentState.FINISHED)/*
                     || aBratAnnotatorModel.getDocument().getState()
                             .equals(SourceDocumentState.CURATION_FINISHED)
                     || aBratAnnotatorModel.getDocument().getState()
-                            .equals(SourceDocumentState.CURATION_IN_PROGRESS)) {
+                            .equals(SourceDocumentState.CURATION_IN_PROGRESS)*/) {
                 finished = true;
             }
         }
