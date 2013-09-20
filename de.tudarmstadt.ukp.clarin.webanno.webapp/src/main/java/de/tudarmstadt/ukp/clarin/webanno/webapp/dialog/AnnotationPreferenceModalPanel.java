@@ -151,7 +151,7 @@ public class AnnotationPreferenceModalPanel
                             }
 
                             if (bratAnnotatorModel.getMode().equals(Mode.CORRECTION)
-                                    || bratAnnotatorModel.getMode().equals(Mode.CORRECTION)) {
+                                    || bratAnnotatorModel.getMode().equals(Mode.CURATION)) {
                                 tagSets.removeAll(corefTagSets);
                             }
                             return tagSets;
