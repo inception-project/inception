@@ -124,7 +124,7 @@ public class AnnotationPage
             private static final long serialVersionUID = 7279648231521710155L;
 
             @Override
-            protected void onChange(AjaxRequestTarget aTarget)
+            protected void onChange(AjaxRequestTarget aTarget, BratAnnotatorModel aBratAnnotatorModel)
             {
                 // updateRightSide(aTarget, sentenceOuterView, curationContainer, this);
                 aTarget.add(numberOfPages);
@@ -250,10 +250,12 @@ public class AnnotationPage
                             String collection = "#" + openDataModel.getProject().getName() + "/";
                             String document = openDataModel.getDocument().getName();
                             target.add(finish.setOutputMarkupId(true));
+                          //  annotator.reloadContent(target);
                             target.appendJavaScript("window.location.hash = '"
                                     + collection
                                     + document
                                     + "';Wicket.Window.unloadConfirmation=false;window.location.reload()");
+
 
                         }
                         else {
@@ -277,7 +279,7 @@ public class AnnotationPage
             @Override
             protected void onChange(AjaxRequestTarget aTarget)
             {
-                aTarget.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                annotator.reloadContent(aTarget);
             }
         });
 
@@ -344,8 +346,7 @@ public class AnnotationPage
                             .getName();
                     String rewriteUrl = project + document;
                     target.add(finish.setOutputMarkupId(true));
-                    target.appendJavaScript("window.location.hash = '" + rewriteUrl
-                            + "'; Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                    annotator.reloadContent(target);
                 }
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up }, EventType.click)));
@@ -412,8 +413,7 @@ public class AnnotationPage
                             .getName();
                     String rewriteUrl = project + document;
                     target.add(finish.setOutputMarkupId(true));
-                    target.appendJavaScript("window.location.hash = '" + rewriteUrl
-                            + "'; Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                    annotator.reloadContent(target);
                 }
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down }, EventType.click)));
@@ -440,7 +440,7 @@ public class AnnotationPage
                     if (bratAnnotatorModel.getSentenceAddress() != nextSentenceAddress) {
                         bratAnnotatorModel.setSentenceAddress(nextSentenceAddress);
                         // target.add(annotator);
-                        target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                        annotator.reloadContent(target);
                     }
 
                     else {
@@ -471,7 +471,7 @@ public class AnnotationPage
                     if (bratAnnotatorModel.getSentenceAddress() != previousSentenceAddress) {
                         bratAnnotatorModel.setSentenceAddress(previousSentenceAddress);
                         // target.add(annotator);
-                        target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                        annotator.reloadContent(target);
                     }
                     else {
                         target.appendJavaScript("alert('This is First Page!')");
@@ -496,7 +496,7 @@ public class AnnotationPage
                         bratAnnotatorModel.setSentenceAddress(bratAnnotatorModel
                                 .getFirstSentenceAddress());
                         // target.add(annotator);
-                        target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                        annotator.reloadContent(target);
                     }
                     else {
                         target.appendJavaScript("alert('This is first page!')");
@@ -526,7 +526,7 @@ public class AnnotationPage
                         bratAnnotatorModel
                                 .setSentenceAddress(lastDisplayWindowBeginingSentenceAddress);
                         // target.add(annotator);
-                        target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                        annotator.reloadContent(target);
                     }
                     else {
                         target.appendJavaScript("alert('This is last Page!')");
@@ -579,7 +579,7 @@ public class AnnotationPage
                     if (bratAnnotatorModel.getSentenceAddress() != gotoPageAddress) {
                         bratAnnotatorModel.setSentenceAddress(gotoPageAddress);
                         // target.add(annotator);
-                        target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                        annotator.reloadContent(target);
                     }
                     else {
                         target.appendJavaScript("alert('This sentence is on the same page!')");

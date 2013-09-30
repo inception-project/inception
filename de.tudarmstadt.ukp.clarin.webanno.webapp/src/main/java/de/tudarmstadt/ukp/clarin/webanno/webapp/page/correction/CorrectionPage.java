@@ -188,10 +188,10 @@ public class CorrectionPage
             private static final long serialVersionUID = 7279648231521710155L;
 
             @Override
-            protected void onChange(AjaxRequestTarget aTarget)
+            protected void onChange(AjaxRequestTarget aTarget, BratAnnotatorModel aBratAnnotatorModel)
             {
                 try {
-
+                    bratAnnotatorModel = aBratAnnotatorModel;
                     CurationBuilder builder = new CurationBuilder(repository, annotationService);
                     curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                     setCurationSegmentBeginEnd();
@@ -566,7 +566,7 @@ public class CorrectionPage
 
                     finish.setModelObject(bratAnnotatorModel);
                     target.add(finish.setOutputMarkupId(true));
-                    target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                    mergeVisualizer.reloadContent(target);
                 }
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up }, EventType.click)));
@@ -632,7 +632,7 @@ public class CorrectionPage
 
                     finish.setModelObject(bratAnnotatorModel);
                     target.add(finish.setOutputMarkupId(true));
-                    target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                    mergeVisualizer.reloadContent(target);
                 }
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down }, EventType.click)));

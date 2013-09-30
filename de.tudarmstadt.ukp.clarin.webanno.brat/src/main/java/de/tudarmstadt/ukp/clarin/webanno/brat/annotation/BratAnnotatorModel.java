@@ -23,6 +23,7 @@ import java.util.HashSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
@@ -91,6 +92,16 @@ public class BratAnnotatorModel
      * as {@link Mode#CURATION}
      */
     private Mode mode;
+
+    /**
+     * The previously selected {@link TagSet} and {@link Tag} for a span/Arc annotation so as to pre-fill the type
+     * in the span/arc annotation dialog (only for new span/arc annotations)
+     * @return
+     */
+    private TagSet rememberedSpanTagSet;
+    private TagSet rememberedArcTagSet;
+    private Tag rememberedSpanTag;
+    private Tag rememberedArcTag;
 
     public Project getProject()
     {
@@ -211,5 +222,46 @@ public class BratAnnotatorModel
     {
         this.mode = mode;
     }
+
+    public TagSet getRememberedSpanTagSet()
+    {
+        return rememberedSpanTagSet;
+    }
+
+    public void setRememberedSpanTagSet(TagSet rememberedTagSet)
+    {
+        this.rememberedSpanTagSet = rememberedTagSet;
+    }
+
+    public Tag getRememberedSpanTag()
+    {
+        return rememberedSpanTag;
+    }
+
+    public void setRememberedSpanTag(Tag rememberedTag)
+    {
+        this.rememberedSpanTag = rememberedTag;
+    }
+
+    public TagSet getRememberedArcTagSet()
+    {
+        return rememberedArcTagSet;
+    }
+
+    public void setRememberedArcTagSet(TagSet rememberedArcTagSet)
+    {
+        this.rememberedArcTagSet = rememberedArcTagSet;
+    }
+
+    public Tag getRememberedArcTag()
+    {
+        return rememberedArcTag;
+    }
+
+    public void setRememberedArcTag(Tag rememberedArcTag)
+    {
+        this.rememberedArcTag = rememberedArcTag;
+    }
+
 
 }

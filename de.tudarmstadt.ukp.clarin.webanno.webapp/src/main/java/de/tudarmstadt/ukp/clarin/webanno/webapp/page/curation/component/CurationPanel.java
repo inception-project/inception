@@ -181,7 +181,7 @@ public class CurationPanel
             private static final long serialVersionUID = 7279648231521710155L;
 
             @Override
-            protected void onChange(AjaxRequestTarget aTarget)
+            protected void onChange(AjaxRequestTarget aTarget, BratAnnotatorModel bratAnnotatorModel)
             {
                 aTarget.add(sentenceOuterView);
                 try {

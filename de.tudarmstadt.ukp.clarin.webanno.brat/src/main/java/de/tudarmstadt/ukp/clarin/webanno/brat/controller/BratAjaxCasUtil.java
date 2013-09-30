@@ -2,13 +2,13 @@
  * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -44,8 +44,11 @@ import org.uimafit.factory.CollectionReaderFactory;
 import org.uimafit.factory.JCasFactory;
 import org.uimafit.util.JCasUtil;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
 import de.tudarmstadt.ukp.dkpro.core.api.io.ResourceCollectionReaderBase;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
@@ -234,12 +237,16 @@ public class BratAjaxCasUtil
 
     /**
      * Get the last sentence CAS address in the current display window
+     *
      * @param aJcas
-     * @param aFirstSentenceAddress the CAS address of the first sentence in the dispaly window
-     * @param aWindowSize the window size
+     * @param aFirstSentenceAddress
+     *            the CAS address of the first sentence in the dispaly window
+     * @param aWindowSize
+     *            the window size
      * @return The address of the last sentence address in the current display window.
      */
-    public static int getLastSentenceAddressInDisplayWindow(JCas aJcas, int aFirstSentenceAddress, int aWindowSize)
+    public static int getLastSentenceAddressInDisplayWindow(JCas aJcas, int aFirstSentenceAddress,
+            int aWindowSize)
     {
         int i = aFirstSentenceAddress;
         int lastSentenceAddress = getLastSenetnceAddress(aJcas);
@@ -513,8 +520,63 @@ public class BratAjaxCasUtil
     }
 
     /**
-     * Get the annotation UIMA type, using the request sent from brat. If the request have type POS_NN,
-     * the the annotation type is  POS
+     * Get the annotation layer name for span {@link AnnotationType} such as {@link AnnotationTypeConstant#NAMEDENTITY} or
+     *  {@link AnnotationTypeConstant#COREFRELTYPE}. If this name is changed in the database, the
+     *  {@link AnnotationTypeConstant} constants also should be updated!
+     * @param aType
+     * @return
+     */
+    public static String getSpanAnnotationTypeName(String aType)
+    {
+        String annotationTypeName = "";
+        if(aType.equals(AnnotationTypeConstant.POS_PREFIX)){
+            annotationTypeName = AnnotationTypeConstant.POS;
+        }
+        else  if(aType.equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)){
+            annotationTypeName = AnnotationTypeConstant.NAMEDENTITY;
+        }
+        else  if(aType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)){
+            annotationTypeName = AnnotationTypeConstant.COREFRELTYPE;
+        }
+        return annotationTypeName;
+    }
+
+    /**
+     * Get the annotation layer name for arc {@link AnnotationType} such as {@link AnnotationTypeConstant#DEPENDENCY} or
+     *  {@link AnnotationTypeConstant#COREFERENCE}. If this name is changed in the database, the
+     *  {@link AnnotationTypeConstant} constants also should be updated!
+     * @param aType
+     * @return
+     */
+    public static String getArcAnnotationTypeName(String aType)
+    {
+        String annotationTypeName = "";
+        if(aType.equals(AnnotationTypeConstant.POS_PREFIX)){
+            annotationTypeName = AnnotationTypeConstant.DEPENDENCY;
+        }
+        else  if(aType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)){
+            annotationTypeName = AnnotationTypeConstant.COREFERENCE;
+        }
+        return annotationTypeName;
+    }
+
+    /**
+     * Get the {@link AnnotationType}, using the request sent from brat. If the request have type
+     * POS_NN, the {@link AnnotationType} is POS
+     *
+     * @param aType
+     *            the type sent from brat annotation as request while annotating
+     */
+    public static AnnotationType getAnnotationType(AnnotationService aAnnotationService,
+            String aTypeName, String aType)
+    {
+        return aAnnotationService.getType(aTypeName, aType);
+
+    }
+
+    /**
+     * Get the annotation UIMA type, using the request sent from brat. If the request have type
+     * POS_NN, the the annotation type is POS
      *
      * @param aType
      *            the UIMA type of the annotation
@@ -522,16 +584,16 @@ public class BratAjaxCasUtil
     public static String getAnnotationType(Type aType)
     {
         String annotationType = null;
-       if(aType.getName().equals(POS.class.getName())){
-           annotationType = AnnotationTypeConstant.POS_PREFIX;
-       }
-       else  if(aType.getName().equals(NamedEntity.class.getName())){
-           annotationType = AnnotationTypeConstant.NAMEDENTITY_PREFIX;
-       }
-       else  if(aType.getName().equals(CoreferenceLink.class.getName())){
-           annotationType = AnnotationTypeConstant.COREFERENCE_PREFIX;
-       }
-      return annotationType;
+        if (aType.getName().equals(POS.class.getName())) {
+            annotationType = AnnotationTypeConstant.POS_PREFIX;
+        }
+        else if (aType.getName().equals(NamedEntity.class.getName())) {
+            annotationType = AnnotationTypeConstant.NAMEDENTITY_PREFIX;
+        }
+        else if (aType.getName().equals(CoreferenceLink.class.getName())) {
+            annotationType = AnnotationTypeConstant.COREFERENCE_PREFIX;
+        }
+        return annotationType;
     }
 
     /**
@@ -570,5 +632,39 @@ public class BratAjaxCasUtil
             }
         }
         return false;
+    }
+    /**
+     * Get the annotation type the way it is used in Brat visualization page (PREFIX+Type), such as (POS_+NN)
+     * @param aSelectedTag
+     * @return
+     */
+
+    public static String getType(Tag aSelectedTag)
+    {
+        String annotationType = "";
+        if (aSelectedTag.getTagSet().getLayer().getName()
+                .equals(AnnotationTypeConstant.POS)) {
+            annotationType = AnnotationTypeConstant.POS_PREFIX + aSelectedTag.getName();
+        }
+        else if (aSelectedTag.getTagSet().getLayer().getName()
+                .equals(AnnotationTypeConstant.DEPENDENCY)) {
+            annotationType = AnnotationTypeConstant.POS_PREFIX + aSelectedTag.getName();
+        }
+        else if (aSelectedTag.getTagSet().getLayer().getName()
+                .equals(AnnotationTypeConstant.NAMEDENTITY)) {
+            annotationType = AnnotationTypeConstant.NAMEDENTITY_PREFIX
+                    + aSelectedTag.getName();
+        }
+        else if (aSelectedTag.getTagSet().getLayer().getName()
+                .equals(AnnotationTypeConstant.COREFRELTYPE)) {
+            annotationType = AnnotationTypeConstant.COREFERENCE_PREFIX
+                    + aSelectedTag.getName();
+        }
+        else if (aSelectedTag.getTagSet().getLayer().getName()
+                .equals(AnnotationTypeConstant.COREFERENCE)) {
+            annotationType = AnnotationTypeConstant.COREFERENCE_PREFIX
+                    + aSelectedTag.getName();
+        }
+        return annotationType;
     }
 }

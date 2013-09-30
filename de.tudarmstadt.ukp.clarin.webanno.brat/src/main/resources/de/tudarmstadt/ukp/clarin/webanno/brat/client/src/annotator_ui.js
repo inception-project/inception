@@ -198,7 +198,7 @@ var AnnotatorUI = (function($, window, undefined) {
           $('#arc_origin').text(Util.spanDisplayForm(spanTypes, originSpan.type) + ' ("' + originSpan.text + '")');
           $('#arc_target').text(Util.spanDisplayForm(spanTypes, targetSpan.type) + ' ("' + targetSpan.text + '")');
           var arcId = eventDescId || [originSpanId, type, targetSpanId];
-          fillArcTypesAndDisplayForm(evt, originSpan.type, targetSpan.type, type, arcId);
+          fillArcTypesAndDisplayForm(evt, originSpanId, originSpan.type, targetSpanId, targetSpan.type, type, arcId);
           // for precise timing, log dialog display to user.
           dispatcher.post('logAction', ['arcEditSelected']);
 
@@ -217,7 +217,7 @@ var AnnotatorUI = (function($, window, undefined) {
             type: editedSpan.type,
             id: id,
           };
-          fillSpanTypesAndDisplayForm(evt, editedSpan.text, editedSpan);
+          fillSpanTypesAndDisplayForm(evt, offsets,editedSpan.text, editedSpan, id);
           // for precise timing, log annotation display to user.
           dispatcher.post('logAction', ['spanEditSelected']);
         }
@@ -581,318 +581,29 @@ var AnnotatorUI = (function($, window, undefined) {
         var $textspan = $widget.find('.ui-button-text');
         $textspan.html(($input[0].checked ? '&#x2611; ' : '&#x2610; ') + $widget.attr('data-bare'));
       };
-
-      var fillSpanTypesAndDisplayForm = function(evt, spanText, span) {
-        keymap = spanKeymap;
-
-        // Figure out whether we should show or hide one of the two
-        // main halves of the selection frame (entities / events).
-        // This depends on the type of the current span, if any, and
-        // the availability of types to select.
-        var hideFrame;
-        if (span) {
-          // existing span; only show relevant half
-          if (span.generalType == 'entity') {
-            hideFrame = 'event';
-          } else {
-            hideFrame = 'entity';
-          }
-          spanForm.dialog('option', { title: 'Edit Annotation' });
-        } else {
-          // new span; show everything that's available
-          if ($('#event_types').find('input').length == 0) {
-            hideFrame = 'event';
-          } else if ($('#entity_types').find('input').length == 0) {
-            hideFrame = 'entity';
-          } else {
-            hideFrame = 'none';
-          }
-          spanForm.dialog('option', { title: 'New Annotation' });
-        }
-        if (hideFrame == 'event') {
-          $('#span_event_section').hide()
-          $('#span_entity_section').show().
-            removeClass('wrapper_half_left').
-            addClass('wrapper_full_width');
-        } else if (hideFrame == 'entity') {
-          $('#span_entity_section').hide()
-          $('#span_event_section').show().
-            removeClass('wrapper_half_right').
-            addClass('wrapper_full_width');
-        } else {
-          // show both entity and event halves
-          $('#span_entity_section').show().
-            removeClass('wrapper_full_width').
-            addClass('wrapper_half_left');
-          $('#span_event_section').show().
-            removeClass('wrapper_full_width').
-            addClass('wrapper_half_right');
-        }
-
-        // only show "delete" button if there's an existing annotation to delete
-        if (span) {
-          $('#del_span_button').show();
-        } else {
-          $('#del_span_button').hide();
-        }
-
-        $('#span_selected').text(spanText);
-        var encodedText = encodeURIComponent(spanText);       
-
-        // enable all inputs by default (see setSpanTypeSelectability)
-        $('#span_form input:not([unused])').removeAttr('disabled');
-
-        // close span types if there's over spanTypesToShowBeforeCollapse
-        if ($('#entity_types .item').length > spanTypesToShowBeforeCollapse) {
-          $('#entity_types .open').removeClass('open');
-        }
-        if ($('#event_types .item').length > spanTypesToShowBeforeCollapse) {
-          $('#event_types .open').removeClass('open');
-        }
-
-        var showAllAttributes = false;
-        if (span) {
-          var hash = new URLHash(coll, doc, { focus: [[span.id]] }).getHash();
-          $('#span_highlight_link').attr('href', hash).show();
-          var el = $('#span_' + span.type);
-          if (el.length) {
-            el[0].checked = true;
-          } else {
-            $('#span_form input:radio:checked').each(function (radioNo, radio) {
-              radio.checked = false;
-            });
-          }
-
-          // open the span type
-          $('#span_' + span.type).parents('.collapsible').each(function() {
-            toggleCollapsible($(this).parent().prev(), true);
-          });
-
-          // count the repeating arc types
-          var arcTypeCount = {};
-          repeatingArcTypes = [];
-          $.each(span.outgoing, function(arcNo, arc) {
-            // parse out possible number suffixes to allow e.g. splitting
-            // on "Theme" for args ("Theme1", "Theme2").
-            var splitArcType = arc.type.match(/^(.*?)(\d*)$/);
-            var noNumArcType = splitArcType[1];
-            if ((arcTypeCount[noNumArcType] = (arcTypeCount[noNumArcType] || 0) + 1) == 2) {
-              repeatingArcTypes.push(noNumArcType);
-            }
-          });
-          if (repeatingArcTypes.length) {
-            $('#span_form_split').show();
-          } else {
-            $('#span_form_split').hide();
-          }
-        } else {
-          $('#span_highlight_link').hide();
-          var firstRadio = $('#span_form input:radio:first')[0];
-          if (firstRadio) {
-            firstRadio.checked = false;
-          } else {
-            dispatcher.post('hideForm');
-            dispatcher.post('messages', [[['No valid span types defined', 'error']]]);
-            return;
-          }
-          $('#span_form_split').hide();
-          $('#span_notes').val('');
-          showAllAttributes = true;
-        }
-        if (span && !reselectedSpan) {
-          $('#span_form_reselect, #span_form_delete, #span_form_add_fragment').show();
-          keymap[$.ui.keyCode.DELETE] = 'span_form_delete';
-          keymap[$.ui.keyCode.INSERT] = 'span_form_reselect';
-          keymap['S-' + $.ui.keyCode.ENTER] = 'span_form_add_fragment';
-          $('#span_notes').val(span.annotatorNotes || '');
-        } else {
-          $('#span_form_reselect, #span_form_delete, #span_form_add_fragment').hide();
-          keymap[$.ui.keyCode.DELETE] = null;
-          keymap[$.ui.keyCode.INSERT] = null;
-          keymap['S-' + $.ui.keyCode.ENTER] = null;
-        }
-        if (span && !reselectedSpan && span.offsets.length > 1) {
-          $('#span_form_reselect_fragment, #span_form_delete_fragment').show();
-          keymap['S-' + $.ui.keyCode.DELETE] = 'span_form_delete_fragment';
-          keymap['S-' + $.ui.keyCode.INSERT] = 'span_form_reselect_fragment';
-        } else {
-          $('#span_form_reselect_fragment, #span_form_delete_fragment').hide();
-          keymap['S-' + $.ui.keyCode.DELETE] = null;
-          keymap['S-' + $.ui.keyCode.INSERT] = null;
-        }
-        // TODO: lots of redundancy in the next two blocks, clean up
-        if (!span) {
-          // no existing annotation, reset attributes
-          var attrCategoryAndTypes = [['entity', entityAttributeTypes],
-                                      ['event', eventAttributeTypes]];
-          $.each(attrCategoryAndTypes, function(ctNo, ct) {
-            var category = ct[0];
-            var attributeTypes = ct[1];
-            $.each(attributeTypes, function(attrNo, attr) {
-              $input = $('#'+category+'_attr_'+Util.escapeQuotes(attr.type));
-              if (attr.unused) {
-                $input.val('');
-              } else if (attr.bool) {
-                $input[0].checked = false;
-                updateCheckbox($input);
-                $input.button('refresh');
-              } else {
-                $input.val('').change();
-              }
-            });
-          });
-        } else if (!reselectedSpan) {
-          // existing annotation, fill attribute values from span
-          var attributeTypes;
-          var category;
-          if (span.generalType == 'entity') {
-            attributeTypes = entityAttributeTypes;
-            category = 'entity';
-          } else if (span.generalType == 'trigger') {
-            attributeTypes = eventAttributeTypes;
-            // TODO: unify category/generalType values ('trigger' vs. 'event')
-            category = 'event';
-          } else {
-            console.error('Unrecognized generalType:', span.generalType);
-          }
-          $.each(attributeTypes, function(attrNo, attr) {
-            $input = $('#'+category+'_attr_'+Util.escapeQuotes(attr.type));
-            var val = span.attributes[attr.type];
-            if (attr.unused) {
-              $input.val(val || '');
-            } else if (attr.bool) {
-              $input[0].checked = val;
-              updateCheckbox($input);
-              $input.button('refresh');
-            } else {
-              $input.val(val || '').change();
-            }
-          });
-        }
-
-        var showValidNormalizationsFor = function(type) {
-          // set DB selector to the first appropriate for the type.
-          // TODO: actually disable inappropriate ones.
-          // TODO: support specific IDs, not just DB specifiers
-          var firstDb = type && normDbsByType[type] ? normDbsByType[type][0] : null;
-          if (firstDb) {
-            $('#span_norm_db').val(firstDb);
-          }
-        }
-
-        showValidNormalizations = function() {
-          // set norm DB selector according to the first selected type
-          var firstSelected = $('#entity_and_event_wrapper input:radio:checked')[0];
-          var selectedType = firstSelected ? firstSelected.value : null;
-          showValidNormalizationsFor(selectedType);
-        }
-
-        // fill normalizations (if any)
-        if (!reselectedSpan) {
-          // clear first
-          clearNormalizationUI();
-
-          var $normDb = $('#span_norm_db');
-          var $normId = $('#span_norm_id');
-          var $normText = $('#span_norm_txt');
-
-          // fill if found (NOTE: only shows last on multiple)
-          var normFilled = false;
-          $.each(span ? span.normalizations : [], function(normNo, norm) {
-            var refDb = norm[0], refId = norm[1], refText = norm[2];
-            $normDb.val(refDb);
-            // could the DB selector be set? (i.e. is refDb configured?)
-            if ($normDb.val() == refDb) {
-              // DB is OK, set the rest also
-              $normId.val(refId);
-              oldSpanNormIdValue = refId;
-              $normText.val(refText);
-              // TODO: check if ID is valid
-              $normId.addClass('valid_value')
-              normFilled = true;
-            } else {
-              // can't set the DB selector; assume DB is not configured,
-              // warn and leave blank (will remove norm when dialog is OK'd)
-              dispatcher.post('messages', [[['Warning: '+refDb+' not configured, removing normalization.', 'warning']]]);
-            }
-          });
-
-          // if there is no existing normalization, show valid ones
-          if (!normFilled) {
-            showValidNormalizations();
-          }
-
-          // update links
-          updateNormalizationRefLink();
-          updateNormalizationDbLink();
-        }
-
-        var showAttributesFor = function(attrTypes, category, type) {
-          var validAttrs = type ? spanTypes[type].attributes : [];
-          var shownCount = 0;
-          $.each(attrTypes, function(attrNo, attr) {
-            var $input = $('#'+category+'_attr_'+Util.escapeQuotes(attr.type));
-            var showAttr = showAllAttributes || $.inArray(attr.type, validAttrs) != -1;
-            if (showAttr) {
-              $input.button('widget').show();
-              shownCount++;
-            } else {
-              $input.button('widget').hide();
-            }
-          });
-          return shownCount;
-        }
-
-        showValidAttributes = function() {
-          var type = $('#span_form input:radio:checked').val();
-          var entityAttrCount = showAttributesFor(entityAttributeTypes, 'entity', type);
-          var eventAttrCount = showAttributesFor(eventAttributeTypes, 'event', type);
-          
-          showAllAttributes = false;
-          // show attribute frames only if at least one attribute is
-          // shown, and set size classes appropriately
-          if (eventAttrCount > 0) {
-            $('#event_attributes').show();
-            $('#event_attribute_label').show();
-            $('#event_types').
-              removeClass('scroll_wrapper_full').
-              addClass('scroll_wrapper_upper');
-          } else {
-            $('#event_attributes').hide();
-            $('#event_attribute_label').hide();
-            $('#event_types').
-              removeClass('scroll_wrapper_upper').
-              addClass('scroll_wrapper_full');
-          }
-          if (entityAttrCount > 0) {
-            $('#entity_attributes').show();
-            $('#entity_attribute_label').show();
-            $('#entity_types').
-              removeClass('scroll_wrapper_full').
-              addClass('scroll_wrapper_upper');
-          } else {
-            $('#entity_attributes').hide();
-            $('#entity_attribute_label').hide();
-            $('#entity_types').
-              removeClass('scroll_wrapper_upper').
-              addClass('scroll_wrapper_full');
-          }
-        }
-        showValidAttributes();
-
-        // TODO XXX: if seemed quite unexpected/unintuitive that the
-        // form was re-displayed while the document still shows the
-        // annotation in its old location in the background (check it).
-        // The fix of skipping confirm is not really good either, though.
-        if (reselectedSpan) { // && !Configuration.confirmModeOn) {
-          submitReselect();
-        } else {
-          dispatcher.post('showForm', [spanForm]);
-          $('#span_form-ok').focus();
-          adjustToCursor(evt, spanForm.parent());
-        }
-      };
-
+      
+      var fillSpanTypesAndDisplayForm =function(evt, offsets, spanText, span, id) {
+    	  
+       if(id) {
+      	dispatcher.post('ajax', [ {
+  			action: 'spanOpenDialog',
+  			offsets: $.toJSON(offsets),
+  			id:id,
+  			type: span.type,
+  			spanText: spanText
+  		}, 'serverResult']);
+      }
+      else{
+    	dispatcher.post('ajax', [ {
+  			action: 'spanOpenDialog',
+  			offsets: $.toJSON(offsets),
+  			spanText: spanText
+  		}, 'serverResult']);  
+	  
+      }
+        };
+        
+        
       var submitReselect = function() {
         $(reselectedSpan.rect).removeClass('reselect');
         reselectedSpan = null;
@@ -1092,187 +803,30 @@ var AnnotatorUI = (function($, window, undefined) {
         return false;
       };
 
-      var fillArcTypesAndDisplayForm = function(evt, originType, targetType, arcType, arcId) {
-        var noArcs = true;
-        keymap = {};
-
-        // separate out possible numeric suffix from type
-        var noNumArcType;
-        if (arcType) {
-            var splitType = arcType.match(/^(.*?)(\d*)$/);
-            noNumArcType = splitType[1];
-        }
-
-        var isEquiv =
-          relationTypesHash &&
-          relationTypesHash[noNumArcType] &&
-          relationTypesHash[noNumArcType].properties &&
-          relationTypesHash[noNumArcType].properties.symmetric &&
-          relationTypesHash[noNumArcType].properties.transitive;
-
-        var $scroller = $();
-        if (spanTypes[originType]) {
-          // for chain annotation, a number, 1-12 is added at the begining
-          // to display different chains in different colors
-          // remove those numbers so that the arc role type will not be dup
-          // in the arc annotation dialog.
-          var uniqueTypes = [];
-          var arcTypes = [];
-        	
-          var arcTypesWithDuplications = spanTypes[originType].arcs;
-          $scroller = $('#arc_roles .scroller').empty();
-          
-          $.each(arcTypesWithDuplications || [], function(arcTypeNo, arcDesc) {
-        	  var arcTypeName = arcDesc.type.replace(/\d+/,'');
-        	  if($.inArray(arcTypeName, uniqueTypes) == -1){
-        		  arcTypes.push(arcDesc);
-        		  uniqueTypes.push(arcTypeName);
-        	  }
-          });
-          // lay them out into the form
-          $.each(arcTypes || [], function(arcTypeNo, arcDesc) {
-            if (arcDesc.targets && arcDesc.targets.indexOf(targetType) != -1) {
-              var arcTypeName = arcDesc.type;
-
-              var isThisEquiv =
-                relationTypesHash &&
-                relationTypesHash[arcTypeName] &&
-                relationTypesHash[arcTypeName].properties &&
-                relationTypesHash[arcTypeName].properties.symmetric &&
-                relationTypesHash[arcTypeName].properties.transitive;
-
-              // do not allow equiv<->non-equiv change options
-              if (arcType && isEquiv != isThisEquiv) return;
-
-              var displayName = ((arcDesc.labels && arcDesc.labels[0]) || 
-                                 arcTypeName);
-              var $checkbox = $('<input id="arc_' + arcTypeName + '" type="radio" name="arc_type" value="' + arcTypeName + '"/>');
-              var $label = $('<label class="arc_type_label" for="arc_' + arcTypeName + '"/>').text(displayName);
-              var $div = $('<div/>').append($checkbox).append($label);
-              $scroller.append($div);
-              if (arcDesc.hotkey) {
-                keymap[arcDesc.hotkey] = '#arc_' + arcTypeName;
-                var name = $label.html();
-                var replace = true;
-                name = name.replace(new RegExp("(&[^;]*?)?(" + arcDesc.hotkey + ")", 'gi'),
-                  function(all, entity, letter) {
-                    if (replace && !entity) {
-                      replace = false;
-                      var hotkey = arcDesc.hotkey.toLowerCase() == letter
-                          ? arcDesc.hotkey.toLowerCase()
-                          : arcDesc.hotkey.toUpperCase();
-                      return '<span class="accesskey">' + Util.escapeHTML(hotkey) + '</span>';
-                    }
-                    return all;
-                  });
-                $label.html(name);
-              }
-
-              noArcs = false;
-            }
-          });
-        }
-
-        if (noArcs) {
-          if (arcId) {
-            // let the user delete or whatever, even on bad config
-            // (note that what's shown to the user is w/o possible num suffix)
-            var $checkbox = $('<input id="arc_' + arcType + '" type="hidden" name="arc_type" value="' + noNumArcType + '"/>');
-            $scroller.append($checkbox);
-          } else {
-            // can't make a new arc
-            dispatcher.post('messages',
-              [[["No choices for " +
-                 Util.spanDisplayForm(spanTypes, originType) +
-                 " -> " +
-                 Util.spanDisplayForm(spanTypes, targetType),
-                 'warning']]]);
-            return;
-          }
-        }
-
-        var reversalPossible = false;
-        if (arcId) {
-          // something was selected
-          var focus = arcId instanceof Array ? arcId : [arcId];
-          var hash = new URLHash(coll, doc, { focus: [focus] }).getHash();
-          $('#arc_highlight_link').attr('href', hash).show(); // TODO incorrect
-          var el = $('#arc_' + arcType)[0];
-          if (el) {
-            el.checked = true;
-          } else {
-              // try w/o numeric suffix
-              el = $('#arc_' + noNumArcType)[0];
-              if (el) {
-                  el.checked = true;
-              }
-          }
-
-          $('#arc_form_reselect, #arc_form_delete').show();
-          keymap[$.ui.keyCode.DELETE] = 'arc_form_delete';
-          keymap[$.ui.keyCode.INSERT] = 'arc_form_reselect';
-
-          var backTargetType = spanTypes[targetType];
-          if (backTargetType) {
-            $.each(backTargetType.arcs || [], function(backArcTypeNo, backArcDesc) {
-              if ($.inArray(originType, backArcDesc.targets || []) != -1) {
-                reversalPossible = true;
-                return false; // terminate the loop
-              }
-            });
-          }
-
-          arcForm.dialog('option', { title: 'Edit Annotation' });
-        } else {
-          // new arc
-          $('#arc_highlight_link').hide();
-          el = $('#arc_form input:radio:first')[0];
-          if (el) {
-            el.checked = true;
-          }
-
-          $('#arc_form_reselect, #arc_form_delete, #arc_form_reverse').hide();
-
-          arcForm.dialog('option', { title: 'New Annotation' });
-        }
-        if (reversalPossible) {
-          $('#arc_form_reverse').show();
-          keymap['S-' + $.ui.keyCode.INSERT] = 'arc_form_reverse';
-        } else {
-          $('#arc_form_reverse').hide();
-        }
-
-        if (!Configuration.confirmModeOn) {
-          arcForm.find('#arc_roles input:radio').click(arcFormSubmitRadio);
-        }
-
-        var arcAnnotatorNotes;
-        var isBinaryRelation = arcId && !(arcId instanceof Array);
-        if (isBinaryRelation) {
-          // only for relation arcs
-          var ed = data.eventDescs[arcId];
-          arcAnnotatorNotes = ed && ed.annotatorNotes;
-        }
-        if (arcAnnotatorNotes) {
-          $('#arc_notes').val(arcAnnotatorNotes);
-        } else {
-          $('#arc_notes').val('');
-        }
-
-        // disable notes for arc types that don't support storage (#945)
-        if(!isBinaryRelation || isEquiv) {
-          // disable the actual input
-          $('#arc_notes').attr('disabled', 'disabled');
-          // add to fieldset for style
-          $('#arc_notes_fieldset').attr('disabled', 'disabled');
-        } else {
-          $('#arc_notes').removeAttr('disabled')
-          $('#arc_notes_fieldset').removeAttr('disabled')
-        }
-
-        dispatcher.post('showForm', [arcForm]);
-        $('#arc_form-ok').focus();
-        adjustToCursor(evt, arcForm.parent());
+      var fillArcTypesAndDisplayForm = function(evt, originSpanId, originType, targetSpanId, targetType, arcType, arcId) {
+    	  
+    	    if(arcId) {
+    	      	dispatcher.post('ajax', [ {
+    	  			action: 'arcOpenDialog',
+    	  			arcId:arcId,
+    	  			arcType: arcType,
+    	  			originSpanId: originSpanId,
+    	  			originType: originType,
+    	  			targetSpanId: targetSpanId,
+    	  			targetType: targetType
+    	  			
+    	  		}, 'serverResult']);
+    	      }
+    	      else{
+    	    	dispatcher.post('ajax', [ {
+    	  			action: 'arcOpenDialog',
+    	  			originSpanId: originSpanId,
+    	  			originType: originType,
+    	  			targetSpanId: targetSpanId,
+    	  			targetType: targetType
+    	  		}, 'serverResult']);  
+    		  
+    	      }
       };
 
       var reverseArc = function(evt) {
@@ -1388,7 +942,7 @@ var AnnotatorUI = (function($, window, undefined) {
               };
               $('#arc_origin').text(Util.spanDisplayForm(spanTypes, originSpan.type)+' ("'+originSpan.text+'")');
               $('#arc_target').text(Util.spanDisplayForm(spanTypes, targetSpan.type)+' ("'+targetSpan.text+'")');
-              fillArcTypesAndDisplayForm(evt, originSpan.type, targetSpan.type);
+              fillArcTypesAndDisplayForm(evt, originSpan.id, originSpan.type, targetSpan.id, targetSpan.type);
               // for precise timing, log dialog display to user.
               dispatcher.post('logAction', ['arcSelected']);
             }
@@ -1522,7 +1076,7 @@ var AnnotatorUI = (function($, window, undefined) {
               // normal span select in standard annotation mode
               // or reselect: show selector
               var spanText = data.text.substring(selectedFrom, selectedTo);
-              fillSpanTypesAndDisplayForm(evt, spanText, reselectedSpan);
+              fillSpanTypesAndDisplayForm(evt, spanOptions.offsets, spanText, reselectedSpan);
               // for precise timing, log annotation display to user.
               dispatcher.post('logAction', ['spanSelected']);
             } else {
