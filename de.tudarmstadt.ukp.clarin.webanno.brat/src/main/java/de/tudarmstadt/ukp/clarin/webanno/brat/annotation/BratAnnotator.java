@@ -412,7 +412,7 @@ public class BratAnnotator
         // open the annotation dialog if only there is
         // span annotation layer (from the settings button) selected
         for (TagSet tagSet : getModelObject().getAnnotationLayers()) {
-            if (tagSet.getLayer().getType().equals(AnnotationTypeConstant.SPAN_TYPE)) {
+            if (tagSet.getType().getType().equals(AnnotationTypeConstant.SPAN_TYPE)) {
                 openAnnotationDialog.show(aTarget);
                 break;
             }
@@ -456,7 +456,7 @@ public class BratAnnotator
         // open the annotation dialog if only there is
         // span annotation layer (from the settings button) selected
         for (TagSet tagSet : getModelObject().getAnnotationLayers()) {
-            if (tagSet.getLayer().getType().equals(AnnotationTypeConstant.SPAN_TYPE)) {
+            if (tagSet.getType().getType().equals(AnnotationTypeConstant.SPAN_TYPE)) {
                 openAnnotationDialog.show(aTarget);
                 break;
             }

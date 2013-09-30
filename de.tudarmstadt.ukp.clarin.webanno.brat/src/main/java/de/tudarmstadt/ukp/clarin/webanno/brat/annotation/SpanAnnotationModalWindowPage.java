@@ -101,7 +101,7 @@ public class SpanAnnotationModalWindowPage
             List<TagSet> spanLayers = new ArrayList<TagSet>();
 
             for (TagSet tagset : bratAnnotatorModel.getAnnotationLayers()) {
-                if (tagset.getLayer().getType().equals("span")) {
+                if (tagset.getType().getType().equals("span")) {
                     spanLayers.add(tagset);
                 }
 

@@ -642,25 +642,25 @@ public class BratAjaxCasUtil
     public static String getType(Tag aSelectedTag)
     {
         String annotationType = "";
-        if (aSelectedTag.getTagSet().getLayer().getName()
+        if (aSelectedTag.getTagSet().getType().getName()
                 .equals(AnnotationTypeConstant.POS)) {
             annotationType = AnnotationTypeConstant.POS_PREFIX + aSelectedTag.getName();
         }
-        else if (aSelectedTag.getTagSet().getLayer().getName()
+        else if (aSelectedTag.getTagSet().getType().getName()
                 .equals(AnnotationTypeConstant.DEPENDENCY)) {
             annotationType = AnnotationTypeConstant.POS_PREFIX + aSelectedTag.getName();
         }
-        else if (aSelectedTag.getTagSet().getLayer().getName()
+        else if (aSelectedTag.getTagSet().getType().getName()
                 .equals(AnnotationTypeConstant.NAMEDENTITY)) {
             annotationType = AnnotationTypeConstant.NAMEDENTITY_PREFIX
                     + aSelectedTag.getName();
         }
-        else if (aSelectedTag.getTagSet().getLayer().getName()
+        else if (aSelectedTag.getTagSet().getType().getName()
                 .equals(AnnotationTypeConstant.COREFRELTYPE)) {
             annotationType = AnnotationTypeConstant.COREFERENCE_PREFIX
                     + aSelectedTag.getName();
         }
-        else if (aSelectedTag.getTagSet().getLayer().getName()
+        else if (aSelectedTag.getTagSet().getType().getName()
                 .equals(AnnotationTypeConstant.COREFERENCE)) {
             annotationType = AnnotationTypeConstant.COREFERENCE_PREFIX
                     + aSelectedTag.getName();
