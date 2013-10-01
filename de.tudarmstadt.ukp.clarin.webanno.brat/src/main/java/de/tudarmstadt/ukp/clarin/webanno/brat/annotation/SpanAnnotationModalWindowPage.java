@@ -249,6 +249,7 @@ public class SpanAnnotationModalWindowPage
                             }
 
                             controller.addSpanToCas(jCas, start, end, annotationType, null, null);
+                            controller.addSpanTagSetToCas(jCas, bratAnnotatorModel.getProject(), annotationType);
                             controller.createAnnotationDocumentContent(
                                     bratAnnotatorModel.getMode(), bratAnnotatorModel.getDocument(),
                                     bratAnnotatorModel.getUser(), jCas);

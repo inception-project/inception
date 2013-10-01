@@ -205,6 +205,7 @@ public class ArcAnnotationModalWindowPage
 
                             controller.addArcToCas(bratAnnotatorModel, annotationType, -1, -1,
                                     originFs, targetFs, jCas);
+                            controller.addArcTagSetToCas(jCas, bratAnnotatorModel.getProject(), annotationType);
 
                             controller.createAnnotationDocumentContent(
                                     bratAnnotatorModel.getMode(), bratAnnotatorModel.getDocument(),

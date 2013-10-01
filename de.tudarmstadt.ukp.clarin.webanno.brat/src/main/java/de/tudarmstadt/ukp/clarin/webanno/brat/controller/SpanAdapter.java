@@ -86,8 +86,8 @@ public class SpanAdapter
 
     private boolean singleTokenBehavior = false;
 
-
-    public SpanAdapter(String aTypePrefix, String aTypeName, String aLabelFeatureName, String aAttachFeature, String aAttachType)
+    public SpanAdapter(String aTypePrefix, String aTypeName, String aLabelFeatureName,
+            String aAttachFeature, String aAttachType)
     {
         typePrefix = aTypePrefix;
         labelFeatureName = aLabelFeatureName;
@@ -114,6 +114,7 @@ public class SpanAdapter
     {
         return singleTokenBehavior;
     }
+
     /**
      * Add annotations from the CAS, which is controlled by the window size, to the brat response
      * {@link GetDocumentResponse}
@@ -227,7 +228,7 @@ public class SpanAdapter
             AnnotationFS newAnnotation = aCas.createAnnotation(type, aBegin, aEnd);
             newAnnotation.setStringValue(feature, aValue);
 
-            if (attachFeature!=null) {
+            if (attachFeature != null) {
                 Type theType = CasUtil.getType(aCas, attachType);
                 Feature posFeature = theType.getFeatureByBaseName(attachFeature);
                 CasUtil.selectCovered(aCas, theType, aBegin, aEnd).get(0)
@@ -248,7 +249,7 @@ public class SpanAdapter
     public void delete(JCas aJCas, AnnotationFS aRefFs)
     {
         FeatureStructure fs = (FeatureStructure) BratAjaxCasUtil.selectAnnotationByAddress(aJCas,
-                FeatureStructure.class, ((FeatureStructureImpl)aRefFs).getAddress());
+                FeatureStructure.class, ((FeatureStructureImpl) aRefFs).getAddress());
         aJCas.removeFsFromIndexes(fs);
     }
 
@@ -260,7 +261,8 @@ public class SpanAdapter
     public static final SpanAdapter getPosAdapter()
     {
         SpanAdapter adapter = new SpanAdapter(AnnotationTypeConstant.POS_PREFIX,
-                POS.class.getName(), AnnotationTypeConstant.POS_FEATURENAME,"pos",Token.class.getName());
+                POS.class.getName(), AnnotationTypeConstant.POS_FEATURENAME, "pos",
+                Token.class.getName());
         adapter.setSingleTokenBehavior(true);
         return adapter;
     }
@@ -273,7 +275,7 @@ public class SpanAdapter
     public static final SpanAdapter getLemmaAdapter()
     {
         SpanAdapter adapter = new SpanAdapter("", Lemma.class.getName(),
-                AnnotationTypeConstant.LEMMA_FEATURENAME,"lemma", Token.class.getName());
+                AnnotationTypeConstant.LEMMA_FEATURENAME, "lemma", Token.class.getName());
         adapter.setSingleTokenBehavior(true);
         return adapter;
     }
@@ -286,7 +288,8 @@ public class SpanAdapter
     public static final SpanAdapter getNamedEntityAdapter()
     {
         SpanAdapter adapter = new SpanAdapter(AnnotationTypeConstant.NAMEDENTITY_PREFIX,
-                NamedEntity.class.getName(), AnnotationTypeConstant.NAMEDENTITY_FEATURENAME,null,null);
+                NamedEntity.class.getName(), AnnotationTypeConstant.NAMEDENTITY_FEATURENAME, null,
+                null);
         adapter.setSingleTokenBehavior(false);
         return adapter;
     }

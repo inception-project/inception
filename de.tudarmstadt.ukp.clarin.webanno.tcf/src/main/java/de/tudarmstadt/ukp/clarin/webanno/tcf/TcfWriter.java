@@ -2,13 +2,13 @@
  * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -40,6 +40,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
 import de.tudarmstadt.ukp.dkpro.core.api.io.JCasFileWriter_ImplBase;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
+import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.TagsetDescription;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -185,8 +186,19 @@ public class TcfWriter
         }
         // create POS tag annotation layer
         PosTagsLayer posLayer = null;
+        boolean tagSetFound = false;
         if (JCasUtil.exists(aJCas, POS.class)) {
-            posLayer = aTextCorpus.createPosTagsLayer("STTS");
+
+            for (TagsetDescription tagSet : select(aJCas, TagsetDescription.class)) {
+                if (tagSet.getLayer().equals(POS.class.getName())) {
+                    posLayer = aTextCorpus.createPosTagsLayer(tagSet.getName());
+                    tagSetFound = true;
+                    break;
+                }
+            }
+            if (!tagSetFound) {
+                posLayer = aTextCorpus.createPosTagsLayer("STTS");
+            }
         }
 
         int j = 0;
@@ -227,8 +239,21 @@ public class TcfWriter
             Map<Integer, eu.clarin.weblicht.wlfxb.tc.api.Token> aTokensBeginPositionMap)
     {
         DependencyParsingLayer dependencyParsingLayer = null;
+        boolean tagSetFound = false;
         if (JCasUtil.exists(aJCas, Dependency.class)) {
-            dependencyParsingLayer = aTextCorpus.createDependencyParsingLayer("tiger", false, true);
+
+            for (TagsetDescription tagSet : select(aJCas, TagsetDescription.class)) {
+                if (tagSet.getLayer().equals(Dependency.class.getName())) {
+                    dependencyParsingLayer = aTextCorpus.createDependencyParsingLayer(
+                            tagSet.getName(), false, true);
+                    tagSetFound = true;
+                    break;
+                }
+            }
+            if (!tagSetFound) {
+                dependencyParsingLayer = aTextCorpus.createDependencyParsingLayer("tiger", false,
+                        true);
+            }
         }
 
         for (Sentence sentence : select(aJCas, Sentence.class)) {
@@ -251,8 +276,19 @@ public class TcfWriter
             Map<Integer, eu.clarin.weblicht.wlfxb.tc.api.Token> aTokensBeginPositionMap)
     {
         NamedEntitiesLayer namedEntitiesLayer = null;
+        boolean tagSetFound = false;
         if (JCasUtil.exists(aJCas, NamedEntity.class)) {
-            namedEntitiesLayer = aTextCorpus.createNamedEntitiesLayer("BART");
+            for (TagsetDescription tagSet : select(aJCas, TagsetDescription.class)) {
+                if (tagSet.getLayer().equals(NamedEntity.class.getName())) {
+                    namedEntitiesLayer = aTextCorpus.createNamedEntitiesLayer(tagSet.getName());
+                    tagSetFound = true;
+                    break;
+                }
+            }
+            if (!tagSetFound) {
+                namedEntitiesLayer = aTextCorpus.createNamedEntitiesLayer("BART");
+            }
+
         }
 
         for (NamedEntity namedEntity : select(aJCas, NamedEntity.class)) {
@@ -271,8 +307,19 @@ public class TcfWriter
             Map<Integer, eu.clarin.weblicht.wlfxb.tc.api.Token> aTokensBeginPositionMap)
     {
         ReferencesLayer coreferencesLayer = null;
+        boolean tagSetFound = false;
         if (JCasUtil.exists(aJCas, CoreferenceChain.class)) {
-            coreferencesLayer = aTextCorpus.createReferencesLayer(null, "TueBaDz", null);
+            for (TagsetDescription tagSet : select(aJCas, TagsetDescription.class)) {
+                if (tagSet.getLayer().equals(CoreferenceLink.class.getName())) {
+                    coreferencesLayer = aTextCorpus.createReferencesLayer(null, tagSet.getName(),
+                            null);
+                    tagSetFound = true;
+                    break;
+                }
+            }
+            if (!tagSetFound) {
+                coreferencesLayer = aTextCorpus.createReferencesLayer(null, "TueBaDz", null);
+            }
 
         }
 
