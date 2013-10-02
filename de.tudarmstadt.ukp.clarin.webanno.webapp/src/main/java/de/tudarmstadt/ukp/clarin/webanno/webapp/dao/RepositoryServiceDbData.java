@@ -92,7 +92,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.io.JCasFileWriter_ImplBase;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.io.bincas.SerializedCasReader;
 import de.tudarmstadt.ukp.dkpro.core.io.bincas.SerializedCasWriter;
-import eu.clarin.weblicht.wlfxb.io.WLFormatException;
 
 public class RepositoryServiceDbData
     implements RepositoryService
@@ -430,7 +429,7 @@ public class RepositoryServiceDbData
     @Transactional
     public File exportAnnotationDocument(SourceDocument aDocument, Project aProject, String aUser,
             Class aWriter, String aFileName, Mode aMode)
-        throws UIMAException, IOException, WLFormatException, ClassNotFoundException
+        throws UIMAException, IOException, ClassNotFoundException
     {
         File exportTempDir = File.createTempFile("webanno", "export");
         exportTempDir.delete();

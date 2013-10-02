@@ -46,7 +46,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
-import eu.clarin.weblicht.wlfxb.io.WLFormatException;
 
 /**
  * Modal window to Export annotated document
@@ -140,10 +139,6 @@ public class ExportModalWindowPage
                                 }
                                 catch (IOException e) {
                                     error("Ubable to find annotation document " + ":"
-                                            + ExceptionUtils.getRootCauseMessage(e));
-                                }
-                                catch (WLFormatException e) {
-                                    error("Ubable to Export the document in TCF format " + ":"
                                             + ExceptionUtils.getRootCauseMessage(e));
                                 }
                                 catch (ClassNotFoundException e) {
