@@ -42,13 +42,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
  * Modal window to Export annotated document
+ *
  * @author Seid Muhie Yimam
  *
  */
@@ -118,16 +116,20 @@ public class ExportModalWindowPage
                             String username = SecurityContextHolder.getContext()
                                     .getAuthentication().getName();
                             User user = repository.getUser(username);
-                            if (document == null) {
+                            if (bratAnnotatorModel.getDocument() == null) {
                                 error("NO Document is opened yet !");
                             }
                             else {
 
                                 try {
-                                    downloadFile = repository.exportAnnotationDocument(document,
-                                            project, username,
-                                            repository.getWritableFormats().get(repository.getWritableFormatId(selectedFormat)),
-                                            fileName, Mode.ANNOTATION);
+                                    downloadFile = repository.exportAnnotationDocument(
+                                            bratAnnotatorModel.getDocument(),
+                                            bratAnnotatorModel.getProject(),
+                                            username,
+                                            repository.getWritableFormats().get(
+                                                    repository.getWritableFormatId(selectedFormat)),
+                                            bratAnnotatorModel.getDocument().getName(),
+                                            bratAnnotatorModel.getMode());
                                 }
                                 catch (FileNotFoundException e) {
                                     error("Ubable to find annotation document " + ":"
@@ -165,15 +167,12 @@ public class ExportModalWindowPage
     }
 
     private ExportDetailsForm exportForm;
-    private Project project;
-    private SourceDocument document;
-    private String fileName;
+    private BratAnnotatorModel bratAnnotatorModel;
 
-    public ExportModalWindowPage(final ModalWindow modalWindow, BratAnnotatorModel aBratAnnotatorModel)
+    public ExportModalWindowPage(final ModalWindow modalWindow,
+            BratAnnotatorModel aBratAnnotatorModel)
     {
-        this.project = aBratAnnotatorModel.getProject();
-        this.document = aBratAnnotatorModel.getDocument();
-        this.fileName = aBratAnnotatorModel.getDocument().getName();
+        this.bratAnnotatorModel = aBratAnnotatorModel;
         exportForm = new ExportDetailsForm("exportForm", modalWindow);
         add(exportForm);
     }
