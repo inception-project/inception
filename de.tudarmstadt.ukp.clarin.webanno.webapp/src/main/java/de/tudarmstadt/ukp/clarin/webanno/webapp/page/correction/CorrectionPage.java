@@ -390,7 +390,9 @@ public class CorrectionPage
                     error(e.getMessage());
                 }
                 update(aTarget);
-                mergeVisualizer.reloadContent(aTarget);
+               // mergeVisualizer.reloadContent(aTarget);
+                aTarget.appendJavaScript("Wicket.Window.unloadConfirmation = false;window.location.reload()");
+
             }
         });
 

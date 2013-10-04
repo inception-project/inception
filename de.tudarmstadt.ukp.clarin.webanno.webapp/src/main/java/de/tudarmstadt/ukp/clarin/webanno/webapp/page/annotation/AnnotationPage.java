@@ -279,7 +279,9 @@ public class AnnotationPage
             @Override
             protected void onChange(AjaxRequestTarget aTarget)
             {
-                annotator.reloadContent(aTarget);
+                //annotator.reloadContent(aTarget);
+                aTarget.appendJavaScript("Wicket.Window.unloadConfirmation = false;window.location.reload()");
+
             }
         });
 
