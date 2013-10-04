@@ -231,7 +231,7 @@ public class MonitoringPage
 
                             // if global admin, show all projects
                             for (Authority authority : authorities) {
-                                if (authority.getRole().equals("ROLE_ADMIN")) {
+                                if (authority.getAuthority().equals("ROLE_ADMIN")) {
                                     return allProjects;
                                 }
                             }

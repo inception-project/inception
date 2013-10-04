@@ -566,8 +566,8 @@ public class RepositoryServiceDbData
     @Transactional(noRollbackFor = NoResultException.class)
     public List<Authority> listAuthorities(User aUser)
     {
-        return entityManager.createQuery("FROM Authority where user =:user", Authority.class)
-                .setParameter("user", aUser).getResultList();
+        return entityManager.createQuery("FROM Authority where username =:username", Authority.class)
+                .setParameter("username", aUser).getResultList();
     }
 
     @Override
