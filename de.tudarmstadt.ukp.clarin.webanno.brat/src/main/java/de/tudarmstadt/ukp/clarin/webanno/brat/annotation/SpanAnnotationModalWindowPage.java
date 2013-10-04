@@ -235,18 +235,8 @@ public class SpanAnnotationModalWindowPage
                         if (selectedTag == null) {
                             aTarget.appendJavaScript("alert('No Tag is selected!')");
                         }
-                        else if (!BratAjaxCasUtil.offsetsInOneSentences(jCas, start, end)) {
-                            aTarget.appendJavaScript("alert('Annotation coveres multiple sentences,"
-                                    + " limit your annotation to single sentence!')");
-                            aModalWindow.close(aTarget);
-                        }
                         else {
                             annotationType = BratAjaxCasUtil.getType(selectedTag);
-
-                            if (!BratAjaxCasUtil.offsetsInOneSentences(jCas, start, end)) {
-                                throw new BratAnnotator.MultipleSentenceCoveredException(
-                                        "Annotation coveres multiple sentences, limit your annotation to single sentence!");
-                            }
 
                             controller.addSpanToCas(jCas, start, end, annotationType, null, null);
                             controller.addSpanTagSetToCas(jCas, bratAnnotatorModel.getProject(), annotationType);
@@ -280,9 +270,6 @@ public class SpanAnnotationModalWindowPage
                         error(e.getMessage());
                     }
                     catch (IOException e) {
-                        error(e.getMessage());
-                    }
-                    catch (BratAnnotator.MultipleSentenceCoveredException e) {
                         error(e.getMessage());
                     }
                 }

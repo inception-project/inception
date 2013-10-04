@@ -49,6 +49,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Offsets;
+import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.OffsetsList;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -183,6 +185,25 @@ public class BratAnnotator
                         selectedSpan = request.getParameterValue("spanText").toString();
                         offsets = request.getParameterValue("offsets").toString();
 
+                        JCas jCas = getCas(getModelObject());
+
+                        OffsetsList offsetLists = (OffsetsList) jsonConverter.getObjectMapper()
+                                .readValue(offsets, OffsetsList.class);
+
+                        int start = BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
+                                getModelObject().getSentenceAddress())
+                                + ((Offsets) offsetLists.get(0)).getBegin();
+
+                        int end = BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
+                                getModelObject().getSentenceAddress())
+                                + ((Offsets) offsetLists.get(0)).getEnd();
+
+                         if (!BratAjaxCasUtil.offsetsInOneSentences(jCas, start, end)) {
+                             aTarget.appendJavaScript("alert('Annotation coveres multiple sentences,"
+                                     + " limit your annotation to single sentence!')");
+                             }
+                         else{
+
                         if (request.getParameterValue("id").toString() == null) {
                             selectedSpanID = -1;
                         }
@@ -196,7 +217,7 @@ public class BratAnnotator
                         else {
                             openSpanAnnotationDialog(openAnnotationDialog, aTarget);
                         }
-
+                         }
                         result = controller.loadConf();
                         hasChanged = true;
                     }
@@ -277,7 +298,7 @@ public class BratAnnotator
                                     .getUser(), uIData, repository, annotationService,
                                     getModelObject());
                             info("Annotation [" + request.getParameterValue("type").toString()
-                                    + "]has been reversed");
+                                    + "]has bratAnnotatorModelbeen reversed");
                             hasChanged = true;
                         }
                         else if (request.getParameterValue("action").toString()
@@ -585,4 +606,21 @@ public class BratAnnotator
 
     }
 
+    private JCas getCas(BratAnnotatorModel aBratAnnotatorModel)
+            throws UIMAException, IOException, ClassNotFoundException
+        {
+
+            if (aBratAnnotatorModel.getMode().equals(Mode.ANNOTATION)
+                    || aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)
+                    || aBratAnnotatorModel.getMode().equals(Mode.CORRECTION_MERGE)) {
+                BratAjaxCasController controller = new BratAjaxCasController(repository,
+                        annotationService);
+
+                return controller.getJCas(aBratAnnotatorModel.getDocument(),
+                        aBratAnnotatorModel.getProject(), aBratAnnotatorModel.getUser());
+            }
+            else {
+                return repository.getCurationDocumentContent(getModelObject().getDocument());
+            }
+        }
 }
