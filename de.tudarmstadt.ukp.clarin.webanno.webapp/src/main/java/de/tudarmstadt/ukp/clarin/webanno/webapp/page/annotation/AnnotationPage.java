@@ -33,7 +33,6 @@ import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.IHeaderResponse;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.NumberTextField;
-import org.apache.wicket.markup.html.link.DownloadLink;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -92,7 +91,6 @@ public class AnnotationPage
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
 
-    private DownloadLink export;
     FinishImage finish;
     private int windowSize;
 
@@ -113,7 +111,6 @@ public class AnnotationPage
 
     public BratAnnotatorModel bratAnnotatorModel = new BratAnnotatorModel();
 
-    @SuppressWarnings("deprecation")
     public AnnotationPage()
     {
 
@@ -136,8 +133,8 @@ public class AnnotationPage
         bratAnnotatorModel.setMode(Mode.ANNOTATION);
         add(annotator);
 
-        add(documentNamePanel = new DocumentNamePanel("documentNamePanel",
-                new Model<BratAnnotatorModel>(bratAnnotatorModel)));
+        add(documentNamePanel = (DocumentNamePanel) new DocumentNamePanel("documentNamePanel",
+                new Model<BratAnnotatorModel>(bratAnnotatorModel)).setOutputMarkupId(true));
 
         add(numberOfPages = (Label) new Label("numberOfPages",
                 new LoadableDetachableModel<String>()
@@ -343,12 +340,11 @@ public class AnnotationPage
                     catch (ClassNotFoundException e) {
                         error(e.getMessage());
                     }
-                    String project = "#" + bratAnnotatorModel.getProject().getName() + "/";
-                    String document = listOfSourceDocuements.get(currentDocumentIndex - 1)
-                            .getName();
-                    String rewriteUrl = project + document;
                     target.add(finish.setOutputMarkupId(true));
                     annotator.reloadContent(target);
+                    target.add(numberOfPages);
+                    updateSentenceNumber();
+                    target.add(documentNamePanel);
                 }
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up }, EventType.click)));
@@ -409,12 +405,10 @@ public class AnnotationPage
                     catch (ClassNotFoundException e) {
                         error(e.getMessage());
                     }
-                    ;
-                    String project = "#" + bratAnnotatorModel.getProject().getName() + "/";
-                    String document = listOfSourceDocuements.get(currentDocumentIndex + 1)
-                            .getName();
-                    String rewriteUrl = project + document;
                     target.add(finish.setOutputMarkupId(true));
+                    target.add(numberOfPages);
+                    target.add(documentNamePanel);
+                    updateSentenceNumber();
                     annotator.reloadContent(target);
                 }
             }
@@ -443,6 +437,7 @@ public class AnnotationPage
                         bratAnnotatorModel.setSentenceAddress(nextSentenceAddress);
                         // target.add(annotator);
                         annotator.reloadContent(target);
+                        target.add(numberOfPages);
                     }
 
                     else {
@@ -474,6 +469,7 @@ public class AnnotationPage
                         bratAnnotatorModel.setSentenceAddress(previousSentenceAddress);
                         // target.add(annotator);
                         annotator.reloadContent(target);
+                        target.add(numberOfPages);
                     }
                     else {
                         target.appendJavaScript("alert('This is First Page!')");
@@ -499,6 +495,7 @@ public class AnnotationPage
                                 .getFirstSentenceAddress());
                         // target.add(annotator);
                         annotator.reloadContent(target);
+                        target.add(numberOfPages);
                     }
                     else {
                         target.appendJavaScript("alert('This is first page!')");
@@ -529,6 +526,7 @@ public class AnnotationPage
                                 .setSentenceAddress(lastDisplayWindowBeginingSentenceAddress);
                         // target.add(annotator);
                         annotator.reloadContent(target);
+                        target.add(numberOfPages);
                     }
                     else {
                         target.appendJavaScript("alert('This is last Page!')");
@@ -549,13 +547,12 @@ public class AnnotationPage
         add(gotoPageTextField);
         gotoPageTextField.add(new AjaxFormComponentUpdatingBehavior("onchange")
         {
+            private static final long serialVersionUID = 56637289242712170L;
 
             @Override
             protected void onUpdate(AjaxRequestTarget target)
             {
-                gotoPageAddress = BratAjaxCasUtil.getSentenceAddress(
-                        getJCas(bratAnnotatorModel.getProject(), bratAnnotatorModel.getDocument()),
-                        gotoPageTextField.getModelObject());
+                updateSentenceNumber();
 
             }
         });
@@ -582,6 +579,7 @@ public class AnnotationPage
                         bratAnnotatorModel.setSentenceAddress(gotoPageAddress);
                         // target.add(annotator);
                         annotator.reloadContent(target);
+                        target.add(numberOfPages);
                     }
                     else {
                         target.appendJavaScript("alert('This sentence is on the same page!')");
@@ -601,7 +599,12 @@ public class AnnotationPage
             private static final long serialVersionUID = -4657965743173979437L;
         });
     }
-
+    private void updateSentenceNumber()
+    {
+        gotoPageAddress = BratAjaxCasUtil.getSentenceAddress(
+                getJCas(bratAnnotatorModel.getProject(), bratAnnotatorModel.getDocument()),
+                gotoPageTextField.getModelObject());
+    }
     @Override
     public void renderHead(IHeaderResponse response)
     {
