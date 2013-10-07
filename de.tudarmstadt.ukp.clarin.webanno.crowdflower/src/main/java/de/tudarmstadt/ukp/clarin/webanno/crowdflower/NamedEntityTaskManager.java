@@ -59,6 +59,7 @@ public class NamedEntityTaskManager implements Serializable
 
     private static Map<String, String> task2NeMap;
 
+    //static mapping of WebAnno short forms to user displayed types in Crowdflower
     static {
         task2NeMap = new HashMap<String, String>();
         task2NeMap.put("PER", "Person");
@@ -116,8 +117,6 @@ public class NamedEntityTaskManager implements Serializable
         StringBuilder textBuilder = new StringBuilder();
         int docNo = 0;
 
-        //DecimalFormat percentFormat = new DecimalFormat("0.00");
-
         jcasloop:
         for (JCas documentJCas : documentsJCas)
         {
@@ -135,11 +134,6 @@ public class NamedEntityTaskManager implements Serializable
                 }
 
                 textBuilder.setLength(0);
-
-                //debug: output progress every 200 sentences
-                /*if(sentenceNo % 200 == 0) {
-                    LOG.info(percentFormat.format(((float)sentence.getBegin() / (float)documentSize)*1000.0)+"%");
-                }*/
 
                 //Maps our own token offsets (needed by JS in the crowdflower task) to Jcas offsets
                 HashMap<Integer,Integer> charOffsetStartMapping = new HashMap<Integer,Integer>();
@@ -241,15 +235,19 @@ public class NamedEntityTaskManager implements Serializable
                     String strTypes = "[]";
                     String strGold = "[\"none\"]";
                     String strGoldReason = noGoldNER1Reason;
+                    int difficulty = 1;
 
                     //Case where we have gold elements and want to give feedback to the crowd user
                     if(goldElems.size() > 0)
                     {
                         strGold = buildTask1GoldElem(textBuilder, goldElems);
+                        difficulty = goldElems.size();
+
                         strTypes = buildTask1GoldElem(textBuilder, goldTypes);
                         strGoldReason = buildTask1GoldElemReason(textBuilder, goldTokens);
                     }
 
+                    task1Data.set_difficulty(difficulty);
                     task1Data.setMarkertext_gold(strGold);
                     task1Data.setMarkertext_gold_reason(strGoldReason);
 
@@ -371,6 +369,7 @@ public class NamedEntityTaskManager implements Serializable
 
     /**
      * Upload a new NER task1 (german) to crowdflower.com. This method is called from the crowd page and is the starting point for a new task1 upload.
+     *
      * @param template
      * @param documentsJCas
      * @param goldsJCas
@@ -390,7 +389,6 @@ public class NamedEntityTaskManager implements Serializable
 
         //by default, allow only German speaking countries
         //would be better to make this configurable
-
         Vector<String> includedCountries = new Vector<String>();
         includedCountries.add("DE");
         includedCountries.add("AT");
@@ -572,13 +570,21 @@ private int getFirstSpanOffset(String spans)
    {
        Log LOG = LogFactory.getLog(getClass());
 
-       LOG.info("retrieving data for job: " + jobID1);
+       LOG.info("Retrieving data for job: " + jobID1);
 
        //retrieve job id 1 data
        CrowdJob job1 = crowdclient.retrieveJob(jobID1);
 
+       LOG.info("Retrieving raw judgments for job: " + jobID1);
        //rawdata is a multiline JSON file
        String rawdata = crowdclient.retrieveRawJudgments(job1);
+
+       if (rawdata == null || rawdata.equals(""))
+       {
+           throw new Exception("No data retrieved for task1 at #" + jobID1 + ". Crowdflower might need more time to prepare your data, try again in one minute.");
+       }
+
+       LOG.info("Got " + rawdata.length() + " chars");
 
        StringReader reader = new StringReader(rawdata);
        BufferedReader br = new BufferedReader(reader);
@@ -592,76 +598,168 @@ private int getFirstSpanOffset(String spans)
 
        ObjectWriter writer = mapper.writer();
 
+       //judgments come in as a quite exotic multiline-json, we need to parse every line of it separately
        while((line=br.readLine())!=null)
        {
-           JsonNode elem = mapper.readTree(line);
-           String text = elem.path("data").path("text").getTextValue();
+           //try to process each line, omit data if an error occurs (but inform user)
+           try{
+               //System.out.println("line:" + line.substring(0, 300) + "...");
 
-           System.out.println("text:" + text);
+               JsonNode elem = mapper.readTree(line);
+               String text = elem.path("data").path("text").getTextValue();
 
-           boolean isGold = !elem.path("data").path("_golden").isMissingNode();
+               String state = elem.path("state").getTextValue();
+               //System.out.println("state:" + state);
 
-           if(isGold)
-           {
-               //System.out.println("goldelem:" + elem);
-               //produce gold data
-               String markertext_gold = elem.path("data").path("markertext_gold").getTextValue();
-               String types = elem.path("data").path("types").getTextValue();
+               //boolean isGold = !elem.path("data").path("_golden").isMissingNode();
+
+               boolean isGold = (state.equals("golden"));
+
+               if(state.equals("hidden_gold"))
+               {
+                   continue;
+               }
+
+               //Temp lists needed for normal and gold data generation
+               List<Integer> startMarkers = new ArrayList<Integer>();
+               List<Integer> endMarkers = new ArrayList<Integer>();
+               List<String> strMarkers = new ArrayList<String>();
+               List<String> NE = new ArrayList<String>();
+
                String document = elem.path("data").path("document").getTextValue();
 
-               //System.out.println("markertext_gold:" + markertext_gold);
-               //System.out.println("types:" + types);
-
-               if(!types.equals("[]"))
+               if(isGold)
                {
-                   //sentence has atleast one NE
-                   List<String> NEtypes = Arrays.asList(types.substring(1, types.length()-1).split(","));
+                   //System.out.println("goldelem:" + elem);
+                   //produce gold data
+                   String markertext_gold = elem.path("data").path("markertext_gold").getTextValue();
+                   String types = elem.path("data").path("types").getTextValue();
 
-                   List<Integer> startMarkers = new ArrayList<Integer>();
-                   List<Integer> endMarkers = new ArrayList<Integer>();
-                   List<String> strMarkers = new ArrayList<String>();
+                   //System.out.println("markertext_gold:" + markertext_gold);
+                   //System.out.println("types:" + types);
 
-                   List<String> NE = new ArrayList<String>();
-
-                   JsonNode markers = mapper.readTree(markertext_gold);
-
-                   for(JsonNode marker : markers)
+                   if(!types.equals("[]"))
                    {
-                       strMarkers.add(writer.writeValueAsString(marker));
-                       int start = marker.path("s").getIntValue();
-                       int end = marker.path("e").getIntValue();
-                       startMarkers.add(start);
-                       endMarkers.add(end);
-                       NE.add(extractSpan(text, start, end));
-                   }
+                       //sentence has atleast one NE
+                       List<String> NEtypes = Arrays.asList(types.substring(1, types.length()-1).split(","));
 
-                   //debug
-                   //System.out.println(NE);
-                   //System.out.println(NEtypes);
-                   for(int i = 0; i < NE.size(); i++)
-                   {
-                       //NamedEntityTask2Data(String text, String toDecide, String posText, String tokenOffset, String document, String ist_todecide_ein_gold, String ist_todecide_ein_gold_reason)
-                       NamedEntityTask2Data task2_datum = new NamedEntityTask2Data(text,NE.get(i),strMarkers.get(i),
-                               String.valueOf(getFirstSpanOffset(text)),document,task2NeMap.get(NEtypes.get(i)),bogusNER2Reason);
-                       uploadData.add(task2_datum);
-                   }
+                       JsonNode markers = mapper.readTree(markertext_gold);
 
-               }//else ignore this sentence
-           }else
-           {
-               //System.out.println("elem:" + elem);
-               //majority voting for
-               for (JsonNode judgment : elem.path("results").path("judgments"))
+                       if(NEtypes.size() != markers.size())
+                       {
+                           LOG.warn("Warning, skipping ill formated gold item in task1! (NEtypes.size() != markers.size())");
+                           continue;
+                       }
+
+                       for(JsonNode marker : markers)
+                       {
+                           strMarkers.add(writer.writeValueAsString(marker));
+                           int start = marker.path("s").getIntValue();
+                           int end = marker.path("e").getIntValue();
+                           startMarkers.add(start);
+                           endMarkers.add(end);
+                           NE.add(extractSpan(text, start, end));
+                       }
+
+                       //debug
+                       //System.out.println("Gen2 sentence with " + NE.size() + " golds.");
+                       //System.out.println(NEtypes);
+                       for(int i = 0; i < NE.size(); i++)
+                       {
+                           //NamedEntityTask2Data(String text, String toDecide, String posText, String tokenOffset, String document, String ist_todecide_ein_gold, String ist_todecide_ein_gold_reason)
+                           NamedEntityTask2Data task2_gold_datum = new NamedEntityTask2Data(text,NE.get(i),strMarkers.get(i),
+                                   String.valueOf(getFirstSpanOffset(text)),document,task2NeMap.get(NEtypes.get(i)),bogusNER2Reason);
+                           uploadData.add(task2_gold_datum);
+                       }
+
+                   }//else ignore this sentence
+               }else //normal data entry
                {
-                   if(!judgment.path("data").path("markertext").isMissingNode())
+                   //System.out.println("Gen2 normal entry");
+                   if(!elem.path("results").path("judgments").isMissingNode())
                    {
-                       String markertext = judgment.path("data").path("markertext").getTextValue();
-                       System.out.println("markertext votes:" + markertext);
+                       Map<String, Integer> votings = new HashMap<String, Integer>();
+                       //Majority voting for each marker in all judgments
+                       for (JsonNode judgment : elem.path("results").path("judgments"))
+                       {
+                           if(!judgment.path("data").path("markertext").isMissingNode())
+                           {
+                               String markertext = judgment.path("data").path("markertext").getTextValue();
+                               System.out.println("markertext votes:" + markertext);
+
+                               JsonNode markers = mapper.readTree(markertext);
+
+                               //iterate over votes
+                               for(JsonNode marker : markers)
+                               {
+                                   String voteText = writer.writeValueAsString(marker);
+                                   //System.out.println("vote: " + voteText);
+
+                                   //first case: add entry for this voting position
+                                   if(!votings.containsKey(voteText))
+                                   {
+                                       votings.put(voteText, 1);
+                                   }//second case: increment voting
+                                   else
+                                   {
+                                       votings.put(voteText, votings.get(voteText)+1);
+                                   }
+                               }
+                           }else
+                           {
+                               LOG.warn("Warning, missing path in JSON result file from crowdflower: results/judgments");
+                           }
+                       }
+                       //TODO: get this from actual job or even better, make it user configurable
+                       int votes_needed = 2;
+
+                       List<String> majorityMarkers = new ArrayList<String>();
+
+                       for(String vote : votings.keySet())
+                       {
+                           System.out.println("Vote: " + vote + "=" + votings.get(vote));
+                           if (votings.get(vote) >= votes_needed)
+                           {
+                               majorityMarkers.add(vote);
+                           }
+                       }
+
+                       //process majority markers
+                       for(String strMarker : majorityMarkers)
+                       {
+                           //System.out.println("### Majority marker:" + strMarker);
+                           if(!strMarker.equals("none") && !strMarker.equals("\"none\""))
+                           {
+                               strMarkers.add(strMarker);
+                               JsonNode marker = mapper.readTree(strMarker);
+                               int start = marker.path("s").getIntValue();
+                               int end = marker.path("e").getIntValue();
+                               startMarkers.add(start);
+                               endMarkers.add(end);
+                               NE.add(extractSpan(text, start, end));
+                           }
+                       }
+
+                       //add data entries to data that should be uploaded
+                       for(int i = 0; i < NE.size(); i++)
+                       {
+                           //NamedEntityTask2Data(String text, String toDecide, String posText, String tokenOffset, String document, String ist_todecide_ein_gold, String ist_todecide_ein_gold_reason)
+                           NamedEntityTask2Data task2_datum = new NamedEntityTask2Data(text,NE.get(i),strMarkers.get(i),
+                                   String.valueOf(getFirstSpanOffset(text)),document);
+                           uploadData.add(task2_datum);
+                       }
+
                    }else
                    {
-                       LOG.warn("Warning, missing path in JSON result file from crowdflower: results/judgments");
+                       LOG.warn("Warning, missing path in JSON result file from crowdflower: data/markertext");
                    }
                }
+           }catch(Exception e)
+           {
+               LOG.warn("Warning, omitted a sentence from task2 upload because of an error in processing it: " + e.getMessage());
+               //debug
+               e.printStackTrace();
+               //TODO: inform user that there was a problem
            }
        }
 

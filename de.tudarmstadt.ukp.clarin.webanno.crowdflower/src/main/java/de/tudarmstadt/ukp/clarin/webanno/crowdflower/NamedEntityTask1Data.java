@@ -32,6 +32,8 @@ public class NamedEntityTask1Data
     String markertext_gold_reason = "";
     String types = "";
 
+    // from http://crowdflower.com/docs-gold: The _difficulty column should contain an integer between 1 and 100. The higher the number, the more difficult the Gold is considered, and it will be displayed later in a contributor's judgment session.
+    int _difficulty = 1;
 
     String document = "";
 
@@ -125,4 +127,14 @@ public class NamedEntityTask1Data
         this.types = types;
     }
 
+    @JsonProperty("_difficulty")
+    public int get_difficulty()
+    {
+        return _difficulty;
+    }
+
+    public void set_difficulty(int _difficulty)
+    {
+        this._difficulty = _difficulty;
+    }
 }

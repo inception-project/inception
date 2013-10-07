@@ -30,6 +30,11 @@ public class NamedEntityTask2Data
     String toDecide = "";
     String _golden = "";
 
+    // from http://crowdflower.com/docs-gold: The _difficulty column should contain an integer between 1 and 100. The higher the number, the more difficult the Gold is considered, and it will be displayed later in a contributor's judgment session.
+    int _difficulty = 1;
+
+
+
     String ist_todecide_ein_gold = "";
     String ist_todecide_ein_gold_reason = "";
 
@@ -38,10 +43,14 @@ public class NamedEntityTask2Data
     String posText = "";
 
     //constructor for normal data
-    NamedEntityTask2Data(String text, String toDecide)
+    NamedEntityTask2Data(String text, String toDecide, String posText, String tokenOffset, String document)
     {
            this.text = text;
            this.toDecide = toDecide;
+
+           this.tokenOffset = tokenOffset;
+           this.document = document;
+           this.posText = posText;
     }
 
     //constructor for gold data
@@ -148,5 +157,16 @@ public class NamedEntityTask2Data
     public void setPosText(String posText)
     {
         this.posText = posText;
+    }
+
+    @JsonProperty("_difficulty")
+    public int get_difficulty()
+    {
+        return _difficulty;
+    }
+
+    public void set_difficulty(int _difficulty)
+    {
+        this._difficulty = _difficulty;
     }
 }

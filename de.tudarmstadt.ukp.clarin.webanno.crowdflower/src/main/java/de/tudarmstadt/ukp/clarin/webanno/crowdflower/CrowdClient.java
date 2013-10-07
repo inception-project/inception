@@ -303,11 +303,15 @@ public class CrowdClient implements Serializable
 
         //Crowdflower sends back a zip file with a single JSON file, which make things a bit awkward here:
         byte[] resultJsonZip = restTemplate.getForObject(judgmentsURL, byte[].class, job.getId(), apiKey);
-        String resultJsonString = new String(unzip(resultJsonZip), "UTF-8");
 
-        System.out.println("resultJsonString:" + resultJsonString);
-
-        return resultJsonString;
+        if(resultJsonZip != null && resultJsonZip.length > 0)
+        {
+            String resultJsonString = new String(unzip(resultJsonZip), "UTF-8");
+            return resultJsonString;
+        }
+        else{
+            return "";
+        }
     }
 
     /**
