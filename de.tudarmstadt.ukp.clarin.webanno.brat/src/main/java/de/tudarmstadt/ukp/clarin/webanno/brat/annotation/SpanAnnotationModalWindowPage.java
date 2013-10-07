@@ -62,6 +62,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 
+/**
+ * A page that is used to display an annotation modal dialog for span annotation
+ * @author Seid Muhie Yimam
+ *
+ */
 public class SpanAnnotationModalWindowPage
     extends WebPage
 {
@@ -239,7 +244,8 @@ public class SpanAnnotationModalWindowPage
                             annotationType = BratAjaxCasUtil.getType(selectedTag);
 
                             controller.addSpanToCas(jCas, start, end, annotationType, null, null);
-                            controller.addSpanTagSetToCas(jCas, bratAnnotatorModel.getProject(), annotationType);
+                            controller.addSpanTagSetToCas(jCas, bratAnnotatorModel.getProject(),
+                                    annotationType);
                             controller.createAnnotationDocumentContent(
                                     bratAnnotatorModel.getMode(), bratAnnotatorModel.getDocument(),
                                     bratAnnotatorModel.getUser(), jCas);

@@ -139,6 +139,12 @@ public class BratAnnotator
         final ModalWindow openAnnotationDialog;
         add(openAnnotationDialog = new ModalWindow("openAnnotationDialog"));
         openAnnotationDialog.setOutputMarkupId(true);
+        openAnnotationDialog.setInitialWidth(550);
+        openAnnotationDialog.setInitialHeight(450);
+        openAnnotationDialog.setResizable(true);
+        openAnnotationDialog.setWidthUnit("px");
+        openAnnotationDialog.setHeightUnit("px");
+        openAnnotationDialog.setCssClassName(openAnnotationDialog.CSS_CLASS_BLUE);
 
         controller = new AbstractDefaultAjaxBehavior()
         {
@@ -383,12 +389,6 @@ public class BratAnnotator
     private void openSpanAnnotationDialog(final ModalWindow openAnnotationDialog,
             AjaxRequestTarget aTarget)
     {
-        openAnnotationDialog.setInitialWidth(550);
-        openAnnotationDialog.setInitialHeight(450);
-        openAnnotationDialog.setResizable(true);
-        openAnnotationDialog.setWidthUnit("px");
-        openAnnotationDialog.setHeightUnit("px");
-
         openAnnotationDialog.setPageCreator(new ModalWindow.PageCreator()
         {
             private static final long serialVersionUID = -2827824968207807739L;
@@ -443,11 +443,6 @@ public class BratAnnotator
     private void openArcAnnotationDialog(final ModalWindow openAnnotationDialog,
             AjaxRequestTarget aTarget)
     {
-        openAnnotationDialog.setInitialWidth(550);
-        openAnnotationDialog.setInitialHeight(450);
-        openAnnotationDialog.setResizable(true);
-        openAnnotationDialog.setWidthUnit("px");
-        openAnnotationDialog.setHeightUnit("px");
 
         if (selectedArcId == -1) {// new annotation
             openAnnotationDialog.setTitle("New Arc Annotation");

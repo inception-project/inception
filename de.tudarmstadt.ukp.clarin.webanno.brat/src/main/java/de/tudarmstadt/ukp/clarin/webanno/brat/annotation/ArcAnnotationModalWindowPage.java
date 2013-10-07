@@ -53,6 +53,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 
+/**
+ * A panel that is used to display an annotation modal dialog for arc annotation.
+ * @author Seid Muhie Yimam
+ *
+ */
 public class ArcAnnotationModalWindowPage
     extends Panel
 {
