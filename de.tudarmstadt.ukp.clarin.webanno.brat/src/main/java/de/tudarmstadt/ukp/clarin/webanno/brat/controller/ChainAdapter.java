@@ -351,7 +351,7 @@ public class ChainAdapter
         boolean duplicate = false;
         Type type = CasUtil.getType(aCas, annotationTypeName);
         Feature feature = type.getFeatureByBaseName(labelFeatureName);
-        for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
+/*        for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
 
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
                 if (!fs.getStringValue(feature).equals(aValue)) {
@@ -359,7 +359,7 @@ public class ChainAdapter
                 }
                 duplicate = true;
             }
-        }
+        }*/
         if (!duplicate) {
             AnnotationFS newAnnotation = aCas.createAnnotation(type, aBegin, aEnd);
             newAnnotation.setStringValue(feature, aValue);
@@ -431,7 +431,7 @@ public class ChainAdapter
                 while (linkFs != null && !found) {
                     // a-> c, b->c = a->b->c
                     if (linkFs.getFeatureValue(next) != null
-                            && BratAjaxCasUtil.isAt((Annotation) linkFs.getFeatureValue(next),
+                            && BratAjaxCasUtil.isSame((Annotation) linkFs.getFeatureValue(next),
                                     (Annotation) targetLink)) {
                         if (linkFs.getBegin() > originLink.getBegin()) {
                             originLink.setFeatureValue(next, linkFs);
@@ -453,9 +453,9 @@ public class ChainAdapter
                         break;
                     }
                     // CASE 4a/b
-                    if (BratAjaxCasUtil.isAt((Annotation) linkFs, (Annotation) originLink)
+                    if (BratAjaxCasUtil.isSame((Annotation) linkFs, (Annotation) originLink)
                             && linkFs.getFeatureValue(next) != null
-                            && !BratAjaxCasUtil.isAt((Annotation) linkFs.getFeatureValue(next),
+                            && !BratAjaxCasUtil.isSame((Annotation) linkFs.getFeatureValue(next),
                                     (Annotation) targetLink)
                             && targetLink.getBegin() < ((AnnotationFS) linkFs.getFeatureValue(next))
                                     .getBegin()) {
@@ -469,15 +469,15 @@ public class ChainAdapter
                         found = true;
                         break;
                     }
-                    else if (BratAjaxCasUtil.isAt((Annotation) linkFs, (Annotation) originLink)
+                    else if (BratAjaxCasUtil.isSame((Annotation) linkFs, (Annotation) originLink)
                             && linkFs.getFeatureValue(next) != null
-                            && !BratAjaxCasUtil.isAt((Annotation) linkFs.getFeatureValue(next),
+                            && !BratAjaxCasUtil.isSame((Annotation) linkFs.getFeatureValue(next),
                                     (Annotation) targetLink)) {
                         linkFs = (AnnotationFS) linkFs.getFeatureValue(next);
                         originLink = linkFs;
                         continue;
                     }
-                    else if (BratAjaxCasUtil.isAt((Annotation) linkFs, (Annotation) originLink)
+                    else if (BratAjaxCasUtil.isSame((Annotation) linkFs, (Annotation) originLink)
                             && linkFs.getFeatureValue(next) == null) {
                         linkFs.setFeatureValue(next, targetLink);
                         linkFs.setStringValue(labelFeature, aValue);
@@ -485,9 +485,9 @@ public class ChainAdapter
                         found = true;
                         break;
                     }
-                    if (BratAjaxCasUtil.isAt((Annotation) linkFs, (Annotation) originLink)
+                    if (BratAjaxCasUtil.isSame((Annotation) linkFs, (Annotation) originLink)
                             && linkFs.getFeatureValue(next) != null
-                            && BratAjaxCasUtil.isAt((Annotation) linkFs.getFeatureValue(next),
+                            && BratAjaxCasUtil.isSame((Annotation) linkFs.getFeatureValue(next),
                                     (Annotation) targetLink)) {
                         modify = !linkFs.getStringValue(labelFeature).equals(aValue);
                         existingChain = linkFs;
@@ -549,12 +549,12 @@ public class ChainAdapter
                 while (linkFs != null) {
                     if (inThisChain) {
                         thatChain = fs;
-                        if (BratAjaxCasUtil.isAt((Annotation) linkFs, (Annotation) aOrigin)) {
+                        if (BratAjaxCasUtil.isSame((Annotation) linkFs, (Annotation) aOrigin)) {
                             inThatChain = true;
                             linkFs = (AnnotationFS) linkFs.getFeatureValue(next);
 
                         }
-                        else if (BratAjaxCasUtil.isAt((Annotation) linkFs, (Annotation) aTarget)) {
+                        else if (BratAjaxCasUtil.isSame((Annotation) linkFs, (Annotation) aTarget)) {
                             inThatChain = true;
                             linkFs = (AnnotationFS) linkFs.getFeatureValue(next);
 
@@ -565,11 +565,11 @@ public class ChainAdapter
                     }
                     else {
                         thisChain = fs;
-                        if (BratAjaxCasUtil.isAt((Annotation) linkFs, (Annotation) aOrigin)) {
+                        if (BratAjaxCasUtil.isSame((Annotation) linkFs, (Annotation) aOrigin)) {
                             tempInThisChain = true;
                             linkFs = (AnnotationFS) linkFs.getFeatureValue(next);
                         }
-                        else if (BratAjaxCasUtil.isAt((Annotation) linkFs, (Annotation) aTarget)) {
+                        else if (BratAjaxCasUtil.isSame((Annotation) linkFs, (Annotation) aTarget)) {
                             tempInThisChain = true;
                             linkFs = (AnnotationFS) linkFs.getFeatureValue(next);
                         }

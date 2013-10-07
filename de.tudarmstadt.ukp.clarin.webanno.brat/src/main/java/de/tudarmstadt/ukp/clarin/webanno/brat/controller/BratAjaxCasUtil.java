@@ -49,6 +49,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
 import de.tudarmstadt.ukp.dkpro.core.api.io.ResourceCollectionReaderBase;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
@@ -67,10 +68,22 @@ import de.tudarmstadt.ukp.dkpro.core.tokit.BreakIteratorSegmenter;
 public class BratAjaxCasUtil
 {
 
-    public static boolean isAt(Annotation a, Annotation b)
+    /**
+     * Annotation a and annotation b are the same if the have the same address (
+     * used for {@link CoreferenceChain})
+     * @param a
+     * @param b
+     * @return
+     */
+    public static boolean isSame(Annotation a, Annotation b)
+    {
+        return a.getAddress() == b.getAddress();
+    }
+
+/*    public static boolean isSame(Annotation a, Annotation b)
     {
         return a.getBegin() == b.getBegin() && a.getEnd() == b.getEnd();
-    }
+    }*/
 
     public static boolean isAt(Annotation a, int begin, int end)
     {
