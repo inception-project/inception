@@ -387,14 +387,7 @@ public class NamedEntityTaskManager implements Serializable
         CrowdJob job = createJob(template);
         LOG.info("Done, new job id is: "+job.getId()+". Now generating data for NER task 1");
 
-        //by default, allow only German speaking countries
-        //would be better to make this configurable
-        Vector<String> includedCountries = new Vector<String>();
-        includedCountries.add("DE");
-        includedCountries.add("AT");
-        includedCountries.add("CH");
-        job.setIncludedCountries(includedCountries);
-
+        setAllowedCountries(job);
         crowdclient.updateAllowedCountries(job);
 
         int goldOffset = 0;
@@ -427,6 +420,17 @@ public class NamedEntityTaskManager implements Serializable
         crowdclient.uploadData(job,mergedData);
         LOG.info("Done, finished uploading data to #" + job.getId());
         return job.getId();
+    }
+
+    private void setAllowedCountries(CrowdJob job)
+    {
+        //by default, allow only German speaking countries
+        //would be better to make this configurable
+        Vector<String> includedCountries = new Vector<String>();
+        includedCountries.add("DE");
+        includedCountries.add("AT");
+        includedCountries.add("CH");
+        job.setIncludedCountries(includedCountries);
     }
 
     /**
@@ -765,6 +769,8 @@ private int getFirstSpanOffset(String spans)
 
        LOG.info("Data generation complete. Creating new Job for Ner task 2.");
        CrowdJob job = createJob(template);
+       setAllowedCountries(job);
+       crowdclient.updateAllowedCountries(job);
        LOG.info("Done, new job id is: "+job.getId()+". Now generating data for NER task 2");
 
        crowdclient.uploadData(job,uploadData);
@@ -772,6 +778,16 @@ private int getFirstSpanOffset(String spans)
        LOG.info("Done uploading data to task2 #"+job.getId()+".");
 
        return job.getId();
+   }
+
+   /**
+    * Aggregates and sets final judgments in the JCases provided by documentsJCas.
+    * @param jobID2
+    * @param documentsJCas
+    */
+   public void retrieveAggJudgmentsTask2(String jobID2, List<JCas> documentsJCas)
+   {
+
    }
 
 }
