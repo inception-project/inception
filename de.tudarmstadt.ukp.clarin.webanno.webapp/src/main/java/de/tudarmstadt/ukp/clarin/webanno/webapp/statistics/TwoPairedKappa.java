@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
+ * Technische Universit?t Darmstadt
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
@@ -91,7 +90,7 @@ public class TwoPairedKappa
      * @throws UIMAException
      */
     public Set<String> getAllAnnotations(List<User> aUsers, SourceDocument aSourceDocument,
-            String aType)
+            String aType, Map<User, JCas> JCases)
     {
         // Set of start+end offsets for all annotations in the document
         Set<String> annotationPositions = new HashSet<String>();
@@ -100,19 +99,8 @@ public class TwoPairedKappa
                     aSourceDocument, user);
             JCas jCas = null;
             if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
-                try {
-                    jCas = repositoryService.getAnnotationDocumentContent(annotationDocument);
-                }
-                catch (UIMAException e) {
-                    LOG.info(ExceptionUtils.getRootCause(e));
-                }
-                catch (IOException e) {
-                    LOG.info(ExceptionUtils.getRootCause(e));
-                }
-                catch (ClassNotFoundException e) {
-                    LOG.info(ExceptionUtils.getRootCause(e));
-                }
 
+                jCas = JCases.get(user);
                 Type type = CasUtil.getType(jCas.getCas(), aType);
                 for (AnnotationFS fs : CasUtil.select(jCas.getCas(), type)) {
                     annotationPositions.add(aSourceDocument.getId() + "" + fs.getBegin() + ""
@@ -170,7 +158,7 @@ public class TwoPairedKappa
      */
     public Map<String, Map<String, String>> updateUserAnnotations(List<User> aUsers,
             SourceDocument aSourceDocument, String aType, String aLableFeatureName,
-            Map<String, Map<String, String>> aUserAnnotations)
+            Map<String, Map<String, String>> aUserAnnotations, Map<User, JCas> JCases)
     {
         for (User user : aUsers) {
 
@@ -179,18 +167,8 @@ public class TwoPairedKappa
 
             JCas jCas = null;
             if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
-                try {
-                    jCas = repositoryService.getAnnotationDocumentContent(annotationDocument);
-                }
-                catch (UIMAException e) {
-                    LOG.info(ExceptionUtils.getRootCause(e));
-                }
-                catch (IOException e) {
-                    LOG.info(ExceptionUtils.getRootCause(e));
-                }
-                catch (ClassNotFoundException e) {
-                    LOG.info(ExceptionUtils.getRootCause(e));
-                }
+
+                jCas = JCases.get(user);
 
                 Type type = CasUtil.getType(jCas.getCas(), aType);
 
