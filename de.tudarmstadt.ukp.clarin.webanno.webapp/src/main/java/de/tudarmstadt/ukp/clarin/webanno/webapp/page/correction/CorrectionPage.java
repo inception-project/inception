@@ -17,7 +17,6 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.webapp.page.correction;
 
-import static org.uimafit.util.JCasUtil.select;
 import static org.uimafit.util.JCasUtil.selectFollowing;
 
 import java.io.FileNotFoundException;
@@ -33,7 +32,6 @@ import javax.persistence.NoResultException;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
-import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
@@ -58,6 +56,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -82,9 +81,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.Cu
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationUserSegmentForAnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.project.SettingsPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome.WelcomePage;
-import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * This is the main class for the correction page. Displays in the lower panel the Automatically
@@ -922,7 +919,8 @@ public class CorrectionPage
             repository.createCorrectionDocumentContent(jCas, bratAnnotatorModel.getDocument(),
                     logedInUser);
             // remove all annotation so that the user can correct from the auto annotation
-            clearJcasAnnotations(jCas, bratAnnotatorModel.getDocument(), logedInUser);
+            BratAnnotatorUtility.clearJcasAnnotations(jCas, bratAnnotatorModel.getDocument(),
+                    logedInUser, repository);
         }
         catch (NoResultException e) {
             BratAjaxCasController controller = new BratAjaxCasController(repository,
@@ -933,7 +931,8 @@ public class CorrectionPage
             repository.createCorrectionDocumentContent(jCas, bratAnnotatorModel.getDocument(),
                     logedInUser);
             // remove all annotation so that the user can correct from the auto annotation
-            clearJcasAnnotations(jCas, bratAnnotatorModel.getDocument(), logedInUser);
+            BratAnnotatorUtility.clearJcasAnnotations(jCas, bratAnnotatorModel.getDocument(),
+                    logedInUser, repository);
         }
 
         if (bratAnnotatorModel.getSentenceAddress() == -1
@@ -989,21 +988,6 @@ public class CorrectionPage
         curationSegment.setEnd(BratAjaxCasUtil.getAnnotationEndOffset(jCas,
                 lastSentenceAddressInDisplayWindow));
 
-    }
-
-    private void clearJcasAnnotations(JCas aJCas, SourceDocument aSourceDocument, User aUser)
-        throws IOException
-    {
-        List<Annotation> annotationsToRemove = new ArrayList<Annotation>();
-        for (Annotation a : select(aJCas, Annotation.class)) {
-            if (!(a instanceof Token || a instanceof Sentence || a instanceof DocumentMetaData)) {
-                annotationsToRemove.add(a);
-            }
-        }
-        for (Annotation annotation : annotationsToRemove) {
-            aJCas.removeFsFromIndexes(annotation);
-        }
-        repository.createAnnotationDocumentContent(aJCas, aSourceDocument, aUser);
     }
 
     private void update(AjaxRequestTarget target)

@@ -17,10 +17,16 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
+import static org.uimafit.util.JCasUtil.select;
+
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.jcas.JCas;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.wicket.request.IRequestParameters;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
@@ -35,8 +41,12 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.OffsetsList;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * A helper class for {@link BratAnnotator} and CurationEditor
@@ -89,14 +99,14 @@ public class BratAnnotatorUtility
                     "Annotation coveres multiple sentences, limit your annotation to single sentence!");
         }
 
-        AnnotationFS originFs = (AnnotationFS) aUIData.getjCas().getLowLevelCas().ll_getFSForRef(
-                aUIData.getOrigin());
-        AnnotationFS targetFs = (AnnotationFS) aUIData.getjCas().getLowLevelCas().ll_getFSForRef(
-                aUIData.getTarget());
+        AnnotationFS originFs = (AnnotationFS) aUIData.getjCas().getLowLevelCas()
+                .ll_getFSForRef(aUIData.getOrigin());
+        AnnotationFS targetFs = (AnnotationFS) aUIData.getjCas().getLowLevelCas()
+                .ll_getFSForRef(aUIData.getTarget());
 
         result = controller.createSpanResponse(bratAnnotatorModel,
                 aUIData.getAnnotationOffsetStart(), aUIData.getjCas(), aUIData.isGetDocument(),
-                aUIData.getAnnotationOffsetEnd(), aUIData.getType(),originFs,targetFs);
+                aUIData.getAnnotationOffsetEnd(), aUIData.getType(), originFs, targetFs);
 
         if (bratAnnotatorModel.isScrollPage()) {
             bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(
@@ -121,14 +131,14 @@ public class BratAnnotatorUtility
         aUIData.setAnnotationOffsetStart(BratAjaxCasUtil.getAnnotationBeginOffset(
                 aUIData.getjCas(), aUIData.getOrigin()));
 
-        AnnotationFS originFs = (AnnotationFS) aUIData.getjCas().getLowLevelCas().ll_getFSForRef(
-                aUIData.getOrigin());
-        AnnotationFS targetFs = (AnnotationFS) aUIData.getjCas().getLowLevelCas().ll_getFSForRef(
-                aUIData.getTarget());
+        AnnotationFS originFs = (AnnotationFS) aUIData.getjCas().getLowLevelCas()
+                .ll_getFSForRef(aUIData.getOrigin());
+        AnnotationFS targetFs = (AnnotationFS) aUIData.getjCas().getLowLevelCas()
+                .ll_getFSForRef(aUIData.getTarget());
 
         result = controller.createArcResponse(bratAnnotatorModel,
                 aUIData.getAnnotationOffsetStart(), aUIData.getjCas(), aUIData.isGetDocument(),
-                aUIData.getType(), aUIData.getAnnotationOffsetEnd(), originFs,targetFs);
+                aUIData.getType(), aUIData.getAnnotationOffsetEnd(), originFs, targetFs);
         if (bratAnnotatorModel.isScrollPage()) {
             bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(
                     aUIData.getjCas(), bratAnnotatorModel.getSentenceAddress(),
@@ -156,14 +166,14 @@ public class BratAnnotatorUtility
                 aUIData.getType().indexOf(AnnotationTypeConstant.PREFIX) + 1);
         if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
 
-            AnnotationFS originFs = (AnnotationFS) aUIData.getjCas().getLowLevelCas().ll_getFSForRef(
-                    aUIData.getOrigin());
-            AnnotationFS targetFs = (AnnotationFS) aUIData.getjCas().getLowLevelCas().ll_getFSForRef(
-                    aUIData.getTarget());
+            AnnotationFS originFs = (AnnotationFS) aUIData.getjCas().getLowLevelCas()
+                    .ll_getFSForRef(aUIData.getOrigin());
+            AnnotationFS targetFs = (AnnotationFS) aUIData.getjCas().getLowLevelCas()
+                    .ll_getFSForRef(aUIData.getTarget());
 
             result = controller.reverseArcResponse(bratAnnotatorModel, aUIData.getjCas(),
-                    aUIData.getAnnotationOffsetStart(), originFs, targetFs,
-                    aUIData.getType(), aUIData.isGetDocument());
+                    aUIData.getAnnotationOffsetStart(), originFs, targetFs, aUIData.getType(),
+                    aUIData.isGetDocument());
             if (bratAnnotatorModel.isScrollPage()) {
                 bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(
                         aUIData.getjCas(), bratAnnotatorModel.getSentenceAddress(),
@@ -225,12 +235,14 @@ public class BratAnnotatorUtility
         aUIData.setAnnotationOffsetStart(BratAjaxCasUtil.getAnnotationBeginOffset(
                 aUIData.getjCas(), aUIData.getOrigin()));
 
-        AnnotationFS originFs = (AnnotationFS) aUIData.getjCas().getLowLevelCas().ll_getFSForRef(aUIData.getOrigin());
-        AnnotationFS targetFs = (AnnotationFS) aUIData.getjCas().getLowLevelCas().ll_getFSForRef(aUIData.getTarget());
+        AnnotationFS originFs = (AnnotationFS) aUIData.getjCas().getLowLevelCas()
+                .ll_getFSForRef(aUIData.getOrigin());
+        AnnotationFS targetFs = (AnnotationFS) aUIData.getjCas().getLowLevelCas()
+                .ll_getFSForRef(aUIData.getTarget());
 
         result = controller.deleteArcResponse(bratAnnotatorModel, aUIData.getjCas(),
-                aUIData.getAnnotationOffsetStart(), originFs, targetFs,
-                aUIData.getType(), aUIData.isGetDocument());
+                aUIData.getAnnotationOffsetStart(), originFs, targetFs, aUIData.getType(),
+                aUIData.isGetDocument());
         if (bratAnnotatorModel.isScrollPage()) {
             bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(
                     aUIData.getjCas(), bratAnnotatorModel.getSentenceAddress(),
@@ -246,7 +258,7 @@ public class BratAnnotatorUtility
         // if annotationDocument is finished, disable editing
         boolean finished = false;
         try {
-            if(aBratAnnotatorModel.getMode().equals(Mode.CURATION)){
+            if (aBratAnnotatorModel.getMode().equals(Mode.CURATION)) {
                 if (aBratAnnotatorModel.getDocument().getState()
                         .equals(SourceDocumentState.CURATION_FINISHED)) {
                     finished = true;
@@ -256,10 +268,16 @@ public class BratAnnotatorUtility
                     .getAnnotationDocument(aBratAnnotatorModel.getDocument(),
                             aBratAnnotatorModel.getUser()).getState()
                     .equals(AnnotationDocumentState.FINISHED)/*
-                    || aBratAnnotatorModel.getDocument().getState()
-                            .equals(SourceDocumentState.CURATION_FINISHED)
-                    || aBratAnnotatorModel.getDocument().getState()
-                            .equals(SourceDocumentState.CURATION_IN_PROGRESS)*/) {
+                                                              * ||
+                                                              * aBratAnnotatorModel.getDocument().
+                                                              * getState()
+                                                              * .equals(SourceDocumentState
+                                                              * .CURATION_FINISHED) ||
+                                                              * aBratAnnotatorModel
+                                                              * .getDocument().getState()
+                                                              * .equals(SourceDocumentState
+                                                              * .CURATION_IN_PROGRESS)
+                                                              */) {
                 finished = true;
             }
         }
@@ -268,5 +286,21 @@ public class BratAnnotatorUtility
         }
 
         return finished;
+    }
+
+    public static void clearJcasAnnotations(JCas aJCas, SourceDocument aSourceDocument, User aUser,
+            RepositoryService repository)
+        throws IOException
+    {
+        List<Annotation> annotationsToRemove = new ArrayList<Annotation>();
+        for (Annotation a : select(aJCas, Annotation.class)) {
+            if (!(a instanceof Token || a instanceof Sentence || a instanceof DocumentMetaData)) {
+                annotationsToRemove.add(a);
+            }
+        }
+        for (Annotation annotation : annotationsToRemove) {
+            aJCas.removeFsFromIndexes(annotation);
+        }
+        repository.createAnnotationDocumentContent(aJCas, aSourceDocument, aUser);
     }
 }
