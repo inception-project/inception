@@ -64,6 +64,7 @@ import org.codehaus.jackson.JsonProcessingException;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.crowdflower.NamedEntityTaskManager;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -833,11 +834,13 @@ public class CrowdSourcePage
         JCas jCas;
         try {
             if (projectRepository.existsAnnotationDocument(sourceDocument, user)) {
-                annotationDocument = projectRepository.getAnnotationDocument(
-                        sourceDocument, user);
 
-                jCas = projectRepository
-                        .getAnnotationDocumentContent(annotationDocument);
+                BratAjaxCasController controller = new BratAjaxCasController(projectRepository,
+                        annotationService);
+
+                jCas =  controller.getJCas(sourceDocument,
+                        selectedProject, user);
+
                 jCases.add(jCas);
             }
             else {
