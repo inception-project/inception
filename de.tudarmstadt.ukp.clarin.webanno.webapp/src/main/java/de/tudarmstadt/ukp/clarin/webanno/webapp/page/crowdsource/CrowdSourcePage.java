@@ -64,6 +64,7 @@ import org.codehaus.jackson.JsonProcessingException;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.crowdflower.NamedEntityTaskManager;
@@ -775,6 +776,73 @@ public class CrowdSourcePage
 
                 }
             });
+
+
+            add(new Button("retrieveT2", new ResourceModel("label"))
+            {
+                private static final long serialVersionUID = 1L;
+                @Override
+                public void onSubmit()
+                {
+                    try {
+                        if(namedEntityTaskManager == null)
+                        {
+                            namedEntityTaskManager = new NamedEntityTaskManager();
+                        }
+
+                        namedEntityTaskManager.setAPIKey(selectedCrowdJob.getApiKey());
+                        User user = userRepository.get(CROWD_USER);
+
+                        List<SourceDocument> sourceDocuments = new ArrayList<SourceDocument>(
+                                selectedCrowdJob.getDocuments());
+                        List<JCas> jCases = getSourceDocumentsJCases(user);
+
+                        String task2ID = selectedCrowdJob.getTask2Id();
+
+                        if(task2ID == null)
+                        {
+                            error("Task2 not yet completed");
+                            return;
+                        }
+
+                        //clear previous annotation / imports for the crowd user
+                        int i=0;
+                        for(JCas cas : jCases)
+                        {
+                            BratAnnotatorUtility.clearJcasAnnotations(cas, sourceDocuments.get(i), user, projectRepository);
+                            i++;
+                        }
+
+                        //import and aggregate judgments from crowdflwoer
+                        namedEntityTaskManager.retrieveAggJudgmentsTask2(task2ID, jCases);
+
+                        //save all changed document annotations on disk
+                        i=0;
+                        for(JCas cas : jCases)
+                        {
+                            SourceDocument document = sourceDocuments.get(i);
+                            projectRepository.createAnnotationDocumentContent(cas, document, user);
+                            i++;
+                        }
+
+                    }
+                    catch (JsonProcessingException e) {
+                        error("Json processing problem: " + e.getMessage());
+                    }
+                    catch (IOException e) {
+                        error("Input/Output exception: " + e.getMessage());
+                    }catch (Exception e) {
+                        error("Something went wrong importing your document(s) from crowdflower.com: " + e.getMessage());
+                    }
+                }
+
+                @Override
+                public boolean isVisible()
+                {
+                    return true;
+                }
+            });
+
 
             // update the status of this source document from crowd
             add(new Button("update", new ResourceModel("label"))

@@ -25,6 +25,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -68,6 +69,16 @@ public class NamedEntityTaskManager implements Serializable
         task2NeMap.put("LOC", "Ort");
         task2NeMap.put("LOCderiv", "Ort");
         task2NeMap.put("OTH", "Etwas anderes");
+    }
+
+    private static Map<String, String> ne2TaskMap;
+
+    static {
+        ne2TaskMap = new HashMap<String, String>();
+        ne2TaskMap.put("Person", "PER");
+        ne2TaskMap.put("Organisation", "ORG");
+        ne2TaskMap.put("Ort", "LOC");
+        ne2TaskMap.put("Etwas anderes", "OTH");
     }
 
     public NamedEntityTaskManager()
@@ -574,33 +585,15 @@ private int getFirstSpanOffset(String spans)
    {
        Log LOG = LogFactory.getLog(getClass());
 
-       LOG.info("Retrieving data for job: " + jobID1);
-
-       //retrieve job id 1 data
-       CrowdJob job1 = crowdclient.retrieveJob(jobID1);
-
-       LOG.info("Retrieving raw judgments for job: " + jobID1);
-       //rawdata is a multiline JSON file
-       String rawdata = crowdclient.retrieveRawJudgments(job1);
-
-       if (rawdata == null || rawdata.equals(""))
-       {
-           throw new Exception("No data retrieved for task1 at #" + jobID1 + ". Crowdflower might need more time to prepare your data, try again in one minute.");
-       }
-
-       LOG.info("Got " + rawdata.length() + " chars");
-
-       StringReader reader = new StringReader(rawdata);
-       BufferedReader br = new BufferedReader(reader);
+       BufferedReader br = getReaderForRawJudgments(jobID1);
        String line;
 
-       //json object mapper
+       //JSON object mapper
        ObjectMapper mapper = new ObjectMapper();
+       ObjectWriter writer = mapper.writer();
 
        //used to represent task2 data that is send as JSON to crowdflower
        Vector<NamedEntityTask2Data> uploadData = new Vector<NamedEntityTask2Data>();
-
-       ObjectWriter writer = mapper.writer();
 
        //judgments come in as a quite exotic multiline-json, we need to parse every line of it separately
        while((line=br.readLine())!=null)
@@ -611,7 +604,6 @@ private int getFirstSpanOffset(String spans)
 
                JsonNode elem = mapper.readTree(line);
                String text = elem.path("data").path("text").getTextValue();
-
                String state = elem.path("state").getTextValue();
                //System.out.println("state:" + state);
 
@@ -624,17 +616,11 @@ private int getFirstSpanOffset(String spans)
                    continue;
                }
 
-               //Temp lists needed for normal and gold data generation
-               List<Integer> startMarkers = new ArrayList<Integer>();
-               List<Integer> endMarkers = new ArrayList<Integer>();
-               List<String> strMarkers = new ArrayList<String>();
-               List<String> NE = new ArrayList<String>();
-
                String document = elem.path("data").path("document").getTextValue();
+               int offset = elem.path("data").path("offset").getIntValue();
 
                if(isGold)
                {
-                   //System.out.println("goldelem:" + elem);
                    //produce gold data
                    String markertext_gold = elem.path("data").path("markertext_gold").getTextValue();
                    String types = elem.path("data").path("types").getTextValue();
@@ -655,27 +641,19 @@ private int getFirstSpanOffset(String spans)
                            continue;
                        }
 
+                       int i=0;
                        for(JsonNode marker : markers)
                        {
-                           strMarkers.add(writer.writeValueAsString(marker));
                            int start = marker.path("s").getIntValue();
                            int end = marker.path("e").getIntValue();
-                           startMarkers.add(start);
-                           endMarkers.add(end);
-                           NE.add(extractSpan(text, start, end));
-                       }
 
-                       //debug
-                       //System.out.println("Gen2 sentence with " + NE.size() + " golds.");
-                       //System.out.println(NEtypes);
-                       for(int i = 0; i < NE.size(); i++)
-                       {
-                           //NamedEntityTask2Data(String text, String toDecide, String posText, String tokenOffset, String document, String ist_todecide_ein_gold, String ist_todecide_ein_gold_reason)
-                           NamedEntityTask2Data task2_gold_datum = new NamedEntityTask2Data(text,NE.get(i),strMarkers.get(i),
+                           NamedEntityTask2Data task2_gold_datum = new NamedEntityTask2Data(text,extractSpan(text, start, end),writer.writeValueAsString(marker),
                                    String.valueOf(getFirstSpanOffset(text)),document,task2NeMap.get(NEtypes.get(i)),bogusNER2Reason);
-                           uploadData.add(task2_gold_datum);
-                       }
 
+                           task2_gold_datum.setDocOffset(offset);
+                           uploadData.add(task2_gold_datum);
+                           i++;
+                       }
                    }//else ignore this sentence
                }else //normal data entry
                {
@@ -734,23 +712,15 @@ private int getFirstSpanOffset(String spans)
                            //System.out.println("### Majority marker:" + strMarker);
                            if(!strMarker.equals("none") && !strMarker.equals("\"none\""))
                            {
-                               strMarkers.add(strMarker);
                                JsonNode marker = mapper.readTree(strMarker);
                                int start = marker.path("s").getIntValue();
                                int end = marker.path("e").getIntValue();
-                               startMarkers.add(start);
-                               endMarkers.add(end);
-                               NE.add(extractSpan(text, start, end));
-                           }
-                       }
 
-                       //add data entries to data that should be uploaded
-                       for(int i = 0; i < NE.size(); i++)
-                       {
-                           //NamedEntityTask2Data(String text, String toDecide, String posText, String tokenOffset, String document, String ist_todecide_ein_gold, String ist_todecide_ein_gold_reason)
-                           NamedEntityTask2Data task2_datum = new NamedEntityTask2Data(text,NE.get(i),strMarkers.get(i),
-                                   String.valueOf(getFirstSpanOffset(text)),document);
-                           uploadData.add(task2_datum);
+                               NamedEntityTask2Data task2_datum = new NamedEntityTask2Data(text,extractSpan(text, start, end),strMarker,
+                                       String.valueOf(getFirstSpanOffset(text)),document);
+                               task2_datum.setDocOffset(offset);
+                               uploadData.add(task2_datum);
+                           }
                        }
 
                    }else
@@ -780,14 +750,123 @@ private int getFirstSpanOffset(String spans)
        return job.getId();
    }
 
+private BufferedReader getReaderForRawJudgments(String jobID)
+    throws UnsupportedEncodingException, IOException, Exception
+{
+        Log LOG = LogFactory.getLog(getClass());
+        LOG.info("Retrieving data for job: " + jobID);
+
+       //retrieve job data
+       CrowdJob job = crowdclient.retrieveJob(jobID);
+
+       LOG.info("Retrieving raw judgments for job: " + jobID);
+       //rawdata is a multiline JSON file
+       String rawdata = crowdclient.retrieveRawJudgments(job);
+
+       if (rawdata == null || rawdata.equals(""))
+       {
+           throw new Exception("No data retrieved for task1 at #" + jobID + ". Crowdflower might need more time to prepare your data, try again in one minute.");
+       }
+
+       LOG.info("Got " + rawdata.length() + " chars");
+
+       StringReader reader = new StringReader(rawdata);
+       BufferedReader br = new BufferedReader(reader);
+    return br;
+}
+
    /**
     * Aggregates and sets final judgments in the JCases provided by documentsJCas.
     * @param jobID2
     * @param documentsJCas
+ * @throws Exception
+ * @throws IOException
+ * @throws UnsupportedEncodingException
     */
-   public void retrieveAggJudgmentsTask2(String jobID2, List<JCas> documentsJCas)
+   public void retrieveAggJudgmentsTask2(String jobID2, List<JCas> documentsJCas) throws UnsupportedEncodingException, IOException, Exception
    {
+       Log LOG = LogFactory.getLog(getClass());
 
+       BufferedReader br = getReaderForRawJudgments(jobID2);
+       String line;
+
+       //JSON object mapper
+       ObjectMapper mapper = new ObjectMapper();
+       //ObjectWriter writer = mapper.writer();
+
+       //this is only for testing purposes. TODO: make this multi-document aware
+       JCas cas = documentsJCas.get(0);
+
+       //Maps our own token offsets (needed by JS in the crowdflower task) to Jcas offsets
+       HashMap<Integer,Integer> charStartMapping = new HashMap<Integer,Integer>();
+       HashMap<Integer,Integer> charEndMapping = new HashMap<Integer,Integer>();
+
+       int i=0;
+       for (Sentence sentence : select(cas, Sentence.class)) {
+           for (Token token : selectCovered(Token.class, sentence)) {
+
+           charStartMapping.put(i, token.getBegin());
+           charEndMapping.put(i, token.getEnd());
+
+           i++;
+           }
+       }
+
+       while((line=br.readLine())!=null)
+       {
+           //try to process each line, omit data if an error occurs (but inform user)
+           try
+           {
+               JsonNode elem = mapper.readTree(line);
+               String text = elem.path("data").path("text").getTextValue();
+               String state = elem.path("state").getTextValue();
+               if (state.equals("finalized"))
+               {
+                   String typeExplicit = elem.path("results").path("ist_todecide_eine").path("agg").getTextValue();
+                   String type = ne2TaskMap.get(typeExplicit);
+                   String posText = elem.path("data").path("posText").getTextValue();
+                   int offset = 0;
+
+                   if(!elem.path("data").path("docOffset").isMissingNode())
+                   {
+                       offset = elem.path("data").path("docOffset").getIntValue();
+                   }else
+                   {
+                       //hack for job #251025 with missing offset field
+                       offset = 20;
+                   }
+
+                   JsonNode marker = mapper.readTree(posText);
+                   int start = marker.path("s").getIntValue();
+                   int end = marker.path("e").getIntValue();
+
+                   NamedEntity newEntity = new NamedEntity(cas, charStartMapping.get(start-offset), charEndMapping.get(end-offset));
+                   newEntity.setValue(type);
+
+                   newEntity.addToIndexes();
+               }
+
+           }catch(Exception e)
+           {
+               LOG.warn("Warning, omitted a sentence from task2 import because of an error in processing it: " + e.getMessage());
+               //debug
+               e.printStackTrace();
+               //TODO: inform user that there was a problem
+           }
+       }
+
+       /*for(JCas cas : documentsJCas)
+       {
+           int startOffset=0;
+           int endOffset=0;
+           String type;
+
+           //TODO: is there an existing annotation?
+
+           NamedEntity newEntity = new NamedEntity(cas, startOffset, endOffset);
+           newEntity.setValue(type);
+
+           newEntity.addToIndexes;
+       }*/
    }
-
 }
