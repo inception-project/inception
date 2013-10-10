@@ -20,23 +20,47 @@
 <head>
 <wicket:head>
 	<script type="text/javascript" src="client/lib/jquery.min.js"></script>
+	<style>
+div.wicket-aa {
+	font-family: "Lucida Grande", "Lucida Sans Unicode", Tahoma, Verdana;
+	font-size: 12px;
+	background-color: white;
+	border-width: 1px;
+	border-color: #cccccc;
+	border-style: solid;
+	padding: 2px;
+	margin: 1px 0 0 0;
+	text-align: left;
+}
+
+div.wicket-aa ul {
+	list-style: none;
+	padding: 2px;
+	margin: 0;
+}
+
+div.wicket-aa ul li.selected {
+	background-color: #FFFF00;
+	padding: 2px;
+	margin: 0;
+}
+</style>
 </wicket:head>
 </head>
 <body>
 	<form wicket:id="annotationDialogForm">
 		<table>
 			<tr>
-				<td>Selected Text:
-				</td>
+				<td>Selected Text:</td>
 				<td><span wicket:id="selectedText"></span></td>
 			</tr>
 			<tr>
 				<td>Layers/TagSets:<select name="TagSets" wicket:id="tagSets"></select>
 				</td>
-				<td>tags:<input type="text" wicket:id="tags" style="width: 200px" />
-				</td>
+				<td><input type="text" wicket:id="tags" /></td>
 			</tr>
 			<tr>
+
 				<td>
 					<button class="buttons" wicket:id="annotate">Ok</button>
 					<button class="buttons" wicket:id="delete">Delete</button>

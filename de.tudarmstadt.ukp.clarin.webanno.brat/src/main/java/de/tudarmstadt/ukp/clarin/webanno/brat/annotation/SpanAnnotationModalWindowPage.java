@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.servlet.http.HttpSession;
@@ -33,6 +34,8 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
 import org.apache.wicket.behavior.Behavior;
+import org.apache.wicket.extensions.ajax.markup.html.autocomplete.AutoCompleteSettings;
+import org.apache.wicket.extensions.ajax.markup.html.autocomplete.AutoCompleteTextField;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.IHeaderResponse;
 import org.apache.wicket.markup.html.WebPage;
@@ -46,9 +49,6 @@ import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
-
-import com.visural.wicket.component.dropdown.DropDown;
-import com.visural.wicket.component.dropdown.DropDownDataSource;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
@@ -64,6 +64,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 
 /**
  * A page that is used to display an annotation modal dialog for span annotation
+ *
  * @author Seid Muhie Yimam
  *
  */
@@ -80,13 +81,13 @@ public class SpanAnnotationModalWindowPage
 
     @SpringBean(name = "jsonConverter")
     private MappingJacksonHttpMessageConverter jsonConverter;
-    private DropDownDataSource annotationTypesDataSource;
-    private DropDownDataSource tagsDataSource;
-    DropDown<Tag> tagsDropDown;
+
+    AutoCompleteTextField<String> tags;
     boolean isModify = false;
     TagSet selectedtTagSet;
-    Model<Tag> tagsModel;
+
     Model<TagSet> tagSetsModel;
+    Model<Tag> tagsModel;
     private AnnotationDialogForm annotationDialogForm;
     private BratAnnotatorModel bratAnnotatorModel;
     String offsets;
@@ -130,33 +131,45 @@ public class SpanAnnotationModalWindowPage
                 tagsModel = new Model<Tag>(null);
             }
 
-            tagsDataSource = new DropDownDataSource<Tag>()
-            {
-                private static final long serialVersionUID = 2234038471648260812L;
-
-                @Override
-                public String getName()
-                {
-                    return "tags";
-                }
-
-                @Override
-                public List<Tag> getValues()
-                {
-                    return annotationService.listTags(selectedtTagSet);
-                }
-
-                @Override
-                public String getDescriptionForValue(Tag t)
-                {
-                    return t.getName();
-                }
-            };
-
             add(new Label("selectedText", selectedText));
 
-            tagsDropDown = new DropDown<Tag>("tags", tagsModel, tagsDataSource, true);
-            add(tagsDropDown.setEnableFilterToggle(false).setOutputMarkupId(true));
+            AutoCompleteSettings settings = new AutoCompleteSettings();
+            settings.setShowListOnEmptyInput(true);
+            settings.setShowListOnFocusGain(true);
+            settings.setUseSmartPositioning(true);
+
+            tags = new AutoCompleteTextField<String>("tags", new Model<String>(
+                    tagsModel.getObject() == null ? "" : tagsModel.getObject().getName()), settings)
+            {
+                private static final long serialVersionUID = 4361134516011334739L;
+
+                @Override
+                protected Iterator<String> getChoices(String input)
+                {
+                    List<String> choices = new ArrayList<String>();
+                    for (Tag tag : annotationService.listTags(selectedtTagSet)) {
+
+                        if (tag.getName().toUpperCase().startsWith(input.toUpperCase())) {
+                            choices.add(tag.getName());
+                        }
+                    }
+                    return choices.iterator();
+                }
+
+            };
+/*            tags.add(new AjaxFormComponentUpdatingBehavior("ondblclick")
+            {
+                private static final long serialVersionUID = 1381680080441080656L;
+
+                @Override
+                protected void onUpdate(AjaxRequestTarget aTarget)
+                {
+                    tags.setModel(new Model<String>(""));
+                    aTarget.add(tags);
+                }
+            });*/
+
+            add(tags);
 
             add(new DropDownChoice<TagSet>("tagSets", tagSetsModel, spanLayers)
             {
@@ -166,8 +179,7 @@ public class SpanAnnotationModalWindowPage
                 protected void onSelectionChanged(TagSet aNewSelection)
                 {
                     selectedtTagSet = aNewSelection;
-                    tagsModel = new Model<Tag>(annotationService.listTags(selectedtTagSet).get(0));
-                    updateTags(tagsModel, selectedtTagSet);
+                    tags.setModel(new Model<String>(""));
                 }
 
                 @Override
@@ -202,16 +214,7 @@ public class SpanAnnotationModalWindowPage
                     response.renderOnLoadJavaScript("$('#" + component.getMarkupId()
                             + "').focus();Wicket.Window.unloadConfirmation = false;");
                 }
-            })
-            /*
-             * .add(new AjaxFormComponentUpdatingBehavior("onchange") { private static final long
-             * serialVersionUID = 1381680080441080656L;
-             *
-             * @Override protected void onUpdate(AjaxRequestTarget aTarget) { selectedtTagSet =
-             * ((TagSet) tagSetsModel.getObject()); tagsModel = new
-             * Model<Tag>(annotationService.listTags(selectedtTagSet).get(0)); updateTags(tagsModel,
-             * selectedtTagSet, aTarget); } })
-             */);
+            }));
 
             add(new AjaxButton("annotate")
             {
@@ -236,7 +239,8 @@ public class SpanAnnotationModalWindowPage
                                 + ((Offsets) offsetLists.get(0)).getEnd();
 
                         String annotationType = "";
-                        Tag selectedTag = (Tag) tagsModel.getObject();
+                        Tag selectedTag = (Tag) annotationService.getTag(tags.getModelObject(),
+                                selectedtTagSet);
                         if (selectedTag == null) {
                             aTarget.appendJavaScript("alert('No Tag is selected!')");
                         }
@@ -303,7 +307,8 @@ public class SpanAnnotationModalWindowPage
 
                         AnnotationFS idFs = (AnnotationFS) jCas.getLowLevelCas().ll_getFSForRef(
                                 selectedSpanId);
-                        Tag selectedTag = (Tag) tagsModel.getObject();
+                        Tag selectedTag = (Tag) annotationService.getTag(tags.getModelObject(),
+                                selectedtTagSet);
                         String annotationType = BratAjaxCasUtil.getType(selectedTag);
                         if (annotationType.startsWith(AnnotationTypeConstant.POS_PREFIX)) {
                             aTarget.appendJavaScript("alert('POS annotations can\\'t be deleted!')");
@@ -347,36 +352,6 @@ public class SpanAnnotationModalWindowPage
                 }
             });
         }
-    }
-
-    private void updateTags(Model<Tag> tagsModel, final TagSet newSelection)
-    {
-        tagsDropDown.remove();
-        tagsDropDown = new DropDown<Tag>("tags", tagsModel, new DropDownDataSource<Tag>()
-        {
-            private static final long serialVersionUID = 2234038471648260812L;
-
-            @Override
-            public String getName()
-            {
-                return "tags";
-            }
-
-            @Override
-            public List<Tag> getValues()
-            {
-                return new ArrayList<Tag>(annotationService.listTags(newSelection));
-            }
-
-            @Override
-            public String getDescriptionForValue(Tag t)
-            {
-                return t.getName();
-            }
-        }, true);
-
-        annotationDialogForm.add(tagsDropDown.setEnableFilterToggle(false));
-        tagsDropDown.setOutputMarkupId(true);
     }
 
     private JCas getCas(BratAnnotatorModel aBratAnnotatorModel)
