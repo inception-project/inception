@@ -40,8 +40,8 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 
-import com.visural.wicket.component.dropdown.DropDown;
-import com.visural.wicket.component.dropdown.DropDownDataSource;
+import com.googlecode.wicket.jquery.ui.kendo.combobox.ComboBox;
+import com.googlecode.wicket.jquery.ui.kendo.combobox.ComboBoxRenderer;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
@@ -72,12 +72,6 @@ public class ArcAnnotationModalWindowPage
     @SpringBean(name = "jsonConverter")
     private MappingJacksonHttpMessageConverter jsonConverter;
 
-    private DropDownDataSource annotationTypesDataSource;
-
-    private DropDownDataSource tagsDataSource;
-
-    DropDown tagsDropDown;
-
     // A flag to keep checking if new annotation is to be made or an existing annotation is double
     // clciked.
     boolean isModify = false;
@@ -90,8 +84,10 @@ public class ArcAnnotationModalWindowPage
     // The selected Tag for the arc annotation
     TagSet selectedtTag;
 
-    Model tagsModel;
-    Model tagSetsModel;
+    Model<Tag> tagsModel;
+    Model<TagSet> tagSetsModel;
+
+    ComboBox<Tag> tags;
 
     private AnnotationDialogForm annotationDialogForm;
     private BratAnnotatorModel bratAnnotatorModel;
@@ -117,47 +113,28 @@ public class ArcAnnotationModalWindowPage
                 if (bratAnnotatorModel.getRememberedArcTagSet() != null
                         && selectedtTagSet.getName().equals(
                                 bratAnnotatorModel.getRememberedArcTagSet().getName())) {
-                    tagSetsModel = new Model(selectedtTagSet);
-                    tagsModel = new Model(bratAnnotatorModel.getRememberedArcTag());
+                    tagSetsModel = new Model<TagSet>(selectedtTagSet);
+                    tagsModel = new Model<Tag>(bratAnnotatorModel.getRememberedArcTag());
                 }
                 else {
-                    tagSetsModel = new Model(selectedtTagSet);
-                    tagsModel = new Model(null);
+                    tagSetsModel = new Model<TagSet>(selectedtTagSet);
+                    tagsModel = new Model<Tag>(null);
                 }
 
             }
             else {
-                tagSetsModel = new Model(selectedtTagSet);
+                tagSetsModel = new Model<TagSet>(selectedtTagSet);
                 Tag tag = annotationService.getTag(BratAjaxCasUtil.getType(selectedArcType),
                         selectedtTagSet);
-                tagsModel = new Model(tag);
+                tagsModel = new Model<Tag>(tag);
             }
 
-            tagsDataSource = new DropDownDataSource<Tag>()
-            {
-                private static final long serialVersionUID = 2234038471648260812L;
+            tags= new ComboBox<Tag>("tags", new Model<String>(
+                    tagsModel.getObject() == null ? "" : tagsModel.getObject().getName()),
+                    annotationService.listTags(selectedtTagSet), new ComboBoxRenderer<Tag>("name",
+                            "name"));
+            add(tags);
 
-                @Override
-                public String getName()
-                {
-                    return "tags";
-                }
-
-                @Override
-                public List<Tag> getValues()
-                {
-                    return annotationService.listTags(selectedtTagSet);
-                }
-
-                @Override
-                public String getDescriptionForValue(Tag t)
-                {
-                    return t.getName();
-                }
-            };
-
-            tagsDropDown = new DropDown("tags", tagsModel, tagsDataSource, true);
-            add(tagsDropDown.setEnableFilterToggle(false));
 
             add(new DropDownChoice<TagSet>("tagSets", tagSetsModel,
                     Arrays.asList(new TagSet[] { selectedtTagSet })).setNullValid(false)
@@ -173,6 +150,8 @@ public class ArcAnnotationModalWindowPage
                         }
                     }).setOutputMarkupId(true).add(new Behavior()
                     {
+                        private static final long serialVersionUID = -4468214709292758331L;
+
                         @Override
                         public void renderHead(Component component, IHeaderResponse response)
                         {
@@ -184,7 +163,7 @@ public class ArcAnnotationModalWindowPage
 
             add(new AjaxSubmitLink("annotate")
             {
-                private static final long serialVersionUID = 1L;
+                private static final long serialVersionUID = 8922161039500097566L;
 
                 @Override
                 public void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
@@ -193,14 +172,16 @@ public class ArcAnnotationModalWindowPage
                             annotationService);
                     JCas jCas;
                     try {
-                        jCas = jCas = getCas(bratAnnotatorModel);
+                        jCas = getCas(bratAnnotatorModel);
 
                         String annotationType = "";
-                        Tag selectedTag = (Tag) tagsModel.getObject();
-                        if (selectedTag == null) {
+
+                        if (tags.getModelObject() == null) {
                             aTarget.appendJavaScript("alert('No Tag is selected!')");
                         }
                         else {
+                            Tag selectedTag = (Tag) annotationService.getTag(tags.getModelObject(),
+                                    selectedtTagSet);
                             annotationType = BratAjaxCasUtil.getType(selectedTag);
 
                             AnnotationFS originFs = (AnnotationFS) jCas.getLowLevelCas()

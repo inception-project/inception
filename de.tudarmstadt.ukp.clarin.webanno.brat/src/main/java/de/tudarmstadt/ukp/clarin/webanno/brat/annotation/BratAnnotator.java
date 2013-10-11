@@ -139,12 +139,11 @@ public class BratAnnotator
         final ModalWindow openAnnotationDialog;
         add(openAnnotationDialog = new ModalWindow("openAnnotationDialog"));
         openAnnotationDialog.setOutputMarkupId(true);
-        openAnnotationDialog.setInitialWidth(550);
-        openAnnotationDialog.setInitialHeight(450);
+        openAnnotationDialog.setInitialWidth(450);
+        openAnnotationDialog.setInitialHeight(280);
         openAnnotationDialog.setResizable(true);
         openAnnotationDialog.setWidthUnit("px");
         openAnnotationDialog.setHeightUnit("px");
-        openAnnotationDialog.setCssClassName(openAnnotationDialog.CSS_CLASS_BLUE);
 
         controller = new AbstractDefaultAjaxBehavior()
         {

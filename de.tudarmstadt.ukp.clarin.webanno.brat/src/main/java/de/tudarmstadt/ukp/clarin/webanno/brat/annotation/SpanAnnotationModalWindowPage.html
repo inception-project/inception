@@ -20,31 +20,10 @@
 <head>
 <wicket:head>
 	<script type="text/javascript" src="client/lib/jquery.min.js"></script>
-	<style>
-div.wicket-aa {
-	font-family: "Lucida Grande", "Lucida Sans Unicode", Tahoma, Verdana;
-	font-size: 12px;
-	background-color: white;
-	border-width: 1px;
-	border-color: #cccccc;
-	border-style: solid;
-	padding: 2px;
-	margin: 1px 0 0 0;
-	text-align: left;
-}
-
-div.wicket-aa ul {
-	list-style: none;
-	padding: 2px;
-	margin: 0;
-}
-
-div.wicket-aa ul li.selected {
-	background-color: #FFFF00;
-	padding: 2px;
-	margin: 0;
-}
-</style>
+	<link rel="stylesheet" type="text/css"
+		href="css/kendo/kendo.common.min.css" media="all" />
+	<link rel="stylesheet" type="text/css"
+		href="css/kendo/kendo.default.min.css" media="all" />
 </wicket:head>
 </head>
 <body>
@@ -55,9 +34,14 @@ div.wicket-aa ul li.selected {
 				<td><span wicket:id="selectedText"></span></td>
 			</tr>
 			<tr>
-				<td>Layers/TagSets:<select name="TagSets" wicket:id="tagSets"></select>
+				<td>Layers/TagSets</td>
+				<td>Tags</td>
+			</tr>
+			<tr  VALIGN=TOP>
+				<td><select name="TagSets" wicket:id="tagSets"
+					style="width: 150px"></select></td>
+				<td><input type="text" wicket:id="tags" style="width: 150px" />
 				</td>
-				<td><input type="text" wicket:id="tags" /></td>
 			</tr>
 			<tr>
 

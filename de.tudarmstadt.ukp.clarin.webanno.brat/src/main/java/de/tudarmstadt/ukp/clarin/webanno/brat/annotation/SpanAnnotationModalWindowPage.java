@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.servlet.http.HttpSession;
@@ -34,8 +33,6 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
 import org.apache.wicket.behavior.Behavior;
-import org.apache.wicket.extensions.ajax.markup.html.autocomplete.AutoCompleteSettings;
-import org.apache.wicket.extensions.ajax.markup.html.autocomplete.AutoCompleteTextField;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.IHeaderResponse;
 import org.apache.wicket.markup.html.WebPage;
@@ -48,7 +45,11 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.odlabs.wiquery.ui.resizable.ResizableBehavior;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
+
+import com.googlecode.wicket.jquery.ui.kendo.combobox.ComboBox;
+import com.googlecode.wicket.jquery.ui.kendo.combobox.ComboBoxRenderer;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
@@ -82,7 +83,7 @@ public class SpanAnnotationModalWindowPage
     @SpringBean(name = "jsonConverter")
     private MappingJacksonHttpMessageConverter jsonConverter;
 
-    AutoCompleteTextField<String> tags;
+    ComboBox<Tag> tags;
     boolean isModify = false;
     TagSet selectedtTagSet;
 
@@ -133,42 +134,10 @@ public class SpanAnnotationModalWindowPage
 
             add(new Label("selectedText", selectedText));
 
-            AutoCompleteSettings settings = new AutoCompleteSettings();
-            settings.setShowListOnEmptyInput(true);
-            settings.setShowListOnFocusGain(true);
-            settings.setUseSmartPositioning(true);
-
-            tags = new AutoCompleteTextField<String>("tags", new Model<String>(
-                    tagsModel.getObject() == null ? "" : tagsModel.getObject().getName()), settings)
-            {
-                private static final long serialVersionUID = 4361134516011334739L;
-
-                @Override
-                protected Iterator<String> getChoices(String input)
-                {
-                    List<String> choices = new ArrayList<String>();
-                    for (Tag tag : annotationService.listTags(selectedtTagSet)) {
-
-                        if (tag.getName().toUpperCase().startsWith(input.toUpperCase())) {
-                            choices.add(tag.getName());
-                        }
-                    }
-                    return choices.iterator();
-                }
-
-            };
-/*            tags.add(new AjaxFormComponentUpdatingBehavior("ondblclick")
-            {
-                private static final long serialVersionUID = 1381680080441080656L;
-
-                @Override
-                protected void onUpdate(AjaxRequestTarget aTarget)
-                {
-                    tags.setModel(new Model<String>(""));
-                    aTarget.add(tags);
-                }
-            });*/
-
+            tags= new ComboBox<Tag>("tags", new Model<String>(
+                    tagsModel.getObject() == null ? "" : tagsModel.getObject().getName()),
+                    annotationService.listTags(selectedtTagSet), new ComboBoxRenderer<Tag>("name",
+                            "name"));
             add(tags);
 
             add(new DropDownChoice<TagSet>("tagSets", tagSetsModel, spanLayers)
@@ -179,7 +148,10 @@ public class SpanAnnotationModalWindowPage
                 protected void onSelectionChanged(TagSet aNewSelection)
                 {
                     selectedtTagSet = aNewSelection;
-                    tags.setModel(new Model<String>(""));
+                    tagsModel.setObject(null);
+
+                    updateTagsComboBox();
+
                 }
 
                 @Override
@@ -214,10 +186,12 @@ public class SpanAnnotationModalWindowPage
                     response.renderOnLoadJavaScript("$('#" + component.getMarkupId()
                             + "').focus();Wicket.Window.unloadConfirmation = false;");
                 }
-            }));
+            }).add(new ResizableBehavior()));
 
             add(new AjaxButton("annotate")
             {
+                private static final long serialVersionUID = 980971048279862290L;
+
                 @Override
                 protected void onSubmit(AjaxRequestTarget aTarget, Form<?> form)
                 {
@@ -239,12 +213,13 @@ public class SpanAnnotationModalWindowPage
                                 + ((Offsets) offsetLists.get(0)).getEnd();
 
                         String annotationType = "";
-                        Tag selectedTag = (Tag) annotationService.getTag(tags.getModelObject(),
-                                selectedtTagSet);
-                        if (selectedTag == null) {
+
+                        if (tags.getModelObject() == null) {
                             aTarget.appendJavaScript("alert('No Tag is selected!')");
                         }
                         else {
+                            Tag selectedTag = (Tag) annotationService.getTag(tags.getModelObject(),
+                                    selectedtTagSet);
                             annotationType = BratAjaxCasUtil.getType(selectedTag);
 
                             controller.addSpanToCas(jCas, start, end, annotationType, null, null);
@@ -351,6 +326,15 @@ public class SpanAnnotationModalWindowPage
                     return isModify;
                 }
             });
+        }
+        private void updateTagsComboBox()
+        {
+            tags.remove();
+            tags= new ComboBox<Tag>("tags", new Model<String>(
+                    tagsModel.getObject() == null ? "" : tagsModel.getObject().getName()),
+                    annotationService.listTags(selectedtTagSet), new ComboBoxRenderer<Tag>("name",
+                            "name"));
+            add(tags);
         }
     }
 

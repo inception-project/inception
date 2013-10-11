@@ -20,15 +20,23 @@
 <head>
 <wicket:head>
 	<script type="text/javascript" src="client/lib/jquery.min.js"></script>
+	<link rel="stylesheet" type="text/css"
+		href="css/kendo/kendo.common.min.css" media="all" />
+	<link rel="stylesheet" type="text/css"
+		href="css/kendo/kendo.default.min.css" media="all" />
 </wicket:head>
 </head>
-  <wicket:panel>
+<wicket:panel>
 	<form wicket:id="annotationDialogForm">
 		<table>
 			<tr>
-				<td>Layer/TagSet:<select name="TagSets" wicket:id="tagSets"></select>
+				<td>Layers/TagSets</td>
+				<td>Tags</td>
+			</tr>
+			<tr  VALIGN=TOP>
+				<td><select name="TagSets" wicket:id="tagSets" style="width: 150px" ></select>
 				</td>
-				<td>tags: <input type="text" wicket:id="tags" />
+				<td><input type="text" wicket:id="tags" style="width: 150px" />
 				</td>
 			</tr>
 			<tr>
