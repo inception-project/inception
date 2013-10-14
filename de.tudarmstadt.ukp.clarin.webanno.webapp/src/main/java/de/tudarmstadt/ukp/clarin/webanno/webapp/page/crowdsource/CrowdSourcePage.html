@@ -49,6 +49,10 @@
                     Name:
                   </label>
                   <input type="text" wicket:id="name" />
+                  <br/>
+                  <input type="submit" wicket:id="save" />
+                  <input type="submit" wicket:id="remove" />
+                  <br/>
                 </div>
                 
                  <div>
@@ -61,7 +65,7 @@
                   <label>
                     ApiKey:
                   </label>
-                  <input type="text" wicket:id="apiKey" />
+                  <input type="text" wicket:id="apiKey" style="width:300px;"/>
                 </div>
                 <br/>
                 <div>
@@ -83,6 +87,8 @@
                   </label>
                   <span wicket:id="status">
                   </span>
+                  <input type="submit" wicket:id="update" />
+                  <br/>
                 </div>
                 <br/>
                 <div>
@@ -91,11 +97,16 @@
                   </label>
                   <select wicket:id="documents" class ="hfill">
                   </select>
-                  <label>
-                    Available sentences:
+                  <input type="submit" wicket:id="addDocuments" />
+                  <input type="submit" wicket:id="removeDocument" />
+                   <label>
+                   &nbsp;|&nbsp;
                   </label>
                   <span wicket:id="availSentences">
                   </span>
+                  <label>
+                    &nbsp;available sentences.
+                  </label>
                   <label>
                     Use:
                   </label>
@@ -108,11 +119,15 @@
                   </label>
                   <select wicket:id="goldDocuments" class ="hfill">
                   </select>
+                  <input type="submit" wicket:id="addGoldDocuments" />
                   <label>
-                    Available sentences:
+                   &nbsp;|&nbsp;
                   </label>
-                  <span wicket:id="availGoldSentences">
+                  <span wicket:id="availGoldSentences">     
                   </span>
+                  <label>
+                    &nbsp;available sentences.
+                  </label>
                   <label>
                     Use:
                   </label>
@@ -120,16 +135,31 @@
                 </div>
                 <br/>
                 
-                <div class="buttons">
-                  <input type="submit" wicket:id="save" />
-                  <input type="submit" wicket:id="remove" />
-                  <input type="submit" wicket:id="addDocuments" /> 
-                  <input type="submit" wicket:id="addGoldDocuments" /> 
-                  <input type="submit" wicket:id="removeDocument" />
+                <div class="crowdflower">
+				<label>
+                    Crowdflower.com:
+                  </label>
+                  <br/>
+                  <br/>
+                  <label><small>
+                    Create a new job for task1 on crowdflower.com using the supplied documents to be annotated and the curated documents used as gold
+                  </small></label> <br/>
                   <input type="submit" wicket:id="uploadT1" />
+                  <br/>
+                  <br/>
+                  <label><small>
+                    Create a new job for task2 out of a successful task1. Make sure that the job has finished, as only finalized judgments are used to further annotate the data.
+                  </small></label>           
+                  <br/>
                   <input type="submit" wicket:id="uploadT2" />
-                  <input type="submit" wicket:id="retrieveT2" />
-                  <input type="submit" wicket:id="update" />
+                  <br/>
+                  <br/>  
+                  <label><small>
+                  	Retrieve final judgments and annotate the documents in WebAnno. If there are previous crowd-annotated NEs, they will be overwritten.
+                  </small></label>
+                  <br/>
+                  <input type="submit" wicket:id="retrieveT2" />     
+                   <br/>                
                 </div>
               </fieldset>
             </form>
