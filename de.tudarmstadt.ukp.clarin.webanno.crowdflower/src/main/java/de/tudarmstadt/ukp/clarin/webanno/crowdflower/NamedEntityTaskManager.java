@@ -46,7 +46,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
-public class NamedEntityTaskManager implements Serializable
+public class NamedEntityTaskManager
+    implements Serializable
 {
 
     private static final long serialVersionUID = -166689748276508297L;
@@ -60,7 +61,7 @@ public class NamedEntityTaskManager implements Serializable
 
     private static Map<String, String> task2NeMap;
 
-    //static mapping of WebAnno short forms to user displayed types in Crowdflower
+    // static mapping of WebAnno short forms to user displayed types in Crowdflower
     static {
         task2NeMap = new HashMap<String, String>();
         task2NeMap.put("PER", "Person");
@@ -73,6 +74,7 @@ public class NamedEntityTaskManager implements Serializable
 
     private static Map<String, String> ne2TaskMap;
 
+    // static mapping of user displayed types in Crowdflower to WebAnno short forms
     static {
         ne2TaskMap = new HashMap<String, String>();
         ne2TaskMap.put("Person", "PER");
@@ -87,15 +89,16 @@ public class NamedEntityTaskManager implements Serializable
     }
 
     /**
-     * Generates a new job on crowdflower.com based on the supplied template string.
-     * The new job won't have any data items
+     * Generates a new job on crowdflower.com based on the supplied template string. The new job
+     * won't have any data items
      *
      * @param template
      * @return
      * @throws JsonProcessingException
      * @throws IOException
      */
-    public CrowdJob createJob(String template) throws JsonProcessingException, IOException
+    public CrowdJob createJob(String template)
+        throws JsonProcessingException, IOException
     {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode jsonTemplate = mapper.readTree(template);
@@ -103,7 +106,16 @@ public class NamedEntityTaskManager implements Serializable
         return crowdclient.createNewJob(job);
     }
 
-    public static String concatWithSeperator(Collection<String> words, String seperator) {
+    /**
+     * Helper function to concatenate a list of strings with the supplied seperator
+     * {"item","item3","test"} -> "item,item3,test"
+     *
+     * @param words
+     * @param seperator
+     * @return string
+     */
+    private static String concatWithSeperator(Collection<String> words, String seperator)
+    {
         StringBuilder wordList = new StringBuilder();
         for (String word : words) {
             wordList.append(new String(word) + seperator);
@@ -111,48 +123,52 @@ public class NamedEntityTaskManager implements Serializable
         return new String(wordList.deleteCharAt(wordList.length() - 1));
     }
 
- /**
-  * Generate data for NER task1. This is quite specific code, but a more general version could one day extend this.
-  * @param documentsJCas List of Cas containing either the documents to be annotated or gold documents
-  * @param goldOffset This is an offset to the token number that is send to Crowdflower, so that (i - goldOffset) = real token offset in webanno.
-  *                     This is needed so that continuous token numbers can be send to Crowdflower
-  * @param generateGold
-  * @return
- * @throws Exception
-  */
-    public Vector<NamedEntityTask1Data> generateTask1Data(List<JCas>documentsJCas, int goldOffset, boolean generateGold, int limit) throws Exception
+    /**
+     * Generate data for NER task1. This is a quite specific function exclusively for German NER,
+     * but a more general version could one day replace this.
+     *
+     * @param documentsJCas
+     *            List of Cas containing either the documents to be annotated or gold documents
+     * @param goldOffset
+     *            This is an offset to the token number that is send to Crowdflower, so that (i -
+     *            goldOffset) = real token offset in webanno. This is needed so that continuous
+     *            token numbers can be send to Crowdflower
+     * @param generateGold
+     * @return
+     * @throws Exception
+     */
+    public Vector<NamedEntityTask1Data> generateTask1Data(List<JCas> documentsJCas, int goldOffset,
+            boolean generateGold, int limit)
+        throws Exception
     {
         Log LOG = LogFactory.getLog(getClass());
         Vector<NamedEntityTask1Data> data = new Vector<NamedEntityTask1Data>();
-        int i=goldOffset;
+        int i = goldOffset;
         StringBuilder textBuilder = new StringBuilder();
         int docNo = 0;
 
-        jcasloop:
-        for (JCas documentJCas : documentsJCas)
-        {
+        jcasloop: for (JCas documentJCas : documentsJCas) {
             int offset = i;
-            int documentSize = documentJCas.size();
 
             int sentenceNo = 0;
             LOG.info("Generating data for document: " + docNo + "/" + documentsJCas.size());
-            LOG.info("Document size: " + documentSize);
+
             for (Sentence sentence : select(documentJCas, Sentence.class)) {
 
-                //if global limit of sentences reached, abort whole iteration
-                if(limit != -1 && sentenceNo >= limit) {
+                // if global limit of sentences reached, abort whole iteration
+                if (limit != -1 && sentenceNo >= limit) {
                     break jcasloop;
                 }
 
                 textBuilder.setLength(0);
 
-                //Maps our own token offsets (needed by JS in the crowdflower task) to Jcas offsets
-                HashMap<Integer,Integer> charOffsetStartMapping = new HashMap<Integer,Integer>();
-                HashMap<Integer,Integer> charOffsetEndMapping = new HashMap<Integer,Integer>();
+                // Maps our own token offsets (needed by JS in the crowdflower task) to Jcas offsets
+                HashMap<Integer, Integer> charOffsetStartMapping = new HashMap<Integer, Integer>();
+                HashMap<Integer, Integer> charOffsetEndMapping = new HashMap<Integer, Integer>();
 
                 for (Token token : selectCovered(Token.class, sentence)) {
 
-                    //check that token offsets match to (i - goldOffset)
+                    // check that token offsets match to (i - goldOffset)
                     String tokenString = new String(token.getCoveredText());
                     textBuilder.append("<span id=\"token=");
                     textBuilder.append(String.valueOf(i));
@@ -168,16 +184,14 @@ public class NamedEntityTaskManager implements Serializable
 
                 String text = new String(textBuilder);
 
-                //clear string builder
+                // clear string builder
                 textBuilder.setLength(0);
 
-                //System.out.println(text);
                 NamedEntityTask1Data task1Data = new NamedEntityTask1Data(text);
                 task1Data.setOffset(offset);
-                task1Data.setDocument("S"+String.valueOf(docNo));
+                task1Data.setDocument("S" + String.valueOf(docNo));
 
-                if (generateGold)
-                {
+                if (generateGold) {
                     ArrayList<String> goldElems = new ArrayList<String>();
                     ArrayList<String> goldTokens = new ArrayList<String>();
                     ArrayList<String> goldTypes = new ArrayList<String>();
@@ -185,54 +199,54 @@ public class NamedEntityTaskManager implements Serializable
                     int lastNeBegin = -1;
                     int lastNeEnd = -1;
 
-                    for (NamedEntity namedEntity : selectCovered(NamedEntity.class, sentence))
-                    {
-                        List<Token> tokens = selectCovered(documentJCas, Token.class, namedEntity.getBegin(),
-                                namedEntity.getEnd());
+                    for (NamedEntity namedEntity : selectCovered(NamedEntity.class, sentence)) {
+                        List<Token> tokens = selectCovered(documentJCas, Token.class,
+                                namedEntity.getBegin(), namedEntity.getEnd());
 
                         List<String> strTokens = new ArrayList<String>();
 
-                        //transform List<Tokens> to List<Strings>
-                        for (Token t : tokens )
-                        {
+                        // transform List<Tokens> to List<Strings>
+                        for (Token t : tokens) {
                             strTokens.add(new String(t.getCoveredText()));
                         }
 
-                        String strToken = concatWithSeperator(strTokens," ");
+                        String strToken = concatWithSeperator(strTokens, " ");
                         String type = namedEntity.getValue();
-
 
                         int neBegin = namedEntity.getBegin();
                         int neEnd = namedEntity.getEnd();
-                        String strElem = buildTask1TokenJSON(textBuilder, namedEntity,charOffsetStartMapping,charOffsetEndMapping);
+                        String strElem = buildTask1TokenJSON(textBuilder, namedEntity,
+                                charOffsetStartMapping, charOffsetEndMapping);
 
-                        LOG.debug("Checking new gold elem " + strElem + " Begin:" + neBegin + " End:" + neEnd);
-                        //nested NE's
-                        if(lastNeEnd != -1 && neBegin <= lastNeEnd)
-                        {
-                            LOG.debug("Nested NE! Last ne size: " + (lastNeEnd - lastNeBegin) + " this NE:" + (neEnd - neBegin));
-                            //this NE is bigger = better
-                            if((neEnd - neBegin) > (lastNeEnd - lastNeBegin))
-                            {
-                                //remove last NE
-                                goldElems.remove(goldElems.size()-1);
-                                goldTokens.remove(goldElems.size()-1);
-                                goldTypes.remove(goldElems.size()-1);
+                        LOG.debug("Checking new gold elem " + strElem + " Begin:" + neBegin
+                                + " End:" + neEnd);
 
-                                //add new NE
+                        // handling of nested NEs
+                        if (lastNeEnd != -1 && neBegin <= lastNeEnd) {
+                            LOG.debug("Nested NE! Last ne size: " + (lastNeEnd - lastNeBegin)
+                                    + " this NE:" + (neEnd - neBegin));
+                            // this NE is bigger = better
+                            if ((neEnd - neBegin) > (lastNeEnd - lastNeBegin)) {
+                                // remove last NE
+                                goldElems.remove(goldElems.size() - 1);
+                                goldTokens.remove(goldElems.size() - 1);
+                                goldTypes.remove(goldElems.size() - 1);
+
+                                // add new NE
                                 goldElems.add(strElem);
                                 goldTokens.add(strToken);
                                 goldTypes.add(type);
 
                                 lastNeBegin = neBegin;
                                 lastNeEnd = neEnd;
-                            }//else ignore this NE, keep last one
-                            else
-                            {
-                                LOG.debug("Ignored elem " + strElem + " because it is a nested NE and previous NE is bigger");
+                            }// else ignore this NE, keep last one
+                            else {
+                                LOG.debug("Ignored elem " + strElem
+                                        + " because it is a nested NE and previous NE is bigger");
                             }
-                        }else{
-                            //standard case, no nested NE, or first NE
+                        }
+                        else {
+                            // standard case, no nested NE, or first NE of nested NEs
                             goldElems.add(strElem);
                             goldTokens.add(strToken);
                             goldTypes.add(type);
@@ -242,16 +256,20 @@ public class NamedEntityTaskManager implements Serializable
                         }
                     }
 
-                    //Standard case: no gold elements
+                    // Standard case: no gold elements
                     String strTypes = "[]";
                     String strGold = "[\"none\"]";
                     String strGoldReason = noGoldNER1Reason;
                     int difficulty = 1;
 
-                    //Case where we have gold elements and want to give feedback to the crowd user
-                    if(goldElems.size() > 0)
-                    {
+                    // Case where we have gold elements and want to give feedback to the crowd user
+                    if (goldElems.size() > 0) {
                         strGold = buildTask1GoldElem(textBuilder, goldElems);
+
+                        // Difficulty is used to hint Crowdflower that more difficult sentences (the
+                        // ones
+                        // where users must mark many NEs) are displayed with less probability.
+
                         difficulty = goldElems.size();
 
                         strTypes = buildTask1GoldElem(textBuilder, goldTypes);
@@ -263,10 +281,11 @@ public class NamedEntityTaskManager implements Serializable
                     task1Data.setMarkertext_gold_reason(strGoldReason);
 
                     task1Data.setTypes(strTypes);
-                    task1Data.setDocument("G"+String.valueOf(docNo));
+                    task1Data.setDocument("G" + String.valueOf(docNo));
 
                     // Marker flag for crowdflower that this data is gold data.
-                    // Still need to click on "convert uploaded gold" manually in the interface.
+                    // Note: Users still need to click on "convert uploaded gold" manually in the
+                    // interface.
                     task1Data.set_golden("TRUE");
                 }
 
@@ -280,7 +299,8 @@ public class NamedEntityTaskManager implements Serializable
     }
 
     /**
-     * Helper method for generateTask1Data, builds a string that explains to the user which named entities he had to select
+     * Helper method for generateTask1Data, builds a string that explains to the user which named
+     * entities he had to select
      *
      * @param textBuilder
      * @param goldTokens
@@ -293,7 +313,7 @@ public class NamedEntityTaskManager implements Serializable
         textBuilder.append("Der Text beinhaltet ");
         textBuilder.append(goldTokens.size());
         textBuilder.append(" Named Entiti(es): ");
-        textBuilder.append(escapeHtml(concatWithSeperator(goldTokens,", ")));
+        textBuilder.append(escapeHtml(concatWithSeperator(goldTokens, ", ")));
         textBuilder.append(goldNER1ReasonHints);
 
         strGoldReason = new String(textBuilder);
@@ -301,9 +321,9 @@ public class NamedEntityTaskManager implements Serializable
     }
 
     /**
-     * Helper method for generateTask1Data, concatenates all JSON formatted
-     * tokens (sorted by position) which is then the gold solution and contains
-     * markers to all NE in the text fragment.
+     * Helper method for generateTask1Data, concatenates all JSON formatted tokens (sorted by
+     * position) which is then the gold solution and contains markers to all NE in the text
+     * fragment.
      *
      * This same format is produced by the JS in the crowdflower.com task1.
      *
@@ -315,30 +335,35 @@ public class NamedEntityTaskManager implements Serializable
     {
         String strGold;
         textBuilder.setLength(0);
-        //strGold = "["+concatWithSeperator(goldElems,",")+"]";
+        // strGold = "["+concatWithSeperator(goldElems,",")+"]";
         textBuilder.append("[");
-        textBuilder.append(concatWithSeperator(goldElems,","));
+        textBuilder.append(concatWithSeperator(goldElems, ","));
         textBuilder.append("]");
         strGold = new String(textBuilder);
         return strGold;
     }
 
     /**
-     * Helper method for generateTask1Data, builds a single JSON formatted elemented describing
-     * start and end position of a named entity.
+     * Helper method for generateTask1Data, builds a single JSON formatted element describing start
+     * and end position of a named entity.
+     *
      * @param textBuilder
      * @param namedEntity
      * @return
      * @throws Exception
      */
-    private String buildTask1TokenJSON(StringBuilder textBuilder, NamedEntity namedEntity, HashMap<Integer,Integer> charOffsetStartMapping, HashMap<Integer,Integer> charOffsetEndMapping) throws Exception
+    private String buildTask1TokenJSON(StringBuilder textBuilder, NamedEntity namedEntity,
+            HashMap<Integer, Integer> charOffsetStartMapping,
+            HashMap<Integer, Integer> charOffsetEndMapping)
+        throws Exception
     {
-        //JSON named enitity marker for the gold data. The JSON here gets enclosed into the data JSON that is uploaded
-        //"{\"s\":"+begin+",\"e\":"+end+"}"
-        if(!charOffsetStartMapping.containsKey(namedEntity.getBegin())
-           || !charOffsetEndMapping.containsKey(namedEntity.getEnd()))
-        {
-            throw new Exception("Data generation error: char offset to token mapping is inconsistent. Contact developpers!");
+        // JSON named enitity marker for the gold data. The JSON here gets enclosed into the data
+        // JSON that is uploaded
+        // "{\"s\":"+begin+",\"e\":"+end+"}"
+        if (!charOffsetStartMapping.containsKey(namedEntity.getBegin())
+                || !charOffsetEndMapping.containsKey(namedEntity.getEnd())) {
+            throw new Exception(
+                    "Data generation error: char offset to token mapping is inconsistent. Contact developpers!");
         }
 
         int start = charOffsetStartMapping.get(namedEntity.getBegin());
@@ -356,6 +381,7 @@ public class NamedEntityTaskManager implements Serializable
 
     /**
      * Set apiKey to the underlying Crowdclient which manages the crowdflower.com REST-protocol
+     *
      * @param key
      */
     public void setAPIKey(String key)
@@ -365,21 +391,23 @@ public class NamedEntityTaskManager implements Serializable
         crowdclient.setApiKey(key);
     }
 
-    public String uploadNewNERTask2(String template, List<JCas>documentsJCas , List<JCas>goldsJCas, String task1Id)
-            throws JsonProcessingException, IOException, Exception
+    public String uploadNewNERTask2(String template, List<JCas> documentsJCas,
+            List<JCas> goldsJCas, String task1Id)
+        throws JsonProcessingException, IOException, Exception
     {
         System.out.println();
         return "";
     }
 
-    public String uploadNewNERTask1(String template, List<JCas>documentsJCas , List<JCas>goldsJCas)
-            throws JsonProcessingException, IOException, Exception
-            {
-                return uploadNewNERTask1(template, documentsJCas , goldsJCas, -1 , -1);
-            }
+    public String uploadNewNERTask1(String template, List<JCas> documentsJCas, List<JCas> goldsJCas)
+        throws JsonProcessingException, IOException, Exception
+    {
+        return uploadNewNERTask1(template, documentsJCas, goldsJCas, -1, -1);
+    }
 
     /**
-     * Upload a new NER task1 (german) to crowdflower.com. This method is called from the crowd page and is the starting point for a new task1 upload.
+     * Upload a new NER task1 (German) to crowdflower.com. This method is called from the crowd page
+     * and is the starting point for a new task1 upload.
      *
      * @param template
      * @param documentsJCas
@@ -390,13 +418,14 @@ public class NamedEntityTaskManager implements Serializable
      * @throws Exception
      */
 
-    public String uploadNewNERTask1(String template, List<JCas>documentsJCas , List<JCas>goldsJCas, int useSents , int useGoldSents)
-            throws JsonProcessingException, IOException, Exception
+    public String uploadNewNERTask1(String template, List<JCas> documentsJCas,
+            List<JCas> goldsJCas, int useSents, int useGoldSents)
+        throws JsonProcessingException, IOException, Exception
     {
         Log LOG = LogFactory.getLog(getClass());
         LOG.info("Creating new Job for Ner task 1.");
         CrowdJob job = createJob(template);
-        LOG.info("Done, new job id is: "+job.getId()+". Now generating data for NER task 1");
+        LOG.info("Done, new job id is: " + job.getId() + ". Now generating data for NER task 1");
 
         setAllowedCountries(job);
         crowdclient.updateAllowedCountries(job);
@@ -405,21 +434,20 @@ public class NamedEntityTaskManager implements Serializable
 
         Vector<NamedEntityTask1Data> goldData = new Vector<NamedEntityTask1Data>();
 
-        //if we have gold data, than generate data for it
-        if(goldsJCas != null && goldsJCas.size() > 0)
-        {
+        // if we have gold data, than generate data for it
+        if (goldsJCas != null && goldsJCas.size() > 0) {
             LOG.info("Gold data available, generating gold data first.");
-            goldData = generateTask1Data(goldsJCas,0,true, useGoldSents);
+            goldData = generateTask1Data(goldsJCas, 0, true, useGoldSents);
             goldOffset = goldData.size();
         }
 
         LOG.info("Generate normal task data.");
-        Vector<NamedEntityTask1Data> data = generateTask1Data(documentsJCas,goldOffset,false,useSents);
+        Vector<NamedEntityTask1Data> data = generateTask1Data(documentsJCas, goldOffset, false,
+                useSents);
 
         Vector<NamedEntityTask1Data> mergedData = new Vector<NamedEntityTask1Data>();
 
-        if(goldsJCas != null && goldsJCas.size() > 0)
-        {
+        if (goldsJCas != null && goldsJCas.size() > 0) {
 
             mergedData.addAll(goldData);
         }
@@ -428,15 +456,15 @@ public class NamedEntityTaskManager implements Serializable
 
         LOG.info("Job data prepared, starting upload.");
         LOG.info("Uploading data to job #" + job.getId());
-        crowdclient.uploadData(job,mergedData);
+        crowdclient.uploadData(job, mergedData);
         LOG.info("Done, finished uploading data to #" + job.getId());
         return job.getId();
     }
 
     private void setAllowedCountries(CrowdJob job)
     {
-        //by default, allow only German speaking countries
-        //would be better to make this configurable
+        // by default, allow only German speaking countries
+        // would be better to make this configurable
         Vector<String> includedCountries = new Vector<String>();
         includedCountries.add("DE");
         includedCountries.add("AT");
@@ -446,427 +474,422 @@ public class NamedEntityTaskManager implements Serializable
 
     /**
      * Gets called from Crowdflower page to determine URL for a given job
+     *
      * @param jobID
      * @return
      */
 
-   public String getURLforID(String jobID)
+    public String getURLforID(String jobID)
     {
-        return "https://crowdflower.com/jobs/"+jobID+"/";
+        return "https://crowdflower.com/jobs/" + jobID + "/";
     }
 
-   public String getStatusString(String jobID1, String jobID2)
-   {
-       //first case: no job ids
-       if((jobID1 == null || jobID1.equals("")) && (jobID2 == null || jobID2.equals("")))
-       {
-           return "No jobs uploaded.";
-       }
-       //second case, got first job id
-       else if(!(jobID1 == null || jobID1.equals("")) && (jobID2 == null || jobID2.equals("")))
-       {
-           JsonNode status = crowdclient.getStatus(jobID1);
+    public String getStatusString(String jobID1, String jobID2)
+    {
+        // first case: no job ids
+        if ((jobID1 == null || jobID1.equals("")) && (jobID2 == null || jobID2.equals(""))) {
+            return "No jobs uploaded.";
+        }
+        // second case, got first job id
+        else if (!(jobID1 == null || jobID1.equals("")) && (jobID2 == null || jobID2.equals(""))) {
+            JsonNode status = crowdclient.getStatus(jobID1);
 
-           int uploadedUnits = -1;
-           boolean finsished = false;
+            int uploadedUnits = -1;
+            boolean finsished = false;
 
-           if(status != null && status.has("count") && status.has("done"))
-           {
-               uploadedUnits = status.path("count").getIntValue();
-               finsished = status.path("done").getBooleanValue();
-           }
-           else
-           {
-               return "Error retrieving status";
-           }
+            if (status != null && status.has("count") && status.has("done")) {
+                uploadedUnits = status.path("count").getIntValue();
+                finsished = status.path("done").getBooleanValue();
+            }
+            else {
+                return "Error retrieving status";
+            }
 
-           return "Job1 has "+uploadedUnits+" uploaded units and is "+
-           (finsished ? " finished. You can continue with task 2." :
-               " not yet finished. Check the link for more information on crowdflower.com. You have to finish task1 before doing task2.");
-       }else
-       {
-           return "Todo: not yet implemented";
-       }
-   }
+            return "Job1 has "
+                    + uploadedUnits
+                    + " uploaded units and is "
+                    + (finsished ? " finished. You can continue with task 2."
+                            : " not yet finished. Check the link for more information on crowdflower.com. You have to finish task1 before doing task2.");
+        }
+        else {
+            return "Todo: not yet implemented";
+        }
+    }
 
+    /**
+     * Helper function for uploadNewNERTask2: Get the string char position of the i-th span from the
+     * HTML token spans that the crowdflower job task1 uses to display a textfragment.
+     *
+     * @param spans
+     * @param spannumber
+     * @return
+     * @throws Exception
+     */
+    private int getSpanPos(String spans, int spannumber)
+        throws Exception
+    {
+        // find all occurrences <span> forward
+        int count = 0;
+        for (int i = -1; (i = spans.indexOf("<span ", i + 1)) != -1;) {
+            if (spannumber == count) {
+                return i;
+            }
+            count++;
+        }
+        throw new Exception("Index not found:" + spannumber);
+    }
 
-   /**
-    * Get the string char position of the i-th span from the HTML token spans that the crowdflower job task1 uses to display a textfragment.
-    * @param spans
-    * @param spannumber
-    * @return
-    * @throws Exception
-    */
-   private int getSpanPos(String spans, int spannumber) throws Exception
-   {
-       // find all occurrences <span> forward
-       int count = 0;
-       for (int i = -1; (i = spans.indexOf("<span ", i + 1)) != -1; ) {
-           if (spannumber==count)
-           {
-                   return i;
-           }
-           count++;
-       }
-       throw new Exception("Index not found:" + spannumber);
-   }
+    /**
+     * Helper function for uploadNewNERTask2: Extract certain spans from the HTML token spans that
+     * the Crowdflower job task1 uses to display a text fragment.
+     *
+     * @param spans
+     * @param start
+     * @param end
+     * @return
+     * @throws Exception
+     */
+    private String extractSpan(String spans, int start, int end)
+        throws Exception
+    {
+        int offset = getFirstSpanOffset(spans);
 
+        assert (start >= offset);
+        assert (end >= offset);
 
-   /**
-    * Extract certain spans from the HTML token spans that the crowdflower job task1 uses to display a textfragment.
-    * @param spans
-    * @param start
-    * @param end
-    * @return
-    * @throws Exception
-    */
-   private String extractSpan(String spans, int start, int end) throws Exception
-   {
-       int offset = getFirstSpanOffset(spans);
+        // so that the text has a span beyond the last one
+        spans += "<span ";
 
-       assert(start >= offset);
-       assert(end >= offset);
+        int substart = getSpanPos(spans, start - offset);
+        int subend = getSpanPos(spans, end - offset + 1);
 
-       //to have a span beyond the last one
-       spans += "<span ";
+        return spans.substring(substart, subend);
+    }
 
-       int substart = getSpanPos(spans,start-offset);
-       int subend = getSpanPos(spans,end-offset+1);
+    private int getFirstSpanOffset(String spans)
+    {
+        String firstNum = "0";
+        boolean foundDigit = false;
 
-       return spans.substring(substart,subend);
-   }
+        // span beginn will look like: "<span id='token=num'>", so will just search the first number
+        // in the string
 
-private int getFirstSpanOffset(String spans)
-{
-    String firstNum = "0";
-       boolean foundDigit = false;
+        /*
+         * regex for this would be: Pattern p = Pattern.compile("(^|\\s)([0-9]+)($|\\s)"); Matcher m
+         * = p.matcher(s); if (m.find()) { String num = m.group(2); }
+         */
 
-       //span beginn will look like: "<span id='token=num'>", so will just search the first number in the string
+        // but hey, extractSpan gets called a lot, this is probably much faster:
 
-       /*regex for this would be:
-       Pattern p = Pattern.compile("(^|\\s)([0-9]+)($|\\s)");
-       Matcher m = p.matcher(s);
-       if (m.find()) {
-           String num = m.group(2);
-       }*/
+        for (int i = 0; i < spans.length(); i++) {
+            if (Character.isDigit(spans.charAt(i))) {
+                foundDigit = true;
+                firstNum = firstNum + Character.toString(spans.charAt(i));
+            }
+            else if (foundDigit && !Character.isDigit(spans.charAt(i))) {
+                break;
+            }
+        }
 
-       //but hey, extractSpan gets called a lot, this is probably much faster:
+        int offset = Integer.valueOf(firstNum);
+        return offset;
+    }
 
-       for(int i=0; i < spans.length(); i++)
-       {
-           if(Character.isDigit(spans.charAt(i)))
-           {
-               foundDigit = true;
-               firstNum = firstNum+Character.toString(spans.charAt(i));
-           }else if(foundDigit && !Character.isDigit(spans.charAt(i)))
-           {
-               break;
-           }
-       }
+    /**
+     * Uploads a new task2 to Crowdflower, producing all data entirely of the raw judgments file
+     * retrieved from a task1 ID.
+     *
+     * @param template
+     * @param jobID1
+     * @param documentsJCas
+     * @param goldsJCas
+     * @return
+     * @throws JsonProcessingException
+     * @throws IOException
+     * @throws Exception
+     */
 
-       int offset = Integer.valueOf(firstNum);
-    return offset;
-}
+    public String uploadNewNERTask2(String template, String jobID1, List<JCas> documentsJCas,
+            List<JCas> goldsJCas)
+        throws JsonProcessingException, IOException, Exception
+    {
+        Log LOG = LogFactory.getLog(getClass());
 
-   /**
-    * Uploads a new task2 to Crowdflower, producing data for the new out of a task-1 ID.
-    * @param template
-    * @param jobID1
-    * @param documentsJCas
-    * @param goldsJCas
-    * @return
-    * @throws JsonProcessingException
-    * @throws IOException
-    * @throws Exception
-    */
+        // Reader that also downloades the raw judgments for the supplied job id
+        BufferedReader br = getReaderForRawJudgments(jobID1);
+        String line;
 
-   public String uploadNewNERTask2(String template, String jobID1, List<JCas>documentsJCas , List<JCas>goldsJCas)
-           throws JsonProcessingException, IOException, Exception
-   {
-       Log LOG = LogFactory.getLog(getClass());
+        // JSON object mapper
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectWriter writer = mapper.writer();
 
-       BufferedReader br = getReaderForRawJudgments(jobID1);
-       String line;
+        // Used to represent task2 data that is send as JSON to crowdflower
+        Vector<NamedEntityTask2Data> uploadData = new Vector<NamedEntityTask2Data>();
 
-       //JSON object mapper
-       ObjectMapper mapper = new ObjectMapper();
-       ObjectWriter writer = mapper.writer();
+        // Judgments come in as a quite exotic multiline-json, we need to parse every line of it
+        // separately
+        while ((line = br.readLine()) != null) {
+            // try to process each line, omit data if an error occurs (but inform user)
+            try {
+                JsonNode elem = mapper.readTree(line);
+                String text = elem.path("data").path("text").getTextValue();
+                String state = elem.path("state").getTextValue();
 
-       //used to represent task2 data that is send as JSON to crowdflower
-       Vector<NamedEntityTask2Data> uploadData = new Vector<NamedEntityTask2Data>();
+                // omit hidden gold items
+                if (state.equals("hidden_gold")) {
+                    continue;
+                }
 
-       //judgments come in as a quite exotic multiline-json, we need to parse every line of it separately
-       while((line=br.readLine())!=null)
-       {
-           //try to process each line, omit data if an error occurs (but inform user)
-           try{
-               //System.out.println("line:" + line.substring(0, 300) + "...");
+                String document = elem.path("data").path("document").getTextValue();
+                int offset = elem.path("data").path("offset").getIntValue();
 
-               JsonNode elem = mapper.readTree(line);
-               String text = elem.path("data").path("text").getTextValue();
-               String state = elem.path("state").getTextValue();
-               //System.out.println("state:" + state);
+                if (state.equals("golden")) {
+                    // produce gold data
+                    String markertext_gold = elem.path("data").path("markertext_gold")
+                            .getTextValue();
+                    String types = elem.path("data").path("types").getTextValue();
 
-               //boolean isGold = !elem.path("data").path("_golden").isMissingNode();
+                    if (!types.equals("[]")) {
+                        // sentence has atleast one NE
+                        List<String> NEtypes = Arrays.asList(types.substring(1, types.length() - 1)
+                                .split(","));
 
-               boolean isGold = (state.equals("golden"));
+                        JsonNode markers = mapper.readTree(markertext_gold);
 
-               if(state.equals("hidden_gold"))
-               {
-                   continue;
-               }
+                        if (NEtypes.size() != markers.size()) {
+                            LOG.warn("Warning, skipping ill formated gold item in task1! (NEtypes.size() != markers.size())");
+                            continue;
+                        }
 
-               String document = elem.path("data").path("document").getTextValue();
-               int offset = elem.path("data").path("offset").getIntValue();
+                        int i = 0;
+                        for (JsonNode marker : markers) {
+                            int start = marker.path("s").getIntValue();
+                            int end = marker.path("e").getIntValue();
 
-               if(isGold)
-               {
-                   //produce gold data
-                   String markertext_gold = elem.path("data").path("markertext_gold").getTextValue();
-                   String types = elem.path("data").path("types").getTextValue();
+                            NamedEntityTask2Data task2_gold_datum = new NamedEntityTask2Data(text,
+                                    extractSpan(text, start, end),
+                                    writer.writeValueAsString(marker),
+                                    String.valueOf(getFirstSpanOffset(text)), document,
+                                    task2NeMap.get(NEtypes.get(i)), bogusNER2Reason);
 
-                   //System.out.println("markertext_gold:" + markertext_gold);
-                   //System.out.println("types:" + types);
+                            task2_gold_datum.setDocOffset(offset);
+                            uploadData.add(task2_gold_datum);
+                            i++;
+                        }
+                    }// else ignore this sentence
+                }
+                else // normal data entry
+                {
+                    if (!elem.path("results").path("judgments").isMissingNode()) {
+                        Map<String, Integer> votings = new HashMap<String, Integer>();
+                        // Majority voting for each marker in all judgments
+                        for (JsonNode judgment : elem.path("results").path("judgments")) {
+                            if (!judgment.path("data").path("markertext").isMissingNode()) {
+                                String markertext = judgment.path("data").path("markertext")
+                                        .getTextValue();
+                                System.out.println("markertext votes:" + markertext);
 
-                   if(!types.equals("[]"))
-                   {
-                       //sentence has atleast one NE
-                       List<String> NEtypes = Arrays.asList(types.substring(1, types.length()-1).split(","));
+                                JsonNode markers = mapper.readTree(markertext);
 
-                       JsonNode markers = mapper.readTree(markertext_gold);
+                                // iterate over votes
+                                for (JsonNode marker : markers) {
+                                    String voteText = writer.writeValueAsString(marker);
 
-                       if(NEtypes.size() != markers.size())
-                       {
-                           LOG.warn("Warning, skipping ill formated gold item in task1! (NEtypes.size() != markers.size())");
-                           continue;
-                       }
+                                    // first case: add entry for this voting position
+                                    if (!votings.containsKey(voteText)) {
+                                        votings.put(voteText, 1);
+                                    }// second case: increment voting
+                                    else {
+                                        votings.put(voteText, votings.get(voteText) + 1);
+                                    }
+                                }
+                            }
+                            else {
+                                LOG.warn("Warning, missing path in JSON result file from crowdflower: results/judgments");
+                            }
+                        }
+                        // TODO: get this from actual job or even better, make it user configurable
+                        int votes_needed = 2;
 
-                       int i=0;
-                       for(JsonNode marker : markers)
-                       {
-                           int start = marker.path("s").getIntValue();
-                           int end = marker.path("e").getIntValue();
+                        List<String> majorityMarkers = new ArrayList<String>();
 
-                           NamedEntityTask2Data task2_gold_datum = new NamedEntityTask2Data(text,extractSpan(text, start, end),writer.writeValueAsString(marker),
-                                   String.valueOf(getFirstSpanOffset(text)),document,task2NeMap.get(NEtypes.get(i)),bogusNER2Reason);
+                        for (String vote : votings.keySet()) {
+                            System.out.println("Vote: " + vote + "=" + votings.get(vote));
+                            if (votings.get(vote) >= votes_needed) {
+                                majorityMarkers.add(vote);
+                            }
+                        }
 
-                           task2_gold_datum.setDocOffset(offset);
-                           uploadData.add(task2_gold_datum);
-                           i++;
-                       }
-                   }//else ignore this sentence
-               }else //normal data entry
-               {
-                   //System.out.println("Gen2 normal entry");
-                   if(!elem.path("results").path("judgments").isMissingNode())
-                   {
-                       Map<String, Integer> votings = new HashMap<String, Integer>();
-                       //Majority voting for each marker in all judgments
-                       for (JsonNode judgment : elem.path("results").path("judgments"))
-                       {
-                           if(!judgment.path("data").path("markertext").isMissingNode())
-                           {
-                               String markertext = judgment.path("data").path("markertext").getTextValue();
-                               System.out.println("markertext votes:" + markertext);
+                        // process majority markers
+                        for (String strMarker : majorityMarkers) {
+                            if (!strMarker.equals("none") && !strMarker.equals("\"none\"")) {
+                                JsonNode marker = mapper.readTree(strMarker);
+                                int start = marker.path("s").getIntValue();
+                                int end = marker.path("e").getIntValue();
 
-                               JsonNode markers = mapper.readTree(markertext);
+                                NamedEntityTask2Data task2_datum = new NamedEntityTask2Data(text,
+                                        extractSpan(text, start, end), strMarker,
+                                        String.valueOf(getFirstSpanOffset(text)), document);
+                                task2_datum.setDocOffset(offset);
+                                uploadData.add(task2_datum);
+                            }
+                        }
 
-                               //iterate over votes
-                               for(JsonNode marker : markers)
-                               {
-                                   String voteText = writer.writeValueAsString(marker);
-                                   //System.out.println("vote: " + voteText);
+                    }
+                    else {
+                        LOG.warn("Warning, missing path in JSON result file from crowdflower: data/markertext");
+                    }
+                }
+            }
+            catch (Exception e) {
+                LOG.warn("Warning, omitted a sentence from task2 upload because of an error in processing it: "
+                        + e.getMessage());
+                // debug
+                e.printStackTrace();
+                // TODO: inform user that there was a problem
+            }
+        }
 
-                                   //first case: add entry for this voting position
-                                   if(!votings.containsKey(voteText))
-                                   {
-                                       votings.put(voteText, 1);
-                                   }//second case: increment voting
-                                   else
-                                   {
-                                       votings.put(voteText, votings.get(voteText)+1);
-                                   }
-                               }
-                           }else
-                           {
-                               LOG.warn("Warning, missing path in JSON result file from crowdflower: results/judgments");
-                           }
-                       }
-                       //TODO: get this from actual job or even better, make it user configurable
-                       int votes_needed = 2;
+        LOG.info("Data generation complete. Creating new Job for Ner task 2.");
+        CrowdJob job = createJob(template);
+        setAllowedCountries(job);
+        crowdclient.updateAllowedCountries(job);
+        LOG.info("Done, new job id is: " + job.getId() + ". Now generating data for NER task 2");
 
-                       List<String> majorityMarkers = new ArrayList<String>();
+        crowdclient.uploadData(job, uploadData);
 
-                       for(String vote : votings.keySet())
-                       {
-                           System.out.println("Vote: " + vote + "=" + votings.get(vote));
-                           if (votings.get(vote) >= votes_needed)
-                           {
-                               majorityMarkers.add(vote);
-                           }
-                       }
+        LOG.info("Done uploading data to task2 #" + job.getId() + ".");
 
-                       //process majority markers
-                       for(String strMarker : majorityMarkers)
-                       {
-                           //System.out.println("### Majority marker:" + strMarker);
-                           if(!strMarker.equals("none") && !strMarker.equals("\"none\""))
-                           {
-                               JsonNode marker = mapper.readTree(strMarker);
-                               int start = marker.path("s").getIntValue();
-                               int end = marker.path("e").getIntValue();
+        return job.getId();
+    }
 
-                               NamedEntityTask2Data task2_datum = new NamedEntityTask2Data(text,extractSpan(text, start, end),strMarker,
-                                       String.valueOf(getFirstSpanOffset(text)),document);
-                               task2_datum.setDocOffset(offset);
-                               uploadData.add(task2_datum);
-                           }
-                       }
+    /**
+     * Helper function for uploadNewNERTask2 and retrieveAggJudgmentsTask2 that retrieves the raw
+     * judgments for the supplied ID and returns a buffered reader for it.
+     *
+     * @param jobID
+     * @return
+     * @throws UnsupportedEncodingException
+     * @throws IOException
+     * @throws Exception
+     */
 
-                   }else
-                   {
-                       LOG.warn("Warning, missing path in JSON result file from crowdflower: data/markertext");
-                   }
-               }
-           }catch(Exception e)
-           {
-               LOG.warn("Warning, omitted a sentence from task2 upload because of an error in processing it: " + e.getMessage());
-               //debug
-               e.printStackTrace();
-               //TODO: inform user that there was a problem
-           }
-       }
-
-       LOG.info("Data generation complete. Creating new Job for Ner task 2.");
-       CrowdJob job = createJob(template);
-       setAllowedCountries(job);
-       crowdclient.updateAllowedCountries(job);
-       LOG.info("Done, new job id is: "+job.getId()+". Now generating data for NER task 2");
-
-       crowdclient.uploadData(job,uploadData);
-
-       LOG.info("Done uploading data to task2 #"+job.getId()+".");
-
-       return job.getId();
-   }
-
-private BufferedReader getReaderForRawJudgments(String jobID)
-    throws UnsupportedEncodingException, IOException, Exception
-{
+    private BufferedReader getReaderForRawJudgments(String jobID)
+        throws UnsupportedEncodingException, IOException, Exception
+    {
         Log LOG = LogFactory.getLog(getClass());
         LOG.info("Retrieving data for job: " + jobID);
 
-       //retrieve job data
-       CrowdJob job = crowdclient.retrieveJob(jobID);
+        // retrieve job data
+        CrowdJob job = crowdclient.retrieveJob(jobID);
 
-       LOG.info("Retrieving raw judgments for job: " + jobID);
-       //rawdata is a multiline JSON file
-       String rawdata = crowdclient.retrieveRawJudgments(job);
+        LOG.info("Retrieving raw judgments for job: " + jobID);
+        // rawdata is a multiline JSON file
+        String rawdata = crowdclient.retrieveRawJudgments(job);
 
-       if (rawdata == null || rawdata.equals(""))
-       {
-           throw new Exception("No data retrieved for task1 at #" + jobID + ". Crowdflower might need more time to prepare your data, try again in one minute.");
-       }
+        if (rawdata == null || rawdata.equals("")) {
+            throw new Exception(
+                    "No data retrieved for task1 at #"
+                            + jobID
+                            + ". Crowdflower might need more time to prepare your data, try again in one minute.");
+        }
 
-       LOG.info("Got " + rawdata.length() + " chars");
+        LOG.info("Got " + rawdata.length() + " chars");
 
-       StringReader reader = new StringReader(rawdata);
-       BufferedReader br = new BufferedReader(reader);
-    return br;
-}
+        StringReader reader = new StringReader(rawdata);
+        BufferedReader br = new BufferedReader(reader);
+        return br;
+    }
 
-   /**
-    * Aggregates and sets final judgments in the JCases provided by documentsJCas.
-    * @param jobID2
-    * @param documentsJCas
- * @throws Exception
- * @throws IOException
- * @throws UnsupportedEncodingException
-    */
-   public void retrieveAggJudgmentsTask2(String jobID2, List<JCas> documentsJCas) throws UnsupportedEncodingException, IOException, Exception
-   {
-       Log LOG = LogFactory.getLog(getClass());
+    /**
+     * Aggregates and sets final judgments in the JCases provided by documentsJCas.
+     *
+     * @param jobID2
+     * @param documentsJCas
+     * @throws Exception
+     * @throws IOException
+     * @throws UnsupportedEncodingException
+     */
+    public void retrieveAggJudgmentsTask2(String jobID2, List<JCas> documentsJCas)
+        throws UnsupportedEncodingException, IOException, Exception
+    {
+        Log LOG = LogFactory.getLog(getClass());
 
-       BufferedReader br = getReaderForRawJudgments(jobID2);
-       String line;
+        BufferedReader br = getReaderForRawJudgments(jobID2);
+        String line;
 
-       //JSON object mapper
-       ObjectMapper mapper = new ObjectMapper();
-       //ObjectWriter writer = mapper.writer();
+        // JSON object mapper
+        ObjectMapper mapper = new ObjectMapper();
+        // ObjectWriter writer = mapper.writer();
 
-       //this is only for testing purposes. TODO: make this multi-document aware
-       JCas cas = documentsJCas.get(0);
+        // This is only for testing purposes. TODO: make this multi-document aware
+        JCas cas = documentsJCas.get(0);
 
-       //Maps our own token offsets (needed by JS in the crowdflower task) to Jcas offsets
-       HashMap<Integer,Integer> charStartMapping = new HashMap<Integer,Integer>();
-       HashMap<Integer,Integer> charEndMapping = new HashMap<Integer,Integer>();
+        // Maps our own token offsets (needed by JS in the crowdflower task) to Jcas offsets
+        HashMap<Integer, Integer> charStartMapping = new HashMap<Integer, Integer>();
+        HashMap<Integer, Integer> charEndMapping = new HashMap<Integer, Integer>();
 
-       int i=0;
-       for (Sentence sentence : select(cas, Sentence.class)) {
-           for (Token token : selectCovered(Token.class, sentence)) {
+        int i = 0;
+        for (Sentence sentence : select(cas, Sentence.class)) {
+            for (Token token : selectCovered(Token.class, sentence)) {
 
-           charStartMapping.put(i, token.getBegin());
-           charEndMapping.put(i, token.getEnd());
+                charStartMapping.put(i, token.getBegin());
+                charEndMapping.put(i, token.getEnd());
 
-           i++;
-           }
-       }
+                i++;
+            }
+        }
 
-       while((line=br.readLine())!=null)
-       {
-           //try to process each line, omit data if an error occurs (but inform user)
-           try
-           {
-               JsonNode elem = mapper.readTree(line);
-               String text = elem.path("data").path("text").getTextValue();
-               String state = elem.path("state").getTextValue();
-               if (state.equals("finalized"))
-               {
-                   String typeExplicit = elem.path("results").path("ist_todecide_eine").path("agg").getTextValue();
-                   String type = ne2TaskMap.get(typeExplicit);
-                   String posText = elem.path("data").path("posText").getTextValue();
-                   int offset = 0;
+        while ((line = br.readLine()) != null) {
+            // try to process each line, omit data if an error occurs (but inform user)
+            try {
+                JsonNode elem = mapper.readTree(line);
+                String text = elem.path("data").path("text").getTextValue();
+                String state = elem.path("state").getTextValue();
+                if (state.equals("finalized")) {
+                    String typeExplicit = elem.path("results").path("ist_todecide_eine")
+                            .path("agg").getTextValue();
+                    String type = ne2TaskMap.get(typeExplicit);
+                    String posText = elem.path("data").path("posText").getTextValue();
+                    int offset = 0;
 
-                   if(!elem.path("data").path("docOffset").isMissingNode())
-                   {
-                       offset = elem.path("data").path("docOffset").getIntValue();
-                   }else
-                   {
-                       //hack for job #251025 with missing offset field
-                       offset = 20;
-                   }
+                    if (!elem.path("data").path("docOffset").isMissingNode()) {
+                        offset = elem.path("data").path("docOffset").getIntValue();
+                    }
+                    else {
+                        // hack for job #251025 with missing offset field
+                        offset = 20;
+                    }
 
-                   JsonNode marker = mapper.readTree(posText);
-                   int start = marker.path("s").getIntValue();
-                   int end = marker.path("e").getIntValue();
+                    JsonNode marker = mapper.readTree(posText);
+                    int start = marker.path("s").getIntValue();
+                    int end = marker.path("e").getIntValue();
 
-                   NamedEntity newEntity = new NamedEntity(cas, charStartMapping.get(start-offset), charEndMapping.get(end-offset));
-                   newEntity.setValue(type);
+                    NamedEntity newEntity = new NamedEntity(cas, charStartMapping.get(start
+                            - offset), charEndMapping.get(end - offset));
+                    newEntity.setValue(type);
+                    newEntity.addToIndexes();
+                }
 
-                   newEntity.addToIndexes();
-               }
+            }
+            catch (Exception e) {
+                LOG.warn("Warning, omitted a sentence from task2 import because of an error in processing it: "
+                        + e.getMessage());
+                // debug
+                e.printStackTrace();
+                // TODO: inform user that there was a problem
+            }
+        }
 
-           }catch(Exception e)
-           {
-               LOG.warn("Warning, omitted a sentence from task2 import because of an error in processing it: " + e.getMessage());
-               //debug
-               e.printStackTrace();
-               //TODO: inform user that there was a problem
-           }
-       }
-
-       /*for(JCas cas : documentsJCas)
-       {
-           int startOffset=0;
-           int endOffset=0;
-           String type;
-
-           //TODO: is there an existing annotation?
-
-           NamedEntity newEntity = new NamedEntity(cas, startOffset, endOffset);
-           newEntity.setValue(type);
-
-           newEntity.addToIndexes;
-       }*/
-   }
+        /*
+         * for(JCas cas : documentsJCas) { int startOffset=0; int endOffset=0; String type;
+         *
+         * //TODO: is there an existing annotation?
+         *
+         * NamedEntity newEntity = new NamedEntity(cas, startOffset, endOffset);
+         * newEntity.setValue(type);
+         *
+         * newEntity.addToIndexes; }
+         */
+    }
 }

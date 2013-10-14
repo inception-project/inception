@@ -21,8 +21,11 @@ package de.tudarmstadt.ukp.clarin.webanno.crowdflower;
 import org.codehaus.jackson.annotate.JsonProperty;
 
 
-//jsontext = {'text':"".join(text),'_golden':'TRUE', 'markertext':'', 'markertext_gold':gold, 'markertext_gold_reason':gold_reason}
-
+/**
+ * Represents the JSON data structure send to Crowdflower for NamedEntityTask1
+ * @author Benjamin
+ *
+ */
 public class NamedEntityTask1Data
 {
     String text = "";

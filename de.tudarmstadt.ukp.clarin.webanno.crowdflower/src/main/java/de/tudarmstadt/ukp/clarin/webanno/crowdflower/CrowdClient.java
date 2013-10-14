@@ -157,9 +157,12 @@ public class CrowdClient implements Serializable
     /**
      * Upload the data vector as JSON to the specified Crowdflower job
      * @param job
-     * @param data
+     * @param data - Generic vector of data, containing ordinary java classes.
+     * They should be annotated so that Jackson understands how to map them to JSON.
+     *
      * @throws Exception
      */
+
     @SuppressWarnings("rawtypes")
     void uploadData(CrowdJob job, Vector data) throws Exception
     {
@@ -178,8 +181,6 @@ public class CrowdClient implements Serializable
             JsonNode jsonData = mapper.convertValue(obj, JsonNode.class);
             jsonObjectCollection += jsonData.toString() + "\n";
         }
-
-        //System.out.println("DEBUG: jsonObjectCollection = " + jsonObjectCollection);
 
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.getMessageConverters().add(new StringHttpMessageConverter());
@@ -205,11 +206,12 @@ public class CrowdClient implements Serializable
     }
 
     /**
-     * sets a single key in Crowdflowers job with a given value
+     * Sets a single key in Crowdflowers job with a given value
      * @param job
      * @param key
      * @param value
      */
+
     void updateVariable(CrowdJob job, String Url, String key, String value)
     {
         MultiValueMap<String, String> argumentMap = new LinkedMultiValueMap<String, String>();
@@ -227,6 +229,7 @@ public class CrowdClient implements Serializable
     }
 
     /**
+     * Orders the job given by its jobid. Pay is per assigment, which is by default 5 units.
      *
      * @param job
      * @param channels : a vector of channels, in which the job should be made available
@@ -260,7 +263,8 @@ public class CrowdClient implements Serializable
     }
 
     /**
-     * unzips all elements in the file represented by byte[]data. Needed by retrieveRawJudgments which will retrieve a zip-file with a single JSON
+     * Unzips all elements in the file represented by byte[] data.
+     * Needed by retrieveRawJudgments which will retrieve a zip-file with a single JSON
      * @param data
      * @return
      * @throws IOException
@@ -315,26 +319,13 @@ public class CrowdClient implements Serializable
     }
 
     /**
-     * This would help to get the short names of crowdflowers channels, but doesn't work currently
-     * @param job
-     */
-    /*Vector<String>*/ void retrieveAvailableChannels(CrowdJob job)
-    {
-        RestTemplate restTemplate = new RestTemplate();
-        restTemplate.getMessageConverters().add(new MappingJacksonHttpMessageConverter());
-
-        JsonNode result = restTemplate.getForObject(channelsURL, JsonNode.class, job.getId(), apiKey);
-
-        //System.out.println(result);
-    }
-
-    /**
      * Get the status of a job id. The resulting JSON will look like this if the query succeds:
      * {"count":550,"done":true}
      * or if there is an error (e.g. wrong job id):
      * {"error": {"message":"We couldn't find what you were looking for."}}
      *
      * @param jobid
+     * @result JsonNode containing the status as supplied by crowdflower
      */
 
     JsonNode getStatus(String jobId)

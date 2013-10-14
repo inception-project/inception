@@ -59,9 +59,7 @@ public class CrowdJob
     private JsonNode template;
     private JsonNode data;
 
-    //TODO: see if golds_count and unit_count is updated automatically after data upload
-
-    //these need special care, because the translation from JSON to HTTP post values is different than for other arrays
+    // These need special care, because the translation from JSON to HTTP post values is different than for other arrays
     public static final String includedCountriesKey = "included_countries";
     public static final String excludedCountriesKey = "excluded_countries";
     public static final String countryCodeKey = "code";
@@ -69,7 +67,7 @@ public class CrowdJob
     public static final String jobKey = "job";
     public static final String idKey = "id";
 
-    //we'll only care about these variables, but store all of them in template, so that it it is easier to change something later if needed
+    // We'll only care about these variables, but store all of them in template, so that it it is easier to change something later if needed
     public static final String[] argumentFilter = {
         "cml", //main description for the Job, in CML (similar to HTML)
         "instructions", //job instructions for workers
@@ -101,11 +99,6 @@ public class CrowdJob
     private Vector<String> channels;
 
     public static final Set<String> argumentFilterSet = new HashSet<String>(Arrays.asList(argumentFilter));
-
-    /*CrowdJob()
-    {
-        this.template = null;
-    }*/
 
     /**
      * Create a new CrowdJob, which is a Java representation of a Job, from a JSON template.
@@ -139,7 +132,6 @@ public class CrowdJob
 
             if(currentNode.isContainerNode())
             {
-                //System.out.println("container node: " + currentKey);
                 //special processing for these arrays:
                 if(currentKey.equals(includedCountriesKey) || currentKey.equals(excludedCountriesKey))
                 {
@@ -147,9 +139,6 @@ public class CrowdJob
                     for (JsonNode subElt ; jsonSubNodeIt.hasNext(); )
                     {
                         subElt = jsonSubNodeIt.next();
-                        //System.out.println(jobKey + "[" + currentKey + "][]=" + subElt.path(countryCodeKey).asText());
-                        //this does currently give me a 500
-                        //agrumentMap.add("job[" + currentKey + "][]",subElt.path(countryCodeKey).asText());
                         (currentKey.equals(includedCountriesKey) ? includedCountries : excludedCountries)
                                                         .addElement(subElt.path(countryCodeKey).asText());
                     }
@@ -180,8 +169,6 @@ public class CrowdJob
         ObjectWriter writer = mapper.writer().withDefaultPrettyPrinter();
         return writer.writeValueAsString(template);
     }
-
-    //mark: getters and setters
 
     public MultiValueMap<String, String> getArgumentMap()
     {
