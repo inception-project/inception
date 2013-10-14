@@ -34,6 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorUIData;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Argument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Relation;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -125,18 +126,26 @@ public class ArcAdapter
             BratAnnotatorModel aBratAnnotatorModel)
     {
 
+        int address = BratAjaxCasUtil.getSentenceAdderessofCAS(aJcas,
+                aBratAnnotatorModel.getSentenceBeginOffset(), aBratAnnotatorModel.getSentenceEndOffset());
         boolean reverse = aBratAnnotatorModel.getProject().isReverseDependencyDirection();
         // The first sentence address in the display window!
         Sentence firstSentence = (Sentence) BratAjaxCasUtil.selectAnnotationByAddress(aJcas,
-                FeatureStructure.class, aBratAnnotatorModel.getSentenceAddress());
-        int i = aBratAnnotatorModel.getSentenceAddress();
-
+                FeatureStructure.class, address);
+        int i = address;
+        int lastSentenceAddress;
+        if(aBratAnnotatorModel.getMode().equals(Mode.CURATION)){
+            lastSentenceAddress = aBratAnnotatorModel.getLastSentenceAddress();
+        }
+        else{
+            lastSentenceAddress = BratAjaxCasUtil.getLastSenetnceAddress(aJcas);
+        }
         // Loop based on window size
         // j, controlling variable to display sentences based on window size
         // i, address of each sentences
         int j = 1;
         while (j <= aBratAnnotatorModel.getWindowSize()) {
-            if (i >= aBratAnnotatorModel.getLastSentenceAddress()) {
+            if (i >= lastSentenceAddress) {
                 Sentence sentence = (Sentence) BratAjaxCasUtil.selectAnnotationByAddress(aJcas,
                         FeatureStructure.class, i);
                 updateResponse(sentence, aResponse, firstSentence.getBegin(), reverse);

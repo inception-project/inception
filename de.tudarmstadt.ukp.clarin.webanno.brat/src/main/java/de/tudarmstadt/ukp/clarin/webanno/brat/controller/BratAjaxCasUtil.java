@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 import static org.uimafit.factory.AnalysisEngineFactory.createPrimitive;
 import static org.uimafit.factory.AnalysisEngineFactory.createPrimitiveDescription;
 import static org.uimafit.util.JCasUtil.select;
+import static org.uimafit.util.JCasUtil.selectCovered;
 import static org.uimafit.util.JCasUtil.selectFollowing;
 import static org.uimafit.util.JCasUtil.selectPreceding;
 
@@ -69,8 +70,9 @@ public class BratAjaxCasUtil
 {
 
     /**
-     * Annotation a and annotation b are the same if the have the same address (
-     * used for {@link CoreferenceChain})
+     * Annotation a and annotation b are the same if the have the same address ( used for
+     * {@link CoreferenceChain})
+     *
      * @param a
      * @param b
      * @return
@@ -80,10 +82,10 @@ public class BratAjaxCasUtil
         return a.getAddress() == b.getAddress();
     }
 
-/*    public static boolean isSame(Annotation a, Annotation b)
-    {
-        return a.getBegin() == b.getBegin() && a.getEnd() == b.getEnd();
-    }*/
+    /*
+     * public static boolean isSame(Annotation a, Annotation b) { return a.getBegin() ==
+     * b.getBegin() && a.getEnd() == b.getEnd(); }
+     */
 
     public static boolean isAt(Annotation a, int begin, int end)
     {
@@ -403,6 +405,19 @@ public class BratAjaxCasUtil
         }
     }
 
+    /**
+     * Get the sentence address for this CAS based on the begin and end address. This is basically
+     * used to transform sentence address in one CAS to other sentence address for different CAS
+     *
+     * @param aJcas
+     * @param aWindowSize
+     * @return
+     */
+    
+    public static int getSentenceAdderessofCAS(JCas aJcas, int aBegin, int aEnd){
+        List<Sentence> sentences = selectCovered(aJcas, Sentence.class, aBegin, aEnd);
+        return sentences.get(0).getAddress();
+    }
     public static int getLastDisplayWindowFirstSentenceAddress(JCas aJcas, int aWindowSize)
     {
         List<Integer> displayWindowBeginingSentenceAddresses = getDisplayWindowBeginningSentenceAddresses(
@@ -533,41 +548,45 @@ public class BratAjaxCasUtil
     }
 
     /**
-     * Get the annotation layer name for span {@link AnnotationType} such as {@link AnnotationTypeConstant#NAMEDENTITY} or
-     *  {@link AnnotationTypeConstant#COREFRELTYPE}. If this name is changed in the database, the
-     *  {@link AnnotationTypeConstant} constants also should be updated!
+     * Get the annotation layer name for span {@link AnnotationType} such as
+     * {@link AnnotationTypeConstant#NAMEDENTITY} or {@link AnnotationTypeConstant#COREFRELTYPE}. If
+     * this name is changed in the database, the {@link AnnotationTypeConstant} constants also
+     * should be updated!
+     *
      * @param aType
      * @return
      */
     public static String getSpanAnnotationTypeName(String aType)
     {
         String annotationTypeName = "";
-        if(aType.equals(AnnotationTypeConstant.POS_PREFIX)){
+        if (aType.equals(AnnotationTypeConstant.POS_PREFIX)) {
             annotationTypeName = AnnotationTypeConstant.POS;
         }
-        else  if(aType.equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)){
+        else if (aType.equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)) {
             annotationTypeName = AnnotationTypeConstant.NAMEDENTITY;
         }
-        else  if(aType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)){
+        else if (aType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
             annotationTypeName = AnnotationTypeConstant.COREFRELTYPE;
         }
         return annotationTypeName;
     }
 
     /**
-     * Get the annotation layer name for arc {@link AnnotationType} such as {@link AnnotationTypeConstant#DEPENDENCY} or
-     *  {@link AnnotationTypeConstant#COREFERENCE}. If this name is changed in the database, the
-     *  {@link AnnotationTypeConstant} constants also should be updated!
+     * Get the annotation layer name for arc {@link AnnotationType} such as
+     * {@link AnnotationTypeConstant#DEPENDENCY} or {@link AnnotationTypeConstant#COREFERENCE}. If
+     * this name is changed in the database, the {@link AnnotationTypeConstant} constants also
+     * should be updated!
+     *
      * @param aType
      * @return
      */
     public static String getArcAnnotationTypeName(String aType)
     {
         String annotationTypeName = "";
-        if(aType.equals(AnnotationTypeConstant.POS_PREFIX)){
+        if (aType.equals(AnnotationTypeConstant.POS_PREFIX)) {
             annotationTypeName = AnnotationTypeConstant.DEPENDENCY;
         }
-        else  if(aType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)){
+        else if (aType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
             annotationTypeName = AnnotationTypeConstant.COREFERENCE;
         }
         return annotationTypeName;
@@ -646,8 +665,11 @@ public class BratAjaxCasUtil
         }
         return false;
     }
+
     /**
-     * Get the annotation type the way it is used in Brat visualization page (PREFIX+Type), such as (POS_+NN)
+     * Get the annotation type the way it is used in Brat visualization page (PREFIX+Type), such as
+     * (POS_+NN)
+     *
      * @param aSelectedTag
      * @return
      */
@@ -655,8 +677,7 @@ public class BratAjaxCasUtil
     public static String getType(Tag aSelectedTag)
     {
         String annotationType = "";
-        if (aSelectedTag.getTagSet().getType().getName()
-                .equals(AnnotationTypeConstant.POS)) {
+        if (aSelectedTag.getTagSet().getType().getName().equals(AnnotationTypeConstant.POS)) {
             annotationType = AnnotationTypeConstant.POS_PREFIX + aSelectedTag.getName();
         }
         else if (aSelectedTag.getTagSet().getType().getName()
@@ -665,18 +686,15 @@ public class BratAjaxCasUtil
         }
         else if (aSelectedTag.getTagSet().getType().getName()
                 .equals(AnnotationTypeConstant.NAMEDENTITY)) {
-            annotationType = AnnotationTypeConstant.NAMEDENTITY_PREFIX
-                    + aSelectedTag.getName();
+            annotationType = AnnotationTypeConstant.NAMEDENTITY_PREFIX + aSelectedTag.getName();
         }
         else if (aSelectedTag.getTagSet().getType().getName()
                 .equals(AnnotationTypeConstant.COREFRELTYPE)) {
-            annotationType = AnnotationTypeConstant.COREFERENCE_PREFIX
-                    + aSelectedTag.getName();
+            annotationType = AnnotationTypeConstant.COREFERENCE_PREFIX + aSelectedTag.getName();
         }
         else if (aSelectedTag.getTagSet().getType().getName()
                 .equals(AnnotationTypeConstant.COREFERENCE)) {
-            annotationType = AnnotationTypeConstant.COREFERENCE_PREFIX
-                    + aSelectedTag.getName();
+            annotationType = AnnotationTypeConstant.COREFERENCE_PREFIX + aSelectedTag.getName();
         }
         return annotationType;
     }

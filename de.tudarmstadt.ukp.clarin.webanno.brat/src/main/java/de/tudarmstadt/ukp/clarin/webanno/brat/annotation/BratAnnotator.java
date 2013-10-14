@@ -195,12 +195,10 @@ public class BratAnnotator
                         OffsetsList offsetLists = (OffsetsList) jsonConverter.getObjectMapper()
                                 .readValue(offsets, OffsetsList.class);
 
-                        int start = BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
-                                getModelObject().getSentenceAddress())
+                        int start = getModelObject().getSentenceBeginOffset()
                                 + ((Offsets) offsetLists.get(0)).getBegin();
 
-                        int end = BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
-                                getModelObject().getSentenceAddress())
+                        int end = getModelObject().getSentenceBeginOffset()
                                 + ((Offsets) offsetLists.get(0)).getEnd();
 
                          if (!BratAjaxCasUtil.offsetsInOneSentences(jCas, start, end)) {

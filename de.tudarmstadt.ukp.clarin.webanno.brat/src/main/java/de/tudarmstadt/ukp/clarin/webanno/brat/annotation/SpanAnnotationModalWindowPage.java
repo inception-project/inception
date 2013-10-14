@@ -62,6 +62,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
  * A page that is used to display an annotation modal dialog for span annotation
@@ -230,12 +231,7 @@ public class SpanAnnotationModalWindowPage
                                     bratAnnotatorModel.getUser(), jCas);
 
                             if (bratAnnotatorModel.isScrollPage()) {
-                                bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil
-                                        .getSentenceBeginAddress(jCas,
-                                                bratAnnotatorModel.getSentenceAddress(), start,
-                                                bratAnnotatorModel.getProject(),
-                                                bratAnnotatorModel.getDocument(),
-                                                bratAnnotatorModel.getWindowSize()));
+                                updateSentenceAddressAndOffsets(jCas, start);
                             }
 
                             bratAnnotatorModel.setRememberedSpanTagSet(selectedtTagSet);
@@ -258,6 +254,8 @@ public class SpanAnnotationModalWindowPage
                         error(e.getMessage());
                     }
                 }
+
+
             });
 
             add(new AjaxSubmitLink("delete")
@@ -295,12 +293,7 @@ public class SpanAnnotationModalWindowPage
                                     bratAnnotatorModel.getUser(), jCas);
 
                             if (bratAnnotatorModel.isScrollPage()) {
-                                bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil
-                                        .getSentenceBeginAddress(jCas,
-                                                bratAnnotatorModel.getSentenceAddress(), start,
-                                                bratAnnotatorModel.getProject(),
-                                                bratAnnotatorModel.getDocument(),
-                                                bratAnnotatorModel.getWindowSize()));
+                                updateSentenceAddressAndOffsets(jCas, start);
                             }
                         }
                     }
@@ -336,8 +329,27 @@ public class SpanAnnotationModalWindowPage
                             "name"));
             add(tags);
         }
+
+
     }
 
+    private void updateSentenceAddressAndOffsets(JCas jCas, int start)
+    {
+        int address = BratAjaxCasUtil.getSentenceAdderessofCAS(jCas,
+                bratAnnotatorModel.getSentenceBeginOffset(),
+                bratAnnotatorModel.getSentenceEndOffset());
+        bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil
+                .getSentenceBeginAddress(jCas,
+                        address, start,
+                        bratAnnotatorModel.getProject(),
+                        bratAnnotatorModel.getDocument(),
+                        bratAnnotatorModel.getWindowSize()));
+
+        Sentence sentence = (Sentence) jCas.getLowLevelCas().ll_getFSForRef(
+                bratAnnotatorModel.getSentenceAddress());
+        bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
+        bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
+    }
     private JCas getCas(BratAnnotatorModel aBratAnnotatorModel)
         throws UIMAException, IOException, ClassNotFoundException
     {

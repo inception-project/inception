@@ -86,7 +86,8 @@ public class CurationBuilder
         this.annotationService = aAnnotationService;
     }
 
-    public CurationContainer buildCurationContainer(BratAnnotatorModel aBratAnnotatorModel) throws UIMAException, ClassNotFoundException, IOException
+    public CurationContainer buildCurationContainer(BratAnnotatorModel aBratAnnotatorModel)
+        throws UIMAException, ClassNotFoundException, IOException
     {
         CurationContainer curationContainer = new CurationContainer();
         // initialize Variables
@@ -141,7 +142,8 @@ public class CurationBuilder
                     (JCas) new ArrayList(jCases.values()).get(0),
                     aBratAnnotatorModel.getLastSentenceAddress());
             if (aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)) {
-                mergeJCas = createCorrectionCas(mergeJCas, aBratAnnotatorModel, randomAnnotationDocument);
+                mergeJCas = createCorrectionCas(mergeJCas, aBratAnnotatorModel,
+                        randomAnnotationDocument);
             }
             else {
                 mergeJCas = createMergeCas(mergeJCas, randomAnnotationDocument, jCases,
@@ -233,21 +235,22 @@ public class CurationBuilder
 
             int windowSize = aBratAnnotatorModel.getWindowSize();
 
-            begin = BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
-                    aBratAnnotatorModel.getSentenceAddress());
-            end = BratAjaxCasUtil.getAnnotationEndOffset(
-                    jCas,
-                    BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(jCas,
-                            aBratAnnotatorModel.getSentenceAddress(), windowSize));
-            sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas,
-                    aBratAnnotatorModel.getSentenceAddress());
+            int address = BratAjaxCasUtil.getSentenceAdderessofCAS(jCas,
+                    aBratAnnotatorModel.getSentenceBeginOffset(),
+                    aBratAnnotatorModel.getSentenceEndOffset());
+
+            begin = BratAjaxCasUtil.getAnnotationBeginOffset(jCas, address);
+            end = BratAjaxCasUtil.getAnnotationEndOffset(jCas, BratAjaxCasUtil
+                    .getLastSentenceAddressInDisplayWindow(jCas, address, windowSize));
+            sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas, address);
             segmentAdress.put(username, new HashMap<Integer, Integer>());
 
-            int i = aBratAnnotatorModel.getSentenceAddress();
+            int i = address;
             Sentence sentence = null;
+            int lastSentenceAddress = BratAjaxCasUtil.getLastSenetnceAddress(jCas);
 
             for (int j = 0; j < aBratAnnotatorModel.getWindowSize(); j++) {
-                if (i >= aBratAnnotatorModel.getLastSentenceAddress()) {
+                if (i >= lastSentenceAddress) {
                     sentence = (Sentence) jCas.getLowLevelCas().ll_getFSForRef(i);
                     sentenceNumber += 1;
                     segmentBeginEnd.put(sentence.getBegin(), sentence.getEnd());
@@ -372,8 +375,8 @@ public class CurationBuilder
         }
         try {
 
-                repository.createCurationDocumentContent(mergeJCas,
-                        randomAnnotationDocument.getDocument(), userLoggedIn);
+            repository.createCurationDocumentContent(mergeJCas,
+                    randomAnnotationDocument.getDocument(), userLoggedIn);
         }
         catch (IOException e1) {
             // TODO Auto-generated catch block
@@ -382,7 +385,8 @@ public class CurationBuilder
         return mergeJCas;
     }
 
-    private JCas createCorrectionCas(JCas mergeJCas, BratAnnotatorModel aBratAnnotatorModel, AnnotationDocument randomAnnotationDocument)
+    private JCas createCorrectionCas(JCas mergeJCas, BratAnnotatorModel aBratAnnotatorModel,
+            AnnotationDocument randomAnnotationDocument)
         throws UIMAException, ClassNotFoundException, IOException
     {
         BratAjaxCasController controller = new BratAjaxCasController(repository, annotationService);

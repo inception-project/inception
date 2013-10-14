@@ -2,13 +2,13 @@
  * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,6 +23,7 @@ import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
@@ -45,16 +46,25 @@ public class CasToBratJson
             BratAnnotatorModel aBratAnnotatorModel)
     {
 
+       int address = BratAjaxCasUtil.getSentenceAdderessofCAS(aJcas,
+                aBratAnnotatorModel.getSentenceBeginOffset(), aBratAnnotatorModel.getSentenceEndOffset());
         Sentence sentenceAddress = (Sentence) aJcas.getLowLevelCas().ll_getFSForRef(
-                aBratAnnotatorModel.getSentenceAddress());
+                address);
         int current = sentenceAddress.getBegin();
-        int i = aBratAnnotatorModel.getSentenceAddress();
+        int i = address;
+        int lastSentenceAddress;
+        if(aBratAnnotatorModel.getMode().equals(Mode.CURATION)){
+            lastSentenceAddress = aBratAnnotatorModel.getLastSentenceAddress();
+        }
+        else{
+            lastSentenceAddress = BratAjaxCasUtil.getLastSenetnceAddress(aJcas);
+        }
         int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(aJcas, i);
         aResponse.setSentenceNumberOffset(sentenceNumber);
         Sentence sentence = null;
 
         for (int j = 0; j < aBratAnnotatorModel.getWindowSize(); j++) {
-            if (i >= aBratAnnotatorModel.getLastSentenceAddress()) {
+            if (i >= lastSentenceAddress) {
                 sentence = (Sentence) aJcas.getLowLevelCas().ll_getFSForRef(i);
                 for (Token coveredToken : selectCovered(Token.class, sentence)) {
                     aResponse.addToken(coveredToken.getBegin() - current, coveredToken.getEnd()
@@ -77,15 +87,24 @@ public class CasToBratJson
     public void addSentenceToResponse(JCas aJcas, GetDocumentResponse aResponse,
             BratAnnotatorModel aBratAnnotatorModel)
     {
+        int address = BratAjaxCasUtil.getSentenceAdderessofCAS(aJcas,
+                aBratAnnotatorModel.getSentenceBeginOffset(), aBratAnnotatorModel.getSentenceEndOffset());
 
         Sentence sentenceAddress = (Sentence) aJcas.getLowLevelCas().ll_getFSForRef(
-                aBratAnnotatorModel.getSentenceAddress());
+                address);
         int current = sentenceAddress.getBegin();
-        int i = aBratAnnotatorModel.getSentenceAddress();
+        int i = address;
+        int lastSentenceAddress;
+        if(aBratAnnotatorModel.getMode().equals(Mode.CURATION)){
+            lastSentenceAddress = aBratAnnotatorModel.getLastSentenceAddress();
+        }
+        else{
+            lastSentenceAddress = BratAjaxCasUtil.getLastSenetnceAddress(aJcas);
+        }
         Sentence sentence = null;
 
         for (int j = 0; j < aBratAnnotatorModel.getWindowSize(); j++) {
-            if (i >= aBratAnnotatorModel.getLastSentenceAddress()) {
+            if (i >= lastSentenceAddress) {
                 sentence = (Sentence) aJcas.getLowLevelCas().ll_getFSForRef(i);
                 aResponse.addSentence(sentence.getBegin() - current, sentence.getEnd() - current);
                 break;

@@ -64,7 +64,14 @@ public class BratAnnotatorModel
      */
     private int firstSentenceAddress;
 
-
+    /**
+     * The begin offset of a sentence
+     */
+    private int sentenceBeginOffset;
+    /**
+     * The end offset of a sentence
+     */
+    private int sentenceEndOffset;
     // Annotation preferences, to be saved in a file system
     /**
      * The annotation layers available in the current project.
@@ -262,6 +269,27 @@ public class BratAnnotatorModel
     {
         this.rememberedArcTag = rememberedArcTag;
     }
+
+    public int getSentenceBeginOffset()
+    {
+        return sentenceBeginOffset;
+    }
+
+    public void setSentenceBeginOffset(int sentenceBeginOffset)
+    {
+        this.sentenceBeginOffset = sentenceBeginOffset;
+    }
+
+    public int getSentenceEndOffset()
+    {
+        return sentenceEndOffset;
+    }
+
+    public void setSentenceEndOffset(int sentenceEndOffset)
+    {
+        this.sentenceEndOffset = sentenceEndOffset;
+    }
+
 
 
 }

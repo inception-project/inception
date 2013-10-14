@@ -205,12 +205,21 @@ public class BratCuratorUtility
             }
 
             if (aCurationUserSegment.getBratAnnotatorModel().isScrollPage()) {
+                int address = BratAjaxCasUtil.getSentenceAdderessofCAS(aJcas, aCurationUserSegment
+                        .getBratAnnotatorModel().getSentenceBeginOffset(), aCurationUserSegment
+                        .getBratAnnotatorModel().getSentenceEndOffset());
                 aCurationUserSegment.getBratAnnotatorModel().setSentenceAddress(
-                        BratAjaxCasUtil.getSentenceBeginAddress(
-                        aJcas, aCurationUserSegment.getBratAnnotatorModel().getSentenceAddress(),
-                        originFs.getBegin(), aCurationUserSegment.getBratAnnotatorModel().getProject(),
-                        aCurationUserSegment.getBratAnnotatorModel().getDocument(),
-                        aCurationUserSegment.getBratAnnotatorModel().getWindowSize()));
+                        BratAjaxCasUtil.getSentenceBeginAddress(aJcas, address,
+                                originFs.getBegin(), aCurationUserSegment.getBratAnnotatorModel()
+                                        .getProject(), aCurationUserSegment.getBratAnnotatorModel()
+                                        .getDocument(), aCurationUserSegment
+                                        .getBratAnnotatorModel().getWindowSize()));
+                Sentence sentence = (Sentence) aJcas.getLowLevelCas().ll_getFSForRef(
+                        aCurationUserSegment.getBratAnnotatorModel().getSentenceAddress());
+                aCurationUserSegment.getBratAnnotatorModel().setSentenceBeginOffset(
+                        sentence.getBegin());
+                aCurationUserSegment.getBratAnnotatorModel()
+                        .setSentenceEndOffset(sentence.getEnd());
             }
         }
     }
@@ -245,12 +254,17 @@ public class BratCuratorUtility
                 aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser(), aMergeJCas);
 
         if (aBratAnnotatorModel.isScrollPage()) {
-            aBratAnnotatorModel.setSentenceAddress(
-                    BratAjaxCasUtil.getSentenceBeginAddress(
-                            clickedJCas, aBratAnnotatorModel.getSentenceAddress(),
-                    fsClicked.getBegin(), aBratAnnotatorModel.getProject(),
-                    aBratAnnotatorModel.getDocument(),
-                    aBratAnnotatorModel.getWindowSize()));
+            int address = BratAjaxCasUtil.getSentenceAdderessofCAS(clickedJCas,
+                    aBratAnnotatorModel.getSentenceBeginOffset(),
+                    aBratAnnotatorModel.getSentenceEndOffset());
+            aBratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(
+                    clickedJCas, address, fsClicked.getBegin(), aBratAnnotatorModel.getProject(),
+                    aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getWindowSize()));
+
+            Sentence sentence = (Sentence) clickedJCas.getLowLevelCas().ll_getFSForRef(
+                    aBratAnnotatorModel.getSentenceAddress());
+            aBratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
+            aBratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
         }
     }
 
@@ -320,6 +334,10 @@ public class BratCuratorUtility
                 CURATION_USER));
         bratAnnotatorModel.setSentenceAddress(aCurationSegment.getSentenceAddress().get(
                 CURATION_USER));
+
+        bratAnnotatorModel.setSentenceBeginOffset(aCurationSegment.getBegin());
+        bratAnnotatorModel.setSentenceEndOffset(aCurationSegment.getEnd());
+
         bratAnnotatorModel.setMode(Mode.CURATION);
         AnnotationPreference preference = new AnnotationPreference();
         ApplicationUtils.setAnnotationPreference(preference, userLoggedIn.getUsername(),
@@ -395,16 +413,16 @@ public class BratCuratorUtility
 
                     aBratAnnotatorModel.setSentenceAddress(getSentenceAddress(aBratAnnotatorModel,
                             jCas, userJCas));
-                    aBratAnnotatorModel.setLastSentenceAddress(getLastSentenceAddress(aBratAnnotatorModel,
-                            jCas, userJCas));
+                    aBratAnnotatorModel.setLastSentenceAddress(getLastSentenceAddress(
+                            aBratAnnotatorModel, jCas, userJCas));
                 }
                 else if (aBratAnnotatorModel.getMode().equals(Mode.CURATION)) {
                     userJCas = aJCases.get(CURATION_USER);
 
                     aBratAnnotatorModel.setSentenceAddress(getSentenceAddress(aBratAnnotatorModel,
                             jCas, userJCas));
-                    aBratAnnotatorModel.setLastSentenceAddress(getLastSentenceAddress(aBratAnnotatorModel,
-                            jCas, userJCas));
+                    aBratAnnotatorModel.setLastSentenceAddress(getLastSentenceAddress(
+                            aBratAnnotatorModel, jCas, userJCas));
                 }
 
                 GetDocumentResponse response = new GetDocumentResponse();
@@ -429,18 +447,22 @@ public class BratCuratorUtility
             }
         }
     }
-/**
- * Get the sentence address for jCas from userJCas.
- * @param aBratAnnotatorModel
- * @param jCas
- * @param userJCas
- * @return
- */
+
+    /**
+     * Get the sentence address for jCas from userJCas.
+     *
+     * @param aBratAnnotatorModel
+     * @param jCas
+     * @param userJCas
+     * @return
+     */
     private static int getSentenceAddress(BratAnnotatorModel aBratAnnotatorModel, JCas jCas,
             JCas userJCas)
     {
-        Sentence sentence = (Sentence) userJCas.getLowLevelCas().ll_getFSForRef(
-                aBratAnnotatorModel.getSentenceAddress());
+        int sentenceAddress = BratAjaxCasUtil.getSentenceAdderessofCAS(userJCas,
+                aBratAnnotatorModel.getSentenceBeginOffset(),
+                aBratAnnotatorModel.getSentenceEndOffset());
+        Sentence sentence = (Sentence) userJCas.getLowLevelCas().ll_getFSForRef(sentenceAddress);
         List<Sentence> sentences = JCasUtil.selectCovered(jCas, Sentence.class,
                 sentence.getBegin(), sentence.getEnd());
         return sentences.get(0).getAddress();
@@ -686,7 +708,7 @@ public class BratCuratorUtility
         else if (annotationOption.getAnnotationSelections().size() == 1) {
             newState = AnnotationState.DISAGREE;
         }
-        else  {
+        else {
             newState = AnnotationState.DO_NOT_USE;
         }
         return newState;
@@ -754,6 +776,7 @@ public class BratCuratorUtility
 
         BratAnnotatorModel bratAnnotatorModel = null;
         if (!aCurationContainer.getBratAnnotatorModel().getMode().equals(Mode.CORRECTION)) {
+            // update sentence address, offsets,... per sentence/per user in the curation view
             bratAnnotatorModel = BratCuratorUtility.setBratAnnotatorModel(sourceDocument,
                     aRepository, aCurationSegment, aAnnotationService);
         }
@@ -766,8 +789,8 @@ public class BratCuratorUtility
         // update sentence list on the right side
         aParent.setModelObject(sentences);
         if (aCurationContainer.getBratAnnotatorModel().getMode().equals(Mode.CURATION)) {
-        aMergeVisualizer.setModelObject(bratAnnotatorModel);
-        aMergeVisualizer.reloadContent(aTarget);
+            aMergeVisualizer.setModelObject(bratAnnotatorModel);
+            aMergeVisualizer.reloadContent(aTarget);
         }
         aTarget.add(aParent);
 

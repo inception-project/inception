@@ -52,6 +52,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
  * A panel that is used to display an annotation modal dialog for arc annotation.
@@ -199,12 +200,7 @@ public class ArcAnnotationModalWindowPage
 
                             if (bratAnnotatorModel.isScrollPage()) {
                                 int start = originFs.getBegin();
-                                bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil
-                                        .getSentenceBeginAddress(jCas,
-                                                bratAnnotatorModel.getSentenceAddress(), start,
-                                                bratAnnotatorModel.getProject(),
-                                                bratAnnotatorModel.getDocument(),
-                                                bratAnnotatorModel.getWindowSize()));
+                                updateSentenceAddressAndOffsets(jCas, start);
                             }
 
                             // save this annotation detail for next time annotation
@@ -258,12 +254,7 @@ public class ArcAnnotationModalWindowPage
 
                         if (bratAnnotatorModel.isScrollPage()) {
                             int start = originFs.getBegin();
-                            bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil
-                                    .getSentenceBeginAddress(jCas,
-                                            bratAnnotatorModel.getSentenceAddress(), start,
-                                            bratAnnotatorModel.getProject(),
-                                            bratAnnotatorModel.getDocument(),
-                                            bratAnnotatorModel.getWindowSize()));
+                            updateSentenceAddressAndOffsets(jCas, start);
                         }
 
                     }
@@ -323,12 +314,7 @@ public class ArcAnnotationModalWindowPage
 
                         if (bratAnnotatorModel.isScrollPage()) {
                             int start = originFs.getBegin();
-                            bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil
-                                    .getSentenceBeginAddress(jCas,
-                                            bratAnnotatorModel.getSentenceAddress(), start,
-                                            bratAnnotatorModel.getProject(),
-                                            bratAnnotatorModel.getDocument(),
-                                            bratAnnotatorModel.getWindowSize()));
+                            updateSentenceAddressAndOffsets(jCas, start);
                         }
 
                     }
@@ -351,6 +337,24 @@ public class ArcAnnotationModalWindowPage
                 }
             });
         }
+    }
+
+    private void updateSentenceAddressAndOffsets(JCas jCas, int start)
+    {
+        int address = BratAjaxCasUtil.getSentenceAdderessofCAS(jCas,
+                bratAnnotatorModel.getSentenceBeginOffset(),
+                bratAnnotatorModel.getSentenceEndOffset());
+        bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil
+                .getSentenceBeginAddress(jCas,
+                        address, start,
+                        bratAnnotatorModel.getProject(),
+                        bratAnnotatorModel.getDocument(),
+                        bratAnnotatorModel.getWindowSize()));
+
+        Sentence sentence = (Sentence) jCas.getLowLevelCas().ll_getFSForRef(
+                bratAnnotatorModel.getSentenceAddress());
+        bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
+        bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
     }
 
     private JCas getCas(BratAnnotatorModel aBratAnnotatorModel)

@@ -209,6 +209,8 @@ public class CurationPanel
         textListView = new ListView<CurationSegmentForSourceDocument>("textListView",
                 curationContainer.getCurationSegments())
         {
+            private static final long serialVersionUID = 8539162089561432091L;
+
             @Override
             protected void populateItem(ListItem<CurationSegmentForSourceDocument> item)
             {

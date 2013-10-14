@@ -72,6 +72,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.Cu
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.project.SettingsPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome.WelcomePage;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
  * This is the main class for the curation page. It contains an interface which
@@ -502,25 +503,32 @@ public class CurationPage extends SettingsPageBase {
 					target.appendJavaScript("alert('This sentence number is either negative or beyond the last sentence number!')");
 				} else if (bratAnnotatorModel.getDocument() != null) {
 
+				    JCas mergeJCas = null;
+                    try {
+                        mergeJCas = repository
+                                .getCurationDocumentContent(bratAnnotatorModel
+                                        .getDocument());
+                    } catch (UIMAException e) {
+                        error(ExceptionUtils.getRootCause(e));
+                    } catch (ClassNotFoundException e) {
+                        error(ExceptionUtils.getRootCause(e));
+                    } catch (IOException e) {
+                        error(e.getMessage());
+                    }
+
 					if (gotoPageAddress == -1) {
 						// Not Updated, default used
-						JCas mergeJCas = null;
-						try {
-							mergeJCas = repository
-									.getCurationDocumentContent(bratAnnotatorModel
-											.getDocument());
-						} catch (UIMAException e) {
-							error(ExceptionUtils.getRootCause(e));
-						} catch (ClassNotFoundException e) {
-							error(ExceptionUtils.getRootCause(e));
-						} catch (IOException e) {
-							error(e.getMessage());
-						}
+
 						gotoPageAddress = BratAjaxCasUtil.getSentenceAddress(
 								mergeJCas, 10);
 					}
 					if (bratAnnotatorModel.getSentenceAddress() != gotoPageAddress) {
 						bratAnnotatorModel.setSentenceAddress(gotoPageAddress);
+
+						   Sentence sentence = (Sentence) mergeJCas.getLowLevelCas().ll_getFSForRef(
+	                                gotoPageAddress);
+	                        bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
+	                        bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
 						CurationBuilder builder = new CurationBuilder(
 								repository, annotationService);
@@ -724,6 +732,12 @@ public class CurationPage extends SettingsPageBase {
 						bratAnnotatorModel
 								.setSentenceAddress(nextSentenceAddress);
 
+
+                        Sentence sentence = (Sentence) mergeJCas.getLowLevelCas().ll_getFSForRef(
+                                nextSentenceAddress);
+                         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
+                         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
+
 						CurationBuilder builder = new CurationBuilder(
 								repository, annotationService);
 						try {
@@ -782,6 +796,11 @@ public class CurationPage extends SettingsPageBase {
 						bratAnnotatorModel
 								.setSentenceAddress(previousSentenceAddress);
 
+						Sentence sentence = (Sentence) mergeJCas.getLowLevelCas().ll_getFSForRef(
+						        previousSentenceAddress);
+                         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
+                         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
+
 						CurationBuilder builder = new CurationBuilder(
 								repository, annotationService);
 						try {
@@ -814,11 +833,34 @@ public class CurationPage extends SettingsPageBase {
 			@Override
 			public void onClick(AjaxRequestTarget target) {
 				if (bratAnnotatorModel.getDocument() != null) {
-					if (bratAnnotatorModel.getFirstSentenceAddress() != bratAnnotatorModel
-							.getSentenceAddress()) {
-						bratAnnotatorModel
-								.setSentenceAddress(bratAnnotatorModel
-										.getFirstSentenceAddress());
+				    JCas mergeJCas = null;
+                    try {
+                        mergeJCas = repository.getCorrectionDocumentContent(bratAnnotatorModel
+                                .getDocument());
+                    }
+                    catch (UIMAException e) {
+                        error(ExceptionUtils.getRootCause(e));
+                    }
+                    catch (ClassNotFoundException e) {
+                        error(ExceptionUtils.getRootCause(e));
+                    }
+                    catch (IOException e) {
+                        error(ExceptionUtils.getRootCause(e));
+                    }
+
+
+                    int address = BratAjaxCasUtil.getSentenceAdderessofCAS(mergeJCas,
+                            bratAnnotatorModel.getSentenceBeginOffset(), bratAnnotatorModel.getSentenceEndOffset());
+                    int firstAddress = BratAjaxCasUtil.getFirstSenetnceAddress(mergeJCas);
+
+                    if (firstAddress != address) {
+                        bratAnnotatorModel.setSentenceAddress(firstAddress);
+
+
+                        Sentence sentence = (Sentence) mergeJCas.getLowLevelCas().ll_getFSForRef(
+                                firstAddress);
+                        bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
+                        bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
 						CurationBuilder builder = new CurationBuilder(
 								repository, annotationService);
@@ -872,6 +914,11 @@ public class CurationPage extends SettingsPageBase {
 							.getSentenceAddress()) {
 						bratAnnotatorModel
 								.setSentenceAddress(lastDisplayWindowBeginingSentenceAddress);
+
+						   Sentence sentence = (Sentence) mergeJCas.getLowLevelCas().ll_getFSForRef(
+	                                lastDisplayWindowBeginingSentenceAddress);
+	                        bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
+	                        bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
 						CurationBuilder builder = new CurationBuilder(
 								repository, annotationService);
@@ -976,6 +1023,12 @@ public class CurationPage extends SettingsPageBase {
 						.getLastSenetnceAddress(jCas));
 				bratAnnotatorModel.setFirstSentenceAddress(bratAnnotatorModel
 						.getSentenceAddress());
+
+	            Sentence sentence = (Sentence) jCas.getLowLevelCas().ll_getFSForRef(
+                        bratAnnotatorModel.getSentenceAddress());
+                bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
+                bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
+
 
 				AnnotationPreference preference = new AnnotationPreference();
 				ApplicationUtils.setAnnotationPreference(preference, username,

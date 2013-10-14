@@ -155,7 +155,7 @@ public class CorrectionPage
             {
                 try {
                     // update begin/end of the curationsegment based on bratAnnotatorModel changes
-                    //(like sentence change in auto-scroll mode,....
+                    // (like sentence change in auto-scroll mode,....
                     curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
                     setCurationSegmentBeginEnd();
 
@@ -185,7 +185,8 @@ public class CorrectionPage
             private static final long serialVersionUID = 7279648231521710155L;
 
             @Override
-            protected void onChange(AjaxRequestTarget aTarget, BratAnnotatorModel aBratAnnotatorModel)
+            protected void onChange(AjaxRequestTarget aTarget,
+                    BratAnnotatorModel aBratAnnotatorModel)
             {
                 try {
                     bratAnnotatorModel = aBratAnnotatorModel;
@@ -242,10 +243,11 @@ public class CorrectionPage
                                 bratAnnotatorModel.getWindowSize());
 
                         // If only one page, start displaying from sentence 1
-                        if (totalNumberOfSentence == 1) {
-                            bratAnnotatorModel.setSentenceAddress(bratAnnotatorModel
-                                    .getFirstSentenceAddress());
-                        }
+                        /*
+                         * if (totalNumberOfSentence == 1) {
+                         * bratAnnotatorModel.setSentenceAddress(bratAnnotatorModel
+                         * .getFirstSentenceAddress()); }
+                         */
                         sentenceNumber = BratAjaxCasUtil.getSentenceNumber(mergeJCas,
                                 bratAnnotatorModel.getSentenceAddress());
                         int firstSentenceNumber = sentenceNumber + 1;
@@ -313,10 +315,6 @@ public class CorrectionPage
                     @Override
                     public void onClose(AjaxRequestTarget target)
                     {
-                        String username = SecurityContextHolder.getContext().getAuthentication()
-                                .getName();
-
-                        User user = repository.getUser(username);
                         // If this source document has at least one annotation document "FINISHED",
                         // and curation not yet
                         // finished on it
@@ -387,7 +385,7 @@ public class CorrectionPage
                     error(e.getMessage());
                 }
                 update(aTarget);
-               // mergeVisualizer.reloadContent(aTarget);
+                // mergeVisualizer.reloadContent(aTarget);
                 aTarget.appendJavaScript("Wicket.Window.unloadConfirmation = false;window.location.reload()");
 
             }
@@ -437,27 +435,32 @@ public class CorrectionPage
                     target.appendJavaScript("alert('This sentence number is either negative or beyond the last sentence number!')");
                 }
                 else if (bratAnnotatorModel.getDocument() != null) {
+                    // Not Updated, default used
+                    JCas mergeJCas = null;
+                    try {
+                        mergeJCas = repository.getCorrectionDocumentContent(bratAnnotatorModel
+                                .getDocument());
+                    }
+                    catch (UIMAException e) {
+                        error(ExceptionUtils.getRootCause(e));
+                    }
+                    catch (ClassNotFoundException e) {
+                        error(ExceptionUtils.getRootCause(e));
+                    }
+                    catch (IOException e) {
+                        error(e.getMessage());
+                    }
 
                     if (gotoPageAddress == -1) {
-                        // Not Updated, default used
-                        JCas mergeJCas = null;
-                        try {
-                            mergeJCas = repository.getCorrectionDocumentContent(bratAnnotatorModel
-                                    .getDocument());
-                        }
-                        catch (UIMAException e) {
-                            error(ExceptionUtils.getRootCause(e));
-                        }
-                        catch (ClassNotFoundException e) {
-                            error(ExceptionUtils.getRootCause(e));
-                        }
-                        catch (IOException e) {
-                            error(e.getMessage());
-                        }
                         gotoPageAddress = BratAjaxCasUtil.getSentenceAddress(mergeJCas, 10);
                     }
                     if (bratAnnotatorModel.getSentenceAddress() != gotoPageAddress) {
                         bratAnnotatorModel.setSentenceAddress(gotoPageAddress);
+
+                        Sentence sentence = (Sentence) mergeJCas.getLowLevelCas().ll_getFSForRef(
+                                gotoPageAddress);
+                        bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
+                        bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
                         CurationBuilder builder = new CurationBuilder(repository, annotationService);
                         try {
@@ -663,12 +666,19 @@ public class CorrectionPage
                     catch (IOException e) {
                         error(ExceptionUtils.getRootCause(e));
                     }
+                    int address = BratAjaxCasUtil.getSentenceAdderessofCAS(mergeJCas,
+                            bratAnnotatorModel.getSentenceBeginOffset(), bratAnnotatorModel.getSentenceEndOffset());
                     int nextSentenceAddress = BratAjaxCasUtil
                             .getNextDisplayWindowSentenceBeginAddress(mergeJCas,
-                                    bratAnnotatorModel.getSentenceAddress(),
+                                    address,
                                     bratAnnotatorModel.getWindowSize());
-                    if (bratAnnotatorModel.getSentenceAddress() != nextSentenceAddress) {
+                    if (address != nextSentenceAddress) {
                         bratAnnotatorModel.setSentenceAddress(nextSentenceAddress);
+
+                        Sentence sentence = (Sentence) mergeJCas.getLowLevelCas().ll_getFSForRef(
+                                nextSentenceAddress);
+                        bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
+                        bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
                         CurationBuilder builder = new CurationBuilder(repository, annotationService);
                         try {
@@ -731,6 +741,11 @@ public class CorrectionPage
                     if (bratAnnotatorModel.getSentenceAddress() != previousSentenceAddress) {
                         bratAnnotatorModel.setSentenceAddress(previousSentenceAddress);
 
+                        Sentence sentence = (Sentence) mergeJCas.getLowLevelCas().ll_getFSForRef(
+                                previousSentenceAddress);
+                        bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
+                        bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
+
                         CurationBuilder builder = new CurationBuilder(repository, annotationService);
                         try {
                             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
@@ -767,10 +782,34 @@ public class CorrectionPage
             public void onClick(AjaxRequestTarget target)
             {
                 if (bratAnnotatorModel.getDocument() != null) {
-                    if (bratAnnotatorModel.getFirstSentenceAddress() != bratAnnotatorModel
-                            .getSentenceAddress()) {
-                        bratAnnotatorModel.setSentenceAddress(bratAnnotatorModel
-                                .getFirstSentenceAddress());
+                    JCas mergeJCas = null;
+                    try {
+                        mergeJCas = repository.getCorrectionDocumentContent(bratAnnotatorModel
+                                .getDocument());
+                    }
+                    catch (UIMAException e) {
+                        error(ExceptionUtils.getRootCause(e));
+                    }
+                    catch (ClassNotFoundException e) {
+                        error(ExceptionUtils.getRootCause(e));
+                    }
+                    catch (IOException e) {
+                        error(ExceptionUtils.getRootCause(e));
+                    }
+
+
+                    int address = BratAjaxCasUtil.getSentenceAdderessofCAS(mergeJCas,
+                            bratAnnotatorModel.getSentenceBeginOffset(), bratAnnotatorModel.getSentenceEndOffset());
+                    int firstAddress = BratAjaxCasUtil.getFirstSenetnceAddress(mergeJCas);
+
+                    if (firstAddress != address) {
+                        bratAnnotatorModel.setSentenceAddress(firstAddress);
+
+
+                        Sentence sentence = (Sentence) mergeJCas.getLowLevelCas().ll_getFSForRef(
+                                firstAddress);
+                        bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
+                        bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
                         CurationBuilder builder = new CurationBuilder(repository, annotationService);
                         try {
@@ -829,6 +868,11 @@ public class CorrectionPage
                             .getSentenceAddress()) {
                         bratAnnotatorModel
                                 .setSentenceAddress(lastDisplayWindowBeginingSentenceAddress);
+
+                        Sentence sentence = (Sentence) mergeJCas.getLowLevelCas().ll_getFSForRef(
+                                lastDisplayWindowBeginingSentenceAddress);
+                        bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
+                        bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
                         CurationBuilder builder = new CurationBuilder(repository, annotationService);
                         try {
@@ -946,6 +990,11 @@ public class CorrectionPage
                         .getLastSenetnceAddress(jCas));
                 bratAnnotatorModel.setFirstSentenceAddress(bratAnnotatorModel.getSentenceAddress());
 
+                Sentence sentence = (Sentence) jCas.getLowLevelCas().ll_getFSForRef(
+                        bratAnnotatorModel.getSentenceAddress());
+                bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
+                bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
+
                 AnnotationPreference preference = new AnnotationPreference();
                 ApplicationUtils.setAnnotationPreference(preference, username, repository,
                         annotationService, bratAnnotatorModel, Mode.CORRECTION);
@@ -975,16 +1024,19 @@ public class CorrectionPage
         BratAjaxCasController controller = new BratAjaxCasController(repository, annotationService);
         JCas jCas = controller.getJCas(bratAnnotatorModel.getDocument(),
                 bratAnnotatorModel.getProject(), bratAnnotatorModel.getUser());
-        Sentence sentence = (Sentence) jCas.getLowLevelCas().ll_getFSForRef(
-                bratAnnotatorModel.getSentenceAddress());
+
+        int sentenceAddress = BratAjaxCasUtil.getSentenceAdderessofCAS(jCas,
+                bratAnnotatorModel.getSentenceBeginOffset(),
+                bratAnnotatorModel.getSentenceEndOffset());
+
+        Sentence sentence = (Sentence) jCas.getLowLevelCas().ll_getFSForRef(sentenceAddress);
         List<Sentence> followingSentences = selectFollowing(jCas, Sentence.class, sentence,
                 bratAnnotatorModel.getWindowSize());
         // Check also, when getting the last sentence address in the display window, if this is the
         // last sentence or the ONLY sentence in the document
         int lastSentenceAddressInDisplayWindow = followingSentences.size() == 0 ? sentence
                 .getAddress() : followingSentences.get(followingSentences.size() - 1).getAddress();
-        curationSegment.setBegin(BratAjaxCasUtil.getAnnotationBeginOffset(jCas,
-                bratAnnotatorModel.getSentenceAddress()));
+        curationSegment.setBegin(BratAjaxCasUtil.getAnnotationBeginOffset(jCas, sentenceAddress));
         curationSegment.setEnd(BratAjaxCasUtil.getAnnotationEndOffset(jCas,
                 lastSentenceAddressInDisplayWindow));
 
