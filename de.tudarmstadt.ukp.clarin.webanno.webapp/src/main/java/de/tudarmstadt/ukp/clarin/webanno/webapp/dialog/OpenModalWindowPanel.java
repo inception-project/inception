@@ -17,10 +17,20 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.webapp.dialog;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.TypeSystem;
+import org.apache.uima.cas.impl.CASCompleteSerializer;
+import org.apache.uima.cas.impl.CASImpl;
+import org.apache.uima.cas.impl.Serialization;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
@@ -39,9 +49,11 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.odlabs.wiquery.ui.resizable.ResizableBehavior;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.uimafit.factory.JCasFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -93,7 +105,7 @@ public class OpenModalWindowPanel
         username = SecurityContextHolder.getContext().getAuthentication().getName();
         user = projectRepository.getUser(username);
         if (getAllowedProjects(mode).size() > 0) {
-            selectedProject =getAllowedProjects(mode).get(0);
+            selectedProject = getAllowedProjects(mode).get(0);
         }
 
         this.openDataModel = aOpenDataModel;
@@ -181,8 +193,8 @@ public class OpenModalWindowPanel
 
         if (aSubject.equals(mode.ANNOTATION)) {
             for (Project project : projectRepository.listProjects()) {
-                if (ApplicationUtils.isMember(project, projectRepository, user)  &&
-                        project.getMode().equals(Mode.ANNOTATION)) {
+                if (ApplicationUtils.isMember(project, projectRepository, user)
+                        && project.getMode().equals(Mode.ANNOTATION)) {
                     allowedProject.add(project);
                 }
             }
@@ -197,8 +209,8 @@ public class OpenModalWindowPanel
 
         else if (aSubject.equals(mode.CORRECTION)) {
             for (Project project : projectRepository.listProjects()) {
-                if (ApplicationUtils.isMember(project, projectRepository, user) &&
-                        project.getMode().equals(Mode.CORRECTION)) {
+                if (ApplicationUtils.isMember(project, projectRepository, user)
+                        && project.getMode().equals(Mode.CORRECTION)) {
                     allowedProject.add(project);
                 }
             }
@@ -268,8 +280,9 @@ public class OpenModalWindowPanel
                                 // finished for curation dialog
                                 List<SourceDocument> excludeDocuments = new ArrayList<SourceDocument>();
                                 for (SourceDocument sourceDocument : allDocuments) {
-                                    if (mode.equals(Mode.ANNOTATION) && projectRepository.existsAnnotationDocument(sourceDocument,
-                                            user)
+                                    if (mode.equals(Mode.ANNOTATION)
+                                            && projectRepository.existsAnnotationDocument(
+                                                    sourceDocument, user)
                                             && projectRepository
                                                     .getAnnotationDocument(sourceDocument, user)
                                                     .getState()
@@ -277,7 +290,9 @@ public class OpenModalWindowPanel
                                         excludeDocuments.add(sourceDocument);
                                     }
                                     else if (mode.equals(Mode.CURATION)
-                                            && !ApplicationUtils.existFinishedDocument(sourceDocument, user, projectRepository, selectedProject)) {
+                                            && !ApplicationUtils.existFinishedDocument(
+                                                    sourceDocument, user, projectRepository,
+                                                    selectedProject)) {
                                         excludeDocuments.add(sourceDocument);
                                     }
 
@@ -321,6 +336,7 @@ public class OpenModalWindowPanel
                 {
                     openDataModel.setProject(selectedProject);
                     openDataModel.setDocument(selectedDocument);
+                    upgradeCasAndSave();
                     modalWindow.close(aTarget);
                 }
             }).add(new ResizableBehavior());
@@ -352,6 +368,9 @@ public class OpenModalWindowPanel
                     else {
                         openDataModel.setProject(selectedProject);
                         openDataModel.setDocument(selectedDocument);
+
+                        upgradeCasAndSave();
+
                         modalWindow.close(aTarget);
                     }
                 }
@@ -381,4 +400,71 @@ public class OpenModalWindowPanel
             });
         }
     }
+
+
+    private void upgradeCasAndSave()
+    {
+        String username = SecurityContextHolder.getContext().getAuthentication()
+                .getName();
+
+        User user = projectRepository.getUser(username);
+        if(projectRepository.existsAnnotationDocument(selectedDocument, user)){
+        AnnotationDocument annotationDocument = projectRepository
+                .getAnnotationDocument(selectedDocument, user);
+        try {
+            if (mode.equals(Mode.ANNOTATION) || mode.equals(Mode.CORRECTION)) {
+                CAS cas = projectRepository.getAnnotationDocumentContent(
+                        annotationDocument).getCas();
+                upgrade(cas);
+                projectRepository.createAnnotationDocumentContent(cas.getJCas(),
+                        annotationDocument.getDocument(), user);
+            }
+            else {
+                CAS cas = projectRepository.getCurationDocumentContent(
+                        selectedDocument).getCas();
+                upgrade(cas);
+                projectRepository.createCurationDocumentContent(cas.getJCas(),
+                        selectedDocument, user);
+            }
+
+        }
+        catch (UIMAException e) {
+            error(ExceptionUtils.getRootCauseMessage(e));
+        }
+        catch (ClassNotFoundException e) {
+            error(e.getMessage());
+        }
+        catch (IOException e) {
+            error(e.getMessage());
+        }
+        catch (Exception e) {
+            // no need to catch, it is acceptable that no curation document
+            // exists to be upgraded while there are annotation documents
+        }
+
+        }
+    }
+
+    private void upgrade(CAS aCas)
+        throws UIMAException, IOException
+    {
+        // Prepare template for new CAS
+        CAS newCas = JCasFactory.createJCas().getCas();
+        CASCompleteSerializer serializer = Serialization.serializeCASComplete((CASImpl) newCas);
+
+        // Save old type system
+        TypeSystem oldTypeSystem = aCas.getTypeSystem();
+
+        // Save old CAS contents
+        ByteArrayOutputStream os2 = new ByteArrayOutputStream();
+        Serialization.serializeWithCompression(aCas, os2, oldTypeSystem);
+
+        // Prepare CAS with new type system
+        Serialization.deserializeCASComplete(serializer, (CASImpl) aCas);
+
+        // Restore CAS data to new type system
+        Serialization.deserializeCAS(aCas, new ByteArrayInputStream(os2.toByteArray()),
+                oldTypeSystem, null);
+    }
+
 }
