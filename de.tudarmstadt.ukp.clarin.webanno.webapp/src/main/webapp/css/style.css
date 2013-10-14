@@ -577,3 +577,7 @@ div.tabpanel .tab-panel {
     padding:2px 2px;
     text-align: center;
 }
+
+tr.border_bottom td {
+		border-bottom: 2pt solid green;
+	}
