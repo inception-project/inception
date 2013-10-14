@@ -187,7 +187,7 @@ public class SpanAnnotationModalWindowPage
                     response.renderOnLoadJavaScript("$('#" + component.getMarkupId()
                             + "').focus();Wicket.Window.unloadConfirmation = false;");
                 }
-            }).add(new ResizableBehavior()));
+            }));
 
             add(new AjaxButton("annotate")
             {
