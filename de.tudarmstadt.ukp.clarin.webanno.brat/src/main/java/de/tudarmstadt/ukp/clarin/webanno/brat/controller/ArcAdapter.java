@@ -219,13 +219,16 @@ public class ArcAdapter
             aTargetFs = temp;
         }
 
+        int address = BratAjaxCasUtil.getSentenceAdderessofCAS(aJCas,
+                aBratAnnotatorModel.getSentenceBeginOffset(), aBratAnnotatorModel.getSentenceEndOffset());
+        
         int beginOffset = BratAjaxCasUtil.selectAnnotationByAddress(aJCas, Sentence.class,
-                aBratAnnotatorModel.getSentenceAddress()).getBegin();
+        		address).getBegin();
         int endOffset = BratAjaxCasUtil.selectAnnotationByAddress(
                 aJCas,
                 Sentence.class,
                 BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(aJCas,
-                        aBratAnnotatorModel.getSentenceAddress(),
+                		address,
                         aBratAnnotatorModel.getWindowSize())).getEnd();
 
         updateCas(aJCas, beginOffset, endOffset, aOriginFs, aTargetFs, aLabelValue);

@@ -32,12 +32,14 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.IRequestParameters;
 import org.codehaus.jackson.JsonGenerator;
 import org.springframework.beans.BeansException;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.uimafit.util.CasUtil;
 import org.uimafit.util.JCasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
@@ -46,6 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
@@ -184,10 +187,16 @@ public class BratCuratorUtility
             // arcType = BratAjaxCasUtil.getAnnotationType(fsClicked.getType())
             // + arcType;
 
-            AnnotationFS originFs = (AnnotationFS) clickedJCas.getLowLevelCas().ll_getFSForRef(
+            AnnotationFS originFsClicked = (AnnotationFS) clickedJCas.getLowLevelCas().ll_getFSForRef(
                     addressOrigin);
-            AnnotationFS targetFs = (AnnotationFS) clickedJCas.getLowLevelCas().ll_getFSForRef(
+            AnnotationFS targetFsClicked = (AnnotationFS) clickedJCas.getLowLevelCas().ll_getFSForRef(
                     addressTarget);
+            
+            AnnotationFS originFs = BratAjaxCasUtil.getAnnotation(aJcas, originFsClicked.getBegin(), 
+            		originFsClicked.getEnd(), originFsClicked.getType());
+            
+            AnnotationFS targetFs = BratAjaxCasUtil.getAnnotation(aJcas, targetFsClicked.getBegin(), 
+            		targetFsClicked.getEnd(), targetFsClicked.getType());
             BratAjaxCasController controller = new BratAjaxCasController(repository,
                     annotationService);
             try {

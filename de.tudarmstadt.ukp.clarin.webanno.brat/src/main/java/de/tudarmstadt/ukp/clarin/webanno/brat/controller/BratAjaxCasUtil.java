@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
 import static org.uimafit.factory.AnalysisEngineFactory.createPrimitive;
 import static org.uimafit.factory.AnalysisEngineFactory.createPrimitiveDescription;
+import static org.uimafit.util.CasUtil.selectCovered;
 import static org.uimafit.util.JCasUtil.select;
 import static org.uimafit.util.JCasUtil.selectCovered;
 import static org.uimafit.util.JCasUtil.selectFollowing;
@@ -38,6 +39,7 @@ import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
@@ -417,6 +419,20 @@ public class BratAjaxCasUtil
     public static int getSentenceAdderessofCAS(JCas aJcas, int aBegin, int aEnd){
         List<Sentence> sentences = selectCovered(aJcas, Sentence.class, aBegin, aEnd);
         return sentences.get(0).getAddress();
+    }
+    /**
+     * Get an annotation using the begin/offsets and its type
+     * @return 
+     */
+    
+
+    public static  AnnotationFS getAnnotation(JCas aJcas, int aBegin, int aEnd, Type aType){
+    	for (AnnotationFS anFS : selectCovered(aJcas.getCas(), aType, aBegin, aEnd)) {
+    		if(anFS.getBegin()==aBegin && anFS.getEnd() == aEnd){
+    			return anFS;
+    		}
+	}
+	return null;
     }
     public static int getLastDisplayWindowFirstSentenceAddress(JCas aJcas, int aWindowSize)
     {
