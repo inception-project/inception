@@ -327,7 +327,8 @@ public class CorrectionPage
 
                                 bratAnnotatorModel.setDocument(openDataModel.getDocument());
                                 bratAnnotatorModel.setProject(openDataModel.getProject());
-
+                                
+                                BratAnnotatorUtility.upgradeCasAndSave(repository, openDataModel.getDocument(), Mode.CORRECTION);
                                 init();
                                 setCurationSegmentBeginEnd();
                                 update(target);

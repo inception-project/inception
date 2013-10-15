@@ -51,6 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -264,6 +265,7 @@ public class CurationPage extends SettingsPageBase {
 													.getDocument());
 									bratAnnotatorModel.setProject(openDataModel
 											.getProject());
+									 BratAnnotatorUtility.upgradeCasAndSave(repository, openDataModel.getDocument(), Mode.CURATION);
 
 									try {
 										initBratAnnotatorDataModel();

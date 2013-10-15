@@ -49,6 +49,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -233,6 +234,7 @@ public class AnnotationPage
                                 && openDataModel.getDocument() != null) {
                             bratAnnotatorModel.setDocument(openDataModel.getDocument());
                             bratAnnotatorModel.setProject(openDataModel.getProject());
+                            BratAnnotatorUtility.upgradeCasAndSave(repository, openDataModel.getDocument(), Mode.ANNOTATION);
                             try {
                                 // setAttributesForGetCollection();
                                 setAttributesForDocument();

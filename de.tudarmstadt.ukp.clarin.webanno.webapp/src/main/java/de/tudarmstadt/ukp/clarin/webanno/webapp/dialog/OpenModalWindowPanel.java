@@ -53,6 +53,7 @@ import org.uimafit.factory.JCasFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -336,8 +337,9 @@ public class OpenModalWindowPanel
                 {
                     openDataModel.setProject(selectedProject);
                     openDataModel.setDocument(selectedDocument);
-                    upgradeCasAndSave();
                     modalWindow.close(aTarget);
+                    
+                    
                 }
             }).add(new ResizableBehavior());
         }
@@ -368,10 +370,7 @@ public class OpenModalWindowPanel
                     else {
                         openDataModel.setProject(selectedProject);
                         openDataModel.setDocument(selectedDocument);
-
-                        upgradeCasAndSave();
-
-                        modalWindow.close(aTarget);
+                        modalWindow.close(aTarget);                      
                     }
                 }
 
@@ -394,77 +393,9 @@ public class OpenModalWindowPanel
                     if (mode.equals(Mode.CURATION)) {
                         openDataModel.setDocument(null); // on cancel, go welcomePage
                     }
-                    modalWindow.close(aTarget);
-
+                    modalWindow.close(aTarget);                   
                 }
             });
         }
     }
-
-
-    private void upgradeCasAndSave()
-    {
-        String username = SecurityContextHolder.getContext().getAuthentication()
-                .getName();
-
-        User user = projectRepository.getUser(username);
-        if(projectRepository.existsAnnotationDocument(selectedDocument, user)){
-        AnnotationDocument annotationDocument = projectRepository
-                .getAnnotationDocument(selectedDocument, user);
-        try {
-            if (mode.equals(Mode.ANNOTATION) || mode.equals(Mode.CORRECTION)) {
-                CAS cas = projectRepository.getAnnotationDocumentContent(
-                        annotationDocument).getCas();
-                upgrade(cas);
-                projectRepository.createAnnotationDocumentContent(cas.getJCas(),
-                        annotationDocument.getDocument(), user);
-            }
-            else {
-                CAS cas = projectRepository.getCurationDocumentContent(
-                        selectedDocument).getCas();
-                upgrade(cas);
-                projectRepository.createCurationDocumentContent(cas.getJCas(),
-                        selectedDocument, user);
-            }
-
-        }
-        catch (UIMAException e) {
-            error(ExceptionUtils.getRootCauseMessage(e));
-        }
-        catch (ClassNotFoundException e) {
-            error(e.getMessage());
-        }
-        catch (IOException e) {
-            error(e.getMessage());
-        }
-        catch (Exception e) {
-            // no need to catch, it is acceptable that no curation document
-            // exists to be upgraded while there are annotation documents
-        }
-
-        }
-    }
-
-    private void upgrade(CAS aCas)
-        throws UIMAException, IOException
-    {
-        // Prepare template for new CAS
-        CAS newCas = JCasFactory.createJCas().getCas();
-        CASCompleteSerializer serializer = Serialization.serializeCASComplete((CASImpl) newCas);
-
-        // Save old type system
-        TypeSystem oldTypeSystem = aCas.getTypeSystem();
-
-        // Save old CAS contents
-        ByteArrayOutputStream os2 = new ByteArrayOutputStream();
-        Serialization.serializeWithCompression(aCas, os2, oldTypeSystem);
-
-        // Prepare CAS with new type system
-        Serialization.deserializeCASComplete(serializer, (CASImpl) aCas);
-
-        // Restore CAS data to new type system
-        Serialization.deserializeCAS(aCas, new ByteArrayInputStream(os2.toByteArray()),
-                oldTypeSystem, null);
-    }
-
 }

@@ -19,11 +19,19 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import static org.uimafit.util.JCasUtil.select;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.TypeSystem;
+import org.apache.uima.cas.impl.CASCompleteSerializer;
+import org.apache.uima.cas.impl.CASImpl;
+import org.apache.uima.cas.impl.Serialization;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
@@ -31,6 +39,8 @@ import org.apache.wicket.request.IRequestParameters;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.uimafit.factory.JCasFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
@@ -39,6 +49,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.OffsetsList;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -303,4 +314,71 @@ public class BratAnnotatorUtility
         }
         repository.createAnnotationDocumentContent(aJCas, aSourceDocument, aUser);
     }
+    
+    public static void upgradeCasAndSave( RepositoryService aRepository, SourceDocument aDocument
+    		, Mode aMode)
+    {
+        String username = SecurityContextHolder.getContext().getAuthentication()
+                .getName();
+
+        User user = aRepository.getUser(username);
+        if(aRepository.existsAnnotationDocument(aDocument, user)){
+        AnnotationDocument annotationDocument = aRepository
+                .getAnnotationDocument(aDocument, user);
+        try {
+            if (aMode.equals(Mode.ANNOTATION) || aMode.equals(Mode.CORRECTION)) {
+                CAS cas = aRepository.getAnnotationDocumentContent(
+                        annotationDocument).getCas();
+                upgrade(cas);
+                aRepository.createAnnotationDocumentContent(cas.getJCas(),
+                        annotationDocument.getDocument(), user);
+            }
+            else {
+                CAS cas = aRepository.getCurationDocumentContent(
+                        aDocument).getCas();
+                upgrade(cas);
+                aRepository.createCurationDocumentContent(cas.getJCas(),
+                        aDocument, user);
+            }
+
+        }
+        catch (UIMAException e) {
+            
+        }
+        catch (ClassNotFoundException e) {
+            
+        }
+        catch (IOException e) {
+           
+        }
+        catch (Exception e) {
+            // no need to catch, it is acceptable that no curation document
+            // exists to be upgraded while there are annotation documents
+        }
+
+        }
+    }
+
+    public static void upgrade(CAS aCas)
+        throws UIMAException, IOException
+    {
+        // Prepare template for new CAS
+        CAS newCas = JCasFactory.createJCas().getCas();
+        CASCompleteSerializer serializer = Serialization.serializeCASComplete((CASImpl) newCas);
+
+        // Save old type system
+        TypeSystem oldTypeSystem = aCas.getTypeSystem();
+
+        // Save old CAS contents
+        ByteArrayOutputStream os2 = new ByteArrayOutputStream();
+        Serialization.serializeWithCompression(aCas, os2, oldTypeSystem);
+
+        // Prepare CAS with new type system
+        Serialization.deserializeCASComplete(serializer, (CASImpl) aCas);
+
+        // Restore CAS data to new type system
+        Serialization.deserializeCAS(aCas, new ByteArrayInputStream(os2.toByteArray()),
+                oldTypeSystem, null);
+    }
+
 }
