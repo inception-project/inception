@@ -370,6 +370,8 @@ public class CurationPage extends SettingsPageBase {
 							.get(currentDocumentIndex - 1).getName());
 					bratAnnotatorModel.setDocument(listOfSourceDocuements
 							.get(currentDocumentIndex - 1));
+					BratAnnotatorUtility.upgradeCasAndSave(repository,
+					        bratAnnotatorModel.getDocument(), Mode.CURATION);
 					try {
 						initBratAnnotatorDataModel();
 						CurationBuilder builder = new CurationBuilder(
@@ -439,6 +441,8 @@ public class CurationPage extends SettingsPageBase {
 							.get(currentDocumentIndex + 1).getName());
 					bratAnnotatorModel.setDocument(listOfSourceDocuements
 							.get(currentDocumentIndex + 1));
+					BratAnnotatorUtility.upgradeCasAndSave(repository,
+					        bratAnnotatorModel.getDocument(), Mode.CURATION);
 					try {
 						initBratAnnotatorDataModel();
 						CurationBuilder builder = new CurationBuilder(

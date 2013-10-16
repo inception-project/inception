@@ -234,7 +234,8 @@ public class AnnotationPage
                                 && openDataModel.getDocument() != null) {
                             bratAnnotatorModel.setDocument(openDataModel.getDocument());
                             bratAnnotatorModel.setProject(openDataModel.getProject());
-                            BratAnnotatorUtility.upgradeCasAndSave(repository, openDataModel.getDocument(), Mode.ANNOTATION);
+                            BratAnnotatorUtility.upgradeCasAndSave(repository,
+                                    openDataModel.getDocument(), Mode.ANNOTATION);
                             try {
                                 // setAttributesForGetCollection();
                                 setAttributesForDocument();
@@ -330,6 +331,8 @@ public class AnnotationPage
                             currentDocumentIndex - 1).getName());
                     bratAnnotatorModel.setDocument(listOfSourceDocuements
                             .get(currentDocumentIndex - 1));
+                    BratAnnotatorUtility.upgradeCasAndSave(repository,
+                            bratAnnotatorModel.getDocument(), Mode.ANNOTATION);
                     try {
                         // setAttributesForGetCollection();
                         setAttributesForDocument();
@@ -395,6 +398,7 @@ public class AnnotationPage
                             currentDocumentIndex + 1).getName());
                     bratAnnotatorModel.setDocument(listOfSourceDocuements
                             .get(currentDocumentIndex + 1));
+                    BratAnnotatorUtility.upgradeCasAndSave(repository, bratAnnotatorModel.getDocument(), Mode.ANNOTATION);
                     try {
                         // setAttributesForGetCollection();
                         setAttributesForDocument();

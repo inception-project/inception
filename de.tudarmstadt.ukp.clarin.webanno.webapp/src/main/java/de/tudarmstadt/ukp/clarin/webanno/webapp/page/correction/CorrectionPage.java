@@ -327,7 +327,7 @@ public class CorrectionPage
 
                                 bratAnnotatorModel.setDocument(openDataModel.getDocument());
                                 bratAnnotatorModel.setProject(openDataModel.getProject());
-                                
+
                                 BratAnnotatorUtility.upgradeCasAndSave(repository, openDataModel.getDocument(), Mode.CORRECTION);
                                 init();
                                 setCurationSegmentBeginEnd();
@@ -551,6 +551,8 @@ public class CorrectionPage
                             currentDocumentIndex - 1).getName());
                     bratAnnotatorModel.setDocument(listOfSourceDocuements
                             .get(currentDocumentIndex - 1));
+                    BratAnnotatorUtility.upgradeCasAndSave(repository,
+                            bratAnnotatorModel.getDocument(), Mode.CORRECTION);
                     try {
                         init();
                         setCurationSegmentBeginEnd();
@@ -617,6 +619,8 @@ public class CorrectionPage
                             currentDocumentIndex + 1).getName());
                     bratAnnotatorModel.setDocument(listOfSourceDocuements
                             .get(currentDocumentIndex + 1));
+                    BratAnnotatorUtility.upgradeCasAndSave(repository,
+                            bratAnnotatorModel.getDocument(), Mode.CORRECTION);
                     try {
                         init();
                         setCurationSegmentBeginEnd();
