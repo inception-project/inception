@@ -43,6 +43,8 @@ public class CrowdJob
 {
     private static final long serialVersionUID = 8496087166198616020L;
 
+    private static final String CROWDFLOWER_JOBLINK = "https://crowdflower.com/jobs/";
+
     @Id
     @GeneratedValue
     private long id;
@@ -128,6 +130,28 @@ public class CrowdJob
     public String getLink()
     {
         return link;
+    }
+
+    /**
+     * Gets called from Crowdflower page to determine URL for a given job
+     *
+     * @param jobID
+     * @return
+     */
+
+    private String getURLforID(String jobID)
+    {
+        return  CROWDFLOWER_JOBLINK + jobID + "/";
+    }
+
+    public String getLink1()
+    {
+        return getURLforID(task1Id);
+    }
+
+    public String getLink2()
+    {
+        return getURLforID(task2Id);
     }
 
     public void setLink(String link)

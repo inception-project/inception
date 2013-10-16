@@ -472,17 +472,7 @@ public class NamedEntityTaskManager
         job.setIncludedCountries(includedCountries);
     }
 
-    /**
-     * Gets called from Crowdflower page to determine URL for a given job
-     *
-     * @param jobID
-     * @return
-     */
 
-    public String getURLforID(String jobID)
-    {
-        return "https://crowdflower.com/jobs/" + jobID + "/";
-    }
 
     public String getStatusString(String jobID1, String jobID2)
     {
@@ -566,6 +556,11 @@ public class NamedEntityTaskManager
         return spans.substring(substart, subend);
     }
 
+    /**
+     * Helper function that retrieves the first token number in a task1 html span
+     * @param spans
+     * @return
+     */
     private int getFirstSpanOffset(String spans)
     {
         String firstNum = "0";
@@ -575,11 +570,13 @@ public class NamedEntityTaskManager
         // in the string
 
         /*
-         * regex for this would be: Pattern p = Pattern.compile("(^|\\s)([0-9]+)($|\\s)"); Matcher m
-         * = p.matcher(s); if (m.find()) { String num = m.group(2); }
+         * regex for this would be:
+         * Pattern p = Pattern.compile("(^|\\s)([0-9]+)($|\\s)");
+         * Matcher m = p.matcher(s);
+         * if (m.find()) { String num = m.group(2); }
          */
 
-        // but hey, extractSpan gets called a lot, this is probably much faster:
+        // but hey, extractSpan gets called a lot, this is faster:
 
         for (int i = 0; i < spans.length(); i++) {
             if (Character.isDigit(spans.charAt(i))) {
@@ -780,13 +777,15 @@ public class NamedEntityTaskManager
         Log LOG = LogFactory.getLog(getClass());
         LOG.info("Retrieving data for job: " + jobID);
 
-        // retrieve job data
+        // Retrieve job data
         CrowdJob job = crowdclient.retrieveJob(jobID);
 
         LOG.info("Retrieving raw judgments for job: " + jobID);
-        // rawdata is a multiline JSON file
+        // Rawdata is a multiline JSON file
         String rawdata = crowdclient.retrieveRawJudgments(job);
 
+        // This may happen if the server didn't have enough time to prepare the data.
+        // (Usually the case for anything else than toy datasets)
         if (rawdata == null || rawdata.equals("")) {
             throw new Exception(
                     "No data retrieved for task1 at #"
@@ -818,33 +817,49 @@ public class NamedEntityTaskManager
         BufferedReader br = getReaderForRawJudgments(jobID2);
         String line;
 
-        // JSON object mapper
+        // Jackson JSON object mapper
         ObjectMapper mapper = new ObjectMapper();
-        // ObjectWriter writer = mapper.writer();
-
-        // This is only for testing purposes. TODO: make this multi-document aware
-        JCas cas = documentsJCas.get(0);
 
         // Maps our own token offsets (needed by JS in the crowdflower task) to Jcas offsets
-        HashMap<Integer, Integer> charStartMapping = new HashMap<Integer, Integer>();
-        HashMap<Integer, Integer> charEndMapping = new HashMap<Integer, Integer>();
+        // One map for start and end offset conversion each and new mappings for each document (to be able to use multiple documents)
+        List<HashMap<Integer, Integer>> charStartMappings = new ArrayList<HashMap<Integer, Integer>>();
+        List<HashMap<Integer, Integer>> charEndMappings = new ArrayList<HashMap<Integer, Integer>>();
 
         int i = 0;
-        for (Sentence sentence : select(cas, Sentence.class)) {
-            for (Token token : selectCovered(Token.class, sentence)) {
+        for(JCas cas : documentsJCas)
+        {
+            HashMap<Integer, Integer> charStartMapping = new HashMap<Integer, Integer>();
+            HashMap<Integer, Integer> charEndMapping = new HashMap<Integer, Integer>();
+            for (Sentence sentence : select(cas, Sentence.class))
+            {
+                for (Token token : selectCovered(Token.class, sentence))
+                {
 
-                charStartMapping.put(i, token.getBegin());
-                charEndMapping.put(i, token.getEnd());
+                    charStartMapping.put(i, token.getBegin());
+                    charEndMapping.put(i, token.getEnd());
 
-                i++;
+                    i++;
+                }
             }
+            charStartMappings.add(charStartMapping);
+            charEndMappings.add(charEndMapping);
         }
 
         while ((line = br.readLine()) != null) {
-            // try to process each line, omit data if an error occurs (but inform user)
+            // try to process each line, omit data if an error occurs
             try {
                 JsonNode elem = mapper.readTree(line);
                 String text = elem.path("data").path("text").getTextValue();
+                // document string contains one char to specify type (golden vs. not golden)
+                // and a new number starting at 0 for each new document
+                int documentNo = Integer.valueOf(elem.path("data").path("document").getTextValue().substring(1));
+                if (documentNo >= documentsJCas.size())
+                {
+                    throw new Exception("Error, number of documents changed from first upload! Tried to access document: " + documentNo);
+                }
+                JCas cas = documentsJCas.get(documentNo);
+
+                //only process elements that are finalized, i.e. elements that don't have missing judgments
                 String state = elem.path("state").getTextValue();
                 if (state.equals("finalized")) {
                     String typeExplicit = elem.path("results").path("ist_todecide_eine")
@@ -853,20 +868,22 @@ public class NamedEntityTaskManager
                     String posText = elem.path("data").path("posText").getTextValue();
                     int offset = 0;
 
+                    // Element numbering in Crowdflower judgments can be different than token numbering in the Cas,
+                    // to support an always incrementing numbering in a multi-document setting for displayed spans (task1)
+                    // docOffset is the diff of the marker (saved from task1 and also present in task2 data)
+                    // to token numbering of the Cas for the current document
+
                     if (!elem.path("data").path("docOffset").isMissingNode()) {
                         offset = elem.path("data").path("docOffset").getIntValue();
-                    }
-                    else {
-                        // hack for job #251025 with missing offset field
-                        offset = 20;
                     }
 
                     JsonNode marker = mapper.readTree(posText);
                     int start = marker.path("s").getIntValue();
                     int end = marker.path("e").getIntValue();
 
-                    NamedEntity newEntity = new NamedEntity(cas, charStartMapping.get(start
-                            - offset), charEndMapping.get(end - offset));
+                    //Map named entity to character offsets and add it to the Cas
+                    NamedEntity newEntity = new NamedEntity(cas, charStartMappings.get(documentNo).get(start
+                            - offset), charEndMappings.get(documentNo).get(end - offset));
                     newEntity.setValue(type);
                     newEntity.addToIndexes();
                 }
@@ -875,21 +892,8 @@ public class NamedEntityTaskManager
             catch (Exception e) {
                 LOG.warn("Warning, omitted a sentence from task2 import because of an error in processing it: "
                         + e.getMessage());
-                // debug
                 e.printStackTrace();
-                // TODO: inform user that there was a problem
             }
         }
-
-        /*
-         * for(JCas cas : documentsJCas) { int startOffset=0; int endOffset=0; String type;
-         *
-         * //TODO: is there an existing annotation?
-         *
-         * NamedEntity newEntity = new NamedEntity(cas, startOffset, endOffset);
-         * newEntity.setValue(type);
-         *
-         * newEntity.addToIndexes; }
-         */
     }
 }

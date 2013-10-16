@@ -365,15 +365,16 @@ public class CrowdSourcePage
             add(new TextField<String>("useSents"));
             add(new TextField<String>("useGoldSents"));
 
-            ExternalLink link;
+            ExternalLink link1;
+            ExternalLink link2;
 
-            IModel<String> model=new LoadableDetachableModel<String>() {
+            IModel<String> link1_model=new LoadableDetachableModel<String>() {
                 private static final long serialVersionUID = -2140663269255140643L;
 
                 @Override
                 protected String load() {
                     if(selectedCrowdJob != null) {
-                        return selectedCrowdJob.getLink();
+                        return selectedCrowdJob.getLink1();
                     }
                     else {
                         return "";
@@ -381,13 +382,36 @@ public class CrowdSourcePage
                 }
             };
 
-            add(link = new ExternalLink("link", model));
+            IModel<String> link2_model=new LoadableDetachableModel<String>() {
+                private static final long serialVersionUID = -2140663269255140643L;
 
-            link.add(new Label("label", new LoadableDetachableModel<String>() {
+                @Override
+                protected String load() {
+                    if(selectedCrowdJob != null) {
+                        return selectedCrowdJob.getLink2();
+                    }
+                    else {
+                        return "";
+                    }
+                }
+            };
+
+            add(link1 = new ExternalLink("link1", link1_model));
+            add(link2 = new ExternalLink("link2", link2_model));
+
+            link1.add(new Label("label1", new LoadableDetachableModel<String>() {
                 private static final long   serialVersionUID    = 1L;
                 @Override
                 protected String load() {
-                        return selectedCrowdJob.getLink();
+                        return selectedCrowdJob.getLink1();
+                }
+            }));
+
+            link2.add(new Label("label2", new LoadableDetachableModel<String>() {
+                private static final long   serialVersionUID    = 1L;
+                @Override
+                protected String load() {
+                        return selectedCrowdJob.getLink2();
                 }
             }));
 
@@ -698,9 +722,8 @@ public class CrowdSourcePage
 
                         String strdD = namedEntityTaskManager.uploadNewNERTask1(template, jCases, goldJCases, useSents, useGoldSents);
                         selectedCrowdJob.setTask1Id(strdD);
-                        selectedCrowdJob.setLink(namedEntityTaskManager.getURLforID(strdD));
                         selectedCrowdJob.setStatus(namedEntityTaskManager.getStatusString(strdD, ""));
-                        selectedCrowdJob.setTask1Id(strdD);
+
                         projectRepository.createCrowdJob(selectedCrowdJob);
                     }
                     catch (FileNotFoundException e)
