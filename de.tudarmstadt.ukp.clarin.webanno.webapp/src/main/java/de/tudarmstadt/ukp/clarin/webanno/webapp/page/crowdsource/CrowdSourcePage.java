@@ -806,6 +806,7 @@ public class CrowdSourcePage
                     String template = FileUtils.readFileToString(projectRepository.getTemplate(CROWD_NERTASK2_TEMPLATE));
                     String task2ID = namedEntityTaskManager.uploadNewNERTask2(template, task1ID, jCases, goldJCases);
                     selectedCrowdJob.setTask2Id(task2ID);
+                    projectRepository.createCrowdJob(selectedCrowdJob);
 
                     }catch (FileNotFoundException e)
                     {
