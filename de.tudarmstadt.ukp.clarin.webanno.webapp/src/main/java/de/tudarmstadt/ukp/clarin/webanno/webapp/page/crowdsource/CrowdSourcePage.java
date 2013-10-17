@@ -106,12 +106,14 @@ public class CrowdSourcePage
     private static final String CROWD_NERTASK2_TEMPLATE = "NERtask2.template";
 
     private CrowdJob selectedCrowdJob;
-    List<SourceDocument> goldDocuments = new ArrayList<SourceDocument>();
+
     private Project selectedProject;
 
     boolean createCrowdJob = false;
 
     private ArrayList<SourceDocument> documents = new ArrayList<SourceDocument>();
+    private ArrayList<SourceDocument> goldDocuments = new ArrayList<SourceDocument>();
+
 
     private NamedEntityTaskManager namedEntityTaskManager;
 
@@ -460,7 +462,6 @@ public class CrowdSourcePage
                         @Override
                         protected List<SourceDocument> load()
                         {
-                            // List<SourceDocument> documents = new ArrayList<SourceDocument>();
 
                             if (selectedCrowdJob != null) {
                                 documents = new ArrayList<SourceDocument>(selectedCrowdJob
@@ -511,9 +512,10 @@ public class CrowdSourcePage
                         @Override
                         protected List<SourceDocument> load()
                         {
-                            // List<SourceDocument> documents = new ArrayList<SourceDocument>();
 
-                            if (goldDocuments.size() != 0) {
+                            if (selectedCrowdJob != null) {
+                                goldDocuments = new ArrayList<SourceDocument>(selectedCrowdJob
+                                        .getGoldDocuments());
                                 Collections.sort(goldDocuments, new Comparator<SourceDocument>()
                                 {
                                     @Override
@@ -525,6 +527,7 @@ public class CrowdSourcePage
                                     }
                                 });
                             }
+
                             return goldDocuments;
                         }
                     });
@@ -644,7 +647,7 @@ public class CrowdSourcePage
                 }
             });
 
-            // remove remove document from the crowd job
+            // remove document from the crowd job
             add(new Button("removeDocument", new ResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;
@@ -659,6 +662,7 @@ public class CrowdSourcePage
                     selectedCrowdJob.setDocuments(new HashSet<SourceDocument>(sourceDocuments));
                     projectRepository.createCrowdJob(selectedCrowdJob);
                     documents.removeAll(CrowdProjectDetailForm.this.getModelObject().documents);
+                    crowdDocumentListForm.setModelObject(new SelectionModel());
                     updateTable();
                 }
 
@@ -670,6 +674,32 @@ public class CrowdSourcePage
                 }
             });
 
+            // remove gold documents from the crowd job
+            add(new Button("removeGoldDocument", new ResourceModel("label"))
+            {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public void onSubmit()
+                {
+                    List<SourceDocument> goldSourceDocuments = new ArrayList<SourceDocument>(
+                            selectedCrowdJob.getGoldDocuments());
+                    goldSourceDocuments
+                            .removeAll(CrowdProjectDetailForm.this.getModelObject().goldDocuments);
+                    selectedCrowdJob.setGoldDocuments(new HashSet<SourceDocument>(goldSourceDocuments));
+                    projectRepository.createCrowdJob(selectedCrowdJob);
+                    goldDocuments.removeAll(CrowdProjectDetailForm.this.getModelObject().goldDocuments);
+                    goldDocumentListForm.setModelObject(new SelectionModel());
+
+                }
+
+                @Override
+                public boolean isVisible()
+                {
+                    return !createCrowdJob;
+
+                }
+            });
 
 
             // send document to crowd flower and get back status and link
@@ -1036,8 +1066,8 @@ public class CrowdSourcePage
                     List<SourceDocument> sourceDocuments = CrowdDocumentListForm.this
                             .getModelObject().documents;
                     if (sourceDocuments != null) {
-                        Set<SourceDocument> oldsDocuments = selectedCrowdJob.getDocuments();
-                        sourceDocuments.addAll(new ArrayList<SourceDocument>(oldsDocuments));
+                        Set<SourceDocument> existingDocuments = selectedCrowdJob.getDocuments();
+                        sourceDocuments.addAll(new ArrayList<SourceDocument>(existingDocuments));
                         selectedCrowdJob.setDocuments(new HashSet<SourceDocument>(sourceDocuments));
                         projectRepository.createCrowdJob(selectedCrowdJob);
                     }
@@ -1069,7 +1099,7 @@ public class CrowdSourcePage
     {
         super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
 
-        add(new CheckBoxMultipleChoice<SourceDocument>("documents")
+        add(new CheckBoxMultipleChoice<SourceDocument>("goldDocuments")
         {
             private static final long serialVersionUID = 1L;
 
@@ -1089,9 +1119,10 @@ public class CrowdSourcePage
                             }
                         }
 
+                        // remove already added gold documents from the list
                         for (CrowdJob crowdJob : projectRepository.listCrowdJobs()) {
                             sourceDocuments.removeAll(new ArrayList<SourceDocument>(crowdJob
-                                    .getDocuments()));
+                                    .getGoldDocuments()));
                         }
 
                         Collections.sort(sourceDocuments, new Comparator<SourceDocument>()
@@ -1119,7 +1150,7 @@ public class CrowdSourcePage
                 });
             }
         }).setOutputMarkupId(true);
-        // add documents to the crowd source job
+
         add(new Button("add", new ResourceModel("label"))
         {
             private static final long serialVersionUID = 1L;
@@ -1128,15 +1159,18 @@ public class CrowdSourcePage
             public void onSubmit()
             {
 
-                List<SourceDocument> goldsSourceDocuments = GoldDocumentListForm.this
-                        .getModelObject().documents;
-                if (goldsSourceDocuments != null) {
-                    goldDocuments.clear();
-                    goldDocuments.addAll(goldsSourceDocuments);
+                List<SourceDocument> sourceDocuments = GoldDocumentListForm.this
+                        .getModelObject().goldDocuments;
+                if (sourceDocuments != null) {
+                    Set<SourceDocument> oldDocuments = selectedCrowdJob.getGoldDocuments();
+                    sourceDocuments.addAll(new ArrayList<SourceDocument>(oldDocuments));
+                    selectedCrowdJob.setGoldDocuments(new HashSet<SourceDocument>(sourceDocuments));
+                    projectRepository.createCrowdJob(selectedCrowdJob);
                 }
                 GoldDocumentListForm.this.setVisible(false);
             }
         });
+
         // add documents to the crowd source project
         add(new Button("cancel", new ResourceModel("label"))
         {
@@ -1162,6 +1196,8 @@ public class CrowdSourcePage
     private class DocumentColumnMetaData
         extends AbstractColumn<List<String>>
     {
+        private static final long serialVersionUID = -3632527878408587144L;
+
         private int columnNumber;
 
         private Project project;

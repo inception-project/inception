@@ -26,8 +26,11 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
+import javax.persistence.PersistenceContext;
+import javax.persistence.PersistenceContextType;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 /**
@@ -54,7 +57,12 @@ public class CrowdJob
 
 
     @ManyToMany
+    @JoinTable(name = "crowd_job_source_document")
     private Set<SourceDocument> documents = new HashSet<SourceDocument>();
+
+    @ManyToMany
+    @JoinTable(name = "crowd_job_gold_document")
+    private Set<SourceDocument> goldDocuments = new HashSet<SourceDocument>();
 
 
     @ManyToOne
@@ -188,6 +196,17 @@ public class CrowdJob
     {
         this.task2Id = task2Id;
     }
+
+    public Set<SourceDocument> getGoldDocuments()
+    {
+        return goldDocuments;
+    }
+    @PersistenceContext(type=PersistenceContextType.EXTENDED)
+    public void setGoldDocuments(Set<SourceDocument> goldDocuments)
+    {
+        this.goldDocuments = goldDocuments;
+    }
+
 
 
 }
