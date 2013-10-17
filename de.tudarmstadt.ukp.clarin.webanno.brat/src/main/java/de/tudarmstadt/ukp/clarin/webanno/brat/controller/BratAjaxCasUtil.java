@@ -37,6 +37,7 @@ import java.util.Map;
 import org.apache.uima.UIMAException;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -45,6 +46,7 @@ import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.uimafit.factory.CollectionReaderFactory;
 import org.uimafit.factory.JCasFactory;
+import org.uimafit.util.CasUtil;
 import org.uimafit.util.JCasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
@@ -56,6 +58,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
 import de.tudarmstadt.ukp.dkpro.core.api.io.ResourceCollectionReaderBase;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
+import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.TagsetDescription;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -415,25 +418,29 @@ public class BratAjaxCasUtil
      * @param aWindowSize
      * @return
      */
-    
-    public static int getSentenceAdderessofCAS(JCas aJcas, int aBegin, int aEnd){
+
+    public static int getSentenceAdderessofCAS(JCas aJcas, int aBegin, int aEnd)
+    {
         List<Sentence> sentences = selectCovered(aJcas, Sentence.class, aBegin, aEnd);
         return sentences.get(0).getAddress();
     }
+
     /**
      * Get an annotation using the begin/offsets and its type
-     * @return 
+     *
+     * @return
      */
-    
 
-    public static  AnnotationFS getAnnotation(JCas aJcas, int aBegin, int aEnd, Type aType){
-    	for (AnnotationFS anFS : selectCovered(aJcas.getCas(), aType, aBegin, aEnd)) {
-    		if(anFS.getBegin()==aBegin && anFS.getEnd() == aEnd){
-    			return anFS;
-    		}
-	}
-	return null;
+    public static AnnotationFS getAnnotation(JCas aJcas, int aBegin, int aEnd, Type aType)
+    {
+        for (AnnotationFS anFS : selectCovered(aJcas.getCas(), aType, aBegin, aEnd)) {
+            if (anFS.getBegin() == aBegin && anFS.getEnd() == aEnd) {
+                return anFS;
+            }
+        }
+        return null;
     }
+
     public static int getLastDisplayWindowFirstSentenceAddress(JCas aJcas, int aWindowSize)
     {
         List<Integer> displayWindowBeginingSentenceAddresses = getDisplayWindowBeginningSentenceAddresses(
@@ -713,5 +720,38 @@ public class BratAjaxCasUtil
             annotationType = AnnotationTypeConstant.COREFERENCE_PREFIX + aSelectedTag.getName();
         }
         return annotationType;
+    }
+
+    /**
+     * A Helper method to add {@link TagsetDescription} to {@link CAS}
+     */
+    public static void updateCasWithTagSet(CAS aCas, String aLayer, String aTagSetName)
+    {
+        Type TagsetType = CasUtil.getType(aCas, TagsetDescription.class);
+        Feature layerFeature = TagsetType.getFeatureByBaseName("layer");
+        Feature nameFeature = TagsetType.getFeatureByBaseName("name");
+
+        boolean tagSetModified = false;
+        // modify existing tagset Name
+        for (FeatureStructure fs : CasUtil.select(aCas, TagsetType)) {
+            String layer = fs.getStringValue(layerFeature);
+            String tagSetName = fs.getStringValue(nameFeature);
+            if (layer.equals(aLayer)) {
+                // only if the tagset name is changed
+                if (!aTagSetName.equals(tagSetName)) {
+                    fs.setStringValue(nameFeature, aTagSetName);
+                    aCas.addFsToIndexes(fs);
+                }
+                tagSetModified = true;
+                break;
+            }
+        }
+        if (!tagSetModified) {
+            FeatureStructure fs = aCas.createFS(TagsetType);
+            fs.setStringValue(layerFeature, aLayer);
+            fs.setStringValue(nameFeature, aTagSetName);
+            aCas.addFsToIndexes(fs);
+
+        }
     }
 }

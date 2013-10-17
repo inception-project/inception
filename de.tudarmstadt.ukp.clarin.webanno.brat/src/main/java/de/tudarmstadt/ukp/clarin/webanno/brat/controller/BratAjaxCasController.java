@@ -29,10 +29,6 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
-import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.codehaus.jackson.JsonParseException;
@@ -40,7 +36,6 @@ import org.codehaus.jackson.map.JsonMappingException;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.MultiValueMap;
-import org.uimafit.util.CasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
@@ -62,7 +57,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.WhoamiResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -73,7 +67,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
-import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.TagsetDescription;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
@@ -488,94 +481,6 @@ public class BratAjaxCasController
                     aAnnotationOffsetStart, aAnnotationOffsetEnd, aOriginFs, aTargetFs);
         }
 
-    }
-
-    /**
-     * Add a {@link TagsetDescription} information to CAS while span annotating
-     *
-     */
-    public void addSpanTagSetToCas(JCas aJCas, Project aProject, String aType)
-    {
-        String annotationType = BratAjaxCasUtil.getAnnotationType(aType);
-
-        if (annotationType.equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)) {
-            AnnotationType type = annotationService.getType(AnnotationTypeConstant.NAMEDENTITY,
-                    AnnotationTypeConstant.SPAN_TYPE);
-            TagSet tagSet = annotationService.getTagSet(type, aProject);
-
-            updateCasWithTagSet(aJCas.getCas(), NamedEntity.class.getName(), tagSet.getName());
-        }
-        else if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
-            AnnotationType type = annotationService.getType(AnnotationTypeConstant.POS,
-                    AnnotationTypeConstant.SPAN_TYPE);
-            TagSet tagSet = annotationService.getTagSet(type, aProject);
-
-            updateCasWithTagSet(aJCas.getCas(), POS.class.getName(), tagSet.getName());
-        }
-        else if (annotationType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
-            AnnotationType type = annotationService.getType(AnnotationTypeConstant.COREFRELTYPE,
-                    AnnotationTypeConstant.SPAN_TYPE);
-            TagSet tagSet = annotationService.getTagSet(type, aProject);
-            updateCasWithTagSet(aJCas.getCas(), CoreferenceLink.class.getName(), tagSet.getName());
-        }
-
-    }
-
-    /**
-     * Add a {@link TagsetDescription} information to CAS while Arc annotating
-     *
-     */
-    public void addArcTagSetToCas(JCas aJCas, Project aProject, String aType)
-    {
-        String annotationType = BratAjaxCasUtil.getAnnotationType(aType);
-
-        if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
-            AnnotationType type = annotationService.getType(AnnotationTypeConstant.DEPENDENCY,
-                    AnnotationTypeConstant.RELATION_TYPE);
-            TagSet tagSet = annotationService.getTagSet(type, aProject);
-
-            updateCasWithTagSet(aJCas.getCas(), Dependency.class.getName(), tagSet.getName());
-        }
-        else if (annotationType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
-            AnnotationType type = annotationService.getType(AnnotationTypeConstant.COREFERENCE,
-                    AnnotationTypeConstant.RELATION_TYPE);
-            TagSet tagSet = annotationService.getTagSet(type, aProject);
-            updateCasWithTagSet(aJCas.getCas(), CoreferenceChain.class.getName(), tagSet.getName());
-        }
-
-    }
-
-    /**
-     * A Helper method to add {@link TagsetDescription} to {@link CAS}
-     */
-    public void updateCasWithTagSet(CAS aCas, String aLayer, String aTagSetName)
-    {
-        Type TagsetType = CasUtil.getType(aCas, TagsetDescription.class);
-        Feature layerFeature = TagsetType.getFeatureByBaseName("layer");
-        Feature nameFeature = TagsetType.getFeatureByBaseName("name");
-
-        boolean tagSetModified = false;
-        // modify existing tagset Name
-        for (FeatureStructure fs : CasUtil.select(aCas, TagsetType)) {
-            String layer = fs.getStringValue(layerFeature);
-            String tagSetName = fs.getStringValue(nameFeature);
-            if (layer.equals(aLayer)) {
-                // only if the tagset name is changed
-                if (!aTagSetName.equals(tagSetName)) {
-                    fs.setStringValue(nameFeature, aTagSetName);
-                    aCas.addFsToIndexes(fs);
-                }
-                tagSetModified = true;
-                break;
-            }
-        }
-        if (!tagSetModified) {
-            FeatureStructure fs = aCas.createFS(TagsetType);
-            fs.setStringValue(layerFeature, aLayer);
-            fs.setStringValue(nameFeature, aTagSetName);
-            aCas.addFsToIndexes(fs);
-
-        }
     }
 
     /**

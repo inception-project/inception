@@ -45,7 +45,6 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.odlabs.wiquery.ui.resizable.ResizableBehavior;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 
 import com.googlecode.wicket.jquery.ui.kendo.combobox.ComboBox;
@@ -224,8 +223,8 @@ public class SpanAnnotationModalWindowPage
                             annotationType = BratAjaxCasUtil.getType(selectedTag);
 
                             controller.addSpanToCas(jCas, start, end, annotationType, null, null);
-                            controller.addSpanTagSetToCas(jCas, bratAnnotatorModel.getProject(),
-                                    annotationType);
+                           // controller.addSpanTagSetToCas(jCas, bratAnnotatorModel.getProject(),
+                             //       annotationType);
                             controller.createAnnotationDocumentContent(
                                     bratAnnotatorModel.getMode(), bratAnnotatorModel.getDocument(),
                                     bratAnnotatorModel.getUser(), jCas);

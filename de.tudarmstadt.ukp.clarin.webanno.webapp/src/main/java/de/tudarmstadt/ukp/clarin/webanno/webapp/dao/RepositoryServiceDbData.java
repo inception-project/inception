@@ -77,8 +77,11 @@ import org.uimafit.factory.JCasFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.model.CrowdJob;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -88,8 +91,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
+import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
 import de.tudarmstadt.ukp.dkpro.core.api.io.JCasFileWriter_ImplBase;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
+import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.dkpro.core.io.bincas.SerializedCasReader;
 import de.tudarmstadt.ukp.dkpro.core.io.bincas.SerializedCasWriter;
 
@@ -479,6 +487,29 @@ public class RepositoryServiceDbData
         documentMetadata.setDocumentUri(new File(dir.getAbsolutePath() + PROJECT + aProject.getId()
                 + DOCUMENT + aDocument.getId() + SOURCE + "/" + aFileName).toURI().toURL()
                 .toExternalForm());
+
+        // update with the correct tagset name
+        List<AnnotationType> types = annotationService.listAnnotationType(aProject);
+        for (AnnotationType annotationType : types) {
+            TagSet tagSet = annotationService.getTagSet(annotationType, aProject);
+            if(annotationType.getName().equals(AnnotationTypeConstant.NAMEDENTITY)){
+                BratAjaxCasUtil.updateCasWithTagSet(cas, NamedEntity.class.getName(), tagSet.getName());
+            }
+            else if(annotationType.getName().equals(AnnotationTypeConstant.POS)){
+                BratAjaxCasUtil.updateCasWithTagSet(cas, POS.class.getName(), tagSet.getName());
+            }
+            else if(annotationType.getName().equals(AnnotationTypeConstant.DEPENDENCY)){
+                BratAjaxCasUtil.updateCasWithTagSet(cas, Dependency.class.getName(), tagSet.getName());
+            }
+            else if(annotationType.getName().equals(AnnotationTypeConstant.COREFRELTYPE)){
+                BratAjaxCasUtil.updateCasWithTagSet(cas, CoreferenceLink.class.getName(), tagSet.getName());
+            }
+            else if(annotationType.getName().equals(AnnotationTypeConstant.COREFERENCE)){
+                BratAjaxCasUtil.updateCasWithTagSet(cas, CoreferenceChain.class.getName(), tagSet.getName());
+            }
+        }
+
+
         runPipeline(cas, writer);
 
         createLog(aProject, aUser).info(
