@@ -107,7 +107,7 @@ public class BratAnnotatorUtility
         if (!BratAjaxCasUtil.offsetsInOneSentences(aUIData.getjCas(),
                 aUIData.getAnnotationOffsetStart(), aUIData.getAnnotationOffsetEnd())) {
             throw new MultipleSentenceCoveredException(
-                    "Annotation coveres multiple sentences, limit your annotation to single sentence!");
+                    "You selected a span across multiple sentences. Limit your span annotations to single sentences!");
         }
 
         AnnotationFS originFs = (AnnotationFS) aUIData.getjCas().getLowLevelCas()
