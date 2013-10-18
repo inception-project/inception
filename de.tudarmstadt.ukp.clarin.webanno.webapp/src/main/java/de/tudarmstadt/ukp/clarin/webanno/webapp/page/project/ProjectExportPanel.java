@@ -70,7 +70,7 @@ import eu.clarin.weblicht.wlfxb.io.WLFormatException;
  * @author Seid Muhie Yimam
  *
  */
-public class ExportPanel
+public class ProjectExportPanel
     extends Panel
 {
     private static final long serialVersionUID = 2116717853865353733L;
@@ -101,7 +101,7 @@ public class ExportPanel
     private FileUpload uploadedFile;
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public ExportPanel(String id, final Model<Project> aProjectModel)
+    public ProjectExportPanel(String id, final Model<Project> aProjectModel)
     {
         super(id);
         // final Project project = aProjectModel.getObject();
@@ -142,7 +142,7 @@ public class ExportPanel
                     }
                     else {
                         // copy curated documents into the export folder
-                        copyCuratedDocuments(aProjectModel.getObject(), exportTempDir);
+                        exportCuratedDocuments(aProjectModel.getObject(), exportTempDir);
                         // copy META_INF contents from the project directory to the export folder
                         FileUtils.copyDirectory(new File(projectRepository.getDir(), "/project/"
                                 + aProjectModel.getObject().getId() + META_INF), metaInfDir);
@@ -213,7 +213,7 @@ public class ExportPanel
                         error("No curation document created yet for this document");
                     }
                     else {
-                        copyCuratedDocuments(aProjectModel.getObject(), exportTempDir);
+                        exportCuratedDocuments(aProjectModel.getObject(), exportTempDir);
                         DaoUtils.zipFolder(exportTempDir, new File(exportTempDir.getAbsolutePath()
                                 + ".zip"));
                         exportFile = new File(exportTempDir.getAbsolutePath() + ".zip");
@@ -266,14 +266,14 @@ public class ExportPanel
                 }
                 else {
                     try {
-                        copyProjectSettings(aProjectModel.getObject(), projectSettings,
+                        exportProjectSettings(aProjectModel.getObject(), projectSettings,
                                 exportTempDir);
-                        copySourceDocuments(aProjectModel.getObject(), exportTempDir);
-                        copyAnnotationDocuments(aProjectModel.getObject(), exportTempDir);
-                        copyProjectLog(aProjectModel.getObject(), exportTempDir);
-                        copyGuideLine(aProjectModel.getObject(), exportTempDir);
-                        copyProjectMetaInf(aProjectModel.getObject(), exportTempDir);
-                        copyCuratedDocuments(aProjectModel.getObject(), exportTempDir);
+                        exportSourceDocuments(aProjectModel.getObject(), exportTempDir);
+                        exportAnnotationDocuments(aProjectModel.getObject(), exportTempDir);
+                        exportProjectLog(aProjectModel.getObject(), exportTempDir);
+                        exportGuideLine(aProjectModel.getObject(), exportTempDir);
+                        exportProjectMetaInf(aProjectModel.getObject(), exportTempDir);
+                        exportCuratedDocuments(aProjectModel.getObject(), exportTempDir);
                         DaoUtils.zipFolder(exportTempDir, new File(exportTempDir.getAbsolutePath()
                                 + ".zip"));
                     }
@@ -296,7 +296,7 @@ public class ExportPanel
      * @param aCopyDir
      *            The folder where curated documents are copied to be exported as Zip File
      */
-    private void copyCuratedDocuments(Project aProject, File aCopyDir)
+    private void exportCuratedDocuments(Project aProject, File aCopyDir)
         throws FileNotFoundException, UIMAException, IOException, WLFormatException,
         ClassNotFoundException
     {
@@ -358,7 +358,7 @@ public class ExportPanel
     /**
      * Copy source documents from the file system of this project to the export folder
      */
-    private void copySourceDocuments(Project aProject, File aCopyDir)
+    private void exportSourceDocuments(Project aProject, File aCopyDir)
         throws IOException
     {
         File sourceDocumentDir = new File(aCopyDir + SOURCE);
@@ -377,7 +377,7 @@ public class ExportPanel
     /**
      * Copy Project logs from the file system of this project to the export folder
      */
-    private void copyProjectLog(Project aProject, File aCopyDir)
+    private void exportProjectLog(Project aProject, File aCopyDir)
         throws IOException
     {
         File logDir = new File(aCopyDir + LOG);
@@ -391,7 +391,7 @@ public class ExportPanel
     /**
      * Copy Project guidelines from the file system of this project to the export folder
      */
-    private void copyGuideLine(Project aProject, File aCopyDir)
+    private void exportGuideLine(Project aProject, File aCopyDir)
         throws IOException
     {
         File guidelineDir = new File(aCopyDir + GUIDELINE);
@@ -407,7 +407,7 @@ public class ExportPanel
     /**
      * Copy Project guidelines from the file system of this project to the export folder
      */
-    private void copyProjectMetaInf(Project aProject, File aCopyDir)
+    private void exportProjectMetaInf(Project aProject, File aCopyDir)
         throws IOException
     {
         File metaInfDir = new File(aCopyDir + META_INF);
@@ -427,7 +427,7 @@ public class ExportPanel
      * @throws WLFormatException
      * @throws UIMAException
      */
-    private void copyAnnotationDocuments(Project aProject, File aCopyDir)
+    private void exportAnnotationDocuments(Project aProject, File aCopyDir)
         throws IOException, UIMAException, WLFormatException, ClassNotFoundException
     {
         List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = projectRepository
@@ -494,7 +494,7 @@ public class ExportPanel
         return curationDocumentExist;
     }
 
-    private void copyProjectSettings(Project aProject, File aProjectSettings, File aExportTempDir)
+    private void exportProjectSettings(Project aProject, File aProjectSettings, File aExportTempDir)
     {
         de.tudarmstadt.ukp.clarin.webanno.export.model.Project project = new de.tudarmstadt.ukp.clarin.webanno.export.model.Project();
         project.setDescription(aProject.getDescription());

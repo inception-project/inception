@@ -457,7 +457,7 @@ public class ProjectPage
                 @Override
                 public Panel getPanel(String panelId)
                 {
-                    return new ExportPanel(panelId, project);
+                    return new ProjectExportPanel(panelId, project);
                 }
 
                 @Override
