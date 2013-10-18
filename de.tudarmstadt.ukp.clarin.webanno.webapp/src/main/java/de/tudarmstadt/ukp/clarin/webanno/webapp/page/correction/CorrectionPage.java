@@ -124,7 +124,7 @@ public class CorrectionPage
 
     private FinishImage finish;
 
-    private CurationSegmentPanel sentenceOuterView;
+    private CurationSegmentPanel automateView;
     private BratAnnotator mergeVisualizer;
 
     private Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress = new HashMap<String, Map<Integer, AnnotationSelection>>();
@@ -145,7 +145,7 @@ public class CorrectionPage
             curationUserSegmentForAnnotationDocument.setBratAnnotatorModel(bratAnnotatorModel);
             sentences.add(curationUserSegmentForAnnotationDocument);
         }
-        sentenceOuterView = new CurationSegmentPanel("sentenceOuterView",
+        automateView = new CurationSegmentPanel("automateView",
                 new Model<LinkedList<CurationUserSegmentForAnnotationDocument>>(sentences))
         {
             private static final long serialVersionUID = 2583509126979792202L;
@@ -177,8 +177,9 @@ public class CorrectionPage
             }
         };
 
-        sentenceOuterView.setOutputMarkupId(true);
-        add(sentenceOuterView);
+        automateView.setOutputMarkupId(true);
+        add(automateView);
+
         mergeVisualizer = new BratAnnotator("mergeView", new Model<BratAnnotatorModel>(
                 bratAnnotatorModel))
         {
@@ -195,7 +196,7 @@ public class CorrectionPage
                     setCurationSegmentBeginEnd();
                     curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
 
-                    BratCuratorUtility.updatePanel(aTarget, sentenceOuterView, curationContainer,
+                    BratCuratorUtility.updatePanel(aTarget, automateView, curationContainer,
                             this, repository, annotationSelectionByUsernameAndAddress,
                             curationSegment, annotationService, jsonConverter);
                 }
@@ -209,7 +210,7 @@ public class CorrectionPage
                     e.getMessage();
                 }
 
-                aTarget.add(sentenceOuterView);
+                aTarget.add(automateView);
                 aTarget.add(numberOfPages);
             }
         };
@@ -224,10 +225,9 @@ public class CorrectionPage
         add(documentNamePanel = new DocumentNamePanel("documentNamePanel",
                 new Model<BratAnnotatorModel>(bratAnnotatorModel)));
 
-        add(numberOfPages = (Label) new Label("numberOfPages", new LoadableDetachableModel()
+        add(numberOfPages = (Label) new Label("numberOfPages", new LoadableDetachableModel<String>()
         {
-
-            private static final long serialVersionUID = 1L;
+            private static final long serialVersionUID = 891566759811286173L;
 
             @Override
             protected String load()
@@ -248,8 +248,11 @@ public class CorrectionPage
                          * bratAnnotatorModel.setSentenceAddress(bratAnnotatorModel
                          * .getFirstSentenceAddress()); }
                          */
+                        int address = BratAjaxCasUtil.getSentenceAdderessofCAS(mergeJCas,
+                                bratAnnotatorModel.getSentenceBeginOffset(),
+                                bratAnnotatorModel.getSentenceEndOffset());
                         sentenceNumber = BratAjaxCasUtil.getSentenceNumber(mergeJCas,
-                                bratAnnotatorModel.getSentenceAddress());
+                                address);
                         int firstSentenceNumber = sentenceNumber + 1;
                         int lastSentenceNumber;
                         if (firstSentenceNumber + bratAnnotatorModel.getWindowSize() - 1 < totalNumberOfSentence) {
@@ -401,6 +404,7 @@ public class CorrectionPage
         add(gotoPageTextField);
         gotoPageTextField.add(new AjaxFormComponentUpdatingBehavior("onchange")
         {
+            private static final long serialVersionUID = -3853194405966729661L;
 
             @Override
             protected void onUpdate(AjaxRequestTarget target)
@@ -933,7 +937,6 @@ public class CorrectionPage
 
     }
 
-    @SuppressWarnings("unchecked")
     private void init()
         throws UIMAException, ClassNotFoundException, IOException
     {
@@ -1050,7 +1053,7 @@ public class CorrectionPage
     private void update(AjaxRequestTarget target)
     {
         try {
-            BratCuratorUtility.updatePanel(target, sentenceOuterView, curationContainer,
+            BratCuratorUtility.updatePanel(target, automateView, curationContainer,
                     mergeVisualizer, repository, annotationSelectionByUsernameAndAddress,
                     curationSegment, annotationService, jsonConverter);
         }
@@ -1063,7 +1066,7 @@ public class CorrectionPage
         catch (IOException e) {
             error(e.getMessage());
         }
-        target.add(sentenceOuterView);
+        target.add(automateView);
         target.add(numberOfPages);
     }
 
