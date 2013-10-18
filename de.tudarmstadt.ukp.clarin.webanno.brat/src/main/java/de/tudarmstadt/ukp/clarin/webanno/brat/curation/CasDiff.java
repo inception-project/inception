@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation;
+package de.tudarmstadt.ukp.clarin.webanno.brat.curation;
 
 import static org.uimafit.util.CasUtil.selectCovered;
 
@@ -33,6 +33,7 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.uimafit.util.CasUtil;
+
 
 /**
  * Class for finding clusters of equal annotations. Equal annotations are grouped into

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation;
+package de.tudarmstadt.ukp.clarin.webanno.brat.util;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -32,14 +32,12 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
-import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.IRequestParameters;
 import org.codehaus.jackson.JsonGenerator;
 import org.springframework.beans.BeansException;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.uimafit.util.CasUtil;
 import org.uimafit.util.JCasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
@@ -48,10 +46,18 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationOption;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.CurationSegmentPanel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.AnnotationState;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationBuilder;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationContainer;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationSegmentForSourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationUserSegmentForAnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Argument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Relation;
@@ -63,12 +69,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.CurationSegmentPanel;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.AnnotationState;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationBuilder;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationContainer;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationSegmentForSourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationUserSegmentForAnnotationDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
@@ -191,11 +191,11 @@ public class BratCuratorUtility
                     addressOrigin);
             AnnotationFS targetFsClicked = (AnnotationFS) clickedJCas.getLowLevelCas().ll_getFSForRef(
                     addressTarget);
-            
-            AnnotationFS originFs = BratAjaxCasUtil.getAnnotation(aJcas, originFsClicked.getBegin(), 
+
+            AnnotationFS originFs = BratAjaxCasUtil.getAnnotation(aJcas, originFsClicked.getBegin(),
             		originFsClicked.getEnd(), originFsClicked.getType());
-            
-            AnnotationFS targetFs = BratAjaxCasUtil.getAnnotation(aJcas, targetFsClicked.getBegin(), 
+
+            AnnotationFS targetFs = BratAjaxCasUtil.getAnnotation(aJcas, targetFsClicked.getBegin(),
             		targetFsClicked.getEnd(), targetFsClicked.getType());
             BratAjaxCasController controller = new BratAjaxCasController(repository,
                     annotationService);

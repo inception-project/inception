@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component;
+package de.tudarmstadt.ukp.clarin.webanno.brat.curation.component;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -46,11 +46,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.AnnotationSelection;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.BratCuratorUtility;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationContainer;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationSegmentForSourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model.CurationUserSegmentForAnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationContainer;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationSegmentForSourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationUserSegmentForAnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratCuratorUtility;
 
 /**
  * Main Panel for the curation page. It displays a box with the complete text on the left side and a

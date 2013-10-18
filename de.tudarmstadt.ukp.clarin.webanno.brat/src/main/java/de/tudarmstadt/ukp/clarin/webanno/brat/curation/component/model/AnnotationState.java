@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model;
+package de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model;
 
 /**
  * State of an annotated span (or arc). Contains color code for visualization

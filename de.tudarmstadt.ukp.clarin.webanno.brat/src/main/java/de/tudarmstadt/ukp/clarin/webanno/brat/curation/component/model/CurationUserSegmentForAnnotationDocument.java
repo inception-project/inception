@@ -15,14 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.component.model;
+package de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model;
 
 import java.io.Serializable;
 import java.util.Map;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.AnnotationSelection;
 
 /**
  * A Model comprises of document and collection brat responses togehter with the username that will
