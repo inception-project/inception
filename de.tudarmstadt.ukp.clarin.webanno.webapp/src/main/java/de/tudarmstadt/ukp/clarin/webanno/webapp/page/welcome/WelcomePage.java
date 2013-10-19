@@ -17,6 +17,8 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome;
 
+import javax.persistence.NoResultException;
+
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
@@ -33,8 +35,10 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.correction.CorrectionPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.crowdsource.CrowdSourcePage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.CurationPage;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.login.LoginPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.monitoring.MonitoringPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.project.ProjectPage;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.security.LogoutPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.security.page.ManageUsersPage;
 
 /**
@@ -63,7 +67,18 @@ public class WelcomePage
     public WelcomePage()
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = projectRepository.getUser(username);
+       
+        // if a user is logged recently, session will not expire,
+        // This causes a problem, if the data base is re-created while user's session not expired OR
+        // the user is deleted while the session is not expired
+        User user = null;
+        try{
+         user = projectRepository.getUser(username);
+        }
+        // redirect to login page (if no usr is found, admin/admin will be created)
+        catch (NoResultException e){
+            setResponsePage(LoginPage.class);
+        }
 
         // Add Project Setting Link
         // Only Super Admin or Project admins can see this link
