@@ -499,6 +499,7 @@ public class ChainAdapter
                     linkFs = (AnnotationFS) linkFs.getFeatureValue(next);
                 }
 
+                lastLink = linkFs;
                 // CASE 3
                 if (lastLink != null && lastLink.getBegin() == originLink.getBegin()) {
                     lastLink.setFeatureValue(next, targetLink);
