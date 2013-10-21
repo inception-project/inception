@@ -623,20 +623,6 @@ public class BratAjaxCasUtil
     }
 
     /**
-     * Get the {@link AnnotationType}, using the request sent from brat. If the request have type
-     * POS_NN, the {@link AnnotationType} is POS
-     *
-     * @param aType
-     *            the type sent from brat annotation as request while annotating
-     */
-    public static AnnotationType getAnnotationType(AnnotationService aAnnotationService,
-            String aTypeName, String aType)
-    {
-        return aAnnotationService.getType(aTypeName, aType);
-
-    }
-
-    /**
      * Get the annotation UIMA type, using the request sent from brat. If the request have type
      * POS_NN, the the annotation type is POS
      *
