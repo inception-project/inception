@@ -144,7 +144,7 @@ public class ArcAdapter
             lastSentenceAddress = aBratAnnotatorModel.getLastSentenceAddress();
         }
         else{
-            lastSentenceAddress = BratAjaxCasUtil.getLastSenetnceAddress(aJcas);
+            lastSentenceAddress = BratAjaxCasUtil.getLastSentenceAddress(aJcas);
         }
         // Loop based on window size
         // j, controlling variable to display sentences based on window size

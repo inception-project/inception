@@ -56,7 +56,7 @@ public class CasToBratJson
             lastSentenceAddress = aBratAnnotatorModel.getLastSentenceAddress();
         }
         else{
-            lastSentenceAddress = BratAjaxCasUtil.getLastSenetnceAddress(aJcas);
+            lastSentenceAddress = BratAjaxCasUtil.getLastSentenceAddress(aJcas);
         }
         int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(aJcas, i);
         aResponse.setSentenceNumberOffset(sentenceNumber);
@@ -96,7 +96,7 @@ public class CasToBratJson
             lastSentenceAddress = aBratAnnotatorModel.getLastSentenceAddress();
         }
         else{
-            lastSentenceAddress = BratAjaxCasUtil.getLastSenetnceAddress(aJcas);
+            lastSentenceAddress = BratAjaxCasUtil.getLastSentenceAddress(aJcas);
         }
         Sentence sentence = null;
 

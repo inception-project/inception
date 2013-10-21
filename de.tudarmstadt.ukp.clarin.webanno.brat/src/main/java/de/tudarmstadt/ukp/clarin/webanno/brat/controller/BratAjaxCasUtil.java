@@ -268,7 +268,7 @@ public class BratAjaxCasUtil
         return firstSentenceAddress;
     }
 
-    public static int getLastSenetnceAddress(JCas aJcas)
+    public static int getLastSentenceAddress(JCas aJcas)
     {
         int lastSentenceAddress = -1;
 
@@ -292,7 +292,7 @@ public class BratAjaxCasUtil
             int aWindowSize)
     {
         int i = aFirstSentenceAddress;
-        int lastSentenceAddress = getLastSenetnceAddress(aJcas);
+        int lastSentenceAddress = getLastSentenceAddress(aJcas);
         int count = 0;
 
         while (count <= aWindowSize) {

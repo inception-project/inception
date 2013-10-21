@@ -1025,7 +1025,7 @@ public class CurationPage extends SettingsPageBase {
 				bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil
 						.getFirstSenetnceAddress(jCas));
 				bratAnnotatorModel.setLastSentenceAddress(BratAjaxCasUtil
-						.getLastSenetnceAddress(jCas));
+						.getLastSentenceAddress(jCas));
 				bratAnnotatorModel.setFirstSentenceAddress(bratAnnotatorModel
 						.getSentenceAddress());
 

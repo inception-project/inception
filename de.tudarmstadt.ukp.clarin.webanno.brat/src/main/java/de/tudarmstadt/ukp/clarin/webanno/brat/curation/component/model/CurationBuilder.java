@@ -250,7 +250,7 @@ public class CurationBuilder
             // FIXME !!! Why not use selectCovered(jcas, Sentence.class, begin, end) here?
             int i = firstSentence.getAddress();
             Sentence sentence = null;
-            int lastSentenceAddress = BratAjaxCasUtil.getLastSenetnceAddress(jCas);
+            int lastSentenceAddress = BratAjaxCasUtil.getLastSentenceAddress(jCas);
 
             for (int j = 0; j < aBratAnnotatorModel.getWindowSize(); j++) {
                 if (i >= lastSentenceAddress) {
