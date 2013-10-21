@@ -378,8 +378,8 @@ public class ArcAnnotationModalWindowPage
         super(aId);
         this.originSpanType = aOriginSpanType;
 
-        String annotationType = BratAjaxCasUtil.getLabelPrefix(originSpanType);
-        String layerName = BratAjaxCasUtil.getArcAnnotationTypeName(annotationType);
+        String getLabelPrefix = BratAjaxCasUtil.getLabelPrefix(originSpanType);
+        String layerName = BratAjaxCasUtil.getArcAnnotationTypeName(getLabelPrefix);
         AnnotationType layer = annotationService.getType(layerName, AnnotationTypeConstant.RELATION_TYPE);
         this.selectedtTagSet = annotationService.getTagSet(layer, aBratAnnotatorModel.getProject());
 
@@ -401,8 +401,8 @@ public class ArcAnnotationModalWindowPage
 
         this.originSpanType = aOriginSpanType;
 
-        String annotationType = BratAjaxCasUtil.getLabelPrefix(originSpanType);
-        String layerName = BratAjaxCasUtil.getArcAnnotationTypeName(annotationType);
+        String labelPrefix = BratAjaxCasUtil.getLabelPrefix(originSpanType);
+        String layerName = BratAjaxCasUtil.getArcAnnotationTypeName(labelPrefix);
         AnnotationType layer = annotationService.getType(layerName, AnnotationTypeConstant.RELATION_TYPE);
         this.selectedtTagSet = annotationService.getTagSet(layer, aBratAnnotatorModel.getProject());
 

@@ -362,11 +362,10 @@ public class BratAjaxCasController
             String aType, boolean aIsGetDocument)
         throws UIMAException, IOException
     {
-
-        String annotationType = BratAjaxCasUtil.getLabelPrefix(aType);
+        String getLabelPrefix = BratAjaxCasUtil.getLabelPrefix(aType);
         String type = BratAjaxCasUtil.getLabel(aType);
 
-        if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
+        if (getLabelPrefix.equals(AnnotationTypeConstant.POS_PREFIX)) {
             ArcAdapter.getDependencyAdapter().delete(aJCas, aOriginFs, aTargetFs,
                     aBratAnnotatorModel, type);
             // Reverse directions
@@ -426,15 +425,14 @@ public class BratAjaxCasController
             String aType, boolean aIsGetDocument)
         throws UIMAException, IOException
     {
-
-        String annotationType = BratAjaxCasUtil.getLabelPrefix(aType);
+        String getLabelPrefix = BratAjaxCasUtil.getLabelPrefix(aType);
         String type = BratAjaxCasUtil.getLabel(aType);
 
-        if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
+        if (getLabelPrefix.equals(AnnotationTypeConstant.POS_PREFIX)) {
             ArcAdapter.getDependencyAdapter().delete(aJCas, aOriginFs, aTargetFs,
                     aBratAnnotatorModel, type);
         }
-        else if (annotationType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
+        else if (getLabelPrefix.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
             ChainAdapter.getCoreferenceChainAdapter().delete(aJCas, aOriginFs);
         }
 
@@ -452,7 +450,6 @@ public class BratAjaxCasController
                 aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser(), aJCas);
 
         return deleteArcResponse;
-
     }
 
     /**
@@ -464,23 +461,21 @@ public class BratAjaxCasController
     public void addSpanToCas(JCas aJCas, int aAnnotationOffsetStart, int aAnnotationOffsetEnd,
             String aType, AnnotationFS aOriginFs, AnnotationFS aTargetFs)
     {
-
-        String annotationType = BratAjaxCasUtil.getLabelPrefix(aType);
+        String getLabelPrefix = BratAjaxCasUtil.getLabelPrefix(aType);
         String aLabelValue = BratAjaxCasUtil.getLabel(aType);
 
-        if (annotationType.equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)) {
+        if (getLabelPrefix.equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)) {
             SpanAdapter.getNamedEntityAdapter().add(aLabelValue, aJCas, aAnnotationOffsetStart,
                     aAnnotationOffsetEnd);
         }
-        else if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
+        else if (getLabelPrefix.equals(AnnotationTypeConstant.POS_PREFIX)) {
             SpanAdapter.getPosAdapter().add(aLabelValue, aJCas, aAnnotationOffsetStart,
                     aAnnotationOffsetEnd);
         }
-        else if (annotationType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
+        else if (getLabelPrefix.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
             ChainAdapter.getCoreferenceLinkAdapter().add(aLabelValue, aJCas,
                     aAnnotationOffsetStart, aAnnotationOffsetEnd, aOriginFs, aTargetFs);
         }
-
     }
 
     /**
@@ -494,15 +489,15 @@ public class BratAjaxCasController
             int aAnnotationOffsetStart, int aAnnotationOffsetEnd, AnnotationFS aOriginFs,
             AnnotationFS aTargetFs, JCas aJCas)
     {
-        String annotationType = BratAjaxCasUtil.getLabelPrefix(aType);
+        String getLabelPrefix = BratAjaxCasUtil.getLabelPrefix(aType);
         String labelValue = BratAjaxCasUtil.getLabel(aType);
 
-        if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
+        if (getLabelPrefix.equals(AnnotationTypeConstant.POS_PREFIX)) {
             ArcAdapter.getDependencyAdapter().add(labelValue, aOriginFs, aTargetFs, aJCas,
                     aBratAnnotatorModel,
                     aBratAnnotatorModel.getProject().isReverseDependencyDirection());
         }
-        else if (annotationType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
+        else if (getLabelPrefix.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
             ChainAdapter.getCoreferenceChainAdapter().add(labelValue, aJCas,
                     aAnnotationOffsetStart, aAnnotationOffsetEnd, aOriginFs, aTargetFs);
         }
@@ -520,16 +515,13 @@ public class BratAjaxCasController
      */
     public void deleteSpanFromCas(String aType, JCas aJcas, AnnotationFS aId)
     {
+        String getLabelPrefix = BratAjaxCasUtil.getLabelPrefix(aType);
 
-        String annotationType = BratAjaxCasUtil.getLabelPrefix(aType);
-
-        if (annotationType.equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)) {
+        if (getLabelPrefix.equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)) {
             SpanAdapter.getNamedEntityAdapter().delete(aJcas, aId);
         }
-        else if (annotationType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
-
+        else if (getLabelPrefix.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
             ChainAdapter.getCoreferenceLinkAdapter().delete(aJcas, aId);
-
         }
     }
 
@@ -546,14 +538,13 @@ public class BratAjaxCasController
     public void delteArcFromCas(String aType, JCas aJCas, AnnotationFS aOriginFs,
             AnnotationFS aTargetFs, BratAnnotatorModel aBratAnnotatorModel)
     {
-
-        String annotationType = BratAjaxCasUtil.getLabelPrefix(aType);
+        String getLabelPrefix = BratAjaxCasUtil.getLabelPrefix(aType);
         String aLabelValue = BratAjaxCasUtil.getLabel(aType);
-        if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
+        if (getLabelPrefix.equals(AnnotationTypeConstant.POS_PREFIX)) {
             ArcAdapter.getDependencyAdapter().delete(aJCas, aOriginFs, aTargetFs,
                     aBratAnnotatorModel, aLabelValue);
         }
-        else if (annotationType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
+        else if (getLabelPrefix.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
             ChainAdapter.getCoreferenceChainAdapter().delete(aJCas, aOriginFs);
         }
     }
