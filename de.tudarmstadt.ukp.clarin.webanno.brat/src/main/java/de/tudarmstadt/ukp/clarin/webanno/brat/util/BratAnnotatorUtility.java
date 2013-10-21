@@ -17,6 +17,7 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.util;
 
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectAnnotationByAddress;
 import static org.uimafit.util.JCasUtil.select;
 
 import java.io.ByteArrayInputStream;
@@ -25,7 +26,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.TypeSystem;
@@ -113,10 +113,8 @@ public class BratAnnotatorUtility
                     "You selected a span across multiple sentences. Limit your span annotations to single sentences!");
         }
 
-        AnnotationFS originFs = (AnnotationFS) aUIData.getjCas().getLowLevelCas()
-                .ll_getFSForRef(aUIData.getOrigin());
-        AnnotationFS targetFs = (AnnotationFS) aUIData.getjCas().getLowLevelCas()
-                .ll_getFSForRef(aUIData.getTarget());
+        AnnotationFS originFs = selectAnnotationByAddress(aUIData.getjCas(), aUIData.getOrigin());
+        AnnotationFS targetFs = selectAnnotationByAddress(aUIData.getjCas(), aUIData.getTarget());
 
         result = controller.createSpanResponse(bratAnnotatorModel,
                 aUIData.getAnnotationOffsetStart(), aUIData.getjCas(), aUIData.isGetDocument(),
@@ -145,10 +143,8 @@ public class BratAnnotatorUtility
         aUIData.setAnnotationOffsetStart(BratAjaxCasUtil.getAnnotationBeginOffset(
                 aUIData.getjCas(), aUIData.getOrigin()));
 
-        AnnotationFS originFs = (AnnotationFS) aUIData.getjCas().getLowLevelCas()
-                .ll_getFSForRef(aUIData.getOrigin());
-        AnnotationFS targetFs = (AnnotationFS) aUIData.getjCas().getLowLevelCas()
-                .ll_getFSForRef(aUIData.getTarget());
+        AnnotationFS originFs = selectAnnotationByAddress(aUIData.getjCas(), aUIData.getOrigin());
+        AnnotationFS targetFs = selectAnnotationByAddress(aUIData.getjCas(), aUIData.getTarget());
 
         result = controller.createArcResponse(bratAnnotatorModel,
                 aUIData.getAnnotationOffsetStart(), aUIData.getjCas(), aUIData.isGetDocument(),
@@ -180,10 +176,8 @@ public class BratAnnotatorUtility
                 aUIData.getType().indexOf(AnnotationTypeConstant.PREFIX) + 1);
         if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
 
-            AnnotationFS originFs = (AnnotationFS) aUIData.getjCas().getLowLevelCas()
-                    .ll_getFSForRef(aUIData.getOrigin());
-            AnnotationFS targetFs = (AnnotationFS) aUIData.getjCas().getLowLevelCas()
-                    .ll_getFSForRef(aUIData.getTarget());
+            AnnotationFS originFs = selectAnnotationByAddress(aUIData.getjCas(), aUIData.getOrigin());
+            AnnotationFS targetFs = selectAnnotationByAddress(aUIData.getjCas(), aUIData.getTarget());
 
             result = controller.reverseArcResponse(bratAnnotatorModel, aUIData.getjCas(),
                     aUIData.getAnnotationOffsetStart(), originFs, targetFs, aUIData.getType(),
@@ -220,7 +214,7 @@ public class BratAnnotatorUtility
                 bratAnnotatorModel.getSentenceAddress()) + end);
         aUIData.setType(aRequest.getParameterValue("type").toString());
 
-        AnnotationFS idFs = (AnnotationFS) aUIData.getjCas().getLowLevelCas().ll_getFSForRef(id);
+        AnnotationFS idFs = selectAnnotationByAddress(aUIData.getjCas(), id);
 
         result = controller.deleteSpanResponse(bratAnnotatorModel, idFs,
                 aUIData.getAnnotationOffsetStart(), aUIData.getjCas(), aUIData.isGetDocument(),
@@ -249,10 +243,8 @@ public class BratAnnotatorUtility
         aUIData.setAnnotationOffsetStart(BratAjaxCasUtil.getAnnotationBeginOffset(
                 aUIData.getjCas(), aUIData.getOrigin()));
 
-        AnnotationFS originFs = (AnnotationFS) aUIData.getjCas().getLowLevelCas()
-                .ll_getFSForRef(aUIData.getOrigin());
-        AnnotationFS targetFs = (AnnotationFS) aUIData.getjCas().getLowLevelCas()
-                .ll_getFSForRef(aUIData.getTarget());
+        AnnotationFS originFs = selectAnnotationByAddress(aUIData.getjCas(), aUIData.getOrigin());
+        AnnotationFS targetFs = selectAnnotationByAddress(aUIData.getjCas(), aUIData.getTarget());
 
         result = controller.deleteArcResponse(bratAnnotatorModel, aUIData.getjCas(),
                 aUIData.getAnnotationOffsetStart(), originFs, targetFs, aUIData.getType(),

@@ -17,6 +17,7 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.webapp.page.correction;
 
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectAnnotationByAddress;
 import static org.uimafit.util.JCasUtil.selectFollowing;
 
 import java.io.FileNotFoundException;
@@ -463,7 +464,7 @@ public class CorrectionPage
                     if (bratAnnotatorModel.getSentenceAddress() != gotoPageAddress) {
                         bratAnnotatorModel.setSentenceAddress(gotoPageAddress);
 
-                        Sentence sentence = (Sentence) mergeJCas.getLowLevelCas().ll_getFSForRef(
+                        Sentence sentence = selectAnnotationByAddress(mergeJCas, Sentence.class,
                                 gotoPageAddress);
                         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
@@ -685,7 +686,7 @@ public class CorrectionPage
                     if (address != nextSentenceAddress) {
                         bratAnnotatorModel.setSentenceAddress(nextSentenceAddress);
 
-                        Sentence sentence = (Sentence) mergeJCas.getLowLevelCas().ll_getFSForRef(
+                        Sentence sentence = selectAnnotationByAddress(mergeJCas, Sentence.class,
                                 nextSentenceAddress);
                         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
@@ -751,7 +752,7 @@ public class CorrectionPage
                     if (bratAnnotatorModel.getSentenceAddress() != previousSentenceAddress) {
                         bratAnnotatorModel.setSentenceAddress(previousSentenceAddress);
 
-                        Sentence sentence = (Sentence) mergeJCas.getLowLevelCas().ll_getFSForRef(
+                        Sentence sentence = selectAnnotationByAddress(mergeJCas, Sentence.class,
                                 previousSentenceAddress);
                         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
@@ -816,7 +817,7 @@ public class CorrectionPage
                         bratAnnotatorModel.setSentenceAddress(firstAddress);
 
 
-                        Sentence sentence = (Sentence) mergeJCas.getLowLevelCas().ll_getFSForRef(
+                        Sentence sentence = selectAnnotationByAddress(mergeJCas, Sentence.class,
                                 firstAddress);
                         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
@@ -879,7 +880,7 @@ public class CorrectionPage
                         bratAnnotatorModel
                                 .setSentenceAddress(lastDisplayWindowBeginingSentenceAddress);
 
-                        Sentence sentence = (Sentence) mergeJCas.getLowLevelCas().ll_getFSForRef(
+                        Sentence sentence = selectAnnotationByAddress(mergeJCas, Sentence.class,
                                 lastDisplayWindowBeginingSentenceAddress);
                         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
@@ -999,7 +1000,7 @@ public class CorrectionPage
                         .getLastSenetnceAddress(jCas));
                 bratAnnotatorModel.setFirstSentenceAddress(bratAnnotatorModel.getSentenceAddress());
 
-                Sentence sentence = (Sentence) jCas.getLowLevelCas().ll_getFSForRef(
+                Sentence sentence = selectAnnotationByAddress(jCas, Sentence.class,
                         bratAnnotatorModel.getSentenceAddress());
                 bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                 bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
@@ -1038,7 +1039,7 @@ public class CorrectionPage
                 bratAnnotatorModel.getSentenceBeginOffset(),
                 bratAnnotatorModel.getSentenceEndOffset());
 
-        Sentence sentence = (Sentence) jCas.getLowLevelCas().ll_getFSForRef(sentenceAddress);
+        Sentence sentence = selectAnnotationByAddress(jCas, Sentence.class, sentenceAddress);
         List<Sentence> followingSentences = selectFollowing(jCas, Sentence.class, sentence,
                 bratAnnotatorModel.getWindowSize());
         // Check also, when getting the last sentence address in the display window, if this is the

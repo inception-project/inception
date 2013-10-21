@@ -17,6 +17,7 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectAnnotationByAddress;
 import static org.uimafit.util.JCasUtil.selectCovered;
 
 import org.apache.uima.jcas.JCas;
@@ -48,8 +49,7 @@ public class CasToBratJson
 
        int address = BratAjaxCasUtil.getSentenceAdderessofCAS(aJcas,
                 aBratAnnotatorModel.getSentenceBeginOffset(), aBratAnnotatorModel.getSentenceEndOffset());
-        Sentence sentenceAddress = (Sentence) aJcas.getLowLevelCas().ll_getFSForRef(
-                address);
+        Sentence sentenceAddress = selectAnnotationByAddress(aJcas, Sentence.class, address);
         int current = sentenceAddress.getBegin();
         int i = address;
         int lastSentenceAddress;
@@ -65,14 +65,14 @@ public class CasToBratJson
 
         for (int j = 0; j < aBratAnnotatorModel.getWindowSize(); j++) {
             if (i >= lastSentenceAddress) {
-                sentence = (Sentence) aJcas.getLowLevelCas().ll_getFSForRef(i);
+                sentence = selectAnnotationByAddress(aJcas, Sentence.class, i);
                 for (Token coveredToken : selectCovered(Token.class, sentence)) {
                     aResponse.addToken(coveredToken.getBegin() - current, coveredToken.getEnd()
                             - current);
                 }
                 break;
             }
-            sentence = (Sentence) aJcas.getLowLevelCas().ll_getFSForRef(i);
+            sentence = selectAnnotationByAddress(aJcas, Sentence.class, i);
             for (Token coveredToken : selectCovered(Token.class, sentence)) {
                 aResponse.addToken(coveredToken.getBegin() - current, coveredToken.getEnd()
                         - current);
@@ -90,8 +90,7 @@ public class CasToBratJson
         int address = BratAjaxCasUtil.getSentenceAdderessofCAS(aJcas,
                 aBratAnnotatorModel.getSentenceBeginOffset(), aBratAnnotatorModel.getSentenceEndOffset());
 
-        Sentence sentenceAddress = (Sentence) aJcas.getLowLevelCas().ll_getFSForRef(
-                address);
+        Sentence sentenceAddress = selectAnnotationByAddress(aJcas, Sentence.class, address);
         int current = sentenceAddress.getBegin();
         int i = address;
         int lastSentenceAddress;
@@ -105,11 +104,11 @@ public class CasToBratJson
 
         for (int j = 0; j < aBratAnnotatorModel.getWindowSize(); j++) {
             if (i >= lastSentenceAddress) {
-                sentence = (Sentence) aJcas.getLowLevelCas().ll_getFSForRef(i);
+                sentence = selectAnnotationByAddress(aJcas, Sentence.class, i);
                 aResponse.addSentence(sentence.getBegin() - current, sentence.getEnd() - current);
                 break;
             }
-            sentence = (Sentence) aJcas.getLowLevelCas().ll_getFSForRef(i);
+            sentence = selectAnnotationByAddress(aJcas, Sentence.class, i); 
             aResponse.addSentence(sentence.getBegin() - current, sentence.getEnd() - current);
             i = BratAjaxCasUtil.getFollowingSentenceAddress(aJcas, i);
         }

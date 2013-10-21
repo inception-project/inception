@@ -116,6 +116,11 @@ public class BratAjaxCasUtil
      * }
      */
 
+    public static AnnotationFS selectAnnotationByAddress(JCas aJCas, int aAddress)
+    {
+        return selectAnnotationByAddress(aJCas, AnnotationFS.class, aAddress);
+    }
+    
     public static <T extends FeatureStructure> T selectAnnotationByAddress(JCas aJCas,
             Class<T> aType, int aAddress)
     {
@@ -300,7 +305,7 @@ public class BratAjaxCasUtil
         int count = 0;
         while (count <= aWindowSize) {
             count++;
-            Sentence sentence = (Sentence) aJcas.getLowLevelCas().ll_getFSForRef(i);
+            Sentence sentence = selectAnnotationByAddress(aJcas, Sentence.class, i);
             if (sentence.getBegin() <= aOffSet && aOffSet <= sentence.getEnd()) {
                 break;
             }
@@ -310,7 +315,7 @@ public class BratAjaxCasUtil
             }
         }
 
-        Sentence sentence = (Sentence) aJcas.getLowLevelCas().ll_getFSForRef(i);
+        Sentence sentence = selectAnnotationByAddress(aJcas, Sentence.class, i);
         List<Sentence> precedingSentences = selectPreceding(aJcas, Sentence.class, sentence,
                 aWindowSize / 2);
 
@@ -402,7 +407,7 @@ public class BratAjaxCasUtil
      */
     public static int getFollowingSentenceAddress(JCas aJcas, int aRef)
     {
-        Sentence sentence = (Sentence) aJcas.getLowLevelCas().ll_getFSForRef(aRef);
+        Sentence sentence = selectAnnotationByAddress(aJcas, Sentence.class, aRef);
         List<Sentence> followingSentence = selectFollowing(aJcas, Sentence.class, sentence, 1);
         if (followingSentence.size() > 0) {
             return followingSentence.get(0).getAddress();

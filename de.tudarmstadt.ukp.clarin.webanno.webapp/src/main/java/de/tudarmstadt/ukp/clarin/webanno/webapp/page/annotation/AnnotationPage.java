@@ -68,6 +68,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.Finish
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.GuidelineModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome.WelcomePage;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.*;
 
 /**
  * A wicket page for the Brat Annotation/Visualization page. Included components for pagination,
@@ -444,7 +445,7 @@ public class AnnotationPage
                     if (bratAnnotatorModel.getSentenceAddress() != nextSentenceAddress) {
                         bratAnnotatorModel.setSentenceAddress(nextSentenceAddress);
 
-                        Sentence sentence = (Sentence) jCas.getLowLevelCas().ll_getFSForRef(
+                        Sentence sentence = selectAnnotationByAddress(jCas, Sentence.class,
                                 nextSentenceAddress);
                         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
@@ -483,7 +484,7 @@ public class AnnotationPage
                     if (bratAnnotatorModel.getSentenceAddress() != previousSentenceAddress) {
                         bratAnnotatorModel.setSentenceAddress(previousSentenceAddress);
 
-                        Sentence sentence = (Sentence) jCas.getLowLevelCas().ll_getFSForRef(
+                        Sentence sentence = selectAnnotationByAddress(jCas, Sentence.class,
                                 previousSentenceAddress);
                         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
@@ -518,9 +519,8 @@ public class AnnotationPage
                         bratAnnotatorModel.setSentenceAddress(bratAnnotatorModel
                                 .getFirstSentenceAddress());
 
-                        Sentence sentence = (Sentence) jCas.getLowLevelCas().ll_getFSForRef(
-                                bratAnnotatorModel
-                                .getFirstSentenceAddress());
+                        Sentence sentence = selectAnnotationByAddress(jCas, Sentence.class,
+                                bratAnnotatorModel.getFirstSentenceAddress());
                         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
@@ -560,7 +560,7 @@ public class AnnotationPage
                         bratAnnotatorModel
                                 .setSentenceAddress(lastDisplayWindowBeginingSentenceAddress);
 
-                        Sentence sentence = (Sentence) jCas.getLowLevelCas().ll_getFSForRef(
+                        Sentence sentence = selectAnnotationByAddress(jCas, Sentence.class,
                                 lastDisplayWindowBeginingSentenceAddress);
                         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
@@ -621,7 +621,7 @@ public class AnnotationPage
                         JCas jCas = getJCas(bratAnnotatorModel.getProject(),
                                 bratAnnotatorModel.getDocument());
 
-                        Sentence sentence = (Sentence) jCas.getLowLevelCas().ll_getFSForRef(
+                        Sentence sentence = selectAnnotationByAddress(jCas, Sentence.class,
                                 gotoPageAddress);
                         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
@@ -722,7 +722,7 @@ public class AnnotationPage
             ApplicationUtils.setAnnotationPreference(preference, username, repository,
                     annotationService, bratAnnotatorModel, Mode.ANNOTATION);
 
-            Sentence sentence = (Sentence) jCas.getLowLevelCas().ll_getFSForRef(
+            Sentence sentence = selectAnnotationByAddress(jCas, Sentence.class,
                     bratAnnotatorModel.getSentenceAddress());
             bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
             bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());

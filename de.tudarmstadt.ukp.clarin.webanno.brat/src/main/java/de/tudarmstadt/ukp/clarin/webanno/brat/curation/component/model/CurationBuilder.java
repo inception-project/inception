@@ -17,6 +17,7 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model;
 
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectAnnotationByAddress;
 import static org.uimafit.util.JCasUtil.selectCovered;
 
 import java.io.IOException;
@@ -251,7 +252,7 @@ public class CurationBuilder
 
             for (int j = 0; j < aBratAnnotatorModel.getWindowSize(); j++) {
                 if (i >= lastSentenceAddress) {
-                    sentence = (Sentence) jCas.getLowLevelCas().ll_getFSForRef(i);
+                    sentence = selectAnnotationByAddress(jCas, Sentence.class, i);
                     sentenceNumber += 1;
                     segmentBeginEnd.put(sentence.getBegin(), sentence.getEnd());
                     segmentText.put(sentence.getBegin(), sentence.getCoveredText().toString());
@@ -259,7 +260,7 @@ public class CurationBuilder
                     segmentAdress.get(username).put(sentence.getBegin(), sentence.getAddress());
                     break;
                 }
-                sentence = (Sentence) jCas.getLowLevelCas().ll_getFSForRef(i);
+                sentence = selectAnnotationByAddress(jCas, Sentence.class, i);
                 sentenceNumber += 1;
                 segmentBeginEnd.put(sentence.getBegin(), sentence.getEnd());
                 segmentText.put(sentence.getBegin(), sentence.getCoveredText().toString());
@@ -363,8 +364,7 @@ public class CurationBuilder
 
                         // removing disagreeing feature structures in mergeJCas
                         if (removeFS && address != null) {
-                            FeatureStructure fs = mergeJCas.getLowLevelCas()
-                                    .ll_getFSForRef(address);
+                            FeatureStructure fs = selectAnnotationByAddress(mergeJCas, address);
                             if (!(fs instanceof Token)) {
                                 mergeJCas.getCas().removeFsFromIndexes(fs);
                             }
