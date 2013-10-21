@@ -185,7 +185,7 @@ public class ArcAnnotationModalWindowPage
                         else {
                             Tag selectedTag = (Tag) annotationService.getTag(tags.getModelObject(),
                                     selectedtTagSet);
-                            annotationType = BratAjaxCasUtil.getType(selectedTag);
+                            annotationType = BratAjaxCasUtil.getQualifiedLabel(selectedTag);
 
                             AnnotationFS originFs = selectAnnotationByAddress(jCas, originSpanId);
                             AnnotationFS targetFs = selectAnnotationByAddress(jCas, targetSpanId);
@@ -288,7 +288,7 @@ public class ArcAnnotationModalWindowPage
                         String annotationType = "";
                         Tag selectedTag = (Tag) tagsModel.getObject();
 
-                        annotationType = BratAjaxCasUtil.getType(selectedTag);
+                        annotationType = BratAjaxCasUtil.getQualifiedLabel(selectedTag);
 
                         AnnotationFS originFs = selectAnnotationByAddress(jCas, originSpanId);
                         AnnotationFS targetFs = selectAnnotationByAddress(jCas, targetSpanId);

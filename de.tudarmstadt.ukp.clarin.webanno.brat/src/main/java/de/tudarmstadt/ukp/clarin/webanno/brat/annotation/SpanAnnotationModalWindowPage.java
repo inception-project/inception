@@ -225,7 +225,7 @@ public class SpanAnnotationModalWindowPage
                         else {
                             Tag selectedTag = (Tag) annotationService.getTag(tags.getModelObject(),
                                     selectedtTagSet);
-                            annotationType = BratAjaxCasUtil.getType(selectedTag);
+                            annotationType = BratAjaxCasUtil.getQualifiedLabel(selectedTag);
 
                             controller.addSpanToCas(jCas, start, end, annotationType, null, null);
                            // controller.addSpanTagSetToCas(jCas, bratAnnotatorModel.getProject(),
@@ -285,7 +285,7 @@ public class SpanAnnotationModalWindowPage
                         AnnotationFS idFs = selectAnnotationByAddress(jCas, selectedSpanId);
                         Tag selectedTag = (Tag) annotationService.getTag(tags.getModelObject(),
                                 selectedtTagSet);
-                        String annotationType = BratAjaxCasUtil.getType(selectedTag);
+                        String annotationType = BratAjaxCasUtil.getQualifiedLabel(selectedTag);
                         if (annotationType.startsWith(AnnotationTypeConstant.POS_PREFIX)) {
                             aTarget.appendJavaScript("alert('POS annotations can\\'t be deleted!')");
                         }

@@ -49,7 +49,6 @@ import org.uimafit.factory.JCasFactory;
 import org.uimafit.util.CasUtil;
 import org.uimafit.util.JCasUtil;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -67,9 +66,9 @@ import de.tudarmstadt.ukp.dkpro.core.tokit.BreakIteratorSegmenter;
 /**
  * Contain Methods for updating CAS Objects directed from brat UI, different utility methods to
  * process the CAS such getting the sentence address, determine page numbers,...
- *
+ * 
  * @author Seid Muhie Yimam
- *
+ * 
  */
 public class BratAjaxCasUtil
 {
@@ -77,7 +76,7 @@ public class BratAjaxCasUtil
     /**
      * Annotation a and annotation b are the same if the have the same address ( used for
      * {@link CoreferenceChain})
-     *
+     * 
      * @param a
      * @param b
      * @return
@@ -100,19 +99,19 @@ public class BratAjaxCasUtil
     /*
      * public static void deleteCoreference(BratAnnotatorModel aBratAnnotatorModel, String aType,
      * BratAnnotatorUIData aUIData) {
-     *
+     * 
      * CoreferenceChain newChain = new CoreferenceChain(aUIData.getjCas()); boolean found = false;
-     *
+     * 
      * CoreferenceLink originCorefType = selectAnnotationByAddress(aUIData.getjCas(),
      * CoreferenceLink.class, aUIData.getOrigin()); for (CoreferenceChain chain :
      * select(aUIData.getjCas(), CoreferenceChain.class)) { CoreferenceLink link = chain.getFirst();
-     *
+     * 
      * if (found) { break; } while (link != null && !found) { if (link.getBegin() ==
      * originCorefType.getBegin()) { newChain.setFirst(link.getNext()); link.setNext(null); found =
      * true; break; } link = link.getNext(); } } newChain.addToIndexes();
-     *
+     * 
      * // removeInvalidChain(aUIData.getjCas());
-     *
+     * 
      * }
      */
 
@@ -120,7 +119,7 @@ public class BratAjaxCasUtil
     {
         return selectAnnotationByAddress(aJCas, AnnotationFS.class, aAddress);
     }
-    
+
     public static <T extends FeatureStructure> T selectAnnotationByAddress(JCas aJCas,
             Class<T> aType, int aAddress)
     {
@@ -129,7 +128,7 @@ public class BratAjaxCasUtil
 
     /**
      * stores, for every tokens, the start and end positions, offsets
-     *
+     * 
      * @param aJcas
      * @return map of tokens begin and end positions
      */
@@ -144,7 +143,7 @@ public class BratAjaxCasUtil
 
     /**
      * delete a span annotation from the response
-     *
+     * 
      * @param aResponse
      * @param id
      */
@@ -204,7 +203,7 @@ public class BratAjaxCasUtil
 
     /**
      * Get the beginning offset of an Annotation
-     *
+     * 
      * @param aJCas
      *            The CAS object
      * @param aRef
@@ -219,7 +218,7 @@ public class BratAjaxCasUtil
 
     /**
      * Get end offset of an annotation
-     *
+     * 
      * @param aJCas
      *            The CAS object
      * @param aRef
@@ -234,7 +233,7 @@ public class BratAjaxCasUtil
     /**
      * Get the internal address of the first sentence annotation from JCAS. This will be used as a
      * reference for moving forward/backward sentences positions
-     *
+     * 
      * @param aJcas
      *            The CAS object assumed to contains some sentence annotations
      * @return the sentence number or -1 if aJcas don't have sentence annotation
@@ -262,7 +261,7 @@ public class BratAjaxCasUtil
 
     /**
      * Get the last sentence CAS address in the current display window
-     *
+     * 
      * @param aJcas
      * @param aFirstSentenceAddress
      *            the CAS address of the first sentence in the dispaly window
@@ -289,7 +288,7 @@ public class BratAjaxCasUtil
 
     /**
      * Get the beginning address of a sentence to be displayed in BRAT.
-     *
+     * 
      * @param aJcas
      *            the CAS object
      * @param aSentenceAddress
@@ -323,7 +322,7 @@ public class BratAjaxCasUtil
             return precedingSentences.get(0).getAddress();
         }
 
-        if (precedingSentences.size() > 0 && aWindowSize >2) {
+        if (precedingSentences.size() > 0 && aWindowSize > 2) {
             return precedingSentences.get(0).getAddress();
         }
         // Selection is on the first sentence
@@ -332,7 +331,7 @@ public class BratAjaxCasUtil
 
     /**
      * Move to the next page of size display window.
-     *
+     * 
      * @param aCurrenSentenceBeginAddress
      *            The beginning sentence address of the current window.
      * @return the Beginning address of the next window
@@ -368,7 +367,7 @@ public class BratAjaxCasUtil
 
     /**
      * Return the beginning position of the Sentence for the previous display window
-     *
+     * 
      * @param aCurrenSentenceBeginAddress
      *            The beginning address of the current sentence of the display window
      * @return
@@ -398,7 +397,7 @@ public class BratAjaxCasUtil
 
     /**
      * Get the sentence address of the next sentence
-     *
+     * 
      * @param aJcas
      *            The CAS object
      * @param aRef
@@ -420,7 +419,7 @@ public class BratAjaxCasUtil
     /**
      * Get the sentence address for this CAS based on the begin and end address. This is basically
      * used to transform sentence address in one CAS to other sentence address for different CAS
-     *
+     * 
      * @param aJcas
      * @param aWindowSize
      * @return
@@ -434,7 +433,7 @@ public class BratAjaxCasUtil
 
     /**
      * Get an annotation using the begin/offsets and its type
-     *
+     * 
      * @return
      */
 
@@ -485,7 +484,7 @@ public class BratAjaxCasUtil
 
     /**
      * Get the ordinal sentence number for this sentence address
-     *
+     * 
      * @return
      */
     public static int getSentenceNumber(JCas aJcas, int aSentenceAddress)
@@ -561,7 +560,7 @@ public class BratAjaxCasUtil
     /**
      * Get the annotation type, using the request sent from brat. If the request have type POS_NN,
      * the the annotation type is POS
-     *
+     * 
      * @param aType
      *            the type sent from brat annotation as request while annotating
      */
@@ -582,7 +581,7 @@ public class BratAjaxCasUtil
      * {@link AnnotationTypeConstant#NAMEDENTITY} or {@link AnnotationTypeConstant#COREFRELTYPE}. If
      * this name is changed in the database, the {@link AnnotationTypeConstant} constants also
      * should be updated!
-     *
+     * 
      * @param aType
      * @return
      */
@@ -606,7 +605,7 @@ public class BratAjaxCasUtil
      * {@link AnnotationTypeConstant#DEPENDENCY} or {@link AnnotationTypeConstant#COREFERENCE}. If
      * this name is changed in the database, the {@link AnnotationTypeConstant} constants also
      * should be updated!
-     *
+     * 
      * @param aType
      * @return
      */
@@ -625,7 +624,7 @@ public class BratAjaxCasUtil
     /**
      * Get the annotation UIMA type, using the request sent from brat. If the request have type
      * POS_NN, the the annotation type is POS
-     *
+     * 
      * @param aType
      *            the UIMA type of the annotation
      */
@@ -648,30 +647,30 @@ public class BratAjaxCasUtil
      * Get label of annotation (arc or span value) If the request have type POS_NN, the the actual
      * annotation value is NN
      * 
-     * @param aFullLabel
+     * @param aQualifiedLabel
      *            the full label sent from brat annotation as request while annotating
      */
-    public static String getLabel(String aFullLabel)
+    public static String getLabel(String aQualifiedLabel)
     {
         String type;
-        if (Character.isDigit(aFullLabel.charAt(0))) {
-            type = aFullLabel.substring(aFullLabel.indexOf(AnnotationTypeConstant.PREFIX) + 1);
+        if (Character.isDigit(aQualifiedLabel.charAt(0))) {
+            type = aQualifiedLabel
+                    .substring(aQualifiedLabel.indexOf(AnnotationTypeConstant.PREFIX) + 1);
         }
         else {
-            type = aFullLabel.substring(aFullLabel.indexOf(AnnotationTypeConstant.PREFIX) + 1);
+            type = aQualifiedLabel
+                    .substring(aQualifiedLabel.indexOf(AnnotationTypeConstant.PREFIX) + 1);
         }
         return type;
     }
 
     /**
      * Check if the start/end offsets of an annotation belongs to the same sentence.
-     *
+     * 
      * @return
      */
-
     public static boolean offsetsInOneSentences(JCas aJcas, int aStartOffset, int aEndOffset)
     {
-
         for (Sentence sentence : select(aJcas, Sentence.class)) {
             if ((sentence.getBegin() <= aStartOffset && sentence.getEnd() > aStartOffset)
                     && aEndOffset <= sentence.getEnd()) {
@@ -684,12 +683,12 @@ public class BratAjaxCasUtil
     /**
      * Get the annotation type the way it is used in Brat visualization page (PREFIX+Type), such as
      * (POS_+NN)
-     *
+     * 
      * @param aSelectedTag
      * @return
      */
 
-    public static String getType(Tag aSelectedTag)
+    public static String getQualifiedLabel(Tag aSelectedTag)
     {
         String annotationType = "";
         if (aSelectedTag.getTagSet().getType().getName().equals(AnnotationTypeConstant.POS)) {
