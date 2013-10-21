@@ -31,20 +31,20 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 /**
  * This interface contains methods which are related to TagSet, Tag and Type for the annotation
  * project .
- *
+ * 
  * @author Seid Muhie Yimam
  * @author Richard Eckart de Castilho
- *
+ * 
  */
 public interface AnnotationService
 {
     /**
      * creates a {@link Tag} for a given {@link TagSet}. Combination of {@code tag name} and
      * {@code tagset name} should be unique
-     *
+     * 
      * @param tag
      * @param user
-     *             The User who perform this operation
+     *            The User who perform this operation
      * @throws IOException
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
@@ -53,7 +53,7 @@ public interface AnnotationService
 
     /**
      * creates a {@link TagSet} object in the database
-     *
+     * 
      * @param tagset
      * @param user
      *            The User who perform this operation
@@ -64,11 +64,11 @@ public interface AnnotationService
         throws IOException;
 
     /**
-     * creates a type which will be a span or arc(relation) type. Currently the annotation types
-     * are highly highly tied with the tagsets, one tagset per type. POS, Names Entity, and
-     * coreference links are span types while coreference chains and dependency parsings are
-     * arc(relation) types.
-     *
+     * creates a type which will be a span or arc(relation) type. Currently the annotation types are
+     * highly highly tied with the tagsets, one tagset per type. POS, Names Entity, and coreference
+     * links are span types while coreference chains and dependency parsings are arc(relation)
+     * types.
+     * 
      * @param type
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
@@ -76,7 +76,7 @@ public interface AnnotationService
 
     /**
      * gets a {@link Tag} using its name and a {@link TagSet}
-     *
+     * 
      * @param aTagName
      * @param tagSet
      * @return
@@ -85,15 +85,15 @@ public interface AnnotationService
 
     /**
      * Get a a {@link TagSet} for a given {@link AnnotationType}. One Tagset per annotation type
-     *
+     * 
      * @param aType
      * @return
      */
-   boolean  existTagSet(AnnotationType type, Project project);
+    boolean existTagSet(AnnotationType type, Project project);
 
     /**
      * get a {@link TagSet} by its type and its project
-     *
+     * 
      * @param tagName
      * @return {@link TagSet}
      */
@@ -108,27 +108,25 @@ public interface AnnotationService
      * Get an {@link AnnotationType}
      */
     AnnotationType getType(String name, String type);
-    /**
-    * Check if an {@link AnnotationType} already exists.
-    */
-   boolean existsType(String name, String type);
 
+    /**
+     * Check if an {@link AnnotationType} already exists.
+     */
+    boolean existsType(String name, String type);
 
     /**
      * Initialize the project with default {@link AnnotationType}, {@link TagSet}s, and {@link Tag}
      * s. This is done per Project
-     *
+     * 
      * @param aProject
      * @throws IOException
      */
-
-
     void initializeTypesForProject(Project project, User user)
         throws IOException;
 
     /**
      * list all {@link AnnotationType} in the system
-     *
+     * 
      * @return {@link List<AnnotationType>}
      */
     List<AnnotationType> listAnnotationType();
@@ -137,16 +135,17 @@ public interface AnnotationService
      * List all annotation types in a project
      */
     List<AnnotationType> listAnnotationType(Project project);
+
     /**
      * list all {@link Tag} in the system
-     *
+     * 
      * @return
      */
     List<Tag> listTags();
 
     /**
      * list all {@link Tag} in a {@link TagSet}
-     *
+     * 
      * @param tag
      * @return
      */
@@ -154,14 +153,14 @@ public interface AnnotationService
 
     /**
      * list all {@link TagSet} in the system
-     *
+     * 
      * @return
      */
     List<TagSet> listTagSets();
 
     /**
      * List all {@link TagSet }s in a project
-     *
+     * 
      * @param project
      * @return
      */
@@ -169,7 +168,7 @@ public interface AnnotationService
 
     /**
      * Removes a {@link Tag} from the database
-     *
+     * 
      * @param tag
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
@@ -177,7 +176,7 @@ public interface AnnotationService
 
     /**
      * removes a {@link TagSet } from the database
-     *
+     * 
      * @param tagset
      */
     void removeTagSet(TagSet tagset);
