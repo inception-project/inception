@@ -128,10 +128,16 @@ public class ArcAdapter
 
         int address = BratAjaxCasUtil.getSentenceAdderessofCAS(aJcas,
                 aBratAnnotatorModel.getSentenceBeginOffset(), aBratAnnotatorModel.getSentenceEndOffset());
+        int lastAddressInPage = BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(aJcas,
+                address, aBratAnnotatorModel.getWindowSize());
+
         boolean reverse = aBratAnnotatorModel.getProject().isReverseDependencyDirection();
         // The first sentence address in the display window!
         Sentence firstSentence = (Sentence) BratAjaxCasUtil.selectAnnotationByAddress(aJcas,
                 FeatureStructure.class, address);
+        // the last sentence address in the display window
+        Sentence lastSentenceInPage = (Sentence) BratAjaxCasUtil.selectAnnotationByAddress(aJcas,
+                FeatureStructure.class, lastAddressInPage);
         int i = address;
         int lastSentenceAddress;
         if(aBratAnnotatorModel.getMode().equals(Mode.CURATION)){
@@ -146,15 +152,13 @@ public class ArcAdapter
         int j = 1;
         while (j <= aBratAnnotatorModel.getWindowSize()) {
             if (i >= lastSentenceAddress) {
-                Sentence sentence = (Sentence) BratAjaxCasUtil.selectAnnotationByAddress(aJcas,
-                        FeatureStructure.class, i);
-                updateResponse(sentence, aResponse, firstSentence.getBegin(), reverse);
+                updateResponse(aJcas, aResponse, firstSentence.getBegin(),
+                        lastSentenceInPage.getEnd(),reverse);
                 break;
             }
             else {
-                Sentence sentence = (Sentence) BratAjaxCasUtil.selectAnnotationByAddress(aJcas,
-                        FeatureStructure.class, i);
-                updateResponse(sentence, aResponse, firstSentence.getBegin(), reverse);
+                updateResponse(aJcas, aResponse, firstSentence.getBegin(),
+                        lastSentenceInPage.getEnd(), reverse);
                 i = BratAjaxCasUtil.getFollowingSentenceAddress(aJcas, i);
             }
             j++;
@@ -168,22 +172,23 @@ public class ArcAdapter
      *            The current sentence in the CAS annotation, with annotations
      * @param aResponse
      *            The {@link GetDocumentResponse} object with the annotation from CAS annotation
-     * @param aFirstSentenceOffset
+     * @param firstSentenceBeginOffset
      *            The first sentence offset. The actual offset in the brat visualization window will
      *            be <b>X-Y</b>, where <b>X</b> is the offset of the annotated span and <b>Y</b> is
      *            aFirstSentenceOffset
      */
-    private void updateResponse(Sentence aSentence, GetDocumentResponse aResponse,
-            int aFirstSentenceOffset, boolean aReverse)
+    private void updateResponse(JCas aJcas, GetDocumentResponse aResponse,
+            int firstSentenceBeginOffset,int lastSentenceEndOffset, boolean aReverse)
     {
-        Type type = CasUtil.getType(aSentence.getCAS(), annotationTypeName);
+        Type type = CasUtil.getType(aJcas.getCas(), annotationTypeName);
         Feature dependentFeature = type.getFeatureByBaseName(dependentFeatureName);
         Feature governorFeature = type.getFeatureByBaseName(governorFeatureName);
 
-        Type spanType = CasUtil.getType(aSentence.getCAS(), arcSpanType);
+        Type spanType = CasUtil.getType(aJcas.getCas(), arcSpanType);
         Feature arcSpanFeature = spanType.getFeatureByBaseName(arcSpanTypeFeatureName);
 
-        for (AnnotationFS fs : CasUtil.selectCovered(type, aSentence)) {
+        for (AnnotationFS fs : CasUtil.selectCovered(aJcas.getCas(), type, firstSentenceBeginOffset,
+                lastSentenceEndOffset)) {
 
             FeatureStructure dependentFs = fs.getFeatureValue(dependentFeature).getFeatureValue(
                     arcSpanFeature);
@@ -221,7 +226,7 @@ public class ArcAdapter
 
         int address = BratAjaxCasUtil.getSentenceAdderessofCAS(aJCas,
                 aBratAnnotatorModel.getSentenceBeginOffset(), aBratAnnotatorModel.getSentenceEndOffset());
-        
+
         int beginOffset = BratAjaxCasUtil.selectAnnotationByAddress(aJCas, Sentence.class,
         		address).getBegin();
         int endOffset = BratAjaxCasUtil.selectAnnotationByAddress(

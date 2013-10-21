@@ -256,9 +256,8 @@ public class TcfWriter
             }
         }
 
-        for (Sentence sentence : select(aJCas, Sentence.class)) {
             List<eu.clarin.weblicht.wlfxb.tc.api.Dependency> deps = new ArrayList<eu.clarin.weblicht.wlfxb.tc.api.Dependency>();
-            for (Dependency d : selectCovered(Dependency.class, sentence)) {
+            for (Dependency d : select(aJCas, Dependency.class)) {
                 eu.clarin.weblicht.wlfxb.tc.api.Dependency dependency = dependencyParsingLayer
                         .createDependency(d.getDependencyType(),
                                 aTokensBeginPositionMap.get(d.getDependent().getBegin()),
@@ -268,7 +267,6 @@ public class TcfWriter
             }
             if (dependencyParsingLayer != null && deps.size() > 0) {
                 dependencyParsingLayer.addParse(deps);
-            }
         }
     }
 
