@@ -118,7 +118,7 @@ public class SpanAnnotationModalWindowPage
 
             if (selectedSpanId != -1) {
                 tagSetsModel = new Model<TagSet>(selectedtTagSet);
-                Tag tag = annotationService.getTag(BratAjaxCasUtil.getType(selectedSpanType),
+                Tag tag = annotationService.getTag(BratAjaxCasUtil.getLabel(selectedSpanType),
                         selectedtTagSet);
 
                 tagsModel = new Model<Tag>(tag);

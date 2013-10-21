@@ -127,7 +127,7 @@ public class ArcAnnotationModalWindowPage
             }
             else {
                 tagSetsModel = new Model<TagSet>(selectedtTagSet);
-                Tag tag = annotationService.getTag(BratAjaxCasUtil.getType(selectedArcType),
+                Tag tag = annotationService.getTag(BratAjaxCasUtil.getLabel(selectedArcType),
                         selectedtTagSet);
                 tagsModel = new Model<Tag>(tag);
             }

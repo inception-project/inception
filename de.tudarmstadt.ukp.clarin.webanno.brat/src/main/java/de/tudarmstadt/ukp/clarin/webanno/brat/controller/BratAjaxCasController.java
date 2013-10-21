@@ -364,7 +364,7 @@ public class BratAjaxCasController
     {
 
         String annotationType = BratAjaxCasUtil.getAnnotationType(aType);
-        String type = BratAjaxCasUtil.getType(aType);
+        String type = BratAjaxCasUtil.getLabel(aType);
 
         if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
             ArcAdapter.getDependencyAdapter().delete(aJCas, aOriginFs, aTargetFs,
@@ -428,7 +428,7 @@ public class BratAjaxCasController
     {
 
         String annotationType = BratAjaxCasUtil.getAnnotationType(aType);
-        String type = BratAjaxCasUtil.getType(aType);
+        String type = BratAjaxCasUtil.getLabel(aType);
 
         if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
             ArcAdapter.getDependencyAdapter().delete(aJCas, aOriginFs, aTargetFs,
@@ -466,7 +466,7 @@ public class BratAjaxCasController
     {
 
         String annotationType = BratAjaxCasUtil.getAnnotationType(aType);
-        String aLabelValue = BratAjaxCasUtil.getType(aType);
+        String aLabelValue = BratAjaxCasUtil.getLabel(aType);
 
         if (annotationType.equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)) {
             SpanAdapter.getNamedEntityAdapter().add(aLabelValue, aJCas, aAnnotationOffsetStart,
@@ -489,23 +489,21 @@ public class BratAjaxCasController
      * @param aBratAnnotatorModel
      *            the Brat annotation data model consisting of the source document, project,
      *            users,...
-     * @param aUIData
-     *            The UI information such as start and end offsets, type of annotation ...
      */
     public void addArcToCas(BratAnnotatorModel aBratAnnotatorModel, String aType,
             int aAnnotationOffsetStart, int aAnnotationOffsetEnd, AnnotationFS aOriginFs,
             AnnotationFS aTargetFs, JCas aJCas)
     {
         String annotationType = BratAjaxCasUtil.getAnnotationType(aType);
-        String aLabelValue = BratAjaxCasUtil.getType(aType);
+        String labelValue = BratAjaxCasUtil.getLabel(aType);
 
         if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
-            ArcAdapter.getDependencyAdapter().add(aLabelValue, aOriginFs, aTargetFs, aJCas,
+            ArcAdapter.getDependencyAdapter().add(labelValue, aOriginFs, aTargetFs, aJCas,
                     aBratAnnotatorModel,
                     aBratAnnotatorModel.getProject().isReverseDependencyDirection());
         }
         else if (annotationType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
-            ChainAdapter.getCoreferenceChainAdapter().add(aLabelValue, aJCas,
+            ChainAdapter.getCoreferenceChainAdapter().add(labelValue, aJCas,
                     aAnnotationOffsetStart, aAnnotationOffsetEnd, aOriginFs, aTargetFs);
         }
     }
@@ -550,7 +548,7 @@ public class BratAjaxCasController
     {
 
         String annotationType = BratAjaxCasUtil.getAnnotationType(aType);
-        String aLabelValue = BratAjaxCasUtil.getType(aType);
+        String aLabelValue = BratAjaxCasUtil.getLabel(aType);
         if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
             ArcAdapter.getDependencyAdapter().delete(aJCas, aOriginFs, aTargetFs,
                     aBratAnnotatorModel, aLabelValue);

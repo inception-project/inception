@@ -659,21 +659,20 @@ public class BratAjaxCasUtil
     }
 
     /**
-     * Get the actual value of the annotation type (arc or span value) If the request have type
-     * POS_NN, the the actual annotation value is NN
-     *
-     * @param aType
-     *            the type sent from brat annotation as request while annotating
-     * @return
+     * Get label of annotation (arc or span value) If the request have type POS_NN, the the actual
+     * annotation value is NN
+     * 
+     * @param aFullLabel
+     *            the full label sent from brat annotation as request while annotating
      */
-    public static String getType(String aType)
+    public static String getLabel(String aFullLabel)
     {
         String type;
-        if (Character.isDigit(aType.charAt(0))) {
-            type = aType.substring(aType.indexOf(AnnotationTypeConstant.PREFIX) + 1);
+        if (Character.isDigit(aFullLabel.charAt(0))) {
+            type = aFullLabel.substring(aFullLabel.indexOf(AnnotationTypeConstant.PREFIX) + 1);
         }
         else {
-            type = aType.substring(aType.indexOf(AnnotationTypeConstant.PREFIX) + 1);
+            type = aFullLabel.substring(aFullLabel.indexOf(AnnotationTypeConstant.PREFIX) + 1);
         }
         return type;
     }
