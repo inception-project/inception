@@ -209,7 +209,7 @@ public class BratCuratorUtility
             }
 
             if (aCurationUserSegment.getBratAnnotatorModel().isScrollPage()) {
-                int address = BratAjaxCasUtil.getSentenceofCAS(aJcas, aCurationUserSegment
+                int address = BratAjaxCasUtil.selectSentenceAt(aJcas, aCurationUserSegment
                 .getBratAnnotatorModel().getSentenceBeginOffset(), aCurationUserSegment
                 .getBratAnnotatorModel().getSentenceEndOffset()).getAddress();
                 aCurationUserSegment.getBratAnnotatorModel().setSentenceAddress(
@@ -257,7 +257,7 @@ public class BratCuratorUtility
                 aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser(), aMergeJCas);
 
         if (aBratAnnotatorModel.isScrollPage()) {
-            int address = BratAjaxCasUtil.getSentenceofCAS(clickedJCas, aBratAnnotatorModel.getSentenceBeginOffset(), aBratAnnotatorModel.getSentenceEndOffset()).getAddress();
+            int address = BratAjaxCasUtil.selectSentenceAt(clickedJCas, aBratAnnotatorModel.getSentenceBeginOffset(), aBratAnnotatorModel.getSentenceEndOffset()).getAddress();
             aBratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(
                     clickedJCas, address, fsClicked.getBegin(), aBratAnnotatorModel.getProject(),
                     aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getWindowSize()));
@@ -460,7 +460,7 @@ public class BratCuratorUtility
     private static int getSentenceAddress(BratAnnotatorModel aBratAnnotatorModel, JCas jCas,
             JCas userJCas)
     {
-        int sentenceAddress = BratAjaxCasUtil.getSentenceofCAS(userJCas, aBratAnnotatorModel.getSentenceBeginOffset(), aBratAnnotatorModel.getSentenceEndOffset()).getAddress();
+        int sentenceAddress = BratAjaxCasUtil.selectSentenceAt(userJCas, aBratAnnotatorModel.getSentenceBeginOffset(), aBratAnnotatorModel.getSentenceEndOffset()).getAddress();
         Sentence sentence = selectByAddr(userJCas, Sentence.class, sentenceAddress);
         List<Sentence> sentences = JCasUtil.selectCovered(jCas, Sentence.class,
                 sentence.getBegin(), sentence.getEnd());

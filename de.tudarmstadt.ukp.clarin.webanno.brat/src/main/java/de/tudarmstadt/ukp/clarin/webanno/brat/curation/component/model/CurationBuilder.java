@@ -235,7 +235,7 @@ public class CurationBuilder
 
             int windowSize = aBratAnnotatorModel.getWindowSize();
 
-            Sentence firstSentence = BratAjaxCasUtil.getSentenceofCAS(jCas,
+            Sentence firstSentence = BratAjaxCasUtil.selectSentenceAt(jCas,
                     aBratAnnotatorModel.getSentenceBeginOffset(),
                     aBratAnnotatorModel.getSentenceEndOffset());
             Sentence lastSentence = selectByAddr(jCas, Sentence.class,

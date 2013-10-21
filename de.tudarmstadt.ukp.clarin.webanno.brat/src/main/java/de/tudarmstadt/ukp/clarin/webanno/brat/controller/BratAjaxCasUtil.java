@@ -119,7 +119,7 @@ public class BratAjaxCasUtil
         return aType.cast(aJCas.getLowLevelCas().ll_getFSForRef(aAddress));
     }
 
-    private static <T extends Annotation> T selectFirstCovered(JCas aJcas, final Class<T> type,
+    private static <T extends Annotation> T selectSingleAt(JCas aJcas, final Class<T> type,
             int aBegin, int aEnd)
     {
         List<T> covered = selectCovered(aJcas, type, aBegin, aEnd);
@@ -127,8 +127,23 @@ public class BratAjaxCasUtil
             return null;
         }
         else {
-            return covered.get(0);
+            T first = covered.get(0);
+            if (first.getBegin() == aBegin && first.getEnd() == aEnd) {
+                return first;
+            }
+            else {
+                return null;
+            }
         }
+    }
+
+    /**
+     * Get the sentence for this CAS based on the begin and end offsets. This is basically
+     * used to transform sentence address in one CAS to other sentence address for different CAS
+     */
+    public static Sentence selectSentenceAt(JCas aJcas, int aBegin, int aEnd)
+    {
+        return selectSingleAt(aJcas, Sentence.class, aBegin, aEnd);
     }
 
 //    /**
@@ -418,15 +433,6 @@ public class BratAjaxCasUtil
         else {
             return aRef;
         }
-    }
-
-    /**
-     * Get the sentence address for this CAS based on the begin and end address. This is basically
-     * used to transform sentence address in one CAS to other sentence address for different CAS
-     */
-    public static Sentence getSentenceofCAS(JCas aJcas, int aBegin, int aEnd)
-    {
-        return selectFirstCovered(aJcas, Sentence.class, aBegin, aEnd);
     }
 
     /**

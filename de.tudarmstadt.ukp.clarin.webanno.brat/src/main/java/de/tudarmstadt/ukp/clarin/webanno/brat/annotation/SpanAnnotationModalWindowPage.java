@@ -205,7 +205,7 @@ public class SpanAnnotationModalWindowPage
                         OffsetsList offsetLists = (OffsetsList) jsonConverter.getObjectMapper()
                                 .readValue(offsets, OffsetsList.class);
 
-                        Sentence sentence = BratAjaxCasUtil.getSentenceofCAS(jCas,
+                        Sentence sentence = BratAjaxCasUtil.selectSentenceAt(jCas,
                                 bratAnnotatorModel.getSentenceBeginOffset(),
                                 bratAnnotatorModel.getSentenceEndOffset());
                         int start = sentence.getBegin() + ((Offsets) offsetLists.get(0)).getBegin();
@@ -332,7 +332,7 @@ public class SpanAnnotationModalWindowPage
 
     private void updateSentenceAddressAndOffsets(JCas jCas, int start)
     {
-        int address = BratAjaxCasUtil.getSentenceofCAS(jCas, bratAnnotatorModel.getSentenceBeginOffset(), bratAnnotatorModel.getSentenceEndOffset()).getAddress();
+        int address = BratAjaxCasUtil.selectSentenceAt(jCas, bratAnnotatorModel.getSentenceBeginOffset(), bratAnnotatorModel.getSentenceEndOffset()).getAddress();
         bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil
                 .getSentenceBeginAddress(jCas,
                         address, start,

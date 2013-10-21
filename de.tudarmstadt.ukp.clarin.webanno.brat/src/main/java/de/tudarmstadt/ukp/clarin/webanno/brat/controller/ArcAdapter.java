@@ -125,8 +125,9 @@ public class ArcAdapter
     public void render(JCas aJcas, GetDocumentResponse aResponse,
             BratAnnotatorModel aBratAnnotatorModel)
     {
-
-        int address = BratAjaxCasUtil.getSentenceofCAS(aJcas, aBratAnnotatorModel.getSentenceBeginOffset(), aBratAnnotatorModel.getSentenceEndOffset()).getAddress();
+        int address = BratAjaxCasUtil.selectSentenceAt(aJcas,
+                aBratAnnotatorModel.getSentenceBeginOffset(),
+                aBratAnnotatorModel.getSentenceEndOffset()).getAddress();
         int lastAddressInPage = BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(aJcas,
                 address, aBratAnnotatorModel.getWindowSize());
 
@@ -214,7 +215,6 @@ public class ArcAdapter
     public void add(String aLabelValue, AnnotationFS aOriginFs, AnnotationFS aTargetFs, JCas aJCas,
             BratAnnotatorModel aBratAnnotatorModel, boolean aReverse)
     {
-
         AnnotationFS temp;
         // swap
         if (aReverse) {
@@ -223,15 +223,16 @@ public class ArcAdapter
             aTargetFs = temp;
         }
 
-        int address = BratAjaxCasUtil.getSentenceofCAS(aJCas, aBratAnnotatorModel.getSentenceBeginOffset(), aBratAnnotatorModel.getSentenceEndOffset()).getAddress();
+        Sentence sentence = BratAjaxCasUtil.selectSentenceAt(aJCas,
+                aBratAnnotatorModel.getSentenceBeginOffset(),
+                aBratAnnotatorModel.getSentenceEndOffset());
 
-        int beginOffset = BratAjaxCasUtil.selectByAddr(aJCas, Sentence.class,
-        		address).getBegin();
+        int beginOffset = sentence.getBegin();
         int endOffset = BratAjaxCasUtil.selectByAddr(
                 aJCas,
                 Sentence.class,
                 BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(aJCas,
-                		address,
+                        sentence.getAddress(),
                         aBratAnnotatorModel.getWindowSize())).getEnd();
 
         updateCas(aJCas, beginOffset, endOffset, aOriginFs, aTargetFs, aLabelValue);
