@@ -110,7 +110,7 @@ public class BratAnnotatorUtility
         aUIData.setAnnotationOffsetEnd(sentence.getBegin() + end);
         aUIData.setType(aRequest.getParameterValue("type").toString());
 
-        if (!BratAjaxCasUtil.offsetsInOneSentences(aUIData.getjCas(),
+        if (!BratAjaxCasUtil.isSameSentence(aUIData.getjCas(),
                 aUIData.getAnnotationOffsetStart(), aUIData.getAnnotationOffsetEnd())) {
             throw new MultipleSentenceCoveredException(
                     "You selected a span across multiple sentences. Limit your span annotations to single sentences!");

@@ -202,7 +202,7 @@ public class BratAnnotator
                         int end = getModelObject().getSentenceBeginOffset()
                                 + ((Offsets) offsetLists.get(0)).getEnd();
 
-                         if (!BratAjaxCasUtil.offsetsInOneSentences(jCas, start, end)) {
+                         if (!BratAjaxCasUtil.isSameSentence(jCas, start, end)) {
                              aTarget.appendJavaScript("alert('Annotation coveres multiple sentences,"
                                      + " limit your annotation to single sentence!')");
                              }

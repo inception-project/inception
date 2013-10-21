@@ -79,6 +79,22 @@ public class BratAjaxCasUtil
         return a.getAddress() == b.getAddress();
     }
 
+    /**
+     * Check if the start/end offsets of an annotation belongs to the same sentence.
+     * 
+     * @return
+     */
+    public static boolean isSameSentence(JCas aJcas, int aStartOffset, int aEndOffset)
+    {
+        for (Sentence sentence : select(aJcas, Sentence.class)) {
+            if ((sentence.getBegin() <= aStartOffset && sentence.getEnd() > aStartOffset)
+                    && aEndOffset <= sentence.getEnd()) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
 //    public static boolean isSame(Annotation a, Annotation b)
 //    {
 //        return a.getBegin() == b.getBegin() && a.getEnd() == b.getEnd();
@@ -689,22 +705,6 @@ public class BratAjaxCasUtil
             annotationType = AnnotationTypeConstant.COREFERENCE_PREFIX + aSelectedTag.getName();
         }
         return annotationType;
-    }
-
-    /**
-     * Check if the start/end offsets of an annotation belongs to the same sentence.
-     * 
-     * @return
-     */
-    public static boolean offsetsInOneSentences(JCas aJcas, int aStartOffset, int aEndOffset)
-    {
-        for (Sentence sentence : select(aJcas, Sentence.class)) {
-            if ((sentence.getBegin() <= aStartOffset && sentence.getEnd() > aStartOffset)
-                    && aEndOffset <= sentence.getEnd()) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**
