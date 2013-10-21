@@ -314,13 +314,15 @@ public class BratAjaxCasUtil
         List<Sentence> precedingSentences = selectPreceding(aJcas, Sentence.class, sentence,
                 aWindowSize / 2);
 
-        if (precedingSentences.size() > 0) {
+        if (precedingSentences.size() > 0 && aSentenceAddress >= i) {
+            return precedingSentences.get(0).getAddress();
+        }
+
+        if (precedingSentences.size() > 0 && aWindowSize >2) {
             return precedingSentences.get(0).getAddress();
         }
         // Selection is on the first sentence
-        else {
-            return sentence.getAddress();
-        }
+        return sentence.getAddress();
     }
 
     /**

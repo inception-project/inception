@@ -174,6 +174,7 @@ public class CorrectionPage
                     e.getMessage();
                 }
                 mergeVisualizer.reloadContent(aTarget);
+                aTarget.add(numberOfPages);
             }
         };
 
