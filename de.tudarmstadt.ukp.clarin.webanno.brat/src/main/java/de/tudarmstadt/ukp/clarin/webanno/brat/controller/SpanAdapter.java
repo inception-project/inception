@@ -131,8 +131,7 @@ public class SpanAdapter
     public void render(JCas aJcas, GetDocumentResponse aResponse,
             BratAnnotatorModel aBratAnnotatorModel)
     {
-        int address = BratAjaxCasUtil.getSentenceAdderessofCAS(aJcas,
-                aBratAnnotatorModel.getSentenceBeginOffset(), aBratAnnotatorModel.getSentenceEndOffset());
+        int address = BratAjaxCasUtil.getSentenceofCAS(aJcas, aBratAnnotatorModel.getSentenceBeginOffset(), aBratAnnotatorModel.getSentenceEndOffset()).getAddress();
         // The first sentence address in the display window!
         Sentence firstSentence = (Sentence) BratAjaxCasUtil.selectAnnotationByAddress(aJcas,
                 FeatureStructure.class, address);

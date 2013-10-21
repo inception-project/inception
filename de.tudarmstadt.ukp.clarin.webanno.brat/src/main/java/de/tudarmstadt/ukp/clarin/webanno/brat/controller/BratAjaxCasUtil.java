@@ -173,62 +173,74 @@ public class BratAjaxCasUtil
         return new int[] { aStart, aEnd };
     }
 
-    /**
-     * Get the beginning position of a token. This is used for dependency annotations
-     */
-    private static Map<Integer, Integer> getTokenPosition(JCas aJcas)
+//    /**
+//     * Get the beginning position of a token. This is used for dependency annotations
+//     */
+//    private static Map<Integer, Integer> getTokenPosition(JCas aJcas)
+//    {
+//        Map<Integer, Integer> tokenBeginPositions = new HashMap<Integer, Integer>();
+//
+//        for (Token token : select(aJcas, Token.class)) {
+//
+//            if (token.getPos() != null) {
+//                tokenBeginPositions.put(token.getPos().getAddress(), token.getBegin());
+//            }
+//        }
+//        return tokenBeginPositions;
+//    }
+//
+//    /**
+//     * Get the token at a given position. This is used for dependency and coreference annotations
+//     */
+//    public static Map<Integer, Token> getToken(JCas aJcas)
+//    {
+//        Map<Integer, Token> tokens = new HashMap<Integer, Token>();
+//        for (Token token : select(aJcas, Token.class)) {
+//            tokens.put(token.getBegin(), token);
+//        }
+//        return tokens;
+//    }
+
+    private static <T extends Annotation> T selectFirstCovered(JCas aJcas, final Class<T> type,
+            int aBegin, int aEnd)
     {
-        Map<Integer, Integer> tokenBeginPositions = new HashMap<Integer, Integer>();
-
-        for (Token token : select(aJcas, Token.class)) {
-
-            if (token.getPos() != null) {
-                tokenBeginPositions.put(token.getPos().getAddress(), token.getBegin());
-            }
+        List<T> covered = selectCovered(aJcas, type, aBegin, aEnd);
+        if (covered.isEmpty()) {
+            return null;
         }
-        return tokenBeginPositions;
-    }
-
-    /**
-     * Get the token at a given position. This is used for dependency and coreference annotations
-     */
-    public static Map<Integer, Token> getToken(JCas aJcas)
-    {
-        Map<Integer, Token> tokens = new HashMap<Integer, Token>();
-        for (Token token : select(aJcas, Token.class)) {
-            tokens.put(token.getBegin(), token);
+        else {
+            return covered.get(0);
         }
-        return tokens;
     }
+    
+//    /**
+//     * Get the beginning offset of an Annotation
+//     * 
+//     * @param aJCas
+//     *            The CAS object
+//     * @param aAddress
+//     *            the low level address of the annotation in the CAS
+//     * @return the beginning offset address of an annotation
+//     */
+//    // private static <T extends Annotation> T selectFirstAt(JCas aJcas, final Class<T> type
+//    public static int getAnnotationBeginOffset(JCas aJCas, int aAddress)
+//    {
+//        return selectAnnotationByAddress(aJCas, Annotation.class, aAddress).getBegin();
+//    }
 
-    /**
-     * Get the beginning offset of an Annotation
-     * 
-     * @param aJCas
-     *            The CAS object
-     * @param aRef
-     *            the low level address of the annotation in the CAS
-     * @return the beginning offset address of an annotation
-     */
-    // private static <T extends Annotation> T selectFirstAt(JCas aJcas, final Class<T> type
-    public static int getAnnotationBeginOffset(JCas aJCas, int aRef)
-    {
-        return selectAnnotationByAddress(aJCas, Annotation.class, aRef).getBegin();
-    }
-
-    /**
-     * Get end offset of an annotation
-     * 
-     * @param aJCas
-     *            The CAS object
-     * @param aRef
-     *            the low level address of the annotation in the CAS
-     * @return end position of the annotation
-     */
-    public static int getAnnotationEndOffset(JCas aJCas, int aRef)
-    {
-        return selectAnnotationByAddress(aJCas, Annotation.class, aRef).getEnd();
-    }
+//    /**
+//     * Get end offset of an annotation
+//     * 
+//     * @param aJCas
+//     *            The CAS object
+//     * @param aRef
+//     *            the low level address of the annotation in the CAS
+//     * @return end position of the annotation
+//     */
+//    public static int getAnnotationEndOffset(JCas aJCas, int aRef)
+//    {
+//        return selectAnnotationByAddress(aJCas, Annotation.class, aRef).getEnd();
+//    }
 
     /**
      * Get the internal address of the first sentence annotation from JCAS. This will be used as a
@@ -419,16 +431,10 @@ public class BratAjaxCasUtil
     /**
      * Get the sentence address for this CAS based on the begin and end address. This is basically
      * used to transform sentence address in one CAS to other sentence address for different CAS
-     * 
-     * @param aJcas
-     * @param aWindowSize
-     * @return
      */
-
-    public static int getSentenceAdderessofCAS(JCas aJcas, int aBegin, int aEnd)
+    public static Sentence getSentenceofCAS(JCas aJcas, int aBegin, int aEnd)
     {
-        List<Sentence> sentences = selectCovered(aJcas, Sentence.class, aBegin, aEnd);
-        return sentences.get(0).getAddress();
+        return selectFirstCovered(aJcas, Sentence.class, aBegin, aEnd);
     }
 
     /**
@@ -687,7 +693,6 @@ public class BratAjaxCasUtil
      * @param aSelectedTag
      * @return
      */
-
     public static String getQualifiedLabel(Tag aSelectedTag)
     {
         String annotationType = "";

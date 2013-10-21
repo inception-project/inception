@@ -250,9 +250,7 @@ public class CorrectionPage
                          * bratAnnotatorModel.setSentenceAddress(bratAnnotatorModel
                          * .getFirstSentenceAddress()); }
                          */
-                        int address = BratAjaxCasUtil.getSentenceAdderessofCAS(mergeJCas,
-                                bratAnnotatorModel.getSentenceBeginOffset(),
-                                bratAnnotatorModel.getSentenceEndOffset());
+                        int address = BratAjaxCasUtil.getSentenceofCAS(mergeJCas, bratAnnotatorModel.getSentenceBeginOffset(), bratAnnotatorModel.getSentenceEndOffset()).getAddress();
                         sentenceNumber = BratAjaxCasUtil.getSentenceNumber(mergeJCas,
                                 address);
                         int firstSentenceNumber = sentenceNumber + 1;
@@ -677,8 +675,7 @@ public class CorrectionPage
                     catch (IOException e) {
                         error(ExceptionUtils.getRootCause(e));
                     }
-                    int address = BratAjaxCasUtil.getSentenceAdderessofCAS(mergeJCas,
-                            bratAnnotatorModel.getSentenceBeginOffset(), bratAnnotatorModel.getSentenceEndOffset());
+                    int address = BratAjaxCasUtil.getSentenceofCAS(mergeJCas, bratAnnotatorModel.getSentenceBeginOffset(), bratAnnotatorModel.getSentenceEndOffset()).getAddress();
                     int nextSentenceAddress = BratAjaxCasUtil
                             .getNextDisplayWindowSentenceBeginAddress(mergeJCas,
                                     address,
@@ -809,8 +806,7 @@ public class CorrectionPage
                     }
 
 
-                    int address = BratAjaxCasUtil.getSentenceAdderessofCAS(mergeJCas,
-                            bratAnnotatorModel.getSentenceBeginOffset(), bratAnnotatorModel.getSentenceEndOffset());
+                    int address = BratAjaxCasUtil.getSentenceofCAS(mergeJCas, bratAnnotatorModel.getSentenceBeginOffset(), bratAnnotatorModel.getSentenceEndOffset()).getAddress();
                     int firstAddress = BratAjaxCasUtil.getFirstSenetnceAddress(mergeJCas);
 
                     if (firstAddress != address) {
@@ -1035,20 +1031,17 @@ public class CorrectionPage
         JCas jCas = controller.getJCas(bratAnnotatorModel.getDocument(),
                 bratAnnotatorModel.getProject(), bratAnnotatorModel.getUser());
 
-        int sentenceAddress = BratAjaxCasUtil.getSentenceAdderessofCAS(jCas,
-                bratAnnotatorModel.getSentenceBeginOffset(),
-                bratAnnotatorModel.getSentenceEndOffset());
+        final int sentenceAddress = BratAjaxCasUtil.getSentenceofCAS(jCas, bratAnnotatorModel.getSentenceBeginOffset(), bratAnnotatorModel.getSentenceEndOffset()).getAddress();
 
-        Sentence sentence = selectAnnotationByAddress(jCas, Sentence.class, sentenceAddress);
+        final Sentence sentence = selectAnnotationByAddress(jCas, Sentence.class, sentenceAddress);
         List<Sentence> followingSentences = selectFollowing(jCas, Sentence.class, sentence,
                 bratAnnotatorModel.getWindowSize());
         // Check also, when getting the last sentence address in the display window, if this is the
         // last sentence or the ONLY sentence in the document
-        int lastSentenceAddressInDisplayWindow = followingSentences.size() == 0 ? sentence
-                .getAddress() : followingSentences.get(followingSentences.size() - 1).getAddress();
-        curationSegment.setBegin(BratAjaxCasUtil.getAnnotationBeginOffset(jCas, sentenceAddress));
-        curationSegment.setEnd(BratAjaxCasUtil.getAnnotationEndOffset(jCas,
-                lastSentenceAddressInDisplayWindow));
+        Sentence lastSentenceAddressInDisplayWindow = followingSentences.size() == 0 ? sentence
+                : followingSentences.get(followingSentences.size() - 1);
+        curationSegment.setBegin(sentence.getBegin());
+        curationSegment.setEnd(lastSentenceAddressInDisplayWindow.getEnd());
 
     }
 

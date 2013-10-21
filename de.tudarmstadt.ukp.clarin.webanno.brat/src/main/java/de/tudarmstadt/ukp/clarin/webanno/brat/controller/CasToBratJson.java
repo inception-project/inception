@@ -47,8 +47,7 @@ public class CasToBratJson
             BratAnnotatorModel aBratAnnotatorModel)
     {
 
-       int address = BratAjaxCasUtil.getSentenceAdderessofCAS(aJcas,
-                aBratAnnotatorModel.getSentenceBeginOffset(), aBratAnnotatorModel.getSentenceEndOffset());
+       int address = BratAjaxCasUtil.getSentenceofCAS(aJcas, aBratAnnotatorModel.getSentenceBeginOffset(), aBratAnnotatorModel.getSentenceEndOffset()).getAddress();
         Sentence sentenceAddress = selectAnnotationByAddress(aJcas, Sentence.class, address);
         int current = sentenceAddress.getBegin();
         int i = address;
@@ -87,8 +86,7 @@ public class CasToBratJson
     public void addSentenceToResponse(JCas aJcas, GetDocumentResponse aResponse,
             BratAnnotatorModel aBratAnnotatorModel)
     {
-        int address = BratAjaxCasUtil.getSentenceAdderessofCAS(aJcas,
-                aBratAnnotatorModel.getSentenceBeginOffset(), aBratAnnotatorModel.getSentenceEndOffset());
+        int address = BratAjaxCasUtil.getSentenceofCAS(aJcas, aBratAnnotatorModel.getSentenceBeginOffset(), aBratAnnotatorModel.getSentenceEndOffset()).getAddress();
 
         Sentence sentenceAddress = selectAnnotationByAddress(aJcas, Sentence.class, address);
         int current = sentenceAddress.getBegin();

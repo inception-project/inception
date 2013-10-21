@@ -329,9 +329,7 @@ public class ArcAnnotationModalWindowPage
 
     private void updateSentenceAddressAndOffsets(JCas jCas, int start)
     {
-        int address = BratAjaxCasUtil.getSentenceAdderessofCAS(jCas,
-                bratAnnotatorModel.getSentenceBeginOffset(),
-                bratAnnotatorModel.getSentenceEndOffset());
+        int address = BratAjaxCasUtil.getSentenceofCAS(jCas, bratAnnotatorModel.getSentenceBeginOffset(), bratAnnotatorModel.getSentenceEndOffset()).getAddress();
         bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil
                 .getSentenceBeginAddress(jCas,
                         address, start,

@@ -21,7 +21,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.
 import static org.uimafit.util.JCasUtil.selectCovered;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -135,13 +134,13 @@ public class CurationBuilder
             // reserve the begin/end offsets before creating re-merge
             int tempBegin = begin;
             int tempEnd = end;
+            JCas firstJCas = jCases.values().iterator().next();
+            
             // re-merge JCAS for all sentences
-            begin = BratAjaxCasUtil.getAnnotationBeginOffset(
-                    (JCas) new ArrayList(jCases.values()).get(0),
-                    aBratAnnotatorModel.getFirstSentenceAddress());
-            end = BratAjaxCasUtil.getAnnotationEndOffset(
-                    (JCas) new ArrayList(jCases.values()).get(0),
-                    aBratAnnotatorModel.getLastSentenceAddress());
+            begin = selectAnnotationByAddress(firstJCas, Sentence.class,
+                    aBratAnnotatorModel.getFirstSentenceAddress()).getBegin();
+            end = selectAnnotationByAddress(firstJCas, Sentence.class,
+                    aBratAnnotatorModel.getLastSentenceAddress()).getEnd();
             if (aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)) {
                 mergeJCas = createCorrectionCas(mergeJCas, aBratAnnotatorModel,
                         randomAnnotationDocument);
@@ -236,17 +235,20 @@ public class CurationBuilder
 
             int windowSize = aBratAnnotatorModel.getWindowSize();
 
-            int address = BratAjaxCasUtil.getSentenceAdderessofCAS(jCas,
+            Sentence firstSentence = BratAjaxCasUtil.getSentenceofCAS(jCas,
                     aBratAnnotatorModel.getSentenceBeginOffset(),
                     aBratAnnotatorModel.getSentenceEndOffset());
+            Sentence lastSentence = selectAnnotationByAddress(jCas, Sentence.class,
+                    BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(jCas,
+                            firstSentence.getAddress(), windowSize));
 
-            begin = BratAjaxCasUtil.getAnnotationBeginOffset(jCas, address);
-            end = BratAjaxCasUtil.getAnnotationEndOffset(jCas, BratAjaxCasUtil
-                    .getLastSentenceAddressInDisplayWindow(jCas, address, windowSize));
-            sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas, address);
+            begin = firstSentence.getBegin();
+            end = lastSentence.getEnd();
+            sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas, firstSentence.getAddress());
             segmentAdress.put(username, new HashMap<Integer, Integer>());
 
-            int i = address;
+            // FIXME !!! Why not use selectCovered(jcas, Sentence.class, begin, end) here?
+            int i = firstSentence.getAddress();
             Sentence sentence = null;
             int lastSentenceAddress = BratAjaxCasUtil.getLastSenetnceAddress(jCas);
 

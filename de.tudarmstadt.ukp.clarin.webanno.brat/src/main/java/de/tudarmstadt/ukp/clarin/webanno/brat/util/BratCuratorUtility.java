@@ -209,9 +209,9 @@ public class BratCuratorUtility
             }
 
             if (aCurationUserSegment.getBratAnnotatorModel().isScrollPage()) {
-                int address = BratAjaxCasUtil.getSentenceAdderessofCAS(aJcas, aCurationUserSegment
-                        .getBratAnnotatorModel().getSentenceBeginOffset(), aCurationUserSegment
-                        .getBratAnnotatorModel().getSentenceEndOffset());
+                int address = BratAjaxCasUtil.getSentenceofCAS(aJcas, aCurationUserSegment
+                .getBratAnnotatorModel().getSentenceBeginOffset(), aCurationUserSegment
+                .getBratAnnotatorModel().getSentenceEndOffset()).getAddress();
                 aCurationUserSegment.getBratAnnotatorModel().setSentenceAddress(
                         BratAjaxCasUtil.getSentenceBeginAddress(aJcas, address,
                                 originFs.getBegin(), aCurationUserSegment.getBratAnnotatorModel()
@@ -257,9 +257,7 @@ public class BratCuratorUtility
                 aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser(), aMergeJCas);
 
         if (aBratAnnotatorModel.isScrollPage()) {
-            int address = BratAjaxCasUtil.getSentenceAdderessofCAS(clickedJCas,
-                    aBratAnnotatorModel.getSentenceBeginOffset(),
-                    aBratAnnotatorModel.getSentenceEndOffset());
+            int address = BratAjaxCasUtil.getSentenceofCAS(clickedJCas, aBratAnnotatorModel.getSentenceBeginOffset(), aBratAnnotatorModel.getSentenceEndOffset()).getAddress();
             aBratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(
                     clickedJCas, address, fsClicked.getBegin(), aBratAnnotatorModel.getProject(),
                     aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getWindowSize()));
@@ -462,9 +460,7 @@ public class BratCuratorUtility
     private static int getSentenceAddress(BratAnnotatorModel aBratAnnotatorModel, JCas jCas,
             JCas userJCas)
     {
-        int sentenceAddress = BratAjaxCasUtil.getSentenceAdderessofCAS(userJCas,
-                aBratAnnotatorModel.getSentenceBeginOffset(),
-                aBratAnnotatorModel.getSentenceEndOffset());
+        int sentenceAddress = BratAjaxCasUtil.getSentenceofCAS(userJCas, aBratAnnotatorModel.getSentenceBeginOffset(), aBratAnnotatorModel.getSentenceEndOffset()).getAddress();
         Sentence sentence = selectAnnotationByAddress(userJCas, Sentence.class, sentenceAddress);
         List<Sentence> sentences = JCasUtil.selectCovered(jCas, Sentence.class,
                 sentence.getBegin(), sentence.getEnd());

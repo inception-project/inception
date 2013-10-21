@@ -55,6 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.tcf.TcfReader;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import eu.clarin.weblicht.wlfxb.io.WLFormatException;
 import eu.clarin.weblicht.wlfxb.tc.xb.TextCorpusLayerTag;
 
@@ -223,12 +224,11 @@ public class CasToBratJsonTest extends TestCase {
 		bratannotatorModel.setLastSentenceAddress(BratAjaxCasUtil
 				.getLastSenetnceAddress(jCas));
 
-		bratannotatorModel.setSentenceBeginOffset(BratAjaxCasUtil
-				.getAnnotationBeginOffset(jCas,
-						bratannotatorModel.getSentenceAddress()));
-		bratannotatorModel.setSentenceEndOffset(BratAjaxCasUtil
-				.getAnnotationEndOffset(jCas,
-						bratannotatorModel.getSentenceAddress()));
+        Sentence sentence = BratAjaxCasUtil.selectAnnotationByAddress(jCas, Sentence.class,
+                bratannotatorModel.getSentenceAddress());
+		
+		bratannotatorModel.setSentenceBeginOffset(sentence.getBegin());
+		bratannotatorModel.setSentenceEndOffset(sentence.getEnd());
 
 		Project project = new Project();
 		project.setReverseDependencyDirection(true);

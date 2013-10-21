@@ -92,7 +92,6 @@ public class BratAnnotatorUtility
             MappingJacksonHttpMessageConverter jsonConverter)
         throws ClassNotFoundException, IOException, UIMAException, MultipleSentenceCoveredException
     {
-
         Object result = null;
         BratAjaxCasController controller = new BratAjaxCasController(repository, annotationService);
         String offsets = aRequest.getParameterValue("offsets").toString();
@@ -101,10 +100,14 @@ public class BratAnnotatorUtility
                 OffsetsList.class);
         int start = offsetLists.get(0).getBegin();
         int end = offsetLists.get(0).getEnd();
-        aUIData.setAnnotationOffsetStart(BratAjaxCasUtil.getAnnotationBeginOffset(
-                aUIData.getjCas(), bratAnnotatorModel.getSentenceAddress()) + start);
-        aUIData.setAnnotationOffsetEnd(BratAjaxCasUtil.getAnnotationBeginOffset(aUIData.getjCas(),
-                bratAnnotatorModel.getSentenceAddress()) + end);
+        
+        Sentence sentence = selectAnnotationByAddress(aUIData.getjCas(), Sentence.class,
+                bratAnnotatorModel.getSentenceAddress());
+        AnnotationFS originFs = selectAnnotationByAddress(aUIData.getjCas(), aUIData.getOrigin());
+        AnnotationFS targetFs = selectAnnotationByAddress(aUIData.getjCas(), aUIData.getTarget());
+        
+        aUIData.setAnnotationOffsetStart(sentence.getBegin() + start);
+        aUIData.setAnnotationOffsetEnd(sentence.getBegin() + end);
         aUIData.setType(aRequest.getParameterValue("type").toString());
 
         if (!BratAjaxCasUtil.offsetsInOneSentences(aUIData.getjCas(),
@@ -113,8 +116,6 @@ public class BratAnnotatorUtility
                     "You selected a span across multiple sentences. Limit your span annotations to single sentences!");
         }
 
-        AnnotationFS originFs = selectAnnotationByAddress(aUIData.getjCas(), aUIData.getOrigin());
-        AnnotationFS targetFs = selectAnnotationByAddress(aUIData.getjCas(), aUIData.getTarget());
 
         result = controller.createSpanResponse(bratAnnotatorModel,
                 aUIData.getAnnotationOffsetStart(), aUIData.getjCas(), aUIData.isGetDocument(),
@@ -134,17 +135,19 @@ public class BratAnnotatorUtility
             AnnotationService annotationService, BratAnnotatorModel bratAnnotatorModel)
         throws UIMAException, IOException
     {
+        int origin = aRequest.getParameterValue("origin").toInt();
+        int target = aRequest.getParameterValue("target").toInt();
+
+        AnnotationFS originFs = selectAnnotationByAddress(aUIData.getjCas(), origin);
+        AnnotationFS targetFs = selectAnnotationByAddress(aUIData.getjCas(), target);
 
         Object result = null;
         BratAjaxCasController controller = new BratAjaxCasController(repository, annotationService);
-        aUIData.setOrigin(aRequest.getParameterValue("origin").toInt());
-        aUIData.setTarget(aRequest.getParameterValue("target").toInt());
+        aUIData.setOrigin(origin);
+        aUIData.setTarget(target);
         aUIData.setType(aRequest.getParameterValue("type").toString());
-        aUIData.setAnnotationOffsetStart(BratAjaxCasUtil.getAnnotationBeginOffset(
-                aUIData.getjCas(), aUIData.getOrigin()));
+        aUIData.setAnnotationOffsetStart(originFs.getBegin());
 
-        AnnotationFS originFs = selectAnnotationByAddress(aUIData.getjCas(), aUIData.getOrigin());
-        AnnotationFS targetFs = selectAnnotationByAddress(aUIData.getjCas(), aUIData.getTarget());
 
         result = controller.createArcResponse(bratAnnotatorModel,
                 aUIData.getAnnotationOffsetStart(), aUIData.getjCas(), aUIData.isGetDocument(),
@@ -163,22 +166,23 @@ public class BratAnnotatorUtility
             AnnotationService annotationService, BratAnnotatorModel bratAnnotatorModel)
         throws UIMAException, IOException
     {
-
         Object result = null;
+        
+        int origin = aRequest.getParameterValue("origin").toInt();
+        int target = aRequest.getParameterValue("target").toInt();
+        
+        AnnotationFS originFs = selectAnnotationByAddress(aUIData.getjCas(), origin);
+        AnnotationFS targetFs = selectAnnotationByAddress(aUIData.getjCas(), target);
+        
         BratAjaxCasController controller = new BratAjaxCasController(repository, annotationService);
-        aUIData.setOrigin(aRequest.getParameterValue("origin").toInt());
-        aUIData.setTarget(aRequest.getParameterValue("target").toInt());
+        aUIData.setOrigin(origin);
+        aUIData.setTarget(target);
         aUIData.setType(aRequest.getParameterValue("type").toString());
-        aUIData.setAnnotationOffsetStart(BratAjaxCasUtil.getAnnotationBeginOffset(
-                aUIData.getjCas(), aUIData.getOrigin()));
+        aUIData.setAnnotationOffsetStart(originFs.getBegin());
 
         String annotationType = aUIData.getType().substring(0,
                 aUIData.getType().indexOf(AnnotationTypeConstant.PREFIX) + 1);
         if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
-
-            AnnotationFS originFs = selectAnnotationByAddress(aUIData.getjCas(), aUIData.getOrigin());
-            AnnotationFS targetFs = selectAnnotationByAddress(aUIData.getjCas(), aUIData.getTarget());
-
             result = controller.reverseArcResponse(bratAnnotatorModel, aUIData.getjCas(),
                     aUIData.getAnnotationOffsetStart(), originFs, targetFs, aUIData.getType(),
                     aUIData.isGetDocument());
@@ -198,7 +202,6 @@ public class BratAnnotatorUtility
             MappingJacksonHttpMessageConverter jsonConverter)
         throws JsonParseException, JsonMappingException, UIMAException, IOException
     {
-
         Object result = null;
         BratAjaxCasController controller = new BratAjaxCasController(repository, annotationService);
 
@@ -208,10 +211,12 @@ public class BratAnnotatorUtility
                 OffsetsList.class);
         int start = offsetLists.get(0).getBegin();
         int end = offsetLists.get(0).getEnd();
-        aUIData.setAnnotationOffsetStart(BratAjaxCasUtil.getAnnotationBeginOffset(
-                aUIData.getjCas(), bratAnnotatorModel.getSentenceAddress()) + start);
-        aUIData.setAnnotationOffsetEnd(BratAjaxCasUtil.getAnnotationBeginOffset(aUIData.getjCas(),
-                bratAnnotatorModel.getSentenceAddress()) + end);
+        
+        Sentence sentence = selectAnnotationByAddress(aUIData.getjCas(), Sentence.class,
+                bratAnnotatorModel.getSentenceAddress());
+        
+        aUIData.setAnnotationOffsetStart(sentence.getBegin() + start);
+        aUIData.setAnnotationOffsetEnd(sentence.getEnd() + end);
         aUIData.setType(aRequest.getParameterValue("type").toString());
 
         AnnotationFS idFs = selectAnnotationByAddress(aUIData.getjCas(), id);
@@ -219,6 +224,7 @@ public class BratAnnotatorUtility
         result = controller.deleteSpanResponse(bratAnnotatorModel, idFs,
                 aUIData.getAnnotationOffsetStart(), aUIData.getjCas(), aUIData.isGetDocument(),
                 aUIData.getType());
+        
         if (bratAnnotatorModel.isScrollPage()) {
             bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(
                     aUIData.getjCas(), bratAnnotatorModel.getSentenceAddress(),
@@ -233,22 +239,24 @@ public class BratAnnotatorUtility
             AnnotationService annotationService, BratAnnotatorModel bratAnnotatorModel)
         throws UIMAException, IOException
     {
-
         Object result = null;
         BratAjaxCasController controller = new BratAjaxCasController(repository, annotationService);
 
-        aUIData.setOrigin(aRequest.getParameterValue("origin").toInt());
-        aUIData.setTarget(aRequest.getParameterValue("target").toInt());
-        aUIData.setType(aRequest.getParameterValue("type").toString());
-        aUIData.setAnnotationOffsetStart(BratAjaxCasUtil.getAnnotationBeginOffset(
-                aUIData.getjCas(), aUIData.getOrigin()));
+        int origin = aRequest.getParameterValue("origin").toInt();
+        int target = aRequest.getParameterValue("target").toInt();
 
-        AnnotationFS originFs = selectAnnotationByAddress(aUIData.getjCas(), aUIData.getOrigin());
-        AnnotationFS targetFs = selectAnnotationByAddress(aUIData.getjCas(), aUIData.getTarget());
+        AnnotationFS originFs = selectAnnotationByAddress(aUIData.getjCas(), origin);
+        AnnotationFS targetFs = selectAnnotationByAddress(aUIData.getjCas(), target);
+
+        aUIData.setOrigin(origin);
+        aUIData.setTarget(target);
+        aUIData.setType(aRequest.getParameterValue("type").toString());
+        aUIData.setAnnotationOffsetStart(originFs.getBegin());
 
         result = controller.deleteArcResponse(bratAnnotatorModel, aUIData.getjCas(),
                 aUIData.getAnnotationOffsetStart(), originFs, targetFs, aUIData.getType(),
                 aUIData.isGetDocument());
+        
         if (bratAnnotatorModel.isScrollPage()) {
             bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(
                     aUIData.getjCas(), bratAnnotatorModel.getSentenceAddress(),
