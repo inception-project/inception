@@ -184,11 +184,6 @@ public class BratCuratorUtility
                 // TODO Auto-generated catch block
                 e1.printStackTrace();
             }
-            // AnnotationFS fsClicked = (AnnotationFS) clickedJCas.getLowLevelCas().ll_getFSForRef(
-            // addressOriginClicked);
-            // arcType = BratAjaxCasUtil.getAnnotationType(fsClicked.getType())
-            // + arcType;
-
             AnnotationFS originFsClicked = selectAnnotationByAddress(clickedJCas, addressOrigin);
             AnnotationFS targetFsClicked = selectAnnotationByAddress(clickedJCas, addressTarget);
 

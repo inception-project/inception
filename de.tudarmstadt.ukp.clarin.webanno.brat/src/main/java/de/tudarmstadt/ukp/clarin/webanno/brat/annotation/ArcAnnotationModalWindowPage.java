@@ -234,13 +234,6 @@ public class ArcAnnotationModalWindowPage
                     JCas jCas;
                     try {
                         jCas = getCas(bratAnnotatorModel);
-                        /*
-                         * AnnotationFS idFs = (AnnotationFS) jCas.getLowLevelCas().ll_getFSForRef(
-                         * arcId);
-                         *
-                         * jCas.removeFsFromIndexes(idFs);
-                         */
-
                         AnnotationFS originFs = selectAnnotationByAddress(jCas, originSpanId);
                         AnnotationFS targetFs = selectAnnotationByAddress(jCas, targetSpanId);
 
