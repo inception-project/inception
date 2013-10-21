@@ -55,14 +55,15 @@ public class SpanAdapter
     implements TypeAdapter
 {
     private Log LOG = LogFactory.getLog(getClass());
+    
     /**
      * Prefix of the label value for Brat to make sure that different annotation types can use the
      * same label, e.g. a POS tag "N" and a named entity type "N".
      *
      * This is used to differentiate the different types in the brat annotation/visualization. The
-     * prefix will not stored in the CAS(striped away at {@link BratAjaxCasController#getType} )
+     * prefix will not stored in the CAS (striped away at {@link BratAjaxCasController#getType} )
      */
-    private String typePrefix;
+    private String labelPrefix;
 
     /**
      * A field that takes the name of the feature which should be set, e.e. "pos" or "lemma".
@@ -87,10 +88,10 @@ public class SpanAdapter
 
     private boolean singleTokenBehavior = false;
 
-    public SpanAdapter(String aTypePrefix, String aTypeName, String aLabelFeatureName,
+    public SpanAdapter(String aLabelPrefix, String aTypeName, String aLabelFeatureName,
             String aAttachFeature, String aAttachType)
     {
-        typePrefix = aTypePrefix;
+        labelPrefix = aLabelPrefix;
         labelFeatureName = aLabelFeatureName;
         annotationTypeName = aTypeName;
         attachFeature = aAttachFeature;
@@ -131,11 +132,11 @@ public class SpanAdapter
     public void render(JCas aJcas, GetDocumentResponse aResponse,
             BratAnnotatorModel aBratAnnotatorModel)
     {
-        int address = BratAjaxCasUtil.selectSentenceAt(aJcas, aBratAnnotatorModel.getSentenceBeginOffset(), aBratAnnotatorModel.getSentenceEndOffset()).getAddress();
         // The first sentence address in the display window!
-        Sentence firstSentence = (Sentence) BratAjaxCasUtil.selectByAddr(aJcas,
-                FeatureStructure.class, address);
-        int i = address;
+        Sentence firstSentence = BratAjaxCasUtil.selectSentenceAt(aJcas,
+                aBratAnnotatorModel.getSentenceBeginOffset(),
+                aBratAnnotatorModel.getSentenceEndOffset());
+        int i = firstSentence.getAddress();
 
         int lastSentenceAddress;
         if(aBratAnnotatorModel.getMode().equals(Mode.CURATION)){
@@ -144,6 +145,7 @@ public class SpanAdapter
         else{
             lastSentenceAddress = BratAjaxCasUtil.getLastSentenceAddress(aJcas);
         }
+        
         // Loop based on window size
         // j, controlling variable to display sentences based on window size
         // i, address of each sentences
@@ -152,13 +154,13 @@ public class SpanAdapter
             if (i >= lastSentenceAddress) {
                 Sentence sentence = (Sentence) BratAjaxCasUtil.selectByAddr(aJcas,
                         FeatureStructure.class, i);
-                updateResponse(sentence, aResponse, firstSentence.getBegin());
+                renderSentence(sentence, aResponse, firstSentence.getBegin());
                 break;
             }
             else {
                 Sentence sentence = (Sentence) BratAjaxCasUtil.selectByAddr(aJcas,
                         FeatureStructure.class, i);
-                updateResponse(sentence, aResponse, firstSentence.getBegin());
+                renderSentence(sentence, aResponse, firstSentence.getBegin());
                 i = BratAjaxCasUtil.getFollowingSentenceAddress(aJcas, i);
             }
             j++;
@@ -177,14 +179,13 @@ public class SpanAdapter
      *            be <b>X-Y</b>, where <b>X</b> is the offset of the annotated span and <b>Y</b> is
      *            aFirstSentenceOffset
      */
-    private void updateResponse(Sentence aSentence, GetDocumentResponse aResponse,
+    private void renderSentence(Sentence aSentence, GetDocumentResponse aResponse,
             int aFirstSentenceOffset)
     {
         Type type = CasUtil.getType(aSentence.getCAS(), annotationTypeName);
         for (AnnotationFS fs : CasUtil.selectCovered(type, aSentence)) {
-
             Feature labelFeature = fs.getType().getFeatureByBaseName(labelFeatureName);
-            aResponse.addEntity(new Entity(((FeatureStructureImpl) fs).getAddress(), typePrefix
+            aResponse.addEntity(new Entity(((FeatureStructureImpl) fs).getAddress(), labelPrefix
                     + fs.getStringValue(labelFeature), asList(new Offsets(fs.getBegin()
                     - aFirstSentenceOffset, fs.getEnd() - aFirstSentenceOffset))));
         }
@@ -303,7 +304,12 @@ public class SpanAdapter
     @Override
     public String getLabelFeatureName()
     {
-        // TODO Auto-generated method stub
         return labelFeatureName;
+    }
+    
+    @Override
+    public String getLabelPrefix()
+    {
+        return labelPrefix;
     }
 }

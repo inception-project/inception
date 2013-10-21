@@ -54,7 +54,7 @@ public class ArcAdapter
      * same label, e.g. a POS tag "N" and a named entity type "N".
      *
      */
-    private String typePrefix;
+    private String labelPrefix;
 
     /**
      * The UIMA type name.
@@ -95,11 +95,11 @@ public class ArcAdapter
      */
     private String arcTokenType;
 
-    public ArcAdapter(String aTypePrefix, String aTypeName, String aLabelFeatureName,
+    public ArcAdapter(String aLabelPrefix, String aTypeName, String aLabelFeatureName,
             String aDependentFeatureName, String aGovernorFeatureName, String aArcSpanType,
             String aArcSpanTypeFeatureName, String aTokenType)
     {
-        typePrefix = aTypePrefix;
+        labelPrefix = aLabelPrefix;
         labelFeatureName = aLabelFeatureName;
         annotationTypeName = aTypeName;
         governorFeatureName = aGovernorFeatureName;
@@ -125,20 +125,19 @@ public class ArcAdapter
     public void render(JCas aJcas, GetDocumentResponse aResponse,
             BratAnnotatorModel aBratAnnotatorModel)
     {
-        int address = BratAjaxCasUtil.selectSentenceAt(aJcas,
-                aBratAnnotatorModel.getSentenceBeginOffset(),
-                aBratAnnotatorModel.getSentenceEndOffset()).getAddress();
-        int lastAddressInPage = BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(aJcas,
-                address, aBratAnnotatorModel.getWindowSize());
-
-        boolean reverse = aBratAnnotatorModel.getProject().isReverseDependencyDirection();
         // The first sentence address in the display window!
-        Sentence firstSentence = (Sentence) BratAjaxCasUtil.selectByAddr(aJcas,
-                FeatureStructure.class, address);
+        Sentence firstSentence = BratAjaxCasUtil.selectSentenceAt(aJcas,
+                aBratAnnotatorModel.getSentenceBeginOffset(),
+                aBratAnnotatorModel.getSentenceEndOffset());
+        int i = firstSentence.getAddress();
+        
+        int lastAddressInPage = BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(aJcas,
+                firstSentence.getAddress(), aBratAnnotatorModel.getWindowSize());
+
         // the last sentence address in the display window
         Sentence lastSentenceInPage = (Sentence) BratAjaxCasUtil.selectByAddr(aJcas,
                 FeatureStructure.class, lastAddressInPage);
-        int i = address;
+        
         int lastSentenceAddress;
         if(aBratAnnotatorModel.getMode().equals(Mode.CURATION)){
             lastSentenceAddress = aBratAnnotatorModel.getLastSentenceAddress();
@@ -146,14 +145,18 @@ public class ArcAdapter
         else{
             lastSentenceAddress = BratAjaxCasUtil.getLastSentenceAddress(aJcas);
         }
+
+        boolean reverse = aBratAnnotatorModel.getProject().isReverseDependencyDirection();
+
         // Loop based on window size
         // j, controlling variable to display sentences based on window size
         // i, address of each sentences
         int j = 1;
         while (j <= aBratAnnotatorModel.getWindowSize()) {
+            // FIXME - I absolutely do not understand what happens in this loop - REC 2013-10-22
             if (i >= lastSentenceAddress) {
                 updateResponse(aJcas, aResponse, firstSentence.getBegin(),
-                        lastSentenceInPage.getEnd(),reverse);
+                        lastSentenceInPage.getEnd(), reverse);
                 break;
             }
             else {
@@ -199,7 +202,7 @@ public class ArcAdapter
 
             Feature labelFeature = fs.getType().getFeatureByBaseName(labelFeatureName);
 
-            aResponse.addRelation(new Relation(((FeatureStructureImpl) fs).getAddress(), typePrefix
+            aResponse.addRelation(new Relation(((FeatureStructureImpl) fs).getAddress(), labelPrefix
                     + fs.getStringValue(labelFeature), argumentList));
         }
     }
@@ -410,5 +413,11 @@ public class ArcAdapter
     public String getLabelFeatureName()
     {
         return labelFeatureName;
+    }
+    
+    @Override
+    public String getLabelPrefix()
+    {
+        return labelPrefix;
     }
 }

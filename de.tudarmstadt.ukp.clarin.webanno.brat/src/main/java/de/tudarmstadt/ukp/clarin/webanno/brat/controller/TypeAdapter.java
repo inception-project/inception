@@ -38,11 +38,19 @@ public interface TypeAdapter
     void render(JCas aJcas, GetDocumentResponse aResponse, BratAnnotatorModel aBratAnnotatorModel);
 
     /**
-     * 
      * @return The feature of an UIMA annotation containing the label to be displayed in the UI.
      */
     String getLabelFeatureName();
 
+    /**
+     * Prefix of the label value for Brat to make sure that different annotation types can use the
+     * same label, e.g. a POS tag "N" and a named entity type "N".
+     *
+     * This is used to differentiate the different types in the brat annotation/visualization. The
+     * prefix will not stored in the CAS (striped away at {@link BratAjaxCasController#getType} )
+     */
+    String getLabelPrefix();
+    
 //    /**
 //     * Update the CAS with new/modification of span annotations from brat
 //     * 

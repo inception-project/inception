@@ -68,7 +68,7 @@ public class ChainAdapter
      * This is used to differentiate the different types in the brat annotation/visualization. The
      * prefix will not stored in the CAS(striped away at {@link BratAjaxCasController#getType} )
      */
-    private String typePrefix;
+    private String labelPrefix;
 
     /**
      * The UIMA type name.
@@ -94,10 +94,10 @@ public class ChainAdapter
 
     private boolean isChain = false;
 
-    public ChainAdapter(String aTypePrefix, String aTypeName, String aLabelFeatureName,
+    public ChainAdapter(String aLabelPrefix, String aTypeName, String aLabelFeatureName,
             String aFirstFeatureName, String aNextFeatureName)
     {
-        typePrefix = aTypePrefix;
+        labelPrefix = aLabelPrefix;
         labelFeatureName = aLabelFeatureName;
         annotationTypeName = aTypeName;
         chainFirstFeatureName = aFirstFeatureName;
@@ -221,7 +221,7 @@ public class ChainAdapter
         Type type = CasUtil.getType(aSentence.getCAS(), annotationTypeName);
         Feature labelFeature = type.getFeatureByBaseName(labelFeatureName);
         for (AnnotationFS fs : CasUtil.selectCovered(type, aSentence)) {
-            aResponse.addEntity(new Entity(((FeatureStructureImpl) fs).getAddress(), typePrefix
+            aResponse.addEntity(new Entity(((FeatureStructureImpl) fs).getAddress(), labelPrefix
                     + fs.getStringValue(labelFeature), asList(new Offsets(fs.getBegin()
                     - aFirstSentenceOffset, fs.getEnd() - aFirstSentenceOffset))));
         }
@@ -288,7 +288,7 @@ public class ChainAdapter
     {
         Feature labelFeature = aFrom.getType().getFeatureByBaseName(labelFeatureName);
         List<Argument> argumentList = getArgument(aFrom, aTo);
-        return new Relation(((FeatureStructureImpl) aFrom).getAddress(), aColorIndex + typePrefix
+        return new Relation(((FeatureStructureImpl) aFrom).getAddress(), aColorIndex + labelPrefix
                 + aFrom.getStringValue(labelFeature), argumentList);
     }
 
@@ -798,5 +798,11 @@ public class ChainAdapter
     public String getLabelFeatureName()
     {
         return labelFeatureName;
+    }
+    
+    @Override
+    public String getLabelPrefix()
+    {
+        return labelPrefix;
     }
 }
