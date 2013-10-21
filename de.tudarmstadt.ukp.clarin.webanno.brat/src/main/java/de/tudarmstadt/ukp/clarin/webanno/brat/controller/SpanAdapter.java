@@ -192,25 +192,22 @@ public class SpanAdapter
 
     /**
      * Update the CAS with new/modification of span annotations from brat
-     *
      * @param aLabelValue
      *            the value of the annotation for the span
      */
-    public void add(String aLabelValue, JCas aJcas, int aAnnotationOffsetStart,
-            int aAnnotationOffsetEnd)
+    public void add(JCas aJcas, int aBegin, int aEnd, String aLabelValue)
     {
         Map<Integer, Integer> offsets = ApplicationUtils.offsets(aJcas);
 
         if (singleTokenBehavior) {
             Map<Integer, Integer> splitedTokens = ApplicationUtils.getSplitedTokens(offsets,
-                    aAnnotationOffsetStart, aAnnotationOffsetEnd);
+                    aBegin, aEnd);
             for (Integer start : splitedTokens.keySet()) {
                 updateCas(aJcas.getCas(), start, splitedTokens.get(start), aLabelValue);
             }
         }
         else {
-            int startAndEnd[] = ApplicationUtils.getTokenStart(offsets, aAnnotationOffsetStart,
-                    aAnnotationOffsetEnd);
+            int startAndEnd[] = ApplicationUtils.getTokenStart(offsets, aBegin, aEnd);
             updateCas(aJcas.getCas(), startAndEnd[0], startAndEnd[1], aLabelValue);
         }
     }

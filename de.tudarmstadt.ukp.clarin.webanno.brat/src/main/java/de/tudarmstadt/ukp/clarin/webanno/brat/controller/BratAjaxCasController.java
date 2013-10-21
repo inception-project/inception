@@ -465,12 +465,12 @@ public class BratAjaxCasController
         String aLabelValue = BratAjaxCasUtil.getLabel(aType);
 
         if (labelPrefix.equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)) {
-            SpanAdapter.getNamedEntityAdapter().add(aLabelValue, aJCas, aAnnotationOffsetStart,
-                    aAnnotationOffsetEnd);
+            SpanAdapter.getNamedEntityAdapter().add(aJCas, aAnnotationOffsetStart, aAnnotationOffsetEnd,
+                    aLabelValue);
         }
         else if (labelPrefix.equals(AnnotationTypeConstant.POS_PREFIX)) {
-            SpanAdapter.getPosAdapter().add(aLabelValue, aJCas, aAnnotationOffsetStart,
-                    aAnnotationOffsetEnd);
+            SpanAdapter.getPosAdapter().add(aJCas, aAnnotationOffsetStart, aAnnotationOffsetEnd,
+                    aLabelValue);
         }
         else if (labelPrefix.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
             ChainAdapter.getCoreferenceLinkAdapter().add(aLabelValue, aJCas,

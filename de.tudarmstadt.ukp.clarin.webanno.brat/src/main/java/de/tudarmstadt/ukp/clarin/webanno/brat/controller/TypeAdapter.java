@@ -43,18 +43,13 @@ public interface TypeAdapter
      */
     String getLabelFeatureName();
 
-    // /**
-    // * Update the CAS with new/modification of annotations from brat
-    // *
-    // * @param aLabelValue
-    // * the value of the annotation
-    // * @param aUIData
-    // * Other information obtained from brat such as the start and end offsets
-    // * @param aReverse
-    // * If arc direction are in reverse direction, from Dependent to Governor
-    // */
-    // void addToCas(String aLabelValue, BratAnnotatorUIData aUIData,
-    // BratAnnotatorModel aBratAnnotatorModel, boolean aReverse);
+//    /**
+//     * Update the CAS with new/modification of span annotations from brat
+//     * 
+//     * @param aLabelValue
+//     *            the value of the annotation for the span
+//     */
+//    void add(String aLabelValue, JCas aJcas, int aAnnotationOffsetStart, int aAnnotationOffsetEnd);
 
     // /**
     // * Delete arc annotation from CAS
