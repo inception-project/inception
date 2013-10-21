@@ -308,7 +308,7 @@ public class BratAnnotator
                         else if (request.getParameterValue("action").toString()
                                 .equals("deleteSpan")) {
                             String type = request.getParameterValue("type").toString();
-                            String annotationType = BratAjaxCasUtil.getAnnotationType(type);
+                            String annotationType = BratAjaxCasUtil.getLabelPrefix(type);
                             if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
                                 result = BratAnnotatorUtility.getDocument(uIData, repository,
                                         annotationService, getModelObject());

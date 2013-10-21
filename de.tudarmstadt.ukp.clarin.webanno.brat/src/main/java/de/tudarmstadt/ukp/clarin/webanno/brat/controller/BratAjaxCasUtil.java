@@ -556,25 +556,6 @@ public class BratAjaxCasUtil
     }
 
     /**
-     * Get the annotation type, using the request sent from brat. If the request have type POS_NN,
-     * the the annotation type is POS
-     * 
-     * @param aType
-     *            the type sent from brat annotation as request while annotating
-     */
-    public static String getAnnotationType(String aType)
-    {
-        String annotationType;
-        if (Character.isDigit(aType.charAt(0))) {
-            annotationType = aType.substring(0, aType.indexOf("_") + 1).replaceAll("[0-9]+", "");
-        }
-        else {
-            annotationType = aType.substring(0, aType.indexOf("_") + 1);
-        }
-        return annotationType;
-    }
-
-    /**
      * Get the annotation layer name for span {@link AnnotationType} such as
      * {@link AnnotationTypeConstant#NAMEDENTITY} or {@link AnnotationTypeConstant#COREFRELTYPE}. If
      * this name is changed in the database, the {@link AnnotationTypeConstant} constants also
@@ -661,7 +642,26 @@ public class BratAjaxCasUtil
         }
         return type;
     }
-    
+
+    /**
+     * Get the annotation type, using the request sent from brat. If the request have type POS_NN,
+     * the the annotation type is POS
+     * 
+     * @param aType
+     *            the type sent from brat annotation as request while annotating
+     */
+    public static String getLabelPrefix(String aType)
+    {
+        String annotationType;
+        if (Character.isDigit(aType.charAt(0))) {
+            annotationType = aType.substring(0, aType.indexOf("_") + 1).replaceAll("[0-9]+", "");
+        }
+        else {
+            annotationType = aType.substring(0, aType.indexOf("_") + 1);
+        }
+        return annotationType;
+    }
+
     /**
      * Get the annotation type the way it is used in Brat visualization page (PREFIX+Type), such as
      * (POS_+NN)

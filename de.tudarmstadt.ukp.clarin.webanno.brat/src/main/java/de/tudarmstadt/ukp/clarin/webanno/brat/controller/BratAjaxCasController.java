@@ -363,7 +363,7 @@ public class BratAjaxCasController
         throws UIMAException, IOException
     {
 
-        String annotationType = BratAjaxCasUtil.getAnnotationType(aType);
+        String annotationType = BratAjaxCasUtil.getLabelPrefix(aType);
         String type = BratAjaxCasUtil.getLabel(aType);
 
         if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
@@ -427,7 +427,7 @@ public class BratAjaxCasController
         throws UIMAException, IOException
     {
 
-        String annotationType = BratAjaxCasUtil.getAnnotationType(aType);
+        String annotationType = BratAjaxCasUtil.getLabelPrefix(aType);
         String type = BratAjaxCasUtil.getLabel(aType);
 
         if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
@@ -465,7 +465,7 @@ public class BratAjaxCasController
             String aType, AnnotationFS aOriginFs, AnnotationFS aTargetFs)
     {
 
-        String annotationType = BratAjaxCasUtil.getAnnotationType(aType);
+        String annotationType = BratAjaxCasUtil.getLabelPrefix(aType);
         String aLabelValue = BratAjaxCasUtil.getLabel(aType);
 
         if (annotationType.equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)) {
@@ -494,7 +494,7 @@ public class BratAjaxCasController
             int aAnnotationOffsetStart, int aAnnotationOffsetEnd, AnnotationFS aOriginFs,
             AnnotationFS aTargetFs, JCas aJCas)
     {
-        String annotationType = BratAjaxCasUtil.getAnnotationType(aType);
+        String annotationType = BratAjaxCasUtil.getLabelPrefix(aType);
         String labelValue = BratAjaxCasUtil.getLabel(aType);
 
         if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
@@ -521,7 +521,7 @@ public class BratAjaxCasController
     public void deleteSpanFromCas(String aType, JCas aJcas, AnnotationFS aId)
     {
 
-        String annotationType = BratAjaxCasUtil.getAnnotationType(aType);
+        String annotationType = BratAjaxCasUtil.getLabelPrefix(aType);
 
         if (annotationType.equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)) {
             SpanAdapter.getNamedEntityAdapter().delete(aJcas, aId);
@@ -547,7 +547,7 @@ public class BratAjaxCasController
             AnnotationFS aTargetFs, BratAnnotatorModel aBratAnnotatorModel)
     {
 
-        String annotationType = BratAjaxCasUtil.getAnnotationType(aType);
+        String annotationType = BratAjaxCasUtil.getLabelPrefix(aType);
         String aLabelValue = BratAjaxCasUtil.getLabel(aType);
         if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
             ArcAdapter.getDependencyAdapter().delete(aJCas, aOriginFs, aTargetFs,
