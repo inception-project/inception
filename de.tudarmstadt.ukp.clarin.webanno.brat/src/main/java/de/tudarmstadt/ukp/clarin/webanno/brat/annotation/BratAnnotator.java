@@ -423,7 +423,7 @@ public class BratAnnotator
                 if (model != null) {
                     setModelObject(model);
                 }
-                onChange(aTarget, getModelObject());
+                onChange(aTarget, model);
                 reloadContent(aTarget);
 
             }
