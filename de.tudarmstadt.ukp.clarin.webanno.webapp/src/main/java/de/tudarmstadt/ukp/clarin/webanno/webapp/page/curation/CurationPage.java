@@ -857,7 +857,7 @@ public class CurationPage extends SettingsPageBase {
 
 
                     int address = BratAjaxCasUtil.selectSentenceAt(mergeJCas, bratAnnotatorModel.getSentenceBeginOffset(), bratAnnotatorModel.getSentenceEndOffset()).getAddress();
-                    int firstAddress = BratAjaxCasUtil.getFirstSenetnceAddress(mergeJCas);
+                    int firstAddress = BratAjaxCasUtil.getFirstSentenceAddress(mergeJCas);
 
                     if (firstAddress != address) {
                         bratAnnotatorModel.setSentenceAddress(firstAddress);
@@ -1023,7 +1023,7 @@ public class CurationPage extends SettingsPageBase {
 
 			try {
 				bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil
-						.getFirstSenetnceAddress(jCas));
+						.getFirstSentenceAddress(jCas));
 				bratAnnotatorModel.setLastSentenceAddress(BratAjaxCasUtil
 						.getLastSentenceAddress(jCas));
 				bratAnnotatorModel.setFirstSentenceAddress(bratAnnotatorModel

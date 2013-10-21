@@ -257,7 +257,7 @@ public class BratAjaxCasUtil
      *            The CAS object assumed to contains some sentence annotations
      * @return the sentence number or -1 if aJcas don't have sentence annotation
      */
-    public static int getFirstSenetnceAddress(JCas aJcas)
+    public static int getFirstSentenceAddress(JCas aJcas)
     {
         int firstSentenceAddress = -1;
 

@@ -220,7 +220,7 @@ public class CasToBratJsonTest extends TestCase {
 		BratAnnotatorModel bratannotatorModel = new BratAnnotatorModel();
 		bratannotatorModel.setWindowSize(10);
 		bratannotatorModel.setSentenceAddress(BratAjaxCasUtil
-				.getFirstSenetnceAddress(jCas));
+				.getFirstSentenceAddress(jCas));
 		bratannotatorModel.setLastSentenceAddress(BratAjaxCasUtil
 				.getLastSentenceAddress(jCas));
 

@@ -807,7 +807,7 @@ public class CorrectionPage
 
 
                     int address = BratAjaxCasUtil.selectSentenceAt(mergeJCas, bratAnnotatorModel.getSentenceBeginOffset(), bratAnnotatorModel.getSentenceEndOffset()).getAddress();
-                    int firstAddress = BratAjaxCasUtil.getFirstSenetnceAddress(mergeJCas);
+                    int firstAddress = BratAjaxCasUtil.getFirstSentenceAddress(mergeJCas);
 
                     if (firstAddress != address) {
                         bratAnnotatorModel.setSentenceAddress(firstAddress);
@@ -991,7 +991,7 @@ public class CorrectionPage
 
             try {
                 bratAnnotatorModel
-                        .setSentenceAddress(BratAjaxCasUtil.getFirstSenetnceAddress(jCas));
+                        .setSentenceAddress(BratAjaxCasUtil.getFirstSentenceAddress(jCas));
                 bratAnnotatorModel.setLastSentenceAddress(BratAjaxCasUtil
                         .getLastSentenceAddress(jCas));
                 bratAnnotatorModel.setFirstSentenceAddress(bratAnnotatorModel.getSentenceAddress());
