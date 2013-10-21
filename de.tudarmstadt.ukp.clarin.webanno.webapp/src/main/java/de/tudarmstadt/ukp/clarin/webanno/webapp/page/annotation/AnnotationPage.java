@@ -127,6 +127,7 @@ public class AnnotationPage
                     BratAnnotatorModel aBratAnnotatorModel)
             {
                 // updateRightSide(aTarget, sentenceOuterView, curationContainer, this);
+                bratAnnotatorModel = aBratAnnotatorModel;
                 aTarget.add(numberOfPages);
             }
         };
