@@ -154,6 +154,19 @@ public class BratAjaxCasUtil
     }
 
     /**
+     * Get an annotation using the begin/offsets and its type
+     */
+    public static AnnotationFS selectSingleFsAt(JCas aJcas, Type aType, int aBegin, int aEnd)
+    {
+        for (AnnotationFS anFS : selectCovered(aJcas.getCas(), aType, aBegin, aEnd)) {
+            if (anFS.getBegin() == aBegin && anFS.getEnd() == aEnd) {
+                return anFS;
+            }
+        }
+        return null;
+    }
+    
+    /**
      * Get the sentence for this CAS based on the begin and end offsets. This is basically
      * used to transform sentence address in one CAS to other sentence address for different CAS
      */
@@ -451,22 +464,6 @@ public class BratAjaxCasUtil
         }
     }
 
-    /**
-     * Get an annotation using the begin/offsets and its type
-     * 
-     * @return
-     */
-
-    public static AnnotationFS getAnnotation(JCas aJcas, int aBegin, int aEnd, Type aType)
-    {
-        for (AnnotationFS anFS : selectCovered(aJcas.getCas(), aType, aBegin, aEnd)) {
-            if (anFS.getBegin() == aBegin && anFS.getEnd() == aEnd) {
-                return anFS;
-            }
-        }
-        return null;
-    }
-
     public static int getLastDisplayWindowFirstSentenceAddress(JCas aJcas, int aWindowSize)
     {
         List<Integer> displayWindowBeginingSentenceAddresses = getDisplayWindowBeginningSentenceAddresses(
@@ -530,7 +527,7 @@ public class BratAjaxCasUtil
         int address = 0;
         // Negative numbers entered for page number
         if (aSentenceNumber < 1) {
-            return -2;
+            return -2; // FIXME: Magic number!
         }
         for (Sentence sentence : select(aJcas, Sentence.class)) {
             if (i == aSentenceNumber) {
@@ -542,7 +539,7 @@ public class BratAjaxCasUtil
         }
         // out of sentence boundary
         if (aSentenceNumber > i) {
-            return -2;
+            return -2; // FIXME: Magic number!
         }
         return address;
 

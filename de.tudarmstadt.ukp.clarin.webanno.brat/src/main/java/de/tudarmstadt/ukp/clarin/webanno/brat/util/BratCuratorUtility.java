@@ -187,11 +187,11 @@ public class BratCuratorUtility
             AnnotationFS originFsClicked = selectByAddr(clickedJCas, addressOrigin);
             AnnotationFS targetFsClicked = selectByAddr(clickedJCas, addressTarget);
 
-            AnnotationFS originFs = BratAjaxCasUtil.getAnnotation(aJcas, originFsClicked.getBegin(),
-            		originFsClicked.getEnd(), originFsClicked.getType());
+            AnnotationFS originFs = BratAjaxCasUtil.selectSingleFsAt(aJcas, originFsClicked.getType(),
+            		originFsClicked.getBegin(), originFsClicked.getEnd());
 
-            AnnotationFS targetFs = BratAjaxCasUtil.getAnnotation(aJcas, targetFsClicked.getBegin(),
-            		targetFsClicked.getEnd(), targetFsClicked.getType());
+            AnnotationFS targetFs = BratAjaxCasUtil.selectSingleFsAt(aJcas, targetFsClicked.getType(),
+            		targetFsClicked.getBegin(), targetFsClicked.getEnd());
             BratAjaxCasController controller = new BratAjaxCasController(repository,
                     annotationService);
             try {
