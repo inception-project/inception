@@ -224,7 +224,7 @@ public class CasToBratJsonTest extends TestCase {
 		bratannotatorModel.setLastSentenceAddress(BratAjaxCasUtil
 				.getLastSenetnceAddress(jCas));
 
-        Sentence sentence = BratAjaxCasUtil.selectAnnotationByAddress(jCas, Sentence.class,
+        Sentence sentence = BratAjaxCasUtil.selectByAddr(jCas, Sentence.class,
                 bratannotatorModel.getSentenceAddress());
 		
 		bratannotatorModel.setSentenceBeginOffset(sentence.getBegin());

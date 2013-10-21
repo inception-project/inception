@@ -132,10 +132,10 @@ public class ArcAdapter
 
         boolean reverse = aBratAnnotatorModel.getProject().isReverseDependencyDirection();
         // The first sentence address in the display window!
-        Sentence firstSentence = (Sentence) BratAjaxCasUtil.selectAnnotationByAddress(aJcas,
+        Sentence firstSentence = (Sentence) BratAjaxCasUtil.selectByAddr(aJcas,
                 FeatureStructure.class, address);
         // the last sentence address in the display window
-        Sentence lastSentenceInPage = (Sentence) BratAjaxCasUtil.selectAnnotationByAddress(aJcas,
+        Sentence lastSentenceInPage = (Sentence) BratAjaxCasUtil.selectByAddr(aJcas,
                 FeatureStructure.class, lastAddressInPage);
         int i = address;
         int lastSentenceAddress;
@@ -225,9 +225,9 @@ public class ArcAdapter
 
         int address = BratAjaxCasUtil.getSentenceofCAS(aJCas, aBratAnnotatorModel.getSentenceBeginOffset(), aBratAnnotatorModel.getSentenceEndOffset()).getAddress();
 
-        int beginOffset = BratAjaxCasUtil.selectAnnotationByAddress(aJCas, Sentence.class,
+        int beginOffset = BratAjaxCasUtil.selectByAddr(aJCas, Sentence.class,
         		address).getBegin();
-        int endOffset = BratAjaxCasUtil.selectAnnotationByAddress(
+        int endOffset = BratAjaxCasUtil.selectByAddr(
                 aJCas,
                 Sentence.class,
                 BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(aJCas,
@@ -278,14 +278,14 @@ public class ArcAdapter
             AnnotationFS dependentFS;
             AnnotationFS governorFS;
             if (aValue.equals("ROOT")) {
-                governorFS = (AnnotationFS) BratAjaxCasUtil.selectAnnotationByAddress(aJCas,
+                governorFS = (AnnotationFS) BratAjaxCasUtil.selectByAddr(aJCas,
                         FeatureStructure.class, ((FeatureStructureImpl) aOriginFs).getAddress());
                 dependentFS = governorFS;
             }
             else {
-                dependentFS = (AnnotationFS) BratAjaxCasUtil.selectAnnotationByAddress(aJCas,
+                dependentFS = (AnnotationFS) BratAjaxCasUtil.selectByAddr(aJCas,
                         FeatureStructure.class, ((FeatureStructureImpl) aTargetFs).getAddress());
-                governorFS = (AnnotationFS) BratAjaxCasUtil.selectAnnotationByAddress(aJCas,
+                governorFS = (AnnotationFS) BratAjaxCasUtil.selectByAddr(aJCas,
                         FeatureStructure.class, ((FeatureStructureImpl) aOriginFs).getAddress());
             }
             // if span A has (start,end)= (20, 26) and B has (start,end)= (30, 36)

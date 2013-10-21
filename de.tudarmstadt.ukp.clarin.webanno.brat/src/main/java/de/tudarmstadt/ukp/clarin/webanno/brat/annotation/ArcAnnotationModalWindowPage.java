@@ -17,7 +17,7 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectAnnotationByAddress;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -187,8 +187,8 @@ public class ArcAnnotationModalWindowPage
                                     selectedtTagSet);
                             annotationType = BratAjaxCasUtil.getQualifiedLabel(selectedTag);
 
-                            AnnotationFS originFs = selectAnnotationByAddress(jCas, originSpanId);
-                            AnnotationFS targetFs = selectAnnotationByAddress(jCas, targetSpanId);
+                            AnnotationFS originFs = selectByAddr(jCas, originSpanId);
+                            AnnotationFS targetFs = selectByAddr(jCas, targetSpanId);
 
                             controller.addArcToCas(bratAnnotatorModel, annotationType, -1, -1,
                                     originFs, targetFs, jCas);
@@ -234,8 +234,8 @@ public class ArcAnnotationModalWindowPage
                     JCas jCas;
                     try {
                         jCas = getCas(bratAnnotatorModel);
-                        AnnotationFS originFs = selectAnnotationByAddress(jCas, originSpanId);
-                        AnnotationFS targetFs = selectAnnotationByAddress(jCas, targetSpanId);
+                        AnnotationFS originFs = selectByAddr(jCas, originSpanId);
+                        AnnotationFS targetFs = selectByAddr(jCas, targetSpanId);
 
                         controller.delteArcFromCas(selectedArcType, jCas, originFs, targetFs,
                                 bratAnnotatorModel);
@@ -281,7 +281,7 @@ public class ArcAnnotationModalWindowPage
                     try {
                         jCas = getCas(bratAnnotatorModel);
 
-                        AnnotationFS idFs = selectAnnotationByAddress(jCas, aRef);
+                        AnnotationFS idFs = selectByAddr(jCas, aRef);
 
                         jCas.removeFsFromIndexes(idFs);
 
@@ -290,8 +290,8 @@ public class ArcAnnotationModalWindowPage
 
                         annotationType = BratAjaxCasUtil.getQualifiedLabel(selectedTag);
 
-                        AnnotationFS originFs = selectAnnotationByAddress(jCas, originSpanId);
-                        AnnotationFS targetFs = selectAnnotationByAddress(jCas, targetSpanId);
+                        AnnotationFS originFs = selectByAddr(jCas, originSpanId);
+                        AnnotationFS targetFs = selectByAddr(jCas, targetSpanId);
 
                         controller.addArcToCas(bratAnnotatorModel, annotationType, -1, -1,
                                 originFs, targetFs, jCas);
@@ -337,7 +337,7 @@ public class ArcAnnotationModalWindowPage
                         bratAnnotatorModel.getDocument(),
                         bratAnnotatorModel.getWindowSize()));
 
-        Sentence sentence = selectAnnotationByAddress(jCas, Sentence.class,
+        Sentence sentence = selectByAddr(jCas, Sentence.class,
                 bratAnnotatorModel.getSentenceAddress());
         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());

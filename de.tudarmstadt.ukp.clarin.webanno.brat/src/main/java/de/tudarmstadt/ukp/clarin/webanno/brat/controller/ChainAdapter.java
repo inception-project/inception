@@ -157,11 +157,11 @@ public class ChainAdapter
             BratAnnotatorModel aBratAnnotatorModel)
     {
         // The first sentence address in the display window!
-        Sentence firstSentence = (Sentence) BratAjaxCasUtil.selectAnnotationByAddress(aJcas,
+        Sentence firstSentence = (Sentence) BratAjaxCasUtil.selectByAddr(aJcas,
                 FeatureStructure.class, aBratAnnotatorModel.getSentenceAddress());
 
         // The last sentence address in the display window!
-        Sentence lastSentence = (Sentence) BratAjaxCasUtil.selectAnnotationByAddress(
+        Sentence lastSentence = (Sentence) BratAjaxCasUtil.selectByAddr(
                 aJcas,
                 FeatureStructure.class,
                 BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(aJcas,
@@ -178,7 +178,7 @@ public class ChainAdapter
         int j = 1;
         while (j <= aBratAnnotatorModel.getWindowSize()) {
             if (i >= aBratAnnotatorModel.getLastSentenceAddress()) {
-                Sentence sentence = (Sentence) BratAjaxCasUtil.selectAnnotationByAddress(aJcas,
+                Sentence sentence = (Sentence) BratAjaxCasUtil.selectByAddr(aJcas,
                         FeatureStructure.class, i);
                 if (isChain) {
                     renderChains(sentence, aResponse, windowBegin, windowEnd);
@@ -189,7 +189,7 @@ public class ChainAdapter
                 break;
             }
             else {
-                Sentence sentence = (Sentence) BratAjaxCasUtil.selectAnnotationByAddress(aJcas,
+                Sentence sentence = (Sentence) BratAjaxCasUtil.selectByAddr(aJcas,
                         FeatureStructure.class, i);
                 if (isChain) {
                     renderChains(sentence, aResponse, windowBegin, windowEnd);
@@ -383,9 +383,9 @@ public class ChainAdapter
     {
         boolean modify = false;
 
-        AnnotationFS originLink = (AnnotationFS) BratAjaxCasUtil.selectAnnotationByAddress(aJcas,
+        AnnotationFS originLink = (AnnotationFS) BratAjaxCasUtil.selectByAddr(aJcas,
                 FeatureStructure.class, ((FeatureStructureImpl)aOriginFs).getAddress());
-        AnnotationFS targetLink = (AnnotationFS) BratAjaxCasUtil.selectAnnotationByAddress(aJcas,
+        AnnotationFS targetLink = (AnnotationFS) BratAjaxCasUtil.selectByAddr(aJcas,
                 FeatureStructure.class,  ((FeatureStructureImpl)aTargetFs).getAddress());
 
         // Currently support only anaphoric relation
@@ -645,7 +645,7 @@ public class ChainAdapter
      */
     public void updateCasBeforeDelete(JCas aJCas, int aRef)
     {
-        FeatureStructure fsToRemove = (FeatureStructure) BratAjaxCasUtil.selectAnnotationByAddress(
+        FeatureStructure fsToRemove = (FeatureStructure) BratAjaxCasUtil.selectByAddr(
                 aJCas, FeatureStructure.class, aRef);
 
         Type type = CasUtil.getType(aJCas.getCas(), annotationTypeName);
@@ -704,7 +704,7 @@ public class ChainAdapter
             boolean found = false;
 
             AnnotationFS originCorefType = (AnnotationFS) BratAjaxCasUtil
-                    .selectAnnotationByAddress(aJCas, FeatureStructure.class, ((FeatureStructureImpl)aRefFs).getAddress());
+                    .selectByAddr(aJCas, FeatureStructure.class, ((FeatureStructureImpl)aRefFs).getAddress());
             for (FeatureStructure fs : CasUtil.selectFS(aJCas.getCas(), type)) {
                 AnnotationFS linkFs = (AnnotationFS) fs.getFeatureValue(first);
                 Feature next = linkFs.getType().getFeatureByBaseName(linkNextFeatureName);
@@ -730,7 +730,7 @@ public class ChainAdapter
             ChainAdapter.getCoreferenceChainAdapter().updateCasBeforeDelete(aJCas, ((FeatureStructureImpl)aRefFs).getAddress());
 
             FeatureStructure fsToRemove = (FeatureStructure) BratAjaxCasUtil
-                    .selectAnnotationByAddress(aJCas, FeatureStructure.class, ((FeatureStructureImpl)aRefFs).getAddress());
+                    .selectByAddr(aJCas, FeatureStructure.class, ((FeatureStructureImpl)aRefFs).getAddress());
 
             aJCas.removeFsFromIndexes(fsToRemove);
 

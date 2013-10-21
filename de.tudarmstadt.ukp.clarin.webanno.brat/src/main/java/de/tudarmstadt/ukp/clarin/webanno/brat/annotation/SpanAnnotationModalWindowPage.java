@@ -17,7 +17,7 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectAnnotationByAddress;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -272,11 +272,11 @@ public class SpanAnnotationModalWindowPage
                         OffsetsList offsetLists = (OffsetsList) jsonConverter.getObjectMapper()
                                 .readValue(offsets, OffsetsList.class);
 
-                        int start = selectAnnotationByAddress(jCas, Sentence.class,
+                        int start = selectByAddr(jCas, Sentence.class,
                                 bratAnnotatorModel.getSentenceAddress()).getBegin()
                                 + ((Offsets) offsetLists.get(0)).getBegin();
 
-                        AnnotationFS idFs = selectAnnotationByAddress(jCas, selectedSpanId);
+                        AnnotationFS idFs = selectByAddr(jCas, selectedSpanId);
                         Tag selectedTag = (Tag) annotationService.getTag(tags.getModelObject(),
                                 selectedtTagSet);
                         String annotationType = BratAjaxCasUtil.getQualifiedLabel(selectedTag);
@@ -340,7 +340,7 @@ public class SpanAnnotationModalWindowPage
                         bratAnnotatorModel.getDocument(),
                         bratAnnotatorModel.getWindowSize()));
 
-        Sentence sentence = selectAnnotationByAddress(jCas, Sentence.class,
+        Sentence sentence = selectByAddr(jCas, Sentence.class,
                 bratAnnotatorModel.getSentenceAddress());
         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());

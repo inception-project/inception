@@ -17,7 +17,7 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model;
 
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectAnnotationByAddress;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
 import static org.uimafit.util.JCasUtil.selectCovered;
 
 import java.io.IOException;
@@ -137,9 +137,9 @@ public class CurationBuilder
             JCas firstJCas = jCases.values().iterator().next();
             
             // re-merge JCAS for all sentences
-            begin = selectAnnotationByAddress(firstJCas, Sentence.class,
+            begin = selectByAddr(firstJCas, Sentence.class,
                     aBratAnnotatorModel.getFirstSentenceAddress()).getBegin();
-            end = selectAnnotationByAddress(firstJCas, Sentence.class,
+            end = selectByAddr(firstJCas, Sentence.class,
                     aBratAnnotatorModel.getLastSentenceAddress()).getEnd();
             if (aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)) {
                 mergeJCas = createCorrectionCas(mergeJCas, aBratAnnotatorModel,
@@ -238,7 +238,7 @@ public class CurationBuilder
             Sentence firstSentence = BratAjaxCasUtil.getSentenceofCAS(jCas,
                     aBratAnnotatorModel.getSentenceBeginOffset(),
                     aBratAnnotatorModel.getSentenceEndOffset());
-            Sentence lastSentence = selectAnnotationByAddress(jCas, Sentence.class,
+            Sentence lastSentence = selectByAddr(jCas, Sentence.class,
                     BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(jCas,
                             firstSentence.getAddress(), windowSize));
 
@@ -254,7 +254,7 @@ public class CurationBuilder
 
             for (int j = 0; j < aBratAnnotatorModel.getWindowSize(); j++) {
                 if (i >= lastSentenceAddress) {
-                    sentence = selectAnnotationByAddress(jCas, Sentence.class, i);
+                    sentence = selectByAddr(jCas, Sentence.class, i);
                     sentenceNumber += 1;
                     segmentBeginEnd.put(sentence.getBegin(), sentence.getEnd());
                     segmentText.put(sentence.getBegin(), sentence.getCoveredText().toString());
@@ -262,7 +262,7 @@ public class CurationBuilder
                     segmentAdress.get(username).put(sentence.getBegin(), sentence.getAddress());
                     break;
                 }
-                sentence = selectAnnotationByAddress(jCas, Sentence.class, i);
+                sentence = selectByAddr(jCas, Sentence.class, i);
                 sentenceNumber += 1;
                 segmentBeginEnd.put(sentence.getBegin(), sentence.getEnd());
                 segmentText.put(sentence.getBegin(), sentence.getCoveredText().toString());
@@ -366,7 +366,7 @@ public class CurationBuilder
 
                         // removing disagreeing feature structures in mergeJCas
                         if (removeFS && address != null) {
-                            FeatureStructure fs = selectAnnotationByAddress(mergeJCas, address);
+                            FeatureStructure fs = selectByAddr(mergeJCas, address);
                             if (!(fs instanceof Token)) {
                                 mergeJCas.getCas().removeFsFromIndexes(fs);
                             }

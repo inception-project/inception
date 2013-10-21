@@ -133,7 +133,7 @@ public class SpanAdapter
     {
         int address = BratAjaxCasUtil.getSentenceofCAS(aJcas, aBratAnnotatorModel.getSentenceBeginOffset(), aBratAnnotatorModel.getSentenceEndOffset()).getAddress();
         // The first sentence address in the display window!
-        Sentence firstSentence = (Sentence) BratAjaxCasUtil.selectAnnotationByAddress(aJcas,
+        Sentence firstSentence = (Sentence) BratAjaxCasUtil.selectByAddr(aJcas,
                 FeatureStructure.class, address);
         int i = address;
 
@@ -150,13 +150,13 @@ public class SpanAdapter
         int j = 1;
         while (j <= aBratAnnotatorModel.getWindowSize()) {
             if (i >= lastSentenceAddress) {
-                Sentence sentence = (Sentence) BratAjaxCasUtil.selectAnnotationByAddress(aJcas,
+                Sentence sentence = (Sentence) BratAjaxCasUtil.selectByAddr(aJcas,
                         FeatureStructure.class, i);
                 updateResponse(sentence, aResponse, firstSentence.getBegin());
                 break;
             }
             else {
-                Sentence sentence = (Sentence) BratAjaxCasUtil.selectAnnotationByAddress(aJcas,
+                Sentence sentence = (Sentence) BratAjaxCasUtil.selectByAddr(aJcas,
                         FeatureStructure.class, i);
                 updateResponse(sentence, aResponse, firstSentence.getBegin());
                 i = BratAjaxCasUtil.getFollowingSentenceAddress(aJcas, i);
@@ -257,7 +257,7 @@ public class SpanAdapter
      */
     public void delete(JCas aJCas, AnnotationFS aRefFs)
     {
-        FeatureStructure fs = (FeatureStructure) BratAjaxCasUtil.selectAnnotationByAddress(aJCas,
+        FeatureStructure fs = (FeatureStructure) BratAjaxCasUtil.selectByAddr(aJCas,
                 FeatureStructure.class, ((FeatureStructureImpl) aRefFs).getAddress());
         aJCas.removeFsFromIndexes(fs);
     }

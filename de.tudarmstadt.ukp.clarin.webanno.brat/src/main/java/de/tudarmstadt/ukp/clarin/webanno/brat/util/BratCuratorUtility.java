@@ -17,7 +17,7 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.util;
 
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectAnnotationByAddress;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -184,8 +184,8 @@ public class BratCuratorUtility
                 // TODO Auto-generated catch block
                 e1.printStackTrace();
             }
-            AnnotationFS originFsClicked = selectAnnotationByAddress(clickedJCas, addressOrigin);
-            AnnotationFS targetFsClicked = selectAnnotationByAddress(clickedJCas, addressTarget);
+            AnnotationFS originFsClicked = selectByAddr(clickedJCas, addressOrigin);
+            AnnotationFS targetFsClicked = selectByAddr(clickedJCas, addressTarget);
 
             AnnotationFS originFs = BratAjaxCasUtil.getAnnotation(aJcas, originFsClicked.getBegin(),
             		originFsClicked.getEnd(), originFsClicked.getType());
@@ -218,7 +218,7 @@ public class BratCuratorUtility
                                         .getProject(), aCurationUserSegment.getBratAnnotatorModel()
                                         .getDocument(), aCurationUserSegment
                                         .getBratAnnotatorModel().getWindowSize()));
-                Sentence sentence = selectAnnotationByAddress(aJcas, Sentence.class, 
+                Sentence sentence = selectByAddr(aJcas, Sentence.class, 
                         aCurationUserSegment.getBratAnnotatorModel().getSentenceAddress());
                 aCurationUserSegment.getBratAnnotatorModel().setSentenceBeginOffset(
                         sentence.getBegin());
@@ -245,7 +245,7 @@ public class BratCuratorUtility
         else {
             clickedJCas = aRepository.getAnnotationDocumentContent(aAnnotationDocument);
         }
-        AnnotationFS fsClicked = selectAnnotationByAddress(clickedJCas, aAddress);
+        AnnotationFS fsClicked = selectByAddr(clickedJCas, aAddress);
 
         BratAjaxCasController controller = new BratAjaxCasController(aRepository,
                 aAnnotationService);
@@ -262,7 +262,7 @@ public class BratCuratorUtility
                     clickedJCas, address, fsClicked.getBegin(), aBratAnnotatorModel.getProject(),
                     aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getWindowSize()));
 
-            Sentence sentence = selectAnnotationByAddress(clickedJCas, Sentence.class,
+            Sentence sentence = selectByAddr(clickedJCas, Sentence.class,
                     aBratAnnotatorModel.getSentenceAddress());
             aBratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
             aBratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
@@ -461,7 +461,7 @@ public class BratCuratorUtility
             JCas userJCas)
     {
         int sentenceAddress = BratAjaxCasUtil.getSentenceofCAS(userJCas, aBratAnnotatorModel.getSentenceBeginOffset(), aBratAnnotatorModel.getSentenceEndOffset()).getAddress();
-        Sentence sentence = selectAnnotationByAddress(userJCas, Sentence.class, sentenceAddress);
+        Sentence sentence = selectByAddr(userJCas, Sentence.class, sentenceAddress);
         List<Sentence> sentences = JCasUtil.selectCovered(jCas, Sentence.class,
                 sentence.getBegin(), sentence.getEnd());
         return sentences.get(0).getAddress();

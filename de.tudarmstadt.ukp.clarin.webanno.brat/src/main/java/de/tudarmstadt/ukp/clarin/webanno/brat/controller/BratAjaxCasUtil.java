@@ -29,11 +29,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-
 import org.apache.uima.UIMAException;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.cas.CAS;
@@ -115,64 +111,75 @@ public class BratAjaxCasUtil
      * }
      */
 
-    public static AnnotationFS selectAnnotationByAddress(JCas aJCas, int aAddress)
+    public static AnnotationFS selectByAddr(JCas aJCas, int aAddress)
     {
-        return selectAnnotationByAddress(aJCas, AnnotationFS.class, aAddress);
+        return selectByAddr(aJCas, AnnotationFS.class, aAddress);
     }
 
-    public static <T extends FeatureStructure> T selectAnnotationByAddress(JCas aJCas,
+    public static <T extends FeatureStructure> T selectByAddr(JCas aJCas,
             Class<T> aType, int aAddress)
     {
         return aType.cast(aJCas.getLowLevelCas().ll_getFSForRef(aAddress));
     }
 
-    /**
-     * stores, for every tokens, the start and end positions, offsets
-     * 
-     * @param aJcas
-     * @return map of tokens begin and end positions
-     */
-    private static Map<Integer, Integer> offsets(JCas aJcas)
+    private static <T extends Annotation> T selectFirstCovered(JCas aJcas, final Class<T> type,
+            int aBegin, int aEnd)
     {
-        Map<Integer, Integer> offsets = new HashMap<Integer, Integer>();
-        for (Token token : select(aJcas, Token.class)) {
-            offsets.put(token.getBegin(), token.getEnd());
+        List<T> covered = selectCovered(aJcas, type, aBegin, aEnd);
+        if (covered.isEmpty()) {
+            return null;
         }
-        return offsets;
+        else {
+            return covered.get(0);
+        }
     }
 
-    /**
-     * delete a span annotation from the response
-     * 
-     * @param aResponse
-     * @param id
-     */
-
-    private static int[] getTokenStart(Map<Integer, Integer> aOffset, int aStart, int aEnd)
-    {
-        Iterator<Integer> it = aOffset.keySet().iterator();
-        boolean startFound = false;
-        boolean endFound = false;
-        while (it.hasNext()) {
-            int tokenStart = it.next();
-            if (aStart >= tokenStart && aStart <= aOffset.get(tokenStart)) {
-                aStart = tokenStart;
-                startFound = true;
-                if (endFound) {
-                    break;
-                }
-            }
-            if (aEnd >= tokenStart && aEnd <= aOffset.get(tokenStart)) {
-                aEnd = aOffset.get(tokenStart);
-                endFound = true;
-                if (startFound) {
-                    break;
-                }
-            }
-        }
-        return new int[] { aStart, aEnd };
-    }
-
+//    /**
+//     * stores, for every tokens, the start and end positions, offsets
+//     * 
+//     * @param aJcas
+//     * @return map of tokens begin and end positions
+//     */
+//    private static Map<Integer, Integer> offsets(JCas aJcas)
+//    {
+//        Map<Integer, Integer> offsets = new HashMap<Integer, Integer>();
+//        for (Token token : select(aJcas, Token.class)) {
+//            offsets.put(token.getBegin(), token.getEnd());
+//        }
+//        return offsets;
+//    }
+//
+//    /**
+//     * delete a span annotation from the response
+//     * 
+//     * @param aResponse
+//     * @param id
+//     */
+//    private static int[] getTokenStart(Map<Integer, Integer> aOffset, int aStart, int aEnd)
+//    {
+//        Iterator<Integer> it = aOffset.keySet().iterator();
+//        boolean startFound = false;
+//        boolean endFound = false;
+//        while (it.hasNext()) {
+//            int tokenStart = it.next();
+//            if (aStart >= tokenStart && aStart <= aOffset.get(tokenStart)) {
+//                aStart = tokenStart;
+//                startFound = true;
+//                if (endFound) {
+//                    break;
+//                }
+//            }
+//            if (aEnd >= tokenStart && aEnd <= aOffset.get(tokenStart)) {
+//                aEnd = aOffset.get(tokenStart);
+//                endFound = true;
+//                if (startFound) {
+//                    break;
+//                }
+//            }
+//        }
+//        return new int[] { aStart, aEnd };
+//    }
+//
 //    /**
 //     * Get the beginning position of a token. This is used for dependency annotations
 //     */
@@ -200,19 +207,7 @@ public class BratAjaxCasUtil
 //        }
 //        return tokens;
 //    }
-
-    private static <T extends Annotation> T selectFirstCovered(JCas aJcas, final Class<T> type,
-            int aBegin, int aEnd)
-    {
-        List<T> covered = selectCovered(aJcas, type, aBegin, aEnd);
-        if (covered.isEmpty()) {
-            return null;
-        }
-        else {
-            return covered.get(0);
-        }
-    }
-    
+//    
 //    /**
 //     * Get the beginning offset of an Annotation
 //     * 
@@ -227,7 +222,7 @@ public class BratAjaxCasUtil
 //    {
 //        return selectAnnotationByAddress(aJCas, Annotation.class, aAddress).getBegin();
 //    }
-
+//
 //    /**
 //     * Get end offset of an annotation
 //     * 
@@ -316,7 +311,7 @@ public class BratAjaxCasUtil
         int count = 0;
         while (count <= aWindowSize) {
             count++;
-            Sentence sentence = selectAnnotationByAddress(aJcas, Sentence.class, i);
+            Sentence sentence = selectByAddr(aJcas, Sentence.class, i);
             if (sentence.getBegin() <= aOffSet && aOffSet <= sentence.getEnd()) {
                 break;
             }
@@ -326,7 +321,7 @@ public class BratAjaxCasUtil
             }
         }
 
-        Sentence sentence = selectAnnotationByAddress(aJcas, Sentence.class, i);
+        Sentence sentence = selectByAddr(aJcas, Sentence.class, i);
         List<Sentence> precedingSentences = selectPreceding(aJcas, Sentence.class, sentence,
                 aWindowSize / 2);
 
@@ -418,7 +413,7 @@ public class BratAjaxCasUtil
      */
     public static int getFollowingSentenceAddress(JCas aJcas, int aRef)
     {
-        Sentence sentence = selectAnnotationByAddress(aJcas, Sentence.class, aRef);
+        Sentence sentence = selectByAddr(aJcas, Sentence.class, aRef);
         List<Sentence> followingSentence = selectFollowing(aJcas, Sentence.class, sentence, 1);
         if (followingSentence.size() > 0) {
             return followingSentence.get(0).getAddress();

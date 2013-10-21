@@ -17,7 +17,7 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.util;
 
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectAnnotationByAddress;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
 import static org.uimafit.util.JCasUtil.select;
 
 import java.io.ByteArrayInputStream;
@@ -101,10 +101,10 @@ public class BratAnnotatorUtility
         int start = offsetLists.get(0).getBegin();
         int end = offsetLists.get(0).getEnd();
         
-        Sentence sentence = selectAnnotationByAddress(aUIData.getjCas(), Sentence.class,
+        Sentence sentence = selectByAddr(aUIData.getjCas(), Sentence.class,
                 bratAnnotatorModel.getSentenceAddress());
-        AnnotationFS originFs = selectAnnotationByAddress(aUIData.getjCas(), aUIData.getOrigin());
-        AnnotationFS targetFs = selectAnnotationByAddress(aUIData.getjCas(), aUIData.getTarget());
+        AnnotationFS originFs = selectByAddr(aUIData.getjCas(), aUIData.getOrigin());
+        AnnotationFS targetFs = selectByAddr(aUIData.getjCas(), aUIData.getTarget());
         
         aUIData.setAnnotationOffsetStart(sentence.getBegin() + start);
         aUIData.setAnnotationOffsetEnd(sentence.getBegin() + end);
@@ -138,8 +138,8 @@ public class BratAnnotatorUtility
         int origin = aRequest.getParameterValue("origin").toInt();
         int target = aRequest.getParameterValue("target").toInt();
 
-        AnnotationFS originFs = selectAnnotationByAddress(aUIData.getjCas(), origin);
-        AnnotationFS targetFs = selectAnnotationByAddress(aUIData.getjCas(), target);
+        AnnotationFS originFs = selectByAddr(aUIData.getjCas(), origin);
+        AnnotationFS targetFs = selectByAddr(aUIData.getjCas(), target);
 
         Object result = null;
         BratAjaxCasController controller = new BratAjaxCasController(repository, annotationService);
@@ -171,8 +171,8 @@ public class BratAnnotatorUtility
         int origin = aRequest.getParameterValue("origin").toInt();
         int target = aRequest.getParameterValue("target").toInt();
         
-        AnnotationFS originFs = selectAnnotationByAddress(aUIData.getjCas(), origin);
-        AnnotationFS targetFs = selectAnnotationByAddress(aUIData.getjCas(), target);
+        AnnotationFS originFs = selectByAddr(aUIData.getjCas(), origin);
+        AnnotationFS targetFs = selectByAddr(aUIData.getjCas(), target);
         
         BratAjaxCasController controller = new BratAjaxCasController(repository, annotationService);
         aUIData.setOrigin(origin);
@@ -212,14 +212,14 @@ public class BratAnnotatorUtility
         int start = offsetLists.get(0).getBegin();
         int end = offsetLists.get(0).getEnd();
         
-        Sentence sentence = selectAnnotationByAddress(aUIData.getjCas(), Sentence.class,
+        Sentence sentence = selectByAddr(aUIData.getjCas(), Sentence.class,
                 bratAnnotatorModel.getSentenceAddress());
         
         aUIData.setAnnotationOffsetStart(sentence.getBegin() + start);
         aUIData.setAnnotationOffsetEnd(sentence.getEnd() + end);
         aUIData.setType(aRequest.getParameterValue("type").toString());
 
-        AnnotationFS idFs = selectAnnotationByAddress(aUIData.getjCas(), id);
+        AnnotationFS idFs = selectByAddr(aUIData.getjCas(), id);
 
         result = controller.deleteSpanResponse(bratAnnotatorModel, idFs,
                 aUIData.getAnnotationOffsetStart(), aUIData.getjCas(), aUIData.isGetDocument(),
@@ -245,8 +245,8 @@ public class BratAnnotatorUtility
         int origin = aRequest.getParameterValue("origin").toInt();
         int target = aRequest.getParameterValue("target").toInt();
 
-        AnnotationFS originFs = selectAnnotationByAddress(aUIData.getjCas(), origin);
-        AnnotationFS targetFs = selectAnnotationByAddress(aUIData.getjCas(), target);
+        AnnotationFS originFs = selectByAddr(aUIData.getjCas(), origin);
+        AnnotationFS targetFs = selectByAddr(aUIData.getjCas(), target);
 
         aUIData.setOrigin(origin);
         aUIData.setTarget(target);
