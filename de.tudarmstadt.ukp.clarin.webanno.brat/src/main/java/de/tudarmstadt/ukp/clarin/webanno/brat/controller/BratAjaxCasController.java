@@ -290,7 +290,6 @@ public class BratAjaxCasController
         LOG.info("Collection: " + aBratAnnotatorModel.getDocument().getName());
 
         GetDocumentResponse response = new GetDocumentResponse();
-
         addBratResponses(response, aBratAnnotatorModel, aAnnotationOffsetStart, aJCas,
                 aIsGetDocument);
 
@@ -307,24 +306,20 @@ public class BratAjaxCasController
             int aAnnotationOffsetEnd, String aType, AnnotationFS aOrigin, AnnotationFS aTarget)
         throws JsonParseException, JsonMappingException, IOException, UIMAException
     {
-
         addSpanToCas(aJCas, aAnnotationOffsetStart, aAnnotationOffsetEnd, aType, aOrigin, aTarget);
+        
         GetDocumentResponse response = new GetDocumentResponse();
-
         addBratResponses(response, aBratAnnotatorModel, aAnnotationOffsetStart, aJCas,
                 aIsGetDocument);
 
         CreateSpanResponse createSpanResponse = new CreateSpanResponse();
-
         createSpanResponse.setAnnotations(response);
 
         newToAnnotationInprogress(aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
-
         createAnnotationDocumentContent(aBratAnnotatorModel.getMode(),
                 aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser(), aJCas);
 
         return createSpanResponse;
-
     }
 
     public CreateArcResponse createArcResponse(BratAnnotatorModel aBratAnnotatorModel,
@@ -337,12 +332,10 @@ public class BratAjaxCasController
                 aOriginFs, aTargetFs, aJCas);
 
         GetDocumentResponse response = new GetDocumentResponse();
-
         addBratResponses(response, aBratAnnotatorModel, aAnnotationOffsetStart, aJCas,
                 aIsGetDocument);
 
         CreateArcResponse createArcResponse = new CreateArcResponse();
-
         createArcResponse.setAnnotations(response);
 
         newToAnnotationInprogress(aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
@@ -359,20 +352,20 @@ public class BratAjaxCasController
 
     public ReverseArcResponse reverseArcResponse(BratAnnotatorModel aBratAnnotatorModel,
             JCas aJCas, int aAnnotationOffsetStart, AnnotationFS aOriginFs, AnnotationFS aTargetFs,
-            String aType, boolean aIsGetDocument)
+            String aQualifiedLabel, boolean aIsGetDocument)
         throws UIMAException, IOException
     {
-        String labelPrefix = BratAjaxCasUtil.getLabelPrefix(aType);
-        String type = BratAjaxCasUtil.getLabel(aType);
+        String labelPrefix = BratAjaxCasUtil.getLabelPrefix(aQualifiedLabel);
+        String label = BratAjaxCasUtil.getLabel(aQualifiedLabel);
 
         if (labelPrefix.equals(AnnotationTypeConstant.POS_PREFIX)) {
             ArcAdapter.getDependencyAdapter().delete(aJCas, aOriginFs, aTargetFs,
-                    aBratAnnotatorModel, type);
+                    aBratAnnotatorModel, label);
             // Reverse directions
             AnnotationFS temp = aOriginFs;// swap variable
             aOriginFs = aTargetFs;
             aTargetFs = temp;
-            ArcAdapter.getDependencyAdapter().add(type, aOriginFs, aTargetFs, aJCas,
+            ArcAdapter.getDependencyAdapter().add(label, aOriginFs, aTargetFs, aJCas,
                     aBratAnnotatorModel, false);
         }
 
@@ -381,7 +374,6 @@ public class BratAjaxCasController
                 aIsGetDocument);
 
         ReverseArcResponse createArcResponse = new ReverseArcResponse();
-
         createArcResponse.setAnnotations(response);
 
         newToAnnotationInprogress(aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
@@ -389,7 +381,6 @@ public class BratAjaxCasController
                 aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser(), aJCas);
 
         return createArcResponse;
-
     }
 
     /**
@@ -400,21 +391,20 @@ public class BratAjaxCasController
             String aType)
         throws JsonParseException, JsonMappingException, IOException, UIMAException
     {
-
         deleteSpanFromCas(aType, aJCas, aId);
 
         GetDocumentResponse response = new GetDocumentResponse();
         addBratResponses(response, aBratAnnotatorModel, aAnnotationOffsetStart, aJCas,
                 aIsGetDocument);
+        
         DeleteSpanResponse deleteSpanResponse = new DeleteSpanResponse();
-
         deleteSpanResponse.setAnnotations(response);
+        
         newToAnnotationInprogress(aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
         createAnnotationDocumentContent(aBratAnnotatorModel.getMode(),
                 aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser(), aJCas);
 
         return deleteSpanResponse;
-
     }
 
     /**
@@ -422,15 +412,15 @@ public class BratAjaxCasController
      */
     public DeleteArcResponse deleteArcResponse(BratAnnotatorModel aBratAnnotatorModel, JCas aJCas,
             int aAnnotationOffsetStart, AnnotationFS aOriginFs, AnnotationFS aTargetFs,
-            String aType, boolean aIsGetDocument)
+            String aQualifiedLabel, boolean aIsGetDocument)
         throws UIMAException, IOException
     {
-        String labelPrefix = BratAjaxCasUtil.getLabelPrefix(aType);
-        String type = BratAjaxCasUtil.getLabel(aType);
+        String labelPrefix = BratAjaxCasUtil.getLabelPrefix(aQualifiedLabel);
+        String label = BratAjaxCasUtil.getLabel(aQualifiedLabel);
 
         if (labelPrefix.equals(AnnotationTypeConstant.POS_PREFIX)) {
             ArcAdapter.getDependencyAdapter().delete(aJCas, aOriginFs, aTargetFs,
-                    aBratAnnotatorModel, type);
+                    aBratAnnotatorModel, label);
         }
         else if (labelPrefix.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
             ChainAdapter.getCoreferenceChainAdapter().delete(aJCas, aOriginFs);
@@ -459,21 +449,21 @@ public class BratAjaxCasController
      *            The UI information such as start and end offsets, type of annotation ...
      */
     public void addSpanToCas(JCas aJCas, int aAnnotationOffsetStart, int aAnnotationOffsetEnd,
-            String aType, AnnotationFS aOriginFs, AnnotationFS aTargetFs)
+            String aQualifiedLabel, AnnotationFS aOriginFs, AnnotationFS aTargetFs)
     {
-        String labelPrefix = BratAjaxCasUtil.getLabelPrefix(aType);
-        String aLabelValue = BratAjaxCasUtil.getLabel(aType);
+        String labelPrefix = BratAjaxCasUtil.getLabelPrefix(aQualifiedLabel);
+        String label = BratAjaxCasUtil.getLabel(aQualifiedLabel);
 
         if (labelPrefix.equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)) {
-            SpanAdapter.getNamedEntityAdapter().add(aJCas, aAnnotationOffsetStart, aAnnotationOffsetEnd,
-                    aLabelValue);
+            SpanAdapter.getNamedEntityAdapter().add(aJCas, aAnnotationOffsetStart,
+                    aAnnotationOffsetEnd, label);
         }
         else if (labelPrefix.equals(AnnotationTypeConstant.POS_PREFIX)) {
             SpanAdapter.getPosAdapter().add(aJCas, aAnnotationOffsetStart, aAnnotationOffsetEnd,
-                    aLabelValue);
+                    label);
         }
         else if (labelPrefix.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
-            ChainAdapter.getCoreferenceLinkAdapter().add(aLabelValue, aJCas,
+            ChainAdapter.getCoreferenceLinkAdapter().add(label, aJCas,
                     aAnnotationOffsetStart, aAnnotationOffsetEnd, aOriginFs, aTargetFs);
         }
     }
@@ -485,20 +475,20 @@ public class BratAjaxCasController
      *            the Brat annotation data model consisting of the source document, project,
      *            users,...
      */
-    public void addArcToCas(BratAnnotatorModel aBratAnnotatorModel, String aType,
+    public void addArcToCas(BratAnnotatorModel aBratAnnotatorModel, String aQualifiedLabel,
             int aAnnotationOffsetStart, int aAnnotationOffsetEnd, AnnotationFS aOriginFs,
             AnnotationFS aTargetFs, JCas aJCas)
     {
-        String labelPrefix = BratAjaxCasUtil.getLabelPrefix(aType);
-        String labelValue = BratAjaxCasUtil.getLabel(aType);
+        String labelPrefix = BratAjaxCasUtil.getLabelPrefix(aQualifiedLabel);
+        String label = BratAjaxCasUtil.getLabel(aQualifiedLabel);
 
         if (labelPrefix.equals(AnnotationTypeConstant.POS_PREFIX)) {
-            ArcAdapter.getDependencyAdapter().add(labelValue, aOriginFs, aTargetFs, aJCas,
+            ArcAdapter.getDependencyAdapter().add(label, aOriginFs, aTargetFs, aJCas,
                     aBratAnnotatorModel,
                     aBratAnnotatorModel.getProject().isReverseDependencyDirection());
         }
         else if (labelPrefix.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
-            ChainAdapter.getCoreferenceChainAdapter().add(labelValue, aJCas,
+            ChainAdapter.getCoreferenceChainAdapter().add(label, aJCas,
                     aAnnotationOffsetStart, aAnnotationOffsetEnd, aOriginFs, aTargetFs);
         }
     }
@@ -506,16 +496,16 @@ public class BratAjaxCasController
     /**
      * Delete a span annotation from the CAS
      *
-     * @param aType
+     * @param aQualifiedLabel
      *            The span annotation
      * @param aJcas
      *            The JCAS from which annotation will deleted
      * @param aId
      *            the CAS address of the annotation
      */
-    public void deleteSpanFromCas(String aType, JCas aJcas, AnnotationFS aId)
+    public void deleteSpanFromCas(String aQualifiedLabel, JCas aJcas, AnnotationFS aId)
     {
-        String labelPrefix = BratAjaxCasUtil.getLabelPrefix(aType);
+        String labelPrefix = BratAjaxCasUtil.getLabelPrefix(aQualifiedLabel);
 
         if (labelPrefix.equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)) {
             SpanAdapter.getNamedEntityAdapter().delete(aJcas, aId);
@@ -535,14 +525,14 @@ public class BratAjaxCasController
      *            users,...
      */
 
-    public void delteArcFromCas(String aType, JCas aJCas, AnnotationFS aOriginFs,
+    public void delteArcFromCas(String aQualifiedLabel, JCas aJCas, AnnotationFS aOriginFs,
             AnnotationFS aTargetFs, BratAnnotatorModel aBratAnnotatorModel)
     {
-        String labelPrefix = BratAjaxCasUtil.getLabelPrefix(aType);
-        String aLabelValue = BratAjaxCasUtil.getLabel(aType);
+        String labelPrefix = BratAjaxCasUtil.getLabelPrefix(aQualifiedLabel);
+        String label = BratAjaxCasUtil.getLabel(aQualifiedLabel);
         if (labelPrefix.equals(AnnotationTypeConstant.POS_PREFIX)) {
             ArcAdapter.getDependencyAdapter().delete(aJCas, aOriginFs, aTargetFs,
-                    aBratAnnotatorModel, aLabelValue);
+                    aBratAnnotatorModel, label);
         }
         else if (labelPrefix.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
             ChainAdapter.getCoreferenceChainAdapter().delete(aJCas, aOriginFs);
@@ -609,9 +599,7 @@ public class BratAjaxCasController
         if (annotationLayers.contains(AnnotationTypeConstant.POS)) {
             SpanAdapter.getPosAdapter().render(aJCas, aResponse, aBratAnnotatorModel);
         }
-
         if (annotationLayers.contains(AnnotationTypeConstant.COREFRELTYPE)) {
-
             ChainAdapter.getCoreferenceLinkAdapter().render(aJCas, aResponse, aBratAnnotatorModel);
         }
         if (aBratAnnotatorModel.isDisplayLemmaSelected()) {

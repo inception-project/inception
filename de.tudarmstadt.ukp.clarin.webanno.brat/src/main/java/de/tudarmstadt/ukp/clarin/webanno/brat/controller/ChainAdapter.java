@@ -318,25 +318,23 @@ public class ChainAdapter
             Map<Integer, Integer> splitedTokens = ApplicationUtils.getSplitedTokens(offsets,
                     aAnnotationOffsetStart, aAnnotationOffsetEnd);
             if (isChain) {
-                updateCoreferenceChainCas(aJCas, aOriginFs,
-                        aTargetFs, aLabelValue);
+                updateCoreferenceChainCas(aJCas, aOriginFs, aTargetFs, aLabelValue);
             }
             else {
                 for (Integer start : splitedTokens.keySet()) {
-                    updateCoreferenceLinkCas(aJCas.getCas(), start,
-                            splitedTokens.get(start), aLabelValue);
+                    updateCoreferenceLinkCas(aJCas.getCas(), start, splitedTokens.get(start),
+                            aLabelValue);
                 }
             }
         }
         else {
             if (isChain) {
-                updateCoreferenceChainCas(aJCas, aOriginFs,
-                        aTargetFs, aLabelValue);
+                updateCoreferenceChainCas(aJCas, aOriginFs, aTargetFs, aLabelValue);
             }
             else {
-                int startAndEnd[] = ApplicationUtils.getTokenStart(offsets, aAnnotationOffsetStart, aAnnotationOffsetEnd);
-                updateCoreferenceLinkCas(aJCas.getCas(),
-                        startAndEnd[0], startAndEnd[1],
+                int startAndEnd[] = ApplicationUtils.getTokenStart(offsets, aAnnotationOffsetStart,
+                        aAnnotationOffsetEnd);
+                updateCoreferenceLinkCas(aJCas.getCas(), startAndEnd[0], startAndEnd[1],
                         aLabelValue);
             }
         }
@@ -379,10 +377,14 @@ public class ChainAdapter
     // CASE 4b: we replace the link to an intermediate link -> chain is cut in two,
     // create new CorefChain pointing to the first link in new chain
     // CASE 5: Add link at the same position as existing -> just update type
-    private void updateCoreferenceChainCas(JCas aJcas, AnnotationFS aOriginFs, AnnotationFS aTargetFs, String aValue)
+    private void updateCoreferenceChainCas(JCas aJcas, AnnotationFS aOriginFs,
+            AnnotationFS aTargetFs, String aValue)
     {
         boolean modify = false;
 
+        // FIXME - What is the purpose of this? Get the address of the originFS and then get again
+        // the annotation from the address? Addresses are specific to JCases. If this works, why
+        // not simply use the aOriginFS and aTargetFS directly? -- REC 2013-10-22
         AnnotationFS originLink = (AnnotationFS) BratAjaxCasUtil.selectByAddr(aJcas,
                 FeatureStructure.class, ((FeatureStructureImpl)aOriginFs).getAddress());
         AnnotationFS targetLink = (AnnotationFS) BratAjaxCasUtil.selectByAddr(aJcas,
