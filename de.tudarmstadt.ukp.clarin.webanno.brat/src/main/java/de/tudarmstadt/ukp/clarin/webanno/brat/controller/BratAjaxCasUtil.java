@@ -82,15 +82,15 @@ public class BratAjaxCasUtil
         return a.getAddress() == b.getAddress();
     }
 
-    /*
-     * public static boolean isSame(Annotation a, Annotation b) { return a.getBegin() ==
-     * b.getBegin() && a.getEnd() == b.getEnd(); }
-     */
+//    public static boolean isSame(Annotation a, Annotation b)
+//    {
+//        return a.getBegin() == b.getBegin() && a.getEnd() == b.getEnd();
+//    }     
 
-    public static boolean isAt(Annotation a, int begin, int end)
-    {
-        return a.getBegin() == begin && a.getEnd() == end;
-    }
+//    public static boolean isAt(Annotation a, int begin, int end)
+//    {
+//        return a.getBegin() == begin && a.getEnd() == end;
+//    }
 
     /*
      * public static void deleteCoreference(BratAnnotatorModel aBratAnnotatorModel, String aType,
@@ -664,29 +664,10 @@ public class BratAjaxCasUtil
         }
         return type;
     }
-
-    /**
-     * Check if the start/end offsets of an annotation belongs to the same sentence.
-     * 
-     * @return
-     */
-    public static boolean offsetsInOneSentences(JCas aJcas, int aStartOffset, int aEndOffset)
-    {
-        for (Sentence sentence : select(aJcas, Sentence.class)) {
-            if ((sentence.getBegin() <= aStartOffset && sentence.getEnd() > aStartOffset)
-                    && aEndOffset <= sentence.getEnd()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
+    
     /**
      * Get the annotation type the way it is used in Brat visualization page (PREFIX+Type), such as
      * (POS_+NN)
-     * 
-     * @param aSelectedTag
-     * @return
      */
     public static String getQualifiedLabel(Tag aSelectedTag)
     {
@@ -711,6 +692,22 @@ public class BratAjaxCasUtil
             annotationType = AnnotationTypeConstant.COREFERENCE_PREFIX + aSelectedTag.getName();
         }
         return annotationType;
+    }
+
+    /**
+     * Check if the start/end offsets of an annotation belongs to the same sentence.
+     * 
+     * @return
+     */
+    public static boolean offsetsInOneSentences(JCas aJcas, int aStartOffset, int aEndOffset)
+    {
+        for (Sentence sentence : select(aJcas, Sentence.class)) {
+            if ((sentence.getBegin() <= aStartOffset && sentence.getEnd() > aStartOffset)
+                    && aEndOffset <= sentence.getEnd()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
