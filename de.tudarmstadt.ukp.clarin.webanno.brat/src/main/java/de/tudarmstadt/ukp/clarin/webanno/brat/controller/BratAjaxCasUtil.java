@@ -560,23 +560,20 @@ public class BratAjaxCasUtil
      * {@link AnnotationTypeConstant#NAMEDENTITY} or {@link AnnotationTypeConstant#COREFRELTYPE}. If
      * this name is changed in the database, the {@link AnnotationTypeConstant} constants also
      * should be updated!
-     * 
-     * @param aType
-     * @return
      */
-    public static String getSpanAnnotationTypeName(String aType)
+    public static String getSpanLayerName(String aPrefix)
     {
-        String annotationTypeName = "";
-        if (aType.equals(AnnotationTypeConstant.POS_PREFIX)) {
-            annotationTypeName = AnnotationTypeConstant.POS;
+        String layer = "";
+        if (aPrefix.equals(AnnotationTypeConstant.POS_PREFIX)) {
+            layer = AnnotationTypeConstant.POS;
         }
-        else if (aType.equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)) {
-            annotationTypeName = AnnotationTypeConstant.NAMEDENTITY;
+        else if (aPrefix.equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)) {
+            layer = AnnotationTypeConstant.NAMEDENTITY;
         }
-        else if (aType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
-            annotationTypeName = AnnotationTypeConstant.COREFRELTYPE;
+        else if (aPrefix.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
+            layer = AnnotationTypeConstant.COREFRELTYPE;
         }
-        return annotationTypeName;
+        return layer;
     }
 
     /**
@@ -584,20 +581,17 @@ public class BratAjaxCasUtil
      * {@link AnnotationTypeConstant#DEPENDENCY} or {@link AnnotationTypeConstant#COREFERENCE}. If
      * this name is changed in the database, the {@link AnnotationTypeConstant} constants also
      * should be updated!
-     * 
-     * @param aType
-     * @return
      */
-    public static String getArcAnnotationTypeName(String aType)
+    public static String getArcLayerName(String aPrefix)
     {
-        String annotationTypeName = "";
-        if (aType.equals(AnnotationTypeConstant.POS_PREFIX)) {
-            annotationTypeName = AnnotationTypeConstant.DEPENDENCY;
+        String layer = "";
+        if (aPrefix.equals(AnnotationTypeConstant.POS_PREFIX)) {
+            layer = AnnotationTypeConstant.DEPENDENCY;
         }
-        else if (aType.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
-            annotationTypeName = AnnotationTypeConstant.COREFERENCE;
+        else if (aPrefix.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
+            layer = AnnotationTypeConstant.COREFERENCE;
         }
-        return annotationTypeName;
+        return layer;
     }
 
 //    /**

@@ -392,8 +392,7 @@ public class SpanAnnotationModalWindowPage
         this.selectedSpanId = aRef;
         this.selectedSpanType = aType;
 
-        String getLabelPrefix = BratAjaxCasUtil.getLabelPrefix(aType);
-        String layerName = BratAjaxCasUtil.getSpanAnnotationTypeName(getLabelPrefix);
+        String layerName = BratAjaxCasUtil.getSpanLayerName(BratAjaxCasUtil.getLabelPrefix(aType));
 
         AnnotationType layer = this.annotationService.getType(layerName, "span");
 
