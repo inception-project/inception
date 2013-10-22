@@ -382,13 +382,9 @@ public class ChainAdapter
     {
         boolean modify = false;
 
-        // FIXME - What is the purpose of this? Get the address of the originFS and then get again
-        // the annotation from the address? Addresses are specific to JCases. If this works, why
-        // not simply use the aOriginFS and aTargetFS directly? -- REC 2013-10-22
-        AnnotationFS originLink = (AnnotationFS) BratAjaxCasUtil.selectByAddr(aJcas,
-                FeatureStructure.class, ((FeatureStructureImpl)aOriginFs).getAddress());
-        AnnotationFS targetLink = (AnnotationFS) BratAjaxCasUtil.selectByAddr(aJcas,
-                FeatureStructure.class,  ((FeatureStructureImpl)aTargetFs).getAddress());
+        // Variables used for swapping
+        AnnotationFS originLink = aOriginFs;
+        AnnotationFS targetLink = aTargetFs;
 
         // Currently support only anaphoric relation
         // Inverse direction
