@@ -127,6 +127,7 @@ public class BratCuratorUtility
     public static void mergeArc(IRequestParameters aRequest,
             CurationUserSegmentForAnnotationDocument aCurationUserSegment, JCas aJcas,
             RepositoryService repository, AnnotationService annotationService)
+                    throws NoOriginOrTargetAnnotationSelectedException
     {
         // add span for merge
         // get information of the span clicked
@@ -149,8 +150,6 @@ public class BratCuratorUtility
 
         if (annotationSelectionOrigin != null && annotationSelectionTarget != null) {
 
-            // TODO no coloring is done at all for arc annotation.
-            // Do the same for arc colors (AGREE, USE,...
             AnnotationDocument clickedAnnotationDocument = null;
             List<AnnotationDocument> annotationDocuments = repository.listAnnotationDocument(
                     project, sourceDocument);
@@ -195,13 +194,17 @@ public class BratCuratorUtility
             BratAjaxCasController controller = new BratAjaxCasController(repository,
                     annotationService);
             try {
-
+                if(originFs == null | targetFs == null){
+                    throw new NoOriginOrTargetAnnotationSelectedException("Either origin or target annotations not selected");
+                }
+                else{
                 controller.addArcToCas(aCurationUserSegment.getBratAnnotatorModel(), arcType, 0, 0,
                         originFs, targetFs, aJcas);
                 controller.createAnnotationDocumentContent(aCurationUserSegment
                         .getBratAnnotatorModel().getMode(), aCurationUserSegment
                         .getBratAnnotatorModel().getDocument(), aCurationUserSegment
                         .getBratAnnotatorModel().getUser(), aJcas);
+                }
             }
             catch (IOException e) {
                 // TODO Auto-generated catch block
@@ -218,7 +221,7 @@ public class BratCuratorUtility
                                         .getProject(), aCurationUserSegment.getBratAnnotatorModel()
                                         .getDocument(), aCurationUserSegment
                                         .getBratAnnotatorModel().getWindowSize()));
-                Sentence sentence = selectByAddr(aJcas, Sentence.class, 
+                Sentence sentence = selectByAddr(aJcas, Sentence.class,
                         aCurationUserSegment.getBratAnnotatorModel().getSentenceAddress());
                 aCurationUserSegment.getBratAnnotatorModel().setSentenceBeginOffset(
                         sentence.getBegin());
@@ -794,4 +797,18 @@ public class BratCuratorUtility
         aTarget.add(aParent);
 
     }
+
+
+    public static class NoOriginOrTargetAnnotationSelectedException
+        extends Exception
+    {
+        private static final long serialVersionUID = 1280015349963924638L;
+
+        public NoOriginOrTargetAnnotationSelectedException(String message)
+        {
+            super(message);
+        }
+
+    }
+
 }

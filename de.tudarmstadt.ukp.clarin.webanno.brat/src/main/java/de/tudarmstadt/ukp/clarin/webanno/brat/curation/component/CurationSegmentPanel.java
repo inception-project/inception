@@ -43,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.BratCurat
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationUserSegmentForAnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratCuratorUtility;
+import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratCuratorUtility.NoOriginOrTargetAnnotationSelectedException;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -125,7 +126,8 @@ public class CurationSegmentPanel
                         if (BratAnnotatorUtility.isDocumentFinished(repository,
                                 curationUserSegment.getBratAnnotatorModel())) {
                             error("This document is already closed. Please ask admin to re-open");
-                            aTarget.appendJavaScript("alert('This document is already closed. Please ask admin to re-open')");
+                            aTarget.appendJavaScript("alert('This document is already closed."
+                                    + " Please ask admin to re-open')");
                         }
                         else {
                             final IRequestParameters request = getRequest().getPostParameters();
@@ -165,8 +167,13 @@ public class CurationSegmentPanel
                                     && action.toString().equals("selectArcForMerge")) {
                                 // add span for merge
                                 // get information of the span clicked
-                                BratCuratorUtility.mergeArc(request, curationUserSegment,
-                                        annotationJCas, repository, annotationService);
+                                try {
+                                    BratCuratorUtility.mergeArc(request, curationUserSegment,
+                                            annotationJCas, repository, annotationService);
+                                }
+                                catch (NoOriginOrTargetAnnotationSelectedException e) {
+                                 aTarget.appendJavaScript("alert('"+e.getMessage()+"')");
+                                }
                             }
                             onChange(aTarget);
                         }
