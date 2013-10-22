@@ -692,7 +692,7 @@ public class ChainAdapter
     /**
      * Remove an arc from a {@link CoreferenceChain}
      */
-    public void delete(JCas aJCas, AnnotationFS aRefFs)
+    public void delete(JCas aJCas, int aAddress)
     {
         if (isChain) {
             Type type = CasUtil.getType(aJCas.getCas(), annotationTypeName);
@@ -702,7 +702,7 @@ public class ChainAdapter
             boolean found = false;
 
             AnnotationFS originCorefType = (AnnotationFS) BratAjaxCasUtil
-                    .selectByAddr(aJCas, FeatureStructure.class, ((FeatureStructureImpl)aRefFs).getAddress());
+                    .selectByAddr(aJCas, FeatureStructure.class, aAddress);
             for (FeatureStructure fs : CasUtil.selectFS(aJCas.getCas(), type)) {
                 AnnotationFS linkFs = (AnnotationFS) fs.getFeatureValue(first);
                 Feature next = linkFs.getType().getFeatureByBaseName(linkNextFeatureName);
@@ -725,10 +725,10 @@ public class ChainAdapter
             removeInvalidChain(aJCas.getCas());
         }
         else {
-            ChainAdapter.getCoreferenceChainAdapter().updateCasBeforeDelete(aJCas, ((FeatureStructureImpl)aRefFs).getAddress());
+            ChainAdapter.getCoreferenceChainAdapter().updateCasBeforeDelete(aJCas, aAddress);
 
             FeatureStructure fsToRemove = (FeatureStructure) BratAjaxCasUtil
-                    .selectByAddr(aJCas, FeatureStructure.class, ((FeatureStructureImpl)aRefFs).getAddress());
+                    .selectByAddr(aJCas, FeatureStructure.class, aAddress);
 
             aJCas.removeFsFromIndexes(fsToRemove);
 
@@ -795,7 +795,7 @@ public class ChainAdapter
     {
         return labelFeatureName;
     }
-    
+
     @Override
     public String getLabelPrefix()
     {

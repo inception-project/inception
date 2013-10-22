@@ -128,35 +128,35 @@ public class ArcAdapter
         Sentence firstSentence = BratAjaxCasUtil.selectSentenceAt(aJcas,
                 aBratAnnotatorModel.getSentenceBeginOffset(),
                 aBratAnnotatorModel.getSentenceEndOffset());
-        
+
         int lastAddressInPage = BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(aJcas,
                 firstSentence.getAddress(), aBratAnnotatorModel.getWindowSize());
 
         // the last sentence address in the display window
         Sentence lastSentenceInPage = (Sentence) BratAjaxCasUtil.selectByAddr(aJcas,
                 FeatureStructure.class, lastAddressInPage);
-        
+
         boolean reverse = aBratAnnotatorModel.getProject().isReverseDependencyDirection();
 
         Type type = CasUtil.getType(aJcas.getCas(), annotationTypeName);
         Feature dependentFeature = type.getFeatureByBaseName(dependentFeatureName);
         Feature governorFeature = type.getFeatureByBaseName(governorFeatureName);
-        
+
         Type spanType = CasUtil.getType(aJcas.getCas(), arcSpanType);
         Feature arcSpanFeature = spanType.getFeatureByBaseName(arcSpanTypeFeatureName);
-        
+
         for (AnnotationFS fs : CasUtil.selectCovered(aJcas.getCas(), type, firstSentence.getBegin(),
                 lastSentenceInPage.getEnd())) {
-        
+
             FeatureStructure dependentFs = fs.getFeatureValue(dependentFeature).getFeatureValue(
                     arcSpanFeature);
             FeatureStructure governorFs = fs.getFeatureValue(governorFeature).getFeatureValue(
                     arcSpanFeature);
-        
+
             List<Argument> argumentList = getArgument(governorFs, dependentFs, reverse);
-        
+
             Feature labelFeature = fs.getType().getFeatureByBaseName(labelFeatureName);
-        
+
             aResponse.addRelation(new Relation(((FeatureStructureImpl) fs).getAddress(), labelPrefix
                     + fs.getStringValue(labelFeature), argumentList));
         }
@@ -321,38 +321,11 @@ public class ArcAdapter
      * @param aJCas
      * @param aId
      */
-    public void delete(JCas aJCas, AnnotationFS aOriginFs, AnnotationFS aTargetFs,
-            BratAnnotatorModel aBratAnnotatorModel, String aValu)
+    public void delete(JCas aJCas, int aAddress)
     {
-        JCas jCas = aJCas;
-        AnnotationFS temp;
-        if (aBratAnnotatorModel.getProject().isReverseDependencyDirection()) {
-            temp = aOriginFs;
-            aOriginFs = aTargetFs;
-            aTargetFs = temp;
-        }
-        FeatureStructure fsToDelete = null;
-
-        Type type = CasUtil.getType(aJCas.getCas(), annotationTypeName);
-        Feature feature = type.getFeatureByBaseName(labelFeatureName);
-        Feature dependentFeature = type.getFeatureByBaseName(dependentFeatureName);
-        Feature governorFeature = type.getFeatureByBaseName(governorFeatureName);
-
-        Type spanType = CasUtil.getType(jCas.getCas(), arcSpanType);
-        Feature arcSpanFeature = spanType.getFeatureByBaseName(arcSpanTypeFeatureName);
-
-        for (AnnotationFS fs : CasUtil.select(jCas.getCas(), type)) {
-            FeatureStructure dependentFs = fs.getFeatureValue(dependentFeature).getFeatureValue(
-                    arcSpanFeature);
-            FeatureStructure governorFs = fs.getFeatureValue(governorFeature).getFeatureValue(
-                    arcSpanFeature);
-            if (isDuplicate((AnnotationFS)governorFs, aOriginFs, (AnnotationFS)dependentFs,
-                    aTargetFs, aValu, fs.getStringValue(feature))) {
-                fsToDelete = fs;
-                break;
-            }
-        }
-        jCas.removeFsFromIndexes(fsToDelete);
+        FeatureStructure fs = (FeatureStructure) BratAjaxCasUtil.selectByAddr(aJCas,
+                FeatureStructure.class, aAddress);
+        aJCas.removeFsFromIndexes(fs);
     }
 
     /**
@@ -408,7 +381,7 @@ public class ArcAdapter
     {
         return labelFeatureName;
     }
-    
+
     @Override
     public String getLabelPrefix()
     {

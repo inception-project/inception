@@ -28,7 +28,6 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -276,7 +275,6 @@ public class SpanAnnotationModalWindowPage
                                 bratAnnotatorModel.getSentenceAddress()).getBegin()
                                 + ((Offsets) offsetLists.get(0)).getBegin();
 
-                        AnnotationFS idFs = selectByAddr(jCas, selectedSpanId);
                         Tag selectedTag = (Tag) annotationService.getTag(tags.getModelObject(),
                                 selectedtTagSet);
                         String annotationType = BratAjaxCasUtil.getQualifiedLabel(selectedTag);
@@ -284,7 +282,7 @@ public class SpanAnnotationModalWindowPage
                             aTarget.appendJavaScript("alert('POS annotations can\\'t be deleted!')");
                         }
                         else {
-                            controller.deleteSpanFromCas(selectedSpanType, jCas, idFs);
+                            controller.deleteSpanFromCas(selectedSpanType, jCas, selectedSpanId);
                             controller.createAnnotationDocumentContent(
                                     bratAnnotatorModel.getMode(), bratAnnotatorModel.getDocument(),
                                     bratAnnotatorModel.getUser(), jCas);
@@ -387,9 +385,9 @@ public class SpanAnnotationModalWindowPage
 
     public SpanAnnotationModalWindowPage(ModalWindow modalWindow,
             BratAnnotatorModel aBratAnnotatorModel, String aSelectedText, String aOffsets,
-            String aType, int aRef)
+            String aType, int selectedSpanId)
     {
-        this.selectedSpanId = aRef;
+        this.selectedSpanId = selectedSpanId;
         this.selectedSpanType = aType;
 
         String layerName = BratAjaxCasUtil.getSpanLayerName(BratAjaxCasUtil.getLabelPrefix(aType));

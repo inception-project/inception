@@ -55,7 +55,7 @@ public class SpanAdapter
     implements TypeAdapter
 {
     private Log LOG = LogFactory.getLog(getClass());
-    
+
     /**
      * Prefix of the label value for Brat to make sure that different annotation types can use the
      * same label, e.g. a POS tag "N" and a named entity type "N".
@@ -145,7 +145,7 @@ public class SpanAdapter
         else{
             lastSentenceAddress = BratAjaxCasUtil.getLastSentenceAddress(aJcas);
         }
-        
+
         // Loop based on window size
         // j, controlling variable to display sentences based on window size
         // i, address of each sentences
@@ -253,10 +253,10 @@ public class SpanAdapter
      * @param aId
      *            the low-level address of the span annotation.
      */
-    public void delete(JCas aJCas, AnnotationFS aRefFs)
+    public void delete(JCas aJCas, int aAddress)
     {
         FeatureStructure fs = (FeatureStructure) BratAjaxCasUtil.selectByAddr(aJCas,
-                FeatureStructure.class, ((FeatureStructureImpl) aRefFs).getAddress());
+                FeatureStructure.class, aAddress);
         aJCas.removeFsFromIndexes(fs);
     }
 
@@ -306,7 +306,7 @@ public class SpanAdapter
     {
         return labelFeatureName;
     }
-    
+
     @Override
     public String getLabelPrefix()
     {

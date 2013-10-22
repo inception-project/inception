@@ -44,14 +44,11 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Stored;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.CreateArcResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.CreateSpanResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.DeleteArcResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.DeleteSpanResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentTimestampResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.ImportDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.LoadConfResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.ReverseArcResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.StoreSvgResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.WhoamiResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -307,7 +304,7 @@ public class BratAjaxCasController
         throws JsonParseException, JsonMappingException, IOException, UIMAException
     {
         addSpanToCas(aJCas, aAnnotationOffsetStart, aAnnotationOffsetEnd, aType, aOrigin, aTarget);
-        
+
         GetDocumentResponse response = new GetDocumentResponse();
         addBratResponses(response, aBratAnnotatorModel, aAnnotationOffsetStart, aJCas,
                 aIsGetDocument);
@@ -346,101 +343,6 @@ public class BratAjaxCasController
 
     }
 
-    /**
-     * reverse the direction of arc annotations, in this case, Dependency parsing
-     */
-
-    public ReverseArcResponse reverseArcResponse(BratAnnotatorModel aBratAnnotatorModel,
-            JCas aJCas, int aAnnotationOffsetStart, AnnotationFS aOriginFs, AnnotationFS aTargetFs,
-            String aQualifiedLabel, boolean aIsGetDocument)
-        throws UIMAException, IOException
-    {
-        String labelPrefix = BratAjaxCasUtil.getLabelPrefix(aQualifiedLabel);
-        String label = BratAjaxCasUtil.getLabel(aQualifiedLabel);
-
-        if (labelPrefix.equals(AnnotationTypeConstant.POS_PREFIX)) {
-            ArcAdapter.getDependencyAdapter().delete(aJCas, aOriginFs, aTargetFs,
-                    aBratAnnotatorModel, label);
-            // Reverse directions
-            AnnotationFS temp = aOriginFs;// swap variable
-            aOriginFs = aTargetFs;
-            aTargetFs = temp;
-            ArcAdapter.getDependencyAdapter().add(label, aOriginFs, aTargetFs, aJCas,
-                    aBratAnnotatorModel, false);
-        }
-
-        GetDocumentResponse response = new GetDocumentResponse();
-        addBratResponses(response, aBratAnnotatorModel, aAnnotationOffsetStart, aJCas,
-                aIsGetDocument);
-
-        ReverseArcResponse createArcResponse = new ReverseArcResponse();
-        createArcResponse.setAnnotations(response);
-
-        newToAnnotationInprogress(aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
-        createAnnotationDocumentContent(aBratAnnotatorModel.getMode(),
-                aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser(), aJCas);
-
-        return createArcResponse;
-    }
-
-    /**
-     * deletes a span annotation, except POS annotation
-     */
-    public DeleteSpanResponse deleteSpanResponse(BratAnnotatorModel aBratAnnotatorModel,
-            AnnotationFS aId, int aAnnotationOffsetStart, JCas aJCas, boolean aIsGetDocument,
-            String aType)
-        throws JsonParseException, JsonMappingException, IOException, UIMAException
-    {
-        deleteSpanFromCas(aType, aJCas, aId);
-
-        GetDocumentResponse response = new GetDocumentResponse();
-        addBratResponses(response, aBratAnnotatorModel, aAnnotationOffsetStart, aJCas,
-                aIsGetDocument);
-        
-        DeleteSpanResponse deleteSpanResponse = new DeleteSpanResponse();
-        deleteSpanResponse.setAnnotations(response);
-        
-        newToAnnotationInprogress(aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
-        createAnnotationDocumentContent(aBratAnnotatorModel.getMode(),
-                aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser(), aJCas);
-
-        return deleteSpanResponse;
-    }
-
-    /**
-     * deletes an arc between the origin and target spans
-     */
-    public DeleteArcResponse deleteArcResponse(BratAnnotatorModel aBratAnnotatorModel, JCas aJCas,
-            int aAnnotationOffsetStart, AnnotationFS aOriginFs, AnnotationFS aTargetFs,
-            String aQualifiedLabel, boolean aIsGetDocument)
-        throws UIMAException, IOException
-    {
-        String labelPrefix = BratAjaxCasUtil.getLabelPrefix(aQualifiedLabel);
-        String label = BratAjaxCasUtil.getLabel(aQualifiedLabel);
-
-        if (labelPrefix.equals(AnnotationTypeConstant.POS_PREFIX)) {
-            ArcAdapter.getDependencyAdapter().delete(aJCas, aOriginFs, aTargetFs,
-                    aBratAnnotatorModel, label);
-        }
-        else if (labelPrefix.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
-            ChainAdapter.getCoreferenceChainAdapter().delete(aJCas, aOriginFs);
-        }
-
-        GetDocumentResponse response = new GetDocumentResponse();
-        addBratResponses(response, aBratAnnotatorModel, aAnnotationOffsetStart, aJCas,
-                aIsGetDocument);
-
-        DeleteArcResponse deleteArcResponse = new DeleteArcResponse();
-
-        deleteArcResponse.setAnnotations(response);
-
-        newToAnnotationInprogress(aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
-
-        createAnnotationDocumentContent(aBratAnnotatorModel.getMode(),
-                aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser(), aJCas);
-
-        return deleteArcResponse;
-    }
 
     /**
      * Add a span annotation to CAS
@@ -503,15 +405,15 @@ public class BratAjaxCasController
      * @param aId
      *            the CAS address of the annotation
      */
-    public void deleteSpanFromCas(String aQualifiedLabel, JCas aJcas, AnnotationFS aId)
+    public void deleteSpanFromCas(String aQualifiedLabel, JCas aJcas, int aAddress)
     {
         String labelPrefix = BratAjaxCasUtil.getLabelPrefix(aQualifiedLabel);
 
         if (labelPrefix.equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)) {
-            SpanAdapter.getNamedEntityAdapter().delete(aJcas, aId);
+            SpanAdapter.getNamedEntityAdapter().delete(aJcas, aAddress);
         }
         else if (labelPrefix.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
-            ChainAdapter.getCoreferenceLinkAdapter().delete(aJcas, aId);
+            ChainAdapter.getCoreferenceLinkAdapter().delete(aJcas, aAddress);
         }
     }
 
@@ -525,17 +427,14 @@ public class BratAjaxCasController
      *            users,...
      */
 
-    public void delteArcFromCas(String aQualifiedLabel, JCas aJCas, AnnotationFS aOriginFs,
-            AnnotationFS aTargetFs, BratAnnotatorModel aBratAnnotatorModel)
+    public void delteArcFromCas(String aQualifiedLabel, JCas aJCas, int aAddress)
     {
         String labelPrefix = BratAjaxCasUtil.getLabelPrefix(aQualifiedLabel);
-        String label = BratAjaxCasUtil.getLabel(aQualifiedLabel);
         if (labelPrefix.equals(AnnotationTypeConstant.POS_PREFIX)) {
-            ArcAdapter.getDependencyAdapter().delete(aJCas, aOriginFs, aTargetFs,
-                    aBratAnnotatorModel, label);
+            ArcAdapter.getDependencyAdapter().delete(aJCas,aAddress);
         }
         else if (labelPrefix.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
-            ChainAdapter.getCoreferenceChainAdapter().delete(aJCas, aOriginFs);
+            ChainAdapter.getCoreferenceChainAdapter().delete(aJCas, aAddress);
         }
     }
 

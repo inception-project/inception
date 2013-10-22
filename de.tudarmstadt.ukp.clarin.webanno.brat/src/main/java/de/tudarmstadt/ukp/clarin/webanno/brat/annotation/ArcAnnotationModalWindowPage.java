@@ -96,7 +96,7 @@ public class ArcAnnotationModalWindowPage
     private BratAnnotatorModel bratAnnotatorModel;
 
     private String originSpanType = null;
-    int aRef = -1;
+    int selectedArcId = -1;
     int originSpanId, targetSpanId;
     String selectedArcType;
 
@@ -111,7 +111,7 @@ public class ArcAnnotationModalWindowPage
             super(id);
 
             // if it is new arc annotation
-            if (aRef == -1) {
+            if (selectedArcId == -1) {
                 // for rapid annotation, pre-fill previous annotation type again
                 if (bratAnnotatorModel.getRememberedArcTagSet() != null
                         && selectedtTagSet.getName().equals(
@@ -234,16 +234,15 @@ public class ArcAnnotationModalWindowPage
                     JCas jCas;
                     try {
                         jCas = getCas(bratAnnotatorModel);
-                        AnnotationFS originFs = selectByAddr(jCas, originSpanId);
-                        AnnotationFS targetFs = selectByAddr(jCas, targetSpanId);
 
-                        controller.delteArcFromCas(selectedArcType, jCas, originFs, targetFs,
-                                bratAnnotatorModel);
+
+                        controller.delteArcFromCas(selectedArcType, jCas,selectedArcId);
                         controller.createAnnotationDocumentContent(bratAnnotatorModel.getMode(),
                                 bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
                                 jCas);
 
                         if (bratAnnotatorModel.isScrollPage()) {
+                            AnnotationFS originFs = selectByAddr(jCas, originSpanId);
                             int start = originFs.getBegin();
                             updateSentenceAddressAndOffsets(jCas, start);
                         }
@@ -281,7 +280,7 @@ public class ArcAnnotationModalWindowPage
                     try {
                         jCas = getCas(bratAnnotatorModel);
 
-                        AnnotationFS idFs = selectByAddr(jCas, aRef);
+                        AnnotationFS idFs = selectByAddr(jCas, selectedArcId);
 
                         jCas.removeFsFromIndexes(idFs);
 
@@ -294,7 +293,7 @@ public class ArcAnnotationModalWindowPage
                         AnnotationFS targetFs = selectByAddr(jCas, targetSpanId);
 
                         controller.addArcToCas(bratAnnotatorModel, annotationType, -1, -1,
-                                originFs, targetFs, jCas);
+                               targetFs,originFs, jCas);
 
                         controller.createAnnotationDocumentContent(bratAnnotatorModel.getMode(),
                                 bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
@@ -392,10 +391,10 @@ public class ArcAnnotationModalWindowPage
 
     public ArcAnnotationModalWindowPage(String aId, final ModalWindow modalWindow,
             BratAnnotatorModel aBratAnnotatorModel, int aOriginSpanId, String aOriginSpanType,
-            int aTargetSpanId, String aTargetSpanType, int aRef, String aType)
+            int aTargetSpanId, String aTargetSpanType, int selectedArcId, String aType)
     {
         super(aId);
-        this.aRef = aRef;
+        this.selectedArcId = selectedArcId;
         selectedArcType = aType;
 
         this.originSpanType = aOriginSpanType;
