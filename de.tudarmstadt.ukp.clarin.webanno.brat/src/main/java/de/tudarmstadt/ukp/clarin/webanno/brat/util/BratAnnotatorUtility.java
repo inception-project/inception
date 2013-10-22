@@ -17,7 +17,6 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.util;
 
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
 import static org.uimafit.util.JCasUtil.select;
 
 import java.io.ByteArrayInputStream;
@@ -32,13 +31,8 @@ import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.CASImpl;
 import org.apache.uima.cas.impl.Serialization;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
-import org.apache.wicket.request.IRequestParameters;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.uimafit.factory.JCasFactory;
 
@@ -47,11 +41,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorUIData;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator.MultipleSentenceCoveredException;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.OffsetsList;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -83,186 +73,6 @@ public class BratAnnotatorUtility
                 aUIData.getAnnotationOffsetStart(), aUIData.getjCas(), aUIData.isGetDocument());
         aUIData.setGetDocument(false);
 
-        return result;
-    }
-
-    public static Object createSpan(IRequestParameters aRequest, User aUser,
-            BratAnnotatorUIData aUIData, RepositoryService repository,
-            AnnotationService annotationService, BratAnnotatorModel bratAnnotatorModel,
-            MappingJacksonHttpMessageConverter jsonConverter)
-        throws ClassNotFoundException, IOException, UIMAException, MultipleSentenceCoveredException
-    {
-        Object result = null;
-        BratAjaxCasController controller = new BratAjaxCasController(repository, annotationService);
-        String offsets = aRequest.getParameterValue("offsets").toString();
-
-        OffsetsList offsetLists = jsonConverter.getObjectMapper().readValue(offsets,
-                OffsetsList.class);
-        int start = offsetLists.get(0).getBegin();
-        int end = offsetLists.get(0).getEnd();
-        
-        Sentence sentence = selectByAddr(aUIData.getjCas(), Sentence.class,
-                bratAnnotatorModel.getSentenceAddress());
-        AnnotationFS originFs = selectByAddr(aUIData.getjCas(), aUIData.getOrigin());
-        AnnotationFS targetFs = selectByAddr(aUIData.getjCas(), aUIData.getTarget());
-        
-        aUIData.setAnnotationOffsetStart(sentence.getBegin() + start);
-        aUIData.setAnnotationOffsetEnd(sentence.getBegin() + end);
-        aUIData.setType(aRequest.getParameterValue("type").toString());
-
-        if (!BratAjaxCasUtil.isSameSentence(aUIData.getjCas(),
-                aUIData.getAnnotationOffsetStart(), aUIData.getAnnotationOffsetEnd())) {
-            throw new MultipleSentenceCoveredException(
-                    "You selected a span across multiple sentences. Limit your span annotations to single sentences!");
-        }
-
-
-        result = controller.createSpanResponse(bratAnnotatorModel,
-                aUIData.getAnnotationOffsetStart(), aUIData.getjCas(), aUIData.isGetDocument(),
-                aUIData.getAnnotationOffsetEnd(), aUIData.getType(), originFs, targetFs);
-
-        if (bratAnnotatorModel.isScrollPage()) {
-            bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(
-                    aUIData.getjCas(), bratAnnotatorModel.getSentenceAddress(),
-                    aUIData.getAnnotationOffsetStart(), bratAnnotatorModel.getProject(),
-                    bratAnnotatorModel.getDocument(), bratAnnotatorModel.getWindowSize()));
-        }
-        return result;
-    }
-
-    public static Object createArc(IRequestParameters aRequest, User aUser,
-            BratAnnotatorUIData aUIData, RepositoryService repository,
-            AnnotationService annotationService, BratAnnotatorModel bratAnnotatorModel)
-        throws UIMAException, IOException
-    {
-        int origin = aRequest.getParameterValue("origin").toInt();
-        int target = aRequest.getParameterValue("target").toInt();
-
-        AnnotationFS originFs = selectByAddr(aUIData.getjCas(), origin);
-        AnnotationFS targetFs = selectByAddr(aUIData.getjCas(), target);
-
-        Object result = null;
-        BratAjaxCasController controller = new BratAjaxCasController(repository, annotationService);
-        aUIData.setOrigin(origin);
-        aUIData.setTarget(target);
-        aUIData.setType(aRequest.getParameterValue("type").toString());
-        aUIData.setAnnotationOffsetStart(originFs.getBegin());
-
-
-        result = controller.createArcResponse(bratAnnotatorModel,
-                aUIData.getAnnotationOffsetStart(), aUIData.getjCas(), aUIData.isGetDocument(),
-                aUIData.getType(), aUIData.getAnnotationOffsetEnd(), originFs, targetFs);
-        if (bratAnnotatorModel.isScrollPage()) {
-            bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(
-                    aUIData.getjCas(), bratAnnotatorModel.getSentenceAddress(),
-                    aUIData.getAnnotationOffsetStart(), bratAnnotatorModel.getProject(),
-                    bratAnnotatorModel.getDocument(), bratAnnotatorModel.getWindowSize()));
-        }
-        return result;
-    }
-
-    public static Object reverseArc(IRequestParameters aRequest, User aUser,
-            BratAnnotatorUIData aUIData, RepositoryService repository,
-            AnnotationService annotationService, BratAnnotatorModel bratAnnotatorModel)
-        throws UIMAException, IOException
-    {
-        Object result = null;
-        
-        int origin = aRequest.getParameterValue("origin").toInt();
-        int target = aRequest.getParameterValue("target").toInt();
-        
-        AnnotationFS originFs = selectByAddr(aUIData.getjCas(), origin);
-        AnnotationFS targetFs = selectByAddr(aUIData.getjCas(), target);
-        
-        BratAjaxCasController controller = new BratAjaxCasController(repository, annotationService);
-        aUIData.setOrigin(origin);
-        aUIData.setTarget(target);
-        aUIData.setType(aRequest.getParameterValue("type").toString());
-        aUIData.setAnnotationOffsetStart(originFs.getBegin());
-
-        String annotationType = aUIData.getType().substring(0,
-                aUIData.getType().indexOf(AnnotationTypeConstant.PREFIX) + 1);
-        if (annotationType.equals(AnnotationTypeConstant.POS_PREFIX)) {
-            result = controller.reverseArcResponse(bratAnnotatorModel, aUIData.getjCas(),
-                    aUIData.getAnnotationOffsetStart(), originFs, targetFs, aUIData.getType(),
-                    aUIData.isGetDocument());
-            if (bratAnnotatorModel.isScrollPage()) {
-                bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(
-                        aUIData.getjCas(), bratAnnotatorModel.getSentenceAddress(),
-                        aUIData.getAnnotationOffsetStart(), bratAnnotatorModel.getProject(),
-                        bratAnnotatorModel.getDocument(), bratAnnotatorModel.getWindowSize()));
-            }
-        }
-        return result;
-    }
-
-    public static Object deleteSpan(IRequestParameters aRequest, User aUser,
-            BratAnnotatorUIData aUIData, RepositoryService repository,
-            AnnotationService annotationService, BratAnnotatorModel bratAnnotatorModel,
-            MappingJacksonHttpMessageConverter jsonConverter)
-        throws JsonParseException, JsonMappingException, UIMAException, IOException
-    {
-        Object result = null;
-        BratAjaxCasController controller = new BratAjaxCasController(repository, annotationService);
-
-        String offsets = aRequest.getParameterValue("offsets").toString();
-        int id = aRequest.getParameterValue("id").toInt();
-        OffsetsList offsetLists = jsonConverter.getObjectMapper().readValue(offsets,
-                OffsetsList.class);
-        int start = offsetLists.get(0).getBegin();
-        int end = offsetLists.get(0).getEnd();
-        
-        Sentence sentence = selectByAddr(aUIData.getjCas(), Sentence.class,
-                bratAnnotatorModel.getSentenceAddress());
-        
-        aUIData.setAnnotationOffsetStart(sentence.getBegin() + start);
-        aUIData.setAnnotationOffsetEnd(sentence.getEnd() + end);
-        aUIData.setType(aRequest.getParameterValue("type").toString());
-
-        AnnotationFS idFs = selectByAddr(aUIData.getjCas(), id);
-
-        result = controller.deleteSpanResponse(bratAnnotatorModel, idFs,
-                aUIData.getAnnotationOffsetStart(), aUIData.getjCas(), aUIData.isGetDocument(),
-                aUIData.getType());
-        
-        if (bratAnnotatorModel.isScrollPage()) {
-            bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(
-                    aUIData.getjCas(), bratAnnotatorModel.getSentenceAddress(),
-                    aUIData.getAnnotationOffsetStart(), bratAnnotatorModel.getProject(),
-                    bratAnnotatorModel.getDocument(), bratAnnotatorModel.getWindowSize()));
-        }
-        return result;
-    }
-
-    public static Object deleteArc(IRequestParameters aRequest, User aUser,
-            BratAnnotatorUIData aUIData, RepositoryService repository,
-            AnnotationService annotationService, BratAnnotatorModel bratAnnotatorModel)
-        throws UIMAException, IOException
-    {
-        Object result = null;
-        BratAjaxCasController controller = new BratAjaxCasController(repository, annotationService);
-
-        int origin = aRequest.getParameterValue("origin").toInt();
-        int target = aRequest.getParameterValue("target").toInt();
-
-        AnnotationFS originFs = selectByAddr(aUIData.getjCas(), origin);
-        AnnotationFS targetFs = selectByAddr(aUIData.getjCas(), target);
-
-        aUIData.setOrigin(origin);
-        aUIData.setTarget(target);
-        aUIData.setType(aRequest.getParameterValue("type").toString());
-        aUIData.setAnnotationOffsetStart(originFs.getBegin());
-
-        result = controller.deleteArcResponse(bratAnnotatorModel, aUIData.getjCas(),
-                aUIData.getAnnotationOffsetStart(), originFs, targetFs, aUIData.getType(),
-                aUIData.isGetDocument());
-        
-        if (bratAnnotatorModel.isScrollPage()) {
-            bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(
-                    aUIData.getjCas(), bratAnnotatorModel.getSentenceAddress(),
-                    aUIData.getAnnotationOffsetStart(), bratAnnotatorModel.getProject(),
-                    bratAnnotatorModel.getDocument(), bratAnnotatorModel.getWindowSize()));
-        }
         return result;
     }
 
@@ -317,7 +127,7 @@ public class BratAnnotatorUtility
         }
         repository.createAnnotationDocumentContent(aJCas, aSourceDocument, aUser);
     }
-    
+
     public static void upgradeCasAndSave( RepositoryService aRepository, SourceDocument aDocument
     		, Mode aMode)
     {
@@ -346,13 +156,13 @@ public class BratAnnotatorUtility
 
         }
         catch (UIMAException e) {
-            
+
         }
         catch (ClassNotFoundException e) {
-            
+
         }
         catch (IOException e) {
-           
+
         }
         catch (Exception e) {
             // no need to catch, it is acceptable that no curation document
