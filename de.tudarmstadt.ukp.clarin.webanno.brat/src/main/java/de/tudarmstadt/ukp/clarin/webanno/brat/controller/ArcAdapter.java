@@ -34,7 +34,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorUIData;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Argument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Relation;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -129,7 +128,6 @@ public class ArcAdapter
         Sentence firstSentence = BratAjaxCasUtil.selectSentenceAt(aJcas,
                 aBratAnnotatorModel.getSentenceBeginOffset(),
                 aBratAnnotatorModel.getSentenceEndOffset());
-        int i = firstSentence.getAddress();
         
         int lastAddressInPage = BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(aJcas,
                 firstSentence.getAddress(), aBratAnnotatorModel.getWindowSize());
@@ -138,33 +136,29 @@ public class ArcAdapter
         Sentence lastSentenceInPage = (Sentence) BratAjaxCasUtil.selectByAddr(aJcas,
                 FeatureStructure.class, lastAddressInPage);
         
-        int lastSentenceAddress;
-        if(aBratAnnotatorModel.getMode().equals(Mode.CURATION)){
-            lastSentenceAddress = aBratAnnotatorModel.getLastSentenceAddress();
-        }
-        else{
-            lastSentenceAddress = BratAjaxCasUtil.getLastSentenceAddress(aJcas);
-        }
-
         boolean reverse = aBratAnnotatorModel.getProject().isReverseDependencyDirection();
 
-        // Loop based on window size
-        // j, controlling variable to display sentences based on window size
-        // i, address of each sentences
-        int j = 1;
-        while (j <= aBratAnnotatorModel.getWindowSize()) {
-            // FIXME - I absolutely do not understand what happens in this loop - REC 2013-10-22
-            if (i >= lastSentenceAddress) {
-                updateResponse(aJcas, aResponse, firstSentence.getBegin(),
-                        lastSentenceInPage.getEnd(), reverse);
-                break;
-            }
-            else {
-                updateResponse(aJcas, aResponse, firstSentence.getBegin(),
-                        lastSentenceInPage.getEnd(), reverse);
-                i = BratAjaxCasUtil.getFollowingSentenceAddress(aJcas, i);
-            }
-            j++;
+        Type type = CasUtil.getType(aJcas.getCas(), annotationTypeName);
+        Feature dependentFeature = type.getFeatureByBaseName(dependentFeatureName);
+        Feature governorFeature = type.getFeatureByBaseName(governorFeatureName);
+        
+        Type spanType = CasUtil.getType(aJcas.getCas(), arcSpanType);
+        Feature arcSpanFeature = spanType.getFeatureByBaseName(arcSpanTypeFeatureName);
+        
+        for (AnnotationFS fs : CasUtil.selectCovered(aJcas.getCas(), type, firstSentence.getBegin(),
+                lastSentenceInPage.getEnd())) {
+        
+            FeatureStructure dependentFs = fs.getFeatureValue(dependentFeature).getFeatureValue(
+                    arcSpanFeature);
+            FeatureStructure governorFs = fs.getFeatureValue(governorFeature).getFeatureValue(
+                    arcSpanFeature);
+        
+            List<Argument> argumentList = getArgument(governorFs, dependentFs, reverse);
+        
+            Feature labelFeature = fs.getType().getFeatureByBaseName(labelFeatureName);
+        
+            aResponse.addRelation(new Relation(((FeatureStructureImpl) fs).getAddress(), labelPrefix
+                    + fs.getStringValue(labelFeature), argumentList));
         }
     }
 
