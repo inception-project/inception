@@ -345,14 +345,22 @@ public class BratAnnotator
             @Override
             public void onClose(AjaxRequestTarget aTarget)
             {
-                // A hack to rememeber the Visural DropDown display value
+                // A hack to rememeber the wicket combobox DropDown display value
                 HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())
                         .getContainerRequest().getSession();
                 BratAnnotatorModel model = (BratAnnotatorModel) session.getAttribute("model");
                 if (model != null) {
-                    setModelObject(model);
+                   // setModelObject(model);
+                    getModelObject().setSentenceAddress(model.getSentenceAddress());
+
+                    getModelObject().setSentenceBeginOffset(model.getSentenceBeginOffset());
+                    getModelObject().setSentenceEndOffset(model.getSentenceEndOffset());
+
+                    getModelObject().setRememberedSpanTagSet(model.getRememberedSpanTagSet());
+                    getModelObject().setRememberedSpanTag(model.getRememberedSpanTag());
+
                 }
-                onChange(aTarget, model);
+                onChange(aTarget, getModelObject());
                 reloadContent(aTarget);
 
             }
