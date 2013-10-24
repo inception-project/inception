@@ -104,20 +104,29 @@ public class CurationBuilder
         Map<String, JCas> jCases = new HashMap<String, JCas>();
         AnnotationDocument randomAnnotationDocument = null;
 
-        for (AnnotationDocument annotationDocument : annotationDocuments) {
-            String username = annotationDocument.getUser();
-            if (aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)) {
-                randomAnnotationDocument = getCases(aBratAnnotatorModel, segmentBeginEnd,
-                        segmentNumber, segmentText, segmentAdress, jCases,
-                        randomAnnotationDocument, annotationDocument, username);
-            }
-            else if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
-                randomAnnotationDocument = getCases(aBratAnnotatorModel, segmentBeginEnd,
-                        segmentNumber, segmentText, segmentAdress, jCases,
-                        randomAnnotationDocument, annotationDocument, username);
+        // get the correction JCas for the logged in user
+        if (aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)) {
+            User user = repository.getUser(SecurityContextHolder.getContext().getAuthentication()
+                    .getName());
+            randomAnnotationDocument = repository.getAnnotationDocument(sourceDocument, user);
+            updateSegment(aBratAnnotatorModel, segmentBeginEnd, segmentNumber, segmentText,
+                    segmentAdress, jCases, randomAnnotationDocument, user.getUsername());
+
+        }
+        else {
+            for (AnnotationDocument annotationDocument : annotationDocuments) {
+                String username = annotationDocument.getUser();
+
+                if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
+
+                    if (randomAnnotationDocument == null) {
+                        randomAnnotationDocument = annotationDocument;
+                    }
+                    updateSegment(aBratAnnotatorModel, segmentBeginEnd, segmentNumber, segmentText,
+                            segmentAdress, jCases, annotationDocument, username);
+                }
             }
         }
-
         // TODO Create pre-merged jcas if not exists for curation user
 
         JCas mergeJCas = null;
@@ -135,7 +144,7 @@ public class CurationBuilder
             int tempBegin = begin;
             int tempEnd = end;
             JCas firstJCas = jCases.values().iterator().next();
-            
+
             // re-merge JCAS for all sentences
             begin = selectByAddr(firstJCas, Sentence.class,
                     aBratAnnotatorModel.getFirstSentenceAddress()).getBegin();
@@ -220,25 +229,22 @@ public class CurationBuilder
      * Puts JCases into a list and get a random annotation document that will be used as a base for
      * the {@link CasDiff}
      */
-    private AnnotationDocument getCases(BratAnnotatorModel aBratAnnotatorModel,
+    private void updateSegment(BratAnnotatorModel aBratAnnotatorModel,
             Map<Integer, Integer> segmentBeginEnd, Map<Integer, Integer> segmentNumber,
             Map<Integer, String> segmentText, Map<String, Map<Integer, Integer>> segmentAdress,
-            Map<String, JCas> jCases, AnnotationDocument randomAnnotationDocument,
-            AnnotationDocument annotationDocument, String username)
+            Map<String, JCas> jCases, AnnotationDocument annotationDocument, String username)
     {
         try {
             JCas jCas = repository.getAnnotationDocumentContent(annotationDocument);
-
-            if (randomAnnotationDocument == null) {
-                randomAnnotationDocument = annotationDocument;
-            }
 
             int windowSize = aBratAnnotatorModel.getWindowSize();
 
             Sentence firstSentence = BratAjaxCasUtil.selectSentenceAt(jCas,
                     aBratAnnotatorModel.getSentenceBeginOffset(),
                     aBratAnnotatorModel.getSentenceEndOffset());
-            Sentence lastSentence = selectByAddr(jCas, Sentence.class,
+            Sentence lastSentence = selectByAddr(
+                    jCas,
+                    Sentence.class,
                     BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(jCas,
                             firstSentence.getAddress(), windowSize));
 
@@ -276,7 +282,6 @@ public class CurationBuilder
         catch (Exception e) {
             LOG.info("Skipping document due to exception [" + annotationDocument + "]", e);
         }
-        return randomAnnotationDocument;
     }
 
     public static List<Type> getEntryTypes(JCas mergeJCas, BratAnnotatorModel aBratAnnotatorModel)
