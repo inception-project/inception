@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 import static java.util.Arrays.asList;
 import static org.uimafit.util.CasUtil.getType;
 import static org.uimafit.util.CasUtil.selectCovered;
+import static org.uimafit.util.JCasUtil.selectCovered;
 
 import java.util.List;
 
@@ -219,7 +220,7 @@ public class ArcAdapter
 
         Type tokenType = getType(aJCas.getCas(), arcTokenType);
         // List all sentence in this display window
-        List<Sentence> sentences = JCasUtil.selectCovered(aJCas, Sentence.class, aBegin, aBegin);
+        List<Sentence> sentences = selectCovered(aJCas, Sentence.class, aBegin, aBegin);
         for (Sentence sentence : sentences) {
 
             for (AnnotationFS fs : selectCovered(aJCas.getCas(), type, sentence.getBegin(),
@@ -345,6 +346,22 @@ public class ArcAdapter
         else {
             return false;
         }
+    }
+
+  /**
+   * Check if the two annotations are in the same sentence
+   * @param aOriginBegin Begin offset of the origin annotation
+   * @param aTargetEnd End offset of the target annotation
+   * @param aJCas the {@link JCas}
+   * @return
+   */
+    public static boolean isAllowed(JCas aJCas, int aOriginBegin, int aTargetEnd)
+    {
+        if (BratAjaxCasUtil.isSameSentence(aJCas, aOriginBegin, aTargetEnd)) {
+            return true;
+        }
+        return false;
+
     }
 
     @Override

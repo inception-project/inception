@@ -301,6 +301,21 @@ public class SpanAdapter
         return adapter;
     }
 
+    /**
+     * Check if the an annotation is in the same sentence
+     * @param The {@link JCas}
+     * @param aBegin begin offset of the span annotation
+     * @param aEnd End offset of the span annotation
+     * @return
+     */
+    public static boolean isAllowed(JCas aJCas, int aBegin, int aEnd)
+    {
+     if (BratAjaxCasUtil.isSameSentence(aJCas, aBegin, aEnd)) {
+              return true;
+          }
+          return false;
+
+      }
     @Override
     public String getLabelFeatureName()
     {
