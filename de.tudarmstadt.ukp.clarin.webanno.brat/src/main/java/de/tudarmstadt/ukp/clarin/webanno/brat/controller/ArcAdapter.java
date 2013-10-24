@@ -30,7 +30,6 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.impl.FeatureStructureImpl;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
-import org.uimafit.util.JCasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorUIData;
@@ -147,12 +146,9 @@ public class ArcAdapter
 
         Type spanType = getType(aJcas.getCas(), arcSpanType);
         Feature arcSpanFeature = spanType.getFeatureByBaseName(arcSpanTypeFeatureName);
-        // List all sentence in this display window
-        List<Sentence> sentences = JCasUtil.selectCovered(aJcas, Sentence.class,
-                firstSentence.getBegin(), lastSentenceInPage.getEnd());
-        for (Sentence sentence : sentences) {
-            for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, sentence.getBegin(),
-                    sentence.getEnd())) {
+
+            for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, firstSentence.getBegin(),
+                    lastSentenceInPage.getEnd())) {
 
                 FeatureStructure dependentFs = fs.getFeatureValue(dependentFeature)
                         .getFeatureValue(arcSpanFeature);
@@ -166,7 +162,6 @@ public class ArcAdapter
                 aResponse.addRelation(new Relation(((FeatureStructureImpl) fs).getAddress(),
                         labelPrefix + fs.getStringValue(labelFeature), argumentList));
             }
-        }
     }
 
     /**
