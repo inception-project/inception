@@ -47,7 +47,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter.ArcCrossedMultipleSentenceException;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter.MultipleSentenceCoveredException;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.MultipleSentenceCoveredException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.AnnotationState;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.BratCurationVisualizer;

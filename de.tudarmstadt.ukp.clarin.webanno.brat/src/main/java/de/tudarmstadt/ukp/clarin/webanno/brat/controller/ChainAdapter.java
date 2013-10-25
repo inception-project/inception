@@ -313,7 +313,7 @@ public class ChainAdapter
      */
     public void add(String aLabelValue, JCas aJCas, int aAnnotationOffsetStart,
             int aAnnotationOffsetEnd, AnnotationFS aOriginFs, AnnotationFS aTargetFs)
-        throws SpanAdapter.MultipleSentenceCoveredException
+        throws MultipleSentenceCoveredException
     {
         Map<Integer, Integer> offsets = ApplicationUtils.offsets(aJCas);
 
@@ -330,7 +330,7 @@ public class ChainAdapter
                                 aLabelValue);
                     }
                     else {
-                        throw new SpanAdapter.MultipleSentenceCoveredException(
+                        throw new MultipleSentenceCoveredException(
                                 "Annotation coveres multiple sentences, "
                                         + "limit your annotation to single sentence!");
                     }

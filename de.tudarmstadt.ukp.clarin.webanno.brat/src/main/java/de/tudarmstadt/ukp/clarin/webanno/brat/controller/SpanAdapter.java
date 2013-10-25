@@ -315,20 +315,6 @@ public class SpanAdapter
         return adapter;
     }
 
-    /**
-     * throw an exception if the a span annotation is not in the same sentence
-     */
-    public static class MultipleSentenceCoveredException
-        extends Exception
-    {
-        private static final long serialVersionUID = 1280015349963924638L;
-
-        public MultipleSentenceCoveredException(String message)
-        {
-            super(message);
-        }
-
-    }
     @Override
     public String getLabelFeatureName()
     {

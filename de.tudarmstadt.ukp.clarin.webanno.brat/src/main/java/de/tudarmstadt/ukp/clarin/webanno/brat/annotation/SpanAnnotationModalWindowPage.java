@@ -58,7 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter.MultipleSentenceCoveredException;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.MultipleSentenceCoveredException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.OffsetsList;
