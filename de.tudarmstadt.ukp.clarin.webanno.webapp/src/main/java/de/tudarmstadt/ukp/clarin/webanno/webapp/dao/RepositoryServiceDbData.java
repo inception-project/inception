@@ -311,7 +311,7 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public boolean existsJCas(String aUsername, SourceDocument aSourceDocument) throws IOException
+    public boolean existsAnnotationDocumentContent(SourceDocument aSourceDocument, String aUsername) throws IOException
     {
         if (new File(getAnnotationFolder(aSourceDocument), aUsername + ".ser").exists()) {
             return true;
@@ -336,7 +336,7 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public boolean existProjectPermission(User aUser, Project aProject)
+    public boolean existsProjectPermission(User aUser, Project aProject)
     {
 
         List<ProjectPermission> projectPermissions = entityManager
@@ -356,7 +356,7 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public boolean existProjectPermissionLevel(User aUser, Project aProject, PermissionLevel aLevel)
+    public boolean existsProjectPermissionLevel(User aUser, Project aProject, PermissionLevel aLevel)
     {
         try {
             entityManager
@@ -375,7 +375,7 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public boolean existSourceDocument(Project aProject, String aFileName)
+    public boolean existsSourceDocument(Project aProject, String aFileName)
     {
         try {
             entityManager
@@ -415,7 +415,7 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public boolean existUser(String username)
+    public boolean existsUser(String username)
     {
 
         try {
@@ -554,7 +554,7 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public File exportGuideLines(Project aProject)
+    public File exportGuidelines(Project aProject)
     {
         return new File(dir.getAbsolutePath() + PROJECT + aProject.getId() + GUIDELINE);
     }
@@ -655,7 +655,7 @@ public class RepositoryServiceDbData
         List<User> users = new ArrayList<User>();
 
         for (String username : usernames) {
-            if (existUser(username)) {
+            if (existsUser(username)) {
                 users.add(getUser(username));
             }
         }
@@ -674,7 +674,7 @@ public class RepositoryServiceDbData
                 .setParameter("level", aPermissionLevel).getResultList();
         List<User> users = new ArrayList<User>();
         for (String username : usernames) {
-            if (existUser(username)) {
+            if (existsUser(username)) {
                 users.add(getUser(username));
             }
         }
@@ -715,7 +715,7 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public void writeGuideline(Project aProject, File aContent, String aFileName)
+    public void createGuideline(Project aProject, File aContent, String aFileName)
         throws IOException
     {
         String guidelinePath = dir.getAbsolutePath() + PROJECT + aProject.getId() + GUIDELINE;
@@ -867,7 +867,7 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public List<String> listAnnotationGuidelineDocument(Project aProject)
+    public List<String> listGuidelines(Project aProject)
     {
         // list all guideline files
         File[] files = new File(dir.getAbsolutePath() + PROJECT + aProject.getId() + GUIDELINE)
@@ -979,7 +979,7 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public void removeAnnotationGuideline(Project aProject, String aFileName)
+    public void removeGuideline(Project aProject, String aFileName)
         throws IOException
     {
         FileUtils.forceDelete(new File(dir.getAbsolutePath() + PROJECT + aProject.getId()

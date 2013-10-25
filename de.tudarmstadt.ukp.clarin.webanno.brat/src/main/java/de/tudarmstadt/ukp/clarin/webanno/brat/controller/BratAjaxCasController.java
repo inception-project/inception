@@ -437,7 +437,7 @@ public class BratAjaxCasController
         try {
             annotationDocument = repository.getAnnotationDocument(aDocument, aUser);
             if (annotationDocument.getState().equals(AnnotationDocumentState.NEW)
-                    && !repository.existsJCas(aUser.getUsername(), aDocument)) {
+                    && !repository.existsAnnotationDocumentContent(aDocument, aUser.getUsername())) {
                 jCas = createJCas(aDocument, annotationDocument, aProject, aUser, repository);
             }
             else {

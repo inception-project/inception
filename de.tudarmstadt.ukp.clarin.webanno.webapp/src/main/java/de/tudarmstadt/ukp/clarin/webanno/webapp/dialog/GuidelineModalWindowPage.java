@@ -58,7 +58,7 @@ public class GuidelineModalWindowPage
             RepeatingView guidelineRepeater = new RepeatingView("guidelineRepeater");
             add(guidelineRepeater);
 
-            for (String guidelineFileName : repository.listAnnotationGuidelineDocument(project)) {
+            for (String guidelineFileName : repository.listGuidelines(project)) {
                 AbstractItem item = new AbstractItem(guidelineRepeater.newChildId());
 
                 guidelineRepeater.add(item);

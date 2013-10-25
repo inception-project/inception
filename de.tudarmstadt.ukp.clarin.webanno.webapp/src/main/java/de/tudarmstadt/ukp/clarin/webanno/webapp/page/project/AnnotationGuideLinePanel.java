@@ -89,7 +89,7 @@ public class AnnotationGuideLinePanel
                             File tempFile = guidelineFile.writeToTempFile();
                             // String text = IOUtils.toString(tcfInputStream, "UTF-8");
                             String fileName = guidelineFile.getClientFileName();
-                            projectRepository.writeGuideline(project, tempFile, fileName);
+                            projectRepository.createGuideline(project, tempFile, fileName);
                         }
                         catch (IOException e) {
                             error("Unable to write guideline file "
@@ -123,7 +123,7 @@ public class AnnotationGuideLinePanel
                         documents.clear();
                         if (project.getId() != 0) {
                             documents.addAll(projectRepository
-                                    .listAnnotationGuidelineDocument(project));
+                                    .listGuidelines(project));
                         }
                         return documents;
                     }
@@ -142,7 +142,7 @@ public class AnnotationGuideLinePanel
                 for (String document : selectedDocuments) {
                     try {
 
-                        projectRepository.removeAnnotationGuideline(project, document);
+                        projectRepository.removeGuideline(project, document);
                     }
                     catch (IOException e) {
                         error("Error while removing a document document "

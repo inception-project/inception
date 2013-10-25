@@ -671,7 +671,7 @@ public class ApplicationUtils
         for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
             ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
             if (entry.toString().startsWith(GUIDELINE)) {
-                File guidelineDir = aRepository.exportGuideLines(aProject);
+                File guidelineDir = aRepository.exportGuidelines(aProject);
                 FileUtils.forceMkdir(guidelineDir);
                 FileUtils.copyInputStreamToFile(zip.getInputStream(entry), new File(guidelineDir,
                         FilenameUtils.getName(entry.getName())));

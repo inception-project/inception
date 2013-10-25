@@ -396,7 +396,7 @@ public class ProjectExportPanel
     {
         File guidelineDir = new File(aCopyDir + GUIDELINE);
         FileUtils.forceMkdir(guidelineDir);
-        File annotationGuidlines = projectRepository.exportGuideLines(aProject);
+        File annotationGuidlines = projectRepository.exportGuidelines(aProject);
         if (annotationGuidlines.exists()) {
             for (File annotationGuideline : annotationGuidlines.listFiles()) {
                 FileUtils.copyFileToDirectory(annotationGuideline, guidelineDir);

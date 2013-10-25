@@ -295,7 +295,7 @@ public class ProjectUsersPanel
 
                         for (PermissionLevel level : PermissionLevelDetailForm.this
                                 .getModelObject().permissionLevels) {
-                            if (!projectRepository.existProjectPermissionLevel(selectedUser,
+                            if (!projectRepository.existsProjectPermissionLevel(selectedUser,
                                     selectedProject.getObject(), level)) {
                                 ProjectPermission projectPermission = new ProjectPermission();
                                 projectPermission.setLevel(level);
