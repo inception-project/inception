@@ -395,7 +395,7 @@ public interface RepositoryService
     /**
      * Check if the user finished annotating the {@link SourceDocument} in this {@link Project}
      */
-    boolean isAnnotationFinished(SourceDocument document, Project project, User user);
+    boolean isAnnotationFinished(SourceDocument document, User user);
 
     /**
      * Check if at least one annotation document is finished for this {@link SourceDocument} in the
@@ -405,7 +405,7 @@ public interface RepositoryService
      * @param project
      * @return
      */
-    boolean existsFinishedAnnotation(SourceDocument document, Project project);
+    boolean existsFinishedAnnotation(SourceDocument document);
     
     /**
      * Remove an annotation document, for example, when a user is removed from a project

@@ -228,14 +228,13 @@ public class CurationPage extends SettingsPageBase {
 										.getName();
 
 								User user = repository.getUser(username);
-								// If this source document has at least one
-								// annotation document "FINISHED",
-								// and curation not yet
-								// finished on it
+                                // If this source document has at least one
+                                // annotation document "FINISHED",
+                                // and curation not yet
+                                // finished on it
 								if (openDataModel.getDocument() != null
 										&& repository.existsFinishedAnnotation(
-												openDataModel.getDocument(),
-												openDataModel.getProject())) {
+												openDataModel.getDocument())) {
 									// Update source document state to
 									// CURRATION_INPROGRESS, if it was not
 									// ANNOTATION_FINISHED

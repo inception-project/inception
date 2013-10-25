@@ -775,13 +775,12 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public boolean existsFinishedAnnotation(SourceDocument aDocument, Project aProject)
+    public boolean existsFinishedAnnotation(SourceDocument aDocument)
     {
         List<AnnotationDocument> annotationDocuments = entityManager
                 .createQuery(
-                        "FROM AnnotationDocument WHERE document = :document AND "
-                                + "project = :project", AnnotationDocument.class)
-                .setParameter("document", aDocument).setParameter("project", aProject)
+                        "FROM AnnotationDocument WHERE document = :document", AnnotationDocument.class)
+                .setParameter("document", aDocument)
                 .getResultList();
         for (AnnotationDocument annotationDocument : annotationDocuments) {
             if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
@@ -794,16 +793,15 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public boolean isAnnotationFinished(SourceDocument aDocument, Project aProject, User aUser)
+    public boolean isAnnotationFinished(SourceDocument aDocument, User aUser)
     {
         try {
-
             AnnotationDocument annotationDocument = entityManager
                     .createQuery(
                             "FROM AnnotationDocument WHERE document = :document AND "
-                                    + "project = :project AND user =:user",
+                                    + "user =:user",
                             AnnotationDocument.class).setParameter("document", aDocument)
-                    .setParameter("project", aProject).setParameter("user", aUser.getUsername())
+                    .setParameter("user", aUser.getUsername())
                     .getSingleResult();
             if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
                 return true;

@@ -478,7 +478,7 @@ public class MonitoringPage
         if (aProject != null) {
             for (User user : projectRepository.listProjectUsersWithPermissions(aProject)) {
                 for (SourceDocument document : projectRepository.listSourceDocuments(aProject)) {
-                    if (projectRepository.isAnnotationFinished(document, aProject, user)) {
+                    if (projectRepository.isAnnotationFinished(document, user)) {
                         if (annotatorsProgress.get(user.getUsername()) == null) {
                             annotatorsProgress.put(user.getUsername(), 1);
                         }
@@ -506,7 +506,7 @@ public class MonitoringPage
                 int totalDocs = 0;
                 for (SourceDocument document : projectRepository.listSourceDocuments(aProject)) {
                     totalDocs++;
-                    if (projectRepository.isAnnotationFinished(document, aProject, user)) {
+                    if (projectRepository.isAnnotationFinished(document, user)) {
                         finished++;
                     }
                     else if (projectRepository.existsAnnotationDocument(document, user)) {
