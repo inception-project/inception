@@ -113,7 +113,7 @@ public class ProjectDocumentsPanel
                             // if getSourceDocument succeeded, it is a duplication!
                             try {
 
-                                projectRepository.getSourceDocument(fileName, project);
+                                projectRepository.getSourceDocument(project, fileName);
                                 error("Document " + fileName + " already uploaded ! Delete "
                                         + "the document if you want to upload again");
                             }
@@ -191,7 +191,7 @@ public class ProjectDocumentsPanel
                                 .getName();
                         User user = projectRepository.getUser(username);
                         projectRepository.removeSourceDocument(
-                                projectRepository.getSourceDocument(document, project), user);
+                                projectRepository.getSourceDocument(project, document), user);
                     }
                     catch (IOException e) {
                         error("Error while removing a document document "

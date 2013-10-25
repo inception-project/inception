@@ -102,7 +102,7 @@ public class DocumentStatusColumnMetaData
         }
         else if (value.substring(0, value.indexOf(":")).equals(CurationPanel.CURATION_USER)) {
             SourceDocument document = projectRepositoryService.getSourceDocument(
-                    value.substring(value.indexOf(":") + 1), project);
+                    project, value.substring(value.indexOf(":") + 1));
             SourceDocumentState state = document.getState();
             String iconNameForState = SourceDocumentState.NEW.toString();
             // If state is annotation finished or annotation in progress, curation is not yet
@@ -130,7 +130,7 @@ public class DocumentStatusColumnMetaData
                 protected void onEvent(AjaxRequestTarget aTarget)
                 {
                     SourceDocument document = projectRepositoryService.getSourceDocument(
-                            value.substring(value.indexOf(":") + 1), project);
+                            project, value.substring(value.indexOf(":") + 1));
                     String username = SecurityContextHolder.getContext().getAuthentication()
                             .getName();
                     User user = projectRepositoryService.getUser(username);
@@ -168,7 +168,7 @@ public class DocumentStatusColumnMetaData
         }
         else {
             SourceDocument document = projectRepositoryService.getSourceDocument(
-                    value.substring(value.indexOf(":") + 1), project);
+                    project, value.substring(value.indexOf(":") + 1));
             User user = projectRepositoryService.getUser(value.substring(0, value.indexOf(":")));
 
             AnnotationDocumentState state;
@@ -200,7 +200,7 @@ public class DocumentStatusColumnMetaData
                 protected void onEvent(AjaxRequestTarget aTarget)
                 {
                     SourceDocument document = projectRepositoryService.getSourceDocument(
-                            value.substring(value.indexOf(":") + 1), project);
+                            project, value.substring(value.indexOf(":") + 1));
                     User user = projectRepositoryService.getUser(value.substring(0,
                             value.indexOf(":")));
 

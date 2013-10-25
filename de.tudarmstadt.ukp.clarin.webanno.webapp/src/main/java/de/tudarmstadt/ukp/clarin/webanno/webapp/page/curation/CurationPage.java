@@ -575,9 +575,9 @@ public class CurationPage extends SettingsPageBase {
 							if (repository
 									.getSourceDocument(
 											bratAnnotatorModel.getDocument()
-													.getName(),
+													.getProject(),
 											bratAnnotatorModel.getDocument()
-													.getProject())
+													.getName())
 									.getState()
 									.equals(SourceDocumentState.CURATION_FINISHED)) {
 								return "images/cancel.png";
@@ -612,8 +612,8 @@ public class CurationPage extends SettingsPageBase {
 			public void onClick(AjaxRequestTarget target) {
 				if (repository
 						.getSourceDocument(
-								bratAnnotatorModel.getDocument().getName(),
-								bratAnnotatorModel.getDocument().getProject())
+								bratAnnotatorModel.getDocument().getProject(),
+								bratAnnotatorModel.getDocument().getName())
 						.getState()
 						.equals(SourceDocumentState.CURATION_FINISHED)) {
 					target.appendJavaScript("alert('Document already closed!')");

@@ -578,7 +578,7 @@ public class ApplicationUtils
             annotationDocument.setUser(importedAnnotationDocument.getUser());
             annotationDocument.setTimestamp(importedAnnotationDocument.getTimestamp());
             annotationDocument.setDocument(aRepository.getSourceDocument(
-                    importedAnnotationDocument.getName(), aImportedProject));
+                    aImportedProject, importedAnnotationDocument.getName()));
             aRepository.createAnnotationDocument(annotationDocument);
         }
     }
@@ -609,7 +609,7 @@ public class ApplicationUtils
             if (entry.toString().startsWith(SOURCE)) {
                 String fileName = entry.toString().replace(SOURCE, "").replace("/", "");
                 de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument = aRepository
-                        .getSourceDocument(fileName, aProject);
+                        .getSourceDocument(aProject, fileName);
                 File sourceFilePath = aRepository.exportSourceDocument(sourceDocument, aProject);
                 FileUtils.copyInputStreamToFile(zip.getInputStream(entry), sourceFilePath);
             }
@@ -631,7 +631,7 @@ public class ApplicationUtils
                 // name of the annotation document
                 fileName = fileName.replace(FilenameUtils.getName(fileName), "").replace("/", "");
                 de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument = aRepository
-                        .getSourceDocument(fileName, aProject);
+                        .getSourceDocument(aProject, fileName);
                 File annotationFilePath = aRepository.exportAnnotationDocument(sourceDocument,
                         aProject, username);
 
@@ -655,7 +655,7 @@ public class ApplicationUtils
                 // name of the annotation document
                 fileName = fileName.replace(FilenameUtils.getName(fileName), "").replace("/", "");
                 de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument = aRepository
-                        .getSourceDocument(fileName, aProject);
+                        .getSourceDocument(aProject, fileName);
                 File annotationFilePath = aRepository.exportAnnotationDocument(sourceDocument,
                         aProject, username);
 

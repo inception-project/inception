@@ -754,8 +754,8 @@ public class AnnotationPage
     boolean isDocumentOpenedFirstTime(String aCollection, String adocumentName)
     {
         bratAnnotatorModel.setProject(repository.getProject(aCollection.replace("/", "")));
-        bratAnnotatorModel.setDocument(repository.getSourceDocument(adocumentName,
-                bratAnnotatorModel.getProject()));
+        bratAnnotatorModel.setDocument(repository.getSourceDocument(bratAnnotatorModel.getProject(),
+                adocumentName));
 
         try {
             repository.getAnnotationDocument(bratAnnotatorModel.getDocument(),

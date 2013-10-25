@@ -735,7 +735,7 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public SourceDocument getSourceDocument(String aDocumentName, Project aProject)
+    public SourceDocument getSourceDocument(Project aProject, String aDocumentName)
     {
 
         return entityManager
