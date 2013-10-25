@@ -123,7 +123,7 @@ public class ArcAdapter
      *            Data model for brat annotations
      */
     @Override
-    public void renderAnnotation(JCas aJcas, GetDocumentResponse aResponse,
+    public void render(JCas aJcas, GetDocumentResponse aResponse,
             BratAnnotatorModel aBratAnnotatorModel)
     {
         // The first sentence address in the display window!

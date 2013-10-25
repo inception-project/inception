@@ -35,7 +35,7 @@ public interface TypeAdapter
      * @param aBratAnnotatorModel
      *            Data model for brat annotations
      */
-    void renderAnnotation(JCas aJcas, GetDocumentResponse aResponse, BratAnnotatorModel aBratAnnotatorModel);
+    void render(JCas aJcas, GetDocumentResponse aResponse, BratAnnotatorModel aBratAnnotatorModel);
 
     /**
      * @return The feature of an UIMA annotation containing the label to be displayed in the UI.

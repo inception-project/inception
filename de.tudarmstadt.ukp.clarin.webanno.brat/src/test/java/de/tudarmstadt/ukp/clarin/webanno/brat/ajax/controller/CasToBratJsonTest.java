@@ -239,17 +239,17 @@ public class CasToBratJsonTest extends TestCase {
 
 		  SpanAdapter.renderTokenAndSentence(jCas, response, bratannotatorModel);
 
-		SpanAdapter.getPosAdapter().renderAnnotation(jCas, response, bratannotatorModel);
-		ChainAdapter.getCoreferenceLinkAdapter().renderAnnotation(jCas, response,
+		SpanAdapter.getPosAdapter().render(jCas, response, bratannotatorModel);
+		ChainAdapter.getCoreferenceLinkAdapter().render(jCas, response,
 				bratannotatorModel);
 
 		SpanAdapter.getLemmaAdapter()
-				.renderAnnotation(jCas, response, bratannotatorModel);
-		SpanAdapter.getNamedEntityAdapter().renderAnnotation(jCas, response,
+				.render(jCas, response, bratannotatorModel);
+		SpanAdapter.getNamedEntityAdapter().render(jCas, response,
 				bratannotatorModel);
-		ArcAdapter.getDependencyAdapter().renderAnnotation(jCas, response,
+		ArcAdapter.getDependencyAdapter().render(jCas, response,
 				bratannotatorModel);
-		ChainAdapter.getCoreferenceChainAdapter().renderAnnotation(jCas, response,
+		ChainAdapter.getCoreferenceChainAdapter().render(jCas, response,
 				bratannotatorModel);
 
 		ApplicationUtils.generateJson(response, new File(jsonFilePath));

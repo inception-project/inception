@@ -132,7 +132,7 @@ public class SpanAdapter
      *            Data model for brat annotations
      */
     @Override
-    public void renderAnnotation(JCas aJcas, GetDocumentResponse aResponse,
+    public void render(JCas aJcas, GetDocumentResponse aResponse,
             BratAnnotatorModel aBratAnnotatorModel)
     {
 

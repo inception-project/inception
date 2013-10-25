@@ -493,24 +493,24 @@ public class BratAjaxCasController
        SpanAdapter.renderTokenAndSentence(aJCas, aResponse, aBratAnnotatorModel);
 
         if (annotationLayers.contains(AnnotationTypeConstant.POS)) {
-            SpanAdapter.getPosAdapter().renderAnnotation(aJCas, aResponse, aBratAnnotatorModel);
+            SpanAdapter.getPosAdapter().render(aJCas, aResponse, aBratAnnotatorModel);
         }
         if (annotationLayers.contains(AnnotationTypeConstant.COREFRELTYPE)) {
-            ChainAdapter.getCoreferenceLinkAdapter().renderAnnotation(aJCas, aResponse, aBratAnnotatorModel);
+            ChainAdapter.getCoreferenceLinkAdapter().render(aJCas, aResponse, aBratAnnotatorModel);
         }
         if (aBratAnnotatorModel.isDisplayLemmaSelected()) {
-            SpanAdapter.getLemmaAdapter().renderAnnotation(aJCas, aResponse, aBratAnnotatorModel);
+            SpanAdapter.getLemmaAdapter().render(aJCas, aResponse, aBratAnnotatorModel);
         }
         if (annotationLayers.contains(AnnotationTypeConstant.NAMEDENTITY)) {
-            SpanAdapter.getNamedEntityAdapter().renderAnnotation(aJCas, aResponse, aBratAnnotatorModel);
+            SpanAdapter.getNamedEntityAdapter().render(aJCas, aResponse, aBratAnnotatorModel);
         }
         if (annotationLayers.contains(AnnotationTypeConstant.DEPENDENCY)
                 && annotationLayers.contains(AnnotationTypeConstant.POS)) {
-            ArcAdapter.getDependencyAdapter().renderAnnotation(aJCas, aResponse, aBratAnnotatorModel);
+            ArcAdapter.getDependencyAdapter().render(aJCas, aResponse, aBratAnnotatorModel);
         }
         if (annotationLayers.contains(AnnotationTypeConstant.COREFERENCE)
                 && annotationLayers.contains(AnnotationTypeConstant.COREFRELTYPE)) {
-            ChainAdapter.getCoreferenceChainAdapter().renderAnnotation(aJCas, aResponse, aBratAnnotatorModel);
+            ChainAdapter.getCoreferenceChainAdapter().render(aJCas, aResponse, aBratAnnotatorModel);
         }
     }
 
