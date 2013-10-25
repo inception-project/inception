@@ -59,11 +59,13 @@ public interface TypeAdapter
 //     */
 //    void add(String aLabelValue, JCas aJcas, int aAnnotationOffsetStart, int aAnnotationOffsetEnd);
 
-    // /**
-    // * Delete arc annotation from CAS
-    // *
-    // * @param aJCas
-    // * @param aId
-    // */
-    // void deleteFromCas(BratAnnotatorUIData aUIData, BratAnnotatorModel aBratAnnotatorModel);
+    /**
+     * Delete a annotation from CAS.
+     *
+     * @param aJCas
+     *            the CAS object
+     * @param aId
+     *            the low-level address of the span annotation.
+     */
+    public void delete(JCas aJCas, int aAddress);
 }

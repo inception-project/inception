@@ -282,7 +282,7 @@ public class SpanAnnotationModalWindowPage
                             aTarget.appendJavaScript("alert('POS annotations can\\'t be deleted!')");
                         }
                         else {
-                            controller.deleteSpanFromCas(selectedSpanType, jCas, selectedSpanId);
+                            controller.deleteAnnotation(selectedSpanType, jCas, selectedSpanId);
                             controller.createAnnotationDocumentContent(
                                     bratAnnotatorModel.getMode(), bratAnnotatorModel.getDocument(),
                                     bratAnnotatorModel.getUser(), jCas);

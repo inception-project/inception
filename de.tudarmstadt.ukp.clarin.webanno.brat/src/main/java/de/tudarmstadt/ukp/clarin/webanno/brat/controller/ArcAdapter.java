@@ -282,12 +282,7 @@ public class ArcAdapter
         }
     }
 
-    /**
-     * Delete arc annotation from CAS
-     *
-     * @param aJCas
-     * @param aId
-     */
+    @Override
     public void delete(JCas aJCas, int aAddress)
     {
         FeatureStructure fs = (FeatureStructure) BratAjaxCasUtil.selectByAddr(aJCas,

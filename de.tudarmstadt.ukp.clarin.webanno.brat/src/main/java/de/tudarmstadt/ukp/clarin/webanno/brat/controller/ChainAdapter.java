@@ -689,9 +689,7 @@ public class ChainAdapter
         }
     }
 
-    /**
-     * Remove an arc from a {@link CoreferenceChain}
-     */
+    @Override
     public void delete(JCas aJCas, int aAddress)
     {
         if (isChain) {

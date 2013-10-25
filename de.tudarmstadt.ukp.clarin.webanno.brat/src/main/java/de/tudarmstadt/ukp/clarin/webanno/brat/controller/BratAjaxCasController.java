@@ -405,7 +405,7 @@ public class BratAjaxCasController
      * @param aId
      *            the CAS address of the annotation
      */
-    public void deleteSpanFromCas(String aQualifiedLabel, JCas aJcas, int aAddress)
+    public void deleteAnnotation(String aQualifiedLabel, JCas aJcas, int aAddress)
     {
         String labelPrefix = BratAjaxCasUtil.getLabelPrefix(aQualifiedLabel);
 
@@ -414,6 +414,12 @@ public class BratAjaxCasController
         }
         else if (labelPrefix.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
             ChainAdapter.getCoreferenceLinkAdapter().delete(aJcas, aAddress);
+        }
+        else if (labelPrefix.equals(AnnotationTypeConstant.POS_PREFIX)) {
+            ArcAdapter.getDependencyAdapter().delete(aJcas, aAddress);
+        }
+        else if (labelPrefix.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
+            ChainAdapter.getCoreferenceChainAdapter().delete(aJcas, aAddress);
         }
     }
 
@@ -429,13 +435,7 @@ public class BratAjaxCasController
 
     public void delteArcFromCas(String aQualifiedLabel, JCas aJCas, int aAddress)
     {
-        String labelPrefix = BratAjaxCasUtil.getLabelPrefix(aQualifiedLabel);
-        if (labelPrefix.equals(AnnotationTypeConstant.POS_PREFIX)) {
-            ArcAdapter.getDependencyAdapter().delete(aJCas,aAddress);
-        }
-        else if (labelPrefix.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
-            ChainAdapter.getCoreferenceChainAdapter().delete(aJCas, aAddress);
-        }
+        deleteAnnotation(aQualifiedLabel, aJCas, aAddress);
     }
 
     /**

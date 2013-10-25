@@ -199,7 +199,7 @@ public class SpanAdapter
     public void add(JCas aJcas, int aBegin, int aEnd, String aLabelValue)
     {
         Map<Integer, Integer> offsets = ApplicationUtils.offsets(aJcas);
-
+        
         if (singleTokenBehavior) {
             Map<Integer, Integer> splitedTokens = ApplicationUtils.getSplitedTokens(offsets,
                     aBegin, aEnd);
@@ -218,7 +218,6 @@ public class SpanAdapter
      */
     private void updateCas(CAS aCas, int aBegin, int aEnd, String aValue)
     {
-
         boolean duplicate = false;
         Type type = CasUtil.getType(aCas, annotationTypeName);
         Feature feature = type.getFeatureByBaseName(labelFeatureName);
@@ -245,14 +244,7 @@ public class SpanAdapter
         }
     }
 
-    /**
-     * Delete a span annotation from CAS
-     *
-     * @param aJCas
-     *            the CAS object
-     * @param aId
-     *            the low-level address of the span annotation.
-     */
+    @Override
     public void delete(JCas aJCas, int aAddress)
     {
         FeatureStructure fs = (FeatureStructure) BratAjaxCasUtil.selectByAddr(aJCas,
