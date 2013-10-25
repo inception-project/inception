@@ -2,13 +2,13 @@
  * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -44,7 +44,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.CasToBratJson;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
@@ -62,16 +61,16 @@ import eu.clarin.weblicht.wlfxb.tc.xb.TextCorpusLayerTag;
 /**
  * Test case for generating Brat Json data for getcollection and getcollection
  * actions
- * 
+ *
  * @author Seid M. Yimam
- * 
+ *
  */
 
 public class CasToBratJsonTest extends TestCase {
 	/*
 	 * @Resource(name = "annotationService") private AnnotationService
 	 * annotationService;
-	 * 
+	 *
 	 * @Resource(name = "jsonConverter") private
 	 * MappingJacksonHttpMessageConverter jsonConverter;
 	 */
@@ -80,7 +79,7 @@ public class CasToBratJsonTest extends TestCase {
 
 	/**
 	 * generate BRAT JSON for the collection informations
-	 * 
+	 *
 	 * @throws IOException
 	 */
 	@Test
@@ -158,7 +157,7 @@ public class CasToBratJsonTest extends TestCase {
 
 	/**
 	 * generate brat JSON data for the document
-	 * 
+	 *
 	 * @throws IOException
 	 * @throws WLFormatException
 	 * @throws UIMAException
@@ -215,8 +214,6 @@ public class CasToBratJsonTest extends TestCase {
 		tagSetNames
 				.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.COREFRELTYPE);
 
-		CasToBratJson casToBratJson = new CasToBratJson();
-
 		BratAnnotatorModel bratannotatorModel = new BratAnnotatorModel();
 		bratannotatorModel.setWindowSize(10);
 		bratannotatorModel.setSentenceAddress(BratAjaxCasUtil
@@ -226,7 +223,7 @@ public class CasToBratJsonTest extends TestCase {
 
         Sentence sentence = BratAjaxCasUtil.selectByAddr(jCas, Sentence.class,
                 bratannotatorModel.getSentenceAddress());
-		
+
 		bratannotatorModel.setSentenceBeginOffset(sentence.getBegin());
 		bratannotatorModel.setSentenceEndOffset(sentence.getEnd());
 
@@ -240,20 +237,19 @@ public class CasToBratJsonTest extends TestCase {
 		GetDocumentResponse response = new GetDocumentResponse();
 		response.setText(jCas.getDocumentText());
 
-		casToBratJson.addTokenToResponse(jCas, response, bratannotatorModel);
-		casToBratJson.addSentenceToResponse(jCas, response, bratannotatorModel);
+		  SpanAdapter.renderTokenAndSentence(jCas, response, bratannotatorModel);
 
-		SpanAdapter.getPosAdapter().render(jCas, response, bratannotatorModel);
-		ChainAdapter.getCoreferenceLinkAdapter().render(jCas, response,
+		SpanAdapter.getPosAdapter().renderAnnotation(jCas, response, bratannotatorModel);
+		ChainAdapter.getCoreferenceLinkAdapter().renderAnnotation(jCas, response,
 				bratannotatorModel);
 
 		SpanAdapter.getLemmaAdapter()
-				.render(jCas, response, bratannotatorModel);
-		SpanAdapter.getNamedEntityAdapter().render(jCas, response,
+				.renderAnnotation(jCas, response, bratannotatorModel);
+		SpanAdapter.getNamedEntityAdapter().renderAnnotation(jCas, response,
 				bratannotatorModel);
-		ArcAdapter.getDependencyAdapter().render(jCas, response,
+		ArcAdapter.getDependencyAdapter().renderAnnotation(jCas, response,
 				bratannotatorModel);
-		ChainAdapter.getCoreferenceChainAdapter().render(jCas, response,
+		ChainAdapter.getCoreferenceChainAdapter().renderAnnotation(jCas, response,
 				bratannotatorModel);
 
 		ApplicationUtils.generateJson(response, new File(jsonFilePath));

@@ -18,6 +18,9 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
 import static java.util.Arrays.asList;
+import static org.uimafit.util.CasUtil.getType;
+import static org.uimafit.util.CasUtil.selectCovered;
+import static org.uimafit.util.JCasUtil.selectCovered;
 
 import java.util.Map;
 
@@ -129,61 +132,32 @@ public class SpanAdapter
      *            Data model for brat annotations
      */
     @Override
-    public void render(JCas aJcas, GetDocumentResponse aResponse,
+    public void renderAnnotation(JCas aJcas, GetDocumentResponse aResponse,
             BratAnnotatorModel aBratAnnotatorModel)
     {
+
         // The first sentence address in the display window!
         Sentence firstSentence = BratAjaxCasUtil.selectSentenceAt(aJcas,
                 aBratAnnotatorModel.getSentenceBeginOffset(),
                 aBratAnnotatorModel.getSentenceEndOffset());
-        int i = firstSentence.getAddress();
 
-        int lastSentenceAddress;
-        if(aBratAnnotatorModel.getMode().equals(Mode.CURATION)){
-            lastSentenceAddress = aBratAnnotatorModel.getLastSentenceAddress();
+        int lastAddressInPage = BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(aJcas,
+                firstSentence.getAddress(), aBratAnnotatorModel.getWindowSize());
+
+        // the last sentence address in the display window
+        Sentence lastSentenceInPage;
+        if (aBratAnnotatorModel.getMode().equals(Mode.CURATION)) {
+            lastSentenceInPage = firstSentence;
         }
-        else{
-            lastSentenceAddress = BratAjaxCasUtil.getLastSentenceAddress(aJcas);
+        else {
+            lastSentenceInPage = (Sentence) BratAjaxCasUtil.selectByAddr(aJcas,
+                    FeatureStructure.class, lastAddressInPage);
         }
 
-        // Loop based on window size
-        // j, controlling variable to display sentences based on window size
-        // i, address of each sentences
-        int j = 1;
-        while (j <= aBratAnnotatorModel.getWindowSize()) {
-            if (i >= lastSentenceAddress) {
-                Sentence sentence = (Sentence) BratAjaxCasUtil.selectByAddr(aJcas,
-                        FeatureStructure.class, i);
-                renderSentence(sentence, aResponse, firstSentence.getBegin());
-                break;
-            }
-            else {
-                Sentence sentence = (Sentence) BratAjaxCasUtil.selectByAddr(aJcas,
-                        FeatureStructure.class, i);
-                renderSentence(sentence, aResponse, firstSentence.getBegin());
-                i = BratAjaxCasUtil.getFollowingSentenceAddress(aJcas, i);
-            }
-            j++;
-        }
-    }
-
-    /**
-     * a helper method to the {@link #render(JCas, GetDocumentResponse, BratAnnotatorModel)}
-     *
-     * @param aSentence
-     *            The current sentence in the CAS annotation, with annotations
-     * @param aResponse
-     *            The {@link GetDocumentResponse} object with the annotation from CAS annotation
-     * @param aFirstSentenceOffset
-     *            The first sentence offset. The actual offset in the brat visualization window will
-     *            be <b>X-Y</b>, where <b>X</b> is the offset of the annotated span and <b>Y</b> is
-     *            aFirstSentenceOffset
-     */
-    private void renderSentence(Sentence aSentence, GetDocumentResponse aResponse,
-            int aFirstSentenceOffset)
-    {
-        Type type = CasUtil.getType(aSentence.getCAS(), annotationTypeName);
-        for (AnnotationFS fs : CasUtil.selectCovered(type, aSentence)) {
+        Type type = getType(aJcas.getCas(), annotationTypeName);
+        int aFirstSentenceOffset = firstSentence.getBegin();
+        for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, firstSentence.getBegin(),
+                lastSentenceInPage.getEnd())) {
             Feature labelFeature = fs.getType().getFeatureByBaseName(labelFeatureName);
             aResponse.addEntity(new Entity(((FeatureStructureImpl) fs).getAddress(), labelPrefix
                     + fs.getStringValue(labelFeature), asList(new Offsets(fs.getBegin()
@@ -191,8 +165,50 @@ public class SpanAdapter
         }
     }
 
+    public static void renderTokenAndSentence(JCas aJcas, GetDocumentResponse aResponse,
+            BratAnnotatorModel aBratAnnotatorModel){
+
+        // The first sentence address in the display window!
+        Sentence firstSentence = BratAjaxCasUtil.selectSentenceAt(aJcas,
+                aBratAnnotatorModel.getSentenceBeginOffset(),
+                aBratAnnotatorModel.getSentenceEndOffset());
+
+        int lastAddressInPage = BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(aJcas,
+                firstSentence.getAddress(), aBratAnnotatorModel.getWindowSize());
+
+        // the last sentence address in the display window
+        Sentence lastSentenceInPage;
+        if (aBratAnnotatorModel.getMode().equals(Mode.CURATION)) {
+            lastSentenceInPage = firstSentence;
+        }
+        else {
+            lastSentenceInPage = (Sentence) BratAjaxCasUtil.selectByAddr(aJcas,
+                    FeatureStructure.class, lastAddressInPage);
+        }
+
+        int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(aJcas, firstSentence.getAddress());
+        aResponse.setSentenceNumberOffset(sentenceNumber);
+
+        int aFirstSentenceOffset = firstSentence.getBegin();
+
+        // Render token + texts
+        for (AnnotationFS fs : selectCovered(aJcas, Token.class, firstSentence.getBegin(),
+                lastSentenceInPage.getEnd())) {
+            aResponse.addToken(fs.getBegin() - aFirstSentenceOffset, fs.getEnd()- aFirstSentenceOffset);
+        }
+        aResponse.setText(aJcas.getDocumentText().substring(aFirstSentenceOffset, lastSentenceInPage.getEnd()));
+
+        // Render Sentence
+        for (AnnotationFS fs : selectCovered(aJcas, Sentence.class, firstSentence.getBegin(),
+                lastSentenceInPage.getEnd())) {
+            aResponse.addSentence(fs.getBegin() - aFirstSentenceOffset, fs.getEnd()- aFirstSentenceOffset);
+        }
+
+    }
+
     /**
      * Update the CAS with new/modification of span annotations from brat
+     *
      * @param aLabelValue
      *            the value of the annotation for the span
      */
@@ -295,19 +311,24 @@ public class SpanAdapter
 
     /**
      * Check if the an annotation is in the same sentence
-     * @param The {@link JCas}
-     * @param aBegin begin offset of the span annotation
-     * @param aEnd End offset of the span annotation
+     *
+     * @param The
+     *            {@link JCas}
+     * @param aBegin
+     *            begin offset of the span annotation
+     * @param aEnd
+     *            End offset of the span annotation
      * @return
      */
     public static boolean isAllowed(JCas aJCas, int aBegin, int aEnd)
     {
-     if (BratAjaxCasUtil.isSameSentence(aJCas, aBegin, aEnd)) {
-              return true;
-          }
-          return false;
+        if (BratAjaxCasUtil.isSameSentence(aJCas, aBegin, aEnd)) {
+            return true;
+        }
+        return false;
 
-      }
+    }
+
     @Override
     public String getLabelFeatureName()
     {

@@ -30,6 +30,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.uima.UIMAException;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.cas.CAS;
@@ -59,9 +60,9 @@ import de.tudarmstadt.ukp.dkpro.core.tokit.BreakIteratorSegmenter;
 /**
  * Contain Methods for updating CAS Objects directed from brat UI, different utility methods to
  * process the CAS such getting the sentence address, determine page numbers,...
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 public class BratAjaxCasUtil
 {
@@ -69,7 +70,7 @@ public class BratAjaxCasUtil
     /**
      * Annotation a and annotation b are the same if the have the same address ( used for
      * {@link CoreferenceChain})
-     * 
+     *
      * @param a
      * @param b
      * @return
@@ -81,7 +82,7 @@ public class BratAjaxCasUtil
 
     /**
      * Check if the start/end offsets of an annotation belongs to the same sentence.
-     * 
+     *
      * @return
      */
     public static boolean isSameSentence(JCas aJcas, int aStartOffset, int aEndOffset)
@@ -94,11 +95,11 @@ public class BratAjaxCasUtil
         }
         return false;
     }
-    
+
 //    public static boolean isSame(Annotation a, Annotation b)
 //    {
 //        return a.getBegin() == b.getBegin() && a.getEnd() == b.getEnd();
-//    }     
+//    }
 
 //    public static boolean isAt(Annotation a, int begin, int end)
 //    {
@@ -108,19 +109,19 @@ public class BratAjaxCasUtil
     /*
      * public static void deleteCoreference(BratAnnotatorModel aBratAnnotatorModel, String aType,
      * BratAnnotatorUIData aUIData) {
-     * 
+     *
      * CoreferenceChain newChain = new CoreferenceChain(aUIData.getjCas()); boolean found = false;
-     * 
+     *
      * CoreferenceLink originCorefType = selectAnnotationByAddress(aUIData.getjCas(),
      * CoreferenceLink.class, aUIData.getOrigin()); for (CoreferenceChain chain :
      * select(aUIData.getjCas(), CoreferenceChain.class)) { CoreferenceLink link = chain.getFirst();
-     * 
+     *
      * if (found) { break; } while (link != null && !found) { if (link.getBegin() ==
      * originCorefType.getBegin()) { newChain.setFirst(link.getNext()); link.setNext(null); found =
      * true; break; } link = link.getNext(); } } newChain.addToIndexes();
-     * 
+     *
      * // removeInvalidChain(aUIData.getjCas());
-     * 
+     *
      * }
      */
 
@@ -165,7 +166,7 @@ public class BratAjaxCasUtil
         }
         return null;
     }
-    
+
     /**
      * Get the sentence for this CAS based on the begin and end offsets. This is basically
      * used to transform sentence address in one CAS to other sentence address for different CAS
@@ -177,7 +178,7 @@ public class BratAjaxCasUtil
 
 //    /**
 //     * stores, for every tokens, the start and end positions, offsets
-//     * 
+//     *
 //     * @param aJcas
 //     * @return map of tokens begin and end positions
 //     */
@@ -192,7 +193,7 @@ public class BratAjaxCasUtil
 //
 //    /**
 //     * delete a span annotation from the response
-//     * 
+//     *
 //     * @param aResponse
 //     * @param id
 //     */
@@ -248,10 +249,10 @@ public class BratAjaxCasUtil
 //        }
 //        return tokens;
 //    }
-//    
+//
 //    /**
 //     * Get the beginning offset of an Annotation
-//     * 
+//     *
 //     * @param aJCas
 //     *            The CAS object
 //     * @param aAddress
@@ -266,7 +267,7 @@ public class BratAjaxCasUtil
 //
 //    /**
 //     * Get end offset of an annotation
-//     * 
+//     *
 //     * @param aJCas
 //     *            The CAS object
 //     * @param aRef
@@ -281,7 +282,7 @@ public class BratAjaxCasUtil
     /**
      * Get the internal address of the first sentence annotation from JCAS. This will be used as a
      * reference for moving forward/backward sentences positions
-     * 
+     *
      * @param aJcas
      *            The CAS object assumed to contains some sentence annotations
      * @return the sentence number or -1 if aJcas don't have sentence annotation
@@ -309,7 +310,7 @@ public class BratAjaxCasUtil
 
     /**
      * Get the last sentence CAS address in the current display window
-     * 
+     *
      * @param aJcas
      * @param aFirstSentenceAddress
      *            the CAS address of the first sentence in the dispaly window
@@ -322,9 +323,9 @@ public class BratAjaxCasUtil
     {
         int i = aFirstSentenceAddress;
         int lastSentenceAddress = getLastSentenceAddress(aJcas);
-        int count = 0;
+        int count = 1;
 
-        while (count <= aWindowSize) {
+        while (count < aWindowSize) {
             i = getFollowingSentenceAddress(aJcas, i);
             if (i >= lastSentenceAddress) {
                 return i;
@@ -336,7 +337,7 @@ public class BratAjaxCasUtil
 
     /**
      * Get the beginning address of a sentence to be displayed in BRAT.
-     * 
+     *
      * @param aJcas
      *            the CAS object
      * @param aSentenceAddress
@@ -379,7 +380,7 @@ public class BratAjaxCasUtil
 
     /**
      * Move to the next page of size display window.
-     * 
+     *
      * @param aCurrenSentenceBeginAddress
      *            The beginning sentence address of the current window.
      * @return the Beginning address of the next window
@@ -415,7 +416,7 @@ public class BratAjaxCasUtil
 
     /**
      * Return the beginning position of the Sentence for the previous display window
-     * 
+     *
      * @param aCurrenSentenceBeginAddress
      *            The beginning address of the current sentence of the display window
      * @return
@@ -445,7 +446,7 @@ public class BratAjaxCasUtil
 
     /**
      * Get the sentence address of the next sentence
-     * 
+     *
      * @param aJcas
      *            The CAS object
      * @param aRef
@@ -501,7 +502,7 @@ public class BratAjaxCasUtil
 
     /**
      * Get the ordinal sentence number for this sentence address
-     * 
+     *
      * @return
      */
     public static int getSentenceNumber(JCas aJcas, int aSentenceAddress)
@@ -616,7 +617,7 @@ public class BratAjaxCasUtil
 //    /**
 //     * Get the annotation UIMA type, using the request sent from brat. If the request have type
 //     * POS_NN, the the annotation type is POS
-//     * 
+//     *
 //     * @param aType
 //     *            the UIMA type of the annotation
 //     */
@@ -638,7 +639,7 @@ public class BratAjaxCasUtil
     /**
      * Get label of annotation (arc or span value) If the request have type POS_NN, the the actual
      * annotation value is NN
-     * 
+     *
      * @param aQualifiedLabel
      *            the full label sent from brat annotation as request while annotating
      */
@@ -659,7 +660,7 @@ public class BratAjaxCasUtil
     /**
      * Get the annotation type, using the request sent from brat. If the request have type POS_NN,
      * the the annotation type is POS
-     * 
+     *
      * @param aType
      *            the type sent from brat annotation as request while annotating
      */

@@ -2,13 +2,13 @@
  * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,7 +33,6 @@ import org.springframework.http.converter.json.MappingJacksonHttpMessageConverte
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.CasToBratJson;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
@@ -146,20 +145,18 @@ public class BratAnnotationDocumentVisualizer
         // SourceDocument document = (SourceDocument) session.getAttribute("document");
         // int windowSize = (Integer)session.getAttribute("windowSize-" + project.getName()
         // +"-"+document.getName());
-        CasToBratJson casToBratJson = new CasToBratJson();
         // If this Classe is used somewhere, get BratAnnotatorModel populated somewhere
         BratAnnotatorModel bratAnnotatorDataModel = new BratAnnotatorModel();
-        casToBratJson.addTokenToResponse(jCas, response, bratAnnotatorDataModel);
-        casToBratJson.addSentenceToResponse(jCas, response, bratAnnotatorDataModel);
-        // If POS annotation exist in CAS 
-        SpanAdapter.getPosAdapter().render(jCas, response, bratAnnotatorDataModel);
-        ChainAdapter.getCoreferenceLinkAdapter().render(jCas, response, bratAnnotatorDataModel);
-        // If Lemma Layer Exist in CAS 
-        SpanAdapter.getLemmaAdapter().render(jCas, response, bratAnnotatorDataModel);
-        // IF Named Entity layer exist in CAS 
-        SpanAdapter.getNamedEntityAdapter().render(jCas, response, bratAnnotatorDataModel);
-        ArcAdapter.getDependencyAdapter().render(jCas, response, bratAnnotatorDataModel);
-        ChainAdapter.getCoreferenceChainAdapter().render(jCas, response, bratAnnotatorDataModel);
+        SpanAdapter.renderTokenAndSentence(jCas, response, bratAnnotatorDataModel);
+        // If POS annotation exist in CAS
+        SpanAdapter.getPosAdapter().renderAnnotation(jCas, response, bratAnnotatorDataModel);
+        ChainAdapter.getCoreferenceLinkAdapter().renderAnnotation(jCas, response, bratAnnotatorDataModel);
+        // If Lemma Layer Exist in CAS
+        SpanAdapter.getLemmaAdapter().renderAnnotation(jCas, response, bratAnnotatorDataModel);
+        // IF Named Entity layer exist in CAS
+        SpanAdapter.getNamedEntityAdapter().renderAnnotation(jCas, response, bratAnnotatorDataModel);
+        ArcAdapter.getDependencyAdapter().renderAnnotation(jCas, response, bratAnnotatorDataModel);
+        ChainAdapter.getCoreferenceChainAdapter().renderAnnotation(jCas, response, bratAnnotatorDataModel);
 
         // Serialize BRAT object model to JSON
         try {

@@ -153,7 +153,7 @@ public class ChainAdapter
      *            Data model for brat annotations
      */
     @Override
-    public void render(JCas aJcas, GetDocumentResponse aResponse,
+    public void renderAnnotation(JCas aJcas, GetDocumentResponse aResponse,
             BratAnnotatorModel aBratAnnotatorModel)
     {
         // The first sentence address in the display window!
@@ -204,7 +204,7 @@ public class ChainAdapter
     }
 
     /**
-     * a helper method to the {@link #render(JCas, GetDocumentResponse, BratAnnotatorModel)}
+     * a helper method to the {@link #renderAnnotation(JCas, GetDocumentResponse, BratAnnotatorModel)}
      *
      * @param aSentence
      *            The current sentence in the CAS annotation, with annotations

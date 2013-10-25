@@ -490,30 +490,27 @@ public class BratAjaxCasController
                     aBratAnnotatorModel.getProject(), aBratAnnotatorModel.getDocument(),
                     aBratAnnotatorModel.getWindowSize()));
         }
-        CasToBratJson casToBratJson = new CasToBratJson();
-
-        casToBratJson.addTokenToResponse(aJCas, aResponse, aBratAnnotatorModel);
-        casToBratJson.addSentenceToResponse(aJCas, aResponse, aBratAnnotatorModel);
+       SpanAdapter.renderTokenAndSentence(aJCas, aResponse, aBratAnnotatorModel);
 
         if (annotationLayers.contains(AnnotationTypeConstant.POS)) {
-            SpanAdapter.getPosAdapter().render(aJCas, aResponse, aBratAnnotatorModel);
+            SpanAdapter.getPosAdapter().renderAnnotation(aJCas, aResponse, aBratAnnotatorModel);
         }
         if (annotationLayers.contains(AnnotationTypeConstant.COREFRELTYPE)) {
-            ChainAdapter.getCoreferenceLinkAdapter().render(aJCas, aResponse, aBratAnnotatorModel);
+            ChainAdapter.getCoreferenceLinkAdapter().renderAnnotation(aJCas, aResponse, aBratAnnotatorModel);
         }
         if (aBratAnnotatorModel.isDisplayLemmaSelected()) {
-            SpanAdapter.getLemmaAdapter().render(aJCas, aResponse, aBratAnnotatorModel);
+            SpanAdapter.getLemmaAdapter().renderAnnotation(aJCas, aResponse, aBratAnnotatorModel);
         }
         if (annotationLayers.contains(AnnotationTypeConstant.NAMEDENTITY)) {
-            SpanAdapter.getNamedEntityAdapter().render(aJCas, aResponse, aBratAnnotatorModel);
+            SpanAdapter.getNamedEntityAdapter().renderAnnotation(aJCas, aResponse, aBratAnnotatorModel);
         }
         if (annotationLayers.contains(AnnotationTypeConstant.DEPENDENCY)
                 && annotationLayers.contains(AnnotationTypeConstant.POS)) {
-            ArcAdapter.getDependencyAdapter().render(aJCas, aResponse, aBratAnnotatorModel);
+            ArcAdapter.getDependencyAdapter().renderAnnotation(aJCas, aResponse, aBratAnnotatorModel);
         }
         if (annotationLayers.contains(AnnotationTypeConstant.COREFERENCE)
                 && annotationLayers.contains(AnnotationTypeConstant.COREFRELTYPE)) {
-            ChainAdapter.getCoreferenceChainAdapter().render(aJCas, aResponse, aBratAnnotatorModel);
+            ChainAdapter.getCoreferenceChainAdapter().renderAnnotation(aJCas, aResponse, aBratAnnotatorModel);
         }
     }
 
