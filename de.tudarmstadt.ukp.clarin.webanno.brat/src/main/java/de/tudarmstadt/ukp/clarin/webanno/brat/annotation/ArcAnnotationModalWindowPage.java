@@ -55,6 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter.ArcCrossedMu
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter.MultipleSentenceCoveredException;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
@@ -138,7 +139,7 @@ public class ArcAnnotationModalWindowPage
             }
             else {
                 tagSetsModel = new Model<TagSet>(selectedtTagSet);
-                Tag tag = annotationService.getTag(BratAjaxCasUtil.getLabel(selectedArcType),
+                Tag tag = annotationService.getTag(TypeUtil.getLabel(selectedArcType),
                         selectedtTagSet);
                 tagsModel = new Model<Tag>(tag);
             }
@@ -196,7 +197,7 @@ public class ArcAnnotationModalWindowPage
                         else {
                             Tag selectedTag = (Tag) annotationService.getTag(tags.getModelObject(),
                                     selectedtTagSet);
-                            annotationType = BratAjaxCasUtil.getQualifiedLabel(selectedTag);
+                            annotationType = TypeUtil.getQualifiedLabel(selectedTag);
 
                             AnnotationFS originFs = selectByAddr(jCas, originSpanId);
                             AnnotationFS targetFs = selectByAddr(jCas, targetSpanId);
@@ -307,7 +308,7 @@ public class ArcAnnotationModalWindowPage
                         String annotationType = "";
                         Tag selectedTag = (Tag) tagsModel.getObject();
 
-                        annotationType = BratAjaxCasUtil.getQualifiedLabel(selectedTag);
+                        annotationType = TypeUtil.getQualifiedLabel(selectedTag);
 
                         AnnotationFS originFs = selectByAddr(jCas, originSpanId);
                         AnnotationFS targetFs = selectByAddr(jCas, targetSpanId);
@@ -403,7 +404,7 @@ public class ArcAnnotationModalWindowPage
         super(aId);
         this.originSpanType = aOriginSpanType;
 
-        String layerName = BratAjaxCasUtil.getArcLayerName(BratAjaxCasUtil.getLabelPrefix(originSpanType));
+        String layerName = TypeUtil.getArcLayerName(TypeUtil.getLabelPrefix(originSpanType));
         AnnotationType layer = annotationService.getType(layerName, AnnotationTypeConstant.RELATION_TYPE);
         this.selectedtTagSet = annotationService.getTagSet(layer, aBratAnnotatorModel.getProject());
 
@@ -425,7 +426,7 @@ public class ArcAnnotationModalWindowPage
 
         this.originSpanType = aOriginSpanType;
 
-        String layerName = BratAjaxCasUtil.getArcLayerName(BratAjaxCasUtil.getLabelPrefix(originSpanType));
+        String layerName = TypeUtil.getArcLayerName(TypeUtil.getLabelPrefix(originSpanType));
         AnnotationType layer = annotationService.getType(layerName, AnnotationTypeConstant.RELATION_TYPE);
         this.selectedtTagSet = annotationService.getTagSet(layer, aBratAnnotatorModel.getProject());
 

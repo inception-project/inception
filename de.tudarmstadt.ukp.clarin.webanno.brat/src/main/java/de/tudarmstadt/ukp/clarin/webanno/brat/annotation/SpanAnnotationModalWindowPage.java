@@ -59,6 +59,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter.MultipleSentenceCoveredException;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.OffsetsList;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
@@ -126,7 +127,7 @@ public class SpanAnnotationModalWindowPage
 
             if (selectedSpanId != -1) {
                 tagSetsModel = new Model<TagSet>(selectedtTagSet);
-                Tag tag = annotationService.getTag(BratAjaxCasUtil.getLabel(selectedSpanType),
+                Tag tag = annotationService.getTag(TypeUtil.getLabel(selectedSpanType),
                         selectedtTagSet);
 
                 tagsModel = new Model<Tag>(tag);
@@ -227,7 +228,7 @@ public class SpanAnnotationModalWindowPage
                         else {
                             Tag selectedTag = (Tag) annotationService.getTag(tags.getModelObject(),
                                     selectedtTagSet);
-                            annotationType = BratAjaxCasUtil.getQualifiedLabel(selectedTag);
+                            annotationType = TypeUtil.getQualifiedLabel(selectedTag);
 
                             controller.addSpanToCas(jCas, start, end, annotationType, null, null);
                             controller.createAnnotationDocumentContent(
@@ -290,7 +291,7 @@ public class SpanAnnotationModalWindowPage
 
                         Tag selectedTag = (Tag) annotationService.getTag(tags.getModelObject(),
                                 selectedtTagSet);
-                        String annotationType = BratAjaxCasUtil.getQualifiedLabel(selectedTag);
+                        String annotationType = TypeUtil.getQualifiedLabel(selectedTag);
                         if (annotationType.startsWith(AnnotationTypeConstant.POS_PREFIX)) {
                             aTarget.appendJavaScript("alert('POS annotations can\\'t be deleted!')");
                         }
@@ -403,7 +404,7 @@ public class SpanAnnotationModalWindowPage
         this.selectedSpanId = selectedSpanId;
         this.selectedSpanType = aType;
 
-        String layerName = BratAjaxCasUtil.getSpanLayerName(BratAjaxCasUtil.getLabelPrefix(aType));
+        String layerName = TypeUtil.getSpanLayerName(TypeUtil.getLabelPrefix(aType));
 
         AnnotationType layer = this.annotationService.getType(layerName, "span");
 
