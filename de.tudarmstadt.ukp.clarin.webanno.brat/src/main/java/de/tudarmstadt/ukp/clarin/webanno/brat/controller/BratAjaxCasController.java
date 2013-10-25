@@ -29,6 +29,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.codehaus.jackson.JsonParseException;
@@ -68,6 +69,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.*;
 
 /**
  * an Ajax Controller for the BRAT Front End. Most of the actions such as getCollectionInformation ,
@@ -413,46 +415,37 @@ public class BratAjaxCasController
     }
 
     /**
-     * Delete a span annotation from the CAS
+     * Delete an annotation from the CAS.
      *
-     * @param aQualifiedLabel
-     *            The span annotation
      * @param aJcas
      *            The JCAS from which annotation will deleted
-     * @param aId
+     * @param aAddress
      *            the CAS address of the annotation
      */
-    public void deleteAnnotation(String aQualifiedLabel, JCas aJcas, int aAddress)
+    public void deleteAnnotation(JCas aJcas, int aAddress)
     {
-        String labelPrefix = BratAjaxCasUtil.getLabelPrefix(aQualifiedLabel);
-
-        if (labelPrefix.equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)) {
-            SpanAdapter.getNamedEntityAdapter().delete(aJcas, aAddress);
-        }
-        else if (labelPrefix.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
-            ChainAdapter.getCoreferenceLinkAdapter().delete(aJcas, aAddress);
-        }
-        else if (labelPrefix.equals(AnnotationTypeConstant.POS_PREFIX)) {
-            ArcAdapter.getDependencyAdapter().delete(aJcas, aAddress);
-        }
-        else if (labelPrefix.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
-            ChainAdapter.getCoreferenceChainAdapter().delete(aJcas, aAddress);
-        }
+        AnnotationFS fs = selectByAddr(aJcas, aAddress);
+        TypeAdapter adapter = getAdapter(fs.getType());
+        adapter.delete(aJcas, aAddress);
     }
-
-    /**
-     * Delete an arc annotation form
-     *
-     * @param aUIData
-     *            The UI information about the arc to be deleted such as origin and target spans,...
-     * @param aBratAnnotatorModel
-     *            the Brat annotation data model consisting of the source document, project,
-     *            users,...
-     */
-
-    public void delteArcFromCas(String aQualifiedLabel, JCas aJCas, int aAddress)
+    
+    public TypeAdapter getAdapter(Type aType) 
     {
-        deleteAnnotation(aQualifiedLabel, aJCas, aAddress);
+        if (aType.getName().equals(NamedEntity.class.getName())) {
+            return SpanAdapter.getNamedEntityAdapter();
+        }
+        else if (aType.getName().equals(Dependency.class.getName())) {
+            return ArcAdapter.getDependencyAdapter();
+        }
+        else if (aType.getName().equals(CoreferenceChain.class.getName())) {
+            return ChainAdapter.getCoreferenceChainAdapter();
+        }
+        else if (aType.getName().equals(CoreferenceLink.class.getName())) {
+            return ChainAdapter.getCoreferenceLinkAdapter();
+        }
+        else {
+            throw new IllegalArgumentException("No adapter for type [" + aType.getName() + "]");
+        }
     }
 
     /**

@@ -253,7 +253,7 @@ public class ArcAnnotationModalWindowPage
                     try {
                         jCas = getCas(bratAnnotatorModel);
 
-                        controller.deleteAnnotation(selectedArcType, jCas, selectedArcId);
+                        controller.deleteAnnotation(jCas, selectedArcId);
                         controller.createAnnotationDocumentContent(bratAnnotatorModel.getMode(),
                                 bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
                                 jCas);
