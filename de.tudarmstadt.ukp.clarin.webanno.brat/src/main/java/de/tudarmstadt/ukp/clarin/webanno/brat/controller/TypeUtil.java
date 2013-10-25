@@ -95,11 +95,11 @@ public final class TypeUtil
         String type;
         if (Character.isDigit(aQualifiedLabel.charAt(0))) {
             type = aQualifiedLabel
-                    .substring(aQualifiedLabel.indexOf(AnnotationTypeConstant.PREFIX) + 1);
+                    .substring(aQualifiedLabel.indexOf(AnnotationTypeConstant.PREFIX_SEPARATOR) + 1);
         }
         else {
             type = aQualifiedLabel
-                    .substring(aQualifiedLabel.indexOf(AnnotationTypeConstant.PREFIX) + 1);
+                    .substring(aQualifiedLabel.indexOf(AnnotationTypeConstant.PREFIX_SEPARATOR) + 1);
         }
         return type;
     }

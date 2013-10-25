@@ -963,7 +963,7 @@ public class CorrectionPage
         catch (DataRetrievalFailureException e) {
             BratAjaxCasController controller = new BratAjaxCasController(repository,
                     annotationService);
-            jCas = controller.getJCas(bratAnnotatorModel.getDocument(), bratAnnotatorModel
+            jCas = controller.readJCas(bratAnnotatorModel.getDocument(), bratAnnotatorModel
                     .getDocument().getProject(), logedInUser);
             // This is the auto annotation, save it under CURATION_USER
             repository.createCorrectionDocumentContent(jCas, bratAnnotatorModel.getDocument(),
@@ -975,7 +975,7 @@ public class CorrectionPage
         catch (NoResultException e) {
             BratAjaxCasController controller = new BratAjaxCasController(repository,
                     annotationService);
-            jCas = controller.getJCas(bratAnnotatorModel.getDocument(), bratAnnotatorModel
+            jCas = controller.readJCas(bratAnnotatorModel.getDocument(), bratAnnotatorModel
                     .getDocument().getProject(), logedInUser);
             // This is the auto annotation, save it under CURATION_USER
             repository.createCorrectionDocumentContent(jCas, bratAnnotatorModel.getDocument(),
@@ -1028,7 +1028,7 @@ public class CorrectionPage
         throws UIMAException, ClassNotFoundException, IOException
     {
         BratAjaxCasController controller = new BratAjaxCasController(repository, annotationService);
-        JCas jCas = controller.getJCas(bratAnnotatorModel.getDocument(),
+        JCas jCas = controller.readJCas(bratAnnotatorModel.getDocument(),
                 bratAnnotatorModel.getProject(), bratAnnotatorModel.getUser());
 
         final int sentenceAddress = BratAjaxCasUtil.selectSentenceAt(jCas, bratAnnotatorModel.getSentenceBeginOffset(), bratAnnotatorModel.getSentenceEndOffset()).getAddress();

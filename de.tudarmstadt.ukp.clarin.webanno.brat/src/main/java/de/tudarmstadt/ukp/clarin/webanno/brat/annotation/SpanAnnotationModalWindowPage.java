@@ -230,8 +230,8 @@ public class SpanAnnotationModalWindowPage
                                     selectedtTagSet);
                             annotationType = TypeUtil.getQualifiedLabel(selectedTag);
 
-                            controller.addSpanToCas(jCas, start, end, annotationType, null, null);
-                            controller.createAnnotationDocumentContent(
+                            controller.createSpanAnnotation(jCas, start, end, annotationType, null, null);
+                            controller.updateJCas(
                                     bratAnnotatorModel.getMode(), bratAnnotatorModel.getDocument(),
                                     bratAnnotatorModel.getUser(), jCas);
 
@@ -297,7 +297,7 @@ public class SpanAnnotationModalWindowPage
                         }
                         else {
                             controller.deleteAnnotation(jCas, selectedSpanId);
-                            controller.createAnnotationDocumentContent(
+                            controller.updateJCas(
                                     bratAnnotatorModel.getMode(), bratAnnotatorModel.getDocument(),
                                     bratAnnotatorModel.getUser(), jCas);
 
@@ -367,7 +367,7 @@ public class SpanAnnotationModalWindowPage
             BratAjaxCasController controller = new BratAjaxCasController(repository,
                     annotationService);
 
-            return controller.getJCas(aBratAnnotatorModel.getDocument(),
+            return controller.readJCas(aBratAnnotatorModel.getDocument(),
                     aBratAnnotatorModel.getProject(), aBratAnnotatorModel.getUser());
         }
         else {

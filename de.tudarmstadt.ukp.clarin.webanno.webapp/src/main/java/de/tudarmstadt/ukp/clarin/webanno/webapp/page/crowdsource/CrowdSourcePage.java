@@ -960,7 +960,7 @@ public class CrowdSourcePage
                 BratAjaxCasController controller = new BratAjaxCasController(projectRepository,
                         annotationService);
 
-                jCas =  controller.getJCas(sourceDocument,
+                jCas =  controller.readJCas(sourceDocument,
                         selectedProject, user);
 
                 jCases.add(jCas);

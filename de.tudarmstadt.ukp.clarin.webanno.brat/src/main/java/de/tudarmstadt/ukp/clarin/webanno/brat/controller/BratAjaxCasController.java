@@ -34,8 +34,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.JsonMappingException;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.MultiValueMap;
@@ -47,8 +45,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter.ArcCrossedMultipleSentenceException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter.MultipleSentenceCoveredException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Stored;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.CreateArcResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.CreateSpanResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentTimestampResponse;
@@ -299,74 +295,9 @@ public class BratAjaxCasController
     }
 
     /**
-     * Creates a new span annotation, saves the annotation to a file system and return the newly
-     * constructed JSON document as a response to BRAT visualizer.
-     *
-     * @throws MultipleSentenceCoveredException
-     * @throws de.tudarmstadt.ukp.clarin.webanno.brat.controller.ChainAdapter.MultipleSentenceCoveredException
-     */
-
-    public CreateSpanResponse createSpanResponse(BratAnnotatorModel aBratAnnotatorModel,
-            int aAnnotationOffsetStart, JCas aJCas, boolean aIsGetDocument,
-            int aAnnotationOffsetEnd, String aType, AnnotationFS aOrigin, AnnotationFS aTarget)
-        throws JsonParseException,
-        JsonMappingException,
-        IOException,
-        UIMAException,
-        MultipleSentenceCoveredException
-    {
-        addSpanToCas(aJCas, aAnnotationOffsetStart, aAnnotationOffsetEnd, aType, aOrigin, aTarget);
-
-        GetDocumentResponse response = new GetDocumentResponse();
-        addBratResponses(response, aBratAnnotatorModel, aAnnotationOffsetStart, aJCas,
-                aIsGetDocument);
-
-        CreateSpanResponse createSpanResponse = new CreateSpanResponse();
-        createSpanResponse.setAnnotations(response);
-
-        newToAnnotationInprogress(aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
-        createAnnotationDocumentContent(aBratAnnotatorModel.getMode(),
-                aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser(), aJCas);
-
-        return createSpanResponse;
-    }
-
-    public CreateArcResponse createArcResponse(BratAnnotatorModel aBratAnnotatorModel,
-            int aAnnotationOffsetStart, JCas aJCas, boolean aIsGetDocument, String aType,
-            int aAnnotationOffsetEnd, AnnotationFS aOriginFs, AnnotationFS aTargetFs)
-        throws UIMAException,
-        IOException,
-        ArcCrossedMultipleSentenceException,
-        MultipleSentenceCoveredException
-    {
-
-        addArcToCas(aBratAnnotatorModel, aType, aAnnotationOffsetStart, aAnnotationOffsetEnd,
-                aOriginFs, aTargetFs, aJCas);
-
-        GetDocumentResponse response = new GetDocumentResponse();
-        addBratResponses(response, aBratAnnotatorModel, aAnnotationOffsetStart, aJCas,
-                aIsGetDocument);
-
-        CreateArcResponse createArcResponse = new CreateArcResponse();
-        createArcResponse.setAnnotations(response);
-
-        newToAnnotationInprogress(aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
-        createAnnotationDocumentContent(aBratAnnotatorModel.getMode(),
-                aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser(), aJCas);
-
-        return createArcResponse;
-
-    }
-
-    /**
      * Add a span annotation to CAS
-     *
-     * @param aUIData
-     *            The UI information such as start and end offsets, type of annotation ...
-     * @throws MultipleSentenceCoveredException
-     * @throws de.tudarmstadt.ukp.clarin.webanno.brat.controller.ChainAdapter.MultipleSentenceCoveredException
      */
-    public void addSpanToCas(JCas aJCas, int aAnnotationOffsetStart, int aAnnotationOffsetEnd,
+    public void createSpanAnnotation(JCas aJCas, int aAnnotationOffsetStart, int aAnnotationOffsetEnd,
             String aQualifiedLabel, AnnotationFS aOriginFs, AnnotationFS aTargetFs)
         throws MultipleSentenceCoveredException
     {
@@ -393,10 +324,8 @@ public class BratAjaxCasController
      * @param aBratAnnotatorModel
      *            the Brat annotation data model consisting of the source document, project,
      *            users,...
-     * @throws ArcCrossedMultipleSentenceException
-     * @throws de.tudarmstadt.ukp.clarin.webanno.brat.controller.ChainAdapter.MultipleSentenceCoveredException
      */
-    public void addArcToCas(BratAnnotatorModel aBratAnnotatorModel, String aQualifiedLabel,
+    public void createArcAnnotation(BratAnnotatorModel aBratAnnotatorModel, String aQualifiedLabel,
             int aAnnotationOffsetStart, int aAnnotationOffsetEnd, AnnotationFS aOriginFs,
             AnnotationFS aTargetFs, JCas aJCas)
         throws ArcCrossedMultipleSentenceException, MultipleSentenceCoveredException
@@ -430,22 +359,6 @@ public class BratAjaxCasController
         adapter.delete(aJcas, aAddress);
     }
     
-    /**
-     * Save the modified CAS in the file system as Serialized CAS
-     */
-    public void createAnnotationDocumentContent(Mode aMode, SourceDocument aSourceDocument,
-            User aUser, JCas aJcas)
-        throws IOException
-    {
-        if (aMode.equals(Mode.ANNOTATION) || aMode.equals(Mode.CORRECTION)
-                || aMode.equals(Mode.CORRECTION_MERGE)) {
-            repository.createAnnotationDocumentContent(aJcas, aSourceDocument, aUser);
-        }
-        else if (aMode.equals(Mode.CURATION) || aMode.equals(Mode.CURATION_MERGE)) {
-            repository.createCurationDocumentContent(aJcas, aSourceDocument, aUser);
-        }
-    }
-
     /**
      * If the annotation is added for the first time, change annotationState from NEW to INPROGRESS
      *
@@ -484,15 +397,12 @@ public class BratAjaxCasController
         }
         SpanAdapter.renderTokenAndSentence(aJCas, aResponse, aBratAnnotatorModel);
 
-        if (annotationLayers.contains(AnnotationTypeConstant.POS)) {
-            SpanAdapter.getPosAdapter().render(aJCas, aResponse, aBratAnnotatorModel);
-        }
-        if (annotationLayers.contains(AnnotationTypeConstant.COREFRELTYPE)) {
-            ChainAdapter.getCoreferenceLinkAdapter().render(aJCas, aResponse,
-                    aBratAnnotatorModel);
-        }
         if (aBratAnnotatorModel.isDisplayLemmaSelected()) {
             SpanAdapter.getLemmaAdapter().render(aJCas, aResponse, aBratAnnotatorModel);
+        }
+        
+        if (annotationLayers.contains(AnnotationTypeConstant.POS)) {
+            SpanAdapter.getPosAdapter().render(aJCas, aResponse, aBratAnnotatorModel);
         }
         if (annotationLayers.contains(AnnotationTypeConstant.NAMEDENTITY)) {
             SpanAdapter.getNamedEntityAdapter().render(aJCas, aResponse,
@@ -501,6 +411,10 @@ public class BratAjaxCasController
         if (annotationLayers.contains(AnnotationTypeConstant.DEPENDENCY)
                 && annotationLayers.contains(AnnotationTypeConstant.POS)) {
             ArcAdapter.getDependencyAdapter().render(aJCas, aResponse,
+                    aBratAnnotatorModel);
+        }
+        if (annotationLayers.contains(AnnotationTypeConstant.COREFRELTYPE)) {
+            ChainAdapter.getCoreferenceLinkAdapter().render(aJCas, aResponse,
                     aBratAnnotatorModel);
         }
         if (annotationLayers.contains(AnnotationTypeConstant.COREFERENCE)
@@ -514,10 +428,8 @@ public class BratAjaxCasController
      * Get the CAS object for the document in the project created by the the User. If this is the
      * first time the user is accessing the annotation document, it will be read from the source
      * document, and converted to CAS
-     *
-     * @throws ClassNotFoundException
      */
-    public JCas getJCas(SourceDocument aDocument, Project aProject, User aUser)
+    public JCas readJCas(SourceDocument aDocument, Project aProject, User aUser)
         throws UIMAException, IOException, ClassNotFoundException
     {
         AnnotationDocument annotationDocument = null;
@@ -526,8 +438,7 @@ public class BratAjaxCasController
             annotationDocument = repository.getAnnotationDocument(aDocument, aUser);
             if (annotationDocument.getState().equals(AnnotationDocumentState.NEW)
                     && !repository.existsJCas(aUser.getUsername(), aDocument)) {
-                jCas = createCasFirstTime(aDocument, annotationDocument, aProject, aUser,
-                        repository);
+                jCas = createJCas(aDocument, annotationDocument, aProject, aUser, repository);
             }
             else {
                 jCas = repository.getAnnotationDocumentContent(annotationDocument);
@@ -536,23 +447,38 @@ public class BratAjaxCasController
         }
         // it is new, create it and get CAS object
         catch (NoResultException ex) {
-            jCas = createCasFirstTime(aDocument, annotationDocument, aProject, aUser, repository);
+            jCas = createJCas(aDocument, annotationDocument, aProject, aUser, repository);
         }
         catch (DataRetrievalFailureException e) {
             throw e;
         }
         return jCas;
     }
+    
+    /**
+     * Save the modified CAS in the file system as Serialized CAS
+     */
+    public void updateJCas(Mode aMode, SourceDocument aSourceDocument, User aUser, JCas aJcas)
+        throws IOException
+    {
+        if (aMode.equals(Mode.ANNOTATION) || aMode.equals(Mode.CORRECTION)
+                || aMode.equals(Mode.CORRECTION_MERGE)) {
+            repository.createAnnotationDocumentContent(aJcas, aSourceDocument, aUser);
+        }
+        else if (aMode.equals(Mode.CURATION) || aMode.equals(Mode.CURATION_MERGE)) {
+            repository.createCurationDocumentContent(aJcas, aSourceDocument, aUser);
+        }
+    }
 
-    public static JCas createCasFirstTime(SourceDocument aDocument,
-            AnnotationDocument aAnnotationDocument, Project aProject, User aUser,
-            RepositoryService repository)
-        throws UIMAException, ClassNotFoundException, IOException
+    public static JCas createJCas(SourceDocument aDocument, AnnotationDocument aAnnotationDocument,
+            Project aProject, User aUser, RepositoryService repository)
+        throws IOException
     {
         JCas jCas;
         // change the state of the source document to inprogress
         aDocument.setState(SourceDocumentStateTransition
                 .transition(SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
+        
         if (!repository.existsAnnotationDocument(aDocument, aUser)) {
             aAnnotationDocument = new AnnotationDocument();
             aAnnotationDocument.setDocument(aDocument);
@@ -565,16 +491,13 @@ public class BratAjaxCasController
             jCas = BratAjaxCasUtil.getJCasFromFile(repository.getSourceDocumentContent(aProject,
                     aDocument), repository.getReadableFormats().get(aDocument.getFormat()));
         }
-        catch (UIMAException uEx) {
-            throw uEx;
-
+        catch (UIMAException e) {
+            throw new IOException(e);
         }
         catch (ClassNotFoundException e) {
-            throw e;
+            throw new IOException(e);
         }
-        catch (IOException e) {
-            throw e;
-        }
+        
         repository.createAnnotationDocument(aAnnotationDocument);
         repository.createAnnotationDocumentContent(jCas, aDocument, aUser);
         return jCas;

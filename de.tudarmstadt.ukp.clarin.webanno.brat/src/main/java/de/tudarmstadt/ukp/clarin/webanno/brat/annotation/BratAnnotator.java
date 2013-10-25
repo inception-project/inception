@@ -480,7 +480,7 @@ public class BratAnnotator
             BratAjaxCasController controller = new BratAjaxCasController(repository,
                     annotationService);
 
-            return controller.getJCas(aDocument, aProject, user);
+            return controller.readJCas(aDocument, aProject, user);
         }
         else {
             return repository.getCurationDocumentContent(getModelObject().getDocument());
@@ -525,7 +525,7 @@ public class BratAnnotator
             BratAjaxCasController controller = new BratAjaxCasController(repository,
                     annotationService);
 
-            return controller.getJCas(aBratAnnotatorModel.getDocument(),
+            return controller.readJCas(aBratAnnotatorModel.getDocument(),
                     aBratAnnotatorModel.getProject(), aBratAnnotatorModel.getUser());
         }
         else {

@@ -676,7 +676,7 @@ public class AnnotationPage
             User user = repository.getUser(username);
             BratAjaxCasController controller = new BratAjaxCasController(repository,
                     annotationService);
-            jCas = controller.getJCas(aDocument, aProject, user);
+            jCas = controller.readJCas(aDocument, aProject, user);
         }
         catch (UIMAException e) {
             error("CAS object not found :" + ExceptionUtils.getRootCauseMessage(e));
@@ -772,7 +772,7 @@ public class AnnotationPage
     {
         JCas jCas = null;
         BratAjaxCasController controller = new BratAjaxCasController(repository, annotationService);
-        jCas = controller.getJCas(aDocument, aProject, user);
+        jCas = controller.readJCas(aDocument, aProject, user);
         return jCas;
     }
 

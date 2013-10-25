@@ -202,10 +202,10 @@ public class ArcAnnotationModalWindowPage
                             AnnotationFS originFs = selectByAddr(jCas, originSpanId);
                             AnnotationFS targetFs = selectByAddr(jCas, targetSpanId);
 
-                                controller.addArcToCas(bratAnnotatorModel, annotationType, -1, -1,
+                                controller.createArcAnnotation(bratAnnotatorModel, annotationType, -1, -1,
                                         originFs, targetFs, jCas);
 
-                            controller.createAnnotationDocumentContent(
+                            controller.updateJCas(
                                     bratAnnotatorModel.getMode(), bratAnnotatorModel.getDocument(),
                                     bratAnnotatorModel.getUser(), jCas);
 
@@ -255,7 +255,7 @@ public class ArcAnnotationModalWindowPage
                         jCas = getCas(bratAnnotatorModel);
 
                         controller.deleteAnnotation(jCas, selectedArcId);
-                        controller.createAnnotationDocumentContent(bratAnnotatorModel.getMode(),
+                        controller.updateJCas(bratAnnotatorModel.getMode(),
                                 bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
                                 jCas);
 
@@ -313,10 +313,10 @@ public class ArcAnnotationModalWindowPage
                         AnnotationFS originFs = selectByAddr(jCas, originSpanId);
                         AnnotationFS targetFs = selectByAddr(jCas, targetSpanId);
 
-                        controller.addArcToCas(bratAnnotatorModel, annotationType, -1, -1,
+                        controller.createArcAnnotation(bratAnnotatorModel, annotationType, -1, -1,
                                targetFs,originFs, jCas);
 
-                        controller.createAnnotationDocumentContent(bratAnnotatorModel.getMode(),
+                        controller.updateJCas(bratAnnotatorModel.getMode(),
                                 bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
                                 jCas);
 
@@ -379,7 +379,7 @@ public class ArcAnnotationModalWindowPage
             BratAjaxCasController controller = new BratAjaxCasController(repository,
                     annotationService);
 
-            return controller.getJCas(aBratAnnotatorModel.getDocument(),
+            return controller.readJCas(aBratAnnotatorModel.getDocument(),
                     aBratAnnotatorModel.getProject(), aBratAnnotatorModel.getUser());
         }
         else {

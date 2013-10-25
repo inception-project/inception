@@ -1005,14 +1005,14 @@ public class CurationPage extends SettingsPageBase {
 			BratAjaxCasController controller = new BratAjaxCasController(
 					repository, annotationService);
 			jCas = controller
-					.getJCas(bratAnnotatorModel.getDocument(),
+					.readJCas(bratAnnotatorModel.getDocument(),
 							bratAnnotatorModel.getDocument().getProject(),
 							userLoggedIn);
 		} catch (NoResultException e) {
 			BratAjaxCasController controller = new BratAjaxCasController(
 					repository, annotationService);
 			jCas = controller
-					.getJCas(bratAnnotatorModel.getDocument(),
+					.readJCas(bratAnnotatorModel.getDocument(),
 							bratAnnotatorModel.getDocument().getProject(),
 							userLoggedIn);
 		}

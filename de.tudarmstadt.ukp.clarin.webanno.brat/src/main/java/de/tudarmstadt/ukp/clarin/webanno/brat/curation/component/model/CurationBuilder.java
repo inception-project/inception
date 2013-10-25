@@ -399,7 +399,7 @@ public class CurationBuilder
         BratAjaxCasController controller = new BratAjaxCasController(repository, annotationService);
         User userLoggedIn = repository.getUser(SecurityContextHolder.getContext()
                 .getAuthentication().getName());
-        mergeJCas = controller.getJCas(aBratAnnotatorModel.getDocument(), aBratAnnotatorModel
+        mergeJCas = controller.readJCas(aBratAnnotatorModel.getDocument(), aBratAnnotatorModel
                 .getDocument().getProject(), userLoggedIn);
         repository.createCorrectionDocumentContent(mergeJCas,
                 randomAnnotationDocument.getDocument(), userLoggedIn);

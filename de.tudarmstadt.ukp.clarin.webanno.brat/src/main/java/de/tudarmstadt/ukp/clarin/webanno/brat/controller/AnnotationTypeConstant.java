@@ -39,7 +39,7 @@ public class AnnotationTypeConstant
     public static final String NAMEDENTITY_PREFIX = "Named Entity_";
     public static final String COREFERENCE_PREFIX = "COREF_";
 
-    public static final String PREFIX = "_";
+    public static final String PREFIX_SEPARATOR = "_";
 
 
 
