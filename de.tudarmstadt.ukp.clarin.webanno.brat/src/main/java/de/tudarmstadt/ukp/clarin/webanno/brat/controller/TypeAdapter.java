@@ -46,8 +46,7 @@ public interface TypeAdapter
      * Prefix of the label value for Brat to make sure that different annotation types can use the
      * same label, e.g. a POS tag "N" and a named entity type "N".
      *
-     * This is used to differentiate the different types in the brat annotation/visualization. The
-     * prefix will not stored in the CAS (striped away at {@link BratAjaxCasController#getType} )
+     * This is used to differentiate the different types in the brat annotation/visualization.
      */
     String getLabelPrefix();
     
@@ -64,7 +63,7 @@ public interface TypeAdapter
      *
      * @param aJCas
      *            the CAS object
-     * @param aId
+     * @param aAddress
      *            the low-level address of the span annotation.
      */
     public void delete(JCas aJCas, int aAddress);
