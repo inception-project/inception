@@ -526,7 +526,7 @@ public class BratCuratorUtility
     {
         SourceDocument sourceDocument = aCurationContainer.getBratAnnotatorModel().getDocument();
         Project project = aCurationContainer.getBratAnnotatorModel().getProject();
-        List<AnnotationDocument> annotationDocuments = aRepository.listAnnotationDocument(project,
+        List<AnnotationDocument> annotationDocuments = aRepository.listAnnotationDocuments(project,
                 sourceDocument);
         Map<String, JCas> jCases = new HashMap<String, JCas>();
         JCas annotatorCas = null;

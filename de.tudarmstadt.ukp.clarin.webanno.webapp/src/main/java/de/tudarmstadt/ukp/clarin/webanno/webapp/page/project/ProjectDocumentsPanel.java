@@ -77,7 +77,7 @@ public class ProjectDocumentsPanel
         super(id);
         this.selectedProjectModel = aProjectModel;
         try {
-            readableFormats = new ArrayList<String>(projectRepository.getReadableFormatsLabel());
+            readableFormats = new ArrayList<String>(projectRepository.getReadableFormatLabels());
             selectedFormat = readableFormats.get(0);
         }
         catch (IOException e) {

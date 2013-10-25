@@ -243,7 +243,7 @@ public class CurationSegmentPanel
         SourceDocument sourceDocument = aCurationUserSegment.getBratAnnotatorModel().getDocument();
         
         AnnotationDocument clickedAnnotationDocument = null;
-        List<AnnotationDocument> annotationDocuments = aRepository.listAnnotationDocument(
+        List<AnnotationDocument> annotationDocuments = aRepository.listAnnotationDocuments(
                 project, sourceDocument);
         for (AnnotationDocument annotationDocument : annotationDocuments) {
             if (annotationDocument.getUser().equals(username)) {
@@ -333,7 +333,7 @@ public class CurationSegmentPanel
         if (annotationSelectionOrigin != null && annotationSelectionTarget != null) {
 
             AnnotationDocument clickedAnnotationDocument = null;
-            List<AnnotationDocument> annotationDocuments = repository.listAnnotationDocument(
+            List<AnnotationDocument> annotationDocuments = repository.listAnnotationDocuments(
                     project, sourceDocument);
             for (AnnotationDocument annotationDocument : annotationDocuments) {
                 if (annotationDocument.getUser().equals(username)) {

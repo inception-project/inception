@@ -717,7 +717,7 @@ public class ApplicationUtils
      */
     public static boolean existFinishedDocument(de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument aSourceDocument, User aUser, RepositoryService aRepository, Project aProject)
     {
-        List<de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument> annotationDocuments = aRepository.listAnnotationDocument(
+        List<de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument> annotationDocuments = aRepository.listAnnotationDocuments(
                 aProject, aSourceDocument);
         boolean finishedAnnotationDocumentExist = false;
         for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : annotationDocuments) {

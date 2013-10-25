@@ -98,7 +98,7 @@ public class CurationBuilder
         Map<Integer, String> segmentText = new HashMap<Integer, String>();
         Map<String, Map<Integer, Integer>> segmentAdress = new HashMap<String, Map<Integer, Integer>>();
         // get annotation documents
-        List<AnnotationDocument> annotationDocuments = repository.listAnnotationDocument(project,
+        List<AnnotationDocument> annotationDocuments = repository.listAnnotationDocuments(project,
                 sourceDocument);
 
         Map<String, JCas> jCases = new HashMap<String, JCas>();

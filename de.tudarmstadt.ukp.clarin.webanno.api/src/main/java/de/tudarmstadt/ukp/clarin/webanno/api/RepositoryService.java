@@ -127,13 +127,15 @@ public interface RepositoryService
      *            the project to be examined
      * @return list of {@link ProjectPermission#getLevel()}
      */
-    ProjectPermission getPermisionLevel(User user, Project project);
+    // FIXME Bug 690 getPermissionLevel == getProjectPermission ? - REC 2013-10-26
+    ProjectPermission getPermissionLevel(User user, Project project);
 
     /**
      * get a permission object where a user is granted permission/permissions;
      * 
      * @return
      */
+    // FIXME Bug 690 getPermissionLevel == getProjectPermission ? - REC 2013-10-26
     ProjectPermission getProjectPermission(User user, Project project);
     
     /**
@@ -384,7 +386,7 @@ public interface RepositoryService
      */
     // FIXME Bug 689 - Source document uniquely identifies project (document.getProject())
     // - REC 2013-10-26
-    List<AnnotationDocument> listAnnotationDocument(Project project, SourceDocument document);
+    List<AnnotationDocument> listAnnotationDocuments(Project project, SourceDocument document);
 
     /**
      * List all {@link AnnotationDocument}s of this {@link SourceDocument} including those created
@@ -394,7 +396,7 @@ public interface RepositoryService
      * @param document
      * @return
      */
-    List<AnnotationDocument> listAnnotationDocument(SourceDocument document);
+    List<AnnotationDocument> listAnnotationDocuments(SourceDocument document);
 
     /**
      * List all annotation documents in the state <b>INPROGRESS</b>
@@ -683,7 +685,7 @@ public interface RepositoryService
      * @throws IOException
      * @throws ClassNotFoundException
      */
-    List<String> getReadableFormatsLabel()
+    List<String> getReadableFormatLabels()
         throws IOException, ClassNotFoundException;
 
     /**
@@ -714,7 +716,7 @@ public interface RepositoryService
      * @throws IOException
      * @throws ClassNotFoundException
      */
-    List<String> getWritableFormatsLabel()
+    List<String> getWritableFormatLabels()
         throws IOException, ClassNotFoundException;
 
     /**

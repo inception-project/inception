@@ -78,7 +78,7 @@ public class ExportModalWindowPage
         {
             super(id);
             try {
-                writeableFormats = (ArrayList<String>) repository.getWritableFormatsLabel();
+                writeableFormats = (ArrayList<String>) repository.getWritableFormatLabels();
                 selectedFormat = writeableFormats.get(0);
             }
             catch (IOException e) {

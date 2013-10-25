@@ -623,7 +623,7 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public ProjectPermission getPermisionLevel(User aUser, Project aProject)
+    public ProjectPermission getPermissionLevel(User aUser, Project aProject)
     {
         return entityManager
                 .createQuery("FROM ProjectPermission WHERE user =:user AND " + "project =:project",
@@ -818,7 +818,7 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public List<AnnotationDocument> listAnnotationDocument(Project aProject,
+    public List<AnnotationDocument> listAnnotationDocuments(Project aProject,
             SourceDocument aDocument)
     {
         // Get all annotators in the project
@@ -854,7 +854,7 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public List<AnnotationDocument> listAnnotationDocument(SourceDocument aSourceDocument)
+    public List<AnnotationDocument> listAnnotationDocuments(SourceDocument aSourceDocument)
     {
         return entityManager
                 .createQuery(
@@ -1014,7 +1014,7 @@ public class RepositoryServiceDbData
         throws IOException
     {
 
-        for (AnnotationDocument annotationDocument : listAnnotationDocument(aDocument)) {
+        for (AnnotationDocument annotationDocument : listAnnotationDocuments(aDocument)) {
             removeAnnotationDocument(annotationDocument);
         }
         // remove it from the crowd job, if it belongs already
@@ -1196,7 +1196,7 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public List<String> getReadableFormatsLabel()
+    public List<String> getReadableFormatLabels()
         throws ClassNotFoundException
     {
         List<String> readableFormats = new ArrayList<String>();
@@ -1251,7 +1251,7 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public List<String> getWritableFormatsLabel()
+    public List<String> getWritableFormatLabels()
         throws ClassNotFoundException
     {
         List<String> writableFormats = new ArrayList<String>();

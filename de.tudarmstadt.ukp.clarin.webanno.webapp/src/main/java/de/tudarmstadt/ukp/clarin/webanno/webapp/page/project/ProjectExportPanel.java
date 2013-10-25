@@ -435,7 +435,7 @@ public class ProjectExportPanel
 
         for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
             for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : projectRepository
-                    .listAnnotationDocument(sourceDocument)) {
+                    .listAnnotationDocuments(sourceDocument)) {
 
                 // copy annotation document only for ACTIVE users and the state of the annotation
                 // document
@@ -541,7 +541,7 @@ public class ProjectExportPanel
 
             // add annotation document to Project
             for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : projectRepository
-                    .listAnnotationDocument(sourceDocument)) {
+                    .listAnnotationDocuments(sourceDocument)) {
                 AnnotationDocument annotationDocumentToExport = new AnnotationDocument();
                 annotationDocumentToExport.setName(annotationDocument.getName());
                 annotationDocumentToExport.setState(annotationDocument.getState());
