@@ -171,9 +171,11 @@ public class ArcAdapter
      *            the value of the annotation for the arc
      * @param aReverse
      *            If arc direction are in reverse direction, from Dependent to Governor
+     * @throws ArcCrossedMultipleSentenceException
      */
     public void add(String aLabelValue, AnnotationFS aOriginFs, AnnotationFS aTargetFs, JCas aJCas,
-            BratAnnotatorModel aBratAnnotatorModel, boolean aReverse)
+            BratAnnotatorModel aBratAnnotatorModel, boolean aReverse) throws
+            ArcCrossedMultipleSentenceException
     {
         AnnotationFS temp;
         // swap
@@ -193,8 +195,12 @@ public class ArcAdapter
                 Sentence.class,
                 BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(aJCas, sentence.getAddress(),
                         aBratAnnotatorModel.getWindowSize())).getEnd();
-
-        updateCas(aJCas, beginOffset, endOffset, aOriginFs, aTargetFs, aLabelValue);
+        if(BratAjaxCasUtil.isSameSentence(aJCas, aOriginFs.getBegin(), aTargetFs.getEnd())) {
+            updateCas(aJCas, beginOffset, endOffset, aOriginFs, aTargetFs, aLabelValue);
+        }
+        else{
+            throw new ArcCrossedMultipleSentenceException("Arc Annotation shouldn't cross sentence boundary");
+        }
     }
 
     /**
@@ -345,14 +351,18 @@ public class ArcAdapter
    * @param aJCas the {@link JCas}
    * @return
    */
-    public static boolean isAllowed(JCas aJCas, int aOriginBegin, int aTargetEnd)
-    {
-        if (BratAjaxCasUtil.isSameSentence(aJCas, aOriginBegin, aTargetEnd)) {
-            return true;
-        }
-        return false;
 
+    public  class ArcCrossedMultipleSentenceException
+    extends Exception
+{
+    private static final long serialVersionUID = 1280015349963924638L;
+
+    public ArcCrossedMultipleSentenceException(String message)
+    {
+        super(message);
     }
+
+}
 
     @Override
     public String getLabelFeatureName()

@@ -204,7 +204,8 @@ public class ChainAdapter
     }
 
     /**
-     * a helper method to the {@link #render(JCas, GetDocumentResponse, BratAnnotatorModel)}
+     * a helper method to the
+     * {@link #renderAnnotation(JCas, GetDocumentResponse, BratAnnotatorModel)}
      *
      * @param aSentence
      *            The current sentence in the CAS annotation, with annotations
@@ -308,9 +309,11 @@ public class ChainAdapter
      *
      * @param aLabelValue
      *            the value of the annotation for the span
+     * @throws MultipleSentenceCoveredException
      */
     public void add(String aLabelValue, JCas aJCas, int aAnnotationOffsetStart,
             int aAnnotationOffsetEnd, AnnotationFS aOriginFs, AnnotationFS aTargetFs)
+        throws SpanAdapter.MultipleSentenceCoveredException
     {
         Map<Integer, Integer> offsets = ApplicationUtils.offsets(aJCas);
 
@@ -322,8 +325,15 @@ public class ChainAdapter
             }
             else {
                 for (Integer start : splitedTokens.keySet()) {
-                    updateCoreferenceLinkCas(aJCas.getCas(), start, splitedTokens.get(start),
-                            aLabelValue);
+                    if (BratAjaxCasUtil.isSameSentence(aJCas, start, splitedTokens.get(start))) {
+                        updateCoreferenceLinkCas(aJCas.getCas(), start, splitedTokens.get(start),
+                                aLabelValue);
+                    }
+                    else {
+                        throw new SpanAdapter.MultipleSentenceCoveredException(
+                                "Annotation coveres multiple sentences, "
+                                        + "limit your annotation to single sentence!");
+                    }
                 }
             }
         }
@@ -349,15 +359,13 @@ public class ChainAdapter
         boolean duplicate = false;
         Type type = CasUtil.getType(aCas, annotationTypeName);
         Feature feature = type.getFeatureByBaseName(labelFeatureName);
-/*        for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
-
-            if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
-                if (!fs.getStringValue(feature).equals(aValue)) {
-                    fs.setStringValue(feature, aValue);
-                }
-                duplicate = true;
-            }
-        }*/
+        /*
+         * for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
+         *
+         * if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) { if
+         * (!fs.getStringValue(feature).equals(aValue)) { fs.setStringValue(feature, aValue); }
+         * duplicate = true; } }
+         */
         if (!duplicate) {
             AnnotationFS newAnnotation = aCas.createAnnotation(type, aBegin, aEnd);
             newAnnotation.setStringValue(feature, aValue);
@@ -643,8 +651,8 @@ public class ChainAdapter
      */
     public void updateCasBeforeDelete(JCas aJCas, int aRef)
     {
-        FeatureStructure fsToRemove = (FeatureStructure) BratAjaxCasUtil.selectByAddr(
-                aJCas, FeatureStructure.class, aRef);
+        FeatureStructure fsToRemove = (FeatureStructure) BratAjaxCasUtil.selectByAddr(aJCas,
+                FeatureStructure.class, aRef);
 
         Type type = CasUtil.getType(aJCas.getCas(), annotationTypeName);
         Feature first = type.getFeatureByBaseName(chainFirstFeatureName);
@@ -699,8 +707,8 @@ public class ChainAdapter
             FeatureStructure newChain = aJCas.getCas().createFS(type);
             boolean found = false;
 
-            AnnotationFS originCorefType = (AnnotationFS) BratAjaxCasUtil
-                    .selectByAddr(aJCas, FeatureStructure.class, aAddress);
+            AnnotationFS originCorefType = (AnnotationFS) BratAjaxCasUtil.selectByAddr(aJCas,
+                    FeatureStructure.class, aAddress);
             for (FeatureStructure fs : CasUtil.selectFS(aJCas.getCas(), type)) {
                 AnnotationFS linkFs = (AnnotationFS) fs.getFeatureValue(first);
                 Feature next = linkFs.getType().getFeatureByBaseName(linkNextFeatureName);
@@ -725,8 +733,8 @@ public class ChainAdapter
         else {
             ChainAdapter.getCoreferenceChainAdapter().updateCasBeforeDelete(aJCas, aAddress);
 
-            FeatureStructure fsToRemove = (FeatureStructure) BratAjaxCasUtil
-                    .selectByAddr(aJCas, FeatureStructure.class, aAddress);
+            FeatureStructure fsToRemove = (FeatureStructure) BratAjaxCasUtil.selectByAddr(aJCas,
+                    FeatureStructure.class, aAddress);
 
             aJCas.removeFsFromIndexes(fsToRemove);
 
@@ -757,6 +765,7 @@ public class ChainAdapter
             aCas.removeFsFromIndexes(chain);
         }
     }
+
     /**
      * Convenience method to get an adapter for coreference Link.
      *
@@ -787,6 +796,7 @@ public class ChainAdapter
         adapter.setChain(true);
         return adapter;
     }
+
 
     @Override
     public String getLabelFeatureName()

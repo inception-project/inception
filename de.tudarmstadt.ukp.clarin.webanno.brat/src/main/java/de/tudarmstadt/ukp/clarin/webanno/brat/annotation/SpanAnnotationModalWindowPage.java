@@ -29,6 +29,7 @@ import javax.servlet.http.HttpSession;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
@@ -41,6 +42,7 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
@@ -56,6 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter.MultipleSentenceCoveredException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.OffsetsList;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
@@ -106,6 +109,12 @@ public class SpanAnnotationModalWindowPage
         {
             super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
 
+            final FeedbackPanel feedbackPanel = new FeedbackPanel("feedbackPanel");
+            add(feedbackPanel);
+            feedbackPanel.setOutputMarkupId(true);
+            feedbackPanel.add(new AttributeModifier("class", "info"));
+            feedbackPanel.add(new AttributeModifier("class", "error"));
+
             List<TagSet> spanLayers = new ArrayList<TagSet>();
 
             for (TagSet tagset : bratAnnotatorModel.getAnnotationLayers()) {
@@ -135,8 +144,8 @@ public class SpanAnnotationModalWindowPage
 
             add(new Label("selectedText", selectedText));
 
-            tags= new ComboBox<Tag>("tags", new Model<String>(
-                    tagsModel.getObject() == null ? "" : tagsModel.getObject().getName()),
+            tags = new ComboBox<Tag>("tags", new Model<String>(tagsModel.getObject() == null ? ""
+                    : tagsModel.getObject().getName()),
                     annotationService.listTags(selectedtTagSet), new ComboBoxRenderer<Tag>("name",
                             "name"));
             add(tags);
@@ -221,8 +230,6 @@ public class SpanAnnotationModalWindowPage
                             annotationType = BratAjaxCasUtil.getQualifiedLabel(selectedTag);
 
                             controller.addSpanToCas(jCas, start, end, annotationType, null, null);
-                           // controller.addSpanTagSetToCas(jCas, bratAnnotatorModel.getProject(),
-                             //       annotationType);
                             controller.createAnnotationDocumentContent(
                                     bratAnnotatorModel.getMode(), bratAnnotatorModel.getDocument(),
                                     bratAnnotatorModel.getUser(), jCas);
@@ -242,16 +249,22 @@ public class SpanAnnotationModalWindowPage
                         }
                     }
                     catch (UIMAException e) {
+                        aTarget.add(feedbackPanel);
                         error(ExceptionUtils.getRootCauseMessage(e));
                     }
                     catch (ClassNotFoundException e) {
+                        aTarget.add(feedbackPanel);
                         error(e.getMessage());
                     }
                     catch (IOException e) {
+                        aTarget.add(feedbackPanel);
+                        error(e.getMessage());
+                    }
+                    catch (MultipleSentenceCoveredException e) {
+                        aTarget.add(feedbackPanel);
                         error(e.getMessage());
                     }
                 }
-
 
             });
 
@@ -315,34 +328,34 @@ public class SpanAnnotationModalWindowPage
                 }
             });
         }
+
         private void updateTagsComboBox()
         {
             tags.remove();
-            tags= new ComboBox<Tag>("tags", new Model<String>(
-                    tagsModel.getObject() == null ? "" : tagsModel.getObject().getName()),
+            tags = new ComboBox<Tag>("tags", new Model<String>(tagsModel.getObject() == null ? ""
+                    : tagsModel.getObject().getName()),
                     annotationService.listTags(selectedtTagSet), new ComboBoxRenderer<Tag>("name",
                             "name"));
             add(tags);
         }
 
-
     }
 
     private void updateSentenceAddressAndOffsets(JCas jCas, int start)
     {
-        int address = BratAjaxCasUtil.selectSentenceAt(jCas, bratAnnotatorModel.getSentenceBeginOffset(), bratAnnotatorModel.getSentenceEndOffset()).getAddress();
-        bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil
-                .getSentenceBeginAddress(jCas,
-                        address, start,
-                        bratAnnotatorModel.getProject(),
-                        bratAnnotatorModel.getDocument(),
-                        bratAnnotatorModel.getWindowSize()));
+        int address = BratAjaxCasUtil.selectSentenceAt(jCas,
+                bratAnnotatorModel.getSentenceBeginOffset(),
+                bratAnnotatorModel.getSentenceEndOffset()).getAddress();
+        bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(jCas,
+                address, start, bratAnnotatorModel.getProject(), bratAnnotatorModel.getDocument(),
+                bratAnnotatorModel.getWindowSize()));
 
         Sentence sentence = selectByAddr(jCas, Sentence.class,
                 bratAnnotatorModel.getSentenceAddress());
         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
     }
+
     private JCas getCas(BratAnnotatorModel aBratAnnotatorModel)
         throws UIMAException, IOException, ClassNotFoundException
     {

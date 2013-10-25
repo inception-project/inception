@@ -39,6 +39,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter.ArcCrossedMultipleSentenceException;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter.MultipleSentenceCoveredException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.BratCurationVisualizer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationUserSegmentForAnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
@@ -158,8 +160,14 @@ public class CurationSegmentPanel
                             StringValue action = request.getParameterValue("action");
                             // check if clicked on a span
                             if (!action.isEmpty() && action.toString().equals("selectSpanForMerge")) {
-                                BratCuratorUtility.mergeSpan(request, curationUserSegment,
-                                        annotationJCas, repository, annotationService);
+                                try {
+                                    BratCuratorUtility.mergeSpan(request, curationUserSegment,
+                                            annotationJCas, repository, annotationService);
+                                }
+                                catch (MultipleSentenceCoveredException e) {
+                                    // TODO Auto-generated catch block
+                                    e.printStackTrace();
+                                }
 
                             }
                             // check if clicked on an arc
@@ -172,7 +180,13 @@ public class CurationSegmentPanel
                                             annotationJCas, repository, annotationService);
                                 }
                                 catch (NoOriginOrTargetAnnotationSelectedException e) {
-                                 aTarget.appendJavaScript("alert('"+e.getMessage()+"')");
+                                    aTarget.appendJavaScript("alert('" + e.getMessage() + "')");
+                                }
+                                catch (ArcCrossedMultipleSentenceException e) {
+                                    error(e.getMessage());
+                                }
+                                catch (MultipleSentenceCoveredException e) {
+                                    error(e.getMessage());
                                 }
                             }
                             onChange(aTarget);

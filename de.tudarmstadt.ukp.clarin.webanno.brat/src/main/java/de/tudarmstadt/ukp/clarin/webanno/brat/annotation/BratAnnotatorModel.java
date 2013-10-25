@@ -101,7 +101,7 @@ public class BratAnnotatorModel
     private Mode mode;
 
     /**
-     * The previously selected {@link TagSet} and {@link Tag} for a span/Arc annotation so as to pre-fill the type
+     * The previously selected {@link TagSet} and {@link Tag} for a span/Arc annotation so as toz pre-fill the type
      * in the span/arc annotation dialog (only for new span/arc annotations)
      * @return
      */

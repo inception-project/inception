@@ -25,7 +25,6 @@ import javax.servlet.http.HttpSession;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Page;
@@ -48,12 +47,7 @@ import org.springframework.http.converter.json.MappingJacksonHttpMessageConverte
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Offsets;
-import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.OffsetsList;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -194,36 +188,18 @@ public class BratAnnotator
                         selectedSpan = request.getParameterValue("spanText").toString();
                         offsets = request.getParameterValue("offsets").toString();
 
-                        JCas jCas = getCas(getModelObject());
-
-                        OffsetsList offsetLists = (OffsetsList) jsonConverter.getObjectMapper()
-                                .readValue(offsets, OffsetsList.class);
-
-                        int start = getModelObject().getSentenceBeginOffset()
-                                + ((Offsets) offsetLists.get(0)).getBegin();
-
-                        int end = getModelObject().getSentenceBeginOffset()
-                                + ((Offsets) offsetLists.get(0)).getEnd();
-
-                        if (!SpanAdapter.isAllowed(jCas, start, end)) {
-                            info("Annotation coveres multiple sentences, limit your annotation to single sentence!");
+                        if (request.getParameterValue("id").toString() == null) {
+                            selectedSpanID = -1;
                         }
                         else {
-
-                            if (request.getParameterValue("id").toString() == null) {
-                                selectedSpanID = -1;
-                            }
-                            else {
-                                selectedSpanID = request.getParameterValue("id").toInt();
-                                selectedSpanType = request.getParameterValue("type").toString();
-                            }
-                            if (BratAnnotatorUtility.isDocumentFinished(repository,
-                                    getModelObject())) {
-                                error("This document is already closed. Please ask admin to re-open");
-                            }
-                            else {
-                                openSpanAnnotationDialog(openAnnotationDialog, aTarget);
-                            }
+                            selectedSpanID = request.getParameterValue("id").toInt();
+                            selectedSpanType = request.getParameterValue("type").toString();
+                        }
+                        if (BratAnnotatorUtility.isDocumentFinished(repository, getModelObject())) {
+                            error("This document is already closed. Please ask admin to re-open");
+                        }
+                        else {
+                            openSpanAnnotationDialog(openAnnotationDialog, aTarget);
                         }
                         result = controller.loadConf();
                         hasChanged = true;
@@ -249,18 +225,7 @@ public class BratAnnotator
                         }
 
                         else {
-                            JCas jCas = getCas(getModelObject());
-                            AnnotationFS originFS = BratAjaxCasUtil
-                                    .selectByAddr(jCas, originSpanId);
-                            AnnotationFS targetFS = BratAjaxCasUtil
-                                    .selectByAddr(jCas, targetSpanId);
-                            if (!ArcAdapter
-                                    .isAllowed(jCas, originFS.getBegin(), targetFS.getEnd())) {
-                                info("Arc Annotation shouldn't cross sentence boundary");
-                            }
-                            else {
-                                openArcAnnotationDialog(openAnnotationDialog, aTarget);
-                            }
+                            openArcAnnotationDialog(openAnnotationDialog, aTarget);
                         }
 
                         result = controller.loadConf();

@@ -41,6 +41,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter.ArcCrossedMultipleSentenceException;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter.MultipleSentenceCoveredException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Stored;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.CreateArcResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.CreateSpanResponse;
@@ -296,12 +298,19 @@ public class BratAjaxCasController
     /**
      * Creates a new span annotation, saves the annotation to a file system and return the newly
      * constructed JSON document as a response to BRAT visualizer.
+     *
+     * @throws MultipleSentenceCoveredException
+     * @throws de.tudarmstadt.ukp.clarin.webanno.brat.controller.ChainAdapter.MultipleSentenceCoveredException
      */
 
     public CreateSpanResponse createSpanResponse(BratAnnotatorModel aBratAnnotatorModel,
             int aAnnotationOffsetStart, JCas aJCas, boolean aIsGetDocument,
             int aAnnotationOffsetEnd, String aType, AnnotationFS aOrigin, AnnotationFS aTarget)
-        throws JsonParseException, JsonMappingException, IOException, UIMAException
+        throws JsonParseException,
+        JsonMappingException,
+        IOException,
+        UIMAException,
+        MultipleSentenceCoveredException
     {
         addSpanToCas(aJCas, aAnnotationOffsetStart, aAnnotationOffsetEnd, aType, aOrigin, aTarget);
 
@@ -322,7 +331,10 @@ public class BratAjaxCasController
     public CreateArcResponse createArcResponse(BratAnnotatorModel aBratAnnotatorModel,
             int aAnnotationOffsetStart, JCas aJCas, boolean aIsGetDocument, String aType,
             int aAnnotationOffsetEnd, AnnotationFS aOriginFs, AnnotationFS aTargetFs)
-        throws UIMAException, IOException
+        throws UIMAException,
+        IOException,
+        ArcCrossedMultipleSentenceException,
+        MultipleSentenceCoveredException
     {
 
         addArcToCas(aBratAnnotatorModel, aType, aAnnotationOffsetStart, aAnnotationOffsetEnd,
@@ -343,15 +355,17 @@ public class BratAjaxCasController
 
     }
 
-
     /**
      * Add a span annotation to CAS
      *
      * @param aUIData
      *            The UI information such as start and end offsets, type of annotation ...
+     * @throws MultipleSentenceCoveredException
+     * @throws de.tudarmstadt.ukp.clarin.webanno.brat.controller.ChainAdapter.MultipleSentenceCoveredException
      */
     public void addSpanToCas(JCas aJCas, int aAnnotationOffsetStart, int aAnnotationOffsetEnd,
             String aQualifiedLabel, AnnotationFS aOriginFs, AnnotationFS aTargetFs)
+        throws MultipleSentenceCoveredException
     {
         String labelPrefix = BratAjaxCasUtil.getLabelPrefix(aQualifiedLabel);
         String label = BratAjaxCasUtil.getLabel(aQualifiedLabel);
@@ -365,8 +379,8 @@ public class BratAjaxCasController
                     label);
         }
         else if (labelPrefix.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
-            ChainAdapter.getCoreferenceLinkAdapter().add(label, aJCas,
-                    aAnnotationOffsetStart, aAnnotationOffsetEnd, aOriginFs, aTargetFs);
+            ChainAdapter.getCoreferenceLinkAdapter().add(label, aJCas, aAnnotationOffsetStart,
+                    aAnnotationOffsetEnd, aOriginFs, aTargetFs);
         }
     }
 
@@ -376,10 +390,13 @@ public class BratAjaxCasController
      * @param aBratAnnotatorModel
      *            the Brat annotation data model consisting of the source document, project,
      *            users,...
+     * @throws ArcCrossedMultipleSentenceException
+     * @throws de.tudarmstadt.ukp.clarin.webanno.brat.controller.ChainAdapter.MultipleSentenceCoveredException
      */
     public void addArcToCas(BratAnnotatorModel aBratAnnotatorModel, String aQualifiedLabel,
             int aAnnotationOffsetStart, int aAnnotationOffsetEnd, AnnotationFS aOriginFs,
             AnnotationFS aTargetFs, JCas aJCas)
+        throws ArcCrossedMultipleSentenceException, MultipleSentenceCoveredException
     {
         String labelPrefix = BratAjaxCasUtil.getLabelPrefix(aQualifiedLabel);
         String label = BratAjaxCasUtil.getLabel(aQualifiedLabel);
@@ -390,8 +407,8 @@ public class BratAjaxCasController
                     aBratAnnotatorModel.getProject().isReverseDependencyDirection());
         }
         else if (labelPrefix.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
-            ChainAdapter.getCoreferenceChainAdapter().add(label, aJCas,
-                    aAnnotationOffsetStart, aAnnotationOffsetEnd, aOriginFs, aTargetFs);
+            ChainAdapter.getCoreferenceChainAdapter().add(label, aJCas, aAnnotationOffsetStart,
+                    aAnnotationOffsetEnd, aOriginFs, aTargetFs);
         }
     }
 
@@ -490,27 +507,31 @@ public class BratAjaxCasController
                     aBratAnnotatorModel.getProject(), aBratAnnotatorModel.getDocument(),
                     aBratAnnotatorModel.getWindowSize()));
         }
-       SpanAdapter.renderTokenAndSentence(aJCas, aResponse, aBratAnnotatorModel);
+        SpanAdapter.renderTokenAndSentence(aJCas, aResponse, aBratAnnotatorModel);
 
         if (annotationLayers.contains(AnnotationTypeConstant.POS)) {
             SpanAdapter.getPosAdapter().render(aJCas, aResponse, aBratAnnotatorModel);
         }
         if (annotationLayers.contains(AnnotationTypeConstant.COREFRELTYPE)) {
-            ChainAdapter.getCoreferenceLinkAdapter().render(aJCas, aResponse, aBratAnnotatorModel);
+            ChainAdapter.getCoreferenceLinkAdapter().render(aJCas, aResponse,
+                    aBratAnnotatorModel);
         }
         if (aBratAnnotatorModel.isDisplayLemmaSelected()) {
             SpanAdapter.getLemmaAdapter().render(aJCas, aResponse, aBratAnnotatorModel);
         }
         if (annotationLayers.contains(AnnotationTypeConstant.NAMEDENTITY)) {
-            SpanAdapter.getNamedEntityAdapter().render(aJCas, aResponse, aBratAnnotatorModel);
+            SpanAdapter.getNamedEntityAdapter().render(aJCas, aResponse,
+                    aBratAnnotatorModel);
         }
         if (annotationLayers.contains(AnnotationTypeConstant.DEPENDENCY)
                 && annotationLayers.contains(AnnotationTypeConstant.POS)) {
-            ArcAdapter.getDependencyAdapter().render(aJCas, aResponse, aBratAnnotatorModel);
+            ArcAdapter.getDependencyAdapter().render(aJCas, aResponse,
+                    aBratAnnotatorModel);
         }
         if (annotationLayers.contains(AnnotationTypeConstant.COREFERENCE)
                 && annotationLayers.contains(AnnotationTypeConstant.COREFRELTYPE)) {
-            ChainAdapter.getCoreferenceChainAdapter().render(aJCas, aResponse, aBratAnnotatorModel);
+            ChainAdapter.getCoreferenceChainAdapter().render(aJCas, aResponse,
+                    aBratAnnotatorModel);
         }
     }
 

@@ -28,8 +28,10 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
 import org.apache.wicket.behavior.Behavior;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
@@ -37,6 +39,7 @@ import org.apache.wicket.markup.html.IHeaderResponse;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -48,8 +51,10 @@ import com.googlecode.wicket.jquery.ui.kendo.combobox.ComboBoxRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter.ArcCrossedMultipleSentenceException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter.MultipleSentenceCoveredException;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
@@ -110,6 +115,12 @@ public class ArcAnnotationModalWindowPage
         {
             super(id);
 
+            final FeedbackPanel feedbackPanel = new FeedbackPanel("feedbackPanel");
+            add(feedbackPanel);
+            feedbackPanel.setOutputMarkupId(true);
+            feedbackPanel.add(new AttributeModifier("class", "info"));
+            feedbackPanel.add(new AttributeModifier("class", "error"));
+
             // if it is new arc annotation
             if (selectedArcId == -1) {
                 // for rapid annotation, pre-fill previous annotation type again
@@ -164,7 +175,7 @@ public class ArcAnnotationModalWindowPage
                         }
                     }));
 
-            add(new AjaxSubmitLink("annotate")
+            add(new AjaxButton("annotate")
             {
                 private static final long serialVersionUID = 8922161039500097566L;
 
@@ -190,9 +201,8 @@ public class ArcAnnotationModalWindowPage
                             AnnotationFS originFs = selectByAddr(jCas, originSpanId);
                             AnnotationFS targetFs = selectByAddr(jCas, targetSpanId);
 
-                            controller.addArcToCas(bratAnnotatorModel, annotationType, -1, -1,
-                                    originFs, targetFs, jCas);
-                      //      controller.addArcTagSetToCas(jCas, bratAnnotatorModel.getProject(), annotationType);
+                                controller.addArcToCas(bratAnnotatorModel, annotationType, -1, -1,
+                                        originFs, targetFs, jCas);
 
                             controller.createAnnotationDocumentContent(
                                     bratAnnotatorModel.getMode(), bratAnnotatorModel.getDocument(),
@@ -218,6 +228,14 @@ public class ArcAnnotationModalWindowPage
                     catch (IOException e) {
                         error(e.getMessage());
                     }
+                    catch (ArcCrossedMultipleSentenceException e) {
+                        aTarget.add(feedbackPanel);
+                        error(e.getMessage());
+                     }
+                     catch (MultipleSentenceCoveredException e) {
+                         aTarget.add(feedbackPanel);
+                         error(e.getMessage());
+                     }
 
                 }
             });
@@ -248,12 +266,15 @@ public class ArcAnnotationModalWindowPage
 
                     }
                     catch (UIMAException e) {
+                        aTarget.add(feedbackPanel);
                         error(ExceptionUtils.getRootCauseMessage(e));
                     }
                     catch (ClassNotFoundException e) {
+                        aTarget.add(feedbackPanel);
                         error(e.getMessage());
                     }
                     catch (IOException e) {
+                        aTarget.add(feedbackPanel);
                         error(e.getMessage());
                     }
                     aModalWindow.close(aTarget);
@@ -312,6 +333,12 @@ public class ArcAnnotationModalWindowPage
                     }
                     catch (IOException e) {
                         error(e.getMessage());
+                    }
+                    catch (ArcCrossedMultipleSentenceException e) {
+                        aTarget.prependJavaScript("alert('"+e.getMessage()+"')");
+                     }
+                    catch (MultipleSentenceCoveredException e) {
+                        aTarget.prependJavaScript("alert('"+e.getMessage()+"')");
                     }
                     aModalWindow.close(aTarget);
                 }

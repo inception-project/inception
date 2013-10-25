@@ -211,21 +211,27 @@ public class SpanAdapter
      *
      * @param aLabelValue
      *            the value of the annotation for the span
+     * @throws MultipleSentenceCoveredException
      */
-    public void add(JCas aJcas, int aBegin, int aEnd, String aLabelValue)
+    public void add(JCas aJcas, int aBegin, int aEnd, String aLabelValue) throws MultipleSentenceCoveredException
     {
         Map<Integer, Integer> offsets = ApplicationUtils.offsets(aJcas);
-        
-        if (singleTokenBehavior) {
-            Map<Integer, Integer> splitedTokens = ApplicationUtils.getSplitedTokens(offsets,
-                    aBegin, aEnd);
-            for (Integer start : splitedTokens.keySet()) {
-                updateCas(aJcas.getCas(), start, splitedTokens.get(start), aLabelValue);
+        if(BratAjaxCasUtil.isSameSentence(aJcas, aBegin, aEnd)) {
+            if (singleTokenBehavior) {
+                Map<Integer, Integer> splitedTokens = ApplicationUtils.getSplitedTokens(offsets,
+                        aBegin, aEnd);
+                for (Integer start : splitedTokens.keySet()) {
+                    updateCas(aJcas.getCas(), start, splitedTokens.get(start), aLabelValue);
+                }
+            }
+            else {
+                int startAndEnd[] = ApplicationUtils.getTokenStart(offsets, aBegin, aEnd);
+                updateCas(aJcas.getCas(), startAndEnd[0], startAndEnd[1], aLabelValue);
             }
         }
-        else {
-            int startAndEnd[] = ApplicationUtils.getTokenStart(offsets, aBegin, aEnd);
-            updateCas(aJcas.getCas(), startAndEnd[0], startAndEnd[1], aLabelValue);
+        else{
+            throw new MultipleSentenceCoveredException("Annotation coveres multiple sentences, "
+                    + "limit your annotation to single sentence!");
         }
     }
 
@@ -310,25 +316,19 @@ public class SpanAdapter
     }
 
     /**
-     * Check if the an annotation is in the same sentence
-     *
-     * @param The
-     *            {@link JCas}
-     * @param aBegin
-     *            begin offset of the span annotation
-     * @param aEnd
-     *            End offset of the span annotation
-     * @return
+     * throw an exception if the a span annotation is not in the same sentence
      */
-    public static boolean isAllowed(JCas aJCas, int aBegin, int aEnd)
+    public static class MultipleSentenceCoveredException
+        extends Exception
     {
-        if (BratAjaxCasUtil.isSameSentence(aJCas, aBegin, aEnd)) {
-            return true;
+        private static final long serialVersionUID = 1280015349963924638L;
+
+        public MultipleSentenceCoveredException(String message)
+        {
+            super(message);
         }
-        return false;
 
     }
-
     @Override
     public String getLabelFeatureName()
     {
