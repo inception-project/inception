@@ -119,26 +119,6 @@ public interface RepositoryService
     boolean existsProjectPermissionLevel(User user, Project project, PermissionLevel level);
     
     /**
-     * For a given project, get the permission level(s) of the user if it is granted
-     * 
-     * @param user
-     *            the user, if already assigned in that project
-     * @param project
-     *            the project to be examined
-     * @return list of {@link ProjectPermission#getLevel()}
-     */
-    // FIXME Bug 690 getPermissionLevel == getProjectPermission ? - REC 2013-10-26
-    ProjectPermission getPermissionLevel(User user, Project project);
-
-    /**
-     * get a permission object where a user is granted permission/permissions;
-     * 
-     * @return
-     */
-    // FIXME Bug 690 getPermissionLevel == getProjectPermission ? - REC 2013-10-26
-    ProjectPermission getProjectPermission(User user, Project project);
-    
-    /**
      * Get a {@link ProjectPermission }objects where a project is member of. We need to get them, for
      * example if the associated {@link Project} is deleted, the {@link ProjectPermission } objects
      * too.
@@ -347,6 +327,7 @@ public interface RepositoryService
     /**
      * Export a Serialized CAS annotation document from the file system
      */
+    // FIXME Why do we need two versions of expertAnnotatonDocument? - REC 2013-10-26
     File exportAnnotationDocument(SourceDocument document, Project project, String user);
     
     /**
@@ -396,6 +377,7 @@ public interface RepositoryService
      * @param document
      * @return
      */
+    // FIXME duplicate of the other listAnnotationDocuments? - REC 2013-10-26
     List<AnnotationDocument> listAnnotationDocuments(SourceDocument document);
 
     /**

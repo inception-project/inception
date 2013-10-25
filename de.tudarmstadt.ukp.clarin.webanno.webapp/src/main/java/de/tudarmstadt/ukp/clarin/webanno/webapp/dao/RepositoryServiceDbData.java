@@ -623,16 +623,6 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public ProjectPermission getPermissionLevel(User aUser, Project aProject)
-    {
-        return entityManager
-                .createQuery("FROM ProjectPermission WHERE user =:user AND " + "project =:project",
-                        ProjectPermission.class).setParameter("user", aUser.getUsername())
-                .setParameter("project", aProject).getSingleResult();
-    }
-
-    @Override
-    @Transactional(noRollbackFor = NoResultException.class)
     @SuppressWarnings("unchecked")
     public List<ProjectPermission> listProjectPermisionLevel(User aUser, Project aProject)
     {
@@ -679,16 +669,6 @@ public class RepositoryServiceDbData
             }
         }
         return users;
-    }
-
-    @Override
-    @Transactional
-    public ProjectPermission getProjectPermission(User aUser, Project aProject)
-    {
-        return entityManager
-                .createQuery("FROM ProjectPermission WHERE user =:user AND " + "project =:project",
-                        ProjectPermission.class).setParameter("user", aUser.getUsername())
-                .setParameter("project", aProject).getSingleResult();
     }
 
     @Override
