@@ -94,7 +94,6 @@ public class AnnotationPreferenceModalPanel
             // Import current settings from the annotator
             getModelObject().numberOfSentences = bratAnnotatorModel.getWindowSize();
             getModelObject().scrollPage = bratAnnotatorModel.isScrollPage();
-            getModelObject().displayLemma = bratAnnotatorModel.isDisplayLemmaSelected();
 
             for (TagSet tagSet : bratAnnotatorModel.getAnnotationLayers()) {
                 getModelObject().annotationLayers.add(tagSet);
@@ -104,16 +103,7 @@ public class AnnotationPreferenceModalPanel
             windowSizeField.setType(Integer.class);
             windowSizeField.setMinimum(1);
             add(windowSizeField);
-            add(new CheckBox("displayLemma")
-            {
-                private static final long serialVersionUID = 6875270671499921169L;
 
-                @Override
-                public boolean isVisible()
-                {
-                    return bratAnnotatorModel.getMode().equals(Mode.ANNOTATION);
-                }
-            });
             add(new Label("displayLemmaLabel", "Display Lemma:")
             {
                 private static final long serialVersionUID = -22913373405728018L;
@@ -192,7 +182,6 @@ public class AnnotationPreferenceModalPanel
                 protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
                 {
                     AnnotationPreference preference = new AnnotationPreference();
-                    preference.setDisplayLemmaSelected(getModelObject().displayLemma);
                     preference.setScrollPage(getModelObject().scrollPage);
                     preference.setWindowSize(getModelObject().numberOfSentences);
 
@@ -218,7 +207,6 @@ public class AnnotationPreferenceModalPanel
                                 + ExceptionUtils.getRootCauseMessage(e));
                     }
 
-                    bratAnnotatorModel.setDisplayLemmaSelected(getModelObject().displayLemma);
                     bratAnnotatorModel.setScrollPage(getModelObject().scrollPage);
                     bratAnnotatorModel.setAnnotationLayers(getModelObject().annotationLayers);
                     bratAnnotatorModel.setWindowSize(getModelObject().numberOfSentences);
@@ -253,7 +241,6 @@ public class AnnotationPreferenceModalPanel
         public Project project;
         public SourceDocument document;
         public int numberOfSentences;
-        public boolean displayLemma;
         public boolean scrollPage;
         public boolean reverseDependencyDirection;
         public HashSet<TagSet> annotationLayers = new HashSet<TagSet>();

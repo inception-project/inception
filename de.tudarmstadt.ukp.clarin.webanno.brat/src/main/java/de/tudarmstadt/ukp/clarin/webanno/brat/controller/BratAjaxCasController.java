@@ -315,6 +315,11 @@ public class BratAjaxCasController
             ChainAdapter.getCoreferenceLinkAdapter().add(label, aJCas, aAnnotationOffsetStart,
                     aAnnotationOffsetEnd, aOriginFs, aTargetFs);
         }
+        // else it should be lemma annotation. we don't have lemma tags and no prefixing !
+        else  {
+            SpanAdapter.getLemmaAdapter().add(aJCas, aAnnotationOffsetStart,
+                    aAnnotationOffsetEnd, label);
+        }
     }
 
     /**
@@ -357,7 +362,7 @@ public class BratAjaxCasController
         TypeAdapter adapter = getAdapter(fs.getType());
         adapter.delete(aJcas, aAddress);
     }
-    
+
     /**
      * If the annotation is added for the first time, change annotationState from NEW to INPROGRESS
      *
@@ -396,10 +401,9 @@ public class BratAjaxCasController
         }
         SpanAdapter.renderTokenAndSentence(aJCas, aResponse, aBratAnnotatorModel);
 
-        if (aBratAnnotatorModel.isDisplayLemmaSelected()) {
+        if (annotationLayers.contains(AnnotationTypeConstant.LEMMA)) {
             SpanAdapter.getLemmaAdapter().render(aJCas, aResponse, aBratAnnotatorModel);
         }
-        
         if (annotationLayers.contains(AnnotationTypeConstant.POS)) {
             SpanAdapter.getPosAdapter().render(aJCas, aResponse, aBratAnnotatorModel);
         }
@@ -453,7 +457,7 @@ public class BratAjaxCasController
         }
         return jCas;
     }
-    
+
     /**
      * Save the modified CAS in the file system as Serialized CAS
      */
@@ -477,7 +481,7 @@ public class BratAjaxCasController
         // change the state of the source document to inprogress
         aDocument.setState(SourceDocumentStateTransition
                 .transition(SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
-        
+
         if (!repository.existsAnnotationDocument(aDocument, aUser)) {
             aAnnotationDocument = new AnnotationDocument();
             aAnnotationDocument.setDocument(aDocument);
@@ -496,7 +500,7 @@ public class BratAjaxCasController
         catch (ClassNotFoundException e) {
             throw new IOException(e);
         }
-        
+
         repository.createAnnotationDocument(aAnnotationDocument);
         repository.createAnnotationDocumentContent(jCas, aDocument, aUser);
         return jCas;

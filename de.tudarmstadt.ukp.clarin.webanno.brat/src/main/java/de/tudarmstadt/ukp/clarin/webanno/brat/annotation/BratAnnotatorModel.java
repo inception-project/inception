@@ -81,10 +81,7 @@ public class BratAnnotatorModel
      * The number of sentences to be dispalyed at atime
      */
     private int windowSize = 10;
-    /**
-     * Used to enable/disable the display of lemma layers
-     */
-    private boolean displayLemmaSelected;
+
     /**
      * Used to enable/disable auto-scrolling while annotation
      */
@@ -188,16 +185,6 @@ public class BratAnnotatorModel
     public void setWindowSize(int aWindowSize)
     {
         windowSize = aWindowSize;
-    }
-
-    public boolean isDisplayLemmaSelected()
-    {
-        return displayLemmaSelected;
-    }
-
-    public void setDisplayLemmaSelected(boolean aIsDisplayLemmaSelected)
-    {
-        displayLemmaSelected = aIsDisplayLemmaSelected;
     }
 
     public boolean isScrollPage()

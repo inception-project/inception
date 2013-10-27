@@ -301,6 +301,11 @@ public class AnnotationServiceImpl
                 de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.COREFERENCE,
                 "coreference annotation", "relation", "TuebaDZ", "de",
                 new String[] { "anaphoric" }, new String[] { "anaphoric" }, aProject, aUser);
+
+        initializeType(
+                de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.LEMMA,
+                "lemma annotation", "span", "Lemma", "de", new String[] {  },
+                new String[] { }, aProject, aUser);
     }
 
     @Override

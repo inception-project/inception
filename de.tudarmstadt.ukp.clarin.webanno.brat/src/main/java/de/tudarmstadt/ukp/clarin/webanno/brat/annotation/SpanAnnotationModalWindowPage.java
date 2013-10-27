@@ -93,7 +93,7 @@ public class SpanAnnotationModalWindowPage
     TagSet selectedtTagSet;
 
     Model<TagSet> tagSetsModel;
-    Model<Tag> tagsModel;
+    Model<String> tagsModel;
     private AnnotationDialogForm annotationDialogForm;
     private BratAnnotatorModel bratAnnotatorModel;
     String offsets;
@@ -127,26 +127,26 @@ public class SpanAnnotationModalWindowPage
 
             if (selectedSpanId != -1) {
                 tagSetsModel = new Model<TagSet>(selectedtTagSet);
-                Tag tag = annotationService.getTag(TypeUtil.getLabel(selectedSpanType),
-                        selectedtTagSet);
-
-                tagsModel = new Model<Tag>(tag);
+                tagsModel = new Model<String>(selectedSpanType);
             }
             else if (bratAnnotatorModel.getRememberedSpanTagSet() != null) {
                 selectedtTagSet = bratAnnotatorModel.getRememberedSpanTagSet();
                 tagSetsModel = new Model<TagSet>(selectedtTagSet);
-                tagsModel = new Model<Tag>(bratAnnotatorModel.getRememberedSpanTag());
+                tagsModel = new Model<String>(bratAnnotatorModel.getRememberedSpanTag().getName());
+                // for lemma,
+                if(tagsModel.getObject()==null){
+                    tagsModel.setObject(selectedText);
+                }
             }
             else {
                 selectedtTagSet = ((TagSet) spanLayers.get(0));
                 tagSetsModel = new Model<TagSet>(selectedtTagSet);
-                tagsModel = new Model<Tag>(null);
+                tagsModel = new Model<String>("");
             }
 
             add(new Label("selectedText", selectedText));
 
-            tags = new ComboBox<Tag>("tags", new Model<String>(tagsModel.getObject() == null ? ""
-                    : tagsModel.getObject().getName()),
+            tags = new ComboBox<Tag>("tags", tagsModel,
                     annotationService.listTags(selectedtTagSet), new ComboBoxRenderer<Tag>("name",
                             "name"));
             add(tags);
@@ -159,7 +159,12 @@ public class SpanAnnotationModalWindowPage
                 protected void onSelectionChanged(TagSet aNewSelection)
                 {
                     selectedtTagSet = aNewSelection;
-                    tagsModel.setObject(null);
+                    if(aNewSelection.getName().equals(AnnotationTypeConstant.LEMMA)) {
+                        tagsModel.setObject(selectedText);
+                    }
+                    else {
+                        tagsModel.setObject("");
+                    }
 
                     updateTagsComboBox();
 
@@ -226,14 +231,23 @@ public class SpanAnnotationModalWindowPage
                             aTarget.appendJavaScript("alert('No Tag is selected!')");
                         }
                         else {
-                            Tag selectedTag = (Tag) annotationService.getTag(tags.getModelObject(),
-                                    selectedtTagSet);
-                            annotationType = TypeUtil.getQualifiedLabel(selectedTag);
 
-                            controller.createSpanAnnotation(jCas, start, end, annotationType, null, null);
-                            controller.updateJCas(
-                                    bratAnnotatorModel.getMode(), bratAnnotatorModel.getDocument(),
-                                    bratAnnotatorModel.getUser(), jCas);
+                            Tag selectedTag;
+                            if (selectedtTagSet.getName().equals(AnnotationTypeConstant.LEMMA)) {
+                                selectedTag = new Tag();
+                                annotationType = tags.getModelObject();
+                            }
+                            else {
+                                selectedTag = (Tag) annotationService.getTag(tags.getModelObject(),
+                                        selectedtTagSet);
+                                annotationType = TypeUtil.getQualifiedLabel(selectedTag);
+                            }
+
+                            controller.createSpanAnnotation(jCas, start, end, annotationType, null,
+                                    null);
+                            controller.updateJCas(bratAnnotatorModel.getMode(),
+                                    bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
+                                    jCas);
 
                             if (bratAnnotatorModel.isScrollPage()) {
                                 updateSentenceAddressAndOffsets(jCas, start);
@@ -297,9 +311,9 @@ public class SpanAnnotationModalWindowPage
                         }
                         else {
                             controller.deleteAnnotation(jCas, selectedSpanId);
-                            controller.updateJCas(
-                                    bratAnnotatorModel.getMode(), bratAnnotatorModel.getDocument(),
-                                    bratAnnotatorModel.getUser(), jCas);
+                            controller.updateJCas(bratAnnotatorModel.getMode(),
+                                    bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
+                                    jCas);
 
                             if (bratAnnotatorModel.isScrollPage()) {
                                 updateSentenceAddressAndOffsets(jCas, start);
@@ -333,8 +347,7 @@ public class SpanAnnotationModalWindowPage
         private void updateTagsComboBox()
         {
             tags.remove();
-            tags = new ComboBox<Tag>("tags", new Model<String>(tagsModel.getObject() == null ? ""
-                    : tagsModel.getObject().getName()),
+            tags = new ComboBox<Tag>("tags", tagsModel,
                     annotationService.listTags(selectedtTagSet), new ComboBoxRenderer<Tag>("name",
                             "name"));
             add(tags);
@@ -402,7 +415,7 @@ public class SpanAnnotationModalWindowPage
             String aType, int selectedSpanId)
     {
         this.selectedSpanId = selectedSpanId;
-        this.selectedSpanType = aType;
+        this.selectedSpanType = TypeUtil.getLabel(aType);
 
         String layerName = TypeUtil.getSpanLayerName(TypeUtil.getLabelPrefix(aType));
 

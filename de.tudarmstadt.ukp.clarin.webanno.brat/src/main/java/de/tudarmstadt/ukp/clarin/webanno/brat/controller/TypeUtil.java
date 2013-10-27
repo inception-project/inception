@@ -33,7 +33,7 @@ public final class TypeUtil
         // No instances
     }
 
-    public static TypeAdapter getAdapter(Type aType) 
+    public static TypeAdapter getAdapter(Type aType)
     {
         if (aType.getName().equals(NamedEntity.class.getName())) {
             return SpanAdapter.getNamedEntityAdapter();
@@ -156,6 +156,9 @@ public final class TypeUtil
         }
         else if (aPrefix.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
             layer = AnnotationTypeConstant.COREFRELTYPE;
+        }
+        else if (aPrefix.equals("")) {// no prefix for lemma
+            layer = AnnotationTypeConstant.LEMMA;
         }
         return layer;
     }

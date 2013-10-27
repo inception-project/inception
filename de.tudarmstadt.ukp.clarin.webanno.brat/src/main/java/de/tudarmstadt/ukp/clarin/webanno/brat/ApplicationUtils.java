@@ -311,7 +311,6 @@ public class ApplicationUtils
             }
             abAnnotatorModel.setWindowSize(aPreference.getWindowSize());
             abAnnotatorModel.setScrollPage(aPreference.isScrollPage());
-            abAnnotatorModel.setDisplayLemmaSelected(aPreference.isDisplayLemmaSelected());
             // Get tagset using the id, from the properties file
             abAnnotatorModel.getAnnotationLayers().clear();
             if (aPreference.getAnnotationLayers() != null) {
