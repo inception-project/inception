@@ -221,7 +221,7 @@ public class ArcAdapter
 
         Type tokenType = getType(aJCas.getCas(), arcTokenType);
         // List all sentence in this display window
-        List<Sentence> sentences = selectCovered(aJCas, Sentence.class, aBegin, aBegin);
+        List<Sentence> sentences = selectCovered(aJCas, Sentence.class, aBegin, aEnd);
         for (Sentence sentence : sentences) {
 
             for (AnnotationFS fs : selectCovered(aJCas.getCas(), type, sentence.getBegin(),
