@@ -351,7 +351,7 @@ public class BratCuratorUtility
                 String label = entity.getType();
                 label = label.replace(AnnotationTypeConstant.POS_PREFIX, "")
                         .replace(AnnotationTypeConstant.NAMEDENTITY_PREFIX, "")
-                        .replace(AnnotationTypeConstant.COREFERENCE_PREFIX, "");
+                        .replace(AnnotationTypeConstant.COREFRELTYPE_PREFIX, "");
                 entity.setType(type);
                 boolean hasArc = false;
                 for (Relation relation : response.getRelations()) {
@@ -445,7 +445,7 @@ public class BratCuratorUtility
         }
         if (newState != null) {
             String type = relation.getType() + "_(" + newState.name() + ")";
-            String label = relation.getType().replace(AnnotationTypeConstant.POS_PREFIX, "")
+            String label = relation.getType().replace(AnnotationTypeConstant.DEP_PREFIX, "")
                     .replace(AnnotationTypeConstant.COREFERENCE_PREFIX, "");
             relation.setType(type);
             return getRelation(type, label, newState, Arrays.asList(new String[] { arcTarget }));

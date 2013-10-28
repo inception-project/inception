@@ -53,7 +53,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.StoreSvgResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.WhoamiResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -296,8 +295,9 @@ public class BratAjaxCasController
     /**
      * Add a span annotation to CAS
      */
-    public void createSpanAnnotation(JCas aJCas, int aAnnotationOffsetStart, int aAnnotationOffsetEnd,
-            String aQualifiedLabel, AnnotationFS aOriginFs, AnnotationFS aTargetFs)
+    public void createSpanAnnotation(JCas aJCas, int aAnnotationOffsetStart,
+            int aAnnotationOffsetEnd, String aQualifiedLabel, AnnotationFS aOriginFs,
+            AnnotationFS aTargetFs)
         throws MultipleSentenceCoveredException
     {
         String labelPrefix = TypeUtil.getLabelPrefix(aQualifiedLabel);
@@ -311,14 +311,14 @@ public class BratAjaxCasController
             SpanAdapter.getPosAdapter().add(aJCas, aAnnotationOffsetStart, aAnnotationOffsetEnd,
                     label);
         }
-        else if (labelPrefix.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
+        else if (labelPrefix.equals(AnnotationTypeConstant.COREFRELTYPE_PREFIX)) {
             ChainAdapter.getCoreferenceLinkAdapter().add(label, aJCas, aAnnotationOffsetStart,
                     aAnnotationOffsetEnd, aOriginFs, aTargetFs);
         }
         // else it should be lemma annotation. we don't have lemma tags and no prefixing !
-        else  {
-            SpanAdapter.getLemmaAdapter().add(aJCas, aAnnotationOffsetStart,
-                    aAnnotationOffsetEnd, label);
+        else {
+            SpanAdapter.getLemmaAdapter().add(aJCas, aAnnotationOffsetStart, aAnnotationOffsetEnd,
+                    label);
         }
     }
 
@@ -337,7 +337,7 @@ public class BratAjaxCasController
         String labelPrefix = TypeUtil.getLabelPrefix(aQualifiedLabel);
         String label = TypeUtil.getLabel(aQualifiedLabel);
 
-        if (labelPrefix.equals(AnnotationTypeConstant.POS_PREFIX)) {
+        if (labelPrefix.equals(AnnotationTypeConstant.DEP_PREFIX)) {
             ArcAdapter.getDependencyAdapter().add(label, aOriginFs, aTargetFs, aJCas,
                     aBratAnnotatorModel,
                     aBratAnnotatorModel.getProject().isReverseDependencyDirection());
@@ -364,35 +364,13 @@ public class BratAjaxCasController
     }
 
     /**
-     * If the annotation is added for the first time, change annotationState from NEW to INPROGRESS
-     *
-     * @param aSourceDocument
-     *            The sourceDocument
-     * @param aUSer
-     *            The USer
-     */
-    private void newToAnnotationInprogress(SourceDocument aSourceDocument, User aUSer)
-    {
-        // If this is the first time the user working on it, change state from NEW to INPROGRESS
-        AnnotationDocument annotationDocument = repository.getAnnotationDocument(aSourceDocument,
-                aUSer);
-        if (annotationDocument.getState().equals(AnnotationDocumentState.NEW)) {
-            annotationDocument.setState(AnnotationDocumentStateTransition
-                    .transition(AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
-        }
-    }
-
-    /**
      * wrap JSON responses to BRAT visualizer
      */
     public static void addBratResponses(GetDocumentResponse aResponse,
             BratAnnotatorModel aBratAnnotatorModel, int aAnnotationOffsetStart, JCas aJCas,
             boolean aIsGetDocument)
     {
-        List<String> annotationLayers = new ArrayList<String>();
-        for (TagSet tag : aBratAnnotatorModel.getAnnotationLayers()) {
-            annotationLayers.add(tag.getType().getName());
-        }
+
         if (aBratAnnotatorModel.isScrollPage() && !aIsGetDocument) {
             aBratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(aJCas,
                     aBratAnnotatorModel.getSentenceAddress(), aAnnotationOffsetStart,
@@ -401,29 +379,8 @@ public class BratAjaxCasController
         }
         SpanAdapter.renderTokenAndSentence(aJCas, aResponse, aBratAnnotatorModel);
 
-        if (annotationLayers.contains(AnnotationTypeConstant.LEMMA)) {
-            SpanAdapter.getLemmaAdapter().render(aJCas, aResponse, aBratAnnotatorModel);
-        }
-        if (annotationLayers.contains(AnnotationTypeConstant.POS)) {
-            SpanAdapter.getPosAdapter().render(aJCas, aResponse, aBratAnnotatorModel);
-        }
-        if (annotationLayers.contains(AnnotationTypeConstant.NAMEDENTITY)) {
-            SpanAdapter.getNamedEntityAdapter().render(aJCas, aResponse,
-                    aBratAnnotatorModel);
-        }
-        if (annotationLayers.contains(AnnotationTypeConstant.DEPENDENCY)
-                && annotationLayers.contains(AnnotationTypeConstant.POS)) {
-            ArcAdapter.getDependencyAdapter().render(aJCas, aResponse,
-                    aBratAnnotatorModel);
-        }
-        if (annotationLayers.contains(AnnotationTypeConstant.COREFRELTYPE)) {
-            ChainAdapter.getCoreferenceLinkAdapter().render(aJCas, aResponse,
-                    aBratAnnotatorModel);
-        }
-        if (annotationLayers.contains(AnnotationTypeConstant.COREFERENCE)
-                && annotationLayers.contains(AnnotationTypeConstant.COREFRELTYPE)) {
-            ChainAdapter.getCoreferenceChainAdapter().render(aJCas, aResponse,
-                    aBratAnnotatorModel);
+        for (TagSet tag : aBratAnnotatorModel.getAnnotationLayers()) {
+            getAdapter(tag.getType().getName()).render(aJCas, aResponse, aBratAnnotatorModel);
         }
     }
 

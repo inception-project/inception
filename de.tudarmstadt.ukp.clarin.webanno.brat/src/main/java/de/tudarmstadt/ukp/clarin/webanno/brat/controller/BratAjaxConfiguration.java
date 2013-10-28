@@ -2,13 +2,13 @@
  * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -77,7 +77,8 @@ public class BratAjaxConfiguration
             else if (tag.getTagSet().getType().getName().equals(AnnotationTypeConstant.NAMEDENTITY)) {
                 namedEntity.add(tag.getName());
             }
-            else if (tag.getTagSet().getType().getName().equals(AnnotationTypeConstant.COREFRELTYPE)) {
+            else if (tag.getTagSet().getType().getName()
+                    .equals(AnnotationTypeConstant.COREFRELTYPE)) {
                 corefRelType.add(tag.getName());
             }
             else if (tag.getTagSet().getType().getName().equals(AnnotationTypeConstant.COREFERENCE)) {
@@ -92,31 +93,31 @@ public class BratAjaxConfiguration
         Collections.sort(coreference);
         Collections.sort(corefRelType);
 
-        List<EntityType> posChildren = getChildren(AnnotationTypeConstant.POS_PREFIX, poses, dependency,
-                "red", "yellow", "blue", "green");
-        EntityType posType = new EntityType(AnnotationTypeConstant.POS_PARENT, AnnotationTypeConstant.POS_PARENT,
-                true, "", "red", "blue", "blue", new ArrayList<String>(), posChildren,
-                new ArrayList<String>(), new ArrayList<RelationType>());
+        List<EntityType> posChildren = getChildren(AnnotationTypeConstant.POS_PREFIX,
+                AnnotationTypeConstant.DEP_PREFIX, poses, dependency, "red", "yellow", "blue",
+                "green");
+        EntityType posType = new EntityType(AnnotationTypeConstant.POS_PARENT,
+                AnnotationTypeConstant.POS_PARENT, true, "", "red", "blue", "blue",
+                new ArrayList<String>(), posChildren, new ArrayList<String>(),
+                new ArrayList<RelationType>());
 
         if (poses.size() > 0) {
             entityTypes.add(posType);
         }
 
+        List<EntityType> corefChildren = getChildren(AnnotationTypeConstant.COREFRELTYPE_PREFIX,
+                AnnotationTypeConstant.COREFERENCE_PREFIX, corefRelType, coreference, "red",
+                "blue", "blue", "");
+        EntityType corefType = new EntityType(AnnotationTypeConstant.COREFERENCE_PARENT,
+                AnnotationTypeConstant.COREFERENCE_PARENT, true, "", "red", "blue", "blue",
+                new ArrayList<String>(), corefChildren, new ArrayList<String>(),
+                new ArrayList<RelationType>());
+        if (corefRelType.size() > 0) {
+            entityTypes.add(corefType);
+        }
 
-
-            List<EntityType> corefChildren = getChildren(AnnotationTypeConstant.COREFERENCE_PREFIX,
-                    corefRelType, coreference, "red", "blue", "blue", "");
-            EntityType corefType = new EntityType(AnnotationTypeConstant.COREFERENCE_PARENT,
-                    AnnotationTypeConstant.COREFERENCE_PARENT, true, "", "red", "blue", "blue",
-                    new ArrayList<String>(), corefChildren, new ArrayList<String>(),
-                    new ArrayList<RelationType>());
-            if (corefRelType.size() > 0) {
-                entityTypes.add(corefType);
-            }
-
-
-        List<EntityType> neChildren = getChildren(AnnotationTypeConstant.NAMEDENTITY_PREFIX, namedEntity,
-                new ArrayList<String>(), "black", "cyan", "green", "");
+        List<EntityType> neChildren = getChildren(AnnotationTypeConstant.NAMEDENTITY_PREFIX, "",
+                namedEntity, new ArrayList<String>(), "black", "cyan", "green", "");
         EntityType neEntityType = new EntityType(AnnotationTypeConstant.NAMEDENTITY_PARENT,
                 AnnotationTypeConstant.NAMEDENTITY_PARENT, true, "", "black", "cyan", "green",
                 new ArrayList<String>(), neChildren, new ArrayList<String>(),
@@ -145,15 +146,15 @@ public class BratAjaxConfiguration
      *            border color of the arc
      * @return {@link List< {@link EntityType }>}
      */
-    private List<EntityType> getChildren(String aPrefix, List<String> spansList,
-            List<String> aArcList, String aFgColor, String aBgcolor, String aBorderColoer,
-            String aArcColor)
+    private List<EntityType> getChildren(String aParentPrefix, String aChildPrefix,
+            List<String> spansList, List<String> aArcList, String aFgColor, String aBgcolor,
+            String aBorderColoer, String aArcColor)
     {
         List<EntityType> children = new ArrayList<EntityType>();
 
         List<String> arcTargets = new ArrayList<String>();
         for (String span : spansList) {
-                arcTargets.add(aPrefix + span);
+            arcTargets.add(aParentPrefix + span);
         }
         for (String span : spansList) {
             List<RelationType> arcs = new ArrayList<RelationType>();
@@ -162,26 +163,28 @@ public class BratAjaxConfiguration
                 String arcLabels = arcTypesResultIterator.next();
 
                 // 12 classes of colors to differentiate Co-reference chains
-                if(aPrefix.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)){
+                if (aParentPrefix.equals(AnnotationTypeConstant.COREFRELTYPE_PREFIX)) {
 
-                String[] colors = new String[] { "#00FF00", "#0000A0", "#FF0000", "#800080 ", "#F000FF",
-                      "#00FFFF ", "#FF00FF ", "#8D38C9", "#8D38C9", "#736AFF", "#C11B17", "#800000" };
-                int i = 1;
-                for(String color:colors){
-                RelationType arc = new RelationType(color, "triangle,5",
-                        Arrays.asList(arcLabels), i+aPrefix + arcLabels, arcTargets, "");
-                arcs.add(arc);
-                i++;
+                    String[] colors = new String[] { "#00FF00", "#0000A0", "#FF0000", "#800080 ",
+                            "#F000FF", "#00FFFF ", "#FF00FF ", "#8D38C9", "#8D38C9", "#736AFF",
+                            "#C11B17", "#800000" };
+                    int i = 1;
+                    for (String color : colors) {
+                        RelationType arc = new RelationType(color, "triangle,5",
+                                Arrays.asList(arcLabels), i + aChildPrefix + arcLabels, arcTargets,
+                                "");
+                        arcs.add(arc);
+                        i++;
+                    }
                 }
-                }
-                else{
+                else {
                     RelationType arc = new RelationType(aArcColor, "triangle,5",
-                            Arrays.asList(arcLabels), aPrefix + arcLabels, arcTargets, "");
+                            Arrays.asList(arcLabels), aChildPrefix + arcLabels, arcTargets, "");
                     arcs.add(arc);
                 }
             }
 
-            EntityType entityTpe = new EntityType(span, aPrefix + span, false, "", aFgColor,
+            EntityType entityTpe = new EntityType(span, aParentPrefix + span, false, "", aFgColor,
                     aBgcolor, aBorderColoer, Arrays.asList(span), new ArrayList<EntityType>(),
                     new ArrayList<String>(), arcs);
             children.add(entityTpe);

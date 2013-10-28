@@ -773,7 +773,7 @@ public class ChainAdapter
      */
     public static final ChainAdapter getCoreferenceLinkAdapter()
     {
-        ChainAdapter adapter = new ChainAdapter(AnnotationTypeConstant.COREFERENCE_PREFIX,
+        ChainAdapter adapter = new ChainAdapter(AnnotationTypeConstant.COREFRELTYPE_PREFIX,
                 CoreferenceLink.class.getName(),
                 AnnotationTypeConstant.COREFERENCELINK_FEATURENAME,
                 AnnotationTypeConstant.COREFERENCECHAIN_FIRST_FEATURENAME,

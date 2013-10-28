@@ -33,18 +33,15 @@ public class AnnotationTypeConstant
     public static final String COREFRELTYPE = "coreference type";
     public static final String LEMMA = "lemma";
 
-    // USed for span annotation hierarchy, as parent name.
-    // This is, in brat terminology, unused entity type.
+
     public static final String POS_PREFIX = "POS_";
+    public static final String DEP_PREFIX = "DEP_";
     public static final String NAMEDENTITY_PREFIX = "Named Entity_";
     public static final String COREFERENCE_PREFIX = "COREF_";
+    public static final String COREFRELTYPE_PREFIX = "COREFT_";
 
     public static final String PREFIX_SEPARATOR = "_";
 
-
-
-    // USed for span annotation hierarchy, as parent name.
-    // This is, in brat terminology, unused entity type.
 
     public static final String POS_PARENT = "POS";
     public static final String NAMEDENTITY_PARENT = "Named Entity";

@@ -303,7 +303,7 @@ public class ArcAdapter
      */
     public static final ArcAdapter getDependencyAdapter()
     {
-        ArcAdapter adapter = new ArcAdapter(AnnotationTypeConstant.POS_PREFIX,
+        ArcAdapter adapter = new ArcAdapter(AnnotationTypeConstant.DEP_PREFIX,
                 Dependency.class.getName(), AnnotationTypeConstant.DEPENDENCY_FEATURENAME,
                 AnnotationTypeConstant.DEPENDENCY_DEPENDENT_FEATURENAME,
                 AnnotationTypeConstant.DEPENDENCY_GOVERNOR_FEATURENAME, Token.class.getName(),

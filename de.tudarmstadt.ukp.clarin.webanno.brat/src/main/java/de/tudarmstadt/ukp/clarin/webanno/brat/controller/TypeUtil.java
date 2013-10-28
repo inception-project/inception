@@ -17,12 +17,14 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
+import org.apache.commons.io.filefilter.PrefixFileFilter;
 import org.apache.uima.cas.Type;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
@@ -33,9 +35,19 @@ public final class TypeUtil
         // No instances
     }
 
+    public static final String POS = "pos";
+    public static final String NAMEDENTITY = "named entity";
+    public static final String DEPENDENCY = "dependency";
+    public static final String COREFERENCE = "coreference";
+    public static final String COREFRELTYPE = "coreference type";
+    public static final String LEMMA = "lemma";
+
     public static TypeAdapter getAdapter(Type aType)
     {
-        if (aType.getName().equals(NamedEntity.class.getName())) {
+        /*
+         * if (aType.getName().equals(POS.class.getName())) { return SpanAdapter.getPosAdapter(); }
+         * else
+         */if (aType.getName().equals(NamedEntity.class.getName())) {
             return SpanAdapter.getNamedEntityAdapter();
         }
         else if (aType.getName().equals(Dependency.class.getName())) {
@@ -49,6 +61,37 @@ public final class TypeUtil
         }
         else {
             throw new IllegalArgumentException("No adapter for type [" + aType.getName() + "]");
+        }
+    }
+
+    /**
+     * Get the adapter based on the {@link PrefixFileFilter} such as POS_, NAMED_ENTITY_
+     *
+     * @param aPrefix
+     * @return
+     */
+    public static TypeAdapter getAdapter(String aPrefix)
+    {
+        if (aPrefix.equals(POS)) {
+            return SpanAdapter.getPosAdapter();
+        }
+        else if (aPrefix.equals(LEMMA)) {
+            return SpanAdapter.getLemmaAdapter();
+        }
+        else if (aPrefix.equals(NAMEDENTITY)) {
+            return SpanAdapter.getNamedEntityAdapter();
+        }
+        else if (aPrefix.equals(DEPENDENCY)) {
+            return ArcAdapter.getDependencyAdapter();
+        }
+        else if (aPrefix.equals(COREFERENCE)) {
+            return ChainAdapter.getCoreferenceChainAdapter();
+        }
+        else if (aPrefix.equals(COREFRELTYPE)) {
+            return ChainAdapter.getCoreferenceLinkAdapter();
+        }
+        else {
+            throw new IllegalArgumentException("No adapter for type [" + aPrefix + "]");
         }
     }
 
@@ -83,7 +126,7 @@ public final class TypeUtil
         }
         else if (aSelectedTag.getTagSet().getType().getName()
                 .equals(AnnotationTypeConstant.DEPENDENCY)) {
-            annotationType = AnnotationTypeConstant.POS_PREFIX + aSelectedTag.getName();
+            annotationType = AnnotationTypeConstant.DEP_PREFIX + aSelectedTag.getName();
         }
         else if (aSelectedTag.getTagSet().getType().getName()
                 .equals(AnnotationTypeConstant.NAMEDENTITY)) {
@@ -91,7 +134,7 @@ public final class TypeUtil
         }
         else if (aSelectedTag.getTagSet().getType().getName()
                 .equals(AnnotationTypeConstant.COREFRELTYPE)) {
-            annotationType = AnnotationTypeConstant.COREFERENCE_PREFIX + aSelectedTag.getName();
+            annotationType = AnnotationTypeConstant.COREFRELTYPE_PREFIX + aSelectedTag.getName();
         }
         else if (aSelectedTag.getTagSet().getType().getName()
                 .equals(AnnotationTypeConstant.COREFERENCE)) {
@@ -111,21 +154,21 @@ public final class TypeUtil
     {
         String type;
         if (Character.isDigit(aQualifiedLabel.charAt(0))) {
-            type = aQualifiedLabel
-                    .substring(aQualifiedLabel.indexOf(AnnotationTypeConstant.PREFIX_SEPARATOR) + 1);
+            type = aQualifiedLabel.substring(aQualifiedLabel
+                    .indexOf(AnnotationTypeConstant.PREFIX_SEPARATOR) + 1);
         }
         else {
-            type = aQualifiedLabel
-                    .substring(aQualifiedLabel.indexOf(AnnotationTypeConstant.PREFIX_SEPARATOR) + 1);
+            type = aQualifiedLabel.substring(aQualifiedLabel
+                    .indexOf(AnnotationTypeConstant.PREFIX_SEPARATOR) + 1);
         }
         return type;
     }
 
     /**
      * Get the annotation layer name for arc {@link AnnotationType} such as
-     * {@link AnnotationTypeConstant#DEPENDENCY} or {@link AnnotationTypeConstant#COREFERENCE}. If
-     * this name is changed in the database, the {@link AnnotationTypeConstant} constants also
-     * should be updated!
+     * {@link AnnotationTypeConstant#DEPENDENCY} or {@link AnnotationTypeConstant#COREFERENCE} based
+     * on the origin span type. This is assumed that an arc is drawn only from single span type such
+     * as from {@link POS}. For Free Annotation type, the method should be changed.
      */
     public static String getArcLayerName(String aPrefix)
     {
@@ -133,7 +176,7 @@ public final class TypeUtil
         if (aPrefix.equals(AnnotationTypeConstant.POS_PREFIX)) {
             layer = AnnotationTypeConstant.DEPENDENCY;
         }
-        else if (aPrefix.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
+        else if (aPrefix.equals(AnnotationTypeConstant.COREFRELTYPE_PREFIX)) {
             layer = AnnotationTypeConstant.COREFERENCE;
         }
         return layer;
@@ -154,7 +197,7 @@ public final class TypeUtil
         else if (aPrefix.equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)) {
             layer = AnnotationTypeConstant.NAMEDENTITY;
         }
-        else if (aPrefix.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
+        else if (aPrefix.equals(AnnotationTypeConstant.COREFRELTYPE_PREFIX)) {
             layer = AnnotationTypeConstant.COREFRELTYPE;
         }
         else if (aPrefix.equals("")) {// no prefix for lemma
