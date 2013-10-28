@@ -64,6 +64,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSetConstant;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
@@ -94,6 +95,38 @@ public class ProjectTagSetsPanel
     DropDownChoice<String> importTagsetFormat;
     DropDownChoice<String> exportTagsetFormat;
     private String selectedExporTagsetFormat = ExportedTagSetConstant.JSON_FORMAT;
+
+    private TagSetSelectionForm tagSetSelectionForm;
+    private TagSelectionForm tagSelectionForm;
+    private TagSetDetailForm tagSetDetailForm;
+    private TagDetailForm tagDetailForm;
+    private ImportTagSetForm importTagSetForm;
+
+    private Model<Project> selectedProjectModel;
+
+    public ProjectTagSetsPanel(String id, Model<Project> aProjectModel)
+    {
+        super(id);
+        this.selectedProjectModel = aProjectModel;
+        tagSetSelectionForm = new TagSetSelectionForm("tagSetSelectionForm");
+
+        tagSelectionForm = new TagSelectionForm("tagSelectionForm");
+        tagSelectionForm.setVisible(false);
+
+        tagSetDetailForm = new TagSetDetailForm("tagSetDetailForm");
+        tagSetDetailForm.setVisible(false);
+
+        tagDetailForm = new TagDetailForm("tagDetailForm");
+        tagDetailForm.setVisible(false);
+
+        importTagSetForm = new ImportTagSetForm("importTagSetForm");
+
+        add(tagSetSelectionForm);
+        add(tagSelectionForm);
+        add(tagSetDetailForm);
+        add(tagDetailForm);
+        add(importTagSetForm);
+    }
 
     private class TagSetSelectionForm
         extends Form<SelectionModel>
@@ -170,8 +203,15 @@ public class ProjectTagSetsPanel
                         tagSetDetailForm.setModelObject(aNewSelection);
                         tagSetDetailForm.setVisible(true);
                         TagSetSelectionForm.this.setVisible(true);
-                        tagSelectionForm.setVisible(true);
-                        tagDetailForm.setVisible(true);
+                        // no need to add tag for lemma
+                        if(aNewSelection.getName().equals(AnnotationTypeConstant.LEMMA)){
+                            tagSelectionForm.setVisible(false);
+                            tagDetailForm.setVisible(false);
+                        }
+                        else{
+                            tagSelectionForm.setVisible(true);
+                            tagDetailForm.setVisible(true);
+                        }
 
                     }
                 }
@@ -395,9 +435,6 @@ public class ProjectTagSetsPanel
         extends Form<de.tudarmstadt.ukp.clarin.webanno.model.TagSet>
     {
         private static final long serialVersionUID = -1L;
-        TagSet tagSet;
-        private List<FileUpload> uploadedFiles;
-        private FileUploadField fileUpload;
 
         @SuppressWarnings("unchecked")
         public TagSetDetailForm(String id)
@@ -445,8 +482,14 @@ public class ProjectTagSetsPanel
                                         + ExceptionUtils.getRootCauseMessage(e));
                             }
                             TagSetDetailForm.this.setModelObject(tagSet);
-                            tagSelectionForm.setVisible(true);
-                            tagDetailForm.setVisible(true);
+                            if(tagSet.getName().equals(AnnotationTypeConstant.LEMMA)){
+                                tagSelectionForm.setVisible(false);
+                                tagDetailForm.setVisible(false);
+                            }
+                            else{
+                                tagSelectionForm.setVisible(true);
+                                tagDetailForm.setVisible(true);
+                            }
                         }
                     }
                 }
@@ -736,37 +779,5 @@ public class ProjectTagSetsPanel
                 }
             });
         }
-    }
-
-    private TagSetSelectionForm tagSetSelectionForm;
-    private TagSelectionForm tagSelectionForm;
-    private TagSetDetailForm tagSetDetailForm;
-    private TagDetailForm tagDetailForm;
-    private ImportTagSetForm importTagSetForm;
-
-    private Model<Project> selectedProjectModel;
-
-    public ProjectTagSetsPanel(String id, Model<Project> aProjectModel)
-    {
-        super(id);
-        this.selectedProjectModel = aProjectModel;
-        tagSetSelectionForm = new TagSetSelectionForm("tagSetSelectionForm");
-
-        tagSelectionForm = new TagSelectionForm("tagSelectionForm");
-        tagSelectionForm.setVisible(false);
-
-        tagSetDetailForm = new TagSetDetailForm("tagSetDetailForm");
-        tagSetDetailForm.setVisible(false);
-
-        tagDetailForm = new TagDetailForm("tagDetailForm");
-        tagDetailForm.setVisible(false);
-
-        importTagSetForm = new ImportTagSetForm("importTagSetForm");
-
-        add(tagSetSelectionForm);
-        add(tagSelectionForm);
-        add(tagSetDetailForm);
-        add(tagDetailForm);
-        add(importTagSetForm);
     }
 }
