@@ -204,7 +204,7 @@ public class ProjectTagSetsPanel
                         tagSetDetailForm.setVisible(true);
                         TagSetSelectionForm.this.setVisible(true);
                         // no need to add tag for lemma
-                        if(aNewSelection.getName().equals(AnnotationTypeConstant.LEMMA)){
+                        if(aNewSelection.getType().getName().equals(AnnotationTypeConstant.LEMMA)){
                             tagSelectionForm.setVisible(false);
                             tagDetailForm.setVisible(false);
                         }
@@ -482,7 +482,7 @@ public class ProjectTagSetsPanel
                                         + ExceptionUtils.getRootCauseMessage(e));
                             }
                             TagSetDetailForm.this.setModelObject(tagSet);
-                            if(tagSet.getName().equals(AnnotationTypeConstant.LEMMA)){
+                            if(tagSet.getType().getName().equals(AnnotationTypeConstant.LEMMA)){
                                 tagSelectionForm.setVisible(false);
                                 tagDetailForm.setVisible(false);
                             }

@@ -159,7 +159,7 @@ public class SpanAnnotationModalWindowPage
                 protected void onSelectionChanged(TagSet aNewSelection)
                 {
                     selectedtTagSet = aNewSelection;
-                    if(aNewSelection.getName().equals(AnnotationTypeConstant.LEMMA)) {
+                    if(aNewSelection.getType().getName().equals(AnnotationTypeConstant.LEMMA)) {
                         tagsModel.setObject(selectedText);
                     }
                     else {
@@ -233,7 +233,7 @@ public class SpanAnnotationModalWindowPage
                         else {
 
                             Tag selectedTag;
-                            if (selectedtTagSet.getName().equals(AnnotationTypeConstant.LEMMA)) {
+                            if (selectedtTagSet.getType().getName().equals(AnnotationTypeConstant.LEMMA)) {
                                 selectedTag = new Tag();
                                 annotationType = tags.getModelObject();
                             }
@@ -302,8 +302,12 @@ public class SpanAnnotationModalWindowPage
                         int start = selectByAddr(jCas, Sentence.class,
                                 bratAnnotatorModel.getSentenceAddress()).getBegin()
                                 + ((Offsets) offsetLists.get(0)).getBegin();
-
-                        Tag selectedTag = (Tag) annotationService.getTag(tags.getModelObject(),
+                        Tag selectedTag = null;
+                        if (selectedtTagSet.getType().getName().equals(AnnotationTypeConstant.LEMMA)) {
+                            aTarget.appendJavaScript("alert('Lemma annotations can\\'t be deleted!')");
+                        }
+                        else{
+                            selectedTag = (Tag) annotationService.getTag(tags.getModelObject(),
                                 selectedtTagSet);
                         String annotationType = TypeUtil.getQualifiedLabel(selectedTag);
                         if (annotationType.startsWith(AnnotationTypeConstant.POS_PREFIX)) {
@@ -319,6 +323,7 @@ public class SpanAnnotationModalWindowPage
                                 updateSentenceAddressAndOffsets(jCas, start);
                             }
                         }
+                    }
                     }
                     catch (UIMAException e) {
                         error(ExceptionUtils.getRootCauseMessage(e));
