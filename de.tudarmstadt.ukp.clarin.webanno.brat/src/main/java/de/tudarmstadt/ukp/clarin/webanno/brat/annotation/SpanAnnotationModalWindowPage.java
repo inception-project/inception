@@ -304,14 +304,16 @@ public class SpanAnnotationModalWindowPage
                                 + ((Offsets) offsetLists.get(0)).getBegin();
                         Tag selectedTag = null;
                         if (selectedtTagSet.getType().getName().equals(AnnotationTypeConstant.LEMMA)) {
-                            aTarget.appendJavaScript("alert('Lemma annotations can\\'t be deleted!')");
+                            aTarget.add(feedbackPanel);
+                            error("Lemma annotations can't be deleted!");
                         }
                         else{
                             selectedTag = (Tag) annotationService.getTag(tags.getModelObject(),
                                 selectedtTagSet);
                         String annotationType = TypeUtil.getQualifiedLabel(selectedTag);
                         if (annotationType.startsWith(AnnotationTypeConstant.POS_PREFIX)) {
-                            aTarget.appendJavaScript("alert('POS annotations can\\'t be deleted!')");
+                            aTarget.add(feedbackPanel);
+                            error("POS annotations can't be deleted!");
                         }
                         else {
                             controller.deleteAnnotation(jCas, selectedSpanId);
@@ -322,6 +324,12 @@ public class SpanAnnotationModalWindowPage
                             if (bratAnnotatorModel.isScrollPage()) {
                                 updateSentenceAddressAndOffsets(jCas, start);
                             }
+                            
+                            // A hack to rememeber the Visural DropDown display value
+                            HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())
+                                    .getContainerRequest().getSession();
+                            session.setAttribute("model", bratAnnotatorModel);
+                            aModalWindow.close(aTarget);
                         }
                     }
                     }
@@ -334,11 +342,6 @@ public class SpanAnnotationModalWindowPage
                     catch (IOException e) {
                         error(e.getMessage());
                     }
-                    // A hack to rememeber the Visural DropDown display value
-                    HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())
-                            .getContainerRequest().getSession();
-                    session.setAttribute("model", bratAnnotatorModel);
-                    aModalWindow.close(aTarget);
                 }
 
                 @Override
