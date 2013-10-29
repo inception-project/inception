@@ -163,18 +163,7 @@ public class ArcAnnotationModalWindowPage
                         {
                             return aObject.getName();
                         }
-                    }).setOutputMarkupId(true).add(new Behavior()
-                    {
-                        private static final long serialVersionUID = -4468214709292758331L;
-
-                        @Override
-                        public void renderHead(Component component, IHeaderResponse response)
-                        {
-                            super.renderHead(component, response);
-                            response.renderOnLoadJavaScript("$('#" + component.getMarkupId()
-                                    + "').focus();");
-                        }
-                    }));
+                    }).setOutputMarkupId(true));
 
             add(new AjaxButton("annotate")
             {
@@ -239,7 +228,18 @@ public class ArcAnnotationModalWindowPage
                      }
 
                 }
-            });
+            }.add(new Behavior()
+            {
+                private static final long serialVersionUID = -3612493911620740735L;
+
+                @Override
+                public void renderHead(Component component, IHeaderResponse response)
+                {
+                    super.renderHead(component, response);
+                    response.renderOnLoadJavaScript("$('#" + component.getMarkupId()
+                            + "').focus();");
+                }
+            }));
 
             add(new AjaxSubmitLink("delete")
             {

@@ -191,18 +191,7 @@ public class SpanAnnotationModalWindowPage
                 {
                     return aObject.getName();
                 }
-            }).setOutputMarkupId(true).add(new Behavior()
-            {
-                private static final long serialVersionUID = -3612493911620740735L;
-
-                @Override
-                public void renderHead(Component component, IHeaderResponse response)
-                {
-                    super.renderHead(component, response);
-                    response.renderOnLoadJavaScript("$('#" + component.getMarkupId()
-                            + "').focus();Wicket.Window.unloadConfirmation = false;");
-                }
-            }));
+            }).setOutputMarkupId(true));
 
             add(new AjaxButton("annotate")
             {
@@ -281,7 +270,18 @@ public class SpanAnnotationModalWindowPage
                     }
                 }
 
-            });
+            }.add(new Behavior()
+            {
+                private static final long serialVersionUID = -3612493911620740735L;
+
+                @Override
+                public void renderHead(Component component, IHeaderResponse response)
+                {
+                    super.renderHead(component, response);
+                    response.renderOnLoadJavaScript("$('#" + component.getMarkupId()
+                            + "').focus();");
+                }
+            }));
 
             add(new AjaxSubmitLink("delete")
             {
@@ -324,7 +324,7 @@ public class SpanAnnotationModalWindowPage
                             if (bratAnnotatorModel.isScrollPage()) {
                                 updateSentenceAddressAndOffsets(jCas, start);
                             }
-                            
+
                             // A hack to rememeber the Visural DropDown display value
                             HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())
                                     .getContainerRequest().getSession();
