@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.StringTokenizer;
+import java.util.TreeMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
@@ -326,13 +327,13 @@ public class ApplicationUtils
             List<TagSet> tagSets = aAnnotationService.listTagSets(abAnnotatorModel.getProject());
             List<TagSet> corefTagSets = new ArrayList<TagSet>();
             for (TagSet tagSet : tagSets) {
-                if(tagSet.getType().getName().equals("coreference type")||
-                        tagSet.getType().getName().equals("coreference") ){
+                if (tagSet.getType().getName().equals("coreference type")
+                        || tagSet.getType().getName().equals("coreference")) {
                     corefTagSets.add(tagSet);
                 }
             }
 
-            if(aMode.equals(Mode.CORRECTION) || aMode.equals(Mode.CORRECTION)){
+            if (aMode.equals(Mode.CORRECTION) || aMode.equals(Mode.CORRECTION)) {
                 tagSets.removeAll(corefTagSets);
             }
             abAnnotatorModel.setAnnotationLayers(new HashSet<TagSet>(tagSets));
@@ -398,7 +399,7 @@ public class ApplicationUtils
      */
     public static Map<Integer, Integer> offsets(JCas aJcas)
     {
-        Map<Integer, Integer> offsets = new HashMap<Integer, Integer>();
+        Map<Integer, Integer> offsets = new TreeMap<Integer, Integer>();
         for (Token token : select(aJcas, Token.class)) {
             offsets.put(token.getBegin(), token.getEnd());
         }
@@ -447,9 +448,17 @@ public class ApplicationUtils
         Iterator<Integer> it = aOffset.keySet().iterator();
         while (it.hasNext()) {
             int tokenStart = it.next();
-            if (aStart <= tokenStart && tokenStart <= aEnd) {
-                startAndEndOfSplitedTokens.put(tokenStart, aOffset.get(tokenStart));
+            // beyond the tokens in need, exit !
+            if (tokenStart >= aEnd) {
+                break;
             }
+            // not yet there
+            if (aOffset.get(tokenStart) <= aStart) {
+                continue;
+            }
+            // these are tokens needed
+            startAndEndOfSplitedTokens.put(tokenStart, aOffset.get(tokenStart));
+
         }
         return startAndEndOfSplitedTokens;
     }
@@ -576,8 +585,8 @@ public class ApplicationUtils
             annotationDocument.setProject(aImportedProject);
             annotationDocument.setUser(importedAnnotationDocument.getUser());
             annotationDocument.setTimestamp(importedAnnotationDocument.getTimestamp());
-            annotationDocument.setDocument(aRepository.getSourceDocument(
-                    aImportedProject, importedAnnotationDocument.getName()));
+            annotationDocument.setDocument(aRepository.getSourceDocument(aImportedProject,
+                    importedAnnotationDocument.getName()));
             aRepository.createAnnotationDocument(annotationDocument);
         }
     }
@@ -706,6 +715,7 @@ public class ApplicationUtils
             }
         }
     }
+
     /**
      * Return true if there exist at least one annotation document FINISHED for annotation for this
      * {@link SourceDocument}
@@ -714,10 +724,12 @@ public class ApplicationUtils
      * @param aUser
      * @return
      */
-    public static boolean existFinishedDocument(de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument aSourceDocument, User aUser, RepositoryService aRepository, Project aProject)
+    public static boolean existFinishedDocument(
+            de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument aSourceDocument, User aUser,
+            RepositoryService aRepository, Project aProject)
     {
-        List<de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument> annotationDocuments = aRepository.listAnnotationDocuments(
-                aProject, aSourceDocument);
+        List<de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument> annotationDocuments = aRepository
+                .listAnnotationDocuments(aProject, aSourceDocument);
         boolean finishedAnnotationDocumentExist = false;
         for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : annotationDocuments) {
             if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
