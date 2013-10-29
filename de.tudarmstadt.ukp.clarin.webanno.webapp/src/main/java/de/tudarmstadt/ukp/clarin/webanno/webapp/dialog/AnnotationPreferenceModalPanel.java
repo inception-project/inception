@@ -225,15 +225,19 @@ public class AnnotationPreferenceModalPanel
                 private static final long serialVersionUID = 7202600912406469768L;
 
                 @Override
-                public void onClick(AjaxRequestTarget target)
+                public void onClick(AjaxRequestTarget aTarget)
                 {
                     AnnotationLayerDetailForm.this.detach();
-                    modalWindow.close(target);
+                    onCancel(aTarget);
+                    modalWindow.close(aTarget);
                 }
             });
         }
     }
 
+    protected void onCancel(AjaxRequestTarget aTarget)
+    {
+    }
     private static class AnnotationLayerDetailFormModel
         implements Serializable
     {

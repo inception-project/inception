@@ -42,6 +42,8 @@ public class AnnotationLayersModalPanel
 {
     private static final long serialVersionUID = 671214149298791793L;
 
+    private boolean closeButtonClicked;
+
     public AnnotationLayersModalPanel(String id, final IModel<BratAnnotatorModel> aModel)
     {
         super(id, aModel);
@@ -56,6 +58,17 @@ public class AnnotationLayersModalPanel
         annotationLayerSelectionModal.setHeightUnit("px");
         annotationLayerSelectionModal
                 .setTitle("Annotation Layer and window size configuration Window");
+        annotationLayerSelectionModal.setCloseButtonCallback(new ModalWindow.CloseButtonCallback()
+        {
+            private static final long serialVersionUID = -5423095433535634321L;
+
+            @Override
+            public boolean onCloseButtonClicked(AjaxRequestTarget aTarget)
+            {
+                closeButtonClicked = true;
+                return true;
+            }
+        });
 
         add(new AjaxLink<Void>("showannotationLayerModal")
         {
@@ -68,10 +81,21 @@ public class AnnotationLayersModalPanel
                     target.appendJavaScript("alert('Please open a project first!')");
                 }
                 else {
+                    closeButtonClicked = false;
 
                     annotationLayerSelectionModal.setContent(new AnnotationPreferenceModalPanel(
                             annotationLayerSelectionModal.getContentId(),
-                            annotationLayerSelectionModal, aModel.getObject()));
+                            annotationLayerSelectionModal, aModel.getObject())
+                    {
+
+                        private static final long serialVersionUID = -3434069761864809703L;
+
+                        @Override
+                        protected void onCancel(AjaxRequestTarget aTarget)
+                        {
+                            closeButtonClicked = true;
+                        };
+                    });
 
                     annotationLayerSelectionModal
                             .setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
@@ -81,7 +105,9 @@ public class AnnotationLayersModalPanel
                                 @Override
                                 public void onClose(AjaxRequestTarget target)
                                 {
-                                    onChange(target);
+                                    if (!closeButtonClicked) {
+                                        onChange(target);
+                                    }
                                 }
                             });
                     annotationLayerSelectionModal.show(target);
@@ -95,6 +121,16 @@ public class AnnotationLayersModalPanel
     protected void onChange(AjaxRequestTarget aTarget)
     {
         // Overriden in curationPanel
+    }
+
+    public boolean isCloseButtonClicked()
+    {
+        return closeButtonClicked;
+    }
+
+    public void setCloseButtonClicked(boolean closeButtonClicked)
+    {
+        this.closeButtonClicked = closeButtonClicked;
     }
 
 }

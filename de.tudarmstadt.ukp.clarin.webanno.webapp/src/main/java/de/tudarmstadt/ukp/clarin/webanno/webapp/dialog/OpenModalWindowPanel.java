@@ -17,20 +17,10 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.webapp.dialog;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.uima.UIMAException;
-import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.TypeSystem;
-import org.apache.uima.cas.impl.CASCompleteSerializer;
-import org.apache.uima.cas.impl.CASImpl;
-import org.apache.uima.cas.impl.Serialization;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
@@ -49,12 +39,9 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.odlabs.wiquery.ui.resizable.ResizableBehavior;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.uimafit.factory.JCasFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
-import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -338,8 +325,8 @@ public class OpenModalWindowPanel
                     openDataModel.setProject(selectedProject);
                     openDataModel.setDocument(selectedDocument);
                     modalWindow.close(aTarget);
-                    
-                    
+
+
                 }
             }).add(new ResizableBehavior());
         }
@@ -370,7 +357,7 @@ public class OpenModalWindowPanel
                     else {
                         openDataModel.setProject(selectedProject);
                         openDataModel.setDocument(selectedDocument);
-                        modalWindow.close(aTarget);                      
+                        modalWindow.close(aTarget);
                     }
                 }
 
@@ -393,9 +380,14 @@ public class OpenModalWindowPanel
                     if (mode.equals(Mode.CURATION)) {
                         openDataModel.setDocument(null); // on cancel, go welcomePage
                     }
-                    modalWindow.close(aTarget);                   
+                    onCancel(aTarget);
+                    modalWindow.close(aTarget);
                 }
             });
         }
+    }
+
+    protected void onCancel(AjaxRequestTarget aTarget)
+    {
     }
 }

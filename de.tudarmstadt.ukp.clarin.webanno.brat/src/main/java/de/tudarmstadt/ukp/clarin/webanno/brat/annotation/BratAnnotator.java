@@ -32,6 +32,7 @@ import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow.CloseButtonCallback;
 import org.apache.wicket.markup.html.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
@@ -88,6 +89,7 @@ public class BratAnnotator
     Integer selectedSpanID, selectedArcId;
 
     Integer originSpanId, targetSpanId;
+    private boolean closeButtonClicked;// check if the annotation dialog has a change
 
     private String originSpanType = null, targetSpanType = null;
 
@@ -142,6 +144,17 @@ public class BratAnnotator
         openAnnotationDialog.setResizable(true);
         openAnnotationDialog.setWidthUnit("px");
         openAnnotationDialog.setHeightUnit("px");
+        openAnnotationDialog.setCloseButtonCallback(new CloseButtonCallback()
+        {
+            private static final long serialVersionUID = -5423095433535634321L;
+
+            @Override
+            public boolean onCloseButtonClicked(AjaxRequestTarget aTarget)
+            {
+                closeButtonClicked = true;
+                return true;
+            }
+        });
 
         controller = new AbstractDefaultAjaxBehavior()
         {
@@ -295,6 +308,7 @@ public class BratAnnotator
     private void openSpanAnnotationDialog(final ModalWindow openAnnotationDialog,
             AjaxRequestTarget aTarget)
     {
+        closeButtonClicked = false;
         openAnnotationDialog.setPageCreator(new ModalWindow.PageCreator()
         {
             private static final long serialVersionUID = -2827824968207807739L;
@@ -339,8 +353,11 @@ public class BratAnnotator
                     getModelObject().setRememberedSpanTag(model.getRememberedSpanTag());
 
                 }
-                onChange(aTarget, getModelObject());
-                reloadContent(aTarget);
+
+                if (!closeButtonClicked) {
+                    onChange(aTarget, getModelObject());
+                    reloadContent(aTarget);
+                }
 
             }
         });
@@ -358,6 +375,7 @@ public class BratAnnotator
             AjaxRequestTarget aTarget)
     {
 
+        closeButtonClicked = false;
         if (selectedArcId == -1) {// new annotation
             openAnnotationDialog.setTitle("New Arc Annotation");
             openAnnotationDialog.setContent(new ArcAnnotationModalWindowPage(openAnnotationDialog
@@ -378,8 +396,10 @@ public class BratAnnotator
             @Override
             public void onClose(AjaxRequestTarget aTarget)
             {
-                onChange(aTarget, getModelObject());
-                reloadContent(aTarget);
+                if (!closeButtonClicked) {
+                    onChange(aTarget, getModelObject());
+                    reloadContent(aTarget);
+                }
 
             }
         });

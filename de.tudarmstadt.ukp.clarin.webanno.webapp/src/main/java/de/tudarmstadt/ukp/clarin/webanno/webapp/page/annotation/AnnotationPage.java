@@ -17,6 +17,8 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation;
 
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -68,7 +70,6 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.Finish
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.GuidelineModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome.WelcomePage;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.*;
 
 /**
  * A wicket page for the Brat Annotation/Visualization page. Included components for pagination,
@@ -112,6 +113,7 @@ public class AnnotationPage
     private int sentenceNumber = 1;
     private int totalNumberOfSentence;
 
+    private boolean closeButtonClicked;
     public BratAnnotatorModel bratAnnotatorModel = new BratAnnotatorModel();
 
     public AnnotationPage()
@@ -215,6 +217,18 @@ public class AnnotationPage
         openDocumentsModal.setWidthUnit("px");
         openDocumentsModal.setHeightUnit("px");
         openDocumentsModal.setTitle("Open document");
+        openDocumentsModal.setCloseButtonCallback(new ModalWindow.CloseButtonCallback()
+        {
+            private static final long serialVersionUID = -5423095433535634321L;
+
+            @Override
+            public boolean onCloseButtonClicked(AjaxRequestTarget aTarget)
+            {
+                closeButtonClicked = true;
+                return true;
+            }
+        });
+
 
         add(new AjaxLink<Void>("showOpenDocumentModal")
         {
@@ -223,8 +237,19 @@ public class AnnotationPage
             @Override
             public void onClick(AjaxRequestTarget target)
             {
+                closeButtonClicked = false;
                 openDocumentsModal.setContent(new OpenModalWindowPanel(openDocumentsModal
-                        .getContentId(), openDataModel, openDocumentsModal, Mode.ANNOTATION));
+                        .getContentId(), openDataModel, openDocumentsModal, Mode.ANNOTATION)
+                {
+
+                    private static final long serialVersionUID = -3434069761864809703L;
+
+                    @Override
+                    protected void onCancel(AjaxRequestTarget aTarget)
+                    {
+                        closeButtonClicked = true;
+                    };
+                });
                 openDocumentsModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
                 {
                     private static final long serialVersionUID = -1746088901018629567L;
@@ -234,6 +259,7 @@ public class AnnotationPage
                     {
                         if (openDataModel.getProject() != null
                                 && openDataModel.getDocument() != null) {
+                            if (!closeButtonClicked) {
                             bratAnnotatorModel.setDocument(openDataModel.getDocument());
                             bratAnnotatorModel.setProject(openDataModel.getProject());
                             BratAnnotatorUtility.upgradeCasAndSave(repository,
@@ -259,7 +285,7 @@ public class AnnotationPage
                                     + collection
                                     + document
                                     + "';Wicket.Window.unloadConfirmation=false;window.location.reload()");
-
+                            }
                         }
                         else {
                             // A hack, the dialog opens for the first time, and if no document is
