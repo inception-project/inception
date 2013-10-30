@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import javax.servlet.http.HttpSession;
 
@@ -70,9 +71,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
  * A page that is used to display an annotation modal dialog for span annotation
- *
+ * 
  * @author Seid Muhie Yimam
- *
+ * 
  */
 public class SpanAnnotationModalWindowPage
     extends WebPage
@@ -129,7 +130,9 @@ public class SpanAnnotationModalWindowPage
                 tagSetsModel = new Model<TagSet>(selectedtTagSet);
                 tagsModel = new Model<String>(selectedSpanType);
             }
-            else if (bratAnnotatorModel.getRememberedSpanTagSet() != null) {
+            else if (bratAnnotatorModel.getRememberedSpanTagSet() != null
+                    && conatinsTagSet(bratAnnotatorModel.getAnnotationLayers(),
+                            bratAnnotatorModel.getRememberedSpanTagSet()) ) {
                 selectedtTagSet = bratAnnotatorModel.getRememberedSpanTagSet();
                 tagSetsModel = new Model<TagSet>(selectedtTagSet);
                 tagsModel = new Model<String>(bratAnnotatorModel.getRememberedSpanTag().getName());
@@ -142,6 +145,10 @@ public class SpanAnnotationModalWindowPage
                 selectedtTagSet = ((TagSet) spanLayers.get(0));
                 tagSetsModel = new Model<TagSet>(selectedtTagSet);
                 tagsModel = new Model<String>("");
+                
+                if(selectedtTagSet.getType().getName().equals(AnnotationTypeConstant.LEMMA)) {
+                    tagsModel.setObject(selectedText);
+                }
             }
 
             add(new Label("selectedText", selectedText));
@@ -440,5 +447,15 @@ public class SpanAnnotationModalWindowPage
         this.annotationDialogForm = new AnnotationDialogForm("annotationDialogForm", modalWindow);
         add(annotationDialogForm);
         this.isModify = true;
+    }
+
+    private boolean conatinsTagSet(Set<TagSet> aTagSets, TagSet aTagSet)
+    {
+        for (TagSet tagSet : aTagSets) {
+            if (tagSet.getId() == aTagSet.getId()){
+                return true;
+            }
+        }
+            return false;
     }
 }
