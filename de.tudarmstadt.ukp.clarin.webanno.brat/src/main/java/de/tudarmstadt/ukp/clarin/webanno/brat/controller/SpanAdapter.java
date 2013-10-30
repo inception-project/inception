@@ -326,4 +326,9 @@ public class SpanAdapter
     {
         return labelPrefix;
     }
+    @Override
+    public Type getAnnotationType(CAS cas)
+    {
+      return  CasUtil.getType(cas, annotationTypeName);
+    }
 }

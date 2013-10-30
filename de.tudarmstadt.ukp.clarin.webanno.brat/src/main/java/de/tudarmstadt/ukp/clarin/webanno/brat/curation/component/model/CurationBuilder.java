@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
 import static org.uimafit.util.JCasUtil.selectCovered;
 
 import java.io.IOException;
@@ -33,12 +34,10 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.jcas.JCas;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.uimafit.util.CasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationOption;
@@ -52,11 +51,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
-import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
-import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
  * This class is responsible for two things. Firstly, it creates a pre-merged cas, which contains
@@ -287,30 +283,9 @@ public class CurationBuilder
     public static List<Type> getEntryTypes(JCas mergeJCas, BratAnnotatorModel aBratAnnotatorModel)
     {
         List<Type> entryTypes = new LinkedList<Type>();
-        // entryTypes.add(CasUtil.getType(firstJCas.getCas(), Token.class));
-        // entryTypes.add(CasUtil.getType(firstJCas.getCas(), Sentence.class));
-        List<String> annotationTypeNames = new LinkedList<String>();
+
         for (TagSet tagSet : aBratAnnotatorModel.getAnnotationLayers()) {
-            annotationTypeNames.add(tagSet.getType().getName());
-        }
-        if (annotationTypeNames.contains(AnnotationTypeConstant.POS)) {
-            entryTypes.add(CasUtil.getType(mergeJCas.getCas(), POS.class));
-        }
-        if (annotationTypeNames.contains(AnnotationTypeConstant.DEPENDENCY)
-                && annotationTypeNames.contains(AnnotationTypeConstant.POS)) {
-            entryTypes.add(CasUtil.getType(mergeJCas.getCas(), Dependency.class));
-        }
-        if (annotationTypeNames.contains(AnnotationTypeConstant.NAMEDENTITY)) {
-            entryTypes.add(CasUtil.getType(mergeJCas.getCas(), NamedEntity.class));
-        }
-        if (annotationTypeNames.contains(AnnotationTypeConstant.COREFRELTYPE)) {
-            // TODO CasDiff does not support coreference links so far
-            // entryTypes.add(CasUtil.getType(mergeJCas.getCas(), CoreferenceLink.class));
-        }
-        if (annotationTypeNames.contains(AnnotationTypeConstant.COREFERENCE)
-                && annotationTypeNames.contains(AnnotationTypeConstant.COREFRELTYPE)) {
-            // TODO CasDiff does not support coreference chains so far
-            // entryTypes.add(CasUtil.getType(mergeJCas.getCas(), CoreferenceChain.class));
+            entryTypes.add(getAdapter(tagSet.getType().getName()).getAnnotationType(mergeJCas.getCas()));
         }
         return entryTypes;
     }

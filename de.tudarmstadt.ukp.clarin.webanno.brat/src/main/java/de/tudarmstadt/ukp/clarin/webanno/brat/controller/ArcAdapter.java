@@ -24,12 +24,14 @@ import static org.uimafit.util.JCasUtil.selectCovered;
 
 import java.util.List;
 
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.impl.FeatureStructureImpl;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
+import org.uimafit.util.CasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorUIData;
@@ -374,5 +376,10 @@ public class ArcAdapter
     public String getLabelPrefix()
     {
         return labelPrefix;
+    }
+    @Override
+    public Type getAnnotationType(CAS cas)
+    {
+      return  CasUtil.getType(cas, annotationTypeName);
     }
 }

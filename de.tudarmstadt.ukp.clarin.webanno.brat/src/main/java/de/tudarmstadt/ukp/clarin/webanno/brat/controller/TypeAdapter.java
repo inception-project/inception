@@ -17,6 +17,8 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Type;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
@@ -49,6 +51,12 @@ public interface TypeAdapter
      * This is used to differentiate the different types in the brat annotation/visualization.
      */
     String getLabelPrefix();
+
+    /**
+     * get the CAS type of the this {@link TypeAdapter}
+     * @return
+     */
+    Type getAnnotationType(CAS cas);
 
 //    /**
 //     * Update the CAS with new/modification of span annotations from brat
