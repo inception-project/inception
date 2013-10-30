@@ -61,15 +61,26 @@ public class NamedEntityTaskManager
 
     private static Map<String, String> task2NeMap;
 
+    private int lastGoldOffset = 0;
+
+    //omittedSentences in the last run becaus of errors
+    private int omittedSentences = 0;
+
     // static mapping of WebAnno short forms to user displayed types in Crowdflower
     static {
         task2NeMap = new HashMap<String, String>();
         task2NeMap.put("PER", "Person");
+        task2NeMap.put("PERderiv","Indirekte Person");
+        task2NeMap.put("PERpart","Person");
         task2NeMap.put("ORG", "Organisation");
-        task2NeMap.put("ORGpart", "Organisation");
+        task2NeMap.put("ORGderiv", "Organisation");
+        task2NeMap.put("ORGpart", "Partielle Organisation");
         task2NeMap.put("LOC", "Ort");
-        task2NeMap.put("LOCderiv", "Ort");
+        task2NeMap.put("LOCderiv", "Indirekter Ort");
+        task2NeMap.put("LOCpart", "Ort");
         task2NeMap.put("OTH", "Etwas anderes");
+        task2NeMap.put("OTHderiv", "Etwas anderes");
+        task2NeMap.put("OTHpart", "Etwas anderes");
     }
 
     private static Map<String, String> ne2TaskMap;
@@ -78,8 +89,11 @@ public class NamedEntityTaskManager
     static {
         ne2TaskMap = new HashMap<String, String>();
         ne2TaskMap.put("Person", "PER");
+        ne2TaskMap.put("Indirekte Person", "PERderiv");
         ne2TaskMap.put("Organisation", "ORG");
+        ne2TaskMap.put("Partielle Organisation", "ORGpart");
         ne2TaskMap.put("Ort", "LOC");
+        ne2TaskMap.put("Indirekter Ort", "LOCderiv");
         ne2TaskMap.put("Etwas anderes", "OTH");
     }
 
@@ -295,6 +309,11 @@ public class NamedEntityTaskManager
             docNo++;
         }
 
+        if(generateGold)
+        {
+            lastGoldOffset = i;
+        }
+
         return data;
     }
 
@@ -434,11 +453,12 @@ public class NamedEntityTaskManager
 
         Vector<NamedEntityTask1Data> goldData = new Vector<NamedEntityTask1Data>();
 
-        // if we have gold data, than generate data for it
+        // If we have gold data, than generate data for it
         if (goldsJCas != null && goldsJCas.size() > 0) {
             LOG.info("Gold data available, generating gold data first.");
             goldData = generateTask1Data(goldsJCas, 0, true, useGoldSents);
-            goldOffset = goldData.size();
+            //Gold offset is measured in tokens
+            goldOffset = this.lastGoldOffset;
         }
 
         LOG.info("Generate normal task data.");
@@ -812,6 +832,8 @@ public class NamedEntityTaskManager
     public void retrieveAggJudgmentsTask2(String jobID2, List<JCas> documentsJCas)
         throws UnsupportedEncodingException, IOException, Exception
     {
+        omittedSentences = 0;
+
         Log LOG = LogFactory.getLog(getClass());
 
         BufferedReader br = getReaderForRawJudgments(jobID2);
@@ -825,9 +847,9 @@ public class NamedEntityTaskManager
         List<HashMap<Integer, Integer>> charStartMappings = new ArrayList<HashMap<Integer, Integer>>();
         List<HashMap<Integer, Integer>> charEndMappings = new ArrayList<HashMap<Integer, Integer>>();
 
-        int i = 0;
         for(JCas cas : documentsJCas)
         {
+            int i = 0;
             HashMap<Integer, Integer> charStartMapping = new HashMap<Integer, Integer>();
             HashMap<Integer, Integer> charEndMapping = new HashMap<Integer, Integer>();
             for (Sentence sentence : select(cas, Sentence.class))
@@ -843,25 +865,28 @@ public class NamedEntityTaskManager
             }
             charStartMappings.add(charStartMapping);
             charEndMappings.add(charEndMapping);
+
         }
 
         while ((line = br.readLine()) != null) {
-            // try to process each line, omit data if an error occurs
+            // Try to process each line, omit data if an error occurs
             try {
                 JsonNode elem = mapper.readTree(line);
-                String text = elem.path("data").path("text").getTextValue();
-                // document string contains one char to specify type (golden vs. not golden)
+
+                // Document string contains one char to specify type (golden vs. not golden)
                 // and a new number starting at 0 for each new document
                 int documentNo = Integer.valueOf(elem.path("data").path("document").getTextValue().substring(1));
                 if (documentNo >= documentsJCas.size())
                 {
                     throw new Exception("Error, number of documents changed from first upload! Tried to access document: " + documentNo);
                 }
-                JCas cas = documentsJCas.get(documentNo);
 
-                //only process elements that are finalized, i.e. elements that don't have missing judgments
+                //Only process elements that are finalized, i.e. elements that don't have missing judgments
                 String state = elem.path("state").getTextValue();
                 if (state.equals("finalized")) {
+
+                    JCas cas = documentsJCas.get(documentNo);
+
                     String typeExplicit = elem.path("results").path("ist_todecide_eine")
                             .path("agg").getTextValue();
                     String type = ne2TaskMap.get(typeExplicit);
@@ -890,6 +915,7 @@ public class NamedEntityTaskManager
 
             }
             catch (Exception e) {
+                omittedSentences++;
                 LOG.warn("Warning, omitted a sentence from task2 import because of an error in processing it: "
                         + e.getMessage());
                 e.printStackTrace();

@@ -30,6 +30,7 @@ public class NamedEntityTask1Data
 {
     String text = "";
     String _golden = "";
+    String _hidden = "FALSE";
     String markertext = "";
     String markertext_gold = "";
     String markertext_gold_reason = "";
@@ -87,6 +88,16 @@ public class NamedEntityTask1Data
     public void set_golden(String _golden)
     {
         this._golden = _golden;
+    }
+
+    @JsonProperty("_hidden")
+    public String get_hidden()
+    {
+        return _hidden;
+    }
+    public void set_hidden(String _hidden)
+    {
+        this._golden = _hidden;
     }
 
     @JsonProperty("markertext")
