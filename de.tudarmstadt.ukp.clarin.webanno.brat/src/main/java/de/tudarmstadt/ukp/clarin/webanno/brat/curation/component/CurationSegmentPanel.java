@@ -44,10 +44,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter.ArcCrossedMultipleSentenceException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter.ArcCrossedMultipleSentenceException;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.MultipleSentenceCoveredException;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.AnnotationState;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.BratCurationVisualizer;
@@ -175,7 +175,7 @@ public class CurationSegmentPanel
                                     mergeSpan(request, curationUserSegment,
                                             annotationJCas, repository, annotationService);
                                 }
-                                catch (MultipleSentenceCoveredException e) {
+                                catch (BratAnnotationException e) {
                                     // TODO Auto-generated catch block
                                     e.printStackTrace();
                                 }
@@ -196,7 +196,7 @@ public class CurationSegmentPanel
                                 catch (ArcCrossedMultipleSentenceException e) {
                                     error(e.getMessage());
                                 }
-                                catch (MultipleSentenceCoveredException e) {
+                                catch (BratAnnotationException e) {
                                     error(e.getMessage());
                                 }
                             }
@@ -222,26 +222,26 @@ public class CurationSegmentPanel
     {
         // Overriden in curationPanel
     }
-    
+
     private void mergeSpan(IRequestParameters aRequest,
             CurationUserSegmentForAnnotationDocument aCurationUserSegment, JCas aJcas,
             RepositoryService aRepository, AnnotationService aAnnotationService)
-        throws MultipleSentenceCoveredException
+        throws BratAnnotationException
     {
         Integer address = aRequest.getParameterValue("id").toInteger();
         String spanType = removePrefix(aRequest.getParameterValue("type").toString());
-        
+
         String username = aCurationUserSegment.getUsername();
         AnnotationSelection annotationSelection = aCurationUserSegment
                 .getAnnotationSelectionByUsernameAndAddress().get(username).get(address);
-        
+
         if (annotationSelection == null) {
             return;
         }
-        
+
         Project project = aCurationUserSegment.getBratAnnotatorModel().getProject();
         SourceDocument sourceDocument = aCurationUserSegment.getBratAnnotatorModel().getDocument();
-        
+
         AnnotationDocument clickedAnnotationDocument = null;
         List<AnnotationDocument> annotationDocuments = aRepository.listAnnotationDocuments(
                 project, sourceDocument);
@@ -251,7 +251,7 @@ public class CurationSegmentPanel
                 break;
             }
         }
-        
+
         try {
             createSpan(spanType, aCurationUserSegment.getBratAnnotatorModel(), aJcas,
                     clickedAnnotationDocument, address, aRepository, aAnnotationService);
@@ -269,15 +269,15 @@ public class CurationSegmentPanel
             e.printStackTrace();
         }
     }
-    
+
     private void createSpan(String spanType,
             BratAnnotatorModel aBratAnnotatorModel, JCas aMergeJCas,
             AnnotationDocument aAnnotationDocument, int aAddress, RepositoryService aRepository,
             AnnotationService aAnnotationService)
-        throws IOException, UIMAException, ClassNotFoundException, MultipleSentenceCoveredException
+        throws IOException, UIMAException, ClassNotFoundException, BratAnnotationException
     {
         JCas clickedJCas = getJCas(aBratAnnotatorModel, aAnnotationDocument);
-        
+
         AnnotationFS fsClicked = selectByAddr(clickedJCas, aAddress);
 
         BratAjaxCasController controller = new BratAjaxCasController(aRepository,
@@ -303,17 +303,17 @@ public class CurationSegmentPanel
             aBratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
         }
     }
-    
+
     private void mergeArc(IRequestParameters aRequest,
             CurationUserSegmentForAnnotationDocument aCurationUserSegment, JCas aJcas,
             RepositoryService repository, AnnotationService annotationService)
         throws NoOriginOrTargetAnnotationSelectedException, ArcCrossedMultipleSentenceException,
-        MultipleSentenceCoveredException
+        BratAnnotationException
     {
         Integer addressOriginClicked = aRequest.getParameterValue("originSpanId").toInteger();
         Integer addressTargetClicked = aRequest.getParameterValue("targetSpanId").toInteger();
         String arcType = removePrefix(aRequest.getParameterValue("type").toString());
-        
+
         // add span for merge
         // get information of the span clicked
         String username = aCurationUserSegment.getUsername();
@@ -402,7 +402,7 @@ public class CurationSegmentPanel
             }
         }
     }
-    
+
     private JCas getJCas(BratAnnotatorModel aModel, AnnotationDocument aDocument)
         throws IOException
     {

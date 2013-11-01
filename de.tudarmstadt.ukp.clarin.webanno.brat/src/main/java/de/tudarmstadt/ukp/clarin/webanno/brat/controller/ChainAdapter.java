@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
 import static java.util.Arrays.asList;
+import static org.uimafit.util.JCasUtil.selectCovered;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -37,7 +38,6 @@ import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.uimafit.util.CasUtil;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorUIData;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Argument;
@@ -48,6 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * A class that is used to create Brat chain to CAS and vice-versa
@@ -90,7 +91,7 @@ public class ChainAdapter
      */
     private String linkNextFeatureName;
 
-    private boolean singleTokenBehavior = false;
+    // private boolean singleTokenBehavior = false;
 
     private boolean isChain = false;
 
@@ -102,25 +103,6 @@ public class ChainAdapter
         annotationTypeName = aTypeName;
         chainFirstFeatureName = aFirstFeatureName;
         linkNextFeatureName = aNextFeatureName;
-    }
-
-    /**
-     * Span can only be made on a single token (not multiple tokens), e.g. for POS or Lemma
-     * annotations. If this is set and a span is made across multiple tokens, then one annotation of
-     * the specified type will be created for each token. If this is not set, a single annotation
-     * covering all tokens is created.
-     */
-    public void setSingleTokenBehavior(boolean aSingleTokenBehavior)
-    {
-        singleTokenBehavior = aSingleTokenBehavior;
-    }
-
-    /**
-     * @see #setSingleTokenBehavior(boolean)
-     */
-    public boolean isSingleTokenBehavior()
-    {
-        return singleTokenBehavior;
     }
 
     /**
@@ -310,42 +292,31 @@ public class ChainAdapter
      * @param aLabelValue
      *            the value of the annotation for the span
      * @throws MultipleSentenceCoveredException
+     * @throws SubTokenSelectedException
      */
-    public void add(String aLabelValue, JCas aJCas, int aAnnotationOffsetStart,
-            int aAnnotationOffsetEnd, AnnotationFS aOriginFs, AnnotationFS aTargetFs)
-        throws MultipleSentenceCoveredException
+    public void add(String aLabelValue, JCas aJCas, int aBegin, int aEnd, AnnotationFS aOriginFs,
+            AnnotationFS aTargetFs)
+        throws BratAnnotationException
     {
-        Map<Integer, Integer> offsets = ApplicationUtils.offsets(aJCas);
-
-        if (singleTokenBehavior) {
-            Map<Integer, Integer> splitedTokens = ApplicationUtils.getSplitedTokens(offsets,
-                    aAnnotationOffsetStart, aAnnotationOffsetEnd);
-            if (isChain) {
-                updateCoreferenceChainCas(aJCas, aOriginFs, aTargetFs, aLabelValue);
-            }
-            else {
-                for (Integer start : splitedTokens.keySet()) {
-                    if (BratAjaxCasUtil.isSameSentence(aJCas, start, splitedTokens.get(start))) {
-                        updateCoreferenceLinkCas(aJCas.getCas(), start, splitedTokens.get(start),
-                                aLabelValue);
-                    }
-                    else {
-                        throw new MultipleSentenceCoveredException(
-                                "Annotation coveres multiple sentences, "
-                                        + "limit your annotation to single sentence!");
-                    }
-                }
-            }
+        if (isChain) {
+            updateCoreferenceChainCas(aJCas, aOriginFs, aTargetFs, aLabelValue);
         }
         else {
-            if (isChain) {
-                updateCoreferenceChainCas(aJCas, aOriginFs, aTargetFs, aLabelValue);
+            List<Token> tokens = selectCovered(aJCas, Token.class, aBegin, aEnd);
+            if (tokens.size() == 0) {
+                throw new SubTokenSelectedException("A minimum of one token should be selected!");
+            }
+            else if (!BratAjaxCasUtil.isSameSentence(aJCas, aBegin, aEnd)) {
+                throw new MultipleSentenceCoveredException(
+                        "Annotation coveres multiple sentences, "
+                                + "limit your annotation to single sentence!");
             }
             else {
-                int startAndEnd[] = ApplicationUtils.getTokenStart(offsets, aAnnotationOffsetStart,
-                        aAnnotationOffsetEnd);
-                updateCoreferenceLinkCas(aJCas.getCas(), startAndEnd[0], startAndEnd[1],
-                        aLabelValue);
+                // update the begin and ends (no sub token selection
+                aBegin = tokens.get(0).getBegin();
+                aEnd = tokens.get(tokens.size() - 1).getEnd();
+
+                updateCoreferenceLinkCas(aJCas.getCas(), aBegin, aEnd, aLabelValue);
             }
         }
     }
@@ -797,7 +768,6 @@ public class ChainAdapter
         return adapter;
     }
 
-
     @Override
     public String getLabelFeatureName()
     {
@@ -809,9 +779,10 @@ public class ChainAdapter
     {
         return labelPrefix;
     }
+
     @Override
     public Type getAnnotationType(CAS cas)
     {
-      return  CasUtil.getType(cas, annotationTypeName);
+        return CasUtil.getType(cas, annotationTypeName);
     }
 }

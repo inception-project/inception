@@ -20,12 +20,12 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 /**
  * throw an exception if the a span annotation is not in the same sentence
  */
-public class MultipleSentenceCoveredException
-    extends BratAnnotationException
+public class BratAnnotationException
+    extends Exception
 {
     private static final long serialVersionUID = 1280015349963924638L;
 
-    public MultipleSentenceCoveredException(String message)
+    public BratAnnotationException(String message)
     {
         super(message);
     }

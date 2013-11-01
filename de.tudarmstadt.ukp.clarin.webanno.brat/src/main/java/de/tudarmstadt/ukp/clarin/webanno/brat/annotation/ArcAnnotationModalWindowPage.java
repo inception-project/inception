@@ -51,10 +51,9 @@ import com.googlecode.wicket.jquery.ui.kendo.combobox.ComboBoxRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter.ArcCrossedMultipleSentenceException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.MultipleSentenceCoveredException;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -218,11 +217,7 @@ public class ArcAnnotationModalWindowPage
                     catch (IOException e) {
                         error(e.getMessage());
                     }
-                    catch (ArcCrossedMultipleSentenceException e) {
-                        aTarget.add(feedbackPanel);
-                        error(e.getMessage());
-                     }
-                     catch (MultipleSentenceCoveredException e) {
+                     catch (BratAnnotationException e) {
                          aTarget.add(feedbackPanel);
                          error(e.getMessage());
                      }
@@ -335,10 +330,7 @@ public class ArcAnnotationModalWindowPage
                     catch (IOException e) {
                         error(e.getMessage());
                     }
-                    catch (ArcCrossedMultipleSentenceException e) {
-                        aTarget.prependJavaScript("alert('"+e.getMessage()+"')");
-                     }
-                    catch (MultipleSentenceCoveredException e) {
+                    catch (BratAnnotationException e) {
                         aTarget.prependJavaScript("alert('"+e.getMessage()+"')");
                     }
                     aModalWindow.close(aTarget);

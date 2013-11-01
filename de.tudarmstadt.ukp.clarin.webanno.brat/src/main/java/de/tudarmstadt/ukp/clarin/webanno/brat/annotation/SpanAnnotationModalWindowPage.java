@@ -59,7 +59,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.MultipleSentenceCoveredException;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.OffsetsList;
@@ -71,9 +71,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
  * A page that is used to display an annotation modal dialog for span annotation
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 public class SpanAnnotationModalWindowPage
     extends WebPage
@@ -145,7 +145,7 @@ public class SpanAnnotationModalWindowPage
                 selectedtTagSet = ((TagSet) spanLayers.get(0));
                 tagSetsModel = new Model<TagSet>(selectedtTagSet);
                 tagsModel = new Model<String>("");
-                
+
                 if(selectedtTagSet.getType().getName().equals(AnnotationTypeConstant.LEMMA)) {
                     tagsModel.setObject(selectedText);
                 }
@@ -271,7 +271,7 @@ public class SpanAnnotationModalWindowPage
                         aTarget.add(feedbackPanel);
                         error(e.getMessage());
                     }
-                    catch (MultipleSentenceCoveredException e) {
+                    catch (BratAnnotationException e) {
                         aTarget.add(feedbackPanel);
                         error(e.getMessage());
                     }

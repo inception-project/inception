@@ -18,14 +18,14 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
 /**
- * throw an exception if the a span annotation is not in the same sentence
+ * throw an exception if a the span selection doesn't cover at least a token
  */
-public class MultipleSentenceCoveredException
+public class SubTokenSelectedException
     extends BratAnnotationException
 {
     private static final long serialVersionUID = 1280015349963924638L;
 
-    public MultipleSentenceCoveredException(String message)
+    public SubTokenSelectedException(String message)
     {
         super(message);
     }

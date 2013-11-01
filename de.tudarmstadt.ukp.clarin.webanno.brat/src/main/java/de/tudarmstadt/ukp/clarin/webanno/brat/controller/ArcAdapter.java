@@ -173,11 +173,11 @@ public class ArcAdapter
      *            the value of the annotation for the arc
      * @param aReverse
      *            If arc direction are in reverse direction, from Dependent to Governor
-     * @throws ArcCrossedMultipleSentenceException
+     * @throws BratAnnotationException
      */
     public void add(String aLabelValue, AnnotationFS aOriginFs, AnnotationFS aTargetFs, JCas aJCas,
             BratAnnotatorModel aBratAnnotatorModel, boolean aReverse) throws
-            ArcCrossedMultipleSentenceException
+            BratAnnotationException
     {
         AnnotationFS temp;
         // swap
@@ -355,7 +355,7 @@ public class ArcAdapter
    */
 
     public  class ArcCrossedMultipleSentenceException
-    extends Exception
+    extends BratAnnotationException
 {
     private static final long serialVersionUID = 1280015349963924638L;
 

@@ -298,7 +298,7 @@ public class BratAjaxCasController
     public void createSpanAnnotation(JCas aJCas, int aAnnotationOffsetStart,
             int aAnnotationOffsetEnd, String aQualifiedLabel, AnnotationFS aOriginFs,
             AnnotationFS aTargetFs)
-        throws MultipleSentenceCoveredException
+        throws BratAnnotationException
     {
         String labelPrefix = TypeUtil.getLabelPrefix(aQualifiedLabel);
         String label = TypeUtil.getLabel(aQualifiedLabel);
@@ -332,7 +332,7 @@ public class BratAjaxCasController
     public void createArcAnnotation(BratAnnotatorModel aBratAnnotatorModel, String aQualifiedLabel,
             int aAnnotationOffsetStart, int aAnnotationOffsetEnd, AnnotationFS aOriginFs,
             AnnotationFS aTargetFs, JCas aJCas)
-        throws ArcCrossedMultipleSentenceException, MultipleSentenceCoveredException
+        throws ArcCrossedMultipleSentenceException, BratAnnotationException
     {
         String labelPrefix = TypeUtil.getLabelPrefix(aQualifiedLabel);
         String label = TypeUtil.getLabel(aQualifiedLabel);

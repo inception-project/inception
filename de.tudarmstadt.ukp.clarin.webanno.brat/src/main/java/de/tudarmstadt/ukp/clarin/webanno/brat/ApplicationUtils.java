@@ -17,8 +17,6 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat;
 
-import static org.uimafit.util.JCasUtil.select;
-
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -37,7 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.StringTokenizer;
-import java.util.TreeMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
@@ -49,7 +46,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.uima.jcas.JCas;
 import org.codehaus.jackson.JsonGenerator;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
@@ -73,7 +69,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * This class contains Utility methods that can be used application wide
@@ -389,49 +384,6 @@ public class ApplicationUtils
             }
         }
         return isZipValidWebanno;
-    }
-
-    /**
-     * Stores, for every tokens, the start and end position offsets : used for multiple span
-     * annotations
-     *
-     * @return map of tokens begin and end positions
-     */
-    public static Map<Integer, Integer> offsets(JCas aJcas)
-    {
-        Map<Integer, Integer> offsets = new TreeMap<Integer, Integer>();
-        for (Token token : select(aJcas, Token.class)) {
-            offsets.put(token.getBegin(), token.getEnd());
-        }
-        return offsets;
-    }
-
-    /**
-     * For multiple span, get the start and end offsets
-     */
-    public static int[] getTokenStart(Map<Integer, Integer> aOffset, int aStart, int aEnd)
-    {
-        Iterator<Integer> it = aOffset.keySet().iterator();
-        boolean startFound = false;
-        boolean endFound = false;
-        while (it.hasNext()) {
-            int tokenStart = it.next();
-            if (aStart >= tokenStart && aStart <= aOffset.get(tokenStart)) {
-                aStart = tokenStart;
-                startFound = true;
-                if (endFound) {
-                    break;
-                }
-            }
-            if (aEnd >= tokenStart && aEnd <= aOffset.get(tokenStart)) {
-                aEnd = aOffset.get(tokenStart);
-                endFound = true;
-                if (startFound) {
-                    break;
-                }
-            }
-        }
-        return new int[] { aStart, aEnd };
     }
 
     /**

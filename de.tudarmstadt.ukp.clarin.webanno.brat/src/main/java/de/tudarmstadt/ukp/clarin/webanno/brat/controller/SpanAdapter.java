@@ -22,7 +22,7 @@ import static org.uimafit.util.CasUtil.getType;
 import static org.uimafit.util.CasUtil.selectCovered;
 import static org.uimafit.util.JCasUtil.selectCovered;
 
-import java.util.Map;
+import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -35,7 +35,6 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.uimafit.util.CasUtil;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorUIData;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
@@ -166,7 +165,8 @@ public class SpanAdapter
     }
 
     public static void renderTokenAndSentence(JCas aJcas, GetDocumentResponse aResponse,
-            BratAnnotatorModel aBratAnnotatorModel){
+            BratAnnotatorModel aBratAnnotatorModel)
+    {
 
         // The first sentence address in the display window!
         Sentence firstSentence = BratAjaxCasUtil.selectSentenceAt(aJcas,
@@ -194,14 +194,17 @@ public class SpanAdapter
         // Render token + texts
         for (AnnotationFS fs : selectCovered(aJcas, Token.class, firstSentence.getBegin(),
                 lastSentenceInPage.getEnd())) {
-            aResponse.addToken(fs.getBegin() - aFirstSentenceOffset, fs.getEnd()- aFirstSentenceOffset);
+            aResponse.addToken(fs.getBegin() - aFirstSentenceOffset, fs.getEnd()
+                    - aFirstSentenceOffset);
         }
-        aResponse.setText(aJcas.getDocumentText().substring(aFirstSentenceOffset, lastSentenceInPage.getEnd()));
+        aResponse.setText(aJcas.getDocumentText().substring(aFirstSentenceOffset,
+                lastSentenceInPage.getEnd()));
 
         // Render Sentence
         for (AnnotationFS fs : selectCovered(aJcas, Sentence.class, firstSentence.getBegin(),
                 lastSentenceInPage.getEnd())) {
-            aResponse.addSentence(fs.getBegin() - aFirstSentenceOffset, fs.getEnd()- aFirstSentenceOffset);
+            aResponse.addSentence(fs.getBegin() - aFirstSentenceOffset, fs.getEnd()
+                    - aFirstSentenceOffset);
         }
 
     }
@@ -211,25 +214,39 @@ public class SpanAdapter
      *
      * @param aLabelValue
      *            the value of the annotation for the span
-     * @throws MultipleSentenceCoveredException
+     * @throws BratAnnotationException
      */
-    public void add(JCas aJcas, int aBegin, int aEnd, String aLabelValue) throws MultipleSentenceCoveredException
+    public void add(JCas aJcas, int aBegin, int aEnd, String aLabelValue)
+        throws BratAnnotationException
     {
-        Map<Integer, Integer> offsets = ApplicationUtils.offsets(aJcas);
-        if(BratAjaxCasUtil.isSameSentence(aJcas, aBegin, aEnd)) {
+        if (BratAjaxCasUtil.isSameSentence(aJcas, aBegin, aEnd)) {
             if (singleTokenBehavior) {
-                Map<Integer, Integer> splitedTokens = ApplicationUtils.getSplitedTokens(offsets,
-                        aBegin, aEnd);
-                for (Integer start : splitedTokens.keySet()) {
-                    updateCas(aJcas.getCas(), start, splitedTokens.get(start), aLabelValue);
+                List<Token> tokens = selectCovered(aJcas, Token.class, aBegin, aEnd);
+                if (tokens.size() == 0) {
+                    throw new SubTokenSelectedException(
+                            "A minimum of one token should be selected!");
+                }
+                else {
+                    for (Token token : tokens) {
+                        updateCas(aJcas.getCas(), token.getBegin(), token.getEnd(), aLabelValue);
+                    }
                 }
             }
             else {
-                int startAndEnd[] = ApplicationUtils.getTokenStart(offsets, aBegin, aEnd);
-                updateCas(aJcas.getCas(), startAndEnd[0], startAndEnd[1], aLabelValue);
+                List<Token> tokens = selectCovered(aJcas, Token.class, aBegin, aEnd);
+                if (tokens.size() == 0) {
+                    throw new SubTokenSelectedException(
+                            "A minimum of one token should be selected!");
+                }
+                else {
+                    // update the begin and ends (no sub token selection
+                    aBegin = tokens.get(0).getBegin();
+                    aEnd = tokens.get(tokens.size() - 1).getEnd();
+                    updateCas(aJcas.getCas(), aBegin, aEnd, aLabelValue);
+                }
             }
         }
-        else{
+        else {
             throw new MultipleSentenceCoveredException("Annotation coveres multiple sentences, "
                     + "limit your annotation to single sentence!");
         }
@@ -326,9 +343,10 @@ public class SpanAdapter
     {
         return labelPrefix;
     }
+
     @Override
     public Type getAnnotationType(CAS cas)
     {
-      return  CasUtil.getType(cas, annotationTypeName);
+        return CasUtil.getType(cas, annotationTypeName);
     }
 }
