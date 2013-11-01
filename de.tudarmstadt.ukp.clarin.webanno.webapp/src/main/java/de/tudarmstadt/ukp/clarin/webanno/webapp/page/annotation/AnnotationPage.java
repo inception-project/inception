@@ -229,7 +229,6 @@ public class AnnotationPage
             }
         });
 
-
         add(new AjaxLink<Void>("showOpenDocumentModal")
         {
             private static final long serialVersionUID = 7496156015186497496L;
@@ -260,31 +259,37 @@ public class AnnotationPage
                         if (openDataModel.getProject() != null
                                 && openDataModel.getDocument() != null) {
                             if (!closeButtonClicked) {
-                            bratAnnotatorModel.setDocument(openDataModel.getDocument());
-                            bratAnnotatorModel.setProject(openDataModel.getProject());
-                            BratAnnotatorUtility.upgradeCasAndSave(repository,
-                                    openDataModel.getDocument(), Mode.ANNOTATION);
-                            try {
-                                // setAttributesForGetCollection();
-                                setAttributesForDocument();
-                            }
-                            catch (IOException e) {
-                                error(e.getMessage());
-                            }
-                            catch (UIMAException e) {
-                                error(ExceptionUtils.getRootCauseMessage(e));
-                            }
-                            catch (ClassNotFoundException e) {
-                                error(e.getMessage());
-                            }
-                            String collection = "#" + openDataModel.getProject().getName() + "/";
-                            String document = openDataModel.getDocument().getName();
-                            target.add(finish.setOutputMarkupId(true));
-                            // annotator.reloadContent(target);
-                            target.appendJavaScript("window.location.hash = '"
-                                    + collection
-                                    + document
-                                    + "';Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                                try {
+                                    bratAnnotatorModel.setDocument(openDataModel.getDocument());
+                                    bratAnnotatorModel.setProject(openDataModel.getProject());
+                                    BratAnnotatorUtility.upgradeCasAndSave(repository,
+                                            openDataModel.getDocument(), Mode.ANNOTATION);
+
+                                    // setAttributesForGetCollection();
+                                    setAttributesForDocument();
+
+                                    String collection = "#" + openDataModel.getProject().getName()
+                                            + "/";
+                                    String document = openDataModel.getDocument().getName();
+                                    target.add(finish.setOutputMarkupId(true));
+                                    // annotator.reloadContent(target);
+                                    target.appendJavaScript("window.location.hash = '"
+                                            + collection
+                                            + document
+                                            + "';Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                                }
+                                catch (IOException e) {
+                                    target.add(getFeedbackPanel());
+                                    error(e.getMessage());
+                                }
+                                catch (UIMAException e) {
+                                    target.add(getFeedbackPanel());
+                                    error(ExceptionUtils.getRootCauseMessage(e));
+                                }
+                                catch (ClassNotFoundException e) {
+                                    target.add(getFeedbackPanel());
+                                    error(e.getMessage());
+                                }
                             }
                         }
                         else {
@@ -426,7 +431,8 @@ public class AnnotationPage
                             currentDocumentIndex + 1).getName());
                     bratAnnotatorModel.setDocument(listOfSourceDocuements
                             .get(currentDocumentIndex + 1));
-                    BratAnnotatorUtility.upgradeCasAndSave(repository, bratAnnotatorModel.getDocument(), Mode.ANNOTATION);
+                    BratAnnotatorUtility.upgradeCasAndSave(repository,
+                            bratAnnotatorModel.getDocument(), Mode.ANNOTATION);
                     try {
                         // setAttributesForGetCollection();
                         setAttributesForDocument();
@@ -471,8 +477,7 @@ public class AnnotationPage
                     if (bratAnnotatorModel.getSentenceAddress() != nextSentenceAddress) {
                         bratAnnotatorModel.setSentenceAddress(nextSentenceAddress);
 
-                        Sentence sentence = selectByAddr(jCas, Sentence.class,
-                                nextSentenceAddress);
+                        Sentence sentence = selectByAddr(jCas, Sentence.class, nextSentenceAddress);
                         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
                         // target.add(annotator);
@@ -647,8 +652,7 @@ public class AnnotationPage
                         JCas jCas = getJCas(bratAnnotatorModel.getProject(),
                                 bratAnnotatorModel.getDocument());
 
-                        Sentence sentence = selectByAddr(jCas, Sentence.class,
-                                gotoPageAddress);
+                        Sentence sentence = selectByAddr(jCas, Sentence.class, gotoPageAddress);
                         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
@@ -780,8 +784,8 @@ public class AnnotationPage
     boolean isDocumentOpenedFirstTime(String aCollection, String adocumentName)
     {
         bratAnnotatorModel.setProject(repository.getProject(aCollection.replace("/", "")));
-        bratAnnotatorModel.setDocument(repository.getSourceDocument(bratAnnotatorModel.getProject(),
-                adocumentName));
+        bratAnnotatorModel.setDocument(repository.getSourceDocument(
+                bratAnnotatorModel.getProject(), adocumentName));
 
         try {
             repository.getAnnotationDocument(bratAnnotatorModel.getDocument(),
