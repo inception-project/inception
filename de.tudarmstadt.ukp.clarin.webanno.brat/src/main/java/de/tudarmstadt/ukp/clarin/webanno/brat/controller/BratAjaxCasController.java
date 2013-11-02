@@ -370,7 +370,6 @@ public class BratAjaxCasController
             BratAnnotatorModel aBratAnnotatorModel, int aAnnotationOffsetStart, JCas aJCas,
             boolean aIsGetDocument)
     {
-
         if (aBratAnnotatorModel.isScrollPage() && !aIsGetDocument) {
             aBratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(aJCas,
                     aBratAnnotatorModel.getSentenceAddress(), aAnnotationOffsetStart,
@@ -380,7 +379,7 @@ public class BratAjaxCasController
         SpanAdapter.renderTokenAndSentence(aJCas, aResponse, aBratAnnotatorModel);
 
         for (TagSet tagSet : aBratAnnotatorModel.getAnnotationLayers()) {
-            getAdapter(tagSet.getType().getName()).render(aJCas, aResponse, aBratAnnotatorModel);
+            getAdapter(tagSet.getType()).render(aJCas, aResponse, aBratAnnotatorModel);
         }
     }
 

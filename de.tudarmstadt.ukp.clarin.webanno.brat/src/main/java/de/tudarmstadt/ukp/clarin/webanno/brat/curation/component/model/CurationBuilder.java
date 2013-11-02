@@ -38,9 +38,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationOption;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff;
@@ -286,10 +286,10 @@ public class CurationBuilder
         List<Type> entryTypes = new LinkedList<Type>();
 
         for (TagSet tagSet : aBratAnnotatorModel.getAnnotationLayers()) {
-            if(tagSet.getType().getName().equals(TypeUtil.COREFERENCE) ||
-                    tagSet.getType().getName().equals(TypeUtil.COREFRELTYPE) )
+            if(tagSet.getType().getName().equals(AnnotationTypeConstant.COREFERENCE) ||
+                    tagSet.getType().getName().equals(AnnotationTypeConstant.COREFRELTYPE) )
                 continue;
-            entryTypes.add(getAdapter(tagSet.getType().getName()).getAnnotationType(mergeJCas.getCas()));
+            entryTypes.add(getAdapter(tagSet.getType()).getAnnotationType(mergeJCas.getCas()));
         }
         return entryTypes;
     }

@@ -17,7 +17,6 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
-import org.apache.commons.io.filefilter.PrefixFileFilter;
 import org.apache.uima.cas.Type;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
@@ -34,13 +33,6 @@ public final class TypeUtil
     {
         // No instances
     }
-
-    public static final String POS = "pos";
-    public static final String NAMEDENTITY = "named entity";
-    public static final String DEPENDENCY = "dependency";
-    public static final String COREFERENCE = "coreference";
-    public static final String COREFRELTYPE = "coreference type";
-    public static final String LEMMA = "lemma";
 
     public static TypeAdapter getAdapter(Type aType)
     {
@@ -60,38 +52,35 @@ public final class TypeUtil
             return ChainAdapter.getCoreferenceLinkAdapter();
         }
         else {
-            throw new IllegalArgumentException("No adapter for type [" + aType.getName() + "]");
+            throw new IllegalArgumentException("No adapter for type with UIMA name ["
+                    + aType.getName() + "]");
         }
     }
 
-    /**
-     * Get the adapter based on the {@link PrefixFileFilter} such as POS_, NAMED_ENTITY_
-     *
-     * @param aPrefix
-     * @return
-     */
-    public static TypeAdapter getAdapter(String aPrefix)
+    public static TypeAdapter getAdapter(AnnotationType aType)
     {
-        if (aPrefix.equals(POS)) {
+        String name = aType.getName();
+        
+        if (name.equals(AnnotationTypeConstant.POS)) {
             return SpanAdapter.getPosAdapter();
         }
-        else if (aPrefix.equals(LEMMA)) {
+        else if (name.equals(AnnotationTypeConstant.LEMMA)) {
             return SpanAdapter.getLemmaAdapter();
         }
-        else if (aPrefix.equals(NAMEDENTITY)) {
+        else if (name.equals(AnnotationTypeConstant.NAMEDENTITY)) {
             return SpanAdapter.getNamedEntityAdapter();
         }
-        else if (aPrefix.equals(DEPENDENCY)) {
+        else if (name.equals(AnnotationTypeConstant.DEPENDENCY)) {
             return ArcAdapter.getDependencyAdapter();
         }
-        else if (aPrefix.equals(COREFERENCE)) {
+        else if (name.equals(AnnotationTypeConstant.COREFERENCE)) {
             return ChainAdapter.getCoreferenceChainAdapter();
         }
-        else if (aPrefix.equals(COREFRELTYPE)) {
+        else if (name.equals(AnnotationTypeConstant.COREFRELTYPE)) {
             return ChainAdapter.getCoreferenceLinkAdapter();
         }
         else {
-            throw new IllegalArgumentException("No adapter for type [" + aPrefix + "]");
+            throw new IllegalArgumentException("No adapter for type with name [" + name + "]");
         }
     }
 
