@@ -47,21 +47,6 @@ public class AnnotationTypeConstant
     public static final String NAMEDENTITY_PARENT = "Named Entity";
     public static final String COREFERENCE_PARENT = "COREF";
 
-    public static final String POS_FEATURENAME = "PosValue";
-    public static final String LEMMA_FEATURENAME = "value";
-    public static final String NAMEDENTITY_FEATURENAME = "value";
-
-    public static final String COREFERENCELINK_FEATURENAME = "referenceType";
-    public static final String COREFERENCECHAIN_FEATURENAME = "referenceRelation";
-    public static final String COREFERENCELINK_NEXT_FEATURENAME = "next";
-    public static final String COREFERENCECHAIN_FIRST_FEATURENAME = "first";
-
-
-    public static final String DEPENDENCY_FEATURENAME = "DependencyType";
-    public static final String DEPENDENCY_DEPENDENT_FEATURENAME = "Dependent";
-    public static final String DEPENDENCY_GOVERNOR_FEATURENAME = "Governor";
-    public static final String ARC_POS_FEATURE_NAME = "pos";
-
     public static final String ROOT = "ROOT";
 
     public static final String SPAN_TYPE = "span";

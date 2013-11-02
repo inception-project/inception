@@ -299,7 +299,7 @@ public class SpanAdapter
     public static final SpanAdapter getPosAdapter()
     {
         SpanAdapter adapter = new SpanAdapter(AnnotationTypeConstant.POS_PREFIX,
-                POS.class.getName(), AnnotationTypeConstant.POS_FEATURENAME, "pos",
+                POS.class.getName(), "PosValue", "pos",
                 Token.class.getName());
         adapter.setSingleTokenBehavior(true);
         return adapter;
@@ -313,7 +313,7 @@ public class SpanAdapter
     public static final SpanAdapter getLemmaAdapter()
     {
         SpanAdapter adapter = new SpanAdapter("", Lemma.class.getName(),
-                AnnotationTypeConstant.LEMMA_FEATURENAME, "lemma", Token.class.getName());
+                "value", "lemma", Token.class.getName());
         adapter.setSingleTokenBehavior(true);
         return adapter;
     }
@@ -326,7 +326,7 @@ public class SpanAdapter
     public static final SpanAdapter getNamedEntityAdapter()
     {
         SpanAdapter adapter = new SpanAdapter(AnnotationTypeConstant.NAMEDENTITY_PREFIX,
-                NamedEntity.class.getName(), AnnotationTypeConstant.NAMEDENTITY_FEATURENAME, null,
+                NamedEntity.class.getName(), "value", null,
                 null);
         adapter.setSingleTokenBehavior(false);
         return adapter;

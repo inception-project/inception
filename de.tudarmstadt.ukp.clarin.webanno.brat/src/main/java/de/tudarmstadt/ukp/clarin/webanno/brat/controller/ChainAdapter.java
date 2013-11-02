@@ -746,9 +746,9 @@ public class ChainAdapter
     {
         ChainAdapter adapter = new ChainAdapter(AnnotationTypeConstant.COREFRELTYPE_PREFIX,
                 CoreferenceLink.class.getName(),
-                AnnotationTypeConstant.COREFERENCELINK_FEATURENAME,
-                AnnotationTypeConstant.COREFERENCECHAIN_FIRST_FEATURENAME,
-                AnnotationTypeConstant.COREFERENCELINK_NEXT_FEATURENAME);
+                "referenceType",
+                "first",
+                "next");
         return adapter;
     }
 
@@ -761,9 +761,9 @@ public class ChainAdapter
     {
         ChainAdapter adapter = new ChainAdapter(AnnotationTypeConstant.COREFERENCE_PREFIX,
                 CoreferenceChain.class.getName(),
-                AnnotationTypeConstant.COREFERENCECHAIN_FEATURENAME,
-                AnnotationTypeConstant.COREFERENCECHAIN_FIRST_FEATURENAME,
-                AnnotationTypeConstant.COREFERENCELINK_NEXT_FEATURENAME);
+                "referenceRelation",
+                "first",
+                "next");
         adapter.setChain(true);
         return adapter;
     }
