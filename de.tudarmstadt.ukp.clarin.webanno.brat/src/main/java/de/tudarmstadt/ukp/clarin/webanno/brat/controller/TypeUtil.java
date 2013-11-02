@@ -17,6 +17,9 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.uima.cas.Type;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
@@ -82,6 +85,32 @@ public final class TypeUtil
         else {
             throw new IllegalArgumentException("No adapter for type with name [" + name + "]");
         }
+    }
+    
+    public static TypeAdapter getAdapter(String aPrefix)
+    {
+        TypeAdapter[] adapterList = new TypeAdapter[] {
+                SpanAdapter.getLemmaAdapter(),
+                SpanAdapter.getNamedEntityAdapter(),
+                SpanAdapter.getPosAdapter(),
+                
+                ChainAdapter.getCoreferenceChainAdapter(),
+                ChainAdapter.getCoreferenceLinkAdapter(),
+                
+                ArcAdapter.getDependencyAdapter()
+        };
+        
+        Map<String, TypeAdapter> adapters = new HashMap<String, TypeAdapter>();
+        for (TypeAdapter adapter : adapterList) {
+            adapters.put(adapter.getLabelPrefix(), adapter);
+        }
+        
+        TypeAdapter result = adapters.get(aPrefix);
+        if (result == null) {
+            throw new IllegalArgumentException("No adapter for prefix [" + aPrefix + "]");
+        }
+        
+        return result;
     }
 
     /**
