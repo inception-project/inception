@@ -785,4 +785,10 @@ public class ChainAdapter
     {
         return CasUtil.getType(cas, annotationTypeName);
     }
+    
+    @Override
+    public String getAnnotationTypeName()
+    {
+        return annotationTypeName;
+    }
 }

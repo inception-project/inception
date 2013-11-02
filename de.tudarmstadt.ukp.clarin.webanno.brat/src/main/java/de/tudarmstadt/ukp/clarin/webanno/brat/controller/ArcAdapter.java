@@ -346,26 +346,6 @@ public class ArcAdapter
         }
     }
 
-  /**
-   * Check if the two annotations are in the same sentence
-   * @param aOriginBegin Begin offset of the origin annotation
-   * @param aTargetEnd End offset of the target annotation
-   * @param aJCas the {@link JCas}
-   * @return
-   */
-
-    public  class ArcCrossedMultipleSentenceException
-    extends BratAnnotationException
-{
-    private static final long serialVersionUID = 1280015349963924638L;
-
-    public ArcCrossedMultipleSentenceException(String message)
-    {
-        super(message);
-    }
-
-}
-
     @Override
     public String getLabelFeatureName()
     {
@@ -381,5 +361,12 @@ public class ArcAdapter
     public Type getAnnotationType(CAS cas)
     {
       return  CasUtil.getType(cas, annotationTypeName);
+    }
+
+    
+    @Override
+    public String getAnnotationTypeName()
+    {
+        return annotationTypeName;
     }
 }

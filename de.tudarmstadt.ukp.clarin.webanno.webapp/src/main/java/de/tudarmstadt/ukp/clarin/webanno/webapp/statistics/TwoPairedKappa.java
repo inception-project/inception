@@ -40,10 +40,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
-import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
-import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
-import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
-import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.AnnotationStudy;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.IAnnotationStudy;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.TwoRaterKappaAgreement;
@@ -58,11 +54,6 @@ import de.tudarmstadt.ukp.dkpro.statistics.agreement.TwoRaterKappaAgreement;
  */
 public class TwoPairedKappa
 {
-    public static final String NAMEDENITYTYPE = NamedEntity.class.getName();
-    public static final String POSTYPE = POS.class.getName();
-    public static final String DEPENDENCYTYPE = Dependency.class.getName();
-    public static final String COREFERENCELINKTYPE = CoreferenceLink.class.getName();
-    public static final String COREFERENCECHAINTYPE = CoreferenceLink.class.getName();
     public static String EMPTY = "EMPTY";
 
     private static RepositoryService repositoryService;
@@ -84,10 +75,6 @@ public class TwoPairedKappa
      *
      * @param aUsers
      *            Users with finished annotation documents
-     * @return
-     * @throws ClassNotFoundException
-     * @throws IOException
-     * @throws UIMAException
      */
     public Set<String> getAllAnnotations(List<User> aUsers, SourceDocument aSourceDocument,
             String aType, Map<User, JCas> JCases)

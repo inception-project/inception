@@ -74,7 +74,8 @@ import org.wicketstuff.progressbar.ProgressionModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -580,47 +581,15 @@ public class MonitoringPage
         }
     }
 
-    private String getType(String aType)
+    private String getType(AnnotationType aType)
     {
-        if (aType.equals("pos")) {
-            aType = TwoPairedKappa.POSTYPE;
-        }
-        else if (aType.equals("dependency")) {
-            aType = TwoPairedKappa.DEPENDENCYTYPE;
-        }
-        else if (aType.equals("named entity")) {
-            aType = TwoPairedKappa.NAMEDENITYTYPE;
-        }
-        else if (aType.equals("coreference type")) {
-            aType = TwoPairedKappa.COREFERENCELINKTYPE;
-        }
-        else if (aType.equals("coreference")) {
-            aType = TwoPairedKappa.COREFERENCECHAINTYPE;
-        }
-        return aType;
+        return TypeUtil.getAdapter(aType).getAnnotationTypeName();
     }
 
-    private String getFeatureName(String aType)
+    private String getFeatureName(AnnotationType aType)
     {
-        String featureName = "";
-        if (aType.equals("pos")) {
-            featureName = AnnotationTypeConstant.POS_FEATURENAME;
-        }
-        else if (aType.equals("dependency")) {
-            featureName = AnnotationTypeConstant.DEPENDENCY_FEATURENAME;
-        }
-        else if (aType.equals("named entity")) {
-            featureName = AnnotationTypeConstant.NAMEDENTITY_FEATURENAME;
-        }
-
-        else if (aType.equals("coreference type")) {
-            featureName = AnnotationTypeConstant.COREFERENCELINK_FEATURENAME;
-        }
-        else if (aType.equals("coreference")) {
-            featureName = AnnotationTypeConstant.COREFERENCECHAIN_FEATURENAME;
-        }
-
-        return featureName;
+        TypeAdapter adapter = TypeUtil.getAdapter(aType);
+        return adapter.getLabelFeatureName();
     }
 
     private void modifyProjectRepeater(RepeatingView aProjectRepeater,
@@ -691,11 +660,9 @@ public class MonitoringPage
             Project project = projectSelectionForm.getModelObject().project;
             if (project != null) {// application is starting
                 // TODO the type conversion will not be needed when the type is stored in
-                // the
-                // database
+                // the database
 
-                String type = getType(annotationTypes.getModelObject().getName());
-                String featureName = getFeatureName(annotationTypes.getModelObject().getName());
+                TypeAdapter adapter = TypeUtil.getAdapter(annotationTypes.getModelObject());
                 List<User> users = projectRepository.listProjectUsersWithPermissions(project,
                         PermissionLevel.USER);
                 double[][] results = new double[users.size()][users.size()];
@@ -746,8 +713,9 @@ public class MonitoringPage
                                             .get(user2)) {
 
                                         if (document1.getId() == document2.getId()) {
-                                            getStudy(type, featureName, twoPairedKappa, user1,
-                                                    user2, allUserAnnotations, document2);
+                                            getStudy(adapter.getAnnotationTypeName(),
+                                                    adapter.getLabelFeatureName(), twoPairedKappa,
+                                                    user1, user2, allUserAnnotations, document2);
                                         }
                                     }
 

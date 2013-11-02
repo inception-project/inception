@@ -42,7 +42,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter.ArcCrossedMultipleSentenceException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Stored;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;

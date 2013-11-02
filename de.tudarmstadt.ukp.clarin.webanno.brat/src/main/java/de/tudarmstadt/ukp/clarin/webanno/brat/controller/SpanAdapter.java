@@ -349,4 +349,10 @@ public class SpanAdapter
     {
         return CasUtil.getType(cas, annotationTypeName);
     }
+    
+    @Override
+    public String getAnnotationTypeName()
+    {
+        return annotationTypeName;
+    }
 }

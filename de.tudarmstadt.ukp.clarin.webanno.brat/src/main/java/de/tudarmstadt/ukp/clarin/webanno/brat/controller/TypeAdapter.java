@@ -53,10 +53,14 @@ public interface TypeAdapter
     String getLabelPrefix();
 
     /**
-     * get the CAS type of the this {@link TypeAdapter}
-     * @return
+     * Get the CAS type of the this {@link TypeAdapter}
      */
     Type getAnnotationType(CAS cas);
+
+    /**
+     * Get the CAS type of the this {@link TypeAdapter}
+     */
+    String getAnnotationTypeName();
 
 //    /**
 //     * Update the CAS with new/modification of span annotations from brat
