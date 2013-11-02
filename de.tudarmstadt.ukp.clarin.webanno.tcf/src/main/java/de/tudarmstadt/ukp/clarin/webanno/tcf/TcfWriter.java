@@ -208,12 +208,13 @@ public class TcfWriter
             aTokensBeginPositionMap.put(coveredToken.getBegin(), tokensLayer.getToken(j));
 
             Lemma lemma = coveredToken.getLemma();
-            if (lemma != null) {
+            if (lemma != null && lemmasLayer != null) {
                 String lemmaValue = coveredToken.getLemma().getValue();
                 lemmasLayer.addLemma(lemmaValue, tokensLayer.getToken(j));
             }
             POS pos = coveredToken.getPos();
-            if (pos != null) {
+
+            if (pos != null && posLayer != null ) {
                 String posValue = coveredToken.getPos().getPosValue();
                 posLayer.addTag(posValue, tokensLayer.getToken(j));
             }
