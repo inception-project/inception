@@ -310,6 +310,9 @@ public class SpanAnnotationModalWindowPage
                                 bratAnnotatorModel.getSentenceAddress()).getBegin()
                                 + ((Offsets) offsetLists.get(0)).getBegin();
                         Tag selectedTag = null;
+                        // FIXME issue #701 TypeAdapter should have field "deletable" and a method 
+                        // "isDeletable" and this should be called here. The prefix constant should
+                        // not be used here -- REC 2013-11-02
                         if (selectedtTagSet.getType().getName().equals(AnnotationTypeConstant.LEMMA)) {
                             aTarget.add(feedbackPanel);
                             error("Lemma annotations can't be deleted!");
@@ -318,6 +321,9 @@ public class SpanAnnotationModalWindowPage
                             selectedTag = (Tag) annotationService.getTag(tags.getModelObject(),
                                 selectedtTagSet);
                         String annotationType = TypeUtil.getQualifiedLabel(selectedTag);
+                        // FIXME issue #701 TypeAdapter should have field "deletable" and a method 
+                        // "isDeletable" and this should be called here. The prefix constant should
+                        // not be used here -- REC 2013-11-02
                         if (annotationType.startsWith(AnnotationTypeConstant.POS_PREFIX)) {
                             aTarget.add(feedbackPanel);
                             error("POS annotations can't be deleted!");
