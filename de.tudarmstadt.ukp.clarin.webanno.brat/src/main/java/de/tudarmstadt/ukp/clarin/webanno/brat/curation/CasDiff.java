@@ -19,8 +19,10 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.curation;
 
 import static org.uimafit.util.CasUtil.selectCovered;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -73,7 +75,14 @@ public class CasDiff {
                 // cas.getIndexRepository().getAllIndexedFS(aType)
                 // #610 - fetch type by name as type instance may be bound to a different CAS
                 Type localType = CasUtil.getType(cas, aEntryType.getName());
-                for (AnnotationFS annotationFS : selectCovered(cas, localType, aBegin, aEnd)) {
+                List<AnnotationFS> annotationFSs;
+                if(aBegin ==-1) {
+                    annotationFSs =  select(cas,localType);
+                }
+                else{
+                    annotationFSs = selectCovered(cas, localType, aBegin, aEnd);
+                }
+                for (AnnotationFS annotationFS : annotationFSs) {
                     Integer begin = annotationFS.getBegin();
                     Integer end = annotationFS.getEnd();
 
@@ -113,7 +122,7 @@ public class CasDiff {
                                     annotationSelection.getAddressByUsername().put(usernameFSNew, addressNew);
                                     annotationSelectionByFeatureStructureNew.put(compareResultFSNew, annotationSelection);
                                     // Add Debug information
-                                    annotationSelection.getFsStringByUsername().put(usernameFSNew, compareResultFSNew.toString());
+                                    annotationSelection.getFsStringByUsername().put(usernameFSNew, compareResultFSNew);
 
                                 }
                             }
@@ -136,7 +145,7 @@ public class CasDiff {
                             annotationSelection.setAnnotationOption(annotationOption);
                             annotationOption.getAnnotationSelections().add(annotationSelection);
                             // Add Debug information
-                            annotationSelection.getFsStringByUsername().put(usernameFSNew, subFS1.toString());
+                            annotationSelection.getFsStringByUsername().put(usernameFSNew, subFS1);
                         }
                         }
                     }
@@ -148,8 +157,17 @@ public class CasDiff {
         return annotationOptions;
     }
 
-    private static Set<FeatureStructure> traverseFS(FeatureStructure fs) {
-        Set<FeatureStructure> nodePlusChildren = new HashSet<FeatureStructure>();
+    private static List<AnnotationFS> select(CAS cas, Type localType)
+    {
+        List<AnnotationFS> annotationFSs = new ArrayList<AnnotationFS>();
+        for(AnnotationFS annotationFS: CasUtil.select(cas, localType)){
+            annotationFSs.add(annotationFS);
+        }
+        return annotationFSs;
+    }
+
+    public static Set<FeatureStructure> traverseFS(FeatureStructure fs) {
+        LinkedHashSet<FeatureStructure> nodePlusChildren = new LinkedHashSet<FeatureStructure>();
         nodePlusChildren.add(fs);
         for (Feature feature : fs.getType().getFeatures()) {
             // features are present in both feature structures, fs1 and fs2

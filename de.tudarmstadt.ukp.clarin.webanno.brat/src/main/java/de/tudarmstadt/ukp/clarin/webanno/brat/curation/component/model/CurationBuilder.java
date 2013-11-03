@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -70,8 +71,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 public class CurationBuilder
 {
 
-    private RepositoryService repository;
-    private AnnotationService annotationService;
+    private final RepositoryService repository;
+    private final AnnotationService annotationService;
 
     private final static Log LOG = LogFactory.getLog(CurationPanel.class);
     int sentenceNumber;
@@ -171,7 +172,7 @@ public class CurationBuilder
         }
 
         if (entryTypes == null) {
-            entryTypes = getEntryTypes(mergeJCas, aBratAnnotatorModel);
+            entryTypes = getEntryTypes(mergeJCas, aBratAnnotatorModel.getAnnotationLayers());
         }
 
         for (Integer begin : segmentBeginEnd.keySet()) {
@@ -281,14 +282,15 @@ public class CurationBuilder
         }
     }
 
-    public static List<Type> getEntryTypes(JCas mergeJCas, BratAnnotatorModel aBratAnnotatorModel)
+    public static List<Type> getEntryTypes(JCas mergeJCas, Set<TagSet> aTagSets)
     {
         List<Type> entryTypes = new LinkedList<Type>();
 
-        for (TagSet tagSet : aBratAnnotatorModel.getAnnotationLayers()) {
-            if(tagSet.getType().getName().equals(AnnotationTypeConstant.COREFERENCE) ||
-                    tagSet.getType().getName().equals(AnnotationTypeConstant.COREFRELTYPE) )
+        for (TagSet tagSet : aTagSets) {
+            if (tagSet.getType().getName().equals(AnnotationTypeConstant.COREFERENCE)
+                    || tagSet.getType().getName().equals(AnnotationTypeConstant.COREFRELTYPE)) {
                 continue;
+            }
             entryTypes.add(getAdapter(tagSet.getType()).getAnnotationType(mergeJCas.getCas()));
         }
         return entryTypes;
@@ -322,7 +324,7 @@ public class CurationBuilder
             e.printStackTrace();
         }
 
-        entryTypes = getEntryTypes(mergeJCas, aBratAnnotatorModel);
+        entryTypes = getEntryTypes(mergeJCas, aBratAnnotatorModel.getAnnotationLayers());
         jCases.put(CurationPanel.CURATION_USER, mergeJCas);
 
         List<AnnotationOption> annotationOptions = null;

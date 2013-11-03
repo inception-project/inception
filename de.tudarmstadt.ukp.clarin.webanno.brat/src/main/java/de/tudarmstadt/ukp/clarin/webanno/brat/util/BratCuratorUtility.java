@@ -557,7 +557,7 @@ public class BratCuratorUtility
 
         // get differing feature structures
         List<Type> entryTypes = CurationBuilder.getEntryTypes(annotatorCas,
-                aCurationContainer.getBratAnnotatorModel());
+                aCurationContainer.getBratAnnotatorModel().getAnnotationLayers());
         List<AnnotationOption> annotationOptions = null;
         try {
             annotationOptions = CasDiff.doDiff(entryTypes, jCases, aCurationSegment.getBegin(),
