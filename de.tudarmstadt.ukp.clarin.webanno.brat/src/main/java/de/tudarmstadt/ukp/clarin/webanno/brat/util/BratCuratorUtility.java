@@ -350,6 +350,7 @@ public class BratCuratorUtility
             if (newState != null) {
                 String type = entity.getType() + "_(" + newState.name() + ")";
                 String label = entity.getType();
+                // FIXME WFT? Can we use TypeUtil.getLabel() here?! -- REC 2013-11-02
                 label = label.replace(AnnotationTypeConstant.POS_PREFIX, "")
                         .replace(AnnotationTypeConstant.NAMEDENTITY_PREFIX, "")
                         .replace(AnnotationTypeConstant.COREFRELTYPE_PREFIX, "");
