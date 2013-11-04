@@ -23,11 +23,13 @@ import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
@@ -78,6 +80,7 @@ import org.wicketstuff.progressbar.ProgressionModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationOption;
@@ -96,6 +99,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.project.SettingsPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.statistics.TwoPairedKappa;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.support.ChartImageResource;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.support.DynamicColumnMetaData;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.support.EntityModel;
@@ -106,9 +110,9 @@ import de.tudarmstadt.ukp.dkpro.statistics.agreement.TwoRaterKappaAgreement;
 
 /**
  * Monitoring To display different monitoring and statistics measurements tabularly and graphically.
- *
+ * 
  * @author Seid Muhie Yimam
- *
+ * 
  */
 public class MonitoringPage
     extends SettingsPageBase
@@ -149,7 +153,7 @@ public class MonitoringPage
     private AgreementForm agreementForm;
     private final AnnotationTypeSelectionForm annotationTypeSelectionForm;
     private ListChoice<AnnotationType> annotationTypes;
-    private transient Map<SourceDocument, Map<String, JCas>> documentJCases;
+    private transient Map<SourceDocument, Map<User, JCas>> documentJCases;
 
     private static final Log LOG = LogFactory.getLog(MonitoringPage.class);
 
@@ -669,258 +673,194 @@ public class MonitoringPage
     private void updateAgreementTabel(AjaxRequestTarget aTarget)
     {
 
-        if (annotationTypes.getModelObject() != null) {
-            Project project = projectSelectionForm.getModelObject().project;
-            if (project != null) {// application is starting
-                // TODO the type conversion will not be needed when the type is stored in
-                // the database
+        Project project = projectSelectionForm.getModelObject().project;
+        List<User> users = projectRepository.listProjectUsersWithPermissions(project,
+                PermissionLevel.USER);
+        double[][] results = new double[users.size()][users.size()];
+        if (annotationTypes.getModelObject() != null
+                && !annotationTypes.getModelObject().getName()
+                        .equals(AnnotationTypeConstant.COREFERENCE)) {
 
-                TypeAdapter adapter = TypeUtil.getAdapter(annotationTypes.getModelObject());
+            TypeAdapter adapter = TypeUtil.getAdapter(annotationTypes.getModelObject());
+            // initialize results with zero
+            for (int m = 0; m < users.size(); m++) {
+                for (int j = 0; j < users.size(); j++) {
+                    results[m][j] = 0.0;
+                }
+            }
 
-                Set<TagSet> tagSets = new HashSet<TagSet>();
-                tagSets.add(annotationService.getTagSet(annotationTypes.getModelObject(), project));
-                List<User> users = projectRepository.listProjectUsersWithPermissions(project,
-                        PermissionLevel.USER);
-                double[][] results = new double[users.size()][users.size()];
-                // initialize results with zero
-                for (int m = 0; m < users.size(); m++) {
-                    for (int j = 0; j < users.size(); j++) {
-                        results[m][j] = 0.0;
+            // assume all users finished only one document
+            double[][] multipleDocumentsFinished = new double[users.size()][users.size()];
+            for (int m = 0; m < users.size(); m++) {
+                for (int j = 0; j < users.size(); j++) {
+                    multipleDocumentsFinished[m][j] = 1.0;
+                }
+            }
+
+            List<SourceDocument> sourceDocuments = projectRepository.listSourceDocuments(project);
+
+            // a map that contains list of finished annotation documents for a given user
+            Map<User, List<SourceDocument>> finishedDocumentLists = new HashMap<User, List<SourceDocument>>();
+            for (User user : users) {
+                List<SourceDocument> finishedDocuments = new ArrayList<SourceDocument>();
+                for (SourceDocument document : sourceDocuments) {
+                    AnnotationDocument annotationDocument = projectRepository
+                            .getAnnotationDocument(document, user);
+                    if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
+                        finishedDocuments.add(document);
                     }
                 }
+                finishedDocumentLists.put(user, finishedDocuments);
+            }
 
-                // assume all users finished only one document
-                double[][] multipleDocumentsFinished = new double[users.size()][users.size()];
-                for (int m = 0; m < users.size(); m++) {
-                    for (int j = 0; j < users.size(); j++) {
-                        multipleDocumentsFinished[m][j] = 1.0;
-                    }
-                }
-
-                List<SourceDocument> sourceDocuments = projectRepository
-                        .listSourceDocuments(project);
-
-                // a map that contains list of finished annotation documents for a given user
-                Map<User, List<SourceDocument>> finishedDocumentLists = new HashMap<User, List<SourceDocument>>();
-                for (User user : users) {
-                    List<SourceDocument> finishedDocuments = new ArrayList<SourceDocument>();
-                    for (SourceDocument document : sourceDocuments) {
-                        if (projectRepository.existsAnnotationDocument(document, user)) {
-                            AnnotationDocument annotationDocument = projectRepository
-                                    .getAnnotationDocument(document, user);
-                            if (annotationDocument.getState().equals(
-                                    AnnotationDocumentState.FINISHED)) {
-                                finishedDocuments.add(document);
-                            }
+            TwoPairedKappa twoPairedKappa = new TwoPairedKappa(project, projectRepository);
+            int userInRow = 0;
+            List<User> rowUsers = new ArrayList<User>();
+            for (User user1 : users) {
+                if (finishedDocumentLists.get(user1).size() != 0) {
+                    int userInColumn = 0;
+                    for (User user2 : users) {
+                        if (user1.getUsername().equals(user2.getUsername())) {// no need to
+                                                                              // compute
+                            // with itself, diagonal one
+                            results[userInRow][userInColumn] = 1.0;
+                            userInColumn++;
+                            continue;
                         }
-                    }
-                    finishedDocumentLists.put(user, finishedDocuments);
-                }
+                        else if (rowUsers.contains(user2)) {// already done, upper part of
+                                                            // matrix
+                            userInColumn++;
+                            continue;
+                        }
 
-                int userInRow = 0;
-                List<User> rowUsers = new ArrayList<User>();
-                for (User user1 : users) {
-                    if (finishedDocumentLists.get(user1).size() != 0) {
-                        int userInColumn = 0;
-                        for (User user2 : users) {
-                            if (user1.getUsername().equals(user2.getUsername())) {// no need to
-                                                                                  // compute
-                                // with itself, diagonal one
-                                results[userInRow][userInColumn] = 1.0;
-                                userInColumn++;
-                                continue;
-                            }
-                            else if (rowUsers.contains(user2)) {// already done, upper part of
-                                                                // matrix
-                                userInColumn++;
-                                continue;
-                            }
+                        Map<String, Map<String, String>> allUserAnnotations = new TreeMap<String, Map<String, String>>();
 
-                            IAnnotationStudy study = new AnnotationStudy(2);
-                            if (finishedDocumentLists.get(user2).size() != 0) {
-                                for (SourceDocument document1 : finishedDocumentLists.get(user1)) {
-                                    for (SourceDocument document2 : finishedDocumentLists
-                                            .get(user2)) {
-                                        if (document1.getId() == document2.getId()) {
-                                            setAnnotationStudy(aTarget, tagSets, user1, user2,
-                                                    study, document1);
-                                        }
+                        if (finishedDocumentLists.get(user2).size() != 0) {
+                            for (SourceDocument document1 : finishedDocumentLists.get(user1)) {
+                                for (SourceDocument document2 : finishedDocumentLists.get(user2)) {
+
+                                    if (document1.getId() == document2.getId()) {
+                                        getStudy(adapter.getAnnotationTypeName(),
+                                                adapter.getLabelFeatureName(), twoPairedKappa,
+                                                user1, user2, allUserAnnotations, document2);
                                     }
                                 }
-                                TwoRaterKappaAgreement kappaAgreement = new TwoRaterKappaAgreement(
-                                        study);
-                                double thisResults = kappaAgreement.calculateAgreement();
-                                results[userInRow][userInColumn] = (double) Math
-                                        .round(thisResults * 100) / 100;
 
                             }
-                            userInColumn++;
                         }
-                        // remove this user for further processing/ Half upper column is enough
-                        rowUsers.add(user1);
+
+                        if (twoPairedKappa.getAgreement(allUserAnnotations).length != 0) {
+                            double[][] thisResults = twoPairedKappa
+                                    .getAgreement(allUserAnnotations);
+                            // for a user with itself, we have
+                            // u1
+                            // u1 1.0
+                            // we took it as it is
+                            if (allUserAnnotations.keySet().size() == 1) {
+                                results[userInRow][userInColumn] = (double) Math
+                                        .round(thisResults[0][0] * 100) / 100;
+                            }
+                            else {
+                                // in result for the two users will be in the form of
+                                // u1 u2
+                                // --------------
+                                // u1 1.0 0.84
+                                // u2 0.84 1.0
+                                // only value from first row, second column is important
+                                results[userInRow][userInColumn] = (double) Math
+                                        .round(thisResults[0][1] * 100) / 100;
+                            }
+                            rowUsers.add(user1);
+                        }
+                        userInColumn++;
                     }
-                    userInRow++;
                 }
-                // Users with some annotations of this type
-
-                List<String> usersListAsColumnHeader = new ArrayList<String>();
-                usersListAsColumnHeader.add("users");
-
-                for (User user : users) {
-                    usersListAsColumnHeader.add(user.getUsername());
-                }
-                List<List<String>> agreementResults = new ArrayList<List<String>>();
-                int i = 0;
-                for (User user1 : users) {
-                    List<String> agreementResult = new ArrayList<String>();
-                    agreementResult.add(user1.getUsername());
-
-                    for (int j = 0; j < users.size(); j++) {
-                        if (j < i) {
-                            agreementResult.add("");
-                        }
-                        else {
-                            agreementResult
-                                    .add((double) Math.round(results[i][j] * 100) / 100 + "");
-                        }
-                    }
-                    i++;
-                    agreementResults.add(agreementResult);
-                }
-
-                TableDataProvider provider = new TableDataProvider(usersListAsColumnHeader,
-                        agreementResults);
-
-                List<IColumn<?>> columns = new ArrayList<IColumn<?>>();
-
-                for (int m = 0; m < provider.getColumnCount(); m++) {
-                    columns.add(new DynamicColumnMetaData(provider, m));
-                }
-                agreementTable.remove();
-                agreementTable = new DefaultDataTable("agreementTable", columns, provider, 10);
-                agreementForm.add(agreementTable);
-                aTarget.add(agreementForm);
+                userInRow++;
             }
         }
-    }
 
-    /**
-     * Get an Annotation Study for the {@link TwoRaterKappaAgreement} computation
-     */
-    private void setAnnotationStudy(AjaxRequestTarget aTarget, Set<TagSet> tagSets, User user1,
-            User user2, IAnnotationStudy study, SourceDocument document1)
-    {
-        try {
-            Map<String, JCas> cases = new HashMap<String, JCas>();
-            cases.put(user1.getUsername(), documentJCases.get(document1).get(user1.getUsername()));
-            cases.put(user2.getUsername(), documentJCases.get(document1).get(user2.getUsername()));
-            long startTime = System.currentTimeMillis();
+        // Users with some annotations of this type
 
-            LOG.info("Start doing CAS diff: ");
-            List<AnnotationOption> annotationOptions = CasDiff.doDiff(
-                    CurationBuilder.getEntryTypes(
-                            documentJCases.get(document1).get(user1.getUsername()), tagSets),
-                    cases, -1, -1);
+        List<String> usersListAsColumnHeader = new ArrayList<String>();
+        usersListAsColumnHeader.add("users");
 
-            long endTime = System.currentTimeMillis();
-            long totalTime = endTime - startTime;
-            LOG.info("Time taken to get diff:" + totalTime + " ms - " + totalTime / 1000);
+        for (User user : users) {
+            usersListAsColumnHeader.add(user.getUsername());
+        }
+        List<List<String>> agreementResults = new ArrayList<List<String>>();
+        int i = 0;
+        for (User user1 : users) {
+            List<String> agreementResult = new ArrayList<String>();
+            agreementResult.add(user1.getUsername());
 
-            startTime = System.currentTimeMillis();
-            LOG.info("Start doing KAPPA computation: ");
-            for (AnnotationOption annotationOption : annotationOptions) {
-                String study1 = "", study2 = "";
-                if (annotationOption.getAnnotationSelections().size() == 1) {// agreement
-                    AnnotationSelection annotationSelection = annotationOption
-                            .getAnnotationSelections().get(0);
-                    FeatureStructure fs1 = annotationSelection.getFsStringByUsername().get(
-                            user1.getUsername());
-                    FeatureStructure fs2 = annotationSelection.getFsStringByUsername().get(
-                            user2.getUsername());
-                    if (fs1 != null) {
-                        Set<FeatureStructure> subFs = CasDiff.traverseFS(fs1);
-                        for (FeatureStructure featureStructure : subFs) {
-                            study1 = study1
-                                    + getValue(featureStructure.getType(), featureStructure);
-                        }
-                    }
-                    else {
-                        study1 = "EMPTY";
-                    }
-
-                    if (fs2 != null) {
-                        Set<FeatureStructure> subFs = CasDiff.traverseFS(fs2);
-                        for (FeatureStructure featureStructure : subFs) {
-                            study2 = study2
-                                    + getValue(featureStructure.getType(), featureStructure);
-                        }
-                    }
-                    else {
-                        study2 = "EMPTY";
-                    }
-
-                    study.addItem(study1, study2);
+            for (int j = 0; j < users.size(); j++) {
+                if (j < i) {
+                    agreementResult.add("");
                 }
                 else {
-                    for (AnnotationSelection annotationSelection : annotationOption
-                            .getAnnotationSelections()) {
-                        if (annotationSelection.getFsStringByUsername().keySet()
-                                .contains(user1.getUsername())) {
-                            FeatureStructure fs = annotationSelection.getFsStringByUsername().get(
-                                    user1.getUsername());
-                            Set<FeatureStructure> subFs = CasDiff.traverseFS(fs);
-                            for (FeatureStructure featureStructure : subFs) {
-                                study1 = study1
-                                        + getValue(featureStructure.getType(), featureStructure);
-                            }
-                        }
-                        else {
-                            FeatureStructure fs = annotationSelection.getFsStringByUsername().get(
-                                    user2.getUsername());
-                            Set<FeatureStructure> subFs = CasDiff.traverseFS(fs);
-                            for (FeatureStructure featureStructure : subFs) {
-                                study2 = study2
-                                        + getValue(featureStructure.getType(), featureStructure);
-                            }
-
-                        }
-                    }
-                    study.addItem(study1, study2);
+                    agreementResult.add((double) Math.round(results[i][j] * 100) / 100 + "");
                 }
             }
+            i++;
+            agreementResults.add(agreementResult);
+        }
 
-            endTime = System.currentTimeMillis();
-            totalTime = endTime - startTime;
-            LOG.info("Time taken to get KAPPA computation:" + totalTime + " ms - " + totalTime
-                    / 1000);
+        TableDataProvider provider = new TableDataProvider(usersListAsColumnHeader,
+                agreementResults);
+
+        List<IColumn<?>> columns = new ArrayList<IColumn<?>>();
+
+        for (int m = 0; m < provider.getColumnCount(); m++) {
+            columns.add(new DynamicColumnMetaData(provider, m));
         }
-        catch (Exception e) {
-            aTarget.add(getFeedbackPanel());
-            error("Error while computing annotation options " + e.getMessage());
-        }
+        agreementTable.remove();
+        agreementTable = new DefaultDataTable("agreementTable", columns, provider, 10);
+        agreementForm.add(agreementTable);
+        aTarget.add(agreementForm);
     }
 
-    private String getValue(Type aType, FeatureStructure fsNew)
+    private void getStudy(String type, String featureName, TwoPairedKappa twoPairedKappa,
+            User user1, User user2, Map<String, Map<String, String>> allUserAnnotations,
+            SourceDocument document2)
     {
-        String result = "";
-        List<Feature> fsNewFeatures = aType.getFeatures();
-        for (Feature feature : fsNewFeatures) {
-            if (feature.getRange().getName().equals("uima.cas.String")) {
-                result = result + fsNew.getStringValue(feature);
+        Set<String> allAnnotations = twoPairedKappa.getAllAnnotations(
+                Arrays.asList(new User[] { user1, user2 }), document2, type,
+                documentJCases.get(document2));
+        if (allAnnotations.size() != 0) {
+            Map<String, Map<String, String>> userAnnotations = twoPairedKappa
+                    .initializeAnnotations(Arrays.asList(new User[] { user1, user2 }),
+                            allAnnotations);
+            userAnnotations = twoPairedKappa.updateUserAnnotations(
+                    Arrays.asList(new User[] { user1, user2 }), document2, type, featureName,
+                    userAnnotations, documentJCases.get(document2));
+
+            // merge annotations from different object for this
+            // user
+            for (String username : userAnnotations.keySet()) {
+                if (allUserAnnotations.get(username) != null) {
+                    allUserAnnotations.get(username).putAll(userAnnotations.get(username));
+                }
+                else {
+                    allUserAnnotations.put(username, userAnnotations.get(username));
+                }
             }
+            for (User user : Arrays.asList(new User[] { user1, user2 })) {
+                allUserAnnotations.get(user.getUsername()).putAll(
+                        userAnnotations.get(user.getUsername()));
+            }
+
         }
-        return result;
     }
 
     // Get all Cases that is not either new or ignore. we need those in progress if the
     // admin tries to finish it from the monitoring page
-    private Map<SourceDocument, Map<String, JCas>> getJCases(List<User> users,
+    private Map<SourceDocument, Map<User, JCas>> getJCases(List<User> users,
             List<SourceDocument> sourceDocuments)
     {
         // Store Jcases so that we can re-use for different iterations
-        Map<SourceDocument, Map<String, JCas>> documentJCases = new HashMap<SourceDocument, Map<String, JCas>>();
+        Map<SourceDocument, Map<User, JCas>> documentJCases = new HashMap<SourceDocument, Map<User, JCas>>();
         for (SourceDocument document : sourceDocuments) {
-            Map<String, JCas> jCases = new HashMap<String, JCas>();
+            Map<User, JCas> jCases = new HashMap<User, JCas>();
             for (User user : users) {
                 if (projectRepository.existsAnnotationDocument(document, user)) {
                     AnnotationDocument annotationDocument = projectRepository
@@ -930,7 +870,7 @@ public class MonitoringPage
                         try {
                             JCas jCas = projectRepository
                                     .getAnnotationDocumentContent(annotationDocument);
-                            jCases.put(user.getUsername(), jCas);
+                            jCases.put(user, jCas);
                         }
                         catch (UIMAException e) {
                             error(ExceptionUtils.getRootCause(e));

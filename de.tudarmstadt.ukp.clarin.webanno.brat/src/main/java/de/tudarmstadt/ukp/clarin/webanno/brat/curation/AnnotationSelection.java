@@ -30,9 +30,9 @@ import org.apache.uima.cas.FeatureStructure;
  * @author Andreas Straninger
  */
 public class AnnotationSelection implements Serializable {
-	Map<String, Integer> addressByUsername = new HashMap<String, Integer>();
-	Map<String, FeatureStructure> fsStringByUsername = new HashMap<String, FeatureStructure>();
-	AnnotationOption annotationOption = null;
+	private Map<String, Integer> addressByUsername = new HashMap<String, Integer>();
+	private transient Map<String, FeatureStructure> fsStringByUsername = new HashMap<String, FeatureStructure>();
+	private AnnotationOption annotationOption = null;
 
 	public Map<String, Integer> getAddressByUsername() {
 		return addressByUsername;
