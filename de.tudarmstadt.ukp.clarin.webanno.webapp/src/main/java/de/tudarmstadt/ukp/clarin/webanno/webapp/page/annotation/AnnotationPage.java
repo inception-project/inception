@@ -47,12 +47,11 @@ import wicket.contrib.input.events.InputBehavior;
 import wicket.contrib.input.events.key.KeyType;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -748,8 +747,7 @@ public class AnnotationPage
             bratAnnotatorModel.setFirstSentenceAddress(bratAnnotatorModel.getSentenceAddress());
             bratAnnotatorModel.setWindowSize(10);
 
-            AnnotationPreference preference = new AnnotationPreference();
-            ApplicationUtils.setAnnotationPreference(preference, username, repository,
+            ProjectUtil.setAnnotationPreference( username, repository,
                     annotationService, bratAnnotatorModel, Mode.ANNOTATION);
 
             Sentence sentence = selectByAddr(jCas, Sentence.class,

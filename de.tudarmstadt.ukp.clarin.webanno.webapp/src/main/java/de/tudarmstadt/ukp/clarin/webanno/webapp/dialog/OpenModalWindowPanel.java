@@ -41,7 +41,7 @@ import org.odlabs.wiquery.ui.resizable.ResizableBehavior;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
+import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -181,7 +181,7 @@ public class OpenModalWindowPanel
 
         if (aSubject.equals(mode.ANNOTATION)) {
             for (Project project : projectRepository.listProjects()) {
-                if (ApplicationUtils.isMember(project, projectRepository, user)
+                if (ProjectUtil.isMember(project, projectRepository, user)
                         && project.getMode().equals(Mode.ANNOTATION)) {
                     allowedProject.add(project);
                 }
@@ -189,7 +189,7 @@ public class OpenModalWindowPanel
         }
         else if (aSubject.equals(mode.CURATION)) {
             for (Project project : projectRepository.listProjects()) {
-                if (ApplicationUtils.isCurator(project, projectRepository, user)) {
+                if (ProjectUtil.isCurator(project, projectRepository, user)) {
                     allowedProject.add(project);
                 }
             }
@@ -197,7 +197,7 @@ public class OpenModalWindowPanel
 
         else if (aSubject.equals(mode.CORRECTION)) {
             for (Project project : projectRepository.listProjects()) {
-                if (ApplicationUtils.isMember(project, projectRepository, user)
+                if (ProjectUtil.isMember(project, projectRepository, user)
                         && project.getMode().equals(Mode.CORRECTION)) {
                     allowedProject.add(project);
                 }
@@ -278,7 +278,7 @@ public class OpenModalWindowPanel
                                         excludeDocuments.add(sourceDocument);
                                     }
                                     else if (mode.equals(Mode.CURATION)
-                                            && !ApplicationUtils.existFinishedDocument(
+                                            && !ProjectUtil.existFinishedDocument(
                                                     sourceDocument, user, projectRepository,
                                                     selectedProject)) {
                                         excludeDocuments.add(sourceDocument);

@@ -39,7 +39,6 @@ import org.springframework.http.converter.json.MappingJacksonHttpMessageConverte
 import org.uimafit.factory.CollectionReaderFactory;
 import org.uimafit.factory.JCasFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
@@ -48,6 +47,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -140,8 +140,8 @@ public class CasToBratJsonTest extends TestCase {
 		tagSetNames
 				.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.COREFRELTYPE);
 
-		ApplicationUtils.setJsonConverter(jsonConverter);
-		ApplicationUtils.generateJson(collectionInformation, new File(
+		ProjectUtil.setJsonConverter(jsonConverter);
+		ProjectUtil.generateJson(collectionInformation, new File(
 				jsonFilePath));
 
 		String reference = FileUtils
@@ -232,7 +232,7 @@ public class CasToBratJsonTest extends TestCase {
 		bratannotatorModel.setProject(project);
 		bratannotatorModel.setMode(Mode.ANNOTATION);
 
-		ApplicationUtils.setJsonConverter(jsonConverter);
+		ProjectUtil.setJsonConverter(jsonConverter);
 
 		GetDocumentResponse response = new GetDocumentResponse();
 		response.setText(jCas.getDocumentText());
@@ -252,7 +252,7 @@ public class CasToBratJsonTest extends TestCase {
 		ChainAdapter.getCoreferenceChainAdapter().render(jCas, response,
 				bratannotatorModel);
 
-		ApplicationUtils.generateJson(response, new File(jsonFilePath));
+		ProjectUtil.generateJson(response, new File(jsonFilePath));
 
 		String reference = FileUtils
 				.readFileToString(

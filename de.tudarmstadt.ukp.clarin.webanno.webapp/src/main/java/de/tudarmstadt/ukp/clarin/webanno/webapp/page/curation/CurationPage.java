@@ -50,14 +50,13 @@ import wicket.contrib.input.events.InputBehavior;
 import wicket.contrib.input.events.key.KeyType;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationContainer;
+import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -350,7 +349,7 @@ public class CurationPage extends SettingsPageBase {
 
 				List<SourceDocument> sourceDocumentsinIgnorState = new ArrayList<SourceDocument>();
 				for (SourceDocument sourceDocument : listOfSourceDocuements) {
-					if (!ApplicationUtils.existFinishedDocument(
+					if (!ProjectUtil.existFinishedDocument(
 							sourceDocument, user, repository,
 							bratAnnotatorModel.getProject())) {
 						sourceDocumentsinIgnorState.add(sourceDocument);
@@ -421,7 +420,7 @@ public class CurationPage extends SettingsPageBase {
 
 				List<SourceDocument> sourceDocumentsinIgnorState = new ArrayList<SourceDocument>();
 				for (SourceDocument sourceDocument : listOfSourceDocuements) {
-					if (!ApplicationUtils.existFinishedDocument(
+					if (!ProjectUtil.existFinishedDocument(
 							sourceDocument, user, repository,
 							bratAnnotatorModel.getProject())) {
 						sourceDocumentsinIgnorState.add(sourceDocument);
@@ -1033,9 +1032,7 @@ public class CurationPage extends SettingsPageBase {
                 bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                 bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-
-				AnnotationPreference preference = new AnnotationPreference();
-				ApplicationUtils.setAnnotationPreference(preference, username,
+				ProjectUtil.setAnnotationPreference(username,
 						repository, annotationService, bratAnnotatorModel,
 						Mode.CURATION);
 			} catch (DataRetrievalFailureException ex) {

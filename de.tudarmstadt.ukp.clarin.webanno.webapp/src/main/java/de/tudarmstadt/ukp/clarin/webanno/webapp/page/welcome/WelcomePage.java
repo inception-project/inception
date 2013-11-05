@@ -27,7 +27,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
+import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.ApplicationPageBase;
@@ -95,13 +95,13 @@ public class WelcomePage
         };
         for (Project project : projectRepository.listProjects()) {
 
-            if (ApplicationUtils.isProjectAdmin(project, projectRepository, user)) {
+            if (ProjectUtil.isProjectAdmin(project, projectRepository, user)) {
                 add(projectSettings);
                 projectSettingAdded = true;
                 break;
             }
         }
-        if (ApplicationUtils.isSuperAdmin(projectRepository, user) && !projectSettingAdded) {
+        if (ProjectUtil.isSuperAdmin(projectRepository, user) && !projectSettingAdded) {
             add(projectSettings);
         }
         else if (!projectSettingAdded) {
@@ -126,14 +126,14 @@ public class WelcomePage
         };
         for (Project project : projectRepository.listProjects()) {
 
-            if (ApplicationUtils.isCurator(project, projectRepository, user)) {
+            if (ProjectUtil.isCurator(project, projectRepository, user)) {
                 add(curation);
                 curatorAdded = true;
                 break;
             }
 
         }
-        if (ApplicationUtils.isSuperAdmin(projectRepository, user) && !projectSettingAdded) {
+        if (ProjectUtil.isSuperAdmin(projectRepository, user) && !projectSettingAdded) {
             add(curation);
         }
         else if (!curatorAdded) {
@@ -157,13 +157,13 @@ public class WelcomePage
         boolean memberAdded = false;
         for (Project project : projectRepository.listProjects()) {
 
-            if (ApplicationUtils.isMember(project, projectRepository, user)) {
+            if (ProjectUtil.isMember(project, projectRepository, user)) {
                 add(annotation);
                 memberAdded = true;
                 break;
             }
         }
-        if (ApplicationUtils.isSuperAdmin(projectRepository, user) && !projectSettingAdded) {
+        if (ProjectUtil.isSuperAdmin(projectRepository, user) && !projectSettingAdded) {
             add(annotation);
         }
         else if (!memberAdded) {
@@ -189,14 +189,14 @@ public class WelcomePage
 
         for (Project project : projectRepository.listProjects()) {
 
-            if (ApplicationUtils.isProjectAdmin(project, projectRepository, user)
-                    || ApplicationUtils.isCurator(project, projectRepository, user)) {
+            if (ProjectUtil.isProjectAdmin(project, projectRepository, user)
+                    || ProjectUtil.isCurator(project, projectRepository, user)) {
                 add(monitoring);
                 monitoringAdded = true;
                 break;
             }
         }
-        if (ApplicationUtils.isSuperAdmin(projectRepository, user) && !monitoringAdded) {
+        if (ProjectUtil.isSuperAdmin(projectRepository, user) && !monitoringAdded) {
             add(monitoring);
         }
         else if (!monitoringAdded) {
@@ -238,14 +238,14 @@ public class WelcomePage
 
         for (Project project : projectRepository.listProjects()) {
 
-            if (ApplicationUtils.isProjectAdmin(project, projectRepository, user)
-                    || ApplicationUtils.isCurator(project, projectRepository, user)) {
+            if (ProjectUtil.isProjectAdmin(project, projectRepository, user)
+                    || ProjectUtil.isCurator(project, projectRepository, user)) {
                 add(crowdSource);
                 crowdSourceAdded = true;
                 break;
             }
         }
-        if (ApplicationUtils.isSuperAdmin(projectRepository, user) && !crowdSourceAdded) {
+        if (ProjectUtil.isSuperAdmin(projectRepository, user) && !crowdSourceAdded) {
             add(crowdSource);
         }
         else if (!crowdSourceAdded) {
@@ -270,14 +270,14 @@ public class WelcomePage
         };
         for (Project project : projectRepository.listProjects()) {
 
-            if (ApplicationUtils.isCurator(project, projectRepository, user)) {
+            if (ProjectUtil.isCurator(project, projectRepository, user)) {
                 add(correction);
                 correctionAdded = true;
                 break;
             }
 
         }
-        if (ApplicationUtils.isSuperAdmin(projectRepository, user) && !projectSettingAdded) {
+        if (ProjectUtil.isSuperAdmin(projectRepository, user) && !projectSettingAdded) {
             add(correction);
         }
         else if (!correctionAdded) {

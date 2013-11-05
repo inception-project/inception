@@ -42,8 +42,6 @@ import org.uimafit.util.JCasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
@@ -64,6 +62,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Relation;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.RelationType;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -139,8 +138,7 @@ public class BratCuratorUtility
         bratAnnotatorModel.setSentenceEndOffset(aCurationSegment.getEnd());
 
         bratAnnotatorModel.setMode(Mode.CURATION);
-        AnnotationPreference preference = new AnnotationPreference();
-        ApplicationUtils.setAnnotationPreference(preference, userLoggedIn.getUsername(),
+        ProjectUtil.setAnnotationPreference(userLoggedIn.getUsername(),
                 aRepository, aAnnotationService, bratAnnotatorModel, Mode.CURATION);
         return bratAnnotatorModel;
     }

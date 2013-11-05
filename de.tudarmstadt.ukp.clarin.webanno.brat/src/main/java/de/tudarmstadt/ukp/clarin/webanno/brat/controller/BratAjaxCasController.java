@@ -40,7 +40,6 @@ import org.springframework.util.MultiValueMap;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Stored;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
@@ -50,6 +49,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.ImportDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.LoadConfResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.StoreSvgResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.WhoamiResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -237,7 +237,7 @@ public class BratAjaxCasController
         User user = repository.getUser(username);
         if (aCollection.equals("/")) {
             for (Project projects : repository.listProjects()) {
-                if (ApplicationUtils.isMember(projects, repository, user)) {
+                if (ProjectUtil.isMember(projects, repository, user)) {
                     info.addCollection(projects.getName());
                 }
             }

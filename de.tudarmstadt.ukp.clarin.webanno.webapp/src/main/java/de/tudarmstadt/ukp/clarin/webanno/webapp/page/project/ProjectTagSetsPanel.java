@@ -63,8 +63,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
+import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSetConstant;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
@@ -327,7 +327,7 @@ public class ProjectTagSetsPanel
                                 try {
                                     tagInputStream = tagFile.getInputStream();
                                     String text = IOUtils.toString(tagInputStream, "UTF-8");
-                                    Map<String, String> tabbedTagsetFromFile = ApplicationUtils
+                                    Map<String, String> tabbedTagsetFromFile = ProjectUtil
                                             .getTagSetFromFile(text);
 
                                     Set<String> listOfTagsFromFile = tabbedTagsetFromFile.keySet();
@@ -572,10 +572,10 @@ public class ProjectTagSetsPanel
                             }
                             exportedTagSetContent.setTags(exportedTags);
                             MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
-                            ApplicationUtils.setJsonConverter(jsonConverter);
+                            ProjectUtil.setJsonConverter(jsonConverter);
 
                             try {
-                                ApplicationUtils.generateJson(exportedTagSetContent, exportFile);
+                                ProjectUtil.generateJson(exportedTagSetContent, exportFile);
                             }
                             catch (IOException e) {
                                 error("File Path not found or No permision to save the file!");

@@ -46,7 +46,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
+import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.ApplicationPageBase;
@@ -233,7 +233,7 @@ public class ManageUsersPage
                     else if(DetailForm.this.getModelObject().getUsername().contains(" ")){
                         info("User username should not contain SPACE character.");
                     }
-                    else if (ApplicationUtils
+                    else if (ProjectUtil
                             .isNameValid(DetailForm.this.getModelObject().getUsername())) {
                         actionSave();
                     }

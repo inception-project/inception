@@ -53,8 +53,6 @@ import wicket.contrib.input.events.InputBehavior;
 import wicket.contrib.input.events.key.KeyType;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
@@ -65,6 +63,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationB
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationSegmentForSourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationUserSegmentForAnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratCuratorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -1001,8 +1000,7 @@ public class CorrectionPage
                 bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                 bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                AnnotationPreference preference = new AnnotationPreference();
-                ApplicationUtils.setAnnotationPreference(preference, username, repository,
+                ProjectUtil.setAnnotationPreference(username, repository,
                         annotationService, bratAnnotatorModel, Mode.CORRECTION);
             }
             catch (DataRetrievalFailureException ex) {

@@ -79,7 +79,6 @@ import org.wicketstuff.progressbar.ProgressionModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
@@ -88,6 +87,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationBuilder;
+import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
@@ -256,9 +256,9 @@ public class MonitoringPage
 
                             // else only projects she is admin of
                             for (Project project : allProjects) {
-                                if (ApplicationUtils.isProjectAdmin(project, projectRepository,
+                                if (ProjectUtil.isProjectAdmin(project, projectRepository,
                                         user)
-                                        || ApplicationUtils.isCurator(project, projectRepository,
+                                        || ProjectUtil.isCurator(project, projectRepository,
                                                 user)) {
                                     allowedProject.add(project);
                                 }

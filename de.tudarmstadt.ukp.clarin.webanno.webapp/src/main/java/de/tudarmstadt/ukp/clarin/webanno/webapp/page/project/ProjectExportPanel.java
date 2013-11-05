@@ -49,7 +49,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
+import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.SourceDocument;
@@ -569,10 +569,10 @@ public class ProjectExportPanel
         project.setProjectPermissions(projectPermissions);
 
         MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
-        ApplicationUtils.setJsonConverter(jsonConverter);
+        ProjectUtil.setJsonConverter(jsonConverter);
 
         try {
-            ApplicationUtils.generateJson(project, aProjectSettings);
+            ProjectUtil.generateJson(project, aProjectSettings);
             FileUtils.copyFileToDirectory(aProjectSettings, aExportTempDir);
         }
         catch (IOException e) {

@@ -59,7 +59,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.ApplicationUtils;
+import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -179,7 +179,7 @@ public class ProjectPage
 
                             // else only projects she is admin of
                             for (Project project : allProjects) {
-                                if (ApplicationUtils.isProjectAdmin(project, projectRepository,
+                                if (ProjectUtil.isProjectAdmin(project, projectRepository,
                                         user)) {
                                     allowedProject.add(project);
                                 }
@@ -255,17 +255,17 @@ public class ProjectPage
                     if (uploadedFile != null) {
                         try {
 
-                            if (ApplicationUtils.isZipStream(uploadedFile.getInputStream())) {
+                            if (ProjectUtil.isZipStream(uploadedFile.getInputStream())) {
 
                                 File zipFfile = uploadedFile.writeToTempFile();
-                                if (ApplicationUtils.isZipValidWebanno(zipFfile)) {
+                                if (ProjectUtil.isZipValidWebanno(zipFfile)) {
                                     ZipFile zip = new ZipFile(zipFfile);
                                     InputStream projectInputStream = null;
                                     for (Enumeration zipEnumerate = zip.entries(); zipEnumerate
                                             .hasMoreElements();) {
                                         ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
                                         if (entry.toString().replace("/", "")
-                                                .startsWith(ApplicationUtils.EXPORTED_PROJECT)
+                                                .startsWith(ProjectUtil.EXPORTED_PROJECT)
                                                 && entry.toString().replace("/", "")
                                                         .endsWith(".json")) {
                                             projectInputStream = zip.getInputStream(entry);
@@ -282,37 +282,37 @@ public class ProjectPage
                                                     text,
                                                     de.tudarmstadt.ukp.clarin.webanno.export.model.Project.class);
 
-                                    Project importedProject = ApplicationUtils.createProject(
+                                    Project importedProject = ProjectUtil.createProject(
                                             importedProjectSetting, projectRepository);
-                                    ApplicationUtils.createSourceDocument(importedProjectSetting,
+                                    ProjectUtil.createSourceDocument(importedProjectSetting,
                                             importedProject, projectRepository);
-                                    ApplicationUtils.createAnnotationDocument(
+                                    ProjectUtil.createAnnotationDocument(
                                             importedProjectSetting, importedProject,
                                             projectRepository);
-                                    ApplicationUtils.createProjectPermission(
+                                    ProjectUtil.createProjectPermission(
                                             importedProjectSetting, importedProject,
                                             projectRepository);
                                     for (TagSet tagset : importedProjectSetting.getTagSets()) {
-                                        ApplicationUtils.createTagset(importedProject, tagset,
+                                        ProjectUtil.createTagset(importedProject, tagset,
                                                 projectRepository, annotationService);
                                     }
                                     // add source document content
-                                    ApplicationUtils.createSourceDocumentContent(zip,
+                                    ProjectUtil.createSourceDocumentContent(zip,
                                             importedProject, projectRepository);
                                     // add annotation document content
-                                    ApplicationUtils.createAnnotationDocumentContent(zip,
+                                    ProjectUtil.createAnnotationDocumentContent(zip,
                                             importedProject, projectRepository);
                                     // create curation document content
-                                    ApplicationUtils.createCurationDocumentContent(zip,
+                                    ProjectUtil.createCurationDocumentContent(zip,
                                             importedProject, projectRepository);
                                     // create project log
-                                    ApplicationUtils.createProjectLog(zip, importedProject,
+                                    ProjectUtil.createProjectLog(zip, importedProject,
                                             projectRepository);
                                     // create project guideline
-                                    ApplicationUtils.createProjectGuideline(zip, importedProject,
+                                    ProjectUtil.createProjectGuideline(zip, importedProject,
                                             projectRepository);
                                     // cretae project META-INF
-                                    ApplicationUtils.createProjectMetaInf(zip, importedProject,
+                                    ProjectUtil.createProjectMetaInf(zip, importedProject,
                                             projectRepository);
                                 }
                                 else {
@@ -529,7 +529,7 @@ public class ProjectPage
                             error("Project with this name already exist !");
                             LOG.error("Project with this name already exist !");
                         }
-                        else if (ApplicationUtils.isNameValid(project.getName())) {
+                        else if (ProjectUtil.isNameValid(project.getName())) {
                             try {
                                 String username = SecurityContextHolder.getContext()
                                         .getAuthentication().getName();
@@ -553,7 +553,7 @@ public class ProjectPage
                     // This is updating Project details
                     else {
                         // Invalid Project name, restore
-                        if (!ApplicationUtils.isNameValid(project.getName()) && !projectExist) {
+                        if (!ProjectUtil.isNameValid(project.getName()) && !projectExist) {
 
                             // Maintain already loaded project and selected Users
                             // Hence Illegal Project modification (limited privilege, illegal

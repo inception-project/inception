@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package de.tudarmstadt.ukp.clarin.webanno.brat;
+package de.tudarmstadt.ukp.clarin.webanno.brat.project;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -27,9 +27,7 @@ import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,12 +69,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
- * This class contains Utility methods that can be used application wide
+ * This class contains Utility methods that can be used in Project settings
  *
  * @author Seid Muhie Yimam
  *
  */
-public class ApplicationUtils
+public class ProjectUtil
 {
 
     private static MappingJacksonHttpMessageConverter jsonConverter;
@@ -94,7 +92,7 @@ public class ApplicationUtils
         jsonConverter = aJsonConverter;
     }
 
-    private static final Log LOG = LogFactory.getLog(ApplicationUtils.class);
+    private static final Log LOG = LogFactory.getLog(ProjectUtil.class);
 
     /**
      * Read Tag and Tag Description. A line has a tag name and a tag description separated by a TAB
@@ -256,7 +254,15 @@ public class ApplicationUtils
         return (user || roleAdmin);
     }
 
-    public static void generateJson(Object aResponse, File aFile)
+    /**
+     * Convert Java objects into JSON format and write it to a file
+     *
+     * @param aObject
+     * @param aFile
+     * @throws IOException
+     */
+
+    public static void generateJson(Object aObject, File aFile)
         throws IOException
     {
         StringWriter out = new StringWriter();
@@ -264,25 +270,29 @@ public class ApplicationUtils
         JsonGenerator jsonGenerator = jsonConverter.getObjectMapper().getJsonFactory()
                 .createJsonGenerator(out);
 
-        jsonGenerator.writeObject(aResponse);
+        jsonGenerator.writeObject(aObject);
         FileUtils.writeStringToFile(aFile, out.toString());
     }
 
     /**
      * Set annotation preferences of users for a given project such as window size, annotation
-     * layers , ...that can be saved to a file system
+     * layers,... reading from the file system.
      *
-     * @param aPreference
-     *            the {@link AnnotationPreference} instance
      * @param aUsername
-     *            {@link The annotator/curator who has logged in to the system}
+     *            The {@link User} for whom we need to read the preference (preferences are stored
+     *            per user)
+     * @param abAnnotatorModel
+     *            The {@link BratAnnotatorModel} that will be populated with preferences from the
+     *            file
+     * @param aMode
      */
-    public static void setAnnotationPreference(AnnotationPreference aPreference, String aUsername,
+    public static void setAnnotationPreference(String aUsername,
             RepositoryService aRepositoryService, AnnotationService aAnnotationService,
             BratAnnotatorModel abAnnotatorModel, Mode aMode)
         throws BeansException, FileNotFoundException, IOException
     {
-        BeanWrapper wrapper = new BeanWrapperImpl(aPreference);
+        AnnotationPreference preference = new AnnotationPreference();
+        BeanWrapper wrapper = new BeanWrapperImpl(preference);
         // get annotation preference from file system
         try {
             for (Entry<Object, Object> entry : aRepositoryService.loadUserSettings(aUsername,
@@ -305,12 +315,12 @@ public class ApplicationUtils
                     }
                 }
             }
-            abAnnotatorModel.setWindowSize(aPreference.getWindowSize());
-            abAnnotatorModel.setScrollPage(aPreference.isScrollPage());
+            abAnnotatorModel.setWindowSize(preference.getWindowSize());
+            abAnnotatorModel.setScrollPage(preference.isScrollPage());
             // Get tagset using the id, from the properties file
             abAnnotatorModel.getAnnotationLayers().clear();
-            if (aPreference.getAnnotationLayers() != null) {
-                for (Long id : aPreference.getAnnotationLayers()) {
+            if (preference.getAnnotationLayers() != null) {
+                for (Long id : preference.getAnnotationLayers()) {
                     abAnnotatorModel.getAnnotationLayers().add(aAnnotationService.getTagSet(id));
                 }
             }
@@ -343,6 +353,9 @@ public class ApplicationUtils
     // see http://notepad2.blogspot.de/2012/07/java-detect-if-stream-or-file-is-zip.html
     private static byte[] MAGIC = { 'P', 'K', 0x3, 0x4 };
 
+    /**
+     * check if the {@link InputStream} provided is a zip file
+     */
     public static boolean isZipStream(InputStream in)
     {
         if (!in.markSupported()) {
@@ -377,42 +390,13 @@ public class ApplicationUtils
         ZipFile zip = new ZipFile(aZipFile);
         for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
             ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
-            if (entry.toString().replace("/", "").startsWith(ApplicationUtils.EXPORTED_PROJECT)
+            if (entry.toString().replace("/", "").startsWith(ProjectUtil.EXPORTED_PROJECT)
                     && entry.toString().replace("/", "").endsWith(".json")) {
                 isZipValidWebanno = true;
                 break;
             }
         }
         return isZipValidWebanno;
-    }
-
-    /**
-     * If the annotation type is limited to only a single token, but brat sends multiple tokens,
-     * split them up
-     *
-     * @return Map of start and end offsets for the multiple token span
-     */
-
-    public static Map<Integer, Integer> getSplitedTokens(Map<Integer, Integer> aOffset, int aStart,
-            int aEnd)
-    {
-        Map<Integer, Integer> startAndEndOfSplitedTokens = new HashMap<Integer, Integer>();
-        Iterator<Integer> it = aOffset.keySet().iterator();
-        while (it.hasNext()) {
-            int tokenStart = it.next();
-            // beyond the tokens in need, exit !
-            if (tokenStart >= aEnd) {
-                break;
-            }
-            // not yet there
-            if (aOffset.get(tokenStart) <= aStart) {
-                continue;
-            }
-            // these are tokens needed
-            startAndEndOfSplitedTokens.put(tokenStart, aOffset.get(tokenStart));
-
-        }
-        return startAndEndOfSplitedTokens;
     }
 
     /**
@@ -432,6 +416,9 @@ public class ApplicationUtils
         }
     }
 
+    /**
+     * Create a {@link TagSet} for the imported project,
+     */
     public static void createTagset(Project aProjecct,
             de.tudarmstadt.ukp.clarin.webanno.export.model.TagSet importedTagSet,
             RepositoryService aRepository, AnnotationService aAnnotationService)
@@ -471,6 +458,12 @@ public class ApplicationUtils
         }
     }
 
+    /**
+     * create new {@link Project} from the
+     * {@link de.tudarmstadt.ukp.clarin.webanno.export.model.Project} model
+     *
+     * @throws IOException
+     */
     public static Project createProject(
             de.tudarmstadt.ukp.clarin.webanno.export.model.Project aProject,
             RepositoryService aRepository)
@@ -491,6 +484,12 @@ public class ApplicationUtils
         return project;
     }
 
+    /**
+     * Get a project name to be used when importing. Use the prefix, copy_of_...+ i to avoid
+     * conflicts
+     *
+     * @return
+     */
     private static String copyProjectName(RepositoryService aRepository, String aProjectName)
     {
         String projectName = "copy_of_" + aProjectName;
@@ -507,6 +506,9 @@ public class ApplicationUtils
         }
     }
 
+    /**
+     * Create s {@link SourceDocument} from the exported {@link SourceDocument}
+     */
     public static void createSourceDocument(
             de.tudarmstadt.ukp.clarin.webanno.export.model.Project aImportedProjectSetting,
             Project aImportedProject, RepositoryService aRepository)
@@ -524,6 +526,10 @@ public class ApplicationUtils
         }
     }
 
+    /**
+     * Create {@link de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument} from exported
+     * {@link AnnotationDocument}
+     */
     public static void createAnnotationDocument(
             de.tudarmstadt.ukp.clarin.webanno.export.model.Project aImportedProjectSetting,
             Project aImportedProject, RepositoryService aRepository)
@@ -543,13 +549,15 @@ public class ApplicationUtils
         }
     }
 
+    /**
+     * Create {@link ProjectPermission} from the exported
+     * {@link de.tudarmstadt.ukp.clarin.webanno.export.model.ProjectPermission}
+     */
     public static void createProjectPermission(
             de.tudarmstadt.ukp.clarin.webanno.export.model.Project aImportedProjectSetting,
             Project aImportedProject, RepositoryService aRepository)
         throws IOException
     {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = aRepository.getUser(username);
         for (de.tudarmstadt.ukp.clarin.webanno.export.model.ProjectPermission importedPermission : aImportedProjectSetting
                 .getProjectPermissions()) {
             de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission permission = new de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission();
@@ -560,6 +568,9 @@ public class ApplicationUtils
         }
     }
 
+    /**
+     * copy source document files from the exported source documents
+     */
     public static void createSourceDocumentContent(ZipFile zip, Project aProject,
             RepositoryService aRepository)
         throws IOException
@@ -576,6 +587,9 @@ public class ApplicationUtils
         }
     }
 
+    /**
+     * copy annotation documents (serialized CASs) from the exported project
+     */
     public static void createAnnotationDocumentContent(ZipFile zip, Project aProject,
             RepositoryService aRepository)
         throws IOException
@@ -600,6 +614,9 @@ public class ApplicationUtils
         }
     }
 
+    /**
+     * Copy curation documents from the exported project
+     */
     public static void createCurationDocumentContent(ZipFile zip, Project aProject,
             RepositoryService aRepository)
         throws IOException
@@ -624,6 +641,9 @@ public class ApplicationUtils
         }
     }
 
+    /**
+     * copy guidelines from the exported project
+     */
     public static void createProjectGuideline(ZipFile zip, Project aProject,
             RepositoryService aRepository)
         throws IOException
@@ -639,6 +659,9 @@ public class ApplicationUtils
         }
     }
 
+    /**
+     * copy Project META_INF from the exported project
+     */
     public static void createProjectMetaInf(ZipFile zip, Project aProject,
             RepositoryService aRepository)
         throws IOException
@@ -656,6 +679,9 @@ public class ApplicationUtils
         }
     }
 
+    /**
+     * copy project log files from the exported project
+     */
     public static void createProjectLog(ZipFile zip, Project aProject, RepositoryService aRepository)
         throws IOException
     {
@@ -671,10 +697,6 @@ public class ApplicationUtils
     /**
      * Return true if there exist at least one annotation document FINISHED for annotation for this
      * {@link SourceDocument}
-     *
-     * @param aSourceDocument
-     * @param aUser
-     * @return
      */
     public static boolean existFinishedDocument(
             de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument aSourceDocument, User aUser,
