@@ -826,8 +826,7 @@ public class CrowdSourcePage
                 @Override
                 public boolean isVisible()
                 {
-                    return !createCrowdJob;
-
+                    return true;
                 }
             });
 
@@ -906,25 +905,27 @@ public class CrowdSourcePage
                 @Override
                 public void onSubmit()
                 {
+                    if(namedEntityTaskManager == null)
+                    {
+                        namedEntityTaskManager = new NamedEntityTaskManager();
+                    }
+                    namedEntityTaskManager.setAPIKey(selectedCrowdJob.getApiKey());
+
                     // Get the source document here
                     List<SourceDocument> sourceDocuments = new ArrayList<SourceDocument>(
                             selectedCrowdJob.getDocuments());
-                    // for each source document
-                    // get annotation document for CROWD_USER
 
-                    // User user = userRepository.get(CROWD_USER);
-                    // AnnotationDocument annotationDocument =
-                    // projectRepository.getAnnotationDocument(document, user)
-                    // Get the JCAS
-                    // Convert it to approprate crowdfloweer format
-                    // Get template
-                    // Get gold
-                    // Send to crowd flower
 
                     String id1 = selectedCrowdJob.getTask1Id();
+                    if(id1 == null) {
+                        id1 = "";
+                    }
                     String id2 = selectedCrowdJob.getTask2Id();
+                    if(id2 == null) {
+                        id2 = "";
+                    }
 
-                    String status = namedEntityTaskManager.getStatusString(id1 == null ? "":id1, id2==null?"":id2);
+                    String status = namedEntityTaskManager.getStatusString(id1,id2);
                     selectedCrowdJob.setStatus(status);
                     projectRepository.createCrowdJob(selectedCrowdJob);
                 }

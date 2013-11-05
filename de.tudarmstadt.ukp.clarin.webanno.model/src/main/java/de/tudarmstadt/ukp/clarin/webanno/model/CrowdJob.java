@@ -149,7 +149,13 @@ public class CrowdJob
 
     private String getURLforID(String jobID)
     {
-        return  CROWDFLOWER_JOBLINK + jobID + "/";
+        if(jobID == null)
+        {
+            return "";
+        }else
+        {
+            return  CROWDFLOWER_JOBLINK + jobID + "/";
+        }
     }
 
     public String getLink1()

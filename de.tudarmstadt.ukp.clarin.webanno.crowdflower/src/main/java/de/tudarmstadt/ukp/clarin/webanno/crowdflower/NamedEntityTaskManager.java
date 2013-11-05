@@ -496,39 +496,86 @@ public class NamedEntityTaskManager
 
     public String getStatusString(String jobID1, String jobID2)
     {
+        String line;
         // first case: no job ids
-        if ((jobID1 == null || jobID1.equals("")) && (jobID2 == null || jobID2.equals(""))) {
+        if (jobID1.equals("") && jobID2.equals("")) {
             return "No jobs uploaded.";
         }
         // second case, got first job id
-        else if (!(jobID1 == null || jobID1.equals("")) && (jobID2 == null || jobID2.equals(""))) {
-            JsonNode status = crowdclient.getStatus(jobID1);
+        else if (!jobID1.equals("") && jobID2.equals("")) {
+            line = "Job1: " + getStatusString(jobID1);
+        }
+        else if(!jobID1.equals("") && !jobID2.equals("")){
+            line = "Job2: " + getStatusString(jobID2);
+        }else
+        {
+            line = "error retrieving status";
+        }
+        return line;
+    }
 
-            int uploadedUnits = -1;
-            boolean finsished = false;
+    private String getStatusString(String jobId)
+    {
+        JsonNode uploadStatus;
+        try{
+        uploadStatus = crowdclient.getUploadStatus(jobId);
+        }catch (Exception e)
+        {
+            return "Error while trying to connect to Crowdflower: " + e.getMessage();
+        }
 
-            if (status != null && status.has("count") && status.has("done")) {
-                uploadedUnits = status.path("count").getIntValue();
-                finsished = status.path("done").getBooleanValue();
+        String line;
+        int uploadedUnits = -1;
+        boolean finsishedUpload = false;
+        int judgments = 0;
+        int neededJudgments = 0;
+
+        //Crowdflower reported an error in ths JSON output
+        if (uploadStatus != null && uploadStatus.has("error"))
+        {
+            return "error retrieving status: " + uploadStatus.path("error").getTextValue();
+        }
+
+        //No error and JSON has required fields
+        if (uploadStatus != null && uploadStatus.has("count") && uploadStatus.has("done")) {
+            uploadedUnits = uploadStatus.path("count").getIntValue();
+            System.out.println("status job1:" + uploadStatus.toString());
+            finsishedUpload = uploadStatus.path("done").getBooleanValue();
+            if(finsishedUpload)
+            {
+                JsonNode status;
+                //retrieve judgment stats
+                try{
+                status = crowdclient.getStatus(jobId);
+                }catch (Exception e)
+                {
+                    return "Error while trying to connect to Crowdflower: " + e.getMessage();
+                }
+                if(status != null && status.has("all_judgments") && status.has("needed_judgments"))
+                {
+                    judgments = status.path("all_judgments").getIntValue();
+                    neededJudgments = status.path("needed_judgments").getIntValue();
+                }
+                else {
+                    return "error retrieving status: malformed response from Crowdflower";
+                }
             }
-            else {
-                return "Error retrieving status";
-            }
-
-            return "Job1 has "
-                    + uploadedUnits
-                    + " uploaded units and is "
-                    + (finsished ? " finished. You can continue with task 2."
-                            : " not yet finished. Check the link for more information on crowdflower.com. You have to finish task1 before doing task2.");
         }
         else {
-            return "Todo: not yet implemented";
+            return "error retrieving status: malformed response from Crowdflower";
         }
+
+        line = "is uploaded and has "
+                + uploadedUnits
+                + " uploaded units. "
+                + (finsishedUpload ? "There are " + judgments + " judgments. Needed to complete job: "+neededJudgments+")"
+                        : "Crowdflower is still processing the upload." );
+        return line;
     }
 
     /**
      * Helper function for uploadNewNERTask2: Get the string char position of the i-th span from the
-     * HTML token spans that the crowdflower job task1 uses to display a textfragment.
+     * HTML token spans that the Crowdflower job task1 uses to display a textfragment.
      *
      * @param spans
      * @param spannumber
@@ -890,6 +937,15 @@ public class NamedEntityTaskManager
                     String typeExplicit = elem.path("results").path("ist_todecide_eine")
                             .path("agg").getTextValue();
                     String type = ne2TaskMap.get(typeExplicit);
+
+                    //Type is null when it is not in ne2TaskMap.
+                    //These are usually difficult cases where workers are unsure or where a wrong word has been marked in task1
+                    if (type == null)
+                    {
+                        //We can simply skip any such cases
+                        continue;
+                    }
+
                     String posText = elem.path("data").path("posText").getTextValue();
                     int offset = 0;
 

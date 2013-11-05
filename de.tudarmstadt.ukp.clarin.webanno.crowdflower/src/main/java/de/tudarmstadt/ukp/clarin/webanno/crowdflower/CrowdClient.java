@@ -77,7 +77,8 @@ public class CrowdClient implements Serializable
     static final String judgmentsURL = "https://api.crowdflower.com/v1/jobs/{jobid}.csv?key={apiKey}&type=json&full=true";
 
     static final String channelsURL = "https://api.crowdflower.com/v1/jobs/{jobid}/channels?key={apiKey}";
-    static final String pingURL = "https://api.crowdflower.com/v1/jobs/{jobid}/units/ping.json?key={apiKey}";
+    static final String pingUnitsURL = "https://api.crowdflower.com/v1/jobs/{jobid}/units/ping.json?key={apiKey}";
+    static final String pingURL = "https://api.crowdflower.com/v1/jobs/{jobid}/ping.json?key={apiKey}";
 
     static final String channelKey = "channels";
     static final String debitKey = "debit[units_count]";
@@ -319,15 +320,32 @@ public class CrowdClient implements Serializable
     }
 
     /**
-     * Get the status of a job id. The resulting JSON will look like this if the query succeds:
+     * Get the upload status of a job id. The resulting JSON will look like this if the query succeds:
      * {"count":550,"done":true}
-     * or if there is an error (e.g. wrong job id):
+     * or if there is an error processing the request (e.g. wrong job id):
      * {"error": {"message":"We couldn't find what you were looking for."}}
      *
      * @param jobid
-     * @result JsonNode containing the status as supplied by crowdflower
+     * @result JsonNode containing the status as supplied by Crowdflower
      */
 
+    JsonNode getUploadStatus(String jobId)
+    {
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.getMessageConverters().add(new MappingJacksonHttpMessageConverter());
+
+        JsonNode result = restTemplate.getForObject(pingUnitsURL, JsonNode.class, jobId, apiKey);
+
+        return result;
+    }
+
+
+    /**
+     * Get the status of a job id. The returned JSON will look like:
+     * {"all_judgments": 50, "golden_judgments": 5, "tainted_judgments": 15, "needed_judgments": 20}
+     * @param jobId
+     * @return JsonNode containing the status as supplied by Crowdflower
+     */
     JsonNode getStatus(String jobId)
     {
         RestTemplate restTemplate = new RestTemplate();
