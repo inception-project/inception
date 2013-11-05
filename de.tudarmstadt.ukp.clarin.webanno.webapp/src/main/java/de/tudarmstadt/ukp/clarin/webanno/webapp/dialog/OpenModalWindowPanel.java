@@ -41,6 +41,7 @@ import org.odlabs.wiquery.ui.resizable.ResizableBehavior;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -74,7 +75,6 @@ public class OpenModalWindowPanel
     private SourceDocument selectedDocument;
 
     private ListChoice<SourceDocument> documents;
-    private OpenDocumentModel openDataModel;
 
     private String username;
     private User user;
@@ -82,10 +82,11 @@ public class OpenModalWindowPanel
     // Dialog is for annotation or curation
 
     private Mode mode;
+    private BratAnnotatorModel bratAnnotatorModel;
 
     List<Project> allowedProject = new ArrayList<Project>();
 
-    public OpenModalWindowPanel(String aId, OpenDocumentModel aOpenDataModel,
+    public OpenModalWindowPanel(String aId, BratAnnotatorModel aBratAnnotatorModel,
             ModalWindow aModalWindow, Mode aSubject)
     {
         super(aId);
@@ -96,7 +97,7 @@ public class OpenModalWindowPanel
             selectedProject = getAllowedProjects(mode).get(0);
         }
 
-        this.openDataModel = aOpenDataModel;
+        this.bratAnnotatorModel = aBratAnnotatorModel;
         projectSelectionForm = new ProjectSelectionForm("projectSelectionForm");
         documentSelectionForm = new DocumentSelectionForm("documentSelectionForm", aModalWindow);
         buttonsForm = new ButtonsForm("buttonsForm", aModalWindow);
@@ -278,9 +279,8 @@ public class OpenModalWindowPanel
                                         excludeDocuments.add(sourceDocument);
                                     }
                                     else if (mode.equals(Mode.CURATION)
-                                            && !ProjectUtil.existFinishedDocument(
-                                                    sourceDocument, user, projectRepository,
-                                                    selectedProject)) {
+                                            && !ProjectUtil.existFinishedDocument(sourceDocument,
+                                                    user, projectRepository, selectedProject)) {
                                         excludeDocuments.add(sourceDocument);
                                     }
 
@@ -322,10 +322,9 @@ public class OpenModalWindowPanel
                 @Override
                 protected void onEvent(final AjaxRequestTarget aTarget)
                 {
-                    openDataModel.setProject(selectedProject);
-                    openDataModel.setDocument(selectedDocument);
+                    bratAnnotatorModel.setProject(selectedProject);
+                    bratAnnotatorModel.setDocument(selectedDocument);
                     modalWindow.close(aTarget);
-
 
                 }
             }).add(new ResizableBehavior());
@@ -355,8 +354,8 @@ public class OpenModalWindowPanel
                                 + selectedProject.getName() + "')");
                     }
                     else {
-                        openDataModel.setProject(selectedProject);
-                        openDataModel.setDocument(selectedDocument);
+                        bratAnnotatorModel.setProject(selectedProject);
+                        bratAnnotatorModel.setDocument(selectedDocument);
                         modalWindow.close(aTarget);
                     }
                 }
@@ -378,7 +377,7 @@ public class OpenModalWindowPanel
                     projectSelectionForm.detach();
                     documentSelectionForm.detach();
                     if (mode.equals(Mode.CURATION)) {
-                        openDataModel.setDocument(null); // on cancel, go welcomePage
+                        bratAnnotatorModel.setDocument(null); // on cancel, go welcomePage
                     }
                     onCancel(aTarget);
                     modalWindow.close(aTarget);

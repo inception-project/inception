@@ -58,7 +58,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenDocumentModel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenModalWindowPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.AnnotationLayersModalPanel;
@@ -81,10 +80,6 @@ public class AnnotationPage
     extends ApplicationPageBase
 {
     private static final long serialVersionUID = 1378872465851908515L;
-
-    private BratAnnotator annotator;
-
-    private OpenDocumentModel openDataModel;
     @SpringBean(name = "jsonConverter")
     private MappingJacksonHttpMessageConverter jsonConverter;
 
@@ -93,6 +88,10 @@ public class AnnotationPage
 
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
+
+    private BratAnnotator annotator;
+
+
 
     FinishImage finish;
     private int windowSize;
@@ -204,8 +203,7 @@ public class AnnotationPage
                     }
                 }).setOutputMarkupId(true));
 
-        // Add a dialog panel to select annotation layers, window size and display lemma option
-        openDataModel = new OpenDocumentModel();
+
         final ModalWindow openDocumentsModal;
         add(openDocumentsModal = new ModalWindow("openDocumentsModal"));
         openDocumentsModal.setOutputMarkupId(true);
@@ -237,7 +235,7 @@ public class AnnotationPage
             {
                 closeButtonClicked = false;
                 openDocumentsModal.setContent(new OpenModalWindowPanel(openDocumentsModal
-                        .getContentId(), openDataModel, openDocumentsModal, Mode.ANNOTATION)
+                        .getContentId(), bratAnnotatorModel, openDocumentsModal, Mode.ANNOTATION)
                 {
 
                     private static final long serialVersionUID = -3434069761864809703L;
@@ -255,21 +253,21 @@ public class AnnotationPage
                     @Override
                     public void onClose(AjaxRequestTarget target)
                     {
-                        if (openDataModel.getProject() != null
-                                && openDataModel.getDocument() != null) {
+                        if (bratAnnotatorModel.getProject() != null
+                                && bratAnnotatorModel.getDocument() != null) {
                             if (!closeButtonClicked) {
                                 try {
-                                    bratAnnotatorModel.setDocument(openDataModel.getDocument());
-                                    bratAnnotatorModel.setProject(openDataModel.getProject());
+                                    bratAnnotatorModel.setDocument(bratAnnotatorModel.getDocument());
+                                    bratAnnotatorModel.setProject(bratAnnotatorModel.getProject());
                                     BratAnnotatorUtility.upgradeCasAndSave(repository,
-                                            openDataModel.getDocument(), Mode.ANNOTATION);
+                                            bratAnnotatorModel.getDocument(), Mode.ANNOTATION);
 
                                     // setAttributesForGetCollection();
                                     setAttributesForDocument();
 
-                                    String collection = "#" + openDataModel.getProject().getName()
+                                    String collection = "#" + bratAnnotatorModel.getProject().getName()
                                             + "/";
-                                    String document = openDataModel.getDocument().getName();
+                                    String document = bratAnnotatorModel.getDocument().getName();
                                     target.add(finish.setOutputMarkupId(true));
                                     // annotator.reloadContent(target);
                                     target.appendJavaScript("window.location.hash = '"
