@@ -25,7 +25,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,9 +34,6 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
-import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.cas.Type;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -82,11 +78,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationOption;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.CurationPanel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -96,7 +88,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
+import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.project.SettingsPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.statistics.TwoPairedKappa;
@@ -104,15 +96,14 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.support.ChartImageResource;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.support.DynamicColumnMetaData;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.support.EntityModel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.support.TableDataProvider;
-import de.tudarmstadt.ukp.dkpro.statistics.agreement.AnnotationStudy;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.IAnnotationStudy;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.TwoRaterKappaAgreement;
 
 /**
- * Monitoring To display different monitoring and statistics measurements tabularly and graphically.
- * 
+ * A Page To display different monitoring and statistics measurements tabularly and graphically.
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 public class MonitoringPage
     extends SettingsPageBase
@@ -157,6 +148,7 @@ public class MonitoringPage
 
     private static final Log LOG = LogFactory.getLog(MonitoringPage.class);
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public MonitoringPage()
         throws UIMAException, IOException, ClassNotFoundException
     {
@@ -256,10 +248,8 @@ public class MonitoringPage
 
                             // else only projects she is admin of
                             for (Project project : allProjects) {
-                                if (ProjectUtil.isProjectAdmin(project, projectRepository,
-                                        user)
-                                        || ProjectUtil.isCurator(project, projectRepository,
-                                                user)) {
+                                if (ProjectUtil.isProjectAdmin(project, projectRepository, user)
+                                        || ProjectUtil.isCurator(project, projectRepository, user)) {
                                     allowedProject.add(project);
                                 }
                             }
@@ -270,6 +260,7 @@ public class MonitoringPage
                     setNullValid(false);
                 }
 
+                @SuppressWarnings({ "unchecked", "rawtypes" })
                 @Override
                 protected void onSelectionChanged(Project aNewSelection)
                 {
@@ -380,6 +371,8 @@ public class MonitoringPage
                                 provider, 20);
                         annotationDocumentStatusTable.add(new AjaxEventBehavior("onclick")
                         {
+                            private static final long serialVersionUID = -4468099385971446135L;
+
                             @Override
                             protected void onEvent(AjaxRequestTarget aTarget)
                             {
@@ -398,7 +391,8 @@ public class MonitoringPage
                                 aTarget.add(annotatorsProgressPercentageImage
                                         .setOutputMarkupId(true));
 
-                                final Map<Project, Integer> projectsProgressPerClosedDocument = getClosedDocumentsInProject();
+                                final Map<Project, Integer> projectsProgressPerClosedDocument =
+                                        getClosedDocumentsInProject();
                                 monitoringDetailForm.remove(projectRepeator);
                                 projectRepeator = new RepeatingView("projectRepeator");
                                 monitoringDetailForm.add(projectRepeator);
@@ -570,11 +564,13 @@ public class MonitoringPage
         }
     }
 
+    @SuppressWarnings("rawtypes")
     private class AgreementForm
         extends Form<DefaultDataTable>
     {
+        private static final long serialVersionUID = 344165080600348157L;
 
-        @SuppressWarnings({ "unchecked", "rawtypes" })
+        @SuppressWarnings({ "unchecked" })
         public AgreementForm(String id, Model<AnnotationType> aType, Model<Project> aProject)
 
         {
@@ -596,17 +592,6 @@ public class MonitoringPage
             }
             add(agreementTable = new DefaultDataTable("agreementTable", columns, provider, 10));
         }
-    }
-
-    private String getType(AnnotationType aType)
-    {
-        return TypeUtil.getAdapter(aType).getAnnotationTypeName();
-    }
-
-    private String getFeatureName(AnnotationType aType)
-    {
-        TypeAdapter adapter = TypeUtil.getAdapter(aType);
-        return adapter.getLabelFeatureName();
     }
 
     private void modifyProjectRepeater(RepeatingView aProjectRepeater,
@@ -670,6 +655,7 @@ public class MonitoringPage
         agreementForm.setVisible(true);
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private void updateAgreementTabel(AjaxRequestTarget aTarget)
     {
 
@@ -713,70 +699,7 @@ public class MonitoringPage
                 finishedDocumentLists.put(user, finishedDocuments);
             }
 
-            TwoPairedKappa twoPairedKappa = new TwoPairedKappa(project, projectRepository);
-            int userInRow = 0;
-            List<User> rowUsers = new ArrayList<User>();
-            for (User user1 : users) {
-                if (finishedDocumentLists.get(user1).size() != 0) {
-                    int userInColumn = 0;
-                    for (User user2 : users) {
-                        if (user1.getUsername().equals(user2.getUsername())) {// no need to
-                                                                              // compute
-                            // with itself, diagonal one
-                            results[userInRow][userInColumn] = 1.0;
-                            userInColumn++;
-                            continue;
-                        }
-                        else if (rowUsers.contains(user2)) {// already done, upper part of
-                                                            // matrix
-                            userInColumn++;
-                            continue;
-                        }
-
-                        Map<String, Map<String, String>> allUserAnnotations = new TreeMap<String, Map<String, String>>();
-
-                        if (finishedDocumentLists.get(user2).size() != 0) {
-                            for (SourceDocument document1 : finishedDocumentLists.get(user1)) {
-                                for (SourceDocument document2 : finishedDocumentLists.get(user2)) {
-
-                                    if (document1.getId() == document2.getId()) {
-                                        getStudy(adapter.getAnnotationTypeName(),
-                                                adapter.getLabelFeatureName(), twoPairedKappa,
-                                                user1, user2, allUserAnnotations, document2);
-                                    }
-                                }
-
-                            }
-                        }
-
-                        if (twoPairedKappa.getAgreement(allUserAnnotations).length != 0) {
-                            double[][] thisResults = twoPairedKappa
-                                    .getAgreement(allUserAnnotations);
-                            // for a user with itself, we have
-                            // u1
-                            // u1 1.0
-                            // we took it as it is
-                            if (allUserAnnotations.keySet().size() == 1) {
-                                results[userInRow][userInColumn] = (double) Math
-                                        .round(thisResults[0][0] * 100) / 100;
-                            }
-                            else {
-                                // in result for the two users will be in the form of
-                                // u1 u2
-                                // --------------
-                                // u1 1.0 0.84
-                                // u2 0.84 1.0
-                                // only value from first row, second column is important
-                                results[userInRow][userInColumn] = (double) Math
-                                        .round(thisResults[0][1] * 100) / 100;
-                            }
-                            rowUsers.add(user1);
-                        }
-                        userInColumn++;
-                    }
-                }
-                userInRow++;
-            }
+            computeKappa(project, users, results, adapter, finishedDocumentLists);
         }
 
         // Users with some annotations of this type
@@ -819,6 +742,84 @@ public class MonitoringPage
         aTarget.add(agreementForm);
     }
 
+    /**
+     * Compute kappa using the {@link TwoRaterKappaAgreement}. The matrix of kappa result is
+     * computed for a user against every other users if and only if both users have finished the
+     * same document <br>
+     * The result is per {@link AnnotationType} for all {@link Tag}s
+     */
+    private void computeKappa(Project project, List<User> users, double[][] results,
+            TypeAdapter adapter, Map<User, List<SourceDocument>> finishedDocumentLists)
+    {
+        TwoPairedKappa twoPairedKappa = new TwoPairedKappa(project, projectRepository);
+        int userInRow = 0;
+        List<User> rowUsers = new ArrayList<User>();
+        for (User user1 : users) {
+            if (finishedDocumentLists.get(user1).size() != 0) {
+                int userInColumn = 0;
+                for (User user2 : users) {
+                    if (user1.getUsername().equals(user2.getUsername())) {// no need to
+                                                                          // compute
+                        // with itself, diagonal one
+                        results[userInRow][userInColumn] = 1.0;
+                        userInColumn++;
+                        continue;
+                    }
+                    else if (rowUsers.contains(user2)) {// already done, upper part of
+                                                        // matrix
+                        userInColumn++;
+                        continue;
+                    }
+
+                    Map<String, Map<String, String>> allUserAnnotations = new TreeMap<String, Map<String, String>>();
+
+                    if (finishedDocumentLists.get(user2).size() != 0) {
+                        for (SourceDocument document1 : finishedDocumentLists.get(user1)) {
+                            for (SourceDocument document2 : finishedDocumentLists.get(user2)) {
+
+                                if (document1.getId() == document2.getId()) {
+                                    getStudy(adapter.getAnnotationTypeName(),
+                                            adapter.getLabelFeatureName(), twoPairedKappa, user1,
+                                            user2, allUserAnnotations, document2);
+                                }
+                            }
+
+                        }
+                    }
+
+                    if (twoPairedKappa.getAgreement(allUserAnnotations).length != 0) {
+                        double[][] thisResults = twoPairedKappa.getAgreement(allUserAnnotations);
+                        // for a user with itself, we have
+                        // u1
+                        // u1 1.0
+                        // we took it as it is
+                        if (allUserAnnotations.keySet().size() == 1) {
+                            results[userInRow][userInColumn] = (double) Math
+                                    .round(thisResults[0][0] * 100) / 100;
+                        }
+                        else {
+                            // in result for the two users will be in the form of
+                            // u1 u2
+                            // --------------
+                            // u1 1.0 0.84
+                            // u2 0.84 1.0
+                            // only value from first row, second column is important
+                            results[userInRow][userInColumn] = (double) Math
+                                    .round(thisResults[0][1] * 100) / 100;
+                        }
+                        rowUsers.add(user1);
+                    }
+                    userInColumn++;
+                }
+            }
+            userInRow++;
+        }
+    }
+
+    /**
+     * set value for {@link IAnnotationStudy} when {@link TwoRaterKappaAgreement} is used for kappa
+     * measures
+     */
     private void getStudy(String type, String featureName, TwoPairedKappa twoPairedKappa,
             User user1, User user2, Map<String, Map<String, String>> allUserAnnotations,
             SourceDocument document2)
@@ -852,8 +853,10 @@ public class MonitoringPage
         }
     }
 
-    // Get all Cases that is not either new or ignore. we need those in progress if the
-    // admin tries to finish it from the monitoring page
+    /**
+     * Get all Cases that is not either new or ignore per user, per document. we need those in
+     * progress if the admin tries to finish it from the monitoring page
+     */
     private Map<SourceDocument, Map<User, JCas>> getJCases(List<User> users,
             List<SourceDocument> sourceDocuments)
     {
