@@ -155,13 +155,13 @@ public class CurationPanel
                             curationSegment, annotationService, jsonConverter);
                 }
                 catch (UIMAException e) {
-                    ExceptionUtils.getRootCause(e);
+                    error(ExceptionUtils.getRootCause(e));
                 }
                 catch (ClassNotFoundException e) {
-                    e.getMessage();
+                   error(e.getMessage());
                 }
                 catch (IOException e) {
-                    e.getMessage();
+                   error(e.getMessage());
                 }
             }
         };
@@ -186,13 +186,13 @@ public class CurationPanel
                             annotationService, jsonConverter);
                 }
                 catch (UIMAException e) {
-                    ExceptionUtils.getRootCause(e);
+                    error(ExceptionUtils.getRootCause(e));
                 }
                 catch (ClassNotFoundException e) {
-                    e.getMessage();
+                   error(e.getMessage());
                 }
                 catch (IOException e) {
-                    e.getMessage();
+                   error(e.getMessage());
                 }
             }
         };
@@ -224,16 +224,7 @@ public class CurationPanel
                                     curationContainer, mergeVisualizer, repository,
                                     annotationSelectionByUsernameAndAddress, curationSegment,
                                     annotationService, jsonConverter);
-                        }
-                        catch (UIMAException e) {
-                            ExceptionUtils.getRootCause(e);
-                        }
-                        catch (ClassNotFoundException e) {
-                            e.getMessage();
-                        }
-                        catch (IOException e) {
-                            e.getMessage();
-                        }
+
                         List<CurationSegmentForSourceDocument> segments = curationContainer
                                 .getCurationSegments();
                         for (CurationSegmentForSourceDocument segment : segments) {
@@ -244,7 +235,16 @@ public class CurationPanel
                         textOuterView.addOrReplace(textListView);
                         aTarget.add(textOuterView);
                         aTarget.add(sentenceOuterView);
-                        // target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                        }
+                        catch (UIMAException e) {
+                            error(ExceptionUtils.getRootCause(e));
+                        }
+                        catch (ClassNotFoundException e) {
+                           error(e.getMessage());
+                        }
+                        catch (IOException e) {
+                           error(e.getMessage());
+                        }
                     }
 
                 };
@@ -252,10 +252,7 @@ public class CurationPanel
                 // add subcomponents to the component
                 item.add(click);
                 String colorCode = curationSegmentItem.getSentenceState().getColorCode();
-                /*
-                 * if (curationSegmentItem.isCurrentSentence()) {
-                 * item.add(AttributeModifier.append("style", "border: 4px solid black;")); }
-                 */
+
                 if (colorCode != null) {
                     item.add(AttributeModifier.append("style", "background-color: " + colorCode
                             + ";"));
