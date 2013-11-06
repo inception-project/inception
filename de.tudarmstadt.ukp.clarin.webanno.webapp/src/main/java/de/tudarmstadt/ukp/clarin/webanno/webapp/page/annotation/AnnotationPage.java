@@ -328,7 +328,7 @@ public class AnnotationPage
              * window
              */
             @Override
-            public void onClick(AjaxRequestTarget target)
+            public void onClick(AjaxRequestTarget aTarget)
             {
                 // List of all Source Documents in the project
                 List<SourceDocument> listOfSourceDocuements = repository
@@ -354,7 +354,7 @@ public class AnnotationPage
 
                 // If the first the document
                 if (currentDocumentIndex == 0) {
-                    target.appendJavaScript("alert('This is the first document!')");
+                    aTarget.appendJavaScript("alert('This is the first document!')");
                 }
                 else {
                     bratAnnotatorModel.setDocumentName(listOfSourceDocuements.get(
@@ -367,20 +367,23 @@ public class AnnotationPage
                         // setAttributesForGetCollection();
                         setAttributesForDocument();
                     }
-                    catch (IOException e) {
-                        error(e.getMessage());
-                    }
                     catch (UIMAException e) {
+                        aTarget.add(getFeedbackPanel());
                         error(ExceptionUtils.getRootCauseMessage(e));
                     }
                     catch (ClassNotFoundException e) {
+                        aTarget.add(getFeedbackPanel());
                         error(e.getMessage());
                     }
-                    target.add(finish.setOutputMarkupId(true));
-                    annotator.reloadContent(target);
-                    target.add(numberOfPages);
+                    catch (IOException e) {
+                        aTarget.add(getFeedbackPanel());
+                        error(e.getMessage());
+                    }
+                    aTarget.add(finish.setOutputMarkupId(true));
+                    annotator.reloadContent(aTarget);
+                    aTarget.add(numberOfPages);
                     updateSentenceNumber();
-                    target.add(documentNamePanel);
+                    aTarget.add(documentNamePanel);
                 }
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up }, EventType.click)));
@@ -395,7 +398,7 @@ public class AnnotationPage
              * window
              */
             @Override
-            public void onClick(AjaxRequestTarget target)
+            public void onClick(AjaxRequestTarget aTarget)
             {
                 // List of all Source Documents in the project
                 List<SourceDocument> listOfSourceDocuements = repository
@@ -421,7 +424,7 @@ public class AnnotationPage
 
                 // If the first document
                 if (currentDocumentIndex == listOfSourceDocuements.size() - 1) {
-                    target.appendJavaScript("alert('This is the last document!')");
+                    aTarget.appendJavaScript("alert('This is the last document!')");
                 }
                 else {
                     bratAnnotatorModel.setDocumentName(listOfSourceDocuements.get(
@@ -434,20 +437,23 @@ public class AnnotationPage
                         // setAttributesForGetCollection();
                         setAttributesForDocument();
                     }
-                    catch (IOException e) {
-                        error(e.getMessage());
-                    }
                     catch (UIMAException e) {
+                        aTarget.add(getFeedbackPanel());
                         error(ExceptionUtils.getRootCauseMessage(e));
                     }
                     catch (ClassNotFoundException e) {
+                        aTarget.add(getFeedbackPanel());
                         error(e.getMessage());
                     }
-                    target.add(finish.setOutputMarkupId(true));
-                    target.add(numberOfPages);
-                    target.add(documentNamePanel);
+                    catch (IOException e) {
+                        aTarget.add(getFeedbackPanel());
+                        error(e.getMessage());
+                    }
+                    aTarget.add(finish.setOutputMarkupId(true));
+                    aTarget.add(numberOfPages);
+                    aTarget.add(documentNamePanel);
                     updateSentenceNumber();
-                    annotator.reloadContent(target);
+                    annotator.reloadContent(aTarget);
                 }
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down }, EventType.click)));
@@ -757,25 +763,6 @@ public class AnnotationPage
         currentprojectId = bratAnnotatorModel.getProject().getId();
         currentDocumentId = bratAnnotatorModel.getDocument().getId();
     }
-
-    /*    *//**
-     * Set different attributes for
-     * {@link BratAjaxCasController#getCollectionInformation(String, ArrayList) }
-     *
-     * @throws IOException
-     */
-    /*
-     *
-     * public void setAttributesForGetCollection() throws IOException { String username =
-     * SecurityContextHolder.getContext().getAuthentication().getName();
-     *
-     * if (bratAnnotatorModel.getProject().getId() != currentprojectId) { AnnotationPreference
-     * preference = new AnnotationPreference(); ApplicationUtils.setAnnotationPreference(preference,
-     * username, repository, annotationService, bratAnnotatorModel, Mode.ANNOTATION); }
-     * currentprojectId = bratAnnotatorModel.getProject().getId();
-     *
-     * }
-     */
 
     boolean isDocumentOpenedFirstTime(String aCollection, String adocumentName)
     {

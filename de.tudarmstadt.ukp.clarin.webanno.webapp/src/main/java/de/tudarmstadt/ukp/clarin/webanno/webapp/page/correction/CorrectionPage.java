@@ -57,6 +57,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.CurationSegmentPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationBuilder;
@@ -158,16 +159,18 @@ public class CorrectionPage
                     BratCuratorUtility.updatePanel(aTarget, this, curationContainer,
                             mergeVisualizer, repository, annotationSelectionByUsernameAndAddress,
                             curationSegment, annotationService, jsonConverter);
-
                 }
                 catch (UIMAException e) {
-                    ExceptionUtils.getRootCause(e);
+                    aTarget.add(getFeedbackPanel());
+                    error(ExceptionUtils.getRootCause(e));
                 }
                 catch (ClassNotFoundException e) {
-                    e.getMessage();
+                    aTarget.add(getFeedbackPanel());
+                    error(e.getMessage());
                 }
                 catch (IOException e) {
-                    e.getMessage();
+                    aTarget.add(getFeedbackPanel());
+                    error(e.getMessage());
                 }
                 mergeVisualizer.reloadContent(aTarget);
                 aTarget.add(numberOfPages);
@@ -196,19 +199,25 @@ public class CorrectionPage
                     BratCuratorUtility.updatePanel(aTarget, automateView, curationContainer, this,
                             repository, annotationSelectionByUsernameAndAddress, curationSegment,
                             annotationService, jsonConverter);
+                    aTarget.add(automateView);
+                    aTarget.add(numberOfPages);
                 }
                 catch (UIMAException e) {
-                    ExceptionUtils.getRootCause(e);
+                    aTarget.add(getFeedbackPanel());
+                    error(ExceptionUtils.getRootCause(e));
                 }
                 catch (ClassNotFoundException e) {
-                    e.getMessage();
+                    aTarget.add(getFeedbackPanel());
+                    error(e.getMessage());
                 }
                 catch (IOException e) {
-                    e.getMessage();
+                    aTarget.add(getFeedbackPanel());
+                    error(e.getMessage());
                 }
-
-                aTarget.add(automateView);
-                aTarget.add(numberOfPages);
+                catch (BratAnnotationException e) {
+                    aTarget.add(getFeedbackPanel());
+                    error(e.getMessage());
+                }
             }
         };
         // reset sentenceAddress and lastSentenceAddress to the orginal once
@@ -306,7 +315,7 @@ public class CorrectionPage
             private static final long serialVersionUID = 7496156015186497496L;
 
             @Override
-            public void onClick(AjaxRequestTarget aTarget)
+            public void onClick(final AjaxRequestTarget aTarget)
             {
                 openDocumentsModal.setContent(new OpenModalWindowPanel(openDocumentsModal
                         .getContentId(), bratAnnotatorModel, openDocumentsModal, Mode.CORRECTION));
@@ -317,13 +326,7 @@ public class CorrectionPage
                     @Override
                     public void onClose(AjaxRequestTarget target)
                     {
-                        // If this source document has at least one annotation document "FINISHED",
-                        // and curation not yet
-                        // finished on it
                         if (bratAnnotatorModel.getDocument() != null) {
-
-                            // Get settings from preferences, if available
-                            // TEST - set window size to 10
 
                             try {
 
@@ -338,15 +341,17 @@ public class CorrectionPage
 
                             }
                             catch (UIMAException e) {
+                                aTarget.add(getFeedbackPanel());
                                 error(ExceptionUtils.getRootCause(e));
                             }
                             catch (ClassNotFoundException e) {
+                                aTarget.add(getFeedbackPanel());
                                 error(e.getMessage());
                             }
                             catch (IOException e) {
+                                aTarget.add(getFeedbackPanel());
                                 error(e.getMessage());
                             }
-
                             finish.setModelObject(bratAnnotatorModel);
                             target.add(finish.setOutputMarkupId(true));
                             target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
@@ -434,10 +439,10 @@ public class CorrectionPage
             private static final long serialVersionUID = 7496156015186497496L;
 
             @Override
-            public void onClick(AjaxRequestTarget target)
+            public void onClick(AjaxRequestTarget aTarget)
             {
                 if (gotoPageAddress == -2) {
-                    target.appendJavaScript("alert('This sentence number is either negative or beyond the last sentence number!')");
+                    aTarget.appendJavaScript("alert('This sentence number is either negative or beyond the last sentence number!')");
                 }
                 else if (bratAnnotatorModel.getDocument() != null) {
                     // Not Updated, default used
@@ -445,51 +450,49 @@ public class CorrectionPage
                     try {
                         mergeJCas = repository.getCorrectionDocumentContent(bratAnnotatorModel
                                 .getDocument());
+
+                        if (gotoPageAddress == -1) {
+                            gotoPageAddress = BratAjaxCasUtil.getSentenceAddress(mergeJCas, 10);
+                        }
+                        if (bratAnnotatorModel.getSentenceAddress() != gotoPageAddress) {
+                            bratAnnotatorModel.setSentenceAddress(gotoPageAddress);
+
+                            Sentence sentence = selectByAddr(mergeJCas, Sentence.class,
+                                    gotoPageAddress);
+                            bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
+                            bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
+
+                            CurationBuilder builder = new CurationBuilder(repository,
+                                    annotationService);
+                            curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
+                            setCurationSegmentBeginEnd();
+                            curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
+                            update(aTarget);
+                            mergeVisualizer.reloadContent(aTarget);
+                        }
+                        else {
+                            aTarget.appendJavaScript("alert('This sentence is on the same page!')");
+                        }
                     }
                     catch (UIMAException e) {
+                        aTarget.add(getFeedbackPanel());
                         error(ExceptionUtils.getRootCause(e));
                     }
                     catch (ClassNotFoundException e) {
-                        error(ExceptionUtils.getRootCause(e));
-                    }
-                    catch (IOException e) {
+                        aTarget.add(getFeedbackPanel());
                         error(e.getMessage());
                     }
-
-                    if (gotoPageAddress == -1) {
-                        gotoPageAddress = BratAjaxCasUtil.getSentenceAddress(mergeJCas, 10);
+                    catch (IOException e) {
+                        aTarget.add(getFeedbackPanel());
+                        error(e.getMessage());
                     }
-                    if (bratAnnotatorModel.getSentenceAddress() != gotoPageAddress) {
-                        bratAnnotatorModel.setSentenceAddress(gotoPageAddress);
-
-                        Sentence sentence = selectByAddr(mergeJCas, Sentence.class, gotoPageAddress);
-                        bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
-                        bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
-
-                        CurationBuilder builder = new CurationBuilder(repository, annotationService);
-                        try {
-                            curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
-                            setCurationSegmentBeginEnd();
-                        }
-                        catch (UIMAException e) {
-                            ExceptionUtils.getRootCauseMessage(e);
-                        }
-                        catch (ClassNotFoundException e) {
-                            error(e.getMessage());
-                        }
-                        catch (IOException e) {
-                            error(e.getMessage());
-                        }
-                        curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
-                        update(target);
-                        mergeVisualizer.reloadContent(target);
-                    }
-                    else {
-                        target.appendJavaScript("alert('This sentence is on the same page!')");
+                    catch (BratAnnotationException e) {
+                        aTarget.add(getFeedbackPanel());
+                        error(e.getMessage());
                     }
                 }
                 else {
-                    target.appendJavaScript("alert('Please open a document first!')");
+                    aTarget.appendJavaScript("alert('Please open a document first!')");
                 }
             }
         });
@@ -657,62 +660,59 @@ public class CorrectionPage
              * window
              */
             @Override
-            public void onClick(AjaxRequestTarget target)
+            public void onClick(AjaxRequestTarget aTarget)
             {
                 if (bratAnnotatorModel.getDocument() != null) {
                     JCas mergeJCas = null;
                     try {
                         mergeJCas = repository.getCorrectionDocumentContent(bratAnnotatorModel
                                 .getDocument());
+                        int address = BratAjaxCasUtil.selectSentenceAt(mergeJCas,
+                                bratAnnotatorModel.getSentenceBeginOffset(),
+                                bratAnnotatorModel.getSentenceEndOffset()).getAddress();
+                        int nextSentenceAddress = BratAjaxCasUtil
+                                .getNextDisplayWindowSentenceBeginAddress(mergeJCas, address,
+                                        bratAnnotatorModel.getWindowSize());
+                        if (address != nextSentenceAddress) {
+                            bratAnnotatorModel.setSentenceAddress(nextSentenceAddress);
+
+                            Sentence sentence = selectByAddr(mergeJCas, Sentence.class,
+                                    nextSentenceAddress);
+                            bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
+                            bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
+
+                            CurationBuilder builder = new CurationBuilder(repository,
+                                    annotationService);
+                            curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
+                            setCurationSegmentBeginEnd();
+                            curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
+                            update(aTarget);
+                            mergeVisualizer.reloadContent(aTarget);
+                        }
+
+                        else {
+                            aTarget.appendJavaScript("alert('This is last page!')");
+                        }
                     }
                     catch (UIMAException e) {
+                        aTarget.add(getFeedbackPanel());
                         error(ExceptionUtils.getRootCause(e));
                     }
                     catch (ClassNotFoundException e) {
-                        error(ExceptionUtils.getRootCause(e));
+                        aTarget.add(getFeedbackPanel());
+                        error(e.getMessage());
                     }
                     catch (IOException e) {
-                        error(ExceptionUtils.getRootCause(e));
+                        aTarget.add(getFeedbackPanel());
+                        error(e.getMessage());
                     }
-                    int address = BratAjaxCasUtil.selectSentenceAt(mergeJCas,
-                            bratAnnotatorModel.getSentenceBeginOffset(),
-                            bratAnnotatorModel.getSentenceEndOffset()).getAddress();
-                    int nextSentenceAddress = BratAjaxCasUtil
-                            .getNextDisplayWindowSentenceBeginAddress(mergeJCas, address,
-                                    bratAnnotatorModel.getWindowSize());
-                    if (address != nextSentenceAddress) {
-                        bratAnnotatorModel.setSentenceAddress(nextSentenceAddress);
-
-                        Sentence sentence = selectByAddr(mergeJCas, Sentence.class,
-                                nextSentenceAddress);
-                        bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
-                        bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
-
-                        CurationBuilder builder = new CurationBuilder(repository, annotationService);
-                        try {
-                            curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
-                            setCurationSegmentBeginEnd();
-                        }
-                        catch (UIMAException e) {
-                            ExceptionUtils.getRootCauseMessage(e);
-                        }
-                        catch (ClassNotFoundException e) {
-                            error(e.getMessage());
-                        }
-                        catch (IOException e) {
-                            error(e.getMessage());
-                        }
-                        curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
-                        update(target);
-                        mergeVisualizer.reloadContent(target);
-                    }
-
-                    else {
-                        target.appendJavaScript("alert('This is last page!')");
+                    catch (BratAnnotationException e) {
+                        aTarget.add(getFeedbackPanel());
+                        error(e.getMessage());
                     }
                 }
                 else {
-                    target.appendJavaScript("alert('Please open a document first!')");
+                    aTarget.appendJavaScript("alert('Please open a document first!')");
                 }
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Page_down }, EventType.click)));
@@ -723,7 +723,7 @@ public class CorrectionPage
             private static final long serialVersionUID = 7496156015186497496L;
 
             @Override
-            public void onClick(AjaxRequestTarget target)
+            public void onClick(AjaxRequestTarget aTarget)
             {
                 if (bratAnnotatorModel.getDocument() != null) {
 
@@ -731,53 +731,50 @@ public class CorrectionPage
                     try {
                         mergeJCas = repository.getCorrectionDocumentContent(bratAnnotatorModel
                                 .getDocument());
+                        int previousSentenceAddress = BratAjaxCasUtil
+                                .getPreviousDisplayWindowSentenceBeginAddress(mergeJCas,
+                                        bratAnnotatorModel.getSentenceAddress(),
+                                        bratAnnotatorModel.getWindowSize());
+                        if (bratAnnotatorModel.getSentenceAddress() != previousSentenceAddress) {
+                            bratAnnotatorModel.setSentenceAddress(previousSentenceAddress);
+
+                            Sentence sentence = selectByAddr(mergeJCas, Sentence.class,
+                                    previousSentenceAddress);
+                            bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
+                            bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
+
+                            CurationBuilder builder = new CurationBuilder(repository,
+                                    annotationService);
+
+                            curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
+                            setCurationSegmentBeginEnd();
+                            curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
+                            update(aTarget);
+                            mergeVisualizer.reloadContent(aTarget);
+                        }
+                        else {
+                            aTarget.appendJavaScript("alert('This is First Page!')");
+                        }
                     }
                     catch (UIMAException e) {
+                        aTarget.add(getFeedbackPanel());
                         error(ExceptionUtils.getRootCause(e));
                     }
                     catch (ClassNotFoundException e) {
-                        error(ExceptionUtils.getRootCause(e));
+                        aTarget.add(getFeedbackPanel());
+                        error(e.getMessage());
                     }
                     catch (IOException e) {
-                        error(ExceptionUtils.getRootCause(e));
+                        aTarget.add(getFeedbackPanel());
+                        error(e.getMessage());
                     }
-
-                    int previousSentenceAddress = BratAjaxCasUtil
-                            .getPreviousDisplayWindowSentenceBeginAddress(mergeJCas,
-                                    bratAnnotatorModel.getSentenceAddress(),
-                                    bratAnnotatorModel.getWindowSize());
-                    if (bratAnnotatorModel.getSentenceAddress() != previousSentenceAddress) {
-                        bratAnnotatorModel.setSentenceAddress(previousSentenceAddress);
-
-                        Sentence sentence = selectByAddr(mergeJCas, Sentence.class,
-                                previousSentenceAddress);
-                        bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
-                        bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
-
-                        CurationBuilder builder = new CurationBuilder(repository, annotationService);
-                        try {
-                            curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
-                            setCurationSegmentBeginEnd();
-                        }
-                        catch (UIMAException e) {
-                            ExceptionUtils.getRootCauseMessage(e);
-                        }
-                        catch (ClassNotFoundException e) {
-                            error(e.getMessage());
-                        }
-                        catch (IOException e) {
-                            error(e.getMessage());
-                        }
-                        curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
-                        update(target);
-                        mergeVisualizer.reloadContent(target);
-                    }
-                    else {
-                        target.appendJavaScript("alert('This is First Page!')");
+                    catch (BratAnnotationException e) {
+                        aTarget.add(getFeedbackPanel());
+                        error(e.getMessage());
                     }
                 }
                 else {
-                    target.appendJavaScript("alert('Please open a document first!')");
+                    aTarget.appendJavaScript("alert('Please open a document first!')");
                 }
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Page_up }, EventType.click)));
@@ -787,60 +784,58 @@ public class CorrectionPage
             private static final long serialVersionUID = 7496156015186497496L;
 
             @Override
-            public void onClick(AjaxRequestTarget target)
+            public void onClick(AjaxRequestTarget aTarget)
             {
                 if (bratAnnotatorModel.getDocument() != null) {
                     JCas mergeJCas = null;
                     try {
                         mergeJCas = repository.getCorrectionDocumentContent(bratAnnotatorModel
                                 .getDocument());
+
+                        int address = BratAjaxCasUtil.selectSentenceAt(mergeJCas,
+                                bratAnnotatorModel.getSentenceBeginOffset(),
+                                bratAnnotatorModel.getSentenceEndOffset()).getAddress();
+                        int firstAddress = BratAjaxCasUtil.getFirstSentenceAddress(mergeJCas);
+
+                        if (firstAddress != address) {
+                            bratAnnotatorModel.setSentenceAddress(firstAddress);
+
+                            Sentence sentence = selectByAddr(mergeJCas, Sentence.class,
+                                    firstAddress);
+                            bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
+                            bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
+
+                            CurationBuilder builder = new CurationBuilder(repository,
+                                    annotationService);
+                            curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
+                            setCurationSegmentBeginEnd();
+                            curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
+                            update(aTarget);
+                            mergeVisualizer.reloadContent(aTarget);
+                        }
+                        else {
+                            aTarget.appendJavaScript("alert('This is first page!')");
+                        }
                     }
                     catch (UIMAException e) {
+                        aTarget.add(getFeedbackPanel());
                         error(ExceptionUtils.getRootCause(e));
                     }
                     catch (ClassNotFoundException e) {
-                        error(ExceptionUtils.getRootCause(e));
+                        aTarget.add(getFeedbackPanel());
+                        error(e.getMessage());
                     }
                     catch (IOException e) {
-                        error(ExceptionUtils.getRootCause(e));
+                        aTarget.add(getFeedbackPanel());
+                        error(e.getMessage());
                     }
-
-                    int address = BratAjaxCasUtil.selectSentenceAt(mergeJCas,
-                            bratAnnotatorModel.getSentenceBeginOffset(),
-                            bratAnnotatorModel.getSentenceEndOffset()).getAddress();
-                    int firstAddress = BratAjaxCasUtil.getFirstSentenceAddress(mergeJCas);
-
-                    if (firstAddress != address) {
-                        bratAnnotatorModel.setSentenceAddress(firstAddress);
-
-                        Sentence sentence = selectByAddr(mergeJCas, Sentence.class, firstAddress);
-                        bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
-                        bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
-
-                        CurationBuilder builder = new CurationBuilder(repository, annotationService);
-                        try {
-                            curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
-                            setCurationSegmentBeginEnd();
-                        }
-                        catch (UIMAException e) {
-                            ExceptionUtils.getRootCauseMessage(e);
-                        }
-                        catch (ClassNotFoundException e) {
-                            error(e.getMessage());
-                        }
-                        catch (IOException e) {
-                            error(e.getMessage());
-                        }
-                        curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
-                        update(target);
-                        mergeVisualizer.reloadContent(target);
-                    }
-                    else {
-                        target.appendJavaScript("alert('This is first page!')");
+                    catch (BratAnnotationException e) {
+                        aTarget.add(getFeedbackPanel());
+                        error(e.getMessage());
                     }
                 }
                 else {
-                    target.appendJavaScript("alert('Please open a document first!')");
+                    aTarget.appendJavaScript("alert('Please open a document first!')");
                 }
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Home }, EventType.click)));
@@ -850,60 +845,58 @@ public class CorrectionPage
             private static final long serialVersionUID = 7496156015186497496L;
 
             @Override
-            public void onClick(AjaxRequestTarget target)
+            public void onClick(AjaxRequestTarget aTarget)
             {
                 if (bratAnnotatorModel.getDocument() != null) {
                     JCas mergeJCas = null;
                     try {
                         mergeJCas = repository.getCorrectionDocumentContent(bratAnnotatorModel
                                 .getDocument());
+                        int lastDisplayWindowBeginingSentenceAddress = BratAjaxCasUtil
+                                .getLastDisplayWindowFirstSentenceAddress(mergeJCas,
+                                        bratAnnotatorModel.getWindowSize());
+                        if (lastDisplayWindowBeginingSentenceAddress != bratAnnotatorModel
+                                .getSentenceAddress()) {
+                            bratAnnotatorModel
+                                    .setSentenceAddress(lastDisplayWindowBeginingSentenceAddress);
+
+                            Sentence sentence = selectByAddr(mergeJCas, Sentence.class,
+                                    lastDisplayWindowBeginingSentenceAddress);
+                            bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
+                            bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
+
+                            CurationBuilder builder = new CurationBuilder(repository,
+                                    annotationService);
+                            curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
+                            setCurationSegmentBeginEnd();
+                            curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
+                            update(aTarget);
+                            mergeVisualizer.reloadContent(aTarget);
+
+                        }
+                        else {
+                            aTarget.appendJavaScript("alert('This is last Page!')");
+                        }
                     }
                     catch (UIMAException e) {
+                        aTarget.add(getFeedbackPanel());
                         error(ExceptionUtils.getRootCause(e));
                     }
                     catch (ClassNotFoundException e) {
-                        error(ExceptionUtils.getRootCause(e));
+                        aTarget.add(getFeedbackPanel());
+                        error(e.getMessage());
                     }
                     catch (IOException e) {
-                        error(ExceptionUtils.getRootCause(e));
+                        aTarget.add(getFeedbackPanel());
+                        error(e.getMessage());
                     }
-                    int lastDisplayWindowBeginingSentenceAddress = BratAjaxCasUtil
-                            .getLastDisplayWindowFirstSentenceAddress(mergeJCas,
-                                    bratAnnotatorModel.getWindowSize());
-                    if (lastDisplayWindowBeginingSentenceAddress != bratAnnotatorModel
-                            .getSentenceAddress()) {
-                        bratAnnotatorModel
-                                .setSentenceAddress(lastDisplayWindowBeginingSentenceAddress);
-
-                        Sentence sentence = selectByAddr(mergeJCas, Sentence.class,
-                                lastDisplayWindowBeginingSentenceAddress);
-                        bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
-                        bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
-
-                        CurationBuilder builder = new CurationBuilder(repository, annotationService);
-                        try {
-                            curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
-                            setCurationSegmentBeginEnd();
-                        }
-                        catch (UIMAException e) {
-                            ExceptionUtils.getRootCauseMessage(e);
-                        }
-                        catch (ClassNotFoundException e) {
-                            error(e.getMessage());
-                        }
-                        catch (IOException e) {
-                            error(e.getMessage());
-                        }
-                        curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
-                        update(target);
-                        mergeVisualizer.reloadContent(target);
-                    }
-                    else {
-                        target.appendJavaScript("alert('This is last Page!')");
+                    catch (BratAnnotationException e) {
+                        aTarget.add(getFeedbackPanel());
+                        error(e.getMessage());
                     }
                 }
                 else {
-                    target.appendJavaScript("alert('Please open a document first!')");
+                    aTarget.appendJavaScript("alert('Please open a document first!')");
                 }
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.End }, EventType.click)));

@@ -42,6 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationOption;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff;
@@ -85,7 +86,7 @@ public class CurationBuilder
     }
 
     public CurationContainer buildCurationContainer(BratAnnotatorModel aBratAnnotatorModel)
-        throws UIMAException, ClassNotFoundException, IOException
+        throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
         CurationContainer curationContainer = new CurationContainer();
         // initialize Variables
@@ -226,60 +227,60 @@ public class CurationBuilder
     /**
      * Puts JCases into a list and get a random annotation document that will be used as a base for
      * the {@link CasDiff}
+     *
+     * @throws IOException
+     * @throws ClassNotFoundException
+     * @throws UIMAException
      */
     private void updateSegment(BratAnnotatorModel aBratAnnotatorModel,
             Map<Integer, Integer> segmentBeginEnd, Map<Integer, Integer> segmentNumber,
             Map<Integer, String> segmentText, Map<String, Map<Integer, Integer>> segmentAdress,
             Map<String, JCas> jCases, AnnotationDocument annotationDocument, String username)
+        throws UIMAException, ClassNotFoundException, IOException
     {
-        try {
-            JCas jCas = repository.getAnnotationDocumentContent(annotationDocument);
+        JCas jCas = repository.getAnnotationDocumentContent(annotationDocument);
 
-            int windowSize = aBratAnnotatorModel.getWindowSize();
+        int windowSize = aBratAnnotatorModel.getWindowSize();
 
-            Sentence firstSentence = BratAjaxCasUtil.selectSentenceAt(jCas,
-                    aBratAnnotatorModel.getSentenceBeginOffset(),
-                    aBratAnnotatorModel.getSentenceEndOffset());
-            Sentence lastSentence = selectByAddr(
-                    jCas,
-                    Sentence.class,
-                    BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(jCas,
-                            firstSentence.getAddress(), windowSize));
+        Sentence firstSentence = BratAjaxCasUtil.selectSentenceAt(jCas,
+                aBratAnnotatorModel.getSentenceBeginOffset(),
+                aBratAnnotatorModel.getSentenceEndOffset());
+        Sentence lastSentence = selectByAddr(
+                jCas,
+                Sentence.class,
+                BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(jCas,
+                        firstSentence.getAddress(), windowSize));
 
-            begin = firstSentence.getBegin();
-            end = lastSentence.getEnd();
-            sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas, firstSentence.getAddress());
-            segmentAdress.put(username, new HashMap<Integer, Integer>());
+        begin = firstSentence.getBegin();
+        end = lastSentence.getEnd();
+        sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas, firstSentence.getAddress());
+        segmentAdress.put(username, new HashMap<Integer, Integer>());
 
-            // FIXME !!! Why not use selectCovered(jcas, Sentence.class, begin, end) here?
-            int i = firstSentence.getAddress();
-            Sentence sentence = null;
-            int lastSentenceAddress = BratAjaxCasUtil.getLastSentenceAddress(jCas);
+        // FIXME !!! Why not use selectCovered(jcas, Sentence.class, begin, end) here?
+        int i = firstSentence.getAddress();
+        Sentence sentence = null;
+        int lastSentenceAddress = BratAjaxCasUtil.getLastSentenceAddress(jCas);
 
-            for (int j = 0; j < aBratAnnotatorModel.getWindowSize(); j++) {
-                if (i >= lastSentenceAddress) {
-                    sentence = selectByAddr(jCas, Sentence.class, i);
-                    sentenceNumber += 1;
-                    segmentBeginEnd.put(sentence.getBegin(), sentence.getEnd());
-                    segmentText.put(sentence.getBegin(), sentence.getCoveredText().toString());
-                    segmentNumber.put(sentence.getBegin(), sentenceNumber);
-                    segmentAdress.get(username).put(sentence.getBegin(), sentence.getAddress());
-                    break;
-                }
+        for (int j = 0; j < aBratAnnotatorModel.getWindowSize(); j++) {
+            if (i >= lastSentenceAddress) {
                 sentence = selectByAddr(jCas, Sentence.class, i);
                 sentenceNumber += 1;
                 segmentBeginEnd.put(sentence.getBegin(), sentence.getEnd());
                 segmentText.put(sentence.getBegin(), sentence.getCoveredText().toString());
                 segmentNumber.put(sentence.getBegin(), sentenceNumber);
                 segmentAdress.get(username).put(sentence.getBegin(), sentence.getAddress());
-                i = BratAjaxCasUtil.getFollowingSentenceAddress(jCas, i);
+                break;
             }
+            sentence = selectByAddr(jCas, Sentence.class, i);
+            sentenceNumber += 1;
+            segmentBeginEnd.put(sentence.getBegin(), sentence.getEnd());
+            segmentText.put(sentence.getBegin(), sentence.getCoveredText().toString());
+            segmentNumber.put(sentence.getBegin(), sentenceNumber);
+            segmentAdress.get(username).put(sentence.getBegin(), sentence.getAddress());
+            i = BratAjaxCasUtil.getFollowingSentenceAddress(jCas, i);
+        }
 
-            jCases.put(username, jCas);
-        }
-        catch (Exception e) {
-            LOG.info("Skipping document due to exception [" + annotationDocument + "]", e);
-        }
+        jCases.put(username, jCas);
     }
 
     public static List<Type> getEntryTypes(JCas mergeJCas, Set<TagSet> aTagSets)
@@ -299,43 +300,29 @@ public class CurationBuilder
     /**
      * For the first time a curation page is opened, create a MergeCas that contains only agreeing
      * annotations Using the CAS of the curator user.
+     *
+     * @throws IOException
+     * @throws ClassNotFoundException
+     * @throws UIMAException
+     * @throws BratAnnotationException
      */
     public JCas createMergeCas(JCas mergeJCas, AnnotationDocument randomAnnotationDocument,
             Map<String, JCas> jCases, BratAnnotatorModel aBratAnnotatorModel)
+        throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
         User userLoggedIn = repository.getUser(SecurityContextHolder.getContext()
                 .getAuthentication().getName());
 
         List<Type> entryTypes = null;
         int numUsers = jCases.size();
-        try {
-            mergeJCas = repository.getAnnotationDocumentContent(randomAnnotationDocument);
-        }
-        catch (UIMAException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        catch (ClassNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        mergeJCas = repository.getAnnotationDocumentContent(randomAnnotationDocument);
 
         entryTypes = getEntryTypes(mergeJCas, aBratAnnotatorModel.getAnnotationLayers());
         jCases.put(CurationPanel.CURATION_USER, mergeJCas);
 
         List<AnnotationOption> annotationOptions = null;
-        try {
 
-            annotationOptions = CasDiff.doDiff(entryTypes, jCases, begin, end);
-        }
-        catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        annotationOptions = CasDiff.doDiff(entryTypes, jCases, begin, end);
         for (AnnotationOption annotationOption : annotationOptions) {
             // remove the featureStructure if more than 1 annotationSelection exists per
             // annotationOption
@@ -361,15 +348,9 @@ public class CurationBuilder
                 }
             }
         }
-        try {
 
-            repository.createCurationDocumentContent(mergeJCas,
-                    randomAnnotationDocument.getDocument(), userLoggedIn);
-        }
-        catch (IOException e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
-        }
+        repository.createCurationDocumentContent(mergeJCas, randomAnnotationDocument.getDocument(),
+                userLoggedIn);
         return mergeJCas;
     }
 

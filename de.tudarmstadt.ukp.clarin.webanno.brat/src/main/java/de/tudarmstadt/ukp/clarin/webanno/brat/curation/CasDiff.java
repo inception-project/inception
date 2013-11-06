@@ -55,11 +55,12 @@ public class CasDiff {
      * @param aCasMap
      *            Map of (username, cas)
      * @return List of {@link AnnotationOption}
+     * @throws RangeNameNotCheckedException
      * @throws Exception
      */
 
     public static List<AnnotationOption> doDiff(List<Type> aEntryTypes,
-            Map<String, JCas> aCasMap, int aBegin, int aEnd) throws Exception {
+            Map<String, JCas> aCasMap, int aBegin, int aEnd) throws RangeNameNotCheckedException {
         Map<Integer, Map<Integer, Set<AnnotationFS>>> annotationFSsByBeginEnd = new HashMap<Integer, Map<Integer, Set<AnnotationFS>>>();
         List<AnnotationOption> annotationOptions = new LinkedList<AnnotationOption>();
         Map<FeatureStructure, String> usernameByFeatureStructure = new HashMap<FeatureStructure, String>();
@@ -185,7 +186,8 @@ public class CasDiff {
     }
 
     private static CompareResult compareFeatureFS(Type aType,
-            FeatureStructure fsNew, FeatureStructure fsOld, Set<FeatureStructure> diffFSNew) throws Exception {
+            FeatureStructure fsNew, FeatureStructure fsOld, Set<FeatureStructure> diffFSNew)
+                    throws RangeNameNotCheckedException {
         CompareResult compareResult = new CompareResult();
 
         // check if types are equal
@@ -237,7 +239,7 @@ public class CasDiff {
                         //diffFS1.remove(fs1);
                     }
                 } else {
-                    throw new Exception(feature.getRange().getName()
+                    throw new RangeNameNotCheckedException(feature.getRange().getName()
                             + " not yet checkd!");
                 }
 
