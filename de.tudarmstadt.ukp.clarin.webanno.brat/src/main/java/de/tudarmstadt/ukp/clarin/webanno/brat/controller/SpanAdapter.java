@@ -89,9 +89,12 @@ public class SpanAdapter
 
     private boolean singleTokenBehavior = false;
 
+    boolean deletable;
+
     public SpanAdapter(String aLabelPrefix, String aTypeName, String aLabelFeatureName,
             String aAttachFeature, String aAttachType)
     {
+
         labelPrefix = aLabelPrefix;
         labelFeatureName = aLabelFeatureName;
         annotationTypeName = aTypeName;
@@ -301,6 +304,7 @@ public class SpanAdapter
                 POS.class.getName(), "PosValue", "pos",
                 Token.class.getName());
         adapter.setSingleTokenBehavior(true);
+        adapter.setDeletable(false);
         return adapter;
     }
 
@@ -314,6 +318,7 @@ public class SpanAdapter
         SpanAdapter adapter = new SpanAdapter("", Lemma.class.getName(),
                 "value", "lemma", Token.class.getName());
         adapter.setSingleTokenBehavior(true);
+        adapter.setDeletable(false);
         return adapter;
     }
 
@@ -328,6 +333,7 @@ public class SpanAdapter
                 NamedEntity.class.getName(), "value", null,
                 null);
         adapter.setSingleTokenBehavior(false);
+        adapter.setDeletable(true);
         return adapter;
     }
 
@@ -354,4 +360,16 @@ public class SpanAdapter
     {
         return annotationTypeName;
     }
+
+    public  void setDeletable(boolean aDeletable)
+    {
+       this.deletable = aDeletable;
+    }
+
+    @Override
+    public boolean isDeletable()
+    {
+        return deletable;
+    }
+
 }

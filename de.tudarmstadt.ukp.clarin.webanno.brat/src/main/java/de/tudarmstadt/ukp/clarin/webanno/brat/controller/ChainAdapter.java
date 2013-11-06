@@ -94,6 +94,8 @@ public class ChainAdapter
 
     private boolean isChain = false;
 
+    private boolean deletable;
+
     public ChainAdapter(String aLabelPrefix, String aTypeName, String aLabelFeatureName,
             String aFirstFeatureName, String aNextFeatureName)
     {
@@ -790,4 +792,11 @@ public class ChainAdapter
     {
         return annotationTypeName;
     }
+
+    @Override
+    public boolean isDeletable()
+    {
+        return deletable;
+    }
+
 }

@@ -78,5 +78,9 @@ public interface TypeAdapter
      * @param aAddress
      *            the low-level address of the span annotation.
      */
+    /**
+     * check if the annotation type is deletable
+     */
+    boolean isDeletable();
     public void delete(JCas aJCas, int aAddress);
 }

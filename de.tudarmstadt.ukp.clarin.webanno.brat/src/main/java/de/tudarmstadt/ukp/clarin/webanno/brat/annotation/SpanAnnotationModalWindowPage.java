@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -60,6 +61,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.OffsetsList;
@@ -132,12 +134,12 @@ public class SpanAnnotationModalWindowPage
             }
             else if (bratAnnotatorModel.getRememberedSpanTagSet() != null
                     && conatinsTagSet(bratAnnotatorModel.getAnnotationLayers(),
-                            bratAnnotatorModel.getRememberedSpanTagSet()) ) {
+                            bratAnnotatorModel.getRememberedSpanTagSet())) {
                 selectedtTagSet = bratAnnotatorModel.getRememberedSpanTagSet();
                 tagSetsModel = new Model<TagSet>(selectedtTagSet);
                 tagsModel = new Model<String>(bratAnnotatorModel.getRememberedSpanTag().getName());
                 // for lemma,
-                if(tagsModel.getObject()==null){
+                if (tagsModel.getObject() == null) {
                     tagsModel.setObject(selectedText);
                 }
             }
@@ -146,7 +148,7 @@ public class SpanAnnotationModalWindowPage
                 tagSetsModel = new Model<TagSet>(selectedtTagSet);
                 tagsModel = new Model<String>("");
 
-                if(selectedtTagSet.getType().getName().equals(AnnotationTypeConstant.LEMMA)) {
+                if (selectedtTagSet.getType().getName().equals(AnnotationTypeConstant.LEMMA)) {
                     tagsModel.setObject(selectedText);
                 }
             }
@@ -166,7 +168,7 @@ public class SpanAnnotationModalWindowPage
                 protected void onSelectionChanged(TagSet aNewSelection)
                 {
                     selectedtTagSet = aNewSelection;
-                    if(aNewSelection.getType().getName().equals(AnnotationTypeConstant.LEMMA)) {
+                    if (aNewSelection.getType().getName().equals(AnnotationTypeConstant.LEMMA)) {
                         tagsModel.setObject(selectedText);
                     }
                     else {
@@ -229,7 +231,8 @@ public class SpanAnnotationModalWindowPage
                         else {
 
                             Tag selectedTag;
-                            if (selectedtTagSet.getType().getName().equals(AnnotationTypeConstant.LEMMA)) {
+                            if (selectedtTagSet.getType().getName()
+                                    .equals(AnnotationTypeConstant.LEMMA)) {
                                 selectedTag = new Tag();
                                 annotationType = tags.getModelObject();
                             }
@@ -309,24 +312,10 @@ public class SpanAnnotationModalWindowPage
                         int start = selectByAddr(jCas, Sentence.class,
                                 bratAnnotatorModel.getSentenceAddress()).getBegin()
                                 + ((Offsets) offsetLists.get(0)).getBegin();
-                        Tag selectedTag = null;
-                        // FIXME issue #701 TypeAdapter should have field "deletable" and a method 
-                        // "isDeletable" and this should be called here. The prefix constant should
-                        // not be used here -- REC 2013-11-02
-                        if (selectedtTagSet.getType().getName().equals(AnnotationTypeConstant.LEMMA)) {
+                        TypeAdapter adapter = getAdapter(selectedtTagSet.getType());
+                        if (!adapter.isDeletable()) {
                             aTarget.add(feedbackPanel);
-                            error("Lemma annotations can't be deleted!");
-                        }
-                        else{
-                            selectedTag = (Tag) annotationService.getTag(tags.getModelObject(),
-                                selectedtTagSet);
-                        String annotationType = TypeUtil.getQualifiedLabel(selectedTag);
-                        // FIXME issue #701 TypeAdapter should have field "deletable" and a method 
-                        // "isDeletable" and this should be called here. The prefix constant should
-                        // not be used here -- REC 2013-11-02
-                        if (annotationType.startsWith(AnnotationTypeConstant.POS_PREFIX)) {
-                            aTarget.add(feedbackPanel);
-                            error("POS annotations can't be deleted!");
+                            error("This annotation can't be deleted!");
                         }
                         else {
                             controller.deleteAnnotation(jCas, selectedSpanId);
@@ -339,12 +328,11 @@ public class SpanAnnotationModalWindowPage
                             }
 
                             // A hack to rememeber the Visural DropDown display value
-                            HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())
-                                    .getContainerRequest().getSession();
+                            HttpSession session = ((ServletWebRequest) RequestCycle.get()
+                                    .getRequest()).getContainerRequest().getSession();
                             session.setAttribute("model", bratAnnotatorModel);
                             aModalWindow.close(aTarget);
                         }
-                    }
                     }
                     catch (UIMAException e) {
                         error(ExceptionUtils.getRootCauseMessage(e));
@@ -458,10 +446,10 @@ public class SpanAnnotationModalWindowPage
     private boolean conatinsTagSet(Set<TagSet> aTagSets, TagSet aTagSet)
     {
         for (TagSet tagSet : aTagSets) {
-            if (tagSet.getId() == aTagSet.getId()){
+            if (tagSet.getId() == aTagSet.getId()) {
                 return true;
             }
         }
-            return false;
+        return false;
     }
 }

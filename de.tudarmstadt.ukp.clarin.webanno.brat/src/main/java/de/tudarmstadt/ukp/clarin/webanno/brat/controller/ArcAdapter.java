@@ -97,6 +97,9 @@ public class ArcAdapter
      */
     private String arcTokenType;
 
+
+    private boolean deletable;
+
     public ArcAdapter(String aLabelPrefix, String aTypeName, String aLabelFeatureName,
             String aDependentFeatureName, String aGovernorFeatureName, String aArcSpanType,
             String aArcSpanTypeFeatureName, String aTokenType)
@@ -368,4 +371,11 @@ public class ArcAdapter
     {
         return annotationTypeName;
     }
+
+    @Override
+    public boolean isDeletable()
+    {
+        return deletable;
+    }
+
 }
