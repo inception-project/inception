@@ -36,7 +36,6 @@ import org.apache.uima.jcas.JCas;
 import org.uimafit.util.CasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -47,9 +46,7 @@ import de.tudarmstadt.ukp.dkpro.statistics.agreement.IAnnotationStudy;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.TwoRaterKappaAgreement;
 
 /**
- * For a given source document, return user annotations for a given UIMA type. This is a Map of
- * users with a nested map which contains the concatenations of annotation offsets and UIMA features
- * for the annotations.
+ * This class provides methods used to compute the kappa agreement.
  *
  * @author Seid Muhie Yimam
  *
@@ -70,10 +67,13 @@ public class TwoPairedKappa
     }
 
     /**
-     * return the concatenations of start and end positions of annotations. <br>
+     * Return the concatenations of start and end offsets of annotations. <br>
      * Example: <br>
-     * An annotation that starts at position 05 and ends at position 11 will have a value
-     * <b>0511</b>
+     * A span annotation that starts at offset 05 and ends at offset 11 will have a value
+     * <b>Doc.ID+0511</b> <br>
+     * For Arc Annotation, besides the start and end offsets of an annotation, it will also consider
+     * the start and end offsets of origin and target span annotations. Hence orientation of the arc
+     * annotation is taken into considerations.
      *
      * @param aUsers
      *            Users with finished annotation documents
@@ -91,7 +91,7 @@ public class TwoPairedKappa
 
                 jCas = JCases.get(user);
                 Type type = CasUtil.getType(jCas.getCas(), aType);
-                for (AnnotationFS fs : CasUtil.select(jCas.getCas(), type)) {                    
+                for (AnnotationFS fs : CasUtil.select(jCas.getCas(), type)) {
                     annotationPositions.add(aSourceDocument.getId() + getPosition(type, fs));
                 }
             }
@@ -100,8 +100,7 @@ public class TwoPairedKappa
     }
 
     /**
-     * For all the annotation positions obtained, initialise all positions with an <b>EMPTY</b>
-     * annotation
+     * For all the annotation offsets obtained, initialise it with an <b>EMPTY</b> annotation
      *
      * @param aUsers
      *            all users
@@ -149,7 +148,7 @@ public class TwoPairedKappa
             Map<String, Map<String, String>> aUserAnnotations, Map<User, JCas> JCases)
     {
         for (User user : aUsers) {
-            
+
             AnnotationDocument annotationDocument = repositoryService.getAnnotationDocument(
                     aSourceDocument, user);
 
@@ -176,21 +175,26 @@ public class TwoPairedKappa
         return aUserAnnotations;
     }
 
-    public double[][] getAgreement(Map<String, Map<String, String>> aUserAnnotations)
+    /**
+     * for two users, <b> user1, user2</b>, compute kappa based on the annotation study.<br>
+     * The annotation study is stored per annotation offsets, EMPTY for a user that didn't make any
+     * annotation
+     */
+    public double[][] getAgreement(Map<String, Map<String, String>> aAnnotationStudy)
     {
         int i = 0;
-        double[][] results = new double[aUserAnnotations.size()][aUserAnnotations.size()];
+        double[][] results = new double[aAnnotationStudy.size()][aAnnotationStudy.size()];
 
-        for (String user1 : aUserAnnotations.keySet()) {
+        for (String user1 : aAnnotationStudy.keySet()) {
             int j = 0;
-            for (String user2 : aUserAnnotations.keySet()) {
+            for (String user2 : aAnnotationStudy.keySet()) {
                 IAnnotationStudy study = new AnnotationStudy(2);
 
-                Map<String, String> user1Annotation = aUserAnnotations.get(user1);
+                Map<String, String> user1Annotation = aAnnotationStudy.get(user1);
                 Iterator<String> user1Iterator = user1Annotation.keySet().iterator();
                 while (user1Iterator.hasNext()) {
                     String annotationOffset = user1Iterator.next();
-                    study.addItem(user1Annotation.get(annotationOffset), aUserAnnotations
+                    study.addItem(user1Annotation.get(annotationOffset), aAnnotationStudy
                             .get(user2).get(annotationOffset));
                 }
                 TwoRaterKappaAgreement kappaAgreement = new TwoRaterKappaAgreement(study);
@@ -201,7 +205,10 @@ public class TwoPairedKappa
         }
         return results;
     }
-    
+
+    /**
+     * From the {@link FeatureStructure} provided, get its type value
+     */
     private String getValue(Type aType, FeatureStructure fsNew)
     {
         String result = "";
@@ -213,7 +220,10 @@ public class TwoPairedKappa
         }
         return result;
     }
-    
+
+    /**
+     * From the {@link FeatureStructure} provided, get the concatenations of begin/end offsets
+     */
     private String getPosition(Type aType, FeatureStructure fsNew)
     {
         String result = "";
