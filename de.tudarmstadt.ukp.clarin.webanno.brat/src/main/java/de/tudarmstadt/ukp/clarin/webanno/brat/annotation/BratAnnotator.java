@@ -164,12 +164,12 @@ public class BratAnnotator
             protected void respond(AjaxRequestTarget aTarget)
             {
                 boolean hasChanged = false;
-                final BratAnnotatorUIData uIData = new BratAnnotatorUIData();
+                JCas jCas = null;
                 if (getModelObject().getDocument() != null) {
                     try {
-                        uIData.setjCas(getCas(getModelObject().getProject(), getModelObject()
+                        jCas = getCas(getModelObject().getProject(), getModelObject()
                                 .getUser(), getModelObject().getDocument(), getModelObject()
-                                .getMode()));
+                                .getMode());
                     }
                     catch (UIMAException e1) {
                         error(ExceptionUtils.getRootCause(e1));
@@ -256,7 +256,7 @@ public class BratAnnotator
                     }
 
                     else if (request.getParameterValue("action").toString().equals("getDocument")) {
-                        result = BratAnnotatorUtility.getDocument(uIData, repository,
+                        result = BratAnnotatorUtility.getDocument(jCas, repository,
                                 annotationService, getModelObject());
                     }
 

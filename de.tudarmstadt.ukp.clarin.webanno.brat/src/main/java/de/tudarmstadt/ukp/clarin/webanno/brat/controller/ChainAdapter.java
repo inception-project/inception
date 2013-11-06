@@ -39,7 +39,6 @@ import org.apache.uima.jcas.tcas.Annotation;
 import org.uimafit.util.CasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorUIData;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Argument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Offsets;
@@ -785,7 +784,7 @@ public class ChainAdapter
     {
         return CasUtil.getType(cas, annotationTypeName);
     }
-    
+
     @Override
     public String getAnnotationTypeName()
     {

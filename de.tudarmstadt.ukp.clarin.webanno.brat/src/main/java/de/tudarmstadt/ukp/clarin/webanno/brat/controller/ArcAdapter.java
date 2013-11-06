@@ -34,7 +34,6 @@ import org.apache.uima.jcas.JCas;
 import org.uimafit.util.CasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorUIData;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Argument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Relation;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
@@ -363,7 +362,7 @@ public class ArcAdapter
       return  CasUtil.getType(cas, annotationTypeName);
     }
 
-    
+
     @Override
     public String getAnnotationTypeName()
     {

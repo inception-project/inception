@@ -40,7 +40,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorUIData;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -61,18 +60,13 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 public class BratAnnotatorUtility
 {
 
-    public static Object getDocument(BratAnnotatorUIData aUIData, RepositoryService repository,
+    public static Object getDocument(JCas aJcas, RepositoryService repository,
             AnnotationService annotationService, BratAnnotatorModel bratAnnotatorModel)
         throws ClassNotFoundException, IOException, UIMAException
     {
         Object result = null;
         BratAjaxCasController controller = new BratAjaxCasController(repository, annotationService);
-
-        aUIData.setGetDocument(true);
-        result = controller.getDocumentResponse(bratAnnotatorModel,
-                aUIData.getAnnotationOffsetStart(), aUIData.getjCas(), aUIData.isGetDocument());
-        aUIData.setGetDocument(false);
-
+        result = controller.getDocumentResponse(bratAnnotatorModel,0, aJcas, true);
         return result;
     }
 
@@ -91,17 +85,7 @@ public class BratAnnotatorUtility
             else if (aRepository
                     .getAnnotationDocument(aBratAnnotatorModel.getDocument(),
                             aBratAnnotatorModel.getUser()).getState()
-                    .equals(AnnotationDocumentState.FINISHED)/*
-                                                              * ||
-                                                              * aBratAnnotatorModel.getDocument().
-                                                              * getState()
-                                                              * .equals(SourceDocumentState
-                                                              * .CURATION_FINISHED) ||
-                                                              * aBratAnnotatorModel
-                                                              * .getDocument().getState()
-                                                              * .equals(SourceDocumentState
-                                                              * .CURATION_IN_PROGRESS)
-                                                              */) {
+                    .equals(AnnotationDocumentState.FINISHED)) {
                 finished = true;
             }
         }
@@ -129,7 +113,7 @@ public class BratAnnotatorUtility
     }
 
     public static void upgradeCasAndSave( RepositoryService aRepository, SourceDocument aDocument
-    		, Mode aMode)
+            , Mode aMode)
     {
         String username = SecurityContextHolder.getContext().getAuthentication()
                 .getName();
