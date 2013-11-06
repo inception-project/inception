@@ -163,7 +163,6 @@ public class BratAnnotator
             @Override
             protected void respond(AjaxRequestTarget aTarget)
             {
-                boolean hasChanged = false;
                 JCas jCas = null;
                 if (getModelObject().getDocument() != null) {
                     try {
@@ -215,7 +214,6 @@ public class BratAnnotator
                             openSpanAnnotationDialog(openAnnotationDialog, aTarget);
                         }
                         result = controller.loadConf();
-                        hasChanged = true;
                     }
 
                     else if (request.getParameterValue("action").toString().equals("arcOpenDialog")) {
@@ -242,7 +240,6 @@ public class BratAnnotator
                         }
 
                         result = controller.loadConf();
-                        hasChanged = true;
                     }
                     else if (request.getParameterValue("action").toString().equals("loadConf")) {
                         result = controller.loadConf();
@@ -304,6 +301,11 @@ public class BratAnnotator
         add(controller);
 
     }
+
+
+    /**
+     * opens the {@link SpanAnnotationModalWindowPage} in a {@link ModalWindow}
+     */
 
     private void openSpanAnnotationDialog(final ModalWindow openAnnotationDialog,
             AjaxRequestTarget aTarget)
@@ -371,6 +373,9 @@ public class BratAnnotator
         }
     }
 
+    /**
+     * opens the {@link ArcAnnotationModalWindowPanel} in a {@link ModalWindow}
+     */
     private void openArcAnnotationDialog(final ModalWindow openAnnotationDialog,
             AjaxRequestTarget aTarget)
     {
@@ -378,13 +383,13 @@ public class BratAnnotator
         closeButtonClicked = false;
         if (selectedArcId == -1) {// new annotation
             openAnnotationDialog.setTitle("New Arc Annotation");
-            openAnnotationDialog.setContent(new ArcAnnotationModalWindowPage(openAnnotationDialog
+            openAnnotationDialog.setContent(new ArcAnnotationModalWindowPanel(openAnnotationDialog
                     .getContentId(), openAnnotationDialog, getModelObject(), originSpanId,
                     originSpanType, targetSpanId, targetSpanType));
         }
         else {
             openAnnotationDialog.setTitle("Edit Arc Annotation");
-            openAnnotationDialog.setContent(new ArcAnnotationModalWindowPage(openAnnotationDialog
+            openAnnotationDialog.setContent(new ArcAnnotationModalWindowPanel(openAnnotationDialog
                     .getContentId(), openAnnotationDialog, getModelObject(), originSpanId,
                     originSpanType, targetSpanId, targetSpanType, selectedArcId, selectedArcType));
         }
@@ -460,6 +465,9 @@ public class BratAnnotator
         }
     }
 
+    /**
+     * Reload {@link BratAnnotator} when the Correction/Curation page is opened
+     */
     public void reloadContent(IHeaderResponse aResponse)
     {
         String[] script = new String[] { "dispatcher.post('clearSVG', []);"
@@ -476,6 +484,10 @@ public class BratAnnotator
         aResponse.renderOnLoadJavaScript("\n" + StringUtils.join(script, "\n"));
     }
 
+    /**
+     * Reload {@link BratAnnotator} when the Correction/Curation page is clicked
+     * for span/arc merge
+     */
     public void reloadContent(AjaxRequestTarget aTarget)
     {
         String[] script = new String[] { "dispatcher.post('clearSVG', []);"
@@ -507,18 +519,6 @@ public class BratAnnotator
         }
     }
 
-    public static class MultipleSentenceCoveredException
-        extends Exception
-    {
-        private static final long serialVersionUID = 1280015349963924638L;
-
-        public MultipleSentenceCoveredException(String message)
-        {
-            super(message);
-        }
-
-    }
-
     public String getCollection()
     {
         return collection;
@@ -531,25 +531,6 @@ public class BratAnnotator
 
     protected void onChange(AjaxRequestTarget aTarget, BratAnnotatorModel aBratAnnotatorModel)
     {
-        // TODO Auto-generated method stub
 
-    }
-
-    private JCas getCas(BratAnnotatorModel aBratAnnotatorModel)
-        throws UIMAException, IOException, ClassNotFoundException
-    {
-
-        if (aBratAnnotatorModel.getMode().equals(Mode.ANNOTATION)
-                || aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)
-                || aBratAnnotatorModel.getMode().equals(Mode.CORRECTION_MERGE)) {
-            BratAjaxCasController controller = new BratAjaxCasController(repository,
-                    annotationService);
-
-            return controller.readJCas(aBratAnnotatorModel.getDocument(),
-                    aBratAnnotatorModel.getProject(), aBratAnnotatorModel.getUser());
-        }
-        else {
-            return repository.getCurationDocumentContent(getModelObject().getDocument());
-        }
     }
 }

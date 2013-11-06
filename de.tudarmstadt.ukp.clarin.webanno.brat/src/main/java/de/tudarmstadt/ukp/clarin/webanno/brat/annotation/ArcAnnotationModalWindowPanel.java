@@ -66,7 +66,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
  * @author Seid Muhie Yimam
  *
  */
-public class ArcAnnotationModalWindowPage
+public class ArcAnnotationModalWindowPanel
     extends Panel
 {
     private static final long serialVersionUID = -2102136855109258306L;
@@ -389,7 +389,7 @@ public class ArcAnnotationModalWindowPage
         private String selectedText;
     }
 
-    public ArcAnnotationModalWindowPage(String aId, final ModalWindow modalWindow,
+    public ArcAnnotationModalWindowPanel(String aId, final ModalWindow modalWindow,
             BratAnnotatorModel aBratAnnotatorModel, int aOriginSpanId, String aOriginSpanType,
             int aTargetSpanId, String aTargetSpanType)
     {
@@ -408,7 +408,7 @@ public class ArcAnnotationModalWindowPage
         add(annotationDialogForm);
     }
 
-    public ArcAnnotationModalWindowPage(String aId, final ModalWindow modalWindow,
+    public ArcAnnotationModalWindowPanel(String aId, final ModalWindow modalWindow,
             BratAnnotatorModel aBratAnnotatorModel, int aOriginSpanId, String aOriginSpanType,
             int aTargetSpanId, String aTargetSpanType, int selectedArcId, String aType)
     {
