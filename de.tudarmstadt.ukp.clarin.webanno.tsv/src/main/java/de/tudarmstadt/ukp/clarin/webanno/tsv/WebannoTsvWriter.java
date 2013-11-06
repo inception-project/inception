@@ -42,13 +42,21 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
  * Writes a specific TSV File (9 TAB separated) annotation from the CAS object. Example of output
- * file: 1 Heutzutage heutzutage ADV _ _ 2 ADV _ _ First column: token Number, in a sentence second
- * Column: the token third column: the lemma forth column: the POS fifth/sixth xolumn: Named Entity
- * annotations in BIO(the sixth column is used to encode nested Named Entity) seventh column: the
- * target token for a dependency parsing eighth column: the function of the dependency parsing ninth
- * and tenth column: Not Yet Known
+ * file:<br>
+ * <br>
+ * 1 Heutzutage heutzutage ADV _ _ 2 ADV _ _ <br>
+ * <br>
+ * First column: token Number, in a sentence <br>
+ * second Column: the token <br>
+ * third column: the lemma <br>
+ * fourth column: the POS <br>
+ * fifth/sixth xolumn: Named Entity annotations in BIO(the sixth column is used to encode nested
+ * Named Entity) <br>
+ * seventh column: the target token for a dependency parsing <br>
+ * eighth column: the function of the dependency parsing <br>
+ * ninth and tenth column: Not Yet Known
  *
- * Sentences are separated by a blank new line
+ * Columns are separated by TAB character and sentences are separated by a blank new line
  *
  * @author Seid Muhie Yimam
  *
@@ -76,7 +84,7 @@ public class WebannoTsvWriter
         OutputStream docOS = null;
         try {
             docOS = getOutputStream(aJCas, filenameSuffix);
-           convertToConll(aJCas, docOS, encoding);
+            convertToTsv(aJCas, docOS, encoding);
         }
         catch (Exception e) {
             throw new AnalysisEngineProcessException(e);
@@ -87,9 +95,10 @@ public class WebannoTsvWriter
 
     }
 
-    private void convertToConll(JCas aJCas, OutputStream aOs, String aEncoding ) throws IOException
+    private void convertToTsv(JCas aJCas, OutputStream aOs, String aEncoding)
+        throws IOException
     {
-      //  StringBuilder conllSb = new StringBuilder();
+        // StringBuilder conllSb = new StringBuilder();
         for (Sentence sentence : select(aJCas, Sentence.class)) {
             // Map of token and the dependent (token address used as a Key)
             Map<Integer, Integer> dependentMap = new HashMap<Integer, Integer>();
@@ -99,8 +108,8 @@ public class WebannoTsvWriter
             Map<Integer, String> dependencyTypeMap = new HashMap<Integer, String>();
 
             for (Dependency dependecny : selectCovered(Dependency.class, sentence)) {
-                dependentMap.put(dependecny.getDependent()
-                        .getAddress(), dependecny.getGovernor().getAddress());
+                dependentMap.put(dependecny.getDependent().getAddress(), dependecny.getGovernor()
+                        .getAddress());
             }
 
             // List of governors (heads), that will be used, if ROOT is not explicitly added,
@@ -125,40 +134,8 @@ public class WebannoTsvWriter
             int j = 1;
             // Add named Entity to a token
             Map<String, String> tokenNamedEntityMap = new HashMap<String, String>();
-            for (NamedEntity namedEntity : selectCovered(NamedEntity.class, sentence)) {
-                boolean secondChain = false; // maintain multiple span chains in BIO1 or BIO2
-                String previopusNamedEntity1 = "O";
-                String previopusNamedEntity2 = "O";
-                for (Token token : selectCovered(Token.class, sentence)) {
-                    if (namedEntity.getBegin() <= token.getBegin()
-                            && namedEntity.getEnd() >= token.getEnd()) {
-                        if (tokenNamedEntityMap.get("first-" + token.getAddress()) == null
-                                & !secondChain) {
-                            if (previopusNamedEntity1.equals("O")) {
-                                tokenNamedEntityMap.put("first-" + token.getAddress(), "B_"
-                                        + namedEntity.getValue());
-                                previopusNamedEntity1 = "B_" + namedEntity.getValue();
-                            }
-                            else {
-                                tokenNamedEntityMap.put("first-" + token.getAddress(), "I_"
-                                        + namedEntity.getValue());
-                            }
-                        }
-                        else if (tokenNamedEntityMap.get("second-" + token.getAddress()) == null) {
-                            if (previopusNamedEntity2.equals("O")) {
-                                tokenNamedEntityMap.put("second-" + token.getAddress(), "B_"
-                                        + namedEntity.getValue());
-                                previopusNamedEntity2 = "B_" + namedEntity.getValue();
-                            }
-                            else {
-                                tokenNamedEntityMap.put("second-" + token.getAddress(), "I_"
-                                        + namedEntity.getValue());
-                            }
-                            secondChain = true;
-                        }
-                    }
-                }
-            }
+
+            createNEColumn(sentence, tokenNamedEntityMap);
 
             for (Token token : selectCovered(Token.class, sentence)) {
 
@@ -186,7 +163,7 @@ public class WebannoTsvWriter
                     }
                 }
                 // ROOT was not explicitly mentioned in the annotation
-                else if(governorAddresses.contains(token.getAddress())){
+                else if (governorAddresses.contains(token.getAddress())) {
                     dependent = "0";
                     type = "ROOT";
                 }
@@ -201,12 +178,56 @@ public class WebannoTsvWriter
                 else {
                     IOUtils.write(j + "\t" + token.getCoveredText() + "\t" + lemma + "\t" + pos
                             + "\t" + firstNamedEntity + "\t" + secondNamedEntity + "\t" + dependent
-                            + "\t" + type + "\t_\t_\n",  aOs, aEncoding);
+                            + "\t" + type + "\t_\t_\n", aOs, aEncoding);
                 }
                 j++;
             }
             IOUtils.write("\n", aOs, aEncoding);
         }
 
+    }
+
+    /**
+     * Iterate through each sentence and obtain NE. The first occurence of the NE will be recored as
+     * B_XX where XX is the NE type in the fifth column. For multispan NE annotation, the I_ prefix
+     * will be added to the NE in the sixth column
+     */
+
+    private void createNEColumn(Sentence sentence, Map<String, String> tokenNamedEntityMap)
+    {
+        for (NamedEntity namedEntity : selectCovered(NamedEntity.class, sentence)) {
+            boolean secondChain = false; // maintain multiple span chains in BIO1 or BIO2
+            String previopusNamedEntity1 = "O";
+            String previopusNamedEntity2 = "O";
+            for (Token token : selectCovered(Token.class, sentence)) {
+                if (namedEntity.getBegin() <= token.getBegin()
+                        && namedEntity.getEnd() >= token.getEnd()) {
+                    if (tokenNamedEntityMap.get("first-" + token.getAddress()) == null
+                            & !secondChain) {
+                        if (previopusNamedEntity1.equals("O")) {
+                            tokenNamedEntityMap.put("first-" + token.getAddress(), "B_"
+                                    + namedEntity.getValue());
+                            previopusNamedEntity1 = "B_" + namedEntity.getValue();
+                        }
+                        else {
+                            tokenNamedEntityMap.put("first-" + token.getAddress(), "I_"
+                                    + namedEntity.getValue());
+                        }
+                    }
+                    else if (tokenNamedEntityMap.get("second-" + token.getAddress()) == null) {
+                        if (previopusNamedEntity2.equals("O")) {
+                            tokenNamedEntityMap.put("second-" + token.getAddress(), "B_"
+                                    + namedEntity.getValue());
+                            previopusNamedEntity2 = "B_" + namedEntity.getValue();
+                        }
+                        else {
+                            tokenNamedEntityMap.put("second-" + token.getAddress(), "I_"
+                                    + namedEntity.getValue());
+                        }
+                        secondChain = true;
+                    }
+                }
+            }
+        }
     }
 }

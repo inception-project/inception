@@ -31,6 +31,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionException;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.util.Level;
@@ -47,13 +48,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
  * Reads a specific TSV File (9 TAB separated) annotation and change it to CAS object. Example of
- * Input Files: 1 Heutzutage heutzutage ADV _ _ 2 ADV _ _ First column: token Number, in a sentence
- * second Column: the token third column: the lemma forth column: the POS fifth/sixth xolumn: Not
- * Yet known seventh column: the target token for a dependency parsing eighth column: the function
- * of the dependency parsing ninth and tenth column: Not Yet Known
- *
- * Sentences are separated by a blank new line
- *
+ * Input Files: <br>1   Heutzutage  heutzutage  ADV _   _   2   ADV _   _ <br>
+ * Columns are separated by a TAB character and sentences are separated by a blank new line
+ * see the {@link WebannoTsvReader#setAnnotations(InputStream, String, StringBuilder, Map, Map, Map, Map, Map, Map, Map, List)}
  * @author Seid Muhie Yimam
  *
  */
@@ -66,8 +63,6 @@ public class WebannoTsvReader
 
     {
         StringBuilder text = new StringBuilder();
-        int tokenNumber = 0;
-        boolean noDependency = false;
         Map<Integer, String> tokens = new HashMap<Integer, String>();
         Map<Integer, String> pos = new HashMap<Integer, String>();
         Map<Integer, String> lemma = new HashMap<Integer, String>();
@@ -77,6 +72,166 @@ public class WebannoTsvReader
         Map<Integer, Integer> dependencyDependent = new HashMap<Integer, Integer>();
 
         List<Integer> firstTokenInSentence = new ArrayList<Integer>();
+
+        setAnnotations(aIs, aEncoding, text, tokens, pos, lemma, namedEntity1, namedEntity2,
+                dependencyFunction, dependencyDependent, firstTokenInSentence);
+
+        aJCas.setDocumentText(text.toString());
+
+        Map<String, Token> tokensStored = new HashMap<String, Token>();
+
+        createToken(aJCas, text, tokens, pos, lemma, tokensStored);
+
+        createNamedEntity(namedEntity1, aJCas, tokens, tokensStored);
+        // For Nested Named Entity
+        createNamedEntity(namedEntity2, aJCas, tokens, tokensStored);
+
+        createDependency(aJCas, tokens, dependencyFunction, dependencyDependent, tokensStored);
+
+        createSentence(aJCas, firstTokenInSentence, tokensStored);
+    }
+
+    /**
+     * Create {@link Token} in the {@link CAS}. If the lemma and pos columns are not empty
+     * it will create {@link Lemma} and {@link POS} annotations
+     */
+    private void createToken(JCas aJCas, StringBuilder text, Map<Integer, String> tokens,
+            Map<Integer, String> pos, Map<Integer, String> lemma, Map<String, Token> tokensStored)
+    {
+        int tokenBeginPosition = 0;
+        int tokenEndPosition = 0;
+
+        for (int i = 1; i <= tokens.size(); i++) {
+            tokenBeginPosition = text.indexOf(tokens.get(i), tokenBeginPosition);
+            Token outToken = new Token(aJCas, tokenBeginPosition, text.indexOf(tokens.get(i),
+                    tokenBeginPosition) + tokens.get(i).length());
+            tokenEndPosition = text.indexOf(tokens.get(i), tokenBeginPosition)
+                    + tokens.get(i).length();
+            tokenBeginPosition = tokenEndPosition;
+            outToken.addToIndexes();
+
+            // Add pos to CAS if exist
+            if (!pos.get(i).equals("_")) {
+                POS outPos = new POS(aJCas, outToken.getBegin(), outToken.getEnd());
+                outPos.setPosValue(pos.get(i));
+                outPos.addToIndexes();
+                outToken.setPos(outPos);
+            }
+
+            // Add lemma if exist
+            if (!lemma.get(i).equals("_")) {
+                Lemma outLemma = new Lemma(aJCas, outToken.getBegin(), outToken.getEnd());
+                outLemma.setValue(lemma.get(i));
+                outLemma.addToIndexes();
+                outToken.setLemma(outLemma);
+            }
+            tokensStored.put("t_" + i, outToken);
+        }
+    }
+
+    /**
+     * add dependency parsing to CAS
+     */
+    private void createDependency(JCas aJCas, Map<Integer, String> tokens,
+            Map<Integer, String> dependencyFunction, Map<Integer, Integer> dependencyDependent,
+            Map<String, Token> tokensStored)
+    {
+        for (int i = 1; i <= tokens.size(); i++) {
+            if (dependencyFunction.get(i) != null) {
+                Dependency outDependency = new Dependency(aJCas);
+                outDependency.setDependencyType(dependencyFunction.get(i));
+
+                // if span A has (start,end)= (20, 26) and B has (start,end)= (30, 36)
+                // arc drawn from A to B, dependency will have (start, end) = (20, 36)
+                // arc drawn from B to A, still dependency will have (start, end) = (20, 36)
+                int begin = 0, end = 0;
+                // if not ROOT
+                if (dependencyDependent.get(i) != 0) {
+                    begin = tokensStored.get("t_" + i).getBegin() > tokensStored.get(
+                            "t_" + dependencyDependent.get(i)).getBegin() ? tokensStored.get(
+                            "t_" + dependencyDependent.get(i)).getBegin() : tokensStored.get(
+                            "t_" + i).getBegin();
+                    end = tokensStored.get("t_" + i).getEnd() < tokensStored.get(
+                            "t_" + dependencyDependent.get(i)).getEnd() ? tokensStored.get(
+                            "t_" + dependencyDependent.get(i)).getEnd() : tokensStored
+                            .get("t_" + i).getEnd();
+                }
+                else {
+                    begin = tokensStored.get("t_" + i).getBegin();
+                    end = tokensStored.get("t_" + i).getEnd();
+                }
+
+                outDependency.setBegin(begin);
+                outDependency.setEnd(end);
+                outDependency.setDependent(tokensStored.get("t_" + i));
+                if (dependencyDependent.get(i) == 0) {
+                    outDependency.setGovernor(tokensStored.get("t_" + i));
+                }
+                else {
+                    outDependency.setGovernor(tokensStored.get("t_" + dependencyDependent.get(i)));
+                }
+                outDependency.addToIndexes();
+            }
+        }
+    }
+
+    /**
+     * Add sentence layer to CAS
+     */
+    private void createSentence(JCas aJCas, List<Integer> firstTokenInSentence,
+            Map<String, Token> tokensStored)
+    {
+        for (int i = 0; i < firstTokenInSentence.size(); i++) {
+            Sentence outSentence = new Sentence(aJCas);
+            // Only last sentence, and no the only sentence in the document (i!=0)
+            if (i == firstTokenInSentence.size() - 1 && i != 0) {
+                outSentence.setBegin(tokensStored.get("t_" + firstTokenInSentence.get(i)).getEnd());
+                outSentence.setEnd(tokensStored.get("t_" + (tokensStored.size())).getEnd());
+                outSentence.addToIndexes();
+                break;
+            }
+            if (i == firstTokenInSentence.size() - 1 && i == 0) {
+                outSentence.setBegin(tokensStored.get("t_" + firstTokenInSentence.get(i))
+                        .getBegin());
+                outSentence.setEnd(tokensStored.get("t_" + (tokensStored.size())).getEnd());
+                outSentence.addToIndexes();
+            }
+            else if (i == 0) {
+                outSentence.setBegin(tokensStored.get("t_" + firstTokenInSentence.get(i))
+                        .getBegin());
+                outSentence.setEnd(tokensStored.get("t_" + firstTokenInSentence.get(i + 1))
+                        .getEnd());
+                outSentence.addToIndexes();
+            }
+            else {
+                outSentence
+                        .setBegin(tokensStored.get("t_" + firstTokenInSentence.get(i)).getEnd() + 1);
+                outSentence.setEnd(tokensStored.get("t_" + firstTokenInSentence.get(i + 1))
+                        .getEnd());
+                outSentence.addToIndexes();
+            }
+        }
+    }
+
+    /**
+     * Iterate through all lines and get available annotations<br>
+     * First column is sentence number  and a blank new line marks end of a sentence<br>
+     * The Second column is the token <br>
+     * The third column is the lemma annotation <br>
+     * The fourth column is the POS annotation <br>
+     * The fifth and sixth columns are Named Entity annotations (sixth column nested NE) <br>
+     * The seventh column is the origin token number of dependency parsing <br>
+     * The eighth column is the function/type of the dependency parsing <br>
+     * Ninth and tenth columns are undefind currently
+     */
+    private void setAnnotations(InputStream aIs, String aEncoding, StringBuilder text,
+            Map<Integer, String> tokens, Map<Integer, String> pos, Map<Integer, String> lemma,
+            Map<Integer, String> namedEntity1, Map<Integer, String> namedEntity2,
+            Map<Integer, String> dependencyFunction, Map<Integer, Integer> dependencyDependent,
+            List<Integer> firstTokenInSentence)
+        throws IOException
+    {
+        int tokenNumber = 0;
         boolean first = true;
         int base = 0;
 
@@ -126,116 +281,9 @@ public class WebannoTsvReader
                 }
                 else {
                     lineTk.nextToken();
-                    noDependency = true;
                 }
                 lineTk.nextToken();
                 lineTk.nextToken();
-            }
-        }
-
-        aJCas.setDocumentText(text.toString());
-
-        int tokenBeginPosition = 0;
-        int tokenEndPosition = 0;
-        Map<String, Token> tokensStored = new HashMap<String, Token>();
-
-        for (int i = 1; i <= tokens.size(); i++) {
-            tokenBeginPosition = text.indexOf(tokens.get(i), tokenBeginPosition);
-            Token outToken = new Token(aJCas, tokenBeginPosition, text.indexOf(tokens.get(i),
-                    tokenBeginPosition) + tokens.get(i).length());
-            tokenEndPosition = text.indexOf(tokens.get(i), tokenBeginPosition)
-                    + tokens.get(i).length();
-            tokenBeginPosition = tokenEndPosition;
-            outToken.addToIndexes();
-
-            // Add pos to CAS if exist
-            if (!pos.get(i).equals("_")) {
-                POS outPos = new POS(aJCas, outToken.getBegin(), outToken.getEnd());
-                outPos.setPosValue(pos.get(i));
-                outPos.addToIndexes();
-                outToken.setPos(outPos);
-            }
-
-            // Add lemma if exist
-            if (!lemma.get(i).equals("_")) {
-                Lemma outLemma = new Lemma(aJCas, outToken.getBegin(), outToken.getEnd());
-                outLemma.setValue(lemma.get(i));
-                outLemma.addToIndexes();
-                outToken.setLemma(outLemma);
-            }
-            tokensStored.put("t_" + i, outToken);
-        }
-
-        createNamedEntity(namedEntity1, aJCas, tokens, tokensStored);
-        // For Nested Named Entity
-        createNamedEntity(namedEntity2, aJCas, tokens, tokensStored);
-        // add Dependency parsing to CAS, if exist
-            for (int i = 1; i <= tokens.size(); i++) {
-                if(dependencyFunction.get(i)!=null){
-                Dependency outDependency = new Dependency(aJCas);
-                outDependency.setDependencyType(dependencyFunction.get(i));
-
-                // if span A has (start,end)= (20, 26) and B has (start,end)= (30, 36)
-                // arc drawn from A to B, dependency will have (start, end) = (20, 36)
-                // arc drawn from B to A, still dependency will have (start, end) = (20, 36)
-                int begin = 0, end = 0;
-                // if not ROOT
-                if (dependencyDependent.get(i) != 0) {
-                begin = tokensStored.get("t_" + i).getBegin()>
-                tokensStored.get("t_" + dependencyDependent.get(i)).getBegin()?
-                        tokensStored.get("t_" + dependencyDependent.get(i)).getBegin()
-                        :tokensStored.get("t_" + i).getBegin();
-                 end = tokensStored.get("t_" + i).getEnd()<
-                tokensStored.get("t_" + dependencyDependent.get(i)).getEnd()?
-                        tokensStored.get("t_" + dependencyDependent.get(i)).getEnd()
-                        :tokensStored.get("t_" + i).getEnd();
-                }
-                else{
-                    begin = tokensStored.get("t_" + i).getBegin();
-                     end = tokensStored.get("t_" + i).getEnd();
-                }
-
-                outDependency.setBegin(begin);
-                outDependency.setEnd(end);
-                outDependency.setDependent(tokensStored.get("t_" + i));
-                if (dependencyDependent.get(i) == 0) {
-                    outDependency.setGovernor(tokensStored.get("t_" + i));
-                }
-                else {
-                    outDependency.setGovernor(tokensStored.get("t_" + dependencyDependent.get(i)));
-                }
-                outDependency.addToIndexes();
-            }
-            }
-
-        for (int i = 0; i < firstTokenInSentence.size(); i++) {
-            Sentence outSentence = new Sentence(aJCas);
-            // Only last sentence, and no the only sentence in the document (i!=0)
-            if (i == firstTokenInSentence.size() - 1 && i != 0) {
-                outSentence.setBegin(tokensStored.get("t_" + firstTokenInSentence.get(i)).getEnd());
-                outSentence.setEnd(tokensStored.get("t_" + (tokensStored.size())).getEnd());
-                outSentence.addToIndexes();
-                break;
-            }
-            if (i == firstTokenInSentence.size() - 1 && i == 0) {
-                outSentence.setBegin(tokensStored.get("t_" + firstTokenInSentence.get(i))
-                        .getBegin());
-                outSentence.setEnd(tokensStored.get("t_" +(tokensStored.size())).getEnd());
-                outSentence.addToIndexes();
-            }
-            else if (i == 0) {
-                outSentence.setBegin(tokensStored.get("t_" + firstTokenInSentence.get(i))
-                        .getBegin());
-                outSentence.setEnd(tokensStored.get("t_" + firstTokenInSentence.get(i + 1))
-                        .getEnd());
-                outSentence.addToIndexes();
-            }
-            else {
-                outSentence
-                        .setBegin(tokensStored.get("t_" + firstTokenInSentence.get(i)).getEnd() + 1);
-                outSentence.setEnd(tokensStored.get("t_" + firstTokenInSentence.get(i + 1))
-                        .getEnd());
-                outSentence.addToIndexes();
             }
         }
     }
