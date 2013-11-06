@@ -131,11 +131,6 @@ public class CurationPanel
         textOuterView.setOutputMarkupId(true);
         add(textOuterView);
 
-        /*
-         * final WebMarkupContainer sentenceOuterView = new WebMarkupContainer("sentenceOuterView");
-         * sentenceOuterView.setOutputMarkupId(true); add(sentenceOuterView);
-         */
-
         bratAnnotatorModel = curationContainer.getBratAnnotatorModel();
 
         LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<CurationUserSegmentForAnnotationDocument>();

@@ -28,6 +28,7 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.list.ListItem;
@@ -62,6 +63,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
+ * A {@link MarkupContainer} for either curation users' sentence annotation (for the lower panel) or
+ * the automated annotations
+ *
  * @author Seid Muhie Yimam
  *
  */
@@ -107,10 +111,10 @@ public class CurationSegmentPanel
         super(id, aModel);
 
         final FeedbackPanel feedbackPanel = new FeedbackPanel("feedbackPanel");
-        add(feedbackPanel);
         feedbackPanel.setOutputMarkupId(true);
         feedbackPanel.add(new AttributeModifier("class", "info"));
         feedbackPanel.add(new AttributeModifier("class", "error"));
+        add(feedbackPanel);
 
         // update list of brat embeddings
         sentenceListView = new ListView<CurationUserSegmentForAnnotationDocument>(
@@ -136,71 +140,69 @@ public class CurationSegmentPanel
                     @Override
                     protected void onSelectAnnotationForMerge(AjaxRequestTarget aTarget)
                     {
+                        // TODO: chain the error from this component up in the CurationPage
+                        // or CorrectionPage
                         if (BratAnnotatorUtility.isDocumentFinished(repository,
                                 curationUserSegment.getBratAnnotatorModel())) {
-                            error("This document is already closed. Please ask admin to re-open");
+                           // aTarget.add(feedbackPanel);
                             aTarget.appendJavaScript("alert('This document is already closed."
                                     + " Please ask admin to re-open')");
                         }
                         else {
-                            final IRequestParameters request = getRequest().getPostParameters();
-                            String username = SecurityContextHolder.getContext()
-                                    .getAuthentication().getName();
-
-                            User user = repository.getUser(username);
-
-                            SourceDocument sourceDocument = curationUserSegment
-                                    .getBratAnnotatorModel().getDocument();
-                            JCas annotationJCas = null;
                             try {
+                                final IRequestParameters request = getRequest().getPostParameters();
+                                String username = SecurityContextHolder.getContext()
+                                        .getAuthentication().getName();
+
+                                User user = repository.getUser(username);
+
+                                SourceDocument sourceDocument = curationUserSegment
+                                        .getBratAnnotatorModel().getDocument();
+                                JCas annotationJCas = null;
+
                                 annotationJCas = curationUserSegment.getBratAnnotatorModel()
                                         .getMode().equals(Mode.CORRECTION) ? repository
                                         .getAnnotationDocumentContent(repository
                                                 .getAnnotationDocument(sourceDocument, user))
                                         : repository.getCurationDocumentContent(sourceDocument);
-                            }
-                            catch (UIMAException e1) {
-                                error(ExceptionUtils.getRootCause(e1));
-                            }
-                            catch (IOException e1) {
-                                error(ExceptionUtils.getRootCause(e1));
-                            }
-                            catch (ClassNotFoundException e1) {
-                                error(ExceptionUtils.getRootCause(e1));
-                            }
-                            StringValue action = request.getParameterValue("action");
-                            // check if clicked on a span
-                            if (!action.isEmpty() && action.toString().equals("selectSpanForMerge")) {
-                                try {
-                                    mergeSpan(request, curationUserSegment,
-                                            annotationJCas, repository, annotationService);
+                                StringValue action = request.getParameterValue("action");
+                                // check if clicked on a span
+                                if (!action.isEmpty()
+                                        && action.toString().equals("selectSpanForMerge")) {
+                                    mergeSpan(request, curationUserSegment, annotationJCas,
+                                            repository, annotationService);
                                 }
-                                catch (BratAnnotationException e) {
-                                    // TODO Auto-generated catch block
-                                    e.printStackTrace();
-                                }
-
-                            }
-                            // check if clicked on an arc
-                            else if (!action.isEmpty()
-                                    && action.toString().equals("selectArcForMerge")) {
-                                // add span for merge
-                                // get information of the span clicked
-                                try {
+                                // check if clicked on an arc
+                                else if (!action.isEmpty()
+                                        && action.toString().equals("selectArcForMerge")) {
+                                    // add span for merge
+                                    // get information of the span clicked
                                     mergeArc(request, curationUserSegment, annotationJCas,
                                             repository, annotationService);
                                 }
-                                catch (NoOriginOrTargetAnnotationSelectedException e) {
-                                    aTarget.appendJavaScript("alert('" + e.getMessage() + "')");
-                                }
-                                catch (ArcCrossedMultipleSentenceException e) {
-                                    error(e.getMessage());
-                                }
-                                catch (BratAnnotationException e) {
-                                    error(e.getMessage());
-                                }
+                                onChange(aTarget);
                             }
-                            onChange(aTarget);
+                            catch (UIMAException e) {
+                              //  aTarget.add(feedbackPanel);
+                              //  error(ExceptionUtils.getRootCauseMessage(e));
+                                aTarget.appendJavaScript(ExceptionUtils.getRootCauseMessage(e));
+                            }
+                            catch (ClassNotFoundException e) {
+                               // aTarget.add(feedbackPanel);
+                               // error(e.getMessage());
+                                aTarget.appendJavaScript(e.getMessage());
+                            }
+                            catch (IOException e) {
+                                // aTarget.add(feedbackPanel);
+                                // error(e.getMessage());
+                                 aTarget.appendJavaScript(e.getMessage());
+                            }
+                            catch (BratAnnotationException e) {
+                                // aTarget.add(feedbackPanel);
+                                // error(e.getMessage());
+                                 aTarget.appendJavaScript(e.getMessage());
+                            }
+
                         }
                         // aTarget.add(feedbackPanel);
                     }
@@ -243,8 +245,8 @@ public class CurationSegmentPanel
         SourceDocument sourceDocument = aCurationUserSegment.getBratAnnotatorModel().getDocument();
 
         AnnotationDocument clickedAnnotationDocument = null;
-        List<AnnotationDocument> annotationDocuments = aRepository.listAnnotationDocuments(
-                project, sourceDocument);
+        List<AnnotationDocument> annotationDocuments = aRepository.listAnnotationDocuments(project,
+                sourceDocument);
         for (AnnotationDocument annotationDocument : annotationDocuments) {
             if (annotationDocument.getUser().equals(username)) {
                 clickedAnnotationDocument = annotationDocument;
@@ -270,10 +272,9 @@ public class CurationSegmentPanel
         }
     }
 
-    private void createSpan(String spanType,
-            BratAnnotatorModel aBratAnnotatorModel, JCas aMergeJCas,
-            AnnotationDocument aAnnotationDocument, int aAddress, RepositoryService aRepository,
-            AnnotationService aAnnotationService)
+    private void createSpan(String spanType, BratAnnotatorModel aBratAnnotatorModel,
+            JCas aMergeJCas, AnnotationDocument aAnnotationDocument, int aAddress,
+            RepositoryService aRepository, AnnotationService aAnnotationService)
         throws IOException, UIMAException, ClassNotFoundException, BratAnnotationException
     {
         JCas clickedJCas = getJCas(aBratAnnotatorModel, aAnnotationDocument);
@@ -284,10 +285,10 @@ public class CurationSegmentPanel
                 aAnnotationService);
         // When curation and correction for coref chain are implemented, null should be replaced by
         // the correct origin and target AnnotationFS
-        controller.createSpanAnnotation(aMergeJCas, fsClicked.getBegin(), fsClicked.getEnd(), spanType,
-                null, null);
-        controller.updateJCas(aBratAnnotatorModel.getMode(),
-                aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser(), aMergeJCas);
+        controller.createSpanAnnotation(aMergeJCas, fsClicked.getBegin(), fsClicked.getEnd(),
+                spanType, null, null);
+        controller.updateJCas(aBratAnnotatorModel.getMode(), aBratAnnotatorModel.getDocument(),
+                aBratAnnotatorModel.getUser(), aMergeJCas);
 
         if (aBratAnnotatorModel.isScrollPage()) {
             int address = BratAjaxCasUtil.selectSentenceAt(clickedJCas,
@@ -369,12 +370,11 @@ public class CurationSegmentPanel
                             "Either origin or target annotations not selected");
                 }
                 else {
-                    controller.createArcAnnotation(aCurationUserSegment.getBratAnnotatorModel(), arcType,
-                            0, 0, originFs, targetFs, aJcas);
-                    controller.updateJCas(aCurationUserSegment
-                            .getBratAnnotatorModel().getMode(), aCurationUserSegment
-                            .getBratAnnotatorModel().getDocument(), aCurationUserSegment
-                            .getBratAnnotatorModel().getUser(), aJcas);
+                    controller.createArcAnnotation(aCurationUserSegment.getBratAnnotatorModel(),
+                            arcType, 0, 0, originFs, targetFs, aJcas);
+                    controller.updateJCas(aCurationUserSegment.getBratAnnotatorModel().getMode(),
+                            aCurationUserSegment.getBratAnnotatorModel().getDocument(),
+                            aCurationUserSegment.getBratAnnotatorModel().getUser(), aJcas);
                 }
             }
             catch (IOException e) {
