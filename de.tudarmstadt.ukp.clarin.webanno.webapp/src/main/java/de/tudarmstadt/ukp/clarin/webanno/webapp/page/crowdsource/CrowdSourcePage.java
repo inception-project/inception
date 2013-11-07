@@ -83,6 +83,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
  * Crowdsource page used to setup and monitor crowd source projects.
  *
  * @author Seid Muhie Yimam
+ * @author Benjamin Milde
  *
  */
 public class CrowdSourcePage
@@ -123,6 +124,13 @@ public class CrowdSourcePage
     private GoldDocumentListForm goldDocumentListForm;
     private CrowdProjectDetailForm crowdJobDetailForm;
 
+
+    /**
+     * Crowd source page, user interface to manage and upload Crowdjobs with WebAnno
+     * @throws UIMAException
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
     public CrowdSourcePage()
         throws UIMAException, IOException, ClassNotFoundException
     {
@@ -140,10 +148,7 @@ public class CrowdSourcePage
         goldDocumentListForm = new GoldDocumentListForm("goldDocumentListForm");
         goldDocumentListForm.setVisible(false);
         add(goldDocumentListForm);
-        /*
-         * projectListForm = new ProjectListForm("projectListForm");
-         * projectListForm.setVisible(false); add(projectListForm);
-         */
+
         crowdJobDetailForm = new CrowdProjectDetailForm("crowdJobDetailForm");
         crowdJobDetailForm.setVisible(false);
         add(crowdJobDetailForm);
@@ -290,7 +295,7 @@ public class CrowdSourcePage
         private static final long serialVersionUID = -1L;
 
         /**
-         * Returns jcases for source documents for the selected crowdjob
+         * Returns jCases for source documents for the selected Crowdjob
          * @param user
          * @return
          */
@@ -311,9 +316,9 @@ public class CrowdSourcePage
 
 
         /**
-         * Returns jcases for gold documents for the selected crowdjob
-         * @param user
-         * @return
+         * Returns jCases for gold documents for the selected crowdjob
+         * @param user - user for the jcases
+         * @return list of jCases
          */
 
         private List<JCas> getGoldDocumentsJCases(User user)
@@ -325,6 +330,10 @@ public class CrowdSourcePage
             return goldJCases;
         }
 
+        /**
+         *
+         * @return - the number of sentences of all currently selected documents
+         */
         private int getSourceDocumentsSentCount()
         {
             User user = userRepository.get(CROWD_USER);
@@ -340,6 +349,10 @@ public class CrowdSourcePage
             return numSents;
         }
 
+        /**
+         *
+         * @return - the number of sentences of all currently selected documents
+         */
         private int getGoldDocumentsSentCount()
         {
             User user = userRepository.get(CROWD_USER);
@@ -416,15 +429,6 @@ public class CrowdSourcePage
                         return selectedCrowdJob.getLink2();
                 }
             }));
-
-            /*add(new Label("link2", new LoadableDetachableModel<String>() {
-                private static final long   serialVersionUID    = 1L;
-                @Override
-                protected String load() {
-                    //TODO: store link2 in selectedCrowdJob
-                    return "";
-                }
-            }));*/
 
             add(new Label("status", new LoadableDetachableModel<String>() {
                 private static final long   serialVersionUID    = 1L;
@@ -724,12 +728,6 @@ public class CrowdSourcePage
                     // Get the JCASes for each gold document
                     List<JCas> goldJCases = getGoldDocumentsJCases(user);
 
-                    // Convert it to approprate crowdfloweer format
-                    // Get template
-                    // Get gold
-                    // Send to crowd flower
-
-                    //Todo: Get the template
                     try {
                         String template = FileUtils.readFileToString(projectRepository.getTemplate(CROWD_NERTASK1_TEMPLATE));
 

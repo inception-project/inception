@@ -22,23 +22,31 @@ import org.codehaus.jackson.annotate.JsonProperty;
 
 
 /**
- * Represents the JSON data structure send to Crowdflower for NamedEntityTask1
- * @author Benjamin
+ * Represents one data row of the JSON data structure send to Crowdflower for NamedEntityTask1
+ * @author Benjamin Milde
  *
  */
 public class NamedEntityTask1Data
 {
+    //text in which spans should be marked (usually in HTML spans)
     String text = "";
+    //is this a gold element
     String _golden = "";
+    //is this a hidden element: default no
     String _hidden = "FALSE";
+    //position markers from JS of Crowdflower job, this is the result supplied by workers
     String markertext = "";
+    //gold position markers if this is a gold element
     String markertext_gold = "";
+    //reason why this is wrong display to worker if he missed his test question
     String markertext_gold_reason = "";
+    //store the types of all NEs in this textfragment if this is a gold item
     String types = "";
 
     // from http://crowdflower.com/docs-gold: The _difficulty column should contain an integer between 1 and 100. The higher the number, the more difficult the Gold is considered, and it will be displayed later in a contributor's judgment session.
     int _difficulty = 1;
 
+    //document name
     String document = "";
 
     @JsonProperty("document")

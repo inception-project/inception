@@ -21,28 +21,42 @@ package de.tudarmstadt.ukp.clarin.webanno.crowdflower;
 import org.codehaus.jackson.annotate.JsonProperty;
 
 /**
-* Represents the JSON data structure send to Crowdflower for NamedEntityTask2
-* @author Benjamin Milde
-*/
+ * Represents one data row of the JSON data structure send to Crowdflower for NamedEntityTask1
+ * @author Benjamin Milde
+ *
+ */
 public class NamedEntityTask2Data
 {
+    //context text displayed to worker
     String text = "";
+
+    //word for which NE type should be recognized
     String toDecide = "";
+
+    //is the element golden?
     String _golden = "";
+
+    //is this element hidden (default all elements are visible)
     String _hidden = "FALSE";
 
-    // from http://crowdflower.com/docs-gold: The _difficulty column should contain an integer between 1 and 100. The higher the number, the more difficult the Gold is considered, and it will be displayed later in a contributor's judgment session.
+    // from http://crowdflower.com/docs-gold: The _difficulty column should contain an integer between 1 and 100.
+    // The higher the number, the more difficult the Gold is considered, and it will be displayed later in a contributor's judgment session.
     int _difficulty = 1;
 
+    //gold solution for this item, can be left empty if _golden is not TRUE
     String ist_todecide_ein_gold = "";
     String ist_todecide_ein_gold_reason = "";
 
+    //token offset
     String tokenOffset = "";
 
-
-
+    //offset this document has for the start token (to allow contious numbering for multi-documents)
     int docOffset = 0;
+
+    //Document name
     String document = "";
+
+    //position JSON which contains start and end token for this NE
     String posText = "";
 
     //constructor for normal data

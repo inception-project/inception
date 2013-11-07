@@ -68,6 +68,10 @@ public class CrowdJob
     public static final String idKey = "id";
 
     // We'll only care about these variables, but store all of them in template, so that it it is easier to change something later if needed
+    // The reason why we use this filter approach is because Crowdflower mixes status values into its job JSON which deal with the state of a job.
+    // These state variables ashouldn't be reuploaded.
+    // We only allow all variables which are essential to a job and ingore all others
+
     public static final String[] argumentFilter = {
         "cml", //main description for the Job, in CML (similar to HTML)
         "instructions", //job instructions for workers

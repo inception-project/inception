@@ -46,9 +46,16 @@ import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
+/**
+ * Class to manage data generation for German Named Entity tasks on Crowdflower.
+ * Uses Crowdclient to upload and create jobs.
+ * @author Benjamin Milde
+ */
 public class NamedEntityTaskManager
     implements Serializable
 {
+
+    private static final String malformedStatusErrorMsg = "error retrieving status: malformed response from Crowdflower";
 
     private static final long serialVersionUID = -166689748276508297L;
 
@@ -63,8 +70,11 @@ public class NamedEntityTaskManager
 
     private int lastGoldOffset = 0;
 
-    //omittedSentences in the last run becaus of errors
+    //omitted sentences in the last run because of errors
     private int omittedSentences = 0;
+
+    //omitted entites in the last run because of errors
+    private int omittedEntities = 0;
 
     // static mapping of WebAnno short forms to user displayed types in Crowdflower
     static {
@@ -97,6 +107,9 @@ public class NamedEntityTaskManager
         ne2TaskMap.put("Etwas anderes", "OTH");
     }
 
+    /**
+     * Default constructor
+     */
     public NamedEntityTaskManager()
     {
         crowdclient = new CrowdClient();
@@ -106,7 +119,7 @@ public class NamedEntityTaskManager
      * Generates a new job on crowdflower.com based on the supplied template string. The new job
      * won't have any data items
      *
-     * @param template
+     * @param template - template as string to use for the new job
      * @return
      * @throws JsonProcessingException
      * @throws IOException
@@ -141,14 +154,17 @@ public class NamedEntityTaskManager
      * Generate data for NER task1. This is a quite specific function exclusively for German NER,
      * but a more general version could one day replace this.
      *
+     * You usually call this function twice, one time to generate gold data (generateGold=true) and one time to generate normal data
+     *
      * @param documentsJCas
      *            List of Cas containing either the documents to be annotated or gold documents
      * @param goldOffset
      *            This is an offset to the token number that is send to Crowdflower, so that (i -
      *            goldOffset) = real token offset in webanno. This is needed so that continuous
      *            token numbers can be send to Crowdflower
-     * @param generateGold
-     * @return
+     * @param generateGold - whether gold data should be produced or normal data
+     * @param limit - limit number of data items to this number
+     * @return Vector<NamedEntityTask1Data>, representing a crowdflower task1 data upload. It can be directly mapped to JSON.
      * @throws Exception
      */
     public Vector<NamedEntityTask1Data> generateTask1Data(List<JCas> documentsJCas, int goldOffset,
@@ -232,13 +248,8 @@ public class NamedEntityTaskManager
                         String strElem = buildTask1TokenJSON(textBuilder, namedEntity,
                                 charOffsetStartMapping, charOffsetEndMapping);
 
-                        LOG.debug("Checking new gold elem " + strElem + " Begin:" + neBegin
-                                + " End:" + neEnd);
-
                         // handling of nested NEs
                         if (lastNeEnd != -1 && neBegin <= lastNeEnd) {
-                            LOG.debug("Nested NE! Last ne size: " + (lastNeEnd - lastNeBegin)
-                                    + " this NE:" + (neEnd - neBegin));
                             // this NE is bigger = better
                             if ((neEnd - neBegin) > (lastNeEnd - lastNeBegin)) {
                                 // remove last NE
@@ -254,10 +265,6 @@ public class NamedEntityTaskManager
                                 lastNeBegin = neBegin;
                                 lastNeEnd = neEnd;
                             }// else ignore this NE, keep last one
-                            else {
-                                LOG.debug("Ignored elem " + strElem
-                                        + " because it is a nested NE and previous NE is bigger");
-                            }
                         }
                         else {
                             // standard case, no nested NE, or first NE of nested NEs
@@ -323,7 +330,8 @@ public class NamedEntityTaskManager
      *
      * @param textBuilder
      * @param goldTokens
-     * @return
+     * @return a string that explains to the user which named
+     *         entities he had to select to get the answer right
      */
     private String buildTask1GoldElemReason(StringBuilder textBuilder, ArrayList<String> goldTokens)
     {
@@ -346,9 +354,9 @@ public class NamedEntityTaskManager
      *
      * This same format is produced by the JS in the crowdflower.com task1.
      *
-     * @param textBuilder
-     * @param goldElems
-     * @return
+     * @param textBuilder - reuse this textbuilder
+     * @param goldElems - string gold elements (JSON), should be sorted
+     * @return JSON string containing list of gold item marker positions
      */
     private String buildTask1GoldElem(StringBuilder textBuilder, ArrayList<String> goldElems)
     {
@@ -366,9 +374,11 @@ public class NamedEntityTaskManager
      * Helper method for generateTask1Data, builds a single JSON formatted element describing start
      * and end position of a named entity.
      *
-     * @param textBuilder
-     * @param namedEntity
-     * @return
+     * @param textBuilder - reuse this textbuilder
+     * @param namedEntity - namedEntity which should mapped to positions formatted to JSON
+     * @charOffsetStartMapping - mapping for start positions to use for WebAnno offset to Crowdflower token offset
+     * @charOffsetEndMapping - mapping for end positions to use for WebAnno offset to Crowdflower token offset
+     * @return JSON formatted string describing positions of single marker
      * @throws Exception
      */
     private String buildTask1TokenJSON(StringBuilder textBuilder, NamedEntity namedEntity,
@@ -401,7 +411,7 @@ public class NamedEntityTaskManager
     /**
      * Set apiKey to the underlying Crowdclient which manages the crowdflower.com REST-protocol
      *
-     * @param key
+     * @param key - API key as string
      */
     public void setAPIKey(String key)
     {
@@ -428,9 +438,11 @@ public class NamedEntityTaskManager
      * Upload a new NER task1 (German) to crowdflower.com. This method is called from the crowd page
      * and is the starting point for a new task1 upload.
      *
-     * @param template
-     * @param documentsJCas
-     * @param goldsJCas
+     * @param template - template as string to be used to upload the job
+     * @param documentsJCas - list of source documents to be annotated
+     * @param goldsJCas - gold data which should be used
+     * @param useSents - number of sentences to use
+     * @param useGoldSents - number of gold sentences to use
      * @return
      * @throws JsonProcessingException
      * @throws IOException
@@ -481,6 +493,10 @@ public class NamedEntityTaskManager
         return job.getId();
     }
 
+    /**
+     * Sets the default countries
+     * @param job
+     */
     private void setAllowedCountries(CrowdJob job)
     {
         // by default, allow only German speaking countries
@@ -492,8 +508,12 @@ public class NamedEntityTaskManager
         job.setIncludedCountries(includedCountries);
     }
 
-
-
+    /**
+     * Describe the current status, given two job IDs. They can also be the empty string, which means
+     * @param jobID1 - Job ID or empty string
+     * @param jobID2 - Job ID or empty string
+     * @return status string for both job IDs
+     */
     public String getStatusString(String jobID1, String jobID2)
     {
         String line;
@@ -514,6 +534,11 @@ public class NamedEntityTaskManager
         return line;
     }
 
+    /**
+     * Get status string for just one job id
+     * @param jobId - Crowdflower job ID
+     * @return status string describing the current status on crowdflower
+     */
     private String getStatusString(String jobId)
     {
         JsonNode uploadStatus;
@@ -530,7 +555,7 @@ public class NamedEntityTaskManager
         int judgments = 0;
         int neededJudgments = 0;
 
-        //Crowdflower reported an error in ths JSON output
+        //Crowdflower reported an error in its JSON output
         if (uploadStatus != null && uploadStatus.has("error"))
         {
             return "error retrieving status: " + uploadStatus.path("error").getTextValue();
@@ -557,12 +582,12 @@ public class NamedEntityTaskManager
                     neededJudgments = status.path("needed_judgments").getIntValue();
                 }
                 else {
-                    return "error retrieving status: malformed response from Crowdflower";
+                    return malformedStatusErrorMsg;
                 }
             }
         }
         else {
-            return "error retrieving status: malformed response from Crowdflower";
+            return malformedStatusErrorMsg;
         }
 
         line = "is uploaded and has "
@@ -577,9 +602,9 @@ public class NamedEntityTaskManager
      * Helper function for uploadNewNERTask2: Get the string char position of the i-th span from the
      * HTML token spans that the Crowdflower job task1 uses to display a textfragment.
      *
-     * @param spans
-     * @param spannumber
-     * @return
+     * @param spans - HTML span string
+     * @param spannumber - the span number to extract the position for
+     * @return index in spans string for the n-th occurence of a span
      * @throws Exception
      */
     private int getSpanPos(String spans, int spannumber)
@@ -597,13 +622,13 @@ public class NamedEntityTaskManager
     }
 
     /**
-     * Helper function for uploadNewNERTask2: Extract certain spans from the HTML token spans that
-     * the Crowdflower job task1 uses to display a text fragment.
+     * Helper function for uploadNewNERTask2: Extract certain token spans from the HTML token spans that
+     * the Crowdflower job task1 uses to display a text fragment. It is used to cut out a named entity from HTML token spans.
      *
-     * @param spans
-     * @param start
-     * @param end
-     * @return
+     * @param spans - HTML span string
+     * @param start - token number
+     * @param end - token number
+     * @return Substring of spans containing the tokens starting at start token and ending at end token
      * @throws Exception
      */
     private String extractSpan(String spans, int start, int end)
@@ -626,7 +651,7 @@ public class NamedEntityTaskManager
     /**
      * Helper function that retrieves the first token number in a task1 html span
      * @param spans
-     * @return
+     * @return first number in span offset string
      */
     private int getFirstSpanOffset(String spans)
     {
@@ -667,7 +692,7 @@ public class NamedEntityTaskManager
      * @param jobID1
      * @param documentsJCas
      * @param goldsJCas
-     * @return
+     * @return Crowdflower ID as string of the new task
      * @throws JsonProcessingException
      * @throws IOException
      * @throws Exception
@@ -678,6 +703,7 @@ public class NamedEntityTaskManager
         throws JsonProcessingException, IOException, Exception
     {
         Log LOG = LogFactory.getLog(getClass());
+        omittedSentences = 0;
 
         // Reader that also downloades the raw judgments for the supplied job id
         BufferedReader br = getReaderForRawJudgments(jobID1);
@@ -772,7 +798,7 @@ public class NamedEntityTaskManager
                                 LOG.warn("Warning, missing path in JSON result file from crowdflower: results/judgments");
                             }
                         }
-                        // TODO: get this from actual job or even better, make it user configurable
+                        // Consider any marked span which has at least two votes. Bogus spans can still be filtered out by task2
                         int votes_needed = 2;
 
                         List<String> majorityMarkers = new ArrayList<String>();
@@ -806,6 +832,7 @@ public class NamedEntityTaskManager
                 }
             }
             catch (Exception e) {
+                omittedSentences++;
                 LOG.warn("Warning, omitted a sentence from task2 upload because of an error in processing it: "
                         + e.getMessage());
                 // debug
@@ -832,7 +859,7 @@ public class NamedEntityTaskManager
      * judgments for the supplied ID and returns a buffered reader for it.
      *
      * @param jobID
-     * @return
+     * @return Buffered reader for raw judgment data (unzipped)
      * @throws UnsupportedEncodingException
      * @throws IOException
      * @throws Exception
@@ -879,7 +906,7 @@ public class NamedEntityTaskManager
     public void retrieveAggJudgmentsTask2(String jobID2, List<JCas> documentsJCas)
         throws UnsupportedEncodingException, IOException, Exception
     {
-        omittedSentences = 0;
+        omittedEntities = 0;
 
         Log LOG = LogFactory.getLog(getClass());
 
@@ -971,7 +998,7 @@ public class NamedEntityTaskManager
 
             }
             catch (Exception e) {
-                omittedSentences++;
+                omittedEntities++;
                 LOG.warn("Warning, omitted a sentence from task2 import because of an error in processing it: "
                         + e.getMessage());
                 e.printStackTrace();

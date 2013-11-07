@@ -16,21 +16,7 @@
  * limitations under the License.
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.crowdflower;
-/*******************************************************************************
- * Copyright 2012
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- ******************************************************************************/
+
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -77,12 +63,18 @@ public class CrowdClient implements Serializable
     static final String judgmentsURL = "https://api.crowdflower.com/v1/jobs/{jobid}.csv?key={apiKey}&type=json&full=true";
 
     static final String channelsURL = "https://api.crowdflower.com/v1/jobs/{jobid}/channels?key={apiKey}";
+
+    //this URL is used to ping the status of the job upload (failed, still processing etc.)
     static final String pingUnitsURL = "https://api.crowdflower.com/v1/jobs/{jobid}/units/ping.json?key={apiKey}";
+
+    //this URL is used to ping the status of an ordered job (how many judgments are needed vs. how many are there already)
     static final String pingURL = "https://api.crowdflower.com/v1/jobs/{jobid}/ping.json?key={apiKey}";
 
     static final String channelKey = "channels";
     static final String debitKey = "debit[units_count]";
     static final String jobPaymentKey = "job[payment_cents]";
+
+    //Crowdflower api key to use for all calls
     private String apiKey = "";
 
 
@@ -101,9 +93,10 @@ public class CrowdClient implements Serializable
     }
 
     /**
-     *
-     * @param job
-     * @return
+     * Create a new job on Crowdflower using supplied job class. If this class had been retrieved with retrieveJob(String jobid),
+     * then you copied the job without its data. Can be used to copy jobs across different accounts if API key is changed between the call to retrieveJob
+     * @param job - job class that should be replicated as new job on Crowdflower
+     * @return job class which represents the new job
      * @throws HttpServerErrorException
      */
     CrowdJob createNewJob(CrowdJob job) throws HttpServerErrorException
@@ -118,9 +111,9 @@ public class CrowdClient implements Serializable
     }
 
     /**
-     *
+     * Retrieve the job by the supplied job ID and represent in the CrowdJob class.
      * @param jobid
-     * @return
+     * @return job class which represents the job @ ID
      * @throws HttpServerErrorException
      */
     CrowdJob retrieveJob(String jobid) throws HttpServerErrorException
@@ -232,7 +225,7 @@ public class CrowdClient implements Serializable
     /**
      * Orders the job given by its jobid. Pay is per assigment, which is by default 5 units.
      *
-     * @param job
+     * @param job as CrowdJob
      * @param channels : a vector of channels, in which the job should be made available
      * @param units : number of units to order
      * @param payPerAssigment : pay in (dollar) cents for each assignments
@@ -267,7 +260,7 @@ public class CrowdClient implements Serializable
      * Unzips all elements in the file represented by byte[] data.
      * Needed by retrieveRawJudgments which will retrieve a zip-file with a single JSON
      * @param data
-     * @return
+     * @return unzipped data
      * @throws IOException
      */
 
@@ -297,7 +290,7 @@ public class CrowdClient implements Serializable
     /**
      * Retrieves raw judgments for a given job
      * @param job
-     * @return
+     * @return raw judgments as string
      * @throws IOException
      * @throws UnsupportedEncodingException
      */
