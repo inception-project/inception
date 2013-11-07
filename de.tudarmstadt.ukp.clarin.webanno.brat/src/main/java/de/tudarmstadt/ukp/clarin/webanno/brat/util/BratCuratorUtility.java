@@ -51,7 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationOption;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.CurationSegmentPanel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.CurationViewPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.AnnotationState;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationContainer;
@@ -515,7 +515,7 @@ public class BratCuratorUtility
 
     public static void updatePanel(
             AjaxRequestTarget aTarget,
-            CurationSegmentPanel aParent,
+            CurationViewPanel aParent,
             CurationContainer aCurationContainer,
             BratAnnotator aMergeVisualizer,
             RepositoryService aRepository,

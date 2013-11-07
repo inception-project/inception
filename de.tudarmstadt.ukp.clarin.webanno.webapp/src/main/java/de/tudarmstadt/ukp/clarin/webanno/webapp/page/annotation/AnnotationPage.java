@@ -263,7 +263,7 @@ public class AnnotationPage
                                             bratAnnotatorModel.getDocument(), Mode.ANNOTATION);
 
                                     // setAttributesForGetCollection();
-                                    setAttributesForDocument();
+                                    loadDocumentAction();
 
                                     String collection = "#" + bratAnnotatorModel.getProject().getName()
                                             + "/";
@@ -365,7 +365,7 @@ public class AnnotationPage
                             bratAnnotatorModel.getDocument(), Mode.ANNOTATION);
                     try {
                         // setAttributesForGetCollection();
-                        setAttributesForDocument();
+                        loadDocumentAction();
                     }
                     catch (UIMAException e) {
                         aTarget.add(getFeedbackPanel());
@@ -435,7 +435,7 @@ public class AnnotationPage
                             bratAnnotatorModel.getDocument(), Mode.ANNOTATION);
                     try {
                         // setAttributesForGetCollection();
-                        setAttributesForDocument();
+                        loadDocumentAction();
                     }
                     catch (UIMAException e) {
                         aTarget.add(getFeedbackPanel());
@@ -735,7 +735,8 @@ public class AnnotationPage
         windowSize = aWindowSize;
     }
 
-    public void setAttributesForDocument()
+    // TODO: refactor ( loadDocument)
+    public void loadDocumentAction()
         throws UIMAException, IOException, ClassNotFoundException
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();

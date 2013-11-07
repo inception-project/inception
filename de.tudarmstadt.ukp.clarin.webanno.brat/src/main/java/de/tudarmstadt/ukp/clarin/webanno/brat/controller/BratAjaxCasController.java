@@ -387,6 +387,7 @@ public class BratAjaxCasController
      * first time the user is accessing the annotation document, it will be read from the source
      * document, and converted to CAS
      */
+    // TODO move to projectRepository
     public JCas readJCas(SourceDocument aDocument, Project aProject, User aUser)
         throws UIMAException, IOException, ClassNotFoundException
     {
@@ -416,6 +417,7 @@ public class BratAjaxCasController
     /**
      * Save the modified CAS in the file system as Serialized CAS
      */
+    // TODO move to projectRepository
     public void updateJCas(Mode aMode, SourceDocument aSourceDocument, User aUser, JCas aJcas)
         throws IOException
     {
@@ -428,6 +430,7 @@ public class BratAjaxCasController
         }
     }
 
+    // TODO move to projectRepository
     public static JCas createJCas(SourceDocument aDocument, AnnotationDocument aAnnotationDocument,
             Project aProject, User aUser, RepositoryService repository)
         throws IOException

@@ -97,7 +97,7 @@ public class ProjectPage
     private ProjectDetailForm projectDetailForm;
     private ImportProjectForm importProjectForm;
 
-    private boolean createProject = false;
+    private boolean createProject = false; //TODO: remove and use project id
 
     private RadioChoice<Mode> projectType;
 
@@ -122,7 +122,6 @@ public class ProjectPage
     {
         private static final long serialVersionUID = -1L;
         private Button creatProject;
-        private ListChoice<Project> projects;
 
         public ProjectSelectionForm(String id)
         {
@@ -135,7 +134,7 @@ public class ProjectPage
                 @Override
                 public void onSubmit()
                 {
-                    ProjectSelectionForm.this.getModelObject().project = null;
+                    ProjectSelectionForm.this.getModelObject().project = null; //TODO remove
                     projectDetailForm.setModelObject(new Project());
                     createProject = true;
                     projectDetailForm.setVisible(true);
@@ -149,7 +148,7 @@ public class ProjectPage
             MetaDataRoleAuthorizationStrategy.authorize(creatProject, Component.RENDER,
                     "ROLE_ADMIN");
 
-            add(projects = new ListChoice<Project>("project")
+            add(new ListChoice<Project>("project")
             {
                 private static final long serialVersionUID = 1L;
 
@@ -220,15 +219,15 @@ public class ProjectPage
         }
     }
 
-    static private class SelectionModel
+    static public class SelectionModel
         implements Serializable
     {
         private static final long serialVersionUID = -1L;
 
-        private Project project;
-        private List<String> documents;
-        private List<String> permissionLevels;
-        private User user;
+        public Project project;
+        public List<String> documents;
+        public List<String> permissionLevels;
+        public User user;
     }
 
     private class ImportProjectForm
@@ -397,7 +396,8 @@ public class ProjectPage
                     return !createProject;
                 }
             });
-
+            
+            // not used in 1.0.0 release
             tabs.add(tagSets = new AbstractTab(new Model<String>("Layers"))
             {
                 private static final long serialVersionUID = 3274065112505097898L;
@@ -411,7 +411,7 @@ public class ProjectPage
                 @Override
                 public boolean isVisible()
                 {
-                    return !createProject;
+                    return false;
                 }
             });
 
@@ -512,9 +512,10 @@ public class ProjectPage
                 @Override
                 public void onSubmit()
                 {
+                    //TODO: if else improve
                     Project project = projectDetailForm.getModelObject();
                     boolean projectExist = false;
-                    try {
+                    try {// TODO: dispegatify
                         projectRepository.existsProject(project.getName());
                     }
                     catch (Exception e) {
@@ -522,7 +523,7 @@ public class ProjectPage
                                 + ExceptionUtils.getRootCauseMessage(e));
                         projectExist = true;
                     }
-                    // If only the project is new!
+                    // Only if the project is new
                     if (project.getId() == 0 && !projectExist) {
                         // Check if the project with this name already exist
                         if (projectRepository.existsProject(project.getName())) {
@@ -546,6 +547,7 @@ public class ProjectPage
                             }
                         }
                         else {
+                            //TODO: manage it in name valid
                             error("Project name shouldn't contain characters such as /\\*?&!$+[^]");
                             LOG.error("Project name shouldn't contain characters such as /\\*?&!$+[^]");
                         }

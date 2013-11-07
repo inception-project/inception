@@ -17,7 +17,7 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat;
 
-public class Myresources
+public class WebAnnoResources
 {
 
 }

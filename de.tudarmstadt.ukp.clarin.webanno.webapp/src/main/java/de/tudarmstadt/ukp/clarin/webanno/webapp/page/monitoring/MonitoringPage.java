@@ -400,7 +400,7 @@ public class MonitoringPage
                                         projectsProgressPerClosedDocument);
 
                                 aTarget.add(monitoringDetailForm.setOutputMarkupId(true));
-                                updateAgreementTabel(aTarget);
+                                updateAgreementTable(aTarget);
                                 aTarget.add(agreementForm.setOutputMarkupId(true));
 
                             }
@@ -467,7 +467,7 @@ public class MonitoringPage
                 @Override
                 protected void onUpdate(AjaxRequestTarget aTarget)
                 {
-                    updateAgreementTabel(aTarget);
+                    updateAgreementTable(aTarget);
                 }
             }).setOutputMarkupId(true);
         }
@@ -656,7 +656,7 @@ public class MonitoringPage
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private void updateAgreementTabel(AjaxRequestTarget aTarget)
+    private void updateAgreementTable(AjaxRequestTarget aTarget)
     {
 
         Project project = projectSelectionForm.getModelObject().project;
@@ -748,6 +748,7 @@ public class MonitoringPage
      * same document <br>
      * The result is per {@link AnnotationType} for all {@link Tag}s
      */
+    //TODO: return a result value
     private void computeKappa(Project project, List<User> users, double[][] results,
             TypeAdapter adapter, Map<User, List<SourceDocument>> finishedDocumentLists)
     {
@@ -774,6 +775,7 @@ public class MonitoringPage
                     Map<String, Map<String, String>> allUserAnnotations = new TreeMap<String, Map<String, String>>();
 
                     if (finishedDocumentLists.get(user2).size() != 0) {
+                        // TODO: linearize
                         for (SourceDocument document1 : finishedDocumentLists.get(user1)) {
                             for (SourceDocument document2 : finishedDocumentLists.get(user2)) {
 
@@ -820,6 +822,7 @@ public class MonitoringPage
      * set value for {@link IAnnotationStudy} when {@link TwoRaterKappaAgreement} is used for kappa
      * measures
      */
+    // TODO: unit test
     private void getStudy(String type, String featureName, TwoPairedKappa twoPairedKappa,
             User user1, User user2, Map<String, Map<String, String>> allUserAnnotations,
             SourceDocument document2)

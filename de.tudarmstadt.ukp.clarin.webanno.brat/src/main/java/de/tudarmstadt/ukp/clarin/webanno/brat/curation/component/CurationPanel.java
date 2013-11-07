@@ -77,7 +77,7 @@ public class CurationPanel
 
     public final static String CURATION_USER = "CURATION_USER";
 
-    private CurationSegmentPanel sentenceOuterView;
+    private CurationViewPanel sentenceOuterView;
     private BratAnnotator mergeVisualizer;
 
     private BratAnnotatorModel bratAnnotatorModel;
@@ -141,7 +141,7 @@ public class CurationPanel
             curationUserSegmentForAnnotationDocument.setBratAnnotatorModel(bratAnnotatorModel);
             sentences.add(curationUserSegmentForAnnotationDocument);
         }
-        sentenceOuterView = new CurationSegmentPanel("sentenceOuterView",
+        sentenceOuterView = new CurationViewPanel("sentenceOuterView",
                 new Model<LinkedList<CurationUserSegmentForAnnotationDocument>>(sentences))
         {
             private static final long serialVersionUID = 2583509126979792202L;

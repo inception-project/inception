@@ -59,7 +59,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.CurationSegmentPanel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.CurationViewPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationSegmentForSourceDocument;
@@ -122,7 +122,7 @@ public class CorrectionPage
 
     private FinishImage finish;
 
-    private CurationSegmentPanel automateView;
+    private CurationViewPanel automateView;
     private BratAnnotator mergeVisualizer;
 
     private Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress = new HashMap<String, Map<Integer, AnnotationSelection>>();
@@ -142,7 +142,7 @@ public class CorrectionPage
             curationUserSegmentForAnnotationDocument.setBratAnnotatorModel(bratAnnotatorModel);
             sentences.add(curationUserSegmentForAnnotationDocument);
         }
-        automateView = new CurationSegmentPanel("automateView",
+        automateView = new CurationViewPanel("automateView",
                 new Model<LinkedList<CurationUserSegmentForAnnotationDocument>>(sentences))
         {
             private static final long serialVersionUID = 2583509126979792202L;

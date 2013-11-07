@@ -91,6 +91,7 @@ public class ManageUsersPage
                     actionCreate();
                 }
             });
+            // not used in the 1.0.0 release
             Button delete;
             add(delete = new Button("delete", new ResourceModel("label"))
             {
@@ -307,6 +308,7 @@ public class ManageUsersPage
         isCreate = true;
     }
 
+    // not used in 1.0.0 release
     public void actionDelete()
     {
         User user = selectionForm.getModelObject().user;
