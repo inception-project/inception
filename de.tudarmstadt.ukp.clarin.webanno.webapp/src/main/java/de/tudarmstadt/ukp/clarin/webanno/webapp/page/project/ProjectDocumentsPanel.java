@@ -45,10 +45,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+
 /**
  * A Panel used to add Documents to the selected {@link Project}
+ * 
  * @author Seid Muhie Yimam
- *
+ * 
  */
 public class ProjectDocumentsPanel
     extends Panel
@@ -102,50 +104,50 @@ public class ProjectDocumentsPanel
             {
                 uploadedFiles = fileUpload.getFileUploads();
                 Project project = selectedProjectModel.getObject();
-
-                if (isNotEmpty(uploadedFiles)) {
-                    for (FileUpload documentToUpload : uploadedFiles) {
-                        String fileName = documentToUpload.getClientFileName();
-
-                        try {
-                            File uploadFile = documentToUpload.writeToTempFile();
-
-                            // if getSourceDocument succeeded, it is a duplication!
-                            try {
-
-                                projectRepository.getSourceDocument(project, fileName);
-                                error("Document " + fileName + " already uploaded ! Delete "
-                                        + "the document if you want to upload again");
-                            }
-                            // The document is not yet saved!
-                            catch (NoResultException ex) {
-                                String username = SecurityContextHolder.getContext()
-                                        .getAuthentication().getName();
-                                User user = projectRepository.getUser(username);
-
-                                SourceDocument document = new SourceDocument();
-                                document.setName(fileName);
-                                document.setProject(project);
-                                String reader = projectRepository.getReadableFormatId(readableFormatsChoice.getModelObject());
-                                document.setFormat(reader);
-                                projectRepository.createSourceDocument(document, user);
-                                projectRepository.uploadSourceDocument(uploadFile, document,
-                                        project.getId(), user);
-
-                            }
-                        }
-                        catch (Exception e) {
-                            error("Error uploading document "
-                                    + ExceptionUtils.getRootCauseMessage(e));
-                        }
-                        info("File [" + fileName + "] has been imported successfully!");
-                    }
-                }
-                else if (isEmpty(uploadedFiles)) {
+                if (isEmpty(uploadedFiles)) {
                     error("No document is selected to upload, please select a document first");
+                    return;
                 }
-                else if (project.getId() == 0) {
+                if (project.getId() == 0) {
                     error("Project not yet created, please save project Details!");
+                    return;
+                }
+                
+                for (FileUpload documentToUpload : uploadedFiles) {
+                    String fileName = documentToUpload.getClientFileName();
+
+                    try {
+                        File uploadFile = documentToUpload.writeToTempFile();
+
+                        // if getSourceDocument succeeded, it is a duplication!
+                        try {
+
+                            projectRepository.getSourceDocument(project, fileName);
+                            error("Document " + fileName + " already uploaded ! Delete "
+                                    + "the document if you want to upload again");
+                        }
+                        // The document is not yet saved!
+                        catch (NoResultException ex) {// TODO: existsDocuments in projectrepository
+                            String username = SecurityContextHolder.getContext()
+                                    .getAuthentication().getName();
+                            User user = projectRepository.getUser(username);
+
+                            SourceDocument document = new SourceDocument();
+                            document.setName(fileName);
+                            document.setProject(project);
+                            String reader = projectRepository
+                                    .getReadableFormatId(readableFormatsChoice.getModelObject());
+                            document.setFormat(reader);
+                            projectRepository.createSourceDocument(document, user);
+                            projectRepository.uploadSourceDocument(uploadFile, document,
+                                    project.getId(), user);
+
+                        }
+                    }
+                    catch (Exception e) {
+                        error("Error uploading document " + ExceptionUtils.getRootCauseMessage(e));
+                    }
+                    info("File [" + fileName + "] has been imported successfully!");
                 }
 
             }
