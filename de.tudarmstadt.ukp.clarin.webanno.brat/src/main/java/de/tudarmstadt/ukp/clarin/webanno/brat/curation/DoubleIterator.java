@@ -15,7 +15,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  * Contributors:
  *     Richard Eckart de Castilho - initial API and implementation
  ******************************************************************************/
@@ -29,6 +29,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.cas.text.AnnotationFS;
 
+/**
+ *  If you put in two lists of AnnotationFS, it will get all the pairs that overlap in some way.
+ * @author Richard Eckart de Castilho
+ *
+ */
 public
 class DoubleIterator<A extends AnnotationFS, B extends AnnotationFS>
 {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013
+ * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -15,19 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
+
+package de.tudarmstadt.ukp.clarin.webanno.brat.util;
+
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 
 /**
- * Throw an exception if the arc annotation is not in the same sentence
- *  * @author Seid Muhie Yimam
+ * Throw an exception if either a target or orgin span annotation is not merged before the arc
+ * annotation merging is attempted
+ *
+ * @author Seid Muhie Yimam
  */
-public class ArcCrossedMultipleSentenceException
+public class NoOriginOrTargetAnnotationSelectedException
     extends BratAnnotationException
 {
     private static final long serialVersionUID = 1280015349963924638L;
 
-    public ArcCrossedMultipleSentenceException(String message)
+    public NoOriginOrTargetAnnotationSelectedException(String message)
     {
         super(message);
     }
+
 }

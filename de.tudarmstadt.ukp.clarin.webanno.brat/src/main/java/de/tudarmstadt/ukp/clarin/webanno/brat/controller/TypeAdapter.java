@@ -24,6 +24,12 @@ import org.apache.uima.jcas.JCas;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 
+/**
+ * Type Adapters for span, arc, and chain annotations
+ * @author Richard Eckart de Castilho
+ * @author Seid Muhie Yimam
+ *
+ */
 public interface TypeAdapter
 {
     /**

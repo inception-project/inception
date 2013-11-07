@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013
+ * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -15,19 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
-
 /**
- * Throw an exception if the arc annotation is not in the same sentence
- *  * @author Seid Muhie Yimam
+ * Conatin classes for user management related pages
  */
-public class ArcCrossedMultipleSentenceException
-    extends BratAnnotationException
-{
-    private static final long serialVersionUID = 1280015349963924638L;
-
-    public ArcCrossedMultipleSentenceException(String message)
-    {
-        super(message);
-    }
-}
+package de.tudarmstadt.ukp.clarin.webanno.webapp.security.page;

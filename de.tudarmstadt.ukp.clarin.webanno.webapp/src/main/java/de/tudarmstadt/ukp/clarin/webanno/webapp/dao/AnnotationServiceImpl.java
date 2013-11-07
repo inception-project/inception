@@ -36,6 +36,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
+/**
+ * Implementation of methods defined in the {@link AnnotationService} interface
+ *
+ * @author Seid Muhie Yimam
+ *
+ */
 public class AnnotationServiceImpl
     implements AnnotationService
 {
@@ -304,8 +310,8 @@ public class AnnotationServiceImpl
 
         initializeType(
                 de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.LEMMA,
-                "lemma annotation", "span", "Lemma", "de", new String[] {  },
-                new String[] { }, aProject, aUser);
+                "lemma annotation", "span", "Lemma", "de", new String[] {}, new String[] {},
+                aProject, aUser);
     }
 
     @Override
@@ -342,7 +348,7 @@ public class AnnotationServiceImpl
         List<Tag> tags = entityManager
                 .createQuery("FROM Tag WHERE tagSet = :tagSet ORDER BY name ASC", Tag.class)
                 .setParameter("tagSet", aTagSet).getResultList();
-        for(int i=0;i<tags.size();i++){
+        for (int i = 0; i < tags.size(); i++) {
             tags.get(i).setName(tags.get(i).getName());
         }
         return tags;

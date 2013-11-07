@@ -37,6 +37,10 @@ import de.tudarmstadt.ukp.dkpro.core.api.io.JCasFileWriter_ImplBase;
 import de.tudarmstadt.ukp.dkpro.core.api.resources.CompressionUtils;
 import de.tudarmstadt.ukp.dkpro.core.io.bincas.SerializedCasReader;
 
+/**
+ * @deprecated - seems no more required
+ */
+@Deprecated
 public class BinaryCasWriter
     extends JCasFileWriter_ImplBase
 {

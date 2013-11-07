@@ -101,6 +101,12 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.dkpro.core.io.bincas.SerializedCasReader;
 import de.tudarmstadt.ukp.dkpro.core.io.bincas.SerializedCasWriter;
 
+/**
+ * Implementation of methods defined in the {@link RepositoryService} interface
+ *
+ * @author Seid Muhie Yimam
+ *
+ */
 public class RepositoryServiceDbData
     implements RepositoryService
 {

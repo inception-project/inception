@@ -22,7 +22,7 @@ import java.util.List;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
- *
+ * Provide methods for user management such as create, update, list users
  * @author Erik-Lân Do Dinh
  * @author Richard Eckart de Castilho
  * @author Seid Muhie Yimam

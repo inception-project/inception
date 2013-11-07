@@ -28,7 +28,12 @@ import org.springframework.transaction.annotation.Transactional;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
-
+/**
+ * Implementation of methods defined in the {@link UserDao} interface
+ *
+ * @author Seid Muhie Yimam
+ *
+ */
 @Repository
 public class UserDaoImpl
 	implements UserDao

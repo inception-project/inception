@@ -24,6 +24,10 @@ import org.apache.uima.collection.CollectionException;
 
 import de.tudarmstadt.ukp.dkpro.core.api.io.ResourceCollectionReaderBase;
 
+/**
+ * @deprecated - seems no more required
+ */
+@Deprecated
 public class BinaryCasReader
     extends ResourceCollectionReaderBase
 {

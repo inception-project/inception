@@ -2,13 +2,13 @@
  * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,6 +35,12 @@ import org.apache.wicket.util.resource.IResourceStream;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
+/**
+ * Modal window to display annotation guidelines
+ *
+ * @author Seid Muhie Yimam
+ *
+ */
 public class GuidelineModalWindowPage
     extends WebPage
 {
@@ -48,7 +54,6 @@ public class GuidelineModalWindowPage
     {
         private static final long serialVersionUID = -4104665452144589457L;
 
-        @SuppressWarnings({ "unchecked", "rawtypes" })
         public guidelineForm(String id, final ModalWindow modalWindow)
         {
             super(id);

@@ -18,7 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
 /**
- * throw an exception if the a span annotation is not in the same sentence
+ * Throw an exception if the a span annotation is not in the same sentence
+ *  * @author Seid Muhie Yimam
  */
 public class MultipleSentenceCoveredException
     extends BratAnnotationException

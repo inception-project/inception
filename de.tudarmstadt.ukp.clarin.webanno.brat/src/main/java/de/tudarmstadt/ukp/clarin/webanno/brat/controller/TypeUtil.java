@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
@@ -30,6 +31,13 @@ import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
+/**
+ * Utility Class for {@link TypeAdapter} with static methods such as geting {@link TypeAdapter}
+ * based on its {@link CAS} {@link Type}
+ * @author Richard Eckart de Castilho
+ * @author Seid Muhie Yimam
+ *
+ */
 public final class TypeUtil
 {
     private TypeUtil()
@@ -63,7 +71,7 @@ public final class TypeUtil
     public static TypeAdapter getAdapter(AnnotationType aType)
     {
         String name = aType.getName();
-        
+
         if (name.equals(AnnotationTypeConstant.POS)) {
             return SpanAdapter.getPosAdapter();
         }
@@ -86,30 +94,30 @@ public final class TypeUtil
             throw new IllegalArgumentException("No adapter for type with name [" + name + "]");
         }
     }
-    
+
     public static TypeAdapter getAdapter(String aPrefix)
     {
         TypeAdapter[] adapterList = new TypeAdapter[] {
                 SpanAdapter.getLemmaAdapter(),
                 SpanAdapter.getNamedEntityAdapter(),
                 SpanAdapter.getPosAdapter(),
-                
+
                 ChainAdapter.getCoreferenceChainAdapter(),
                 ChainAdapter.getCoreferenceLinkAdapter(),
-                
+
                 ArcAdapter.getDependencyAdapter()
         };
-        
+
         Map<String, TypeAdapter> adapters = new HashMap<String, TypeAdapter>();
         for (TypeAdapter adapter : adapterList) {
             adapters.put(adapter.getLabelPrefix(), adapter);
         }
-        
+
         TypeAdapter result = adapters.get(aPrefix);
         if (result == null) {
             throw new IllegalArgumentException("No adapter for prefix [" + aPrefix + "]");
         }
-        
+
         return result;
     }
 
