@@ -2,13 +2,13 @@
  * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,16 +18,14 @@
 package de.tudarmstadt.ukp.clarin.webanno.webapp.page.project;
 
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
-import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.NoResultException;
-
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.uima.UIMAException;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.ListMultipleChoice;
@@ -48,9 +46,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
  * A Panel used to add Documents to the selected {@link Project}
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 public class ProjectDocumentsPanel
     extends Panel
@@ -112,42 +110,43 @@ public class ProjectDocumentsPanel
                     error("Project not yet created, please save project Details!");
                     return;
                 }
-                
+
                 for (FileUpload documentToUpload : uploadedFiles) {
                     String fileName = documentToUpload.getClientFileName();
+
+                    if (projectRepository.existsSourceDocument(project, fileName)) {
+                        error("Document " + fileName + " already uploaded ! Delete "
+                                + "the document if you want to upload again");
+                        continue;
+                    }
 
                     try {
                         File uploadFile = documentToUpload.writeToTempFile();
 
-                        // if getSourceDocument succeeded, it is a duplication!
-                        try {
+                        String username = SecurityContextHolder.getContext().getAuthentication()
+                                .getName();
+                        User user = projectRepository.getUser(username);
 
-                            projectRepository.getSourceDocument(project, fileName);
-                            error("Document " + fileName + " already uploaded ! Delete "
-                                    + "the document if you want to upload again");
-                        }
-                        // The document is not yet saved!
-                        catch (NoResultException ex) {// TODO: existsDocuments in projectrepository
-                            String username = SecurityContextHolder.getContext()
-                                    .getAuthentication().getName();
-                            User user = projectRepository.getUser(username);
-
-                            SourceDocument document = new SourceDocument();
-                            document.setName(fileName);
-                            document.setProject(project);
-                            String reader = projectRepository
-                                    .getReadableFormatId(readableFormatsChoice.getModelObject());
-                            document.setFormat(reader);
-                            projectRepository.createSourceDocument(document, user);
-                            projectRepository.uploadSourceDocument(uploadFile, document,
-                                    project.getId(), user);
-
-                        }
+                        SourceDocument document = new SourceDocument();
+                        document.setName(fileName);
+                        document.setProject(project);
+                        String reader = projectRepository.getReadableFormatId(readableFormatsChoice
+                                .getModelObject());
+                        document.setFormat(reader);
+                        projectRepository.createSourceDocument(document, user);
+                        projectRepository.uploadSourceDocument(uploadFile, document,
+                                project.getId(), user);
+                        info("File [" + fileName + "] has been imported successfully!");
                     }
-                    catch (Exception e) {
+                    catch (ClassNotFoundException e) {
+                        error(e.getMessage());
+                    }
+                    catch (IOException e) {
+                        error("Error uploading document " + e.getMessage());
+                    }
+                    catch (UIMAException e) {
                         error("Error uploading document " + ExceptionUtils.getRootCauseMessage(e));
                     }
-                    info("File [" + fileName + "] has been imported successfully!");
                 }
 
             }
