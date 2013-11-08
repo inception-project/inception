@@ -1,0 +1,12 @@
+1	The	_	DT	O	O	4	NMOD	_	_
+2	luxury	_	NN	O	O	3	NMOD	_	_
+3	auto	_	NN	O	O	4	NMOD	_	_
+4	maker	_	NN	O	O	7	SBJ	_	_
+5	last	_	JJ	O	O	6	NMOD	_	_
+6	year	_	NN	O	O	4	TMP	_	_
+7	sold	_	VBD	O	O	0	ROOT	_	_
+8	1,214	_	CD	O	O	9	NMOD	_	_
+9	cars	_	NNS	O	O	7	OBJ	_	_
+10	in	_	IN	O	O	9	LOC	_	_
+11	the	_	DT	O	O	12	NMOD	_	_
+12	U.S.	_	NNP	O	O	10	PMOD	_	_

@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.webapp.statistics;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -25,8 +26,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
@@ -35,10 +34,6 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.uimafit.util.CasUtil;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.AnnotationStudy;
@@ -55,17 +50,6 @@ public class TwoPairedKappa
 {
     public static String EMPTY = "EMPTY";
 
-    private static RepositoryService repositoryService;
-    private Project project;
-
-    private Log LOG = LogFactory.getLog(getClass());
-
-    public TwoPairedKappa(Project aProject, RepositoryService aRepositoryService)
-    {
-        repositoryService = aRepositoryService;
-        project = aProject;
-    }
-
     /**
      * Return the concatenations of start and end offsets of annotations. <br>
      * Example: <br>
@@ -78,23 +62,13 @@ public class TwoPairedKappa
      * @param aUsers
      *            Users with finished annotation documents
      */
-    public Set<String> getAllAnnotations(List<User> aUsers, SourceDocument aSourceDocument,
-            String aType, Map<User, JCas> JCases)
+    public Set<String> getAnnotationPositions(JCas aJCas, Long docId, String aType)
     {
         // Set of start+end offsets for all annotations in the document
         Set<String> annotationPositions = new HashSet<String>();
-        for (User user : aUsers) {
-            AnnotationDocument annotationDocument = repositoryService.getAnnotationDocument(
-                    aSourceDocument, user);
-            JCas jCas = null;
-            if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
-
-                jCas = JCases.get(user);
-                Type type = CasUtil.getType(jCas.getCas(), aType);
-                for (AnnotationFS fs : CasUtil.select(jCas.getCas(), type)) {
-                    annotationPositions.add(aSourceDocument.getId() + getPosition(type, fs));
-                }
-            }
+        Type type = CasUtil.getType(aJCas.getCas(), aType);
+        for (AnnotationFS fs : CasUtil.select(aJCas.getCas(), type)) {
+            annotationPositions.add(docId + getPosition(type, fs));
         }
         return annotationPositions;
     }
@@ -108,7 +82,7 @@ public class TwoPairedKappa
      *            the initialised user annotations
      * @param aAnnotationPositions
      *            annotation positions obtained using
-     *            {@link #getAllAnnotations(List, SourceDocument, String, String)}
+     *            {@link #getAnnotationPositions(List, SourceDocument, String, String)}
      */
     public Map<String, Map<String, String>> initializeAnnotations(List<User> aUsers,
             Set<String> aAnnotationPositions)
@@ -143,36 +117,67 @@ public class TwoPairedKappa
      * @throws IOException
      * @throws ClassNotFoundException
      */
-    public Map<String, Map<String, String>> updateUserAnnotations(List<User> aUsers,
-            SourceDocument aSourceDocument, String aType, String aLableFeatureName,
-            Map<String, Map<String, String>> aUserAnnotations, Map<User, JCas> JCases)
+    public Map<String, Map<String, String>> updateUserAnnotations(User aUser,
+            Map<String, Map<String, String>> aUserAnnotations, Long docId, String aType,
+            String aLableFeatureName, JCas aJcas)
     {
-        for (User user : aUsers) {
+        Type type = CasUtil.getType(aJcas.getCas(), aType);
 
-            AnnotationDocument annotationDocument = repositoryService.getAnnotationDocument(
-                    aSourceDocument, user);
-
-            JCas jCas = null;
-            if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
-
-                jCas = JCases.get(user);
-
-                Type type = CasUtil.getType(jCas.getCas(), aType);
-
-                for (AnnotationFS fs : CasUtil.select(jCas.getCas(), type)) {
-                    Feature labelFeature = fs.getType().getFeatureByBaseName(aLableFeatureName);
-                    // update the already initialised EMPTY annotation with actual annotations,
-                    // when exist
-                    if (fs.getStringValue(labelFeature) != null) {
-                        aUserAnnotations.get(user.getUsername()).put(
-                                aSourceDocument.getId() + "" + getPosition(type, fs),
-                                getValue(type, fs));
-                    }
-                }
+        for (AnnotationFS fs : CasUtil.select(aJcas.getCas(), type)) {
+            Feature labelFeature = fs.getType().getFeatureByBaseName(aLableFeatureName);
+            // update the already initialised EMPTY annotation with actual annotations,
+            // when exist
+            if (fs.getStringValue(labelFeature) != null) {
+                aUserAnnotations.get(aUser.getUsername()).put(docId + "" + getPosition(type, fs),
+                        getValue(type, fs));
             }
         }
         // return the updated annotations
         return aUserAnnotations;
+    }
+
+    /**
+     * set value for {@link IAnnotationStudy} when {@link TwoRaterKappaAgreement} is used for kappa
+     * measures
+     */
+    // TODO: unit test
+    public void getStudy(String aType, String featureName, User user1, User user2,
+            Map<String, Map<String, String>> allUserAnnotations, SourceDocument aDocument,
+            Map<User, JCas> JCases)
+    {
+        Set<String> annotationPositions = new HashSet<String>();
+
+        for (User user : Arrays.asList(new User[] { user1, user2 })) {
+
+            JCas jCas = JCases.get(user);
+            annotationPositions.addAll(getAnnotationPositions(jCas, aDocument.getId(), aType));
+
+        }
+
+        if (annotationPositions.size() != 0) {
+            Map<String, Map<String, String>> userAnnotations = initializeAnnotations(
+                    Arrays.asList(new User[] { user1, user2 }), annotationPositions);
+            for (User user : Arrays.asList(new User[] { user1, user2 })) {
+                updateUserAnnotations(user, userAnnotations, aDocument.getId(), aType, featureName,
+                        JCases.get(user));
+            }
+
+            // merge annotations from different object for this
+            // user
+            for (String username : userAnnotations.keySet()) {
+                if (allUserAnnotations.get(username) != null) {
+                    allUserAnnotations.get(username).putAll(userAnnotations.get(username));
+                }
+                else {
+                    allUserAnnotations.put(username, userAnnotations.get(username));
+                }
+            }
+            for (User user : Arrays.asList(new User[] { user1, user2 })) {
+                allUserAnnotations.get(user.getUsername()).putAll(
+                        userAnnotations.get(user.getUsername()));
+            }
+
+        }
     }
 
     /**

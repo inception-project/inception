@@ -23,11 +23,9 @@ import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -96,7 +94,6 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.support.ChartImageResource;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.support.DynamicColumnMetaData;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.support.EntityModel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.support.TableDataProvider;
-import de.tudarmstadt.ukp.dkpro.statistics.agreement.IAnnotationStudy;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.TwoRaterKappaAgreement;
 
 /**
@@ -391,8 +388,7 @@ public class MonitoringPage
                                 aTarget.add(annotatorsProgressPercentageImage
                                         .setOutputMarkupId(true));
 
-                                final Map<Project, Integer> projectsProgressPerClosedDocument =
-                                        getClosedDocumentsInProject();
+                                final Map<Project, Integer> projectsProgressPerClosedDocument = getClosedDocumentsInProject();
                                 monitoringDetailForm.remove(projectRepeator);
                                 projectRepeator = new RepeatingView("projectRepeator");
                                 monitoringDetailForm.add(projectRepeator);
@@ -748,11 +744,11 @@ public class MonitoringPage
      * same document <br>
      * The result is per {@link AnnotationType} for all {@link Tag}s
      */
-    //TODO: return a result value
+    // TODO: return a result value
     private void computeKappa(Project project, List<User> users, double[][] results,
             TypeAdapter adapter, Map<User, List<SourceDocument>> finishedDocumentLists)
     {
-        TwoPairedKappa twoPairedKappa = new TwoPairedKappa(project, projectRepository);
+        TwoPairedKappa twoPairedKappa = new TwoPairedKappa();
         int userInRow = 0;
         List<User> rowUsers = new ArrayList<User>();
         for (User user1 : users) {
@@ -780,9 +776,9 @@ public class MonitoringPage
                             for (SourceDocument document2 : finishedDocumentLists.get(user2)) {
 
                                 if (document1.getId() == document2.getId()) {
-                                    getStudy(adapter.getAnnotationTypeName(),
-                                            adapter.getLabelFeatureName(), twoPairedKappa, user1,
-                                            user2, allUserAnnotations, document2);
+                                    twoPairedKappa.getStudy(adapter.getAnnotationTypeName(),
+                                            adapter.getLabelFeatureName(), user1, user2,
+                                            allUserAnnotations, document2, documentJCases.get(document1));
                                 }
                             }
 
@@ -817,45 +813,6 @@ public class MonitoringPage
             userInRow++;
         }
     }
-
-    /**
-     * set value for {@link IAnnotationStudy} when {@link TwoRaterKappaAgreement} is used for kappa
-     * measures
-     */
-    // TODO: unit test
-    private void getStudy(String type, String featureName, TwoPairedKappa twoPairedKappa,
-            User user1, User user2, Map<String, Map<String, String>> allUserAnnotations,
-            SourceDocument document2)
-    {
-        Set<String> allAnnotations = twoPairedKappa.getAllAnnotations(
-                Arrays.asList(new User[] { user1, user2 }), document2, type,
-                documentJCases.get(document2));
-        if (allAnnotations.size() != 0) {
-            Map<String, Map<String, String>> userAnnotations = twoPairedKappa
-                    .initializeAnnotations(Arrays.asList(new User[] { user1, user2 }),
-                            allAnnotations);
-            userAnnotations = twoPairedKappa.updateUserAnnotations(
-                    Arrays.asList(new User[] { user1, user2 }), document2, type, featureName,
-                    userAnnotations, documentJCases.get(document2));
-
-            // merge annotations from different object for this
-            // user
-            for (String username : userAnnotations.keySet()) {
-                if (allUserAnnotations.get(username) != null) {
-                    allUserAnnotations.get(username).putAll(userAnnotations.get(username));
-                }
-                else {
-                    allUserAnnotations.put(username, userAnnotations.get(username));
-                }
-            }
-            for (User user : Arrays.asList(new User[] { user1, user2 })) {
-                allUserAnnotations.get(user.getUsername()).putAll(
-                        userAnnotations.get(user.getUsername()));
-            }
-
-        }
-    }
-
     /**
      * Get all Cases that is not either new or ignore per user, per document. we need those in
      * progress if the admin tries to finish it from the monitoring page
