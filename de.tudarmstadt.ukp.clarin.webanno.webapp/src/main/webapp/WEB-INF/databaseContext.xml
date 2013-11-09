@@ -27,11 +27,10 @@
 		<property name="ignoreResourceNotFound" value="true" />
 		<property name="properties">
 			<props>
-				<prop key="database.dialect">org.hibernate.dialect.MySQL5InnoDBDialect</prop>
-				<prop key="database.driver">com.mysql.jdbc.Driver</prop>
-				<prop key="database.url">jdbc:mysql://localhost:3306/tcf?useUnicode=true&amp;characterEncoding=utf8
-				</prop>
-				<prop key="database.username">root</prop>
+				<prop key="database.dialect">org.hibernate.dialect.HSQLDialect</prop>
+				<prop key="database.driver">org.hsqldb.jdbc.JDBCDriver</prop>
+				<prop key="database.url">jdbc:hsqldb:file:${webanno.home}/db/webanno;hsqldb.default_table_type=cached</prop>
+				<prop key="database.username">sa</prop>
 				<prop key="database.password"></prop>
 				<prop key="database.initial-pool-size">4</prop>
 				<prop key="database.min-pool-size">4</prop>
@@ -76,7 +75,7 @@
 		<property name="dataSource" ref="dataSource" />
 	</bean>
 
-	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource">
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
 		<property name="driverClassName" value="${database.driver}" />
 		<property name="url" value="${database.url}" />
 		<property name="username" value="${database.username}" />
