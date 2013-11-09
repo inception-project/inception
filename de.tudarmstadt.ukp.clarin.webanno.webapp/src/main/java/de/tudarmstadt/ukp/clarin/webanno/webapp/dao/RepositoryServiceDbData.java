@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.dao;
 
 import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.commons.io.IOUtils.copyLarge;
+import static org.apache.commons.lang.StringUtils.*;
 import static org.uimafit.factory.AnalysisEngineFactory.createPrimitiveDescription;
 import static org.uimafit.pipeline.SimplePipeline.runPipeline;
 
@@ -161,9 +162,6 @@ public class RepositoryServiceDbData
     // The annotation preference properties File name
     String annotationPreferencePropertiesFileName;
 
-    /*
-     * @Resource(name = "formats") private Properties readWriteFileFormats;
-     */
     private Object lock = new Object();
 
     public RepositoryServiceDbData()
@@ -1177,13 +1175,11 @@ public class RepositoryServiceDbData
         throws ClassNotFoundException
     {
         List<String> readableFormats = new ArrayList<String>();
-        Set<String> key = (Set) readWriteFileFormats.keySet();
-
-        for (String keyvalue : key) {
-            if (keyvalue.contains(".label")) {
-                String readerLabel = keyvalue.substring(0, keyvalue.lastIndexOf(".label"));
-                if (readWriteFileFormats.getProperty(readerLabel + ".reader") != null) {
-                    readableFormats.add(readWriteFileFormats.getProperty(keyvalue));
+        for (String key : readWriteFileFormats.stringPropertyNames()) {
+            if (key.contains(".label") && !isBlank(readWriteFileFormats.getProperty(key))) {
+                String readerLabel = key.substring(0, key.lastIndexOf(".label"));
+                if (!isBlank(readWriteFileFormats.getProperty(readerLabel + ".reader"))) {
+                    readableFormats.add(readWriteFileFormats.getProperty(key));
                 }
             }
         }
@@ -1194,13 +1190,11 @@ public class RepositoryServiceDbData
     public String getReadableFormatId(String aLabel)
         throws ClassNotFoundException
     {
-        Set<String> key = (Set) readWriteFileFormats.keySet();
         String readableFormat = "";
-        for (String keyvalue : key) {
-            if (keyvalue.contains(".label")) {
-
-                if (readWriteFileFormats.getProperty(keyvalue).equals(aLabel)) {
-                    readableFormat = keyvalue.substring(0, keyvalue.lastIndexOf(".label"));
+        for (String key : readWriteFileFormats.stringPropertyNames()) {
+            if (key.contains(".label") && !isBlank(readWriteFileFormats.getProperty(key))) {
+                if (readWriteFileFormats.getProperty(key).equals(aLabel)) {
+                    readableFormat = key.substring(0, key.lastIndexOf(".label"));
                     break;
                 }
             }
@@ -1213,12 +1207,10 @@ public class RepositoryServiceDbData
         throws ClassNotFoundException
     {
         Map<String, Class> readableFormats = new HashMap<String, Class>();
-        Set<String> key = (Set) readWriteFileFormats.keySet();
-
-        for (String keyvalue : key) {
-            if (keyvalue.contains(".label")) {
-                String readerLabel = keyvalue.substring(0, keyvalue.lastIndexOf(".label"));
-                if (readWriteFileFormats.getProperty(readerLabel + ".reader") != null) {
+        for (String key : readWriteFileFormats.stringPropertyNames()) {
+            if (key.contains(".label") && !isBlank(readWriteFileFormats.getProperty(key))) {
+                String readerLabel = key.substring(0, key.lastIndexOf(".label"));
+                if (!isBlank(readWriteFileFormats.getProperty(readerLabel + ".reader"))) {
                     readableFormats.put(readerLabel, Class.forName(readWriteFileFormats
                             .getProperty(readerLabel + ".reader")));
                 }
@@ -1232,13 +1224,11 @@ public class RepositoryServiceDbData
         throws ClassNotFoundException
     {
         List<String> writableFormats = new ArrayList<String>();
-        Set<String> keys = (Set) readWriteFileFormats.keySet();
-
-        for (String keyvalue : keys) {
-            if (keyvalue.contains(".label")) {
-                String writerLabel = keyvalue.substring(0, keyvalue.lastIndexOf(".label"));
-                if (readWriteFileFormats.getProperty(writerLabel + ".writer") != null) {
-                    writableFormats.add(readWriteFileFormats.getProperty(keyvalue));
+        for (String key : readWriteFileFormats.stringPropertyNames()) {
+            if (key.contains(".label") && !isBlank(readWriteFileFormats.getProperty(key))) {
+                String writerLabel = key.substring(0, key.lastIndexOf(".label"));
+                if (!isBlank(readWriteFileFormats.getProperty(writerLabel + ".writer"))) {
+                    writableFormats.add(readWriteFileFormats.getProperty(key));
                 }
             }
         }
@@ -1249,12 +1239,11 @@ public class RepositoryServiceDbData
     public String getWritableFormatId(String aLabel)
         throws ClassNotFoundException
     {
-        Set<String> keys = (Set) readWriteFileFormats.keySet();
         String writableFormat = "";
-        for (String keyvalue : keys) {
-            if (keyvalue.contains(".label")) {
-                if (readWriteFileFormats.getProperty(keyvalue).equals(aLabel)) {
-                    writableFormat = keyvalue.substring(0, keyvalue.lastIndexOf(".label"));
+        for (String key : readWriteFileFormats.stringPropertyNames()) {
+            if (key.contains(".label") && !isBlank(readWriteFileFormats.getProperty(key))) {
+                if (readWriteFileFormats.getProperty(key).equals(aLabel)) {
+                    writableFormat = key.substring(0, key.lastIndexOf(".label"));
                     break;
                 }
             }
