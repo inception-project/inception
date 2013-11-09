@@ -34,7 +34,7 @@ import javax.persistence.UniqueConstraint;
  *
  */
 @Entity
-@Table(name = "tag", uniqueConstraints = { @UniqueConstraint(columnNames = { "tagset", "name" }) })
+@Table(name = "tag")
 public class Tag
     implements Serializable
 {
@@ -44,7 +44,7 @@ public class Tag
     @GeneratedValue
     private long id;
 
-    @Column(nullable = false, columnDefinition = "varbinary(128)")
+    @Column(nullable = false)
     private String name;
 
     @Lob
