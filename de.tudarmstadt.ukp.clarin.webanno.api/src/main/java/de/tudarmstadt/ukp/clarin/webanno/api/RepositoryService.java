@@ -635,14 +635,7 @@ public interface RepositoryService
         throws IOException;
     
     /**
-     * Get an apiKey to upload document to crowdFlower, that is stored in settings.properties
-     */
-    String getApiKey();
-
-    /**
      * List {@link CrowdJob}s/Crowd Tasks in the system
-     * 
-     * @return
      */
     List<CrowdJob> listCrowdJobs();
 

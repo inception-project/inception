@@ -137,9 +137,6 @@ public class RepositoryServiceDbData
     @Value(value = "${backup.keep.number}")
     private int backupKeepNumber;
 
-    @Value(value = "${apiKey}")
-    private String apiKey;
-
     @Resource(name = "formats")
     private Properties readWriteFileFormats;
 
@@ -582,12 +579,6 @@ public class RepositoryServiceDbData
                                 + " AND project = :project", AnnotationDocument.class)
                 .setParameter("document", aDocument).setParameter("user", aUser.getUsername())
                 .setParameter("project", aDocument.getProject()).getSingleResult();
-    }
-
-    @Override
-    public String getApiKey()
-    {
-        return apiKey;
     }
 
     @Override

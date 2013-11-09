@@ -26,7 +26,7 @@
 
 	<!-- setup wicket application -->
 	
-		<util:properties id="formats"
+	<util:properties id="formats"
 		location="file:${webanno.home}/formats.properties" /> 
 
 	<bean id="wicketApplication"
@@ -41,20 +41,12 @@
 				<prop key="backup.keep.time">0</prop>
 				<prop key="backup.interval">0</prop>
 				<prop key="backup.keep.number">0</prop>
-
-				<prop key="text.label">Plain text</prop>
-				<prop key="text.reader">de.tudarmstadt.ukp.dkpro.core.io.text.TextReader
-				</prop>
-				<prop key="text.writer">de.tudarmstadt.ukp.dkpro.core.io.text.TextWriter
-				</prop>
-				<prop key="apiKey">1234</prop>
 			</props>
 		</property>
 		<property name="locations">
 			<list>
 				<value>classpath:META-INF/settings.properties</value>
 				<value>file:${webanno.home}/settings.properties</value>
-				<value>file:${webanno.home}/formats.properties</value>
 			</list>
 		</property>
 	</bean>
