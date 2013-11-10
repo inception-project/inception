@@ -73,9 +73,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
  * A page that is used to display an annotation modal dialog for span annotation
- *
+ * 
  * @author Seid Muhie Yimam
- *
+ * 
  */
 public class SpanAnnotationModalWindowPage
     extends WebPage
@@ -168,7 +168,7 @@ public class SpanAnnotationModalWindowPage
                 protected void onSelectionChanged(TagSet aNewSelection)
                 {
                     selectedtTagSet = aNewSelection;
-                    if (aNewSelection.getType().getName().equals(AnnotationTypeConstant.LEMMA)) {
+                    if (isLemma(aNewSelection)) {
                         tagsModel.setObject(selectedText);
                     }
                     else {
@@ -226,13 +226,19 @@ public class SpanAnnotationModalWindowPage
                         String annotationType = "";
 
                         if (tags.getModelObject() == null) {
-                            aTarget.appendJavaScript("alert('No Tag is selected!')");
+                            aTarget.add(feedbackPanel);
+                            error("No Tag is selected!");
+                        }
+                        else if (!annotationService.existsTag(tags.getModelObject(),
+                                selectedtTagSet) && !isLemma(selectedtTagSet)) {
+                            aTarget.add(feedbackPanel);
+                            error(tags.getModelObject()
+                                    + " is not in the tag list. Please choose form the existing tags");
                         }
                         else {
 
                             Tag selectedTag;
-                            if (selectedtTagSet.getType().getName()
-                                    .equals(AnnotationTypeConstant.LEMMA)) {
+                            if (isLemma(selectedtTagSet)) {
                                 selectedTag = new Tag();
                                 annotationType = tags.getModelObject();
                             }
@@ -335,12 +341,15 @@ public class SpanAnnotationModalWindowPage
                         }
                     }
                     catch (UIMAException e) {
+                        aTarget.add(feedbackPanel);
                         error(ExceptionUtils.getRootCauseMessage(e));
                     }
                     catch (ClassNotFoundException e) {
+                        aTarget.add(feedbackPanel);
                         error(e.getMessage());
                     }
                     catch (IOException e) {
+                        aTarget.add(feedbackPanel);
                         error(e.getMessage());
                     }
                 }
@@ -352,16 +361,13 @@ public class SpanAnnotationModalWindowPage
                 }
             });
         }
-
         private void updateTagsComboBox()
         {
             tags.remove();
-            tags = new ComboBox<Tag>("tags", tagsModel,
-                    annotationService.listTags(selectedtTagSet), new ComboBoxRenderer<Tag>("name",
-                            "name"));
+            tags = new ComboBox<Tag>("tags", tagsModel, annotationService.listTags(selectedtTagSet),
+                    new ComboBoxRenderer<Tag>("name", "name"));
             add(tags);
         }
-
     }
 
     private void updateSentenceAddressAndOffsets(JCas jCas, int start)
@@ -451,5 +457,14 @@ public class SpanAnnotationModalWindowPage
             }
         }
         return false;
+    }
+
+    private boolean isLemma(TagSet aTagSet)
+    {
+        if (aTagSet.getType().getName().equals(AnnotationTypeConstant.LEMMA)) {
+            return true;
+        }
+        else
+            return false;
     }
 }

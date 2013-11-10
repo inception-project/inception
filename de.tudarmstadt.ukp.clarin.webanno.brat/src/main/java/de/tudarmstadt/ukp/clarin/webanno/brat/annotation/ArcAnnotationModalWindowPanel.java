@@ -63,8 +63,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
  * A panel that is used to display an annotation modal dialog for arc annotation.
+ * 
  * @author Seid Muhie Yimam
- *
+ * 
  */
 public class ArcAnnotationModalWindowPanel
     extends Panel
@@ -110,7 +111,6 @@ public class ArcAnnotationModalWindowPanel
     {
         private static final long serialVersionUID = -4104665452144589457L;
 
-        @SuppressWarnings({ "unchecked", "rawtypes" })
         public AnnotationDialogForm(String id, final ModalWindow aModalWindow)
         {
             super(id);
@@ -143,12 +143,11 @@ public class ArcAnnotationModalWindowPanel
                 tagsModel = new Model<Tag>(tag);
             }
 
-            tags= new ComboBox<Tag>("tags", new Model<String>(
-                    tagsModel.getObject() == null ? "" : tagsModel.getObject().getName()),
+            tags = new ComboBox<Tag>("tags", new Model<String>(tagsModel.getObject() == null ? ""
+                    : tagsModel.getObject().getName()),
                     annotationService.listTags(selectedtTagSet), new ComboBoxRenderer<Tag>("name",
                             "name"));
             add(tags);
-
 
             add(new DropDownChoice<TagSet>("tagSets", tagSetsModel,
                     Arrays.asList(new TagSet[] { selectedtTagSet })).setNullValid(false)
@@ -182,6 +181,12 @@ public class ArcAnnotationModalWindowPanel
                         if (tags.getModelObject() == null) {
                             aTarget.appendJavaScript("alert('No Tag is selected!')");
                         }
+                        else if (!annotationService.existsTag(tags.getModelObject(),
+                                selectedtTagSet)) {
+                            aTarget.add(feedbackPanel);
+                            error(tags.getModelObject()
+                                    + " is not in the tag list. Please choose form the existing tags");
+                        }
                         else {
                             Tag selectedTag = (Tag) annotationService.getTag(tags.getModelObject(),
                                     selectedtTagSet);
@@ -190,12 +195,12 @@ public class ArcAnnotationModalWindowPanel
                             AnnotationFS originFs = selectByAddr(jCas, originSpanId);
                             AnnotationFS targetFs = selectByAddr(jCas, targetSpanId);
 
-                                controller.createArcAnnotation(bratAnnotatorModel, annotationType, -1, -1,
-                                        originFs, targetFs, jCas);
+                            controller.createArcAnnotation(bratAnnotatorModel, annotationType, -1,
+                                    -1, originFs, targetFs, jCas);
 
-                            controller.updateJCas(
-                                    bratAnnotatorModel.getMode(), bratAnnotatorModel.getDocument(),
-                                    bratAnnotatorModel.getUser(), jCas);
+                            controller.updateJCas(bratAnnotatorModel.getMode(),
+                                    bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
+                                    jCas);
 
                             if (bratAnnotatorModel.isScrollPage()) {
                                 int start = originFs.getBegin();
@@ -217,10 +222,10 @@ public class ArcAnnotationModalWindowPanel
                     catch (IOException e) {
                         error(e.getMessage());
                     }
-                     catch (BratAnnotationException e) {
-                         aTarget.add(feedbackPanel);
-                         error(e.getMessage());
-                     }
+                    catch (BratAnnotationException e) {
+                        aTarget.add(feedbackPanel);
+                        error(e.getMessage());
+                    }
 
                 }
             }.add(new Behavior()
@@ -309,7 +314,7 @@ public class ArcAnnotationModalWindowPanel
                         AnnotationFS targetFs = selectByAddr(jCas, targetSpanId);
 
                         controller.createArcAnnotation(bratAnnotatorModel, annotationType, -1, -1,
-                               targetFs,originFs, jCas);
+                                targetFs, originFs, jCas);
 
                         controller.updateJCas(bratAnnotatorModel.getMode(),
                                 bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
@@ -331,7 +336,7 @@ public class ArcAnnotationModalWindowPanel
                         error(e.getMessage());
                     }
                     catch (BratAnnotationException e) {
-                        aTarget.prependJavaScript("alert('"+e.getMessage()+"')");
+                        aTarget.prependJavaScript("alert('" + e.getMessage() + "')");
                     }
                     aModalWindow.close(aTarget);
                 }
@@ -347,13 +352,12 @@ public class ArcAnnotationModalWindowPanel
 
     private void updateSentenceAddressAndOffsets(JCas jCas, int start)
     {
-        int address = BratAjaxCasUtil.selectSentenceAt(jCas, bratAnnotatorModel.getSentenceBeginOffset(), bratAnnotatorModel.getSentenceEndOffset()).getAddress();
-        bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil
-                .getSentenceBeginAddress(jCas,
-                        address, start,
-                        bratAnnotatorModel.getProject(),
-                        bratAnnotatorModel.getDocument(),
-                        bratAnnotatorModel.getWindowSize()));
+        int address = BratAjaxCasUtil.selectSentenceAt(jCas,
+                bratAnnotatorModel.getSentenceBeginOffset(),
+                bratAnnotatorModel.getSentenceEndOffset()).getAddress();
+        bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(jCas,
+                address, start, bratAnnotatorModel.getProject(), bratAnnotatorModel.getDocument(),
+                bratAnnotatorModel.getWindowSize()));
 
         Sentence sentence = selectByAddr(jCas, Sentence.class,
                 bratAnnotatorModel.getSentenceAddress());
@@ -397,7 +401,8 @@ public class ArcAnnotationModalWindowPanel
         this.originSpanType = aOriginSpanType;
 
         String layerName = TypeUtil.getArcLayerName(TypeUtil.getLabelPrefix(originSpanType));
-        AnnotationType layer = annotationService.getType(layerName, AnnotationTypeConstant.RELATION_TYPE);
+        AnnotationType layer = annotationService.getType(layerName,
+                AnnotationTypeConstant.RELATION_TYPE);
         this.selectedtTagSet = annotationService.getTagSet(layer, aBratAnnotatorModel.getProject());
 
         this.originSpanId = aOriginSpanId;
@@ -419,7 +424,8 @@ public class ArcAnnotationModalWindowPanel
         this.originSpanType = aOriginSpanType;
 
         String layerName = TypeUtil.getArcLayerName(TypeUtil.getLabelPrefix(originSpanType));
-        AnnotationType layer = annotationService.getType(layerName, AnnotationTypeConstant.RELATION_TYPE);
+        AnnotationType layer = annotationService.getType(layerName,
+                AnnotationTypeConstant.RELATION_TYPE);
         this.selectedtTagSet = annotationService.getTagSet(layer, aBratAnnotatorModel.getProject());
 
         this.originSpanId = aOriginSpanId;

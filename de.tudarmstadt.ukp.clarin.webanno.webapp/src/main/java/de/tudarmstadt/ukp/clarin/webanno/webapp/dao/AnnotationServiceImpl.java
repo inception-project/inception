@@ -105,6 +105,17 @@ public class AnnotationServiceImpl
                 .setParameter("name", aTagName).setParameter("tagSet", aTagSet).getSingleResult();
     }
 
+    
+  public  boolean existsTag(String aTagName, TagSet aTagSet){
+        
+        try{
+        getTag(aTagName, aTagSet);
+        return true;           
+        }
+        catch (NoResultException e) {
+            return false;
+        }
+    }
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public boolean existTagSet(AnnotationType aType, Project aProject)

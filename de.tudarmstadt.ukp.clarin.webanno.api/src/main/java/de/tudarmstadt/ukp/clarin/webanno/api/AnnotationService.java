@@ -82,6 +82,11 @@ public interface AnnotationService
      * @return
      */
     Tag getTag(String tagName, TagSet tagSet);
+    
+    /**
+     * Check if a tag with this name in the given tagset exists
+     */
+    boolean existsTag(String tagName, TagSet tagSet);
 
     /**
      * Get a a {@link TagSet} for a given {@link AnnotationType}. One Tagset per annotation type
