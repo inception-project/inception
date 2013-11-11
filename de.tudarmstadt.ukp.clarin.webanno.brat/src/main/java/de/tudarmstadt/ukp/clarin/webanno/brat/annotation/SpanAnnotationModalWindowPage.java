@@ -29,7 +29,9 @@ import java.util.Set;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.tools.ant.types.selectors.SelectSelector;
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
@@ -216,13 +218,23 @@ public class SpanAnnotationModalWindowPage
 
                         OffsetsList offsetLists = (OffsetsList) jsonConverter.getObjectMapper()
                                 .readValue(offsets, OffsetsList.class);
-
-                        Sentence sentence = BratAjaxCasUtil.selectSentenceAt(jCas,
-                                bratAnnotatorModel.getSentenceBeginOffset(),
-                                bratAnnotatorModel.getSentenceEndOffset());
-                        int start = sentence.getBegin() + ((Offsets) offsetLists.get(0)).getBegin();
-                        int end = sentence.getBegin() + ((Offsets) offsetLists.get(0)).getEnd();
-
+                        
+                        int start;
+                        int end;
+                        if (selectedSpanId == -1) {
+                            Sentence sentence = BratAjaxCasUtil.selectSentenceAt(jCas,
+                                    bratAnnotatorModel.getSentenceBeginOffset(),
+                                    bratAnnotatorModel.getSentenceEndOffset());
+                            start = sentence.getBegin() + ((Offsets) offsetLists.get(0)).getBegin();
+                            end = sentence.getBegin()
+                                    + ((Offsets) offsetLists.get(offsetLists.size() - 1)).getEnd();
+                        }
+                        // get the begin/end from the annotation, no need to re-calculate
+                        else {
+                            AnnotationFS fs = BratAjaxCasUtil.selectByAddr(jCas, selectedSpanId);
+                            start = fs.getBegin();
+                            end = fs.getEnd();
+                        }
                         String annotationType = "";
 
                         if (tags.getModelObject() == null) {
@@ -361,11 +373,13 @@ public class SpanAnnotationModalWindowPage
                 }
             });
         }
+
         private void updateTagsComboBox()
         {
             tags.remove();
-            tags = new ComboBox<Tag>("tags", tagsModel, annotationService.listTags(selectedtTagSet),
-                    new ComboBoxRenderer<Tag>("name", "name"));
+            tags = new ComboBox<Tag>("tags", tagsModel,
+                    annotationService.listTags(selectedtTagSet), new ComboBoxRenderer<Tag>("name",
+                            "name"));
             add(tags);
         }
     }
