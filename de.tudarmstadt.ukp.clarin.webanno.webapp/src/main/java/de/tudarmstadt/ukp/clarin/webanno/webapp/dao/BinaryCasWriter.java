@@ -18,9 +18,9 @@
 package de.tudarmstadt.ukp.clarin.webanno.webapp.dao;
 
 import static org.apache.commons.io.IOUtils.closeQuietly;
-//import static org.apache.uima.cas.impl.Serialization.serializeCAS;
+import static org.apache.uima.cas.impl.Serialization.serializeCAS;
 import static org.apache.uima.cas.impl.Serialization.serializeCASMgr;
-//import static org.apache.uima.cas.impl.Serialization.serializeWithCompression;
+import static org.apache.uima.cas.impl.Serialization.serializeWithCompression;
 
 import java.io.DataOutputStream;
 import java.io.File;
@@ -37,10 +37,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.io.JCasFileWriter_ImplBase;
 import de.tudarmstadt.ukp.dkpro.core.api.resources.CompressionUtils;
 import de.tudarmstadt.ukp.dkpro.core.io.bincas.SerializedCasReader;
 
-/**
- * @deprecated - seems no more required
- */
-@Deprecated
 public class BinaryCasWriter
     extends JCasFileWriter_ImplBase
 {
@@ -73,8 +69,7 @@ public class BinaryCasWriter
     public void process(JCas aJCas)
         throws AnalysisEngineProcessException
     {
-        // Disabled for 0.4.0 release
-      /*  OutputStream docOS = null;
+        OutputStream docOS = null;
         try {
             docOS = getOutputStream(aJCas, filenameSuffix);
 
@@ -106,7 +101,7 @@ public class BinaryCasWriter
         }
         finally {
             closeQuietly(docOS);
-        }*/
+        }
     }
 
     private void writeTypeSystem(JCas aJCas)
