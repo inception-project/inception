@@ -581,7 +581,7 @@ public class ProjectUtil
                 String fileName = entry.toString().replace(SOURCE, "").replace("/", "");
                 de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument = aRepository
                         .getSourceDocument(aProject, fileName);
-                File sourceFilePath = aRepository.exportSourceDocument(sourceDocument, aProject);
+                File sourceFilePath = aRepository.exportSourceDocument(sourceDocument);
                 FileUtils.copyInputStreamToFile(zip.getInputStream(entry), sourceFilePath);
             }
         }

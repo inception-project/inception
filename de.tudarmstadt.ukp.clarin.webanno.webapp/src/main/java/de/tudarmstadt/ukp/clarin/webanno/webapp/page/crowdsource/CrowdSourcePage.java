@@ -974,8 +974,7 @@ public class CrowdSourcePage
                 projectRepository.createAnnotationDocument(annotationDocument);
 
                 jCas = BratAjaxCasUtil.getJCasFromFile(
-                        projectRepository.getSourceDocumentContent(selectedProject,
-                                sourceDocument),
+                        projectRepository.getSourceDocumentContent(sourceDocument),
                         projectRepository.getReadableFormats().get(
                                 sourceDocument.getFormat()));
                 projectRepository.createAnnotationDocumentContent(jCas, sourceDocument, user);

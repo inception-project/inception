@@ -312,7 +312,8 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public boolean existsAnnotationDocumentContent(SourceDocument aSourceDocument, String aUsername) throws IOException
+    public boolean existsAnnotationDocumentContent(SourceDocument aSourceDocument, String aUsername)
+        throws IOException
     {
         if (new File(getAnnotationFolder(aSourceDocument), aUsername + ".ser").exists()) {
             return true;
@@ -436,8 +437,8 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public File exportAnnotationDocument(SourceDocument aDocument, String aUser,
-            Class aWriter, String aFileName, Mode aMode)
+    public File exportAnnotationDocument(SourceDocument aDocument, String aUser, Class aWriter,
+            String aFileName, Mode aMode)
         throws UIMAException, IOException, ClassNotFoundException
     {
         File exportTempDir = File.createTempFile("webanno", "export");
@@ -446,7 +447,8 @@ public class RepositoryServiceDbData
 
         File annotationFolder = getAnnotationFolder(aDocument);
         String serializedCaseFileName;
-        // for Correction, it will export the corrected result (of the logged in user) (CORRECTION_USER.ser is
+        // for Correction, it will export the corrected result (of the logged in user)
+        // (CORRECTION_USER.ser is
         // the automated result displayed for the user to correct it, not the final result)
         if (aMode.equals(Mode.ANNOTATION) || aMode.equals(Mode.CORRECTION)) {
             serializedCaseFileName = aUser + ".ser";
@@ -494,23 +496,26 @@ public class RepositoryServiceDbData
         List<AnnotationType> types = annotationService.listAnnotationType(project);
         for (AnnotationType annotationType : types) {
             TagSet tagSet = annotationService.getTagSet(annotationType, project);
-            if(annotationType.getName().equals(AnnotationTypeConstant.NAMEDENTITY)){
-                BratAjaxCasUtil.updateCasWithTagSet(cas, NamedEntity.class.getName(), tagSet.getName());
+            if (annotationType.getName().equals(AnnotationTypeConstant.NAMEDENTITY)) {
+                BratAjaxCasUtil.updateCasWithTagSet(cas, NamedEntity.class.getName(),
+                        tagSet.getName());
             }
-            else if(annotationType.getName().equals(AnnotationTypeConstant.POS)){
+            else if (annotationType.getName().equals(AnnotationTypeConstant.POS)) {
                 BratAjaxCasUtil.updateCasWithTagSet(cas, POS.class.getName(), tagSet.getName());
             }
-            else if(annotationType.getName().equals(AnnotationTypeConstant.DEPENDENCY)){
-                BratAjaxCasUtil.updateCasWithTagSet(cas, Dependency.class.getName(), tagSet.getName());
+            else if (annotationType.getName().equals(AnnotationTypeConstant.DEPENDENCY)) {
+                BratAjaxCasUtil.updateCasWithTagSet(cas, Dependency.class.getName(),
+                        tagSet.getName());
             }
-            else if(annotationType.getName().equals(AnnotationTypeConstant.COREFRELTYPE)){
-                BratAjaxCasUtil.updateCasWithTagSet(cas, CoreferenceLink.class.getName(), tagSet.getName());
+            else if (annotationType.getName().equals(AnnotationTypeConstant.COREFRELTYPE)) {
+                BratAjaxCasUtil.updateCasWithTagSet(cas, CoreferenceLink.class.getName(),
+                        tagSet.getName());
             }
-            else if(annotationType.getName().equals(AnnotationTypeConstant.COREFERENCE)){
-                BratAjaxCasUtil.updateCasWithTagSet(cas, CoreferenceChain.class.getName(), tagSet.getName());
+            else if (annotationType.getName().equals(AnnotationTypeConstant.COREFERENCE)) {
+                BratAjaxCasUtil.updateCasWithTagSet(cas, CoreferenceChain.class.getName(),
+                        tagSet.getName());
             }
         }
-
 
         runPipeline(cas, writer);
 
@@ -534,10 +539,10 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public File exportSourceDocument(SourceDocument aDocument, Project aProject)
+    public File exportSourceDocument(SourceDocument aDocument)
     {
-        File documentUri = new File(dir.getAbsolutePath() + PROJECT + aProject.getId() + DOCUMENT
-                + aDocument.getId() + SOURCE);
+        File documentUri = new File(dir.getAbsolutePath() + PROJECT
+                + aDocument.getProject().getId() + DOCUMENT + aDocument.getId() + SOURCE);
         return new File(documentUri, aDocument.getName());
     }
 
@@ -593,7 +598,8 @@ public class RepositoryServiceDbData
     @Transactional(noRollbackFor = NoResultException.class)
     public List<Authority> listAuthorities(User aUser)
     {
-        return entityManager.createQuery("FROM Authority where username =:username", Authority.class)
+        return entityManager
+                .createQuery("FROM Authority where username =:username", Authority.class)
                 .setParameter("username", aUser).getResultList();
     }
 
@@ -722,9 +728,9 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public File getSourceDocumentContent(Project aProject, SourceDocument aDocument)
+    public File getSourceDocumentContent(SourceDocument aDocument)
     {
-        String path = dir.getAbsolutePath() + PROJECT + aProject.getId() + DOCUMENT
+        String path = dir.getAbsolutePath() + PROJECT + aDocument.getProject().getId() + DOCUMENT
                 + aDocument.getId() + SOURCE;
         return new File(path + "/" + aDocument.getName());
     }
@@ -754,9 +760,8 @@ public class RepositoryServiceDbData
     public boolean existsFinishedAnnotation(SourceDocument aDocument)
     {
         List<AnnotationDocument> annotationDocuments = entityManager
-                .createQuery(
-                        "FROM AnnotationDocument WHERE document = :document", AnnotationDocument.class)
-                .setParameter("document", aDocument)
+                .createQuery("FROM AnnotationDocument WHERE document = :document",
+                        AnnotationDocument.class).setParameter("document", aDocument)
                 .getResultList();
         for (AnnotationDocument annotationDocument : annotationDocuments) {
             if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
@@ -775,9 +780,8 @@ public class RepositoryServiceDbData
             AnnotationDocument annotationDocument = entityManager
                     .createQuery(
                             "FROM AnnotationDocument WHERE document = :document AND "
-                                    + "user =:user",
-                            AnnotationDocument.class).setParameter("document", aDocument)
-                    .setParameter("user", aUser.getUsername())
+                                    + "user =:user", AnnotationDocument.class)
+                    .setParameter("document", aDocument).setParameter("user", aUser.getUsername())
                     .getSingleResult();
             if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
                 return true;
@@ -862,7 +866,8 @@ public class RepositoryServiceDbData
     @Transactional
     public List<Project> listProjects()
     {
-        return entityManager.createQuery("FROM Project  ORDER BY name ASC ", Project.class).getResultList();
+        return entityManager.createQuery("FROM Project  ORDER BY name ASC ", Project.class)
+                .getResultList();
     }
 
     @Override
@@ -921,7 +926,7 @@ public class RepositoryServiceDbData
             annotationService.removeTagSet(tagset);
         }
         // remove, if exists, a crowdsource job created from this project
-        for(CrowdJob crowdJob: listCrowdJobs(aProject)){
+        for (CrowdJob crowdJob : listCrowdJobs(aProject)) {
             removeCrowdJob(crowdJob);
         }
         // remove the project directory from the file system
@@ -1089,12 +1094,11 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public void uploadSourceDocument(File aFile, SourceDocument aDocument, long aProjectId,
-            User aUser)
+    public void uploadSourceDocument(File aFile, SourceDocument aDocument, User aUser)
         throws IOException
     {
-        String path = dir.getAbsolutePath() + PROJECT + aProjectId + DOCUMENT + aDocument.getId()
-                + SOURCE;
+        String path = dir.getAbsolutePath() + PROJECT + aDocument.getProject().getId() + DOCUMENT
+                + aDocument.getId() + SOURCE;
         FileUtils.forceMkdir(new File(path));
         File newTcfFile = new File(path, aDocument.getName());
 
@@ -1119,12 +1123,11 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public void uploadSourceDocument(InputStream aIs, SourceDocument aDocument, long aProjectId,
-            User aUser)
+    public void uploadSourceDocument(InputStream aIs, SourceDocument aDocument, User aUser)
         throws IOException
     {
-        String path = dir.getAbsolutePath() + PROJECT + aProjectId + DOCUMENT + aDocument.getId()
-                + SOURCE;
+        String path = dir.getAbsolutePath() + PROJECT + aDocument.getProject().getId() + DOCUMENT
+                + aDocument.getId() + SOURCE;
         FileUtils.forceMkdir(new File(path));
         File newTcfFile = new File(path, aDocument.getName());
 

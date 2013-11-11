@@ -192,9 +192,8 @@ public interface RepositoryService
      * Exports source documents of a given Project. This is used to copy projects from one
      * application/release to another.
      */
-    // FIXME Bug 689 - Source document uniquely identifies project (document.getProject())
-    // - REC 2013-10-26
-    File exportSourceDocument(SourceDocument document, Project project);
+
+    File exportSourceDocument(SourceDocument document);
 
     /**
      * Get meta data information about {@link SourceDocument} from the database. This method is
@@ -220,9 +219,7 @@ public interface RepositoryService
      *            The {@link SourceDocument} to be examined
      * @return the Directory path of the source document
      */
-    // FIXME Bug 689 - Source document uniquely identifies project (document.getProject())
-    // - REC 2013-10-26
-    File getSourceDocumentContent(Project project, SourceDocument document);
+    File getSourceDocumentContent(SourceDocument document);
 
     /**
      * List all source documents in a project. The source documents are the original TCF documents
@@ -250,9 +247,7 @@ public interface RepositoryService
         throws IOException;
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER','ROLE_REMOTE')")
-    // FIXME Bug 689 - Source document uniquely identifies project (document.getProject())
-    // - REC 2013-10-26
-    void uploadSourceDocument(File file, SourceDocument document, long projectId, User user)
+    void uploadSourceDocument(File file, SourceDocument document, User user)
         throws IOException, UIMAException;
 
     /**
@@ -260,9 +255,7 @@ public interface RepositoryService
      * repository directory. This way we don't need to create the file to a temporary folder
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER','ROLE_REMOTE')")
-    // FIXME Bug 689 - Source document uniquely identifies project (document.getProject())
-    // - REC 2013-10-26
-    void uploadSourceDocument(InputStream file, SourceDocument document, long projectId, User user)
+    void uploadSourceDocument(InputStream file, SourceDocument document, User user)
         throws IOException, UIMAException;
 
     // --------------------------------------------------------------------------------------------

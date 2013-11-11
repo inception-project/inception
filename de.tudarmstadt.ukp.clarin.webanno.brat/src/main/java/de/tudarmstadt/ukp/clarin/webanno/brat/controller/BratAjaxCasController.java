@@ -449,8 +449,8 @@ public class BratAjaxCasController
         }
 
         try {
-            jCas = BratAjaxCasUtil.getJCasFromFile(repository.getSourceDocumentContent(aProject,
-                    aDocument), repository.getReadableFormats().get(aDocument.getFormat()));
+            jCas = BratAjaxCasUtil.getJCasFromFile(repository.getSourceDocumentContent(aDocument),
+                    repository.getReadableFormats().get(aDocument.getFormat()));
         }
         catch (UIMAException e) {
             throw new IOException(e);

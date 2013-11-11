@@ -369,7 +369,7 @@ public class ProjectExportPanel
 
         for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
             FileUtils.copyFileToDirectory(
-                    projectRepository.exportSourceDocument(sourceDocument, aProject),
+                    projectRepository.exportSourceDocument(sourceDocument),
                     sourceDocumentDir);
         }
     }

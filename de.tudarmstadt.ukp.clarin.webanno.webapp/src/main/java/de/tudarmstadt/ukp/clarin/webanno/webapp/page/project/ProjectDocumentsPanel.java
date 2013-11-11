@@ -134,8 +134,7 @@ public class ProjectDocumentsPanel
                                 .getModelObject());
                         document.setFormat(reader);
                         projectRepository.createSourceDocument(document, user);
-                        projectRepository.uploadSourceDocument(uploadFile, document,
-                                project.getId(), user);
+                        projectRepository.uploadSourceDocument(uploadFile, document, user);
                         info("File [" + fileName + "] has been imported successfully!");
                     }
                     catch (ClassNotFoundException e) {
