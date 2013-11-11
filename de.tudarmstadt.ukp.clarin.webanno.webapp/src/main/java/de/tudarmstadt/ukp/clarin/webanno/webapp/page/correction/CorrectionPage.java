@@ -315,7 +315,7 @@ public class CorrectionPage
             private static final long serialVersionUID = 7496156015186497496L;
 
             @Override
-            public void onClick(final AjaxRequestTarget aTarget)
+            public void onClick(AjaxRequestTarget aTarget)
             {
                 openDocumentsModal.setContent(new OpenModalWindowPanel(openDocumentsModal
                         .getContentId(), bratAnnotatorModel, openDocumentsModal, Mode.CORRECTION));
@@ -341,15 +341,15 @@ public class CorrectionPage
 
                             }
                             catch (UIMAException e) {
-                                aTarget.add(getFeedbackPanel());
+                                target.add(getFeedbackPanel());
                                 error(ExceptionUtils.getRootCause(e));
                             }
                             catch (ClassNotFoundException e) {
-                                aTarget.add(getFeedbackPanel());
+                                target.add(getFeedbackPanel());
                                 error(e.getMessage());
                             }
                             catch (IOException e) {
-                                aTarget.add(getFeedbackPanel());
+                                target.add(getFeedbackPanel());
                                 error(e.getMessage());
                             }
                             finish.setModelObject(bratAnnotatorModel);

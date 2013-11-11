@@ -47,6 +47,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationOption;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff;
@@ -345,11 +346,8 @@ public class BratCuratorUtility
             }
             if (newState != null) {
                 String type = entity.getType() + "_(" + newState.name() + ")";
-                String label = entity.getType();
-                // FIXME WFT? Can we use TypeUtil.getLabel() here?! -- REC 2013-11-02
-                label = label.replace(AnnotationTypeConstant.POS_PREFIX, "")
-                        .replace(AnnotationTypeConstant.NAMEDENTITY_PREFIX, "")
-                        .replace(AnnotationTypeConstant.COREFRELTYPE_PREFIX, "");
+                String label = TypeUtil.getLabel(entity.getType());
+
                 entity.setType(type);
                 boolean hasArc = false;
                 for (Relation relation : response.getRelations()) {

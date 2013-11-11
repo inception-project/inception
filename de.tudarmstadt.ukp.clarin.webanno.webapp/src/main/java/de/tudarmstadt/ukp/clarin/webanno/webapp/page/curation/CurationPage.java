@@ -211,7 +211,7 @@ public class CurationPage
             private static final long serialVersionUID = 7496156015186497496L;
 
             @Override
-            public void onClick(final AjaxRequestTarget aTarget)
+            public void onClick(AjaxRequestTarget aTarget)
             {
                 openDocumentsModal.setContent(new OpenModalWindowPanel(openDocumentsModal
                         .getContentId(), bratAnnotatorModel, openDocumentsModal, Mode.CURATION));
@@ -234,45 +234,43 @@ public class CurationPage
                             // ANNOTATION_FINISHED
                             if (!bratAnnotatorModel.getDocument().getState()
                                     .equals(SourceDocumentState.CURATION_FINISHED)) {
-                                try {
-                                    bratAnnotatorModel.getDocument().setState(
-                                            SourceDocumentState.CURATION_IN_PROGRESS);
 
-                                    repository.createSourceDocument(
-                                            bratAnnotatorModel.getDocument(), user);
-                                    bratAnnotatorModel.setDocument(bratAnnotatorModel.getDocument());
-                                    bratAnnotatorModel.setProject(bratAnnotatorModel.getProject());
-                                    BratAnnotatorUtility.upgradeCasAndSave(repository,
-                                            bratAnnotatorModel.getDocument(), Mode.CURATION);
+                                bratAnnotatorModel.getDocument().setState(
+                                        SourceDocumentState.CURATION_IN_PROGRESS);
+                            }
+                            try {
+                                repository.createSourceDocument(bratAnnotatorModel.getDocument(),
+                                        user);
+                                BratAnnotatorUtility.upgradeCasAndSave(repository,
+                                        bratAnnotatorModel.getDocument(), Mode.CURATION);
 
-                                    initBratAnnotatorDataModel();
-                                    CurationBuilder builder = new CurationBuilder(repository,
-                                            annotationService);
-                                    curationContainer = builder
-                                            .buildCurationContainer(bratAnnotatorModel);
-                                    curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
-                                    updatePanel(curationContainer);
+                                initBratAnnotatorDataModel();
+                                CurationBuilder builder = new CurationBuilder(repository,
+                                        annotationService);
+                                curationContainer = builder
+                                        .buildCurationContainer(bratAnnotatorModel);
+                                curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
+                                updatePanel(curationContainer);
 
-                                    target.add(finish.setOutputMarkupId(true));
-                                    target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                                target.add(finish.setOutputMarkupId(true));
+                                target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
 
-                                }
-                                catch (UIMAException e) {
-                                    aTarget.add(getFeedbackPanel());
-                                    error(ExceptionUtils.getRootCause(e));
-                                }
-                                catch (ClassNotFoundException e) {
-                                    aTarget.add(getFeedbackPanel());
-                                    error(e.getMessage());
-                                }
-                                catch (IOException e) {
-                                    aTarget.add(getFeedbackPanel());
-                                    error(e.getMessage());
-                                }
-                                catch (BratAnnotationException e) {
-                                    aTarget.add(getFeedbackPanel());
-                                    error(e.getMessage());
-                                }
+                            }
+                            catch (UIMAException e) {
+                                target.add(getFeedbackPanel());
+                                error(ExceptionUtils.getRootCause(e));
+                            }
+                            catch (ClassNotFoundException e) {
+                                target.add(getFeedbackPanel());
+                                error(e.getMessage());
+                            }
+                            catch (IOException e) {
+                                target.add(getFeedbackPanel());
+                                error(e.getMessage());
+                            }
+                            catch (BratAnnotationException e) {
+                                target.add(getFeedbackPanel());
+                                error(e.getMessage());
                             }
                         }
                         else if (bratAnnotatorModel.getDocument() == null) {
