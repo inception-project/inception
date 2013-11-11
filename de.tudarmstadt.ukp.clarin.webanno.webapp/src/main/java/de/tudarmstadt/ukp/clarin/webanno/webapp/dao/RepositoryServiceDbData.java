@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.dao;
 
 import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.commons.io.IOUtils.copyLarge;
-import static org.apache.commons.lang.StringUtils.*;
+import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.uimafit.factory.AnalysisEngineFactory.createPrimitiveDescription;
 import static org.uimafit.pipeline.SimplePipeline.runPipeline;
 
@@ -436,7 +436,7 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public File exportAnnotationDocument(SourceDocument aDocument, Project aProject, String aUser,
+    public File exportAnnotationDocument(SourceDocument aDocument, String aUser,
             Class aWriter, String aFileName, Mode aMode)
         throws UIMAException, IOException, ClassNotFoundException
     {
@@ -475,7 +475,8 @@ public class RepositoryServiceDbData
         DocumentMetaData documentMetadata = DocumentMetaData.get(cas.getJCas());
         // Update the source file name in case it is changed for some reason
 
-        File currentDocumentUri = new File(dir.getAbsolutePath() + PROJECT + aProject.getId()
+        Project project = aDocument.getProject();
+        File currentDocumentUri = new File(dir.getAbsolutePath() + PROJECT + project.getId()
                 + DOCUMENT + aDocument.getId() + SOURCE);
 
         documentMetadata.setDocumentUri(new File(currentDocumentUri, aFileName).toURI().toURL()
@@ -485,14 +486,14 @@ public class RepositoryServiceDbData
 
         documentMetadata.setCollectionId(currentDocumentUri.toURI().toURL().toExternalForm());
 
-        documentMetadata.setDocumentUri(new File(dir.getAbsolutePath() + PROJECT + aProject.getId()
+        documentMetadata.setDocumentUri(new File(dir.getAbsolutePath() + PROJECT + project.getId()
                 + DOCUMENT + aDocument.getId() + SOURCE + "/" + aFileName).toURI().toURL()
                 .toExternalForm());
 
         // update with the correct tagset name
-        List<AnnotationType> types = annotationService.listAnnotationType(aProject);
+        List<AnnotationType> types = annotationService.listAnnotationType(project);
         for (AnnotationType annotationType : types) {
-            TagSet tagSet = annotationService.getTagSet(annotationType, aProject);
+            TagSet tagSet = annotationService.getTagSet(annotationType, project);
             if(annotationType.getName().equals(AnnotationTypeConstant.NAMEDENTITY)){
                 BratAjaxCasUtil.updateCasWithTagSet(cas, NamedEntity.class.getName(), tagSet.getName());
             }
@@ -513,10 +514,10 @@ public class RepositoryServiceDbData
 
         runPipeline(cas, writer);
 
-        createLog(aProject, aUser).info(
+        createLog(project, aUser).info(
                 " Exported file [" + aDocument.getName() + "] with ID [" + aDocument.getId()
-                        + "] from Project[" + aProject.getId() + "]");
-        createLog(aProject, aUser).removeAllAppenders();
+                        + "] from Project[" + project.getId() + "]");
+        createLog(project, aUser).removeAllAppenders();
 
         if (exportTempDir.listFiles().length > 1) {
             try {
@@ -524,7 +525,7 @@ public class RepositoryServiceDbData
                         new File(exportTempDir.getAbsolutePath() + ".zip"));
             }
             catch (Exception e) {
-                createLog(aProject, aUser).info("Unable to create Zip File");
+                createLog(project, aUser).info("Unable to create Zip File");
             }
             return new File(exportTempDir.getAbsolutePath() + ".zip");
         }

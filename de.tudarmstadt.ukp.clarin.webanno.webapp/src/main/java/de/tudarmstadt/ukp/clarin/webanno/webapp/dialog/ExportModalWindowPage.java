@@ -124,7 +124,6 @@ public class ExportModalWindowPage
                                 try {
                                     downloadFile = repository.exportAnnotationDocument(
                                             bratAnnotatorModel.getDocument(),
-                                            bratAnnotatorModel.getProject(),
                                             username,
                                             repository.getWritableFormats().get(
                                                     repository.getWritableFormatId(selectedFormat)),

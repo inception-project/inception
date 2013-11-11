@@ -325,7 +325,7 @@ public class ProjectExportPanel
                 File curationFile = null;
                 if (CurationFileAsSerialisedCas.exists()) {
                     curationFile = projectRepository.exportAnnotationDocument(sourceDocument,
-                            aProject, username, TcfWriter.class, sourceDocument.getName(),
+                            username, TcfWriter.class, sourceDocument.getName(),
                             Mode.CURATION);
                 }
                 // in Case they didn't exist
@@ -343,7 +343,7 @@ public class ProjectExportPanel
                 File correctionFile = null;
                 if (CorrectionFileAsSerialisedCas.exists()) {
                     correctionFile = projectRepository.exportAnnotationDocument(sourceDocument,
-                            aProject, username, TcfWriter.class, sourceDocument.getName(),
+                             username, TcfWriter.class, sourceDocument.getName(),
                             Mode.CORRECTION);
                 }
                 // in Case they didn't exist
@@ -460,7 +460,7 @@ public class ProjectExportPanel
                         Class writer = projectRepository.getWritableFormats().get(
                                 sourceDocument.getFormat());
                         annotationFile = projectRepository.exportAnnotationDocument(sourceDocument,
-                                aProject, annotationDocument.getUser(), writer,
+                                annotationDocument.getUser(), writer,
                                 sourceDocument.getName(), Mode.ANNOTATION);
                     }
                     if (annotationFileAsSerialisedCas.exists()) {
