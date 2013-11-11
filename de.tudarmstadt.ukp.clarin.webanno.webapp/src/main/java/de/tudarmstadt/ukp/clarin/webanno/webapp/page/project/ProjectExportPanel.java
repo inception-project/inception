@@ -320,13 +320,12 @@ public class ProjectExportPanel
             if (sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)
                     || sourceDocument.getState().equals(SourceDocumentState.CURATION_IN_PROGRESS)) {
 
-                File CurationFileAsSerialisedCas = projectRepository.exportAnnotationDocument(
-                        sourceDocument, aProject, CURATION_USER);
+                File CurationFileAsSerialisedCas = projectRepository.exportserializedCas(
+                        sourceDocument, CURATION_USER);
                 File curationFile = null;
                 if (CurationFileAsSerialisedCas.exists()) {
                     curationFile = projectRepository.exportAnnotationDocument(sourceDocument,
-                            username, TcfWriter.class, sourceDocument.getName(),
-                            Mode.CURATION);
+                            username, TcfWriter.class, sourceDocument.getName(), Mode.CURATION);
                 }
                 // in Case they didn't exist
                 if (CurationFileAsSerialisedCas.exists()) {
@@ -337,14 +336,13 @@ public class ProjectExportPanel
 
             // If this project is a correction project, add the auto-annotated CAS to same folder as
             // CURATION
-            if(aProject.getMode().equals(Mode.CORRECTION)){
-                File CorrectionFileAsSerialisedCas = projectRepository.exportAnnotationDocument(
-                        sourceDocument, aProject, CORRECTION_USER);
+            if (aProject.getMode().equals(Mode.CORRECTION)) {
+                File CorrectionFileAsSerialisedCas = projectRepository.exportserializedCas(
+                        sourceDocument, CORRECTION_USER);
                 File correctionFile = null;
                 if (CorrectionFileAsSerialisedCas.exists()) {
                     correctionFile = projectRepository.exportAnnotationDocument(sourceDocument,
-                             username, TcfWriter.class, sourceDocument.getName(),
-                            Mode.CORRECTION);
+                            username, TcfWriter.class, sourceDocument.getName(), Mode.CORRECTION);
                 }
                 // in Case they didn't exist
                 if (CorrectionFileAsSerialisedCas.exists()) {
@@ -368,8 +366,7 @@ public class ProjectExportPanel
                 .listSourceDocuments(aProject);
 
         for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
-            FileUtils.copyFileToDirectory(
-                    projectRepository.exportSourceDocument(sourceDocument),
+            FileUtils.copyFileToDirectory(projectRepository.exportSourceDocument(sourceDocument),
                     sourceDocumentDir);
         }
     }
@@ -451,17 +448,16 @@ public class ProjectExportPanel
                     FileUtils.forceMkdir(annotationDocumentAsSerialisedCasDir);
                     FileUtils.forceMkdir(annotationDocumentDir);
 
-                    File annotationFileAsSerialisedCas = projectRepository
-                            .exportAnnotationDocument(sourceDocument, aProject,
-                                    annotationDocument.getUser());
+                    File annotationFileAsSerialisedCas = projectRepository.exportserializedCas(
+                            sourceDocument, annotationDocument.getUser());
 
                     File annotationFile = null;
                     if (annotationFileAsSerialisedCas.exists()) {
                         Class writer = projectRepository.getWritableFormats().get(
                                 sourceDocument.getFormat());
                         annotationFile = projectRepository.exportAnnotationDocument(sourceDocument,
-                                annotationDocument.getUser(), writer,
-                                sourceDocument.getName(), Mode.ANNOTATION);
+                                annotationDocument.getUser(), writer, sourceDocument.getName(),
+                                Mode.ANNOTATION);
                     }
                     if (annotationFileAsSerialisedCas.exists()) {
                         FileUtils.copyFileToDirectory(annotationFileAsSerialisedCas,

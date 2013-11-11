@@ -606,8 +606,7 @@ public class ProjectUtil
                 fileName = fileName.replace(FilenameUtils.getName(fileName), "").replace("/", "");
                 de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument = aRepository
                         .getSourceDocument(aProject, fileName);
-                File annotationFilePath = aRepository.exportAnnotationDocument(sourceDocument,
-                        aProject, username);
+                File annotationFilePath = aRepository.exportserializedCas(sourceDocument, username);
 
                 FileUtils.copyInputStreamToFile(zip.getInputStream(entry), annotationFilePath);
             }
@@ -633,8 +632,7 @@ public class ProjectUtil
                 fileName = fileName.replace(FilenameUtils.getName(fileName), "").replace("/", "");
                 de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument = aRepository
                         .getSourceDocument(aProject, fileName);
-                File annotationFilePath = aRepository.exportAnnotationDocument(sourceDocument,
-                        aProject, username);
+                File annotationFilePath = aRepository.exportserializedCas(sourceDocument, username);
 
                 FileUtils.copyInputStreamToFile(zip.getInputStream(entry), annotationFilePath);
             }
@@ -703,7 +701,7 @@ public class ProjectUtil
             RepositoryService aRepository, Project aProject)
     {
         List<de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument> annotationDocuments = aRepository
-                .listAnnotationDocuments(aProject, aSourceDocument);
+                .listAnnotationDocuments(aSourceDocument);
         boolean finishedAnnotationDocumentExist = false;
         for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : annotationDocuments) {
             if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {

@@ -547,9 +547,9 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public File exportAnnotationDocument(SourceDocument aDocument, Project aProject, String aUser)
+    public File exportserializedCas(SourceDocument aDocument, String aUser)
     {
-        File documentUri = new File(dir.getAbsolutePath() + PROJECT + aProject.getId() + DOCUMENT
+        File documentUri = new File(dir.getAbsolutePath() + PROJECT + aDocument.getProject().getId() + DOCUMENT
                 + aDocument.getId() + ANNOTATION);
         return new File(documentUri, aUser + ".ser");
     }
@@ -798,16 +798,15 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public List<AnnotationDocument> listAnnotationDocuments(Project aProject,
-            SourceDocument aDocument)
+    public List<AnnotationDocument> listAnnotationDocuments(SourceDocument aDocument)
     {
         // Get all annotators in the project
         List<String> users = entityManager
                 .createQuery(
                         "SELECT DISTINCT user FROM ProjectPermission WHERE project = :project "
                                 + "AND level = :level", String.class)
-                .setParameter("project", aProject).setParameter("level", PermissionLevel.USER)
-                .getResultList();
+                .setParameter("project", aDocument.getProject())
+                .setParameter("level", PermissionLevel.USER).getResultList();
 
         // Bail out already. HQL doesn't seem to like queries with an empty parameter right of "in"
         if (users.isEmpty()) {
@@ -828,20 +827,8 @@ public class RepositoryServiceDbData
                 .createQuery(
                         "FROM AnnotationDocument WHERE project = :project AND document = :document "
                                 + "AND user in (:users)", AnnotationDocument.class)
-                .setParameter("project", aProject).setParameter("users", users)
+                .setParameter("project", aDocument.getProject()).setParameter("users", users)
                 .setParameter("document", aDocument).getResultList();
-    }
-
-    @Override
-    @Transactional(noRollbackFor = NoResultException.class)
-    public List<AnnotationDocument> listAnnotationDocuments(SourceDocument aSourceDocument)
-    {
-        return entityManager
-                .createQuery(
-                        "FROM AnnotationDocument WHERE project = :project AND document = :document",
-                        AnnotationDocument.class)
-                .setParameter("project", aSourceDocument.getProject())
-                .setParameter("document", aSourceDocument).getResultList();
     }
 
     @Override

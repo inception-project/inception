@@ -144,7 +144,7 @@ public class CurationViewPanel
                         // or CorrectionPage
                         if (BratAnnotatorUtility.isDocumentFinished(repository,
                                 curationUserSegment.getBratAnnotatorModel())) {
-                           // aTarget.add(feedbackPanel);
+                            // aTarget.add(feedbackPanel);
                             aTarget.appendJavaScript("alert('This document is already closed."
                                     + " Please ask admin to re-open')");
                         }
@@ -183,24 +183,24 @@ public class CurationViewPanel
                                 onChange(aTarget);
                             }
                             catch (UIMAException e) {
-                              //  aTarget.add(feedbackPanel);
-                              //  error(ExceptionUtils.getRootCauseMessage(e));
+                                // aTarget.add(feedbackPanel);
+                                // error(ExceptionUtils.getRootCauseMessage(e));
                                 aTarget.appendJavaScript(ExceptionUtils.getRootCauseMessage(e));
                             }
                             catch (ClassNotFoundException e) {
-                               // aTarget.add(feedbackPanel);
-                               // error(e.getMessage());
+                                // aTarget.add(feedbackPanel);
+                                // error(e.getMessage());
                                 aTarget.appendJavaScript(e.getMessage());
                             }
                             catch (IOException e) {
                                 // aTarget.add(feedbackPanel);
                                 // error(e.getMessage());
-                                 aTarget.appendJavaScript(e.getMessage());
+                                aTarget.appendJavaScript(e.getMessage());
                             }
                             catch (BratAnnotationException e) {
                                 // aTarget.add(feedbackPanel);
                                 // error(e.getMessage());
-                                 aTarget.appendJavaScript(e.getMessage());
+                                aTarget.appendJavaScript(e.getMessage());
                             }
 
                         }
@@ -245,8 +245,8 @@ public class CurationViewPanel
         SourceDocument sourceDocument = aCurationUserSegment.getBratAnnotatorModel().getDocument();
 
         AnnotationDocument clickedAnnotationDocument = null;
-        List<AnnotationDocument> annotationDocuments = aRepository.listAnnotationDocuments(project,
-                sourceDocument);
+        List<AnnotationDocument> annotationDocuments = aRepository
+                .listAnnotationDocuments(sourceDocument);
         for (AnnotationDocument annotationDocument : annotationDocuments) {
             if (annotationDocument.getUser().equals(username)) {
                 clickedAnnotationDocument = annotationDocument;
@@ -334,8 +334,8 @@ public class CurationViewPanel
         if (annotationSelectionOrigin != null && annotationSelectionTarget != null) {
 
             AnnotationDocument clickedAnnotationDocument = null;
-            List<AnnotationDocument> annotationDocuments = repository.listAnnotationDocuments(
-                    project, sourceDocument);
+            List<AnnotationDocument> annotationDocuments = repository
+                    .listAnnotationDocuments(sourceDocument);
             for (AnnotationDocument annotationDocument : annotationDocuments) {
                 if (annotationDocument.getUser().equals(username)) {
                     clickedAnnotationDocument = annotationDocument;

@@ -199,6 +199,7 @@ public interface RepositoryService
      * Get meta data information about {@link SourceDocument} from the database. This method is
      * called either for {@link AnnotationDocument} object creation or
      * {@link RepositoryService#createSourceDocument(SourceDocument, User)}
+     *
      * @param project
      *            the {@link Project} where the {@link SourceDocument} belongs
      * @param documentName
@@ -311,15 +312,14 @@ public interface RepositoryService
      * @param user
      *            the {@link User } who annotates the document.
      */
-    File exportAnnotationDocument(SourceDocument document, String user,
-            Class writer, String fileName, Mode mode)
+    File exportAnnotationDocument(SourceDocument document, String user, Class writer,
+            String fileName, Mode mode)
         throws FileNotFoundException, UIMAException, IOException, ClassNotFoundException;
 
     /**
      * Export a Serialized CAS annotation document from the file system
      */
-    // FIXME Why do we need two versions of expertAnnotatonDocument? - REC 2013-10-26
-    File exportAnnotationDocument(SourceDocument document, Project project, String user);
+    File exportserializedCas(SourceDocument document, String user);
 
     /**
      * Get an {@link AnnotationDocument} object from the database using the {@link SourceDocument}
@@ -346,7 +346,6 @@ public interface RepositoryService
     JCas getAnnotationDocumentContent(AnnotationDocument annotationDocument)
         throws UIMAException, IOException, ClassNotFoundException;
 
-
     /**
      * List all the {@link AnnotationDocument}s, if available for a given {@link SourceDocument} in
      * the {@link Project}. Returns list of {@link AnnotationDocument}s for all {@link User}s in the
@@ -356,28 +355,7 @@ public interface RepositoryService
      *            the {@link SourceDocument}
      * @return {@link AnnotationDocument}
      */
-    // FIXME Bug 689 - Source document uniquely identifies project (document.getProject())
-    // - REC 2013-10-26
-    List<AnnotationDocument> listAnnotationDocuments(Project project, SourceDocument document);
-
-    /**
-     * List all {@link AnnotationDocument}s of this {@link SourceDocument} including those created
-     * by project admins or super admins for Test purpose. This method is called when a source
-     * document is deleted so that associated annotation documents also get removed.
-     *
-     * @param document
-     * @return
-     */
-    // FIXME duplicate of the other listAnnotationDocuments? - REC 2013-10-26
     List<AnnotationDocument> listAnnotationDocuments(SourceDocument document);
-
-    /**
-     * List all annotation documents in the state <b>INPROGRESS</b>
-     *
-     * @param document
-     * @return
-     */
-    // List<AnnotationDocument> listAnnotationDocumentInProgress(SourceDocument document);
 
     /**
      * Check if the user finished annotating the {@link SourceDocument} in this {@link Project}
@@ -414,7 +392,7 @@ public interface RepositoryService
         throws IOException;
 
     JCas getCorrectionDocumentContent(SourceDocument document)
-            throws UIMAException, IOException, ClassNotFoundException;
+        throws UIMAException, IOException, ClassNotFoundException;
 
     // --------------------------------------------------------------------------------------------
     // Methods related to curation

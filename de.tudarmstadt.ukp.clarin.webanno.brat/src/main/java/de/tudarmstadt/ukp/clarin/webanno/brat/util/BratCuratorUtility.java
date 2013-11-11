@@ -65,7 +65,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -137,8 +136,8 @@ public class BratCuratorUtility
         bratAnnotatorModel.setSentenceEndOffset(aCurationSegment.getEnd());
 
         bratAnnotatorModel.setMode(Mode.CURATION);
-        ProjectUtil.setAnnotationPreference(userLoggedIn.getUsername(),
-                aRepository, aAnnotationService, bratAnnotatorModel, Mode.CURATION);
+        ProjectUtil.setAnnotationPreference(userLoggedIn.getUsername(), aRepository,
+                aAnnotationService, bratAnnotatorModel, Mode.CURATION);
         return bratAnnotatorModel;
     }
 
@@ -524,9 +523,8 @@ public class BratCuratorUtility
         throws UIMAException, ClassNotFoundException, IOException
     {
         SourceDocument sourceDocument = aCurationContainer.getBratAnnotatorModel().getDocument();
-        Project project = aCurationContainer.getBratAnnotatorModel().getProject();
-        List<AnnotationDocument> annotationDocuments = aRepository.listAnnotationDocuments(project,
-                sourceDocument);
+        List<AnnotationDocument> annotationDocuments = aRepository
+                .listAnnotationDocuments(sourceDocument);
         Map<String, JCas> jCases = new HashMap<String, JCas>();
         JCas annotatorCas = null;
         // this is a CORRECTION project
@@ -553,8 +551,8 @@ public class BratCuratorUtility
         jCases.put(CURATION_USER, annotatorCas);
 
         // get differing feature structures
-        List<Type> entryTypes = CurationBuilder.getEntryTypes(annotatorCas,
-                aCurationContainer.getBratAnnotatorModel().getAnnotationLayers());
+        List<Type> entryTypes = CurationBuilder.getEntryTypes(annotatorCas, aCurationContainer
+                .getBratAnnotatorModel().getAnnotationLayers());
         List<AnnotationOption> annotationOptions = null;
         try {
             annotationOptions = CasDiff.doDiff(entryTypes, jCases, aCurationSegment.getBegin(),
