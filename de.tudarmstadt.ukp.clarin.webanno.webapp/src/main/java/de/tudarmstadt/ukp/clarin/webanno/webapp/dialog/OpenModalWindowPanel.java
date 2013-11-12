@@ -93,8 +93,8 @@ public class OpenModalWindowPanel
         this.mode = aSubject;
         username = SecurityContextHolder.getContext().getAuthentication().getName();
         user = projectRepository.getUser(username);
-        if (getAllowedProjects(mode).size() > 0) {
-            selectedProject = getAllowedProjects(mode).get(0);
+        if (getAllowedProjects().size() > 0) {
+            selectedProject = getAllowedProjects().get(0);
         }
 
         this.bratAnnotatorModel = aBratAnnotatorModel;
@@ -131,7 +131,7 @@ public class OpenModalWindowPanel
                         @Override
                         protected List<Project> load()
                         {
-                            return getAllowedProjects(mode);
+                            return getAllowedProjects();
                         }
                     });
                     setChoiceRenderer(new ChoiceRenderer<Project>("name"));
@@ -175,34 +175,36 @@ public class OpenModalWindowPanel
         }
     }
 
-    public List<Project> getAllowedProjects(Mode aSubject)
+    public List<Project> getAllowedProjects()
     {
 
         List<Project> allowedProject = new ArrayList<Project>();
-
-        if (aSubject.equals(mode.ANNOTATION)) {
+        switch (mode) {
+        case ANNOTATION:
             for (Project project : projectRepository.listProjects()) {
                 if (ProjectUtil.isMember(project, projectRepository, user)
                         && project.getMode().equals(Mode.ANNOTATION)) {
                     allowedProject.add(project);
                 }
             }
-        }
-        else if (aSubject.equals(mode.CURATION)) {
+            break;
+        case CURATION:
             for (Project project : projectRepository.listProjects()) {
                 if (ProjectUtil.isCurator(project, projectRepository, user)) {
                     allowedProject.add(project);
                 }
             }
-        }
-
-        else if (aSubject.equals(mode.CORRECTION)) {
+            break;
+        case CORRECTION:
             for (Project project : projectRepository.listProjects()) {
                 if (ProjectUtil.isMember(project, projectRepository, user)
                         && project.getMode().equals(Mode.CORRECTION)) {
                     allowedProject.add(project);
                 }
             }
+            break;
+        default:
+            break;
         }
 
         return allowedProject;
@@ -260,37 +262,42 @@ public class OpenModalWindowPanel
                         @Override
                         protected List<SourceDocument> load()
                         {
-                            if (selectedProject != null) {
-                                List<SourceDocument> allDocuments = projectRepository
-                                        .listSourceDocuments(selectedProject);
+                            if (selectedProject == null) {
+                                return new ArrayList<SourceDocument>();
+                            }
+                            List<SourceDocument> allDocuments = projectRepository
+                                    .listSourceDocuments(selectedProject);
 
-                                // Remove from the list source documents that are in IGNORE state OR
-                                // that do not have at least one annotation document marked as
-                                // finished for curation dialog
-                                List<SourceDocument> excludeDocuments = new ArrayList<SourceDocument>();
-                                for (SourceDocument sourceDocument : allDocuments) {
-                                    if (mode.equals(Mode.ANNOTATION)
-                                            && projectRepository.existsAnnotationDocument(
-                                                    sourceDocument, user)
+                            // Remove from the list source documents that are in IGNORE state OR
+                            // that do not have at least one annotation document marked as
+                            // finished for curation dialog
+                            List<SourceDocument> excludeDocuments = new ArrayList<SourceDocument>();
+                            for (SourceDocument sourceDocument : allDocuments) {
+                                switch (mode) {
+                                case ANNOTATION:
+                                    if (projectRepository.existsAnnotationDocument(sourceDocument,
+                                            user)
                                             && projectRepository
                                                     .getAnnotationDocument(sourceDocument, user)
                                                     .getState()
                                                     .equals(AnnotationDocumentState.IGNORE)) {
                                         excludeDocuments.add(sourceDocument);
                                     }
-                                    else if (mode.equals(Mode.CURATION)
+                                    break;
+                                case CURATION:
+                                    if (mode.equals(Mode.CURATION)
                                             && !ProjectUtil.existFinishedDocument(sourceDocument,
                                                     user, projectRepository, selectedProject)) {
                                         excludeDocuments.add(sourceDocument);
                                     }
-
+                                    break;
+                                default:
+                                    break;
                                 }
-                                allDocuments.removeAll(excludeDocuments);
-                                return allDocuments;
+
                             }
-                            else {
-                                return new ArrayList<SourceDocument>();
-                            }
+                            allDocuments.removeAll(excludeDocuments);
+                            return allDocuments;
                         }
                     });
                     setChoiceRenderer(new ChoiceRenderer<SourceDocument>("name"));
