@@ -831,6 +831,18 @@ public class RepositoryServiceDbData
                 .setParameter("document", aDocument).getResultList();
     }
 
+
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public List<AnnotationDocument> listAllAnnotationDocuments(SourceDocument aSourceDocument)
+    {
+        return entityManager
+                .createQuery(
+                        "FROM AnnotationDocument WHERE project = :project AND document = :document",
+                        AnnotationDocument.class)
+                .setParameter("project", aSourceDocument.getProject())
+                .setParameter("document", aSourceDocument).getResultList();
+    }
     @Override
     public List<String> listGuidelines(Project aProject)
     {
@@ -982,7 +994,7 @@ public class RepositoryServiceDbData
         throws IOException
     {
 
-        for (AnnotationDocument annotationDocument : listAnnotationDocuments(aDocument)) {
+        for (AnnotationDocument annotationDocument : listAllAnnotationDocuments(aDocument)) {
             removeAnnotationDocument(annotationDocument);
         }
         // remove it from the crowd job, if it belongs already

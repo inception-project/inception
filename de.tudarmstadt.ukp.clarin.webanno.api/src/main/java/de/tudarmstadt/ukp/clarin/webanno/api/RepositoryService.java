@@ -358,6 +358,16 @@ public interface RepositoryService
     List<AnnotationDocument> listAnnotationDocuments(SourceDocument document);
 
     /**
+     * List all annotation documents for this source document (including in active and delted user
+     * annotation and those created by project admins or super admins for Test purpose. This method
+     * is called when a source document (or Project) is deleted so that associated annotation
+     * documents also get removed.
+     *
+     * @return
+     */
+    List<AnnotationDocument> listAllAnnotationDocuments(SourceDocument document);
+
+    /**
      * Check if the user finished annotating the {@link SourceDocument} in this {@link Project}
      */
     boolean isAnnotationFinished(SourceDocument document, User user);
