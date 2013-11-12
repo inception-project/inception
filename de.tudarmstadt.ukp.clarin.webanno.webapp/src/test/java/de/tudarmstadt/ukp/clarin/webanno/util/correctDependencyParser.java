@@ -1,3 +1,20 @@
+/*******************************************************************************
+ * Copyright 2012
+ * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+ * Technische Universität Darmstadt
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.util;
 
 import static org.uimafit.util.JCasUtil.select;
@@ -20,14 +37,21 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.dkpro.core.io.bincas.SerializedCasReader;
 import de.tudarmstadt.ukp.dkpro.core.io.bincas.SerializedCasWriter;
 
+/**
+ * It is a main method to reverse wrongly annotated dependency annotations (on a project with the
+ * reverse button checked) Might be not necessary or be implemented as differently
+ *
+ * @author Seid Muhie Yimam
+ *
+ */
 public class correctDependencyParser
 {
 
-    public static void main(String[] args) throws UIMAException, IOException
+    public static void main(String[] args)
+        throws UIMAException, IOException
     {
 
         String file = "marc.ser";
-
 
         CAS cas = JCasFactory.createJCas().getCas();
         CollectionReader reader = CollectionReaderFactory.createCollectionReader(
@@ -41,7 +65,7 @@ public class correctDependencyParser
             dependencies.add(d);
         }
         // update
-        for(Dependency d: dependencies){
+        for (Dependency d : dependencies) {
             Token dep = d.getDependent();
             Token gov = d.getGovernor();
             d.setDependent(gov);
@@ -49,9 +73,10 @@ public class correctDependencyParser
             d.addToIndexes();
         }
 
-        File targetPath = new File("/home/likewise-open/UKP/yimam/CLARIN/bugeddata/ser/testing/2988/annotation2/");
-        AnalysisEngine writer = AnalysisEngineFactory.createPrimitive(
-                SerializedCasWriter.class, SerializedCasWriter.PARAM_PATH, targetPath,
+        File targetPath = new File(
+                "/home/likewise-open/UKP/yimam/CLARIN/bugeddata/ser/testing/2988/annotation2/");
+        AnalysisEngine writer = AnalysisEngineFactory.createPrimitive(SerializedCasWriter.class,
+                SerializedCasWriter.PARAM_PATH, targetPath,
                 SerializedCasWriter.PARAM_USE_DOCUMENT_ID, true);
         writer.process(cas);
 
