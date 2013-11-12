@@ -24,7 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.wicket.behavior.SimpleAttributeModifier;
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.CheckBoxMultipleChoice;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
@@ -61,7 +61,7 @@ public class ProjectUsersPanel
     @SpringBean(name = "userRepository")
     private UserDao userRepository;
 
-   private static final String CROWD_USER = "crowd_user";
+    private static final String CROWD_USER = "crowd_user";
 
     private class UserSelectionForm
         extends Form<SelectionModel>
@@ -114,22 +114,21 @@ public class ProjectUsersPanel
                 @Override
                 protected void onSelectionChanged(User aNewSelection)
                 {
-                    if (aNewSelection != null) {
-                        selectedUser = aNewSelection;
-                        // Clear old selections
-                        permissionLevelDetailForm.setModelObject(null);
-                        List<ProjectPermission> projectPermissions = projectRepository
-                                .listProjectPermisionLevel(selectedUser,
-                                        selectedProject.getObject());
-                        List<PermissionLevel> levels = new ArrayList<PermissionLevel>();
-                        for (ProjectPermission permission : projectPermissions) {
-                            levels.add(permission.getLevel());
-                        }
-                        SelectionModel newSelectionModel = new SelectionModel();
-                        newSelectionModel.permissionLevels.addAll(levels);
-                        permissionLevelDetailForm.setModelObject(newSelectionModel);
-
+                    if (aNewSelection == null) {
+                        return;
                     }
+                    selectedUser = aNewSelection;
+                    // Clear old selections
+                    permissionLevelDetailForm.setModelObject(null);
+                    List<ProjectPermission> projectPermissions = projectRepository
+                            .listProjectPermisionLevel(selectedUser, selectedProject.getObject());
+                    List<PermissionLevel> levels = new ArrayList<PermissionLevel>();
+                    for (ProjectPermission permission : projectPermissions) {
+                        levels.add(permission.getLevel());
+                    }
+                    SelectionModel newSelectionModel = new SelectionModel();
+                    newSelectionModel.permissionLevels.addAll(levels);
+                    permissionLevelDetailForm.setModelObject(newSelectionModel);
                 }
 
                 @Override
@@ -144,7 +143,7 @@ public class ProjectUsersPanel
                     return "";
                 }
             });
-            users.setOutputMarkupId(true).add(new SimpleAttributeModifier("style", "width:100%"));
+            users.setOutputMarkupId(true).add(new AttributeModifier("style", "width:100%"));
             users.setMaxRows(15);
             add(new Button("addUser", new ResourceModel("label"))
             {
@@ -164,40 +163,22 @@ public class ProjectUsersPanel
                 @Override
                 public void onSubmit()
                 {
-                    if (selectedUser != null) {
-                        List<ProjectPermission> projectPermissions = projectRepository
-                                .listProjectPermisionLevel(selectedUser,
-                                        selectedProject.getObject());
-                        for (ProjectPermission projectPermission : projectPermissions) {
-                            try {
-                                projectRepository.removeProjectPermission(projectPermission);
-                            }
-                            catch (IOException e) {
-                                error("Unable to remove project permission level "
-                                        + ExceptionUtils.getRootCauseMessage(e));
-                            }
-                        }
-                /*        // Remove any annotation document associated with this user too
-                        List<SourceDocument> sourceDocuments = projectRepository
-                                .listSourceDocuments(selectedProject.getObject());
-                        for (SourceDocument sourceDocument : sourceDocuments) {
-                            if (projectRepository.existsAnnotationDocument(sourceDocument,
-                                    selectedUser)) {
-                                try {
-                                    projectRepository.removeCurationDocumentContent(sourceDocument);
-                                }
-                                catch (IOException e) {
-                                   error(e.getMessage());
-                                }
-                                projectRepository.removeAnnotationDocument(projectRepository
-                                        .getAnnotationDocument(sourceDocument, selectedUser));
-                            }
-                        }*/
-                        userLists.remove(selectedUser);
-                    }
-                    else {
+                    if (selectedUser == null) {
                         info("No user is selected to remove");
+                        return;
                     }
+                    List<ProjectPermission> projectPermissions = projectRepository
+                            .listProjectPermisionLevel(selectedUser, selectedProject.getObject());
+                    for (ProjectPermission projectPermission : projectPermissions) {
+                        try {
+                            projectRepository.removeProjectPermission(projectPermission);
+                        }
+                        catch (IOException e) {
+                            error("Unable to remove project permission level "
+                                    + ExceptionUtils.getRootCauseMessage(e));
+                        }
+                    }
+                    userLists.remove(selectedUser);
                 }
             });
 
@@ -221,7 +202,7 @@ public class ProjectUsersPanel
         }
     }
 
-    private class SelectionModel
+    public class SelectionModel
         implements Serializable
     {
         private static final long serialVersionUID = 9137613222721590389L;
@@ -348,9 +329,10 @@ public class ProjectUsersPanel
                             List<User> allUSers = projectRepository.listUsers();
                             allUSers.removeAll(projectRepository
                                     .listProjectUsersWithPermissions(selectedProject.getObject()));
-                            // add this User in the List that can be used as virtual user for crowdsource
+                            // add this User in the List that can be used as virtual user for
+                            // crowdsource
 
-                            if(userRepository.get(CROWD_USER) == null){
+                            if (userRepository.get(CROWD_USER) == null) {
                                 User crowdUser = new User();
                                 crowdUser.setUsername(CROWD_USER);
                                 crowdUser.setPassword("");
