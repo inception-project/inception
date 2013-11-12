@@ -244,7 +244,7 @@ public class CurationPage
                                 BratAnnotatorUtility.upgradeCasAndSave(repository,
                                         bratAnnotatorModel.getDocument(), Mode.CURATION);
 
-                                initBratAnnotatorDataModel();
+                                loadDocumentAction();
                                 CurationBuilder builder = new CurationBuilder(repository,
                                         annotationService);
                                 curationContainer = builder
@@ -368,7 +368,7 @@ public class CurationPage
                     BratAnnotatorUtility.upgradeCasAndSave(repository,
                             bratAnnotatorModel.getDocument(), Mode.CURATION);
                     try {
-                        initBratAnnotatorDataModel();
+                        loadDocumentAction();
                         CurationBuilder builder = new CurationBuilder(repository, annotationService);
                         curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                         curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
@@ -443,7 +443,7 @@ public class CurationPage
                     BratAnnotatorUtility.upgradeCasAndSave(repository,
                             bratAnnotatorModel.getDocument(), Mode.CURATION);
                     try {
-                        initBratAnnotatorDataModel();
+                        loadDocumentAction();
                         CurationBuilder builder = new CurationBuilder(repository, annotationService);
                         curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                         curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
@@ -687,7 +687,7 @@ public class CurationPage
                             try {
                                 repository.removeCurationDocumentContent(bratAnnotatorModel
                                         .getDocument());
-                                initBratAnnotatorDataModel();
+                                loadDocumentAction();
                                 CurationBuilder builder = new CurationBuilder(repository,
                                         annotationService);
                                 curationContainer = builder
@@ -992,8 +992,7 @@ public class CurationPage
         response.renderOnLoadJavaScript(jQueryString);
     }
 
-    @SuppressWarnings("unchecked")
-    private void initBratAnnotatorDataModel()
+    private void loadDocumentAction()
         throws UIMAException, ClassNotFoundException, IOException
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();

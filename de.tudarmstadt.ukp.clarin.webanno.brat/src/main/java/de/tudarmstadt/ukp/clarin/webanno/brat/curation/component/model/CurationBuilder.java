@@ -50,7 +50,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -90,7 +89,6 @@ public class CurationBuilder
     {
         CurationContainer curationContainer = new CurationContainer();
         // initialize Variables
-        Project project = aBratAnnotatorModel.getProject();
         SourceDocument sourceDocument = aBratAnnotatorModel.getDocument();
         Map<Integer, Integer> segmentBeginEnd = new HashMap<Integer, Integer>();
         Map<Integer, Integer> segmentNumber = new HashMap<Integer, Integer>();
@@ -126,7 +124,6 @@ public class CurationBuilder
                 }
             }
         }
-        // TODO Create pre-merged jcas if not exists for curation user
 
         JCas mergeJCas = null;
         try {

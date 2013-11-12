@@ -23,8 +23,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.NoResultException;
-
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
@@ -257,12 +255,9 @@ public class AnnotationPage
                                 && bratAnnotatorModel.getDocument() != null) {
                             if (!closeButtonClicked) {
                                 try {
-                                    bratAnnotatorModel.setDocument(bratAnnotatorModel.getDocument());
-                                    bratAnnotatorModel.setProject(bratAnnotatorModel.getProject());
                                     BratAnnotatorUtility.upgradeCasAndSave(repository,
                                             bratAnnotatorModel.getDocument(), Mode.ANNOTATION);
 
-                                    // setAttributesForGetCollection();
                                     loadDocumentAction();
 
                                     String collection = "#" + bratAnnotatorModel.getProject().getName()
@@ -765,21 +760,6 @@ public class AnnotationPage
         currentDocumentId = bratAnnotatorModel.getDocument().getId();
     }
 
-    boolean isDocumentOpenedFirstTime(String aCollection, String adocumentName)
-    {
-        bratAnnotatorModel.setProject(repository.getProject(aCollection.replace("/", "")));
-        bratAnnotatorModel.setDocument(repository.getSourceDocument(
-                bratAnnotatorModel.getProject(), adocumentName));
-
-        try {
-            repository.getAnnotationDocument(bratAnnotatorModel.getDocument(),
-                    bratAnnotatorModel.getUser());
-            return false;
-        }
-        catch (NoResultException e) {
-            return true;
-        }
-    }
 
     private JCas getCas(Project aProject, User user, SourceDocument aDocument)
         throws UIMAException, IOException, ClassNotFoundException

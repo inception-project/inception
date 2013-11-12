@@ -335,7 +335,7 @@ public class CorrectionPage
 
                                 BratAnnotatorUtility.upgradeCasAndSave(repository,
                                         bratAnnotatorModel.getDocument(), Mode.CORRECTION);
-                                init();
+                                loadDocumentAction();
                                 setCurationSegmentBeginEnd();
                                 update(target);
 
@@ -560,7 +560,7 @@ public class CorrectionPage
                     BratAnnotatorUtility.upgradeCasAndSave(repository,
                             bratAnnotatorModel.getDocument(), Mode.CORRECTION);
                     try {
-                        init();
+                        loadDocumentAction();
                         setCurationSegmentBeginEnd();
                         update(target);
 
@@ -628,7 +628,7 @@ public class CorrectionPage
                     BratAnnotatorUtility.upgradeCasAndSave(repository,
                             bratAnnotatorModel.getDocument(), Mode.CORRECTION);
                     try {
-                        init();
+                        loadDocumentAction();
                         setCurationSegmentBeginEnd();
                         update(target);
 
@@ -927,7 +927,7 @@ public class CorrectionPage
 
     }
 
-    private void init()
+    private void loadDocumentAction()
         throws UIMAException, ClassNotFoundException, IOException
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
