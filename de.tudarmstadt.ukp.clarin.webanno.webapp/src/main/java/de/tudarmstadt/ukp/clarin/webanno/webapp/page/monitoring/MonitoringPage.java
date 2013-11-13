@@ -83,7 +83,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.project.SettingsPageBase;
@@ -132,10 +131,10 @@ public class MonitoringPage
     private final MonitoringDetailForm monitoringDetailForm;
     private final Image annotatorsProgressImage;
     private final Image annotatorsProgressPercentageImage;
+    private final Image overallProjectProgressImage;
     private DefaultDataTable<?> annotationDocumentStatusTable;
     private DefaultDataTable<?> agreementTable;
     private final Label projectName;
-    private RepeatingView projectRepeator;
     private AgreementForm agreementForm;
     private final AnnotationTypeSelectionForm annotationTypeSelectionForm;
     private ListChoice<AnnotationType> annotationTypes;
@@ -165,6 +164,10 @@ public class MonitoringPage
         annotatorsProgressPercentageImage = new NonCachingImage("annotatorPercentage");
         annotatorsProgressPercentageImage.setOutputMarkupPlaceholderTag(true);
         annotatorsProgressPercentageImage.setVisible(false);
+
+        overallProjectProgressImage = new NonCachingImage("overallProjectProgressImage");
+        overallProjectProgressImage.setOutputMarkupPlaceholderTag(true);
+        overallProjectProgressImage.setVisible(false);
 
         add(projectSelectionForm);
         projectName = new Label("projectName", "");
@@ -198,7 +201,7 @@ public class MonitoringPage
         monitoringDetailForm.setVisible(false);
         add(monitoringDetailForm.add(annotatorsProgressImage)
                 .add(annotatorsProgressPercentageImage).add(projectName)
-                .add(annotationDocumentStatusTable));
+                .add(annotationDocumentStatusTable).add(overallProjectProgressImage));
         annotationDocumentStatusTable.setVisible(false);
     }
 
@@ -266,6 +269,7 @@ public class MonitoringPage
                     if (aNewSelection == null) {
                         return;
                     }
+
                     monitoringDetailForm.setModelObject(aNewSelection);
                     monitoringDetailForm.setVisible(true);
                     annotationTypeSelectionForm.setVisible(true);
@@ -278,6 +282,7 @@ public class MonitoringPage
 
                     final Map<String, Integer> annotatorsProgress = new HashMap<String, Integer>();
                     final Map<String, Integer> annotatorsProgressInPercent = new HashMap<String, Integer>();
+                    final Map<String, Integer> overallProjectProgress = new HashMap<String, Integer>();
                     final Project project = aNewSelection;
                     List<SourceDocument> documents = projectRepository.listSourceDocuments(project);
 
@@ -288,8 +293,13 @@ public class MonitoringPage
                         annotatorsProgressInPercent
                                 .putAll(getPercentageOfFinishedDocumentsPerUser(project));
                         annotatorsProgress.putAll(getFinishedDocumentsPerUser(project));
+
                     }
                     projectName.setDefaultModelObject(project.getName());
+
+                    overallProjectProgress.putAll(getOverallProjectProgress());
+                    overallProjectProgressImage.setImageResource(createProgressChart(
+                            overallProjectProgress, 100, true));
 
                     annotatorsProgressImage.setImageResource(createProgressChart(
                             annotatorsProgress, totalDocuments, false));
@@ -382,20 +392,16 @@ public class MonitoringPage
                                     annotatorsProgressInPercent, 100, true));
                             aTarget.add(annotatorsProgressPercentageImage.setOutputMarkupId(true));
 
-                            final Map<Project, Integer> projectsProgressPerClosedDocument = getClosedDocumentsInProject();
-                            monitoringDetailForm.remove(projectRepeator);
-                            projectRepeator = new RepeatingView("projectRepeator");
-                            monitoringDetailForm.add(projectRepeator);
-                            modifyProjectRepeater(projectRepeator,
-                                    projectsProgressPerClosedDocument);
-
-                            aTarget.add(monitoringDetailForm.setOutputMarkupId(true));
+                            overallProjectProgress.clear();
+                            overallProjectProgress.putAll(getOverallProjectProgress());
+                            overallProjectProgressImage.setImageResource(createProgressChart(
+                                    overallProjectProgress, 100, true));
+                            aTarget.add(overallProjectProgressImage.setOutputMarkupId(true));
                             updateAgreementTable(aTarget);
                             aTarget.add(agreementForm.setOutputMarkupId(true));
 
                         }
                     });
-                    monitoringDetailForm.add(annotationDocumentStatusTable);
                 }
 
                 @Override
@@ -524,6 +530,18 @@ public class MonitoringPage
         return annotatorsProgress;
     }
 
+    private Map<String, Integer> getOverallProjectProgress()
+    {
+        Map<String, Integer> overallProjectProgress = new HashMap<String, Integer>();
+        for (Project project : projectRepository.listProjects()) {
+            int annoFinished = projectRepository.listFinishedAnnotationDocuments(project).size();
+            int allAnno = projectRepository.listAnnotationDocuments(project).size();
+            int progress = (int) Math.round((double) (annoFinished * 100) / (allAnno));
+            overallProjectProgress.put(project.getName(), progress);
+        }
+        return overallProjectProgress;
+    }
+
     static private class SelectionModel
         implements Serializable
     {
@@ -541,13 +559,6 @@ public class MonitoringPage
         public MonitoringDetailForm(String id)
         {
             super(id, new CompoundPropertyModel<Project>(new EntityModel<Project>(new Project())));
-
-            final Map<Project, Integer> projectsProgressPerClosedDocument = getClosedDocumentsInProject();
-
-            // Overall progress by Projects
-            projectRepeator = new RepeatingView("projectRepeator");
-            add(projectRepeator);
-            modifyProjectRepeater(projectRepeator, projectsProgressPerClosedDocument);
 
         }
     }
@@ -606,31 +617,6 @@ public class MonitoringPage
                 }
             }));
         }
-    }
-
-    private Map<Project, Integer> getClosedDocumentsInProject()
-    {
-        Map<Project, Integer> projectsProgressPerClosedDocument = new HashMap<Project, Integer>();
-        for (Project project : projectRepository.listProjects()) {
-            for (SourceDocument document : projectRepository.listSourceDocuments(project)) {
-
-                // Projects Progress
-                if (document.getState().equals(SourceDocumentState.ANNOTATION_FINISHED)) {
-                    if (projectsProgressPerClosedDocument.get(project) == null) {
-                        projectsProgressPerClosedDocument.put(project, 1);
-
-                    }
-                    else {
-                        int previousExpectedValue = projectsProgressPerClosedDocument.get(project);
-                        projectsProgressPerClosedDocument.put(project, previousExpectedValue + 1);
-                    }
-                }
-            }
-            if (projectsProgressPerClosedDocument.get(project) == null) {
-                projectsProgressPerClosedDocument.put(project, 0);
-            }
-        }
-        return projectsProgressPerClosedDocument;
     }
 
     private void updateAgreementForm()
