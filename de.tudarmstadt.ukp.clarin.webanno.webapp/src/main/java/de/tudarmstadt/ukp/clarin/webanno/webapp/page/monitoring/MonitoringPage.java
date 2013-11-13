@@ -42,8 +42,6 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.markup.html.image.Image;
 import org.apache.wicket.markup.html.image.NonCachingImage;
-import org.apache.wicket.markup.html.list.AbstractItem;
-import org.apache.wicket.markup.repeater.RepeatingView;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
@@ -53,21 +51,14 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.NumberTickUnit;
 import org.jfree.chart.axis.TickUnits;
-import org.jfree.chart.labels.StandardPieSectionLabelGenerator;
 import org.jfree.chart.plot.CategoryPlot;
-import org.jfree.chart.plot.PiePlot3D;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.BarRenderer;
 import org.jfree.chart.renderer.category.StandardBarPainter;
 import org.jfree.data.category.DefaultCategoryDataset;
-import org.jfree.data.general.DefaultPieDataset;
 import org.jfree.ui.RectangleInsets;
-import org.jfree.util.Rotation;
 import org.jfree.util.UnitType;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.wicketstuff.progressbar.ProgressBar;
-import org.wicketstuff.progressbar.Progression;
-import org.wicketstuff.progressbar.ProgressionModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
@@ -300,6 +291,7 @@ public class MonitoringPage
                     overallProjectProgress.putAll(getOverallProjectProgress());
                     overallProjectProgressImage.setImageResource(createProgressChart(
                             overallProjectProgress, 100, true));
+                    overallProjectProgressImage.setVisible(true);
 
                     annotatorsProgressImage.setImageResource(createProgressChart(
                             annotatorsProgress, totalDocuments, false));
@@ -397,11 +389,14 @@ public class MonitoringPage
                             overallProjectProgressImage.setImageResource(createProgressChart(
                                     overallProjectProgress, 100, true));
                             aTarget.add(overallProjectProgressImage.setOutputMarkupId(true));
+
+                            aTarget.add(monitoringDetailForm.setOutputMarkupId(true));
                             updateAgreementTable(aTarget);
                             aTarget.add(agreementForm.setOutputMarkupId(true));
 
                         }
                     });
+                    monitoringDetailForm.add(annotationDocumentStatusTable);
                 }
 
                 @Override
@@ -535,7 +530,7 @@ public class MonitoringPage
         Map<String, Integer> overallProjectProgress = new HashMap<String, Integer>();
         for (Project project : projectRepository.listProjects()) {
             int annoFinished = projectRepository.listFinishedAnnotationDocuments(project).size();
-            int allAnno = projectRepository.listAnnotationDocuments(project).size();
+            int allAnno = projectRepository.numberOfExpectedAnnotationDocuments(project);
             int progress = (int) Math.round((double) (annoFinished * 100) / (allAnno));
             overallProjectProgress.put(project.getName(), progress);
         }
@@ -590,32 +585,6 @@ public class MonitoringPage
                 columns.add(new DynamicColumnMetaData(provider, m));
             }
             add(agreementTable = new DefaultDataTable("agreementTable", columns, provider, 10));
-        }
-    }
-
-    private void modifyProjectRepeater(RepeatingView aProjectRepeater,
-            final Map<Project, Integer> aProjectsProgressPerClosedDocument)
-    {
-        for (final Project project : aProjectsProgressPerClosedDocument.keySet()) {
-
-            final int totaldocuments = projectRepository.listSourceDocuments(project).size();
-
-            AbstractItem item = new AbstractItem(aProjectRepeater.newChildId());
-            aProjectRepeater.add(item);
-
-            item.add(new Label("project", project.getName()));
-            item.add(new ProgressBar("projectProgress", new ProgressionModel()
-            {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                protected Progression getProgression()
-                {
-                    double value = (double) aProjectsProgressPerClosedDocument.get(project)
-                            / totaldocuments;
-                    return new Progression((int) (value * 100));
-                }
-            }));
         }
     }
 
@@ -831,32 +800,6 @@ public class MonitoringPage
             documentJCases.put(document, jCases);
         }
         return documentJCases;
-    }
-
-    private JFreeChart createPieChart(Map<String, Integer> chartValues)
-    {
-
-        // fill dataset
-        DefaultPieDataset dataset = new DefaultPieDataset();
-        for (String chartValue : chartValues.keySet()) {
-            dataset.setValue(chartValue, chartValues.get(chartValue));
-        }
-        // create chart
-        JFreeChart chart = ChartFactory.createPieChart3D(null, dataset, false, true, false);
-        PiePlot3D plot = (PiePlot3D) chart.getPlot();
-        plot.setInsets(RectangleInsets.ZERO_INSETS);
-        plot.setStartAngle(290);
-        plot.setDirection(Rotation.CLOCKWISE);
-        plot.setIgnoreZeroValues(true);
-        plot.setOutlineVisible(false);
-        plot.setBackgroundPaint(null);
-        plot.setInteriorGap(0.0);
-        plot.setMaximumLabelWidth(0.22);
-        plot.setLabelGenerator(new StandardPieSectionLabelGenerator("{0} {1} ({2})"));
-        plot.setDepthFactor(0.25);
-        plot.setCircular(true);
-        plot.setDarkerSides(true);
-        return chart;
     }
 
     private ChartImageResource createProgressChart(Map<String, Integer> chartValues, int aMaxValue,

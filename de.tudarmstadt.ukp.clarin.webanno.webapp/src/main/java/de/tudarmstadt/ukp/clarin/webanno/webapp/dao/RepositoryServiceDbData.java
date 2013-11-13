@@ -549,8 +549,8 @@ public class RepositoryServiceDbData
     @Override
     public File exportserializedCas(SourceDocument aDocument, String aUser)
     {
-        File documentUri = new File(dir.getAbsolutePath() + PROJECT + aDocument.getProject().getId() + DOCUMENT
-                + aDocument.getId() + ANNOTATION);
+        File documentUri = new File(dir.getAbsolutePath() + PROJECT
+                + aDocument.getProject().getId() + DOCUMENT + aDocument.getId() + ANNOTATION);
         return new File(documentUri, aUser + ".ser");
     }
 
@@ -801,27 +801,11 @@ public class RepositoryServiceDbData
     public List<AnnotationDocument> listAnnotationDocuments(SourceDocument aDocument)
     {
         // Get all annotators in the project
-        List<String> users = entityManager
-                .createQuery(
-                        "SELECT DISTINCT user FROM ProjectPermission WHERE project = :project "
-                                + "AND level = :level", String.class)
-                .setParameter("project", aDocument.getProject())
-                .setParameter("level", PermissionLevel.USER).getResultList();
-
+        List<String> users = getAllAnnotators(aDocument.getProject());
         // Bail out already. HQL doesn't seem to like queries with an empty parameter right of "in"
         if (users.isEmpty()) {
             return new ArrayList<AnnotationDocument>();
         }
-
-        // check if the username is in the Users database (imported projects might have username
-        // in the ProjectPermission entry while it is not in the Users database
-        List<String> notInUsers = new ArrayList<String>();
-        for (String user : users) {
-            if (!userRepository.exists(user)) {
-                notInUsers.add(user);
-            }
-        }
-        users.removeAll(notInUsers);
 
         return entityManager
                 .createQuery(
@@ -831,6 +815,49 @@ public class RepositoryServiceDbData
                 .setParameter("document", aDocument).getResultList();
     }
 
+    @Override
+    public int numberOfExpectedAnnotationDocuments(Project aProject)
+    {
+
+        // Get all annotators in the project
+        List<String> users = getAllAnnotators(aProject);
+        // Bail out already. HQL doesn't seem to like queries with an empty parameter right of "in"
+        if (users.isEmpty()) {
+         return   0;
+        }
+
+        int ignored = 0;
+        List<AnnotationDocument> annotationDocuments =  entityManager
+                .createQuery(
+                        "FROM AnnotationDocument WHERE project = :project AND user in (:users)",
+                        AnnotationDocument.class).setParameter("project", aProject)
+                .setParameter("users", users).getResultList();
+        for(AnnotationDocument annotationDocument: annotationDocuments){
+            if(annotationDocument.getState().equals(AnnotationDocumentState.IGNORE)){
+                ignored++;
+            }
+        }
+        return listSourceDocuments(aProject).size()*users.size() - ignored;
+
+    }
+
+    @Override
+    public List<AnnotationDocument> listFinishedAnnotationDocuments(Project aProject)
+    {
+        // Get all annotators in the project
+        List<String> users = getAllAnnotators(aProject);
+        // Bail out already. HQL doesn't seem to like queries with an empty parameter right of "in"
+        if (users.isEmpty()) {
+            return new ArrayList<AnnotationDocument>();
+        }
+
+        return entityManager
+                .createQuery(
+                        "FROM AnnotationDocument WHERE project = :project AND state = :state"
+                                + " AND user in (:users)", AnnotationDocument.class)
+                .setParameter("project", aProject).setParameter("users", users)
+                .setParameter("state", AnnotationDocumentState.FINISHED).getResultList();
+    }
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
@@ -843,6 +870,7 @@ public class RepositoryServiceDbData
                 .setParameter("project", aSourceDocument.getProject())
                 .setParameter("document", aSourceDocument).getResultList();
     }
+
     @Override
     public List<String> listGuidelines(Project aProject)
     {
@@ -1520,5 +1548,28 @@ public class RepositoryServiceDbData
     public boolean isRemoteProject(Project project)
     {
         return new File(dir, PROJECT + project.getId() + META_INF).exists();
+    }
+
+    private List<String> getAllAnnotators(Project aProject)
+    {
+        // Get all annotators in the project
+        List<String> users = entityManager
+                .createQuery(
+                        "SELECT DISTINCT user FROM ProjectPermission WHERE project = :project "
+                                + "AND level = :level", String.class)
+                .setParameter("project", aProject).setParameter("level", PermissionLevel.USER)
+                .getResultList();
+
+        // check if the username is in the Users database (imported projects might have username
+        // in the ProjectPermission entry while it is not in the Users database
+        List<String> notInUsers = new ArrayList<String>();
+        for (String user : users) {
+            if (!userRepository.exists(user)) {
+                notInUsers.add(user);
+            }
+        }
+        users.removeAll(notInUsers);
+
+        return users;
     }
 }

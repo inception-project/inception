@@ -358,6 +358,17 @@ public interface RepositoryService
     List<AnnotationDocument> listAnnotationDocuments(SourceDocument document);
 
     /**
+     * Number of expected annotation documents in this project (numUser X document - Ignored)
+     */
+    int  numberOfExpectedAnnotationDocuments(Project project);
+
+    /**
+     * List all annotation Documents in a project that are already closed. used to compute overall
+     * project progress
+     */
+    List<AnnotationDocument> listFinishedAnnotationDocuments(Project project);
+
+    /**
      * List all annotation documents for this source document (including in active and delted user
      * annotation and those created by project admins or super admins for Test purpose. This method
      * is called when a source document (or Project) is deleted so that associated annotation
