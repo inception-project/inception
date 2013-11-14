@@ -86,9 +86,9 @@ import de.tudarmstadt.ukp.dkpro.statistics.agreement.TwoRaterKappaAgreement;
 
 /**
  * A Page To display different monitoring and statistics measurements tabularly and graphically.
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 public class MonitoringPage
     extends SettingsPageBase
@@ -271,9 +271,9 @@ public class MonitoringPage
 
                     ProjectSelectionForm.this.setVisible(true);
 
-                    final Map<String, Integer> annotatorsProgress = new HashMap<String, Integer>();
-                    final Map<String, Integer> annotatorsProgressInPercent = new HashMap<String, Integer>();
-                    final Map<String, Integer> overallProjectProgress = new HashMap<String, Integer>();
+                    final Map<String, Integer> annotatorsProgress = new TreeMap<String, Integer>();
+                    final Map<String, Integer> annotatorsProgressInPercent = new TreeMap<String, Integer>();
+                    final Map<String, Integer> overallProjectProgress = new TreeMap<String, Integer>();
                     final Project project = aNewSelection;
                     List<SourceDocument> documents = projectRepository.listSourceDocuments(project);
 
@@ -491,8 +491,8 @@ public class MonitoringPage
                             annotatorsProgress.put(user.getUsername(), 1);
                         }
                         else {
-                            int previousExpectedValue = annotatorsProgress.get(user.getUsername());
-                            annotatorsProgress.put(user.getUsername(), previousExpectedValue + 1);
+                            int previousValue = annotatorsProgress.get(user.getUsername());
+                            annotatorsProgress.put(user.getUsername(), previousValue + 1);
                         }
                     }
                 }
@@ -825,8 +825,9 @@ public class MonitoringPage
         plot.setInsets(new RectangleInsets(UnitType.ABSOLUTE, 0, 20, 0, 20));
         plot.getRangeAxis().setRange(0.0, aMaxValue);
         ((NumberAxis) plot.getRangeAxis()).setNumberFormatOverride(new DecimalFormat("0"));
-
-        if (!aIsPercentage) {
+        // For documents lessan 10, avoid repeating the number of documents  such as 0 0 1 1 1
+        // NumberTickUnit automatically determin the range
+        if (!aIsPercentage && aMaxValue <= 10) {
             TickUnits standardUnits = new TickUnits();
             NumberAxis tick = new NumberAxis();
             tick.setTickUnit(new NumberTickUnit(1));
