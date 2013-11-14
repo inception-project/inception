@@ -54,8 +54,9 @@ public class BratCurationVisualizer extends BratVisualizer {
 		Label label = new Label("username", username);
 		add(label);
         controller = new AbstractDefaultAjaxBehavior() {
+            private static final long serialVersionUID = 1133593826878553307L;
 
-			@Override
+            @Override
 			protected void respond(AjaxRequestTarget aTarget) {
                 //aTarget.prependJavaScript("Wicket.$('"+vis.getMarkupId()+"').temp = ['test'];");
 				onSelectAnnotationForMerge(aTarget);

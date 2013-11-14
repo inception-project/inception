@@ -240,8 +240,7 @@ public class CurationViewPanel
         if (annotationSelection == null) {
             return;
         }
-
-        Project project = aCurationUserSegment.getBratAnnotatorModel().getProject();
+        
         SourceDocument sourceDocument = aCurationUserSegment.getBratAnnotatorModel().getDocument();
 
         AnnotationDocument clickedAnnotationDocument = null;

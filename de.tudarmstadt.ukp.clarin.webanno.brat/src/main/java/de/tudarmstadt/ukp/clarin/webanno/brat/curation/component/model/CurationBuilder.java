@@ -60,11 +60,11 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  * This class is responsible for two things. Firstly, it creates a pre-merged cas, which contains
  * all annotations, where all annotators agree on. This is done by copying a random cas and removing
  * all differing annotations.
- *
+ * 
  * Secondly, the class creates an instance of {@link CurationContainer}, which is the wicket model
  * for the curation panel. The {@link CurationContainer} contains the text for all sentences, which
  * are displayed at a specific page.
- *
+ * 
  * @author Andreas Straninger
  * @author Seid Muhie Yimam
  */
@@ -99,65 +99,30 @@ public class CurationBuilder
                 .listAnnotationDocuments(sourceDocument);
 
         Map<String, JCas> jCases = new HashMap<String, JCas>();
+
         AnnotationDocument randomAnnotationDocument = null;
 
         // get the correction JCas for the logged in user
         if (aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)) {
-            User user = repository.getUser(SecurityContextHolder.getContext().getAuthentication()
-                    .getName());
-            randomAnnotationDocument = repository.getAnnotationDocument(sourceDocument, user);
+            jCases = listJcasesforCorrection(randomAnnotationDocument, sourceDocument);
+            String username = jCases.keySet().iterator().next();
             updateSegment(aBratAnnotatorModel, segmentBeginEnd, segmentNumber, segmentText,
-                    segmentAdress, jCases, randomAnnotationDocument, user.getUsername());
+                    segmentAdress, jCases.get(username), username);
 
         }
         else {
-            for (AnnotationDocument annotationDocument : annotationDocuments) {
-                String username = annotationDocument.getUser();
 
-                if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
-
-                    if (randomAnnotationDocument == null) {
-                        randomAnnotationDocument = annotationDocument;
-                    }
-                    updateSegment(aBratAnnotatorModel, segmentBeginEnd, segmentNumber, segmentText,
-                            segmentAdress, jCases, annotationDocument, username);
-                }
+            jCases = listJcasesforCuration(annotationDocuments, randomAnnotationDocument);
+            for (String username : jCases.keySet()) {
+                JCas jCas = jCases.get(username);
+                updateSegment(aBratAnnotatorModel, segmentBeginEnd, segmentNumber, segmentText,
+                        segmentAdress, jCas, username);
             }
         }
 
         JCas mergeJCas = null;
-        try {
-            if (aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)) {
-                mergeJCas = repository.getCorrectionDocumentContent(sourceDocument);
-            }
-            else {
-                mergeJCas = repository.getCurationDocumentContent(sourceDocument);
-            }
-        }
-        // Create jcas, if it could not be loaded from the file system
-        catch (Exception e) {
-            // reserve the begin/end offsets before creating re-merge
-            int tempBegin = begin;
-            int tempEnd = end;
-            JCas firstJCas = jCases.values().iterator().next();
-
-            // re-merge JCAS for all sentences
-            begin = selectByAddr(firstJCas, Sentence.class,
-                    aBratAnnotatorModel.getFirstSentenceAddress()).getBegin();
-            end = selectByAddr(firstJCas, Sentence.class,
-                    aBratAnnotatorModel.getLastSentenceAddress()).getEnd();
-            if (aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)) {
-                mergeJCas = createCorrectionCas(mergeJCas, aBratAnnotatorModel,
-                        randomAnnotationDocument);
-            }
-            else {
-                mergeJCas = createMergeCas(mergeJCas, randomAnnotationDocument, jCases,
-                        aBratAnnotatorModel);
-            }
-            // restore actual begin/end offsets
-            begin = tempBegin;
-            end = tempEnd;
-        }
+        mergeJCas = getMergeCas(aBratAnnotatorModel, sourceDocument, jCases,
+                randomAnnotationDocument, mergeJCas);
 
         int numUsers = jCases.size();
 
@@ -221,10 +186,84 @@ public class CurationBuilder
         return curationContainer;
     }
 
+    public Map<String, JCas> listJcasesforCorrection(AnnotationDocument randomAnnotationDocument,
+            SourceDocument aDocument)
+        throws UIMAException, ClassNotFoundException, IOException
+    {
+        Map<String, JCas> jCases = new HashMap<String, JCas>();
+        User user = repository.getUser(SecurityContextHolder.getContext().getAuthentication()
+                .getName());
+        randomAnnotationDocument = repository.getAnnotationDocument(aDocument, user);
+
+        JCas jCas = repository.getAnnotationDocumentContent(randomAnnotationDocument);
+        jCases.put(user.getUsername(), jCas);
+        return jCases;
+    }
+
+    public Map<String, JCas> listJcasesforCuration(List<AnnotationDocument> annotationDocuments,
+            AnnotationDocument randomAnnotationDocument)
+        throws UIMAException, ClassNotFoundException, IOException
+    {
+        Map<String, JCas> jCases = new HashMap<String, JCas>();
+        for (AnnotationDocument annotationDocument : annotationDocuments) {
+            String username = annotationDocument.getUser();
+
+            if (!annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
+                continue;
+            }
+
+            if (randomAnnotationDocument == null) {
+                randomAnnotationDocument = annotationDocument;
+            }
+            JCas jCas = repository.getAnnotationDocumentContent(annotationDocument);
+            jCases.put(username, jCas);
+        }
+        return jCases;
+    }
+
+    public JCas getMergeCas(BratAnnotatorModel aBratAnnotatorModel, SourceDocument sourceDocument,
+            Map<String, JCas> jCases, AnnotationDocument randomAnnotationDocument, JCas mergeJCas)
+        throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
+    {
+        try {
+            if (aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)) {
+                mergeJCas = repository.getCorrectionDocumentContent(sourceDocument);
+            }
+            else {
+                mergeJCas = repository.getCurationDocumentContent(sourceDocument);
+            }
+        }
+        // Create jcas, if it could not be loaded from the file system
+        catch (Exception e) {
+            // reserve the begin/end offsets before creating re-merge
+            int tempBegin = begin;
+            int tempEnd = end;
+            JCas firstJCas = jCases.values().iterator().next();
+
+            // re-merge JCAS for all sentences
+            begin = selectByAddr(firstJCas, Sentence.class,
+                    aBratAnnotatorModel.getFirstSentenceAddress()).getBegin();
+            end = selectByAddr(firstJCas, Sentence.class,
+                    aBratAnnotatorModel.getLastSentenceAddress()).getEnd();
+            if (aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)) {
+                mergeJCas = createCorrectionCas(mergeJCas, aBratAnnotatorModel,
+                        randomAnnotationDocument);
+            }
+            else {
+                mergeJCas = createMergeCas(mergeJCas, randomAnnotationDocument, jCases,
+                        aBratAnnotatorModel);
+            }
+            // restore actual begin/end offsets
+            begin = tempBegin;
+            end = tempEnd;
+        }
+        return mergeJCas;
+    }
+
     /**
      * Puts JCases into a list and get a random annotation document that will be used as a base for
      * the {@link CasDiff}
-     *
+     * 
      * @throws IOException
      * @throws ClassNotFoundException
      * @throws UIMAException
@@ -232,10 +271,9 @@ public class CurationBuilder
     private void updateSegment(BratAnnotatorModel aBratAnnotatorModel,
             Map<Integer, Integer> segmentBeginEnd, Map<Integer, Integer> segmentNumber,
             Map<Integer, String> segmentText, Map<String, Map<Integer, Integer>> segmentAdress,
-            Map<String, JCas> jCases, AnnotationDocument annotationDocument, String username)
+            JCas jCas, String username)
         throws UIMAException, ClassNotFoundException, IOException
     {
-        JCas jCas = repository.getAnnotationDocumentContent(annotationDocument);
 
         int windowSize = aBratAnnotatorModel.getWindowSize();
 
@@ -276,8 +314,6 @@ public class CurationBuilder
             segmentAdress.get(username).put(sentence.getBegin(), sentence.getAddress());
             i = BratAjaxCasUtil.getFollowingSentenceAddress(jCas, i);
         }
-
-        jCases.put(username, jCas);
     }
 
     public static List<Type> getEntryTypes(JCas mergeJCas, Set<TagSet> aTagSets)
@@ -297,7 +333,7 @@ public class CurationBuilder
     /**
      * For the first time a curation page is opened, create a MergeCas that contains only agreeing
      * annotations Using the CAS of the curator user.
-     *
+     * 
      * @throws IOException
      * @throws ClassNotFoundException
      * @throws UIMAException
