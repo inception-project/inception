@@ -243,8 +243,8 @@ public class WebannoTsvReader
                 continue;
             }
             if (count != 9) {// not a proper TSV file
-                getUimaContext().getLogger().log(Level.INFO, "This is not valid TSV File");
-                throw new IOException("This is not valid TSV File");
+                getUimaContext().getLogger().log(Level.INFO, "This is not a valid TSV File");
+                throw new IOException("This is not a valid TSV File");
             }
             StringTokenizer lineTk = new StringTokenizer(line, "\t");
 
