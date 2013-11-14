@@ -104,9 +104,9 @@ import de.tudarmstadt.ukp.dkpro.core.io.bincas.SerializedCasWriter;
 
 /**
  * Implementation of methods defined in the {@link RepositoryService} interface
- *
+ * 
  * @author Seid Muhie Yimam
- *
+ * 
  */
 public class RepositoryServiceDbData
     implements RepositoryService
@@ -183,7 +183,7 @@ public class RepositoryServiceDbData
 
     /**
      * Renames a file.
-     *
+     * 
      * @throws IOException
      *             if the file cannot be renamed.
      * @return the target file.
@@ -201,7 +201,7 @@ public class RepositoryServiceDbData
 
     /**
      * Get the folder where the annotations are stored. Creates the folder if necessary.
-     *
+     * 
      * @throws IOException
      *             if the folder cannot be created.
      */
@@ -398,18 +398,24 @@ public class RepositoryServiceDbData
     {
         try {
 
-            Date timestamp = entityManager
-                    .createQuery(
-                            "SELECT max(timestamp) FROM AnnotationDocument WHERE project = :project "
-                                    + " AND user = :user", Date.class)
-                    .setParameter("project", aProject).setParameter("user", aUsername)
-                    .getSingleResult();
-            if (timestamp != null) {
-                return true;
-            }
-            else {
+            if (getProjectTimeStamp(aProject, aUsername) == null) {
                 return false;
             }
+            return true;
+        }
+        catch (NoResultException ex) {
+            return false;
+        }
+    }
+
+    public boolean existsProjectTimeStamp(Project aProject)
+    {
+        try {
+
+            if (getProjectTimeStamp(aProject) == null) {
+                return false;
+            }
+            return true;
         }
         catch (NoResultException ex) {
             return false;
@@ -747,6 +753,14 @@ public class RepositoryServiceDbData
                 .getSingleResult();
     }
 
+    public Date getProjectTimeStamp(Project aProject)
+    {
+        return entityManager
+                .createQuery(
+                        "SELECT max(timestamp) FROM AnnotationDocument WHERE project = :project",
+                        Date.class).setParameter("project", aProject).getSingleResult();
+    }
+
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public User getUser(String aUsername)
@@ -823,21 +837,21 @@ public class RepositoryServiceDbData
         List<String> users = getAllAnnotators(aProject);
         // Bail out already. HQL doesn't seem to like queries with an empty parameter right of "in"
         if (users.isEmpty()) {
-         return   0;
+            return 0;
         }
 
         int ignored = 0;
-        List<AnnotationDocument> annotationDocuments =  entityManager
+        List<AnnotationDocument> annotationDocuments = entityManager
                 .createQuery(
                         "FROM AnnotationDocument WHERE project = :project AND user in (:users)",
                         AnnotationDocument.class).setParameter("project", aProject)
                 .setParameter("users", users).getResultList();
-        for(AnnotationDocument annotationDocument: annotationDocuments){
-            if(annotationDocument.getState().equals(AnnotationDocumentState.IGNORE)){
+        for (AnnotationDocument annotationDocument : annotationDocuments) {
+            if (annotationDocument.getState().equals(AnnotationDocumentState.IGNORE)) {
                 ignored++;
             }
         }
-        return listSourceDocuments(aProject).size()*users.size() - ignored;
+        return listSourceDocuments(aProject).size() * users.size() - ignored;
 
     }
 
@@ -1326,6 +1340,7 @@ public class RepositoryServiceDbData
         throws IOException
     {
         createAnnotationContent(aDocument, aJcas, CURATION_USER, aUser);
+        aDocument.setTimestamp(new Timestamp(new Date().getTime()));
     }
 
     @Override
@@ -1346,7 +1361,7 @@ public class RepositoryServiceDbData
     /**
      * Creates an annotation document (either user's annotation document or CURATION_USER's
      * annotation document)
-     *
+     * 
      * @param aDocument
      *            the {@link SourceDocument}
      * @param aJcas
@@ -1503,7 +1518,7 @@ public class RepositoryServiceDbData
     /**
      * For a given {@link SourceDocument}, return the {@link AnnotationDocument} for the user or for
      * the CURATION_USER
-     *
+     * 
      * @param aDocument
      *            the {@link SourceDocument}
      * @param aUsername

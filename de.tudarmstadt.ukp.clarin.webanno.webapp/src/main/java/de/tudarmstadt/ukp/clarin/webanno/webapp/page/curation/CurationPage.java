@@ -21,7 +21,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.persistence.NoResultException;
@@ -80,7 +82,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
  * This is the main class for the curation page. It contains an interface which displays differences
  * between user annotations for a specific document. The interface provides a tool for merging these
  * annotations and storing them as a new annotation.
- *
+ * 
  * @author Andreas Straninger
  * @author Seid Muhie Yimam
  */
@@ -225,61 +227,55 @@ public class CurationPage
                         String username = SecurityContextHolder.getContext().getAuthentication()
                                 .getName();
 
-                        User user = repository.getUser(username);
-                        if (bratAnnotatorModel.getDocument() != null
-                                && repository.existsFinishedAnnotation(bratAnnotatorModel
-                                        .getDocument())) {
-                            // Update source document state to
-                            // CURRATION_INPROGRESS, if it was not
-                            // ANNOTATION_FINISHED
-                            if (!bratAnnotatorModel.getDocument().getState()
-                                    .equals(SourceDocumentState.CURATION_FINISHED)) {
-
-                                bratAnnotatorModel.getDocument().setState(
-                                        SourceDocumentState.CURATION_IN_PROGRESS);
-                            }
-                            try {
-                                repository.createSourceDocument(bratAnnotatorModel.getDocument(),
-                                        user);
-                                BratAnnotatorUtility.upgradeCasAndSave(repository,
-                                        bratAnnotatorModel.getDocument(), Mode.CURATION);
-
-                                loadDocumentAction();
-                                CurationBuilder builder = new CurationBuilder(repository,
-                                        annotationService);
-                                curationContainer = builder
-                                        .buildCurationContainer(bratAnnotatorModel);
-                                curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
-                                updatePanel(curationContainer);
-
-                                target.add(finish.setOutputMarkupId(true));
-                                target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
-
-                            }
-                            catch (UIMAException e) {
-                                target.add(getFeedbackPanel());
-                                error(ExceptionUtils.getRootCause(e));
-                            }
-                            catch (ClassNotFoundException e) {
-                                target.add(getFeedbackPanel());
-                                error(e.getMessage());
-                            }
-                            catch (IOException e) {
-                                target.add(getFeedbackPanel());
-                                error(e.getMessage());
-                            }
-                            catch (BratAnnotationException e) {
-                                target.add(getFeedbackPanel());
-                                error(e.getMessage());
-                            }
-                        }
-                        else if (bratAnnotatorModel.getDocument() == null) {
+                        if (bratAnnotatorModel.getDocument() == null) {
                             setResponsePage(WelcomePage.class);
                         }
-                        else {
-                            target.appendJavaScript("alert('Annotation in progress for document ["
-                                    + bratAnnotatorModel.getDocument().getName() + "]')");
+
+                        User user = repository.getUser(username);
+                        // Update source document state to
+                        // CURRATION_INPROGRESS, if it was not
+                        // ANNOTATION_FINISHED
+                        if (!bratAnnotatorModel.getDocument().getState()
+                                .equals(SourceDocumentState.CURATION_FINISHED)) {
+
+                            bratAnnotatorModel.getDocument().setState(
+                                    SourceDocumentState.CURATION_IN_PROGRESS);
+                            // add timestamp 
+                            bratAnnotatorModel.getDocument().setTimestamp(new Timestamp(new Date().getTime()));
                         }
+                        try {
+                            repository.createSourceDocument(bratAnnotatorModel.getDocument(), user);
+                            BratAnnotatorUtility.upgradeCasAndSave(repository,
+                                    bratAnnotatorModel.getDocument(), Mode.CURATION);
+
+                            loadDocumentAction();
+                            CurationBuilder builder = new CurationBuilder(repository,
+                                    annotationService);
+                            curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
+                            curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
+                            updatePanel(curationContainer);
+
+                            target.add(finish.setOutputMarkupId(true));
+                            target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+
+                        }
+                        catch (UIMAException e) {
+                            target.add(getFeedbackPanel());
+                            error(ExceptionUtils.getRootCause(e));
+                        }
+                        catch (ClassNotFoundException e) {
+                            target.add(getFeedbackPanel());
+                            error(e.getMessage());
+                        }
+                        catch (IOException e) {
+                            target.add(getFeedbackPanel());
+                            error(e.getMessage());
+                        }
+                        catch (BratAnnotationException e) {
+                            target.add(getFeedbackPanel());
+                            error(e.getMessage());
+                        }
+
                         target.add(documentNamePanel.setOutputMarkupId(true));
                     }
                 });

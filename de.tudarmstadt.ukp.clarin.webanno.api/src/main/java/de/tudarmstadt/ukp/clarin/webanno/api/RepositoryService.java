@@ -472,9 +472,14 @@ public interface RepositoryService
     /**
      * Check if there exists an project timestamp for this user and {@link Project}.
      *
-     * @return
      */
     boolean existsProjectTimeStamp(Project project, String username);
+    /**
+     * check if there exists a timestamp for at least one source document in aproject (add when
+     * a curator start curating)
+     */
+    boolean existsProjectTimeStamp(Project project);
+    
 
     /**
      * Export the associated project log for this {@link Project} while copying a project
@@ -504,6 +509,11 @@ public interface RepositoryService
      * @return
      */
     Date getProjectTimeStamp(Project project, String username);
+    
+    /**
+     * get the timestamp, of the curator, if exist
+     */
+    Date getProjectTimeStamp(Project project);
 
     /**
      * Get a {@link Project} from the database the name of the Project

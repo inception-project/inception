@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.model;
 
 import java.io.Serializable;
+import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -26,14 +27,18 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import javax.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.Type;
+
 /**
- * A persistence object for meta-data of source documents. The content of the source document is stored in
- * the file system.
+ * A persistence object for meta-data of source documents. The content of the source document is
+ * stored in the file system.
+ * 
  * @author Seid Muhie Yimam
- *
+ * 
  */
 @Entity
 @Table(name = "source_document", uniqueConstraints = { @UniqueConstraint(columnNames = { "name",
@@ -57,8 +62,11 @@ public class SourceDocument
     private String format;
 
     @Column(nullable = false)
-    @Type(type="de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateType")
+    @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateType")
     private SourceDocumentState state = SourceDocumentState.NEW;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date timestamp;
 
     public long getId()
     {
@@ -108,6 +116,16 @@ public class SourceDocument
     public void setState(SourceDocumentState aState)
     {
         state = aState;
+    }
+
+    public Date getTimestamp()
+    {
+        return timestamp;
+    }
+
+    public void setTimestamp(Date timestamp)
+    {
+        this.timestamp = timestamp;
     }
 
     @Override

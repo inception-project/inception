@@ -522,6 +522,7 @@ public class ProjectUtil
             sourceDocument.setName(importedSourceDocument.getName());
             sourceDocument.setState(importedSourceDocument.getState());
             sourceDocument.setProject(aImportedProject);
+            sourceDocument.setTimestamp(importedSourceDocument.getTimestamp());
             aRepository.createSourceDocument(sourceDocument, user);
         }
     }

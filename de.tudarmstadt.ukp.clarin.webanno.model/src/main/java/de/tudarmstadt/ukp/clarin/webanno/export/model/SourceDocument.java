@@ -17,14 +17,21 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.export.model;
 
+import java.util.Date;
+
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.annotate.JsonPropertyOrder;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+
 /**
  * Source document information to be exported/imported
+ * 
  * @author Seid Muhie Yimam
- *
+ * 
  */
 @JsonPropertyOrder(value = { "name", "format", "state" })
 public class SourceDocument
@@ -35,29 +42,47 @@ public class SourceDocument
     String format;
     @JsonProperty("state")
     SourceDocumentState state;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date timestamp;
+
     public String getName()
     {
         return name;
     }
+
     public void setName(String name)
     {
         this.name = name;
     }
+
     public String getFormat()
     {
         return format;
     }
+
     public void setFormat(String format)
     {
         this.format = format;
     }
+
     public SourceDocumentState getState()
     {
         return state;
     }
+
     public void setState(SourceDocumentState state)
     {
         this.state = state;
+    }
+
+    public Date getTimestamp()
+    {
+        return timestamp;
+    }
+
+    public void setTimestamp(Date timestamp)
+    {
+        this.timestamp = timestamp;
     }
 
 }

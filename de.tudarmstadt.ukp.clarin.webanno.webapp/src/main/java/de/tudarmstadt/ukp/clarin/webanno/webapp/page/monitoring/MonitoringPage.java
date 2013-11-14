@@ -86,9 +86,9 @@ import de.tudarmstadt.ukp.dkpro.statistics.agreement.TwoRaterKappaAgreement;
 
 /**
  * A Page To display different monitoring and statistics measurements tabularly and graphically.
- *
+ * 
  * @author Seid Muhie Yimam
- *
+ * 
  */
 public class MonitoringPage
     extends SettingsPageBase
@@ -320,7 +320,14 @@ public class MonitoringPage
                     // Add a timestamp row for every user.
                     List<String> projectTimeStamp = new ArrayList<String>();
                     projectTimeStamp.add(LAST_ACCESS + LAST_ACCESS_ROW); // first column
-                    projectTimeStamp.add(LAST_ACCESS + "");// curation column, not yet added
+                    if (projectRepository.existsProjectTimeStamp(aNewSelection)) {
+                        projectTimeStamp.add(LAST_ACCESS
+                                + projectRepository.getProjectTimeStamp(aNewSelection));
+                    }
+                    else {
+                        projectTimeStamp.add(LAST_ACCESS + "__");
+                    }
+
                     for (User user : usersWithPermissions) {
                         if (projectRepository.existsProjectTimeStamp(project, user.getUsername())) {
                             projectTimeStamp.add(LAST_ACCESS
