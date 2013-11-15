@@ -103,9 +103,13 @@ public class CrowdSourcePage
     private UserDao userRepository;
 
     private static final String CROWD_USER = "crowd_user";
+
+    //TODO: explain how to export these templates from Crowdflower
+    // & move to manager
     private static final String CROWD_NERTASK1_TEMPLATE = "NERtask1.template";
     private static final String CROWD_NERTASK2_TEMPLATE = "NERtask2.template";
 
+    //TODO: rename
     private CrowdJob selectedCrowdJob;
 
     private Project selectedProject;
@@ -127,12 +131,9 @@ public class CrowdSourcePage
 
     /**
      * Crowd source page, user interface to manage and upload Crowdjobs with WebAnno
-     * @throws UIMAException
-     * @throws IOException
-     * @throws ClassNotFoundException
+     *
      */
     public CrowdSourcePage()
-        throws UIMAException, IOException, ClassNotFoundException
     {
         crowdSourceForm = new CrowdSourceForm("crowdSourceForm");
         add(crowdSourceForm);
@@ -157,7 +158,7 @@ public class CrowdSourcePage
     private class CrowdSourceForm
         extends Form<SelectionModel>
     {
-        private static final long serialVersionUID = -1L;
+        private static final long serialVersionUID = 1L;
 
         public CrowdSourceForm(String id)
         {
@@ -222,6 +223,7 @@ public class CrowdSourcePage
     {
         private static final long serialVersionUID = -1L;
 
+        @SuppressWarnings("unchecked")
         public CrowdJobForm(String id)
         {
             super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
@@ -265,6 +267,7 @@ public class CrowdSourcePage
             for (int i = 0; i < provider.getColumnCount(); i++) {
                 columns.add(new DocumentColumnMetaData(provider, i));
             }
+            //TODO: look into what generic is used here
             add(new DefaultDataTable("crowdSourceInformationTable", columns, provider, 20));
 
             add(new Button("new", new ResourceModel("label"))
@@ -292,7 +295,7 @@ public class CrowdSourcePage
     private class CrowdProjectDetailForm
         extends Form<SelectionModel>
     {
-        private static final long serialVersionUID = -1L;
+        private static final long serialVersionUID = 1L;
 
         /**
          * Returns jCases for source documents for the selected Crowdjob
@@ -454,6 +457,7 @@ public class CrowdSourcePage
                 }
             }));
 
+            //TODO: more comments
             add(new ListMultipleChoice<SourceDocument>("documents")
             {
                 private static final long serialVersionUID = 1L;

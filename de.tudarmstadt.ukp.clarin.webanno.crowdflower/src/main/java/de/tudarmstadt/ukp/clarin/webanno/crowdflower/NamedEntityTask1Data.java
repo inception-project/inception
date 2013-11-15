@@ -28,6 +28,17 @@ import org.codehaus.jackson.annotate.JsonProperty;
  */
 public class NamedEntityTask1Data
 {
+    public static final String FIELD_TEXT = "text";
+    public static final String FIELD_GOLDEN = "_golden";
+    public static final String FIELD_HIDDEN = "_hidden";
+    public static final String FIELD_MARKERTEXT = "markertext";
+    public static final String FIELD_MARKERTEXT_GOLD = "markertext_gold";
+    public static final String FIELD_MARKERTEXT_GOLD_REASON = "markertext_gold_reason";
+    public static final String FIELD_TYPES = "types";
+    public static final String FIELD_DIFFICULTY = "_difficulty";
+    public static final String FIELD_DOCUMENT = "document";
+    public static final String FIELD_OFFSET = "offset";
+
     //text in which spans should be marked (usually in HTML spans)
     String text = "";
     //is this a gold element
@@ -49,7 +60,15 @@ public class NamedEntityTask1Data
     //document name
     String document = "";
 
-    @JsonProperty("document")
+    int offset = 0;
+
+    //constructor for normal data
+    NamedEntityTask1Data(String text)
+    {
+        this.text = text;
+    }
+
+    @JsonProperty(FIELD_DOCUMENT)
     public String getDocument()
     {
         return document;
@@ -60,7 +79,7 @@ public class NamedEntityTask1Data
         this.document = document;
     }
 
-    @JsonProperty("offset")
+    @JsonProperty(FIELD_OFFSET)
     public int getOffset()
     {
         return offset;
@@ -70,15 +89,9 @@ public class NamedEntityTask1Data
     {
         this.offset = offset;
     }
-    int offset = 0;
 
-    //constructor for normal data
-    NamedEntityTask1Data(String text)
-    {
-        this.text = text;
-    }
 
-    @JsonProperty("text")
+    @JsonProperty(FIELD_TEXT)
     public String getText()
     {
         return text;
@@ -88,7 +101,7 @@ public class NamedEntityTask1Data
         this.text = text;
     }
 
-    @JsonProperty("_golden")
+    @JsonProperty(FIELD_GOLDEN)
     public String get_golden()
     {
         return _golden;
@@ -98,7 +111,7 @@ public class NamedEntityTask1Data
         this._golden = _golden;
     }
 
-    @JsonProperty("_hidden")
+    @JsonProperty(FIELD_HIDDEN)
     public String get_hidden()
     {
         return _hidden;
@@ -108,7 +121,7 @@ public class NamedEntityTask1Data
         this._golden = _hidden;
     }
 
-    @JsonProperty("markertext")
+    @JsonProperty(FIELD_MARKERTEXT)
     public String getMarkertext()
     {
         return markertext;
@@ -118,7 +131,7 @@ public class NamedEntityTask1Data
         this.markertext = markertext;
     }
 
-    @JsonProperty("markertext_gold")
+    @JsonProperty(FIELD_MARKERTEXT_GOLD)
     public String getMarkertext_gold()
     {
         return markertext_gold;
@@ -128,7 +141,7 @@ public class NamedEntityTask1Data
         this.markertext_gold = markertext_gold;
     }
 
-    @JsonProperty("markertext_gold_reason")
+    @JsonProperty(FIELD_MARKERTEXT_GOLD_REASON)
     public String getMarkertext_gold_reason()
     {
         return markertext_gold_reason;
@@ -138,7 +151,7 @@ public class NamedEntityTask1Data
         this.markertext_gold_reason = markertext_gold_reason;
     }
 
-    @JsonProperty("types")
+    @JsonProperty(FIELD_TYPES)
     public String getTypes()
     {
         return types;
@@ -149,7 +162,7 @@ public class NamedEntityTask1Data
         this.types = types;
     }
 
-    @JsonProperty("_difficulty")
+    @JsonProperty(FIELD_DIFFICULTY)
     public int get_difficulty()
     {
         return _difficulty;

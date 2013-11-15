@@ -27,37 +27,50 @@ import org.codehaus.jackson.annotate.JsonProperty;
  */
 public class NamedEntityTask2Data
 {
+    public static final String FIELD_TEXT = "text";
+    public static final String FIELD_TODECIDE = "toDecide";
+    public static final String FIELD_GOLDEN = "_golden";
+    public static final String FIELD_HIDDEN = "_hidden";
+    public static final String FIELD_DIFFICULTY = "_difficulty";
+    public static final String FIELD_TODECIDE_RESULT = "ist_todecide_ein";
+    public static final String FIELD_TODECIDE_GOLD = "ist_todecide_ein_gold";
+    public static final String FIELD_TODECIDE_GOLD_REASON = "ist_todecide_ein_gold_reason";
+    public static final String FIELD_TOKENOFFSET = "tokenOffest";
+    public static final String FIELD_DOCOFFSET = "docOffset";
+    public static final String FIELD_DOCUMENT = "document";
+    public static final String FIELD_POSTEXT = "posText";
+
     //context text displayed to worker
-    String text = "";
+    private String text = "";
 
     //word for which NE type should be recognized
-    String toDecide = "";
+    private String toDecide = "";
 
     //is the element golden?
-    String _golden = "";
+    private String _golden = "";
 
     //is this element hidden (default all elements are visible)
-    String _hidden = "FALSE";
+    private String _hidden = "FALSE";
 
     // from http://crowdflower.com/docs-gold: The _difficulty column should contain an integer between 1 and 100.
     // The higher the number, the more difficult the Gold is considered, and it will be displayed later in a contributor's judgment session.
-    int _difficulty = 1;
+    private int _difficulty = 1;
 
     //gold solution for this item, can be left empty if _golden is not TRUE
-    String ist_todecide_ein_gold = "";
-    String ist_todecide_ein_gold_reason = "";
+    private String ist_todecide_ein_gold = "";
+    private String ist_todecide_ein_gold_reason = "";
 
     //token offset
-    String tokenOffset = "";
+    private String tokenOffset = "";
 
     //offset this document has for the start token (to allow contious numbering for multi-documents)
-    int docOffset = 0;
+    private int docOffset = 0;
 
     //Document name
-    String document = "";
+    private String document = "";
 
     //position JSON which contains start and end token for this NE
-    String posText = "";
+    private String posText = "";
 
     //constructor for normal data
     NamedEntityTask2Data(String text, String toDecide, String posText, String tokenOffset, String document)
@@ -90,7 +103,7 @@ public class NamedEntityTask2Data
 
     }
 
-    @JsonProperty("text")
+    @JsonProperty(FIELD_TEXT)
     public String getText()
     {
         return text;
@@ -100,7 +113,7 @@ public class NamedEntityTask2Data
         this.text = text;
     }
 
-    @JsonProperty("toDecide")
+    @JsonProperty(FIELD_TODECIDE)
     public String getToDecide()
     {
         return toDecide;
@@ -110,7 +123,7 @@ public class NamedEntityTask2Data
         this.toDecide = toDecide;
     }
 
-    @JsonProperty("_golden")
+    @JsonProperty(FIELD_GOLDEN)
     public String get_golden()
     {
         return _golden;
@@ -121,7 +134,7 @@ public class NamedEntityTask2Data
         this._golden = _golden;
     }
 
-    @JsonProperty("_hidden")
+    @JsonProperty(FIELD_HIDDEN)
     public String get_hidden()
     {
         return _hidden;
@@ -131,7 +144,7 @@ public class NamedEntityTask2Data
         this._golden = _hidden;
     }
 
-    @JsonProperty("ist_todecide_eine_gold")
+    @JsonProperty(FIELD_TODECIDE_GOLD)
     public String get_ist_todecide_ein_gold()
     {
         return ist_todecide_ein_gold;
@@ -142,7 +155,7 @@ public class NamedEntityTask2Data
         this.ist_todecide_ein_gold = _ist_todecide_ein_gold;
     }
 
-    @JsonProperty("ist_todecide_eine_gold_reason")
+    @JsonProperty(FIELD_TODECIDE_GOLD_REASON)
     public String get_ist_todecide_ein_gold_reason()
     {
         return ist_todecide_ein_gold_reason;
@@ -153,7 +166,7 @@ public class NamedEntityTask2Data
         this.ist_todecide_ein_gold_reason = _ist_todecide_ein_gold_reason;
     }
 
-    @JsonProperty("tokenOffset")
+    @JsonProperty(FIELD_TOKENOFFSET)
     public String getTokenOffset()
     {
         return tokenOffset;
@@ -164,7 +177,7 @@ public class NamedEntityTask2Data
         this.tokenOffset = tokenOffset;
     }
 
-    @JsonProperty("document")
+    @JsonProperty(FIELD_DOCUMENT)
     public String getDocument()
     {
         return document;
@@ -175,7 +188,7 @@ public class NamedEntityTask2Data
         this.document = document;
     }
 
-    @JsonProperty("posText")
+    @JsonProperty(FIELD_POSTEXT)
     public String getPosText()
     {
         return posText;
@@ -186,7 +199,7 @@ public class NamedEntityTask2Data
         this.posText = posText;
     }
 
-    @JsonProperty("_difficulty")
+    @JsonProperty(FIELD_DIFFICULTY)
     public int get_difficulty()
     {
         return _difficulty;
@@ -197,7 +210,7 @@ public class NamedEntityTask2Data
         this._difficulty = _difficulty;
     }
 
-    @JsonProperty("docOffset")
+    @JsonProperty(FIELD_DOCOFFSET)
     public int getDocOffset()
     {
         return docOffset;

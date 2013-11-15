@@ -87,11 +87,6 @@ public class CrowdClient implements Serializable
         this.apiKey = apiKey;
     }
 
-    CrowdClient()
-    {
-
-    }
-
     /**
      * Create a new job on Crowdflower using supplied job class. If this class had been retrieved with retrieveJob(String jobid),
      * then you copied the job without its data. Can be used to copy jobs across different accounts if API key is changed between the call to retrieveJob
@@ -145,7 +140,6 @@ public class CrowdClient implements Serializable
         {
             restTemplate.put(baseJobURL, job.getIncludedCountriesMap(), job.getId(), apiKey);
         }
-       // restTemplate.put(url, request, urlVariables)
     }
 
     /**
@@ -154,11 +148,9 @@ public class CrowdClient implements Serializable
      * @param data - Generic vector of data, containing ordinary java classes.
      * They should be annotated so that Jackson understands how to map them to JSON.
      *
-     * @throws Exception
      */
 
-    @SuppressWarnings("rawtypes")
-    void uploadData(CrowdJob job, Vector data) throws Exception
+    void uploadData(CrowdJob job, Vector<?> data)
     {
         Log LOG = LogFactory.getLog(getClass());
 
@@ -168,13 +160,17 @@ public class CrowdClient implements Serializable
         ObjectMapper mapper = new ObjectMapper();
         String jsonObjectCollection = "";
 
+        StringBuilder jsonStringBuilder = new StringBuilder();
         int count = 0;
         for(Object obj : data)
         {
             count++;
             JsonNode jsonData = mapper.convertValue(obj, JsonNode.class);
-            jsonObjectCollection += jsonData.toString() + "\n";
+            jsonStringBuilder.append(jsonData.toString());
+            jsonStringBuilder.append("\n");
         }
+
+        jsonObjectCollection = jsonStringBuilder.toString();
 
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.getMessageConverters().add(new StringHttpMessageConverter());

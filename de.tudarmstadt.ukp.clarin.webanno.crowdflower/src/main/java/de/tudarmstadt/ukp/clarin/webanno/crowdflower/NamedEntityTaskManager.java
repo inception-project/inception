@@ -77,6 +77,8 @@ public class NamedEntityTaskManager
     private int omittedEntities = 0;
 
     // static mapping of WebAnno short forms to user displayed types in Crowdflower
+    //used for gold
+    //TODO: make these mapping configurable
     static {
         task2NeMap = new HashMap<String, String>();
         task2NeMap.put("PER", "Person");
@@ -119,7 +121,7 @@ public class NamedEntityTaskManager
      * Generates a new job on crowdflower.com based on the supplied template string. The new job
      * won't have any data items
      *
-     * @param template - template as string to use for the new job
+     * @param template - template as JSON string to use for the new job
      * @return
      * @throws JsonProcessingException
      * @throws IOException
@@ -134,18 +136,18 @@ public class NamedEntityTaskManager
     }
 
     /**
-     * Helper function to concatenate a list of strings with the supplied seperator
+     * Helper function to concatenate a list of strings with the supplied separator
      * {"item","item3","test"} -> "item,item3,test"
      *
      * @param words
-     * @param seperator
+     * @param separator
      * @return string
      */
-    private static String concatWithSeperator(Collection<String> words, String seperator)
+    private static String concatWithSeparator(Collection<String> words, String separator)
     {
         StringBuilder wordList = new StringBuilder();
         for (String word : words) {
-            wordList.append(new String(word) + seperator);
+            wordList.append(new String(word) + separator);
         }
         return new String(wordList.deleteCharAt(wordList.length() - 1));
     }
@@ -165,14 +167,17 @@ public class NamedEntityTaskManager
      * @param generateGold - whether gold data should be produced or normal data
      * @param limit - limit number of data items to this number
      * @return Vector<NamedEntityTask1Data>, representing a crowdflower task1 data upload. It can be directly mapped to JSON.
-     * @throws Exception
+     * @throws CrowdException
+     *
      */
-    public Vector<NamedEntityTask1Data> generateTask1Data(List<JCas> documentsJCas, int goldOffset,
+
+    public List<NamedEntityTask1Data> generateTask1Data(List<JCas> documentsJCas, int goldOffset,
             boolean generateGold, int limit)
-        throws Exception
+        throws CrowdException
     {
         Log LOG = LogFactory.getLog(getClass());
-        Vector<NamedEntityTask1Data> data = new Vector<NamedEntityTask1Data>();
+
+        List<NamedEntityTask1Data> data = new ArrayList<NamedEntityTask1Data>();
         int i = goldOffset;
         StringBuilder textBuilder = new StringBuilder();
         int docNo = 0;
@@ -193,17 +198,17 @@ public class NamedEntityTaskManager
                 textBuilder.setLength(0);
 
                 // Maps our own token offsets (needed by JS in the crowdflower task) to Jcas offsets
-                HashMap<Integer, Integer> charOffsetStartMapping = new HashMap<Integer, Integer>();
-                HashMap<Integer, Integer> charOffsetEndMapping = new HashMap<Integer, Integer>();
+                Map<Integer, Integer> charOffsetStartMapping = new HashMap<Integer, Integer>();
+                Map<Integer, Integer> charOffsetEndMapping = new HashMap<Integer, Integer>();
 
                 for (Token token : selectCovered(Token.class, sentence)) {
 
                     // check that token offsets match to (i - goldOffset)
-                    String tokenString = new String(token.getCoveredText());
+                    //String tokenString = ;
                     textBuilder.append("<span id=\"token=");
                     textBuilder.append(String.valueOf(i));
                     textBuilder.append("\">");
-                    textBuilder.append(escapeHtml(tokenString));
+                    textBuilder.append(escapeHtml(token.getCoveredText()));
                     textBuilder.append(" </span>");
 
                     charOffsetStartMapping.put(token.getBegin(), i);
@@ -212,7 +217,7 @@ public class NamedEntityTaskManager
                     i++;
                 }
 
-                String text = new String(textBuilder);
+                String text = textBuilder.toString();
 
                 // clear string builder
                 textBuilder.setLength(0);
@@ -222,9 +227,9 @@ public class NamedEntityTaskManager
                 task1Data.setDocument("S" + String.valueOf(docNo));
 
                 if (generateGold) {
-                    ArrayList<String> goldElems = new ArrayList<String>();
-                    ArrayList<String> goldTokens = new ArrayList<String>();
-                    ArrayList<String> goldTypes = new ArrayList<String>();
+                    List<String> goldElems = new ArrayList<String>();
+                    List<String> goldTokens = new ArrayList<String>();
+                    List<String> goldTypes = new ArrayList<String>();
 
                     int lastNeBegin = -1;
                     int lastNeEnd = -1;
@@ -240,7 +245,7 @@ public class NamedEntityTaskManager
                             strTokens.add(new String(t.getCoveredText()));
                         }
 
-                        String strToken = concatWithSeperator(strTokens, " ");
+                        String strToken = concatWithSeparator(strTokens, " ");
                         String type = namedEntity.getValue();
 
                         int neBegin = namedEntity.getBegin();
@@ -277,8 +282,9 @@ public class NamedEntityTaskManager
                         }
                     }
 
-                    // Standard case: no gold elements
+
                     String strTypes = "[]";
+
                     String strGold = "[\"none\"]";
                     String strGoldReason = noGoldNER1Reason;
                     int difficulty = 1;
@@ -333,14 +339,14 @@ public class NamedEntityTaskManager
      * @return a string that explains to the user which named
      *         entities he had to select to get the answer right
      */
-    private String buildTask1GoldElemReason(StringBuilder textBuilder, ArrayList<String> goldTokens)
+    private String buildTask1GoldElemReason(StringBuilder textBuilder, List<String> goldTokens)
     {
         String strGoldReason;
         textBuilder.setLength(0);
         textBuilder.append("Der Text beinhaltet ");
         textBuilder.append(goldTokens.size());
         textBuilder.append(" Named Entiti(es): ");
-        textBuilder.append(escapeHtml(concatWithSeperator(goldTokens, ", ")));
+        textBuilder.append(escapeHtml(concatWithSeparator(goldTokens, ", ")));
         textBuilder.append(goldNER1ReasonHints);
 
         strGoldReason = new String(textBuilder);
@@ -358,13 +364,13 @@ public class NamedEntityTaskManager
      * @param goldElems - string gold elements (JSON), should be sorted
      * @return JSON string containing list of gold item marker positions
      */
-    private String buildTask1GoldElem(StringBuilder textBuilder, ArrayList<String> goldElems)
+    private String buildTask1GoldElem(StringBuilder textBuilder, List<String> goldElems)
     {
         String strGold;
         textBuilder.setLength(0);
         // strGold = "["+concatWithSeperator(goldElems,",")+"]";
         textBuilder.append("[");
-        textBuilder.append(concatWithSeperator(goldElems, ","));
+        textBuilder.append(concatWithSeparator(goldElems, ","));
         textBuilder.append("]");
         strGold = new String(textBuilder);
         return strGold;
@@ -379,19 +385,19 @@ public class NamedEntityTaskManager
      * @charOffsetStartMapping - mapping for start positions to use for WebAnno offset to Crowdflower token offset
      * @charOffsetEndMapping - mapping for end positions to use for WebAnno offset to Crowdflower token offset
      * @return JSON formatted string describing positions of single marker
-     * @throws Exception
+     * @throws CrowdException
      */
     private String buildTask1TokenJSON(StringBuilder textBuilder, NamedEntity namedEntity,
-            HashMap<Integer, Integer> charOffsetStartMapping,
-            HashMap<Integer, Integer> charOffsetEndMapping)
-        throws Exception
+            Map<Integer, Integer> charOffsetStartMapping,
+            Map<Integer, Integer> charOffsetEndMapping)
+        throws CrowdException
     {
         // JSON named enitity marker for the gold data. The JSON here gets enclosed into the data
         // JSON that is uploaded
         // "{\"s\":"+begin+",\"e\":"+end+"}"
         if (!charOffsetStartMapping.containsKey(namedEntity.getBegin())
                 || !charOffsetEndMapping.containsKey(namedEntity.getEnd())) {
-            throw new Exception(
+            throw new CrowdException(
                     "Data generation error: char offset to token mapping is inconsistent. Contact developpers!");
         }
 
@@ -418,14 +424,6 @@ public class NamedEntityTaskManager
         Log LOG = LogFactory.getLog(getClass());
         LOG.info("Using apiKey:" + key);
         crowdclient.setApiKey(key);
-    }
-
-    public String uploadNewNERTask2(String template, List<JCas> documentsJCas,
-            List<JCas> goldsJCas, String task1Id)
-        throws JsonProcessingException, IOException, Exception
-    {
-        System.out.println();
-        return "";
     }
 
     public String uploadNewNERTask1(String template, List<JCas> documentsJCas, List<JCas> goldsJCas)
@@ -463,7 +461,7 @@ public class NamedEntityTaskManager
 
         int goldOffset = 0;
 
-        Vector<NamedEntityTask1Data> goldData = new Vector<NamedEntityTask1Data>();
+        List<NamedEntityTask1Data> goldData = new ArrayList<NamedEntityTask1Data>();
 
         // If we have gold data, than generate data for it
         if (goldsJCas != null && goldsJCas.size() > 0) {
@@ -474,7 +472,7 @@ public class NamedEntityTaskManager
         }
 
         LOG.info("Generate normal task data.");
-        Vector<NamedEntityTask1Data> data = generateTask1Data(documentsJCas, goldOffset, false,
+        List<NamedEntityTask1Data> data = generateTask1Data(documentsJCas, goldOffset, false,
                 useSents);
 
         Vector<NamedEntityTask1Data> mergedData = new Vector<NamedEntityTask1Data>();
@@ -608,7 +606,7 @@ public class NamedEntityTaskManager
      * @throws Exception
      */
     private int getSpanPos(String spans, int spannumber)
-        throws Exception
+        throws IndexOutOfBoundsException
     {
         // find all occurrences <span> forward
         int count = 0;
@@ -618,7 +616,7 @@ public class NamedEntityTaskManager
             }
             count++;
         }
-        throw new Exception("Index not found:" + spannumber);
+        throw new IndexOutOfBoundsException("Token index not found in getSpanPos:" + spannumber + " in span: " + spans);
     }
 
     /**
@@ -629,10 +627,9 @@ public class NamedEntityTaskManager
      * @param start - token number
      * @param end - token number
      * @return Substring of spans containing the tokens starting at start token and ending at end token
-     * @throws Exception
+     * @throws IndexOutOfBoundsException
      */
-    private String extractSpan(String spans, int start, int end)
-        throws Exception
+    private String extractSpan(String spans, int start, int end) throws IndexOutOfBoundsException
     {
         int offset = getFirstSpanOffset(spans);
 
@@ -695,12 +692,12 @@ public class NamedEntityTaskManager
      * @return Crowdflower ID as string of the new task
      * @throws JsonProcessingException
      * @throws IOException
-     * @throws Exception
+     * @throws CrowdException
      */
 
     public String uploadNewNERTask2(String template, String jobID1, List<JCas> documentsJCas,
             List<JCas> goldsJCas)
-        throws JsonProcessingException, IOException, Exception
+        throws JsonProcessingException, IOException, CrowdException
     {
         Log LOG = LogFactory.getLog(getClass());
         omittedSentences = 0;
@@ -804,7 +801,6 @@ public class NamedEntityTaskManager
                         List<String> majorityMarkers = new ArrayList<String>();
 
                         for (String vote : votings.keySet()) {
-                            System.out.println("Vote: " + vote + "=" + votings.get(vote));
                             if (votings.get(vote) >= votes_needed) {
                                 majorityMarkers.add(vote);
                             }
@@ -835,8 +831,6 @@ public class NamedEntityTaskManager
                 omittedSentences++;
                 LOG.warn("Warning, omitted a sentence from task2 upload because of an error in processing it: "
                         + e.getMessage());
-                // debug
-                e.printStackTrace();
                 // TODO: inform user that there was a problem
             }
         }
@@ -862,11 +856,11 @@ public class NamedEntityTaskManager
      * @return Buffered reader for raw judgment data (unzipped)
      * @throws UnsupportedEncodingException
      * @throws IOException
-     * @throws Exception
+     * @throws CrowdException
      */
 
     private BufferedReader getReaderForRawJudgments(String jobID)
-        throws UnsupportedEncodingException, IOException, Exception
+        throws UnsupportedEncodingException, IOException, CrowdException
     {
         Log LOG = LogFactory.getLog(getClass());
         LOG.info("Retrieving data for job: " + jobID);
@@ -881,7 +875,7 @@ public class NamedEntityTaskManager
         // This may happen if the server didn't have enough time to prepare the data.
         // (Usually the case for anything else than toy datasets)
         if (rawdata == null || rawdata.equals("")) {
-            throw new Exception(
+            throw new CrowdException(
                     "No data retrieved for task1 at #"
                             + jobID
                             + ". Crowdflower might need more time to prepare your data, try again in one minute.");
@@ -902,9 +896,15 @@ public class NamedEntityTaskManager
      * @throws Exception
      * @throws IOException
      * @throws UnsupportedEncodingException
+     * @throws CrowdException
      */
+
+    //TODO: find better name
+    //TODO: replace magic string
+    //TODO: omittedEntities
+
     public void retrieveAggJudgmentsTask2(String jobID2, List<JCas> documentsJCas)
-        throws UnsupportedEncodingException, IOException, Exception
+        throws UnsupportedEncodingException, IOException, CrowdException
     {
         omittedEntities = 0;
 
@@ -918,28 +918,24 @@ public class NamedEntityTaskManager
 
         // Maps our own token offsets (needed by JS in the crowdflower task) to Jcas offsets
         // One map for start and end offset conversion each and new mappings for each document (to be able to use multiple documents)
-        List<HashMap<Integer, Integer>> charStartMappings = new ArrayList<HashMap<Integer, Integer>>();
-        List<HashMap<Integer, Integer>> charEndMappings = new ArrayList<HashMap<Integer, Integer>>();
+        // Array position is token number
+        List<List<Integer>> charStartMappings = new ArrayList<List<Integer>>();
+        List<List<Integer>> charEndMappings = new ArrayList<List<Integer>>();
 
         for(JCas cas : documentsJCas)
         {
-            int i = 0;
-            HashMap<Integer, Integer> charStartMapping = new HashMap<Integer, Integer>();
-            HashMap<Integer, Integer> charEndMapping = new HashMap<Integer, Integer>();
+            List<Integer> charStartMapping = new ArrayList<Integer>();
+            List<Integer> charEndMapping = new ArrayList<Integer>();
             for (Sentence sentence : select(cas, Sentence.class))
             {
                 for (Token token : selectCovered(Token.class, sentence))
                 {
-
-                    charStartMapping.put(i, token.getBegin());
-                    charEndMapping.put(i, token.getEnd());
-
-                    i++;
+                    charStartMapping.add(token.getBegin());
+                    charEndMapping.add(token.getEnd());
                 }
             }
             charStartMappings.add(charStartMapping);
             charEndMappings.add(charEndMapping);
-
         }
 
         while ((line = br.readLine()) != null) {
@@ -952,7 +948,7 @@ public class NamedEntityTaskManager
                 int documentNo = Integer.valueOf(elem.path("data").path("document").getTextValue().substring(1));
                 if (documentNo >= documentsJCas.size())
                 {
-                    throw new Exception("Error, number of documents changed from first upload! Tried to access document: " + documentNo);
+                    throw new CrowdException("Error, number of documents changed from first upload! Tried to access document: " + documentNo);
                 }
 
                 //Only process elements that are finalized, i.e. elements that don't have missing judgments
@@ -997,6 +993,8 @@ public class NamedEntityTaskManager
                 }
 
             }
+            //We catch all exceptions here, in order to guarantee best effort in processing the data.
+            //That is, we try to assign to every sentence and don't stop if there is a problem and inform the user afterwards.
             catch (Exception e) {
                 omittedEntities++;
                 LOG.warn("Warning, omitted a sentence from task2 import because of an error in processing it: "
