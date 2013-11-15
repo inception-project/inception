@@ -104,17 +104,6 @@ public class AnnotationPreferenceModalPanel
             windowSizeField.setMinimum(1);
             add(windowSizeField);
 
-            add(new Label("displayLemmaLabel", "Display Lemma:")
-            {
-                private static final long serialVersionUID = -22913373405728018L;
-
-                @Override
-                public boolean isVisible()
-                {
-                    return bratAnnotatorModel.getMode().equals(Mode.ANNOTATION);
-                }
-            });
-
             add(tagSets = (CheckBoxMultipleChoice<TagSet>) new CheckBoxMultipleChoice<TagSet>(
                     "annotationLayers")
             {
@@ -151,6 +140,7 @@ public class AnnotationPreferenceModalPanel
                     setChoiceRenderer(new ChoiceRenderer<TagSet>("name", "id"));
                 }
             });
+            
             // Add a Checkbox to enable/disable automatic page navigations while annotating
             add(new CheckBox("scrollPage")
             {

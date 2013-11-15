@@ -352,6 +352,10 @@ public class CorrectionPage
                                 target.add(getFeedbackPanel());
                                 error(e.getMessage());
                             }
+                            catch (BratAnnotationException e) {
+                                target.add(getFeedbackPanel());
+                                error(e.getMessage());
+                            }
                             finish.setModelObject(bratAnnotatorModel);
                             target.add(finish.setOutputMarkupId(true));
                             target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
@@ -574,6 +578,10 @@ public class CorrectionPage
                     catch (IOException e) {
                         error(ExceptionUtils.getRootCause(e));
                     }
+                    catch (BratAnnotationException e) {
+                        target.add(getFeedbackPanel());
+                        error(e.getMessage());
+                    }
 
                     finish.setModelObject(bratAnnotatorModel);
                     target.add(finish.setOutputMarkupId(true));
@@ -641,6 +649,10 @@ public class CorrectionPage
                     }
                     catch (IOException e) {
                         error(ExceptionUtils.getRootCause(e));
+                    }
+                    catch (BratAnnotationException e) {
+                        target.add(getFeedbackPanel());
+                        error(e.getMessage());
                     }
 
                     finish.setModelObject(bratAnnotatorModel);
@@ -928,54 +940,19 @@ public class CorrectionPage
     }
 
     private void loadDocumentAction()
-        throws UIMAException, ClassNotFoundException, IOException
+        throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User logedInUser = repository.getUser(SecurityContextHolder.getContext()
                 .getAuthentication().getName());
-        JCas jCas = null;
-        try {
-            AnnotationDocument logedInUserAnnotationDocument = repository.getAnnotationDocument(
-                    bratAnnotatorModel.getDocument(), logedInUser);
-            jCas = repository.getAnnotationDocumentContent(logedInUserAnnotationDocument);
-
-        }
-        catch (UIMAException e) {
-            throw e;
-        }
-        catch (ClassNotFoundException e) {
-            throw e;
-        }
-        // First time the Merge Cas is opened
-        catch (IOException e) {
-            throw e;
-        }
-        // Get information to be populated to bratAnnotatorModel from the JCAS of the logged in user
-        //
-        catch (DataRetrievalFailureException e) {
-            BratAjaxCasController controller = new BratAjaxCasController(repository,
-                    annotationService);
-            jCas = controller.readJCas(bratAnnotatorModel.getDocument(), bratAnnotatorModel
-                    .getDocument().getProject(), logedInUser);
-            // This is the auto annotation, save it under CURATION_USER
-            repository.createCorrectionDocumentContent(jCas, bratAnnotatorModel.getDocument(),
-                    logedInUser);
-            // remove all annotation so that the user can correct from the auto annotation
-            BratAnnotatorUtility.clearJcasAnnotations(jCas, bratAnnotatorModel.getDocument(),
-                    logedInUser, repository);
-        }
-        catch (NoResultException e) {
-            BratAjaxCasController controller = new BratAjaxCasController(repository,
-                    annotationService);
-            jCas = controller.readJCas(bratAnnotatorModel.getDocument(), bratAnnotatorModel
-                    .getDocument().getProject(), logedInUser);
-            // This is the auto annotation, save it under CURATION_USER
-            repository.createCorrectionDocumentContent(jCas, bratAnnotatorModel.getDocument(),
-                    logedInUser);
-            // remove all annotation so that the user can correct from the auto annotation
-            BratAnnotatorUtility.clearJcasAnnotations(jCas, bratAnnotatorModel.getDocument(),
-                    logedInUser, repository);
-        }
+        List<AnnotationDocument> annotationDocuments = repository
+                .listAnnotationDocuments(bratAnnotatorModel.getDocument());
+        CurationBuilder cb = new CurationBuilder(repository, annotationService);
+        AnnotationDocument randomAnnotationDocument = null;
+        Map<String, JCas> jCases = cb.listJcasesforCuration(annotationDocuments,
+                randomAnnotationDocument);
+        JCas mergeJCas = cb.getMergeCas(bratAnnotatorModel, bratAnnotatorModel.getDocument(),
+                jCases, randomAnnotationDocument);
 
         if (bratAnnotatorModel.getSentenceAddress() == -1
                 || bratAnnotatorModel.getDocument().getId() != currentDocumentId
@@ -983,12 +960,12 @@ public class CorrectionPage
 
             try {
                 bratAnnotatorModel
-                        .setSentenceAddress(BratAjaxCasUtil.getFirstSentenceAddress(jCas));
+                        .setSentenceAddress(BratAjaxCasUtil.getFirstSentenceAddress(mergeJCas));
                 bratAnnotatorModel.setLastSentenceAddress(BratAjaxCasUtil
-                        .getLastSentenceAddress(jCas));
+                        .getLastSentenceAddress(mergeJCas));
                 bratAnnotatorModel.setFirstSentenceAddress(bratAnnotatorModel.getSentenceAddress());
 
-                Sentence sentence = selectByAddr(jCas, Sentence.class,
+                Sentence sentence = selectByAddr(mergeJCas, Sentence.class,
                         bratAnnotatorModel.getSentenceAddress());
                 bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                 bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());

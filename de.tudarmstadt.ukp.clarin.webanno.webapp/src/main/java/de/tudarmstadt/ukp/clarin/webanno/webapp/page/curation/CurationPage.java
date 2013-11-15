@@ -24,7 +24,9 @@ import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.persistence.NoResultException;
 
@@ -240,8 +242,9 @@ public class CurationPage
 
                             bratAnnotatorModel.getDocument().setState(
                                     SourceDocumentState.CURATION_IN_PROGRESS);
-                            // add timestamp 
-                            bratAnnotatorModel.getDocument().setTimestamp(new Timestamp(new Date().getTime()));
+                            // add timestamp
+                            bratAnnotatorModel.getDocument().setTimestamp(
+                                    new Timestamp(new Date().getTime()));
                         }
                         try {
                             repository.createSourceDocument(bratAnnotatorModel.getDocument(), user);
@@ -989,42 +992,20 @@ public class CurationPage
     }
 
     private void loadDocumentAction()
-        throws UIMAException, ClassNotFoundException, IOException
+        throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
+        List<AnnotationDocument> annotationDocuments = repository
+                .listAnnotationDocuments(bratAnnotatorModel.getDocument());
+        CurationBuilder cb = new CurationBuilder(repository, annotationService);
+        AnnotationDocument randomAnnotationDocument = null;
+        Map<String, JCas> jCases = cb.listJcasesforCuration(annotationDocuments,
+                randomAnnotationDocument);
+        JCas mergeJCas = cb.getMergeCas(bratAnnotatorModel, bratAnnotatorModel.getDocument(),
+                jCases, randomAnnotationDocument);
+
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User userLoggedIn = repository.getUser(SecurityContextHolder.getContext()
                 .getAuthentication().getName());
-        JCas jCas = null;
-        try {
-            AnnotationDocument logedInUserAnnotationDocument = repository.getAnnotationDocument(
-                    bratAnnotatorModel.getDocument(), userLoggedIn);
-            jCas = repository.getAnnotationDocumentContent(logedInUserAnnotationDocument);
-        }
-        catch (UIMAException e) {
-            throw e;
-        }
-        catch (ClassNotFoundException e) {
-            throw e;
-        }
-        // First time the Merge Cas is opened
-        catch (IOException e) {
-            throw e;
-        }
-        // Get information to be populated to bratAnnotatorModel from the JCAS
-        // of the logged in user
-        //
-        catch (DataRetrievalFailureException e) {
-            BratAjaxCasController controller = new BratAjaxCasController(repository,
-                    annotationService);
-            jCas = controller.readJCas(bratAnnotatorModel.getDocument(), bratAnnotatorModel
-                    .getDocument().getProject(), userLoggedIn);
-        }
-        catch (NoResultException e) {
-            BratAjaxCasController controller = new BratAjaxCasController(repository,
-                    annotationService);
-            jCas = controller.readJCas(bratAnnotatorModel.getDocument(), bratAnnotatorModel
-                    .getDocument().getProject(), userLoggedIn);
-        }
 
         if (bratAnnotatorModel.getSentenceAddress() == -1
                 || bratAnnotatorModel.getDocument().getId() != currentDocumentId
@@ -1032,12 +1013,12 @@ public class CurationPage
 
             try {
                 bratAnnotatorModel
-                        .setSentenceAddress(BratAjaxCasUtil.getFirstSentenceAddress(jCas));
+                        .setSentenceAddress(BratAjaxCasUtil.getFirstSentenceAddress(mergeJCas));
                 bratAnnotatorModel.setLastSentenceAddress(BratAjaxCasUtil
-                        .getLastSentenceAddress(jCas));
+                        .getLastSentenceAddress(mergeJCas));
                 bratAnnotatorModel.setFirstSentenceAddress(bratAnnotatorModel.getSentenceAddress());
 
-                Sentence sentence = selectByAddr(jCas, Sentence.class,
+                Sentence sentence = selectByAddr(mergeJCas, Sentence.class,
                         bratAnnotatorModel.getSentenceAddress());
                 bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                 bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());

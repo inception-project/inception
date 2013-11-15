@@ -214,6 +214,7 @@ public class CurationPanel
                 // ajax call when clicking on a sentence on the left side
                 final AbstractDefaultAjaxBehavior click = new AbstractDefaultAjaxBehavior()
                 {
+                    private static final long serialVersionUID = 5803814168152098822L;
 
                     @Override
                     protected void respond(AjaxRequestTarget aTarget)

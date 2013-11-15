@@ -120,9 +120,8 @@ public class CurationBuilder
             }
         }
 
-        JCas mergeJCas = null;
-        mergeJCas = getMergeCas(aBratAnnotatorModel, sourceDocument, jCases,
-                randomAnnotationDocument, mergeJCas);
+        JCas mergeJCas = getMergeCas(aBratAnnotatorModel, sourceDocument, jCases,
+                randomAnnotationDocument);
 
         int numUsers = jCases.size();
 
@@ -222,9 +221,10 @@ public class CurationBuilder
     }
 
     public JCas getMergeCas(BratAnnotatorModel aBratAnnotatorModel, SourceDocument sourceDocument,
-            Map<String, JCas> jCases, AnnotationDocument randomAnnotationDocument, JCas mergeJCas)
+            Map<String, JCas> jCases, AnnotationDocument randomAnnotationDocument)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
+        JCas mergeJCas = null;
         try {
             if (aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)) {
                 mergeJCas = repository.getCorrectionDocumentContent(sourceDocument);
@@ -235,16 +235,7 @@ public class CurationBuilder
         }
         // Create jcas, if it could not be loaded from the file system
         catch (Exception e) {
-            // reserve the begin/end offsets before creating re-merge
-            int tempBegin = begin;
-            int tempEnd = end;
-            JCas firstJCas = jCases.values().iterator().next();
 
-            // re-merge JCAS for all sentences
-            begin = selectByAddr(firstJCas, Sentence.class,
-                    aBratAnnotatorModel.getFirstSentenceAddress()).getBegin();
-            end = selectByAddr(firstJCas, Sentence.class,
-                    aBratAnnotatorModel.getLastSentenceAddress()).getEnd();
             if (aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)) {
                 mergeJCas = createCorrectionCas(mergeJCas, aBratAnnotatorModel,
                         randomAnnotationDocument);
@@ -253,9 +244,6 @@ public class CurationBuilder
                 mergeJCas = createMergeCas(mergeJCas, randomAnnotationDocument, jCases,
                         aBratAnnotatorModel);
             }
-            // restore actual begin/end offsets
-            begin = tempBegin;
-            end = tempEnd;
         }
         return mergeJCas;
     }
