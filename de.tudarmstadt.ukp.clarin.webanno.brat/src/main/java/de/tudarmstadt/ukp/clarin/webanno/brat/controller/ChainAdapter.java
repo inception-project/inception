@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
 import static java.util.Arrays.asList;
-import static org.uimafit.util.JCasUtil.selectCovered;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -303,11 +302,9 @@ public class ChainAdapter
             updateCoreferenceChainCas(aJCas, aOriginFs, aTargetFs, aLabelValue);
         }
         else {
-            List<Token> tokens = selectCovered(aJCas, Token.class, aBegin, aEnd);
-            if (tokens.size() == 0) {
-                throw new SubTokenSelectedException("A minimum of one token should be selected!");
-            }
-            else if (!BratAjaxCasUtil.isSameSentence(aJCas, aBegin, aEnd)) {
+            List<Token> tokens = BratAjaxCasUtil
+                    .selectOverlapping(aJCas, Token.class, aBegin, aEnd);
+            if (!BratAjaxCasUtil.isSameSentence(aJCas, aBegin, aEnd)) {
                 throw new MultipleSentenceCoveredException(
                         "Annotation coveres multiple sentences, "
                                 + "limit your annotation to single sentence!");
@@ -746,10 +743,8 @@ public class ChainAdapter
     public static final ChainAdapter getCoreferenceLinkAdapter()
     {
         ChainAdapter adapter = new ChainAdapter(AnnotationTypeConstant.COREFRELTYPE_PREFIX,
-                CoreferenceLink.class.getName(),
-                "referenceType",
-                "first",
-                "next");
+                CoreferenceLink.class.getName(), "referenceType", "first", "next");
+        adapter.setDeletable(true);
         return adapter;
     }
 
@@ -761,10 +756,7 @@ public class ChainAdapter
     public static final ChainAdapter getCoreferenceChainAdapter()
     {
         ChainAdapter adapter = new ChainAdapter(AnnotationTypeConstant.COREFERENCE_PREFIX,
-                CoreferenceChain.class.getName(),
-                "referenceRelation",
-                "first",
-                "next");
+                CoreferenceChain.class.getName(), "referenceRelation", "first", "next");
         adapter.setChain(true);
         return adapter;
     }
@@ -791,6 +783,12 @@ public class ChainAdapter
     public String getAnnotationTypeName()
     {
         return annotationTypeName;
+    }
+
+
+    public void setDeletable(boolean deletable)
+    {
+        this.deletable = deletable;
     }
 
     @Override

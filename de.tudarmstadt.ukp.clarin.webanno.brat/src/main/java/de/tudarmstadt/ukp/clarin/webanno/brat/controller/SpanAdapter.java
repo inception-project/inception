@@ -48,7 +48,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * A class that is used to create Brat Span to CAS and vice-versa
- *
+ * 
  * @author Seid Muhie Yimam
  * @author Richard Eckart de Castilho
  */
@@ -60,7 +60,7 @@ public class SpanAdapter
     /**
      * Prefix of the label value for Brat to make sure that different annotation types can use the
      * same label, e.g. a POS tag "N" and a named entity type "N".
-     *
+     * 
      * This is used to differentiate the different types in the brat annotation/visualization. The
      * prefix will not stored in the CAS (striped away at {@link BratAjaxCasController#getType} )
      */
@@ -124,7 +124,7 @@ public class SpanAdapter
     /**
      * Add annotations from the CAS, which is controlled by the window size, to the brat response
      * {@link GetDocumentResponse}
-     *
+     * 
      * @param aJcas
      *            The JCAS object containing annotations
      * @param aResponse
@@ -213,7 +213,7 @@ public class SpanAdapter
 
     /**
      * Update the CAS with new/modification of span annotations from brat
-     *
+     * 
      * @param aLabelValue
      *            the value of the annotation for the span
      * @throws BratAnnotationException
@@ -223,29 +223,20 @@ public class SpanAdapter
     {
         if (BratAjaxCasUtil.isSameSentence(aJcas, aBegin, aEnd)) {
             if (singleTokenBehavior) {
-                List<Token> tokens = selectCovered(aJcas, Token.class, aBegin, aEnd);
-                if (tokens.size() == 0) {
-                    throw new SubTokenSelectedException(
-                            "A minimum of one token should be selected!");
-                }
-                else {
-                    for (Token token : tokens) {
-                        updateCas(aJcas.getCas(), token.getBegin(), token.getEnd(), aLabelValue);
-                    }
+                List<Token> tokens = BratAjaxCasUtil.selectOverlapping(aJcas, Token.class, aBegin,
+                        aEnd);
+
+                for (Token token : tokens) {
+                    updateCas(aJcas.getCas(), token.getBegin(), token.getEnd(), aLabelValue);
                 }
             }
             else {
-                List<Token> tokens = selectCovered(aJcas, Token.class, aBegin, aEnd);
-                if (tokens.size() == 0) {
-                    throw new SubTokenSelectedException(
-                            "A minimum of one token should be selected!");
-                }
-                else {
-                    // update the begin and ends (no sub token selection
-                    aBegin = tokens.get(0).getBegin();
-                    aEnd = tokens.get(tokens.size() - 1).getEnd();
-                    updateCas(aJcas.getCas(), aBegin, aEnd, aLabelValue);
-                }
+                List<Token> tokens = BratAjaxCasUtil.selectOverlapping(aJcas, Token.class, aBegin,
+                        aEnd);
+                // update the begin and ends (no sub token selection
+                aBegin = tokens.get(0).getBegin();
+                aEnd = tokens.get(tokens.size() - 1).getEnd();
+                updateCas(aJcas.getCas(), aBegin, aEnd, aLabelValue);
             }
         }
         else {
@@ -295,14 +286,13 @@ public class SpanAdapter
 
     /**
      * Convenience method to get an adapter for part-of-speech.
-     *
+     * 
      * NOTE: This is not meant to stay. It's just a convenience during refactoring!
      */
     public static final SpanAdapter getPosAdapter()
     {
         SpanAdapter adapter = new SpanAdapter(AnnotationTypeConstant.POS_PREFIX,
-                POS.class.getName(), "PosValue", "pos",
-                Token.class.getName());
+                POS.class.getName(), "PosValue", "pos", Token.class.getName());
         adapter.setSingleTokenBehavior(true);
         adapter.setDeletable(false);
         return adapter;
@@ -310,13 +300,13 @@ public class SpanAdapter
 
     /**
      * Convenience method to get an adapter for lemma.
-     *
+     * 
      * NOTE: This is not meant to stay. It's just a convenience during refactoring!
      */
     public static final SpanAdapter getLemmaAdapter()
     {
-        SpanAdapter adapter = new SpanAdapter("", Lemma.class.getName(),
-                "value", "lemma", Token.class.getName());
+        SpanAdapter adapter = new SpanAdapter("", Lemma.class.getName(), "value", "lemma",
+                Token.class.getName());
         adapter.setSingleTokenBehavior(true);
         adapter.setDeletable(false);
         return adapter;
@@ -324,14 +314,13 @@ public class SpanAdapter
 
     /**
      * Convenience method to get an adapter for named entity.
-     *
+     * 
      * NOTE: This is not meant to stay. It's just a convenience during refactoring!
      */
     public static final SpanAdapter getNamedEntityAdapter()
     {
         SpanAdapter adapter = new SpanAdapter(AnnotationTypeConstant.NAMEDENTITY_PREFIX,
-                NamedEntity.class.getName(), "value", null,
-                null);
+                NamedEntity.class.getName(), "value", null, null);
         adapter.setSingleTokenBehavior(false);
         adapter.setDeletable(true);
         return adapter;
@@ -361,9 +350,9 @@ public class SpanAdapter
         return annotationTypeName;
     }
 
-    public  void setDeletable(boolean aDeletable)
+    public void setDeletable(boolean aDeletable)
     {
-       this.deletable = aDeletable;
+        this.deletable = aDeletable;
     }
 
     @Override

@@ -174,108 +174,44 @@ public class BratAjaxCasUtil
         return selectSingleAt(aJcas, Sentence.class, aBegin, aEnd);
     }
 
-//    /**
-//     * stores, for every tokens, the start and end positions, offsets
-//     *
-//     * @param aJcas
-//     * @return map of tokens begin and end positions
-//     */
-//    private static Map<Integer, Integer> offsets(JCas aJcas)
-//    {
-//        Map<Integer, Integer> offsets = new HashMap<Integer, Integer>();
-//        for (Token token : select(aJcas, Token.class)) {
-//            offsets.put(token.getBegin(), token.getEnd());
-//        }
-//        return offsets;
-//    }
-//
-//    /**
-//     * delete a span annotation from the response
-//     *
-//     * @param aResponse
-//     * @param id
-//     */
-//    private static int[] getTokenStart(Map<Integer, Integer> aOffset, int aStart, int aEnd)
-//    {
-//        Iterator<Integer> it = aOffset.keySet().iterator();
-//        boolean startFound = false;
-//        boolean endFound = false;
-//        while (it.hasNext()) {
-//            int tokenStart = it.next();
-//            if (aStart >= tokenStart && aStart <= aOffset.get(tokenStart)) {
-//                aStart = tokenStart;
-//                startFound = true;
-//                if (endFound) {
-//                    break;
-//                }
-//            }
-//            if (aEnd >= tokenStart && aEnd <= aOffset.get(tokenStart)) {
-//                aEnd = aOffset.get(tokenStart);
-//                endFound = true;
-//                if (startFound) {
-//                    break;
-//                }
-//            }
-//        }
-//        return new int[] { aStart, aEnd };
-//    }
-//
-//    /**
-//     * Get the beginning position of a token. This is used for dependency annotations
-//     */
-//    private static Map<Integer, Integer> getTokenPosition(JCas aJcas)
-//    {
-//        Map<Integer, Integer> tokenBeginPositions = new HashMap<Integer, Integer>();
-//
-//        for (Token token : select(aJcas, Token.class)) {
-//
-//            if (token.getPos() != null) {
-//                tokenBeginPositions.put(token.getPos().getAddress(), token.getBegin());
-//            }
-//        }
-//        return tokenBeginPositions;
-//    }
-//
-//    /**
-//     * Get the token at a given position. This is used for dependency and coreference annotations
-//     */
-//    public static Map<Integer, Token> getToken(JCas aJcas)
-//    {
-//        Map<Integer, Token> tokens = new HashMap<Integer, Token>();
-//        for (Token token : select(aJcas, Token.class)) {
-//            tokens.put(token.getBegin(), token);
-//        }
-//        return tokens;
-//    }
-//
-//    /**
-//     * Get the beginning offset of an Annotation
-//     *
-//     * @param aJCas
-//     *            The CAS object
-//     * @param aAddress
-//     *            the low level address of the annotation in the CAS
-//     * @return the beginning offset address of an annotation
-//     */
-//    // private static <T extends Annotation> T selectFirstAt(JCas aJcas, final Class<T> type
-//    public static int getAnnotationBeginOffset(JCas aJCas, int aAddress)
-//    {
-//        return selectAnnotationByAddress(aJCas, Annotation.class, aAddress).getBegin();
-//    }
-//
-//    /**
-//     * Get end offset of an annotation
-//     *
-//     * @param aJCas
-//     *            The CAS object
-//     * @param aRef
-//     *            the low level address of the annotation in the CAS
-//     * @return end position of the annotation
-//     */
-//    public static int getAnnotationEndOffset(JCas aJCas, int aRef)
-//    {
-//        return selectAnnotationByAddress(aJCas, Annotation.class, aRef).getEnd();
-//    }
+    /**
+     * Get overlapping annotations where selection overlaps with annotations.<br>
+     * Example: if annotation is (5, 13) and selection covered was from (7, 12); the annotation (5,
+     * 13) is returned as overlapped selection <br>
+     * If multiple annotations are [(3, 8), (9, 15), (16, 21)] and selection covered was from (10,
+     * 18), overlapped annotation [(9, 15), (16, 21)] should be returned
+     *
+     * @param <T>
+     *            the JCas type.
+     * @param jCas
+     *            a JCas containing the annotation.
+     * @param type
+     *            a UIMA type.
+     * @param begin
+     *            begin offset.
+     * @param end
+     *            end offset.
+     * @return a return value.
+     */
+
+    public static <T extends Annotation> List<T> selectOverlapping(JCas aJCas,
+            final Class<T> aType, int aBegin, int aEnd)
+    {
+
+        List<T> annotations = new ArrayList<T>();
+        for (T t : select(aJCas, aType)) {
+            if (t.getBegin() >= aEnd) {
+                break;
+            }
+            // not yet there
+            if (t.getEnd() <= aBegin) {
+                continue;
+            }
+            annotations.add(t);
+        }
+
+        return annotations;
+    }
 
     /**
      * Get the internal address of the first sentence annotation from JCAS. This will be used as a
