@@ -19,12 +19,14 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.List;
 
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Page;
@@ -50,12 +52,17 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Offsets;
+import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.OffsetsList;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * Base class for displaying a BRAT visualization. Override methods {@link #getCollectionData()} and
@@ -200,9 +207,6 @@ public class BratAnnotator
                     else if (request.getParameterValue("action").toString()
                             .equals("spanOpenDialog")) {
 
-                        selectedSpan = request.getParameterValue("spanText").toString();
-                        offsets = request.getParameterValue("offsets").toString();
-
                         if (request.getParameterValue("id").toString() == null) {
                             selectedSpanID = -1;
                         }
@@ -210,11 +214,38 @@ public class BratAnnotator
                             selectedSpanID = request.getParameterValue("id").toInt();
                             selectedSpanType = request.getParameterValue("type").toString();
                         }
+
+                        offsets = request.getParameterValue("offsets").toString();
+                        OffsetsList offsetLists = (OffsetsList) jsonConverter.getObjectMapper()
+                                .readValue(offsets, OffsetsList.class);
+
+                        int beginOffset;
+                        int endOffset;
+                        if (selectedSpanID == -1) {
+                            Sentence sentence = BratAjaxCasUtil.selectSentenceAt(jCas,
+                                    getModelObject().getSentenceBeginOffset(), getModelObject()
+                                            .getSentenceEndOffset());
+                            beginOffset = sentence.getBegin()
+                                    + ((Offsets) offsetLists.get(0)).getBegin();
+                            endOffset = sentence.getBegin()
+                                    + ((Offsets) offsetLists.get(offsetLists.size() - 1)).getEnd();
+                        }
+
+                        // get the begin/end from the annotation, no need to re-calculate
+                        else {
+                            AnnotationFS fs = BratAjaxCasUtil.selectByAddr(jCas, selectedSpanID);
+                            beginOffset = fs.getBegin();
+                            endOffset = fs.getEnd();
+                        }
+
+                        selectedSpan = getSelectedText(jCas, beginOffset, endOffset);
+
                         if (BratAnnotatorUtility.isDocumentFinished(repository, getModelObject())) {
                             error("This document is already closed. Please ask admin to re-open");
                         }
                         else {
-                            openSpanAnnotationDialog(openAnnotationDialog, aTarget);
+                            openSpanAnnotationDialog(openAnnotationDialog, aTarget, beginOffset,
+                                    endOffset);
                         }
                         result = controller.loadConf();
                     }
@@ -311,7 +342,7 @@ public class BratAnnotator
      */
 
     private void openSpanAnnotationDialog(final ModalWindow openAnnotationDialog,
-            AjaxRequestTarget aTarget)
+            AjaxRequestTarget aTarget, final int aBeginOffset, final int aEndOffset)
     {
         closeButtonClicked = false;
         openAnnotationDialog.setPageCreator(new ModalWindow.PageCreator()
@@ -324,13 +355,13 @@ public class BratAnnotator
                 if (selectedSpanID == -1) {// new annotation
                     openAnnotationDialog.setTitle("New Span Annotation");
                     return new SpanAnnotationModalWindowPage(openAnnotationDialog,
-                            getModelObject(), selectedSpan, offsets);
+                            getModelObject(), selectedSpan, aBeginOffset, aEndOffset);
                 }
                 else {
                     openAnnotationDialog.setTitle("Edit Span Annotation");
                     return new SpanAnnotationModalWindowPage(openAnnotationDialog,
-                            getModelObject(), selectedSpan, offsets, selectedSpanType,
-                            selectedSpanID);
+                            getModelObject(), selectedSpan, aBeginOffset, aEndOffset,
+                            selectedSpanType, selectedSpanID);
                 }
             }
 
@@ -526,6 +557,24 @@ public class BratAnnotator
     public String getCollection()
     {
         return collection;
+    }
+
+    /**
+     * For a span annotation, if a sub-token is selected, display the whole text so that the user is
+     * aware of what is being annotated, based on
+     * {@link BratAjaxCasUtil#selectOverlapping(JCas, Class, int, int)} ISSUE - Affected text not
+     * correctly displayed in annotation dialog (Bug #272)
+     *
+     */
+    private String getSelectedText(JCas aJcas, int aBeginOffset, int aEndOffset)
+    {
+        List<Token> tokens = BratAjaxCasUtil.selectOverlapping(aJcas, Token.class, aBeginOffset,
+                aEndOffset);
+        StringBuilder seletedTextSb = new StringBuilder();
+        for (Token token : tokens) {
+            seletedTextSb.append(token.getCoveredText() + " ");
+        }
+        return seletedTextSb.toString();
     }
 
     public void setCollection(String collection)

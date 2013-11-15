@@ -30,7 +30,6 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
@@ -64,8 +63,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Offsets;
-import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.OffsetsList;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
@@ -100,7 +97,8 @@ public class SpanAnnotationModalWindowPage
     Model<String> tagsModel;
     private AnnotationDialogForm annotationDialogForm;
     private BratAnnotatorModel bratAnnotatorModel;
-    String offsets;
+    private int beginOffset;
+    private int endOffset;
     private String selectedText = null;
     int selectedSpanId = -1;
     String selectedSpanType;
@@ -215,25 +213,6 @@ public class SpanAnnotationModalWindowPage
                     try {
                         JCas jCas = getCas(bratAnnotatorModel);
 
-                        OffsetsList offsetLists = (OffsetsList) jsonConverter.getObjectMapper()
-                                .readValue(offsets, OffsetsList.class);
-
-                        int start;
-                        int end;
-                        if (selectedSpanId == -1) {
-                            Sentence sentence = BratAjaxCasUtil.selectSentenceAt(jCas,
-                                    bratAnnotatorModel.getSentenceBeginOffset(),
-                                    bratAnnotatorModel.getSentenceEndOffset());
-                            start = sentence.getBegin() + ((Offsets) offsetLists.get(0)).getBegin();
-                            end = sentence.getBegin()
-                                    + ((Offsets) offsetLists.get(offsetLists.size() - 1)).getEnd();
-                        }
-                        // get the begin/end from the annotation, no need to re-calculate
-                        else {
-                            AnnotationFS fs = BratAjaxCasUtil.selectByAddr(jCas, selectedSpanId);
-                            start = fs.getBegin();
-                            end = fs.getEnd();
-                        }
                         String annotationType = "";
 
                         if (tags.getModelObject() == null) {
@@ -259,20 +238,20 @@ public class SpanAnnotationModalWindowPage
                                 annotationType = TypeUtil.getQualifiedLabel(selectedTag);
                             }
 
-                            controller.createSpanAnnotation(jCas, start, end, annotationType, null,
+                            controller.createSpanAnnotation(jCas, beginOffset, endOffset, annotationType, null,
                                     null);
                             controller.updateJCas(bratAnnotatorModel.getMode(),
                                     bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
                                     jCas);
 
                             if (bratAnnotatorModel.isScrollPage()) {
-                                updateSentenceAddressAndOffsets(jCas, start);
+                                updateSentenceAddressAndOffsets(jCas, beginOffset);
                             }
 
                             bratAnnotatorModel.setRememberedSpanTagSet(selectedtTagSet);
                             bratAnnotatorModel.setRememberedSpanTag(selectedTag);
-                            bratAnnotatorModel.setMessage("The span annotation [" + TypeUtil.getLabel(annotationType)
-                                    + "] is added");
+                            bratAnnotatorModel.setMessage("The span annotation ["
+                                    + TypeUtil.getLabel(annotationType) + "] is added");
 
                             // A hack to rememeber the Visural DropDown display value
                             HttpSession session = ((ServletWebRequest) RequestCycle.get()
@@ -325,12 +304,6 @@ public class SpanAnnotationModalWindowPage
                     try {
                         JCas jCas = getCas(bratAnnotatorModel);
 
-                        OffsetsList offsetLists = (OffsetsList) jsonConverter.getObjectMapper()
-                                .readValue(offsets, OffsetsList.class);
-
-                        int start = selectByAddr(jCas, Sentence.class,
-                                bratAnnotatorModel.getSentenceAddress()).getBegin()
-                                + ((Offsets) offsetLists.get(0)).getBegin();
                         TypeAdapter adapter = getAdapter(selectedtTagSet.getType());
                         if (!adapter.isDeletable()) {
                             aTarget.add(feedbackPanel);
@@ -343,11 +316,11 @@ public class SpanAnnotationModalWindowPage
                                     jCas);
 
                             if (bratAnnotatorModel.isScrollPage()) {
-                                updateSentenceAddressAndOffsets(jCas, start);
+                                updateSentenceAddressAndOffsets(jCas, beginOffset);
                             }
 
-                            bratAnnotatorModel.setMessage("The span annotation [" + selectedSpanType
-                                    + "] is deleted");
+                            bratAnnotatorModel.setMessage("The span annotation ["
+                                    + selectedSpanType + "] is deleted");
 
                             // A hack to rememeber the Visural DropDown display value
                             HttpSession session = ((ServletWebRequest) RequestCycle.get()
@@ -432,9 +405,11 @@ public class SpanAnnotationModalWindowPage
     }
 
     public SpanAnnotationModalWindowPage(ModalWindow modalWindow,
-            BratAnnotatorModel aBratAnnotatorModel, String aSelectedText, String aOffsets)
+            BratAnnotatorModel aBratAnnotatorModel, String aSelectedText, int aBeginOffset,
+            int aEndOffset)
     {
-        this.offsets = aOffsets;
+        this.beginOffset = aBeginOffset;
+        this.endOffset = aEndOffset;
 
         this.selectedText = aSelectedText;
 
@@ -444,8 +419,8 @@ public class SpanAnnotationModalWindowPage
     }
 
     public SpanAnnotationModalWindowPage(ModalWindow modalWindow,
-            BratAnnotatorModel aBratAnnotatorModel, String aSelectedText, String aOffsets,
-            String aType, int selectedSpanId)
+            BratAnnotatorModel aBratAnnotatorModel, String aSelectedText, int aBeginOffset,
+            int aEndOffset, String aType, int selectedSpanId)
     {
         this.selectedSpanId = selectedSpanId;
         this.selectedSpanType = TypeUtil.getLabel(aType);
@@ -457,7 +432,8 @@ public class SpanAnnotationModalWindowPage
         this.selectedtTagSet = this.annotationService.getTagSet(layer,
                 aBratAnnotatorModel.getProject());
 
-        this.offsets = aOffsets;
+        this.beginOffset = aBeginOffset;
+        this.endOffset = aEndOffset;
 
         this.selectedText = aSelectedText;
 
