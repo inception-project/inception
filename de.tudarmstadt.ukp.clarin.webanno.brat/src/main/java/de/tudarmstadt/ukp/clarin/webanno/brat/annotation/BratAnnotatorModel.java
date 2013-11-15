@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 import java.io.Serializable;
 import java.util.HashSet;
 
+import org.apache.wicket.markup.html.panel.FeedbackPanel;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -92,20 +94,26 @@ public class BratAnnotatorModel
      */
     private String documentName;
     /**
-     * The Mode of the current operations as either {@link Mode#ANNOTATION} or
-     * as {@link Mode#CURATION}
+     * The Mode of the current operations as either {@link Mode#ANNOTATION} or as
+     * {@link Mode#CURATION}
      */
     private Mode mode;
 
     /**
-     * The previously selected {@link TagSet} and {@link Tag} for a span/Arc annotation so as toz pre-fill the type
-     * in the span/arc annotation dialog (only for new span/arc annotations)
+     * The previously selected {@link TagSet} and {@link Tag} for a span/Arc annotation so as toz
+     * pre-fill the type in the span/arc annotation dialog (only for new span/arc annotations)
+     *
      * @return
      */
     private TagSet rememberedSpanTagSet;
     private TagSet rememberedArcTagSet;
     private Tag rememberedSpanTag;
     private Tag rememberedArcTag;
+    /**
+     * Specific message to be sent from the annotation dialog to the {@link BratAnnotator} so that
+     * it can be displayed in the {@link FeedbackPanel}
+     */
+    private String message = "";
 
     public Project getProject()
     {
@@ -277,6 +285,15 @@ public class BratAnnotatorModel
         this.sentenceEndOffset = sentenceEndOffset;
     }
 
+    public String getMessage()
+    {
+        return message;
+    }
+
+    public void setMessage(String message)
+    {
+        this.message = message;
+    }
 
 
 }

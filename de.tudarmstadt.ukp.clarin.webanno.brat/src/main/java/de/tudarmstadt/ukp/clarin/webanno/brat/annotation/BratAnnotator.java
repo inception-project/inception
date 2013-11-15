@@ -28,6 +28,7 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Page;
+import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
@@ -163,12 +164,14 @@ public class BratAnnotator
             @Override
             protected void respond(AjaxRequestTarget aTarget)
             {
+                if (!getModelObject().getMessage().equals("")) {
+                    info(getModelObject().getMessage());
+                }
                 JCas jCas = null;
                 if (getModelObject().getDocument() != null) {
                     try {
-                        jCas = getCas(getModelObject().getProject(), getModelObject()
-                                .getUser(), getModelObject().getDocument(), getModelObject()
-                                .getMode());
+                        jCas = getCas(getModelObject().getProject(), getModelObject().getUser(),
+                                getModelObject().getDocument(), getModelObject().getMode());
                     }
                     catch (UIMAException e1) {
                         error(ExceptionUtils.getRootCause(e1));
@@ -218,6 +221,7 @@ public class BratAnnotator
 
                     else if (request.getParameterValue("action").toString().equals("arcOpenDialog")) {
 
+                        Session.get().getFeedbackMessages().clear();
                         originSpanType = request.getParameterValue("originType").toString();
                         originSpanId = request.getParameterValue("originSpanId").toInteger();
                         selectedArcType = request.getParameterValue("arcType").toString();
@@ -302,7 +306,6 @@ public class BratAnnotator
 
     }
 
-
     /**
      * opens the {@link SpanAnnotationModalWindowPage} in a {@link ModalWindow}
      */
@@ -353,6 +356,8 @@ public class BratAnnotator
 
                     getModelObject().setRememberedSpanTagSet(model.getRememberedSpanTagSet());
                     getModelObject().setRememberedSpanTag(model.getRememberedSpanTag());
+
+                    getModelObject().setMessage(model.getMessage());
 
                 }
 
@@ -485,8 +490,7 @@ public class BratAnnotator
     }
 
     /**
-     * Reload {@link BratAnnotator} when the Correction/Curation page is clicked
-     * for span/arc merge
+     * Reload {@link BratAnnotator} when the Correction/Curation page is clicked for span/arc merge
      */
     public void reloadContent(AjaxRequestTarget aTarget)
     {

@@ -29,7 +29,6 @@ import java.util.Set;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.tools.ant.types.selectors.SelectSelector;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
@@ -75,9 +74,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
  * A page that is used to display an annotation modal dialog for span annotation
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 public class SpanAnnotationModalWindowPage
     extends WebPage
@@ -218,7 +217,7 @@ public class SpanAnnotationModalWindowPage
 
                         OffsetsList offsetLists = (OffsetsList) jsonConverter.getObjectMapper()
                                 .readValue(offsets, OffsetsList.class);
-                        
+
                         int start;
                         int end;
                         if (selectedSpanId == -1) {
@@ -272,6 +271,8 @@ public class SpanAnnotationModalWindowPage
 
                             bratAnnotatorModel.setRememberedSpanTagSet(selectedtTagSet);
                             bratAnnotatorModel.setRememberedSpanTag(selectedTag);
+                            bratAnnotatorModel.setMessage("The span annotation [" + TypeUtil.getLabel(annotationType)
+                                    + "] is added");
 
                             // A hack to rememeber the Visural DropDown display value
                             HttpSession session = ((ServletWebRequest) RequestCycle.get()
@@ -344,6 +345,9 @@ public class SpanAnnotationModalWindowPage
                             if (bratAnnotatorModel.isScrollPage()) {
                                 updateSentenceAddressAndOffsets(jCas, start);
                             }
+
+                            bratAnnotatorModel.setMessage("The span annotation [" + selectedSpanType
+                                    + "] is deleted");
 
                             // A hack to rememeber the Visural DropDown display value
                             HttpSession session = ((ServletWebRequest) RequestCycle.get()
@@ -478,7 +482,8 @@ public class SpanAnnotationModalWindowPage
         if (aTagSet.getType().getName().equals(AnnotationTypeConstant.LEMMA)) {
             return true;
         }
-        else
+        else {
             return false;
+        }
     }
 }

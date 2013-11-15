@@ -63,9 +63,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
  * A panel that is used to display an annotation modal dialog for arc annotation.
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 public class ArcAnnotationModalWindowPanel
     extends Panel
@@ -206,6 +206,8 @@ public class ArcAnnotationModalWindowPanel
                                 int start = originFs.getBegin();
                                 updateSentenceAddressAndOffsets(jCas, start);
                             }
+                            bratAnnotatorModel.setMessage("The arc annotation ["
+                                    + TypeUtil.getLabel(annotationType) + "] is added");
 
                             // save this annotation detail for next time annotation
                             bratAnnotatorModel.setRememberedArcTagSet(selectedtTagSet);
@@ -264,6 +266,8 @@ public class ArcAnnotationModalWindowPanel
                             int start = originFs.getBegin();
                             updateSentenceAddressAndOffsets(jCas, start);
                         }
+                        bratAnnotatorModel.setMessage("The arc annotation ["
+                                + TypeUtil.getLabel(selectedArcType) + "] is deleted");
 
                     }
                     catch (UIMAException e) {
@@ -324,6 +328,9 @@ public class ArcAnnotationModalWindowPanel
                             int start = originFs.getBegin();
                             updateSentenceAddressAndOffsets(jCas, start);
                         }
+
+                        bratAnnotatorModel.setMessage("The arc annotation  ["
+                                + TypeUtil.getLabel(selectedArcType) + "] is reversed");
 
                     }
                     catch (UIMAException e) {
