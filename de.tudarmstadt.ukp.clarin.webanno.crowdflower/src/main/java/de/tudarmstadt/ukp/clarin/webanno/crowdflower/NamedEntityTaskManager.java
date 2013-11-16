@@ -76,6 +76,26 @@ public class NamedEntityTaskManager
     //omitted entites in the last run because of errors
     private int omittedEntities = 0;
 
+    public int getOmittedSentences()
+    {
+        return omittedSentences;
+    }
+
+    public void setOmittedSentences(int omittedSentences)
+    {
+        this.omittedSentences = omittedSentences;
+    }
+
+    public int getOmittedEntities()
+    {
+        return omittedEntities;
+    }
+
+    public void setOmittedEntities(int omittedEntities)
+    {
+        this.omittedEntities = omittedEntities;
+    }
+
     // static mapping of WebAnno short forms to user displayed types in Crowdflower
     //used for gold
     //TODO: make these mapping configurable
@@ -831,7 +851,6 @@ public class NamedEntityTaskManager
                 omittedSentences++;
                 LOG.warn("Warning, omitted a sentence from task2 upload because of an error in processing it: "
                         + e.getMessage());
-                // TODO: inform user that there was a problem
             }
         }
 
@@ -899,11 +918,9 @@ public class NamedEntityTaskManager
      * @throws CrowdException
      */
 
-    //TODO: find better name
     //TODO: replace magic string
-    //TODO: omittedEntities
 
-    public void retrieveAggJudgmentsTask2(String jobID2, List<JCas> documentsJCas)
+    public void setCrowdJobAnnotationsInDocs(String jobID2, List<JCas> documentsJCas)
         throws UnsupportedEncodingException, IOException, CrowdException
     {
         omittedEntities = 0;

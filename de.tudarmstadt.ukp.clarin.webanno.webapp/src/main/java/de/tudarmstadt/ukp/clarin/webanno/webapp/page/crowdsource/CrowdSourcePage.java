@@ -752,11 +752,21 @@ public class CrowdSourcePage
                             useGoldSents = Integer.valueOf(strUseGoldSents);
                         }
 
-                        String strdD = namedEntityTaskManager.uploadNewNERTask1(template, jCases, goldJCases, useSents, useGoldSents);
-                        selectedCrowdJob.setTask1Id(strdD);
-                        selectedCrowdJob.setStatus(namedEntityTaskManager.getStatusString(strdD, ""));
+                        String task1ID = namedEntityTaskManager.uploadNewNERTask1(template, jCases, goldJCases, useSents, useGoldSents);
+                        selectedCrowdJob.setTask1Id(task1ID);
+                        selectedCrowdJob.setStatus(namedEntityTaskManager.getStatusString(task1ID, ""));
 
                         projectRepository.createCrowdJob(selectedCrowdJob);
+
+                        int omittedSentences = namedEntityTaskManager.getOmittedSentences();
+                        if(omittedSentences==0)
+                        {
+                            info("Crowdflower task " + task1ID + " uploaded succesfully.");
+                        }else
+                        {
+                            warn("Crowdflower task " + task1ID + " uploaded succesfully, but " + omittedSentences
+                                    + " sentences were omitted due to processing errors (see log).");
+                        }
                     }
                     catch (FileNotFoundException e)
                     {
@@ -809,6 +819,16 @@ public class CrowdSourcePage
                     String task2ID = namedEntityTaskManager.uploadNewNERTask2(template, task1ID, jCases, goldJCases);
                     selectedCrowdJob.setTask2Id(task2ID);
                     projectRepository.createCrowdJob(selectedCrowdJob);
+
+                    int omittedSentences = namedEntityTaskManager.getOmittedSentences();
+                    if(omittedSentences==0)
+                    {
+                        info("Crowdflower task " + task2ID + " uploaded succesfully.");
+                    }else
+                    {
+                        warn("Crowdflower task " + task2ID + " uploaded succesfully, but " + omittedSentences
+                                + " sentences were omitted due to processing errors (see log).");
+                    }
 
                     }catch (FileNotFoundException e)
                     {
@@ -868,8 +888,8 @@ public class CrowdSourcePage
                             i++;
                         }
 
-                        //import and aggregate judgments from crowdflwoer
-                        namedEntityTaskManager.retrieveAggJudgmentsTask2(task2ID, jCases);
+                        //import job results from crowdflwoer
+                        namedEntityTaskManager.setCrowdJobAnnotationsInDocs(task2ID, jCases);
 
                         //save all changed document annotations on disk
                         i=0;
@@ -879,7 +899,16 @@ public class CrowdSourcePage
                             projectRepository.createAnnotationDocumentContent(cas, document, user);
                             i++;
                         }
+                        int omittedEntities = namedEntityTaskManager.getOmittedEntities();
 
+                        if(omittedEntities==0)
+                        {
+                            info("Crowdflower job annotations imported succesfully for this task.");
+                        }else
+                        {
+                            warn("Warning: Crowdflower job annotations imported succesfully for this task, but " + omittedEntities
+                                    + " annotations were omitted due to processing errors (see log).");
+                        }
                     }
                     catch (JsonProcessingException e) {
                         error("Json processing problem: " + e.getMessage());
