@@ -530,7 +530,7 @@ public class NamedEntityTaskManager
         List<NamedEntityTask1Data> data = generateTask1Data(documentsJCas, goldOffset, false,
                 useSents);
 
-        Vector<NamedEntityTask1Data> mergedData = new Vector<NamedEntityTask1Data>();
+        List<NamedEntityTask1Data> mergedData = new ArrayList<NamedEntityTask1Data>();
 
         if (goldsJCas != null && goldsJCas.size() > 0) {
 

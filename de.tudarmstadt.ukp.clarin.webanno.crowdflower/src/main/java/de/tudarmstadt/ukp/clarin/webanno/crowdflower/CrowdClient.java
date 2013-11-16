@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.util.List;
 import java.util.Vector;
 import java.util.zip.ZipInputStream;
 
@@ -150,7 +151,7 @@ public class CrowdClient implements Serializable
      *
      */
 
-    void uploadData(CrowdJob job, Vector<?> data)
+    void uploadData(CrowdJob job, List<?> data)
     {
         Log LOG = LogFactory.getLog(getClass());
 
