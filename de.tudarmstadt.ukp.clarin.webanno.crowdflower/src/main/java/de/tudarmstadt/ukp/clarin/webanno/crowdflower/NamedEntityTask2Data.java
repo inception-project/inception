@@ -32,9 +32,9 @@ public class NamedEntityTask2Data
     public static final String FIELD_GOLDEN = "_golden";
     public static final String FIELD_HIDDEN = "_hidden";
     public static final String FIELD_DIFFICULTY = "_difficulty";
-    public static final String FIELD_TODECIDE_RESULT = "ist_todecide_ein";
-    public static final String FIELD_TODECIDE_GOLD = "ist_todecide_ein_gold";
-    public static final String FIELD_TODECIDE_GOLD_REASON = "ist_todecide_ein_gold_reason";
+    public static final String FIELD_TODECIDE_RESULT = "ist_todecide_eine";
+    public static final String FIELD_TODECIDE_GOLD = "ist_todecide_eine_gold";
+    public static final String FIELD_TODECIDE_GOLD_REASON = "ist_todecide_eine_gold_reason";
     public static final String FIELD_TOKENOFFSET = "tokenOffest";
     public static final String FIELD_DOCOFFSET = "docOffset";
     public static final String FIELD_DOCUMENT = "document";

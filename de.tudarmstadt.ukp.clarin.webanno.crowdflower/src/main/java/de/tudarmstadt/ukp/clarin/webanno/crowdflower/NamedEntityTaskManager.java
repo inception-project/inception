@@ -55,6 +55,38 @@ public class NamedEntityTaskManager
     implements Serializable
 {
 
+    private static final String JSON_VALUE_NONE2 = "\"none\"";
+    private static final String JSON_VALUE_NONE1 = "none";
+    private static final String JSON_VALUE_HIDDEN_GOLD = "hidden_gold";
+    private static final String JSON_VALUE_GOLDEN = "golden";
+    private static final String JSON_FIELD_JUDGMENTS = "judgments";
+    private static final String HTML_OPEN_SPAN = "<span ";
+    private static final String HTML_SPAN_TOKEN_CLOSE = "\">";
+    private static final String HTML_SPAN_CLOSE = "</span>";
+    private static final String HTML_SPAN_TOKEN_START = "<span id=\"token=";
+    private static final String JSON_SOURCEDOC_SHORTFORM = "S";
+    private static final String JSON_VALUE_EMPTY_ARRAY = "[]";
+    private static final String JSON_VALUE_NONE_MARKER = "[\"none\"]";
+    private static final String JSON_GOLDDOC_SHORTFORM = "G";
+    private static final String JSON_TRUE = "TRUE";
+    private static final String COUNTRY_CODE_CH = "CH";
+    private static final String COUNTRY_CODE_AT = "AT";
+    private static final String COUNTRY_CODE_DE = "DE";
+    private static final String JSON_FIELD_STATUS_NEEDED_JUDGMENTS = "needed_judgments";
+    private static final String JSON_FIELD_STATUS_ALL_JUDGMENTS = "all_judgments";
+    private static final String JSON_FIELD_DONE = "done";
+    private static final String JSON_FIELD_COUNT = "count";
+    private static final String JSON_FIELD_ERROR = "error";
+    //JSON field constant
+    private static final String JSON_FIELD_END_MARKER = "e";
+    private static final String JSON_FIELD_START_MARKER = "s";
+    private static final String JSON_FIELD_RESULTS = "results";
+    private static final String JSON_FIELD_AGGREGATED = "agg";
+    private static final String JSON_FIELD_FINALIZED = "finalized";
+    private static final String JSON_FIELD_STATE = "state";
+    private static final String JSON_FIELD_DOCUMENT = "document";
+    private static final String JSON_FIELD_DATA = "data";
+
     private static final String malformedStatusErrorMsg = "error retrieving status: malformed response from Crowdflower";
 
     private static final long serialVersionUID = -166689748276508297L;
@@ -96,9 +128,11 @@ public class NamedEntityTaskManager
         this.omittedEntities = omittedEntities;
     }
 
-    // static mapping of WebAnno short forms to user displayed types in Crowdflower
+    //Static mapping of WebAnno short forms to user displayed types in Crowdflower
     //used for gold
-    //TODO: make these mapping configurable
+
+    //this could be made configurable to allow more flexibility
+
     static {
         task2NeMap = new HashMap<String, String>();
         task2NeMap.put("PER", "Person");
@@ -225,11 +259,12 @@ public class NamedEntityTaskManager
 
                     // check that token offsets match to (i - goldOffset)
                     //String tokenString = ;
-                    textBuilder.append("<span id=\"token=");
+                    textBuilder.append(HTML_SPAN_TOKEN_START);
                     textBuilder.append(String.valueOf(i));
-                    textBuilder.append("\">");
+                    textBuilder.append(HTML_SPAN_TOKEN_CLOSE);
                     textBuilder.append(escapeHtml(token.getCoveredText()));
-                    textBuilder.append(" </span>");
+                    textBuilder.append(" ");
+                    textBuilder.append(HTML_SPAN_CLOSE);
 
                     charOffsetStartMapping.put(token.getBegin(), i);
                     charOffsetEndMapping.put(token.getEnd(), i);
@@ -244,7 +279,7 @@ public class NamedEntityTaskManager
 
                 NamedEntityTask1Data task1Data = new NamedEntityTask1Data(text);
                 task1Data.setOffset(offset);
-                task1Data.setDocument("S" + String.valueOf(docNo));
+                task1Data.setDocument(JSON_SOURCEDOC_SHORTFORM + String.valueOf(docNo));
 
                 if (generateGold) {
                     List<String> goldElems = new ArrayList<String>();
@@ -303,9 +338,9 @@ public class NamedEntityTaskManager
                     }
 
 
-                    String strTypes = "[]";
+                    String strTypes = JSON_VALUE_EMPTY_ARRAY;
 
-                    String strGold = "[\"none\"]";
+                    String strGold = JSON_VALUE_NONE_MARKER;
                     String strGoldReason = noGoldNER1Reason;
                     int difficulty = 1;
 
@@ -328,12 +363,12 @@ public class NamedEntityTaskManager
                     task1Data.setMarkertext_gold_reason(strGoldReason);
 
                     task1Data.setTypes(strTypes);
-                    task1Data.setDocument("G" + String.valueOf(docNo));
+                    task1Data.setDocument(JSON_GOLDDOC_SHORTFORM + String.valueOf(docNo));
 
                     // Marker flag for crowdflower that this data is gold data.
                     // Note: Users still need to click on "convert uploaded gold" manually in the
                     // interface.
-                    task1Data.set_golden("TRUE");
+                    task1Data.set_golden(JSON_TRUE);
                 }
 
                 data.add(task1Data);
@@ -520,9 +555,9 @@ public class NamedEntityTaskManager
         // by default, allow only German speaking countries
         // would be better to make this configurable
         Vector<String> includedCountries = new Vector<String>();
-        includedCountries.add("DE");
-        includedCountries.add("AT");
-        includedCountries.add("CH");
+        includedCountries.add(COUNTRY_CODE_DE);
+        includedCountries.add(COUNTRY_CODE_AT);
+        includedCountries.add(COUNTRY_CODE_CH);
         job.setIncludedCountries(includedCountries);
     }
 
@@ -574,16 +609,16 @@ public class NamedEntityTaskManager
         int neededJudgments = 0;
 
         //Crowdflower reported an error in its JSON output
-        if (uploadStatus != null && uploadStatus.has("error"))
+        if (uploadStatus != null && uploadStatus.has(JSON_FIELD_ERROR))
         {
-            return "error retrieving status: " + uploadStatus.path("error").getTextValue();
+            return "error retrieving status: " + uploadStatus.path(JSON_FIELD_ERROR).getTextValue();
         }
 
         //No error and JSON has required fields
-        if (uploadStatus != null && uploadStatus.has("count") && uploadStatus.has("done")) {
-            uploadedUnits = uploadStatus.path("count").getIntValue();
+        if (uploadStatus != null && uploadStatus.has(JSON_FIELD_COUNT) && uploadStatus.has(JSON_FIELD_DONE)) {
+            uploadedUnits = uploadStatus.path(JSON_FIELD_COUNT).getIntValue();
             System.out.println("status job1:" + uploadStatus.toString());
-            finsishedUpload = uploadStatus.path("done").getBooleanValue();
+            finsishedUpload = uploadStatus.path(JSON_FIELD_DONE).getBooleanValue();
             if(finsishedUpload)
             {
                 JsonNode status;
@@ -594,10 +629,10 @@ public class NamedEntityTaskManager
                 {
                     return "Error while trying to connect to Crowdflower: " + e.getMessage();
                 }
-                if(status != null && status.has("all_judgments") && status.has("needed_judgments"))
+                if(status != null && status.has(JSON_FIELD_STATUS_ALL_JUDGMENTS) && status.has(JSON_FIELD_STATUS_NEEDED_JUDGMENTS))
                 {
-                    judgments = status.path("all_judgments").getIntValue();
-                    neededJudgments = status.path("needed_judgments").getIntValue();
+                    judgments = status.path(JSON_FIELD_STATUS_ALL_JUDGMENTS).getIntValue();
+                    neededJudgments = status.path(JSON_FIELD_STATUS_NEEDED_JUDGMENTS).getIntValue();
                 }
                 else {
                     return malformedStatusErrorMsg;
@@ -630,7 +665,7 @@ public class NamedEntityTaskManager
     {
         // find all occurrences <span> forward
         int count = 0;
-        for (int i = -1; (i = spans.indexOf("<span ", i + 1)) != -1;) {
+        for (int i = -1; (i = spans.indexOf(HTML_OPEN_SPAN, i + 1)) != -1;) {
             if (spannumber == count) {
                 return i;
             }
@@ -657,7 +692,7 @@ public class NamedEntityTaskManager
         assert (end >= offset);
 
         // so that the text has a span beyond the last one
-        spans += "<span ";
+        spans += HTML_OPEN_SPAN;
 
         int substart = getSpanPos(spans, start - offset);
         int subend = getSpanPos(spans, end - offset + 1);
@@ -739,24 +774,24 @@ public class NamedEntityTaskManager
             // try to process each line, omit data if an error occurs (but inform user)
             try {
                 JsonNode elem = mapper.readTree(line);
-                String text = elem.path("data").path("text").getTextValue();
-                String state = elem.path("state").getTextValue();
+                String text = elem.path(JSON_FIELD_DATA).path(NamedEntityTask1Data.FIELD_TEXT).getTextValue();
+                String state = elem.path(JSON_FIELD_STATE).getTextValue();
 
                 // omit hidden gold items
-                if (state.equals("hidden_gold")) {
+                if (state.equals(JSON_VALUE_HIDDEN_GOLD)) {
                     continue;
                 }
 
-                String document = elem.path("data").path("document").getTextValue();
-                int offset = elem.path("data").path("offset").getIntValue();
+                String document = elem.path(JSON_FIELD_DATA).path(JSON_FIELD_DOCUMENT).getTextValue();
+                int offset = elem.path(JSON_FIELD_DATA).path(NamedEntityTask1Data.FIELD_OFFSET).getIntValue();
 
-                if (state.equals("golden")) {
+                if (state.equals(JSON_VALUE_GOLDEN)) {
                     // produce gold data
-                    String markertext_gold = elem.path("data").path("markertext_gold")
+                    String markertext_gold = elem.path(JSON_FIELD_DATA).path(NamedEntityTask1Data.FIELD_MARKERTEXT_GOLD)
                             .getTextValue();
-                    String types = elem.path("data").path("types").getTextValue();
+                    String types = elem.path(JSON_FIELD_DATA).path(NamedEntityTask1Data.FIELD_TYPES).getTextValue();
 
-                    if (!types.equals("[]")) {
+                    if (!types.equals(JSON_VALUE_EMPTY_ARRAY)) {
                         // sentence has atleast one NE
                         List<String> NEtypes = Arrays.asList(types.substring(1, types.length() - 1)
                                 .split(","));
@@ -770,8 +805,8 @@ public class NamedEntityTaskManager
 
                         int i = 0;
                         for (JsonNode marker : markers) {
-                            int start = marker.path("s").getIntValue();
-                            int end = marker.path("e").getIntValue();
+                            int start = marker.path(JSON_FIELD_START_MARKER).getIntValue();
+                            int end = marker.path(JSON_FIELD_END_MARKER).getIntValue();
 
                             NamedEntityTask2Data task2_gold_datum = new NamedEntityTask2Data(text,
                                     extractSpan(text, start, end),
@@ -787,12 +822,12 @@ public class NamedEntityTaskManager
                 }
                 else // normal data entry
                 {
-                    if (!elem.path("results").path("judgments").isMissingNode()) {
+                    if (!elem.path(JSON_FIELD_RESULTS).path(JSON_FIELD_JUDGMENTS).isMissingNode()) {
                         Map<String, Integer> votings = new HashMap<String, Integer>();
                         // Majority voting for each marker in all judgments
-                        for (JsonNode judgment : elem.path("results").path("judgments")) {
-                            if (!judgment.path("data").path("markertext").isMissingNode()) {
-                                String markertext = judgment.path("data").path("markertext")
+                        for (JsonNode judgment : elem.path(JSON_FIELD_RESULTS).path(JSON_FIELD_JUDGMENTS)) {
+                            if (!judgment.path(JSON_FIELD_DATA).path(NamedEntityTask1Data.FIELD_MARKERTEXT).isMissingNode()) {
+                                String markertext = judgment.path(JSON_FIELD_DATA).path(NamedEntityTask1Data.FIELD_MARKERTEXT)
                                         .getTextValue();
                                 System.out.println("markertext votes:" + markertext);
 
@@ -828,10 +863,10 @@ public class NamedEntityTaskManager
 
                         // process majority markers
                         for (String strMarker : majorityMarkers) {
-                            if (!strMarker.equals("none") && !strMarker.equals("\"none\"")) {
+                            if (!strMarker.equals(JSON_VALUE_NONE1) && !strMarker.equals(JSON_VALUE_NONE2)) {
                                 JsonNode marker = mapper.readTree(strMarker);
-                                int start = marker.path("s").getIntValue();
-                                int end = marker.path("e").getIntValue();
+                                int start = marker.path(JSON_FIELD_START_MARKER).getIntValue();
+                                int end = marker.path(JSON_FIELD_END_MARKER).getIntValue();
 
                                 NamedEntityTask2Data task2_datum = new NamedEntityTask2Data(text,
                                         extractSpan(text, start, end), strMarker,
@@ -918,8 +953,6 @@ public class NamedEntityTaskManager
      * @throws CrowdException
      */
 
-    //TODO: replace magic string
-
     public void setCrowdJobAnnotationsInDocs(String jobID2, List<JCas> documentsJCas)
         throws UnsupportedEncodingException, IOException, CrowdException
     {
@@ -962,20 +995,20 @@ public class NamedEntityTaskManager
 
                 // Document string contains one char to specify type (golden vs. not golden)
                 // and a new number starting at 0 for each new document
-                int documentNo = Integer.valueOf(elem.path("data").path("document").getTextValue().substring(1));
+                int documentNo = Integer.valueOf(elem.path(JSON_FIELD_DATA).path(JSON_FIELD_DOCUMENT).getTextValue().substring(1));
                 if (documentNo >= documentsJCas.size())
                 {
                     throw new CrowdException("Error, number of documents changed from first upload! Tried to access document: " + documentNo);
                 }
 
                 //Only process elements that are finalized, i.e. elements that don't have missing judgments
-                String state = elem.path("state").getTextValue();
-                if (state.equals("finalized")) {
+                String state = elem.path(JSON_FIELD_STATE).getTextValue();
+                if (state.equals(JSON_FIELD_FINALIZED)) {
 
                     JCas cas = documentsJCas.get(documentNo);
 
-                    String typeExplicit = elem.path("results").path("ist_todecide_eine")
-                            .path("agg").getTextValue();
+                    String typeExplicit = elem.path(JSON_FIELD_RESULTS).path(NamedEntityTask2Data.FIELD_TODECIDE_RESULT)
+                            .path(JSON_FIELD_AGGREGATED).getTextValue();
                     String type = ne2TaskMap.get(typeExplicit);
 
                     //Type is null when it is not in ne2TaskMap.
@@ -986,7 +1019,7 @@ public class NamedEntityTaskManager
                         continue;
                     }
 
-                    String posText = elem.path("data").path("posText").getTextValue();
+                    String posText = elem.path(JSON_FIELD_DATA).path(NamedEntityTask2Data.FIELD_POSTEXT).getTextValue();
                     int offset = 0;
 
                     // Element numbering in Crowdflower judgments can be different than token numbering in the Cas,
@@ -994,13 +1027,13 @@ public class NamedEntityTaskManager
                     // docOffset is the diff of the marker (saved from task1 and also present in task2 data)
                     // to token numbering of the Cas for the current document
 
-                    if (!elem.path("data").path("docOffset").isMissingNode()) {
-                        offset = elem.path("data").path("docOffset").getIntValue();
+                    if (!elem.path(JSON_FIELD_DATA).path(NamedEntityTask2Data.FIELD_DOCOFFSET).isMissingNode()) {
+                        offset = elem.path(JSON_FIELD_DATA).path(NamedEntityTask2Data.FIELD_DOCOFFSET).getIntValue();
                     }
 
                     JsonNode marker = mapper.readTree(posText);
-                    int start = marker.path("s").getIntValue();
-                    int end = marker.path("e").getIntValue();
+                    int start = marker.path(JSON_FIELD_START_MARKER).getIntValue();
+                    int end = marker.path(JSON_FIELD_END_MARKER).getIntValue();
 
                     //Map named entity to character offsets and add it to the Cas
                     NamedEntity newEntity = new NamedEntity(cas, charStartMappings.get(documentNo).get(start
