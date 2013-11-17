@@ -279,28 +279,12 @@ public class CurationBuilder
         sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas, firstSentence.getAddress());
         segmentAdress.put(username, new HashMap<Integer, Integer>());
 
-        // FIXME !!! Why not use selectCovered(jcas, Sentence.class, begin, end) here?
-        int i = firstSentence.getAddress();
-        Sentence sentence = null;
-        int lastSentenceAddress = BratAjaxCasUtil.getLastSentenceAddress(jCas);
-
-        for (int j = 0; j < aBratAnnotatorModel.getWindowSize(); j++) {
-            if (i >= lastSentenceAddress) {
-                sentence = selectByAddr(jCas, Sentence.class, i);
-                sentenceNumber += 1;
-                segmentBeginEnd.put(sentence.getBegin(), sentence.getEnd());
-                segmentText.put(sentence.getBegin(), sentence.getCoveredText().toString());
-                segmentNumber.put(sentence.getBegin(), sentenceNumber);
-                segmentAdress.get(username).put(sentence.getBegin(), sentence.getAddress());
-                break;
-            }
-            sentence = selectByAddr(jCas, Sentence.class, i);
+        for (Sentence sentence : selectCovered(jCas, Sentence.class, begin, end)) {
             sentenceNumber += 1;
             segmentBeginEnd.put(sentence.getBegin(), sentence.getEnd());
             segmentText.put(sentence.getBegin(), sentence.getCoveredText().toString());
             segmentNumber.put(sentence.getBegin(), sentenceNumber);
             segmentAdress.get(username).put(sentence.getBegin(), sentence.getAddress());
-            i = BratAjaxCasUtil.getFollowingSentenceAddress(jCas, i);
         }
     }
 
