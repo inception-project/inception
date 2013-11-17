@@ -16,15 +16,25 @@
 #limitations under the License.
 -->
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<wicket:head>
+	<script type="text/javascript" src="client/lib/jquery.min.js"></script>
+</wicket:head>
   <wicket:panel>
     <fieldset class="ui-widget-content ui-corner-all">
       <legend>
         Export
       </legend>
       <div class="buttons">
+      <table>
+      	<tr>
+      	<td>Export progress:</td>
+      	<td wicket:id="progress"></td>
+      	</tr>
+      </table>    
         <input type="submit" wicket:id="send" value="Export curated documents to CLARIN workspace" />
-        <input type="submit"wicket:id="export" value="Export curated documents to the file system"/>
-        <input type="submit"wicket:id="exportProject" value="Export the whole project into the file system"/>
+        <input type="submit"wicket:id="export" value="Export curated documents to the file system"/>   
+        <input type="submit"wicket:id="exportProject" id="exportProject"
+         value="Export the whole project into the file system"/>
       </div>
     </fieldset>
   </wicket:panel>

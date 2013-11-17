@@ -34,6 +34,8 @@ import org.apache.http.entity.FileEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.apache.uima.UIMAException;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.form.upload.FileUploadField;
@@ -45,6 +47,9 @@ import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.wicketstuff.progressbar.ProgressBar;
+import org.wicketstuff.progressbar.Progression;
+import org.wicketstuff.progressbar.ProgressionModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
@@ -62,14 +67,16 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.tcf.TcfWriter;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dao.DaoUtils;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.AJAXDownload;
 import eu.clarin.weblicht.wlfxb.io.WLFormatException;
 
 /**
  * A Panel used to add Project Guidelines in a selected {@link Project}
- *
+ * 
  * @author Seid Muhie Yimam
- *
+ * 
  */
+@SuppressWarnings("deprecation")
 public class ProjectExportPanel
     extends Panel
 {
@@ -97,14 +104,25 @@ public class ProjectExportPanel
     @SpringBean(name = "userRepository")
     private UserDao userRepository;
 
+    @SuppressWarnings("unused")
     private FileUploadField fileUpload;
+    @SuppressWarnings("unused")
     private FileUpload uploadedFile;
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private int progress = 0;
+    private ProgressBar Progress;
+
+    private String username;
+    private String fileName;
+    String downloadedFile;
+    String projectName;
+
+    @SuppressWarnings({ "rawtypes" })
     public ProjectExportPanel(String id, final Model<Project> aProjectModel)
     {
         super(id);
-        // final Project project = aProjectModel.getObject();
+
+        username = SecurityContextHolder.getContext().getAuthentication().getName();
 
         add(new Button("send", new ResourceModel("label"))
         {
@@ -121,6 +139,7 @@ public class ProjectExportPanel
             public void onSubmit()
             {
 
+                @SuppressWarnings({ "resource" })
                 HttpClient httpclient = new DefaultHttpClient();
                 try {
                     HttpPost httppost = new HttpPost(
@@ -150,7 +169,6 @@ public class ProjectExportPanel
                         DaoUtils.zipFolder(exportTempDir, new File(exportTempDir.getAbsolutePath()
                                 + ".zip"));
 
-                        @SuppressWarnings("deprecation")
                         FileEntity reqEntity = new FileEntity(new File(exportTempDir
                                 .getAbsolutePath() + ".zip"), "application/octet-stream");
 
@@ -240,55 +258,127 @@ public class ProjectExportPanel
             }
         }).setOutputMarkupId(true);
 
-        add(new DownloadLink("exportProject", new LoadableDetachableModel<File>()
+        final AJAXDownload exportProject = new AJAXDownload();
+
+        Progress = new ProgressBar("progress", new ProgressionModel()
         {
-            private static final long serialVersionUID = 840863954694163375L;
+            private static final long serialVersionUID = 1971929040248482474L;
+
+            protected Progression getProgression()
+            {
+                return new Progression(progress);
+            }
+        })
+        {
+            private static final long serialVersionUID = -6599620911784164177L;
+
+            protected void onFinished(AjaxRequestTarget target)
+            {
+                if (!fileName.equals(downloadedFile)) {
+                    exportProject.initiate(target, fileName);
+                    downloadedFile = fileName;
+                }
+            }
+        };
+
+        Progress.add(exportProject);
+        add(Progress);
+
+        add(new AjaxLink("exportProject")
+        {
+
+            private static final long serialVersionUID = -5758406309688341664L;
 
             @Override
-            protected File load()
+            public void onClick(final AjaxRequestTarget target)
             {
-                File exportTempDir = null;
-                // all metadata and project settings data from the database as JSON file
-                File projectSettings = null;
-                try {
-                    projectSettings = File.createTempFile(EXPORTED_PROJECT, ".json");
-                    // Directory to store source documents and annotation documents
-                    exportTempDir = File.createTempFile("webanno-project", "export");
-                    exportTempDir.delete();
-                    exportTempDir.mkdirs();
-                }
-                catch (IOException e1) {
-                    error("Unable to create temporary File!!");
 
-                }
-                if (aProjectModel.getObject().getId() == 0) {
-                    error("Project not yet created. Please save project details first!");
-                }
-                else {
-                    try {
-                        exportProjectSettings(aProjectModel.getObject(), projectSettings,
-                                exportTempDir);
-                        exportSourceDocuments(aProjectModel.getObject(), exportTempDir);
-                        exportAnnotationDocuments(aProjectModel.getObject(), exportTempDir);
-                        exportProjectLog(aProjectModel.getObject(), exportTempDir);
-                        exportGuideLine(aProjectModel.getObject(), exportTempDir);
-                        exportProjectMetaInf(aProjectModel.getObject(), exportTempDir);
-                        exportCuratedDocuments(aProjectModel.getObject(), exportTempDir);
-                        DaoUtils.zipFolder(exportTempDir, new File(exportTempDir.getAbsolutePath()
-                                + ".zip"));
+                Progress.start(target);
+
+                new Thread()
+                {
+                    public void run()
+                    {
+                        File file = null;
+                        try { // file =
+                            file = generateZipFile(aProjectModel, target);
+                            fileName = file.getAbsolutePath();
+                            projectName = aProjectModel.getObject().getName();
+                        }
+                        catch (UIMAException e) {
+                            error(ExceptionUtils.getRootCause(e));
+                        }
+                        catch (ClassNotFoundException e) {
+                            error(e.getMessage());
+                        }
+                        catch (IOException e) {
+                            error(e.getMessage());
+                        }
+                        catch (WLFormatException e) {
+                            error(e.getMessage());
+                        }
+                        catch (ZippingException e) {
+                            error(e.getMessage());
+                        }
+                        catch (InterruptedException e) {
+                        }
                     }
-                    catch (Exception e) {
-                        info(e.getMessage());
-                    }
-                }
-                return new File(exportTempDir.getAbsolutePath() + ".zip");
+                }.start();
             }
-        }).setOutputMarkupId(true));
+
+        });
+
+    }
+
+    public File generateZipFile(final Model<Project> aProjectModel, AjaxRequestTarget target)
+        throws IOException, UIMAException, ClassNotFoundException, WLFormatException,
+        ZippingException, InterruptedException
+    {
+        File exportTempDir = null;
+        // all metadata and project settings data from the database as JSON file
+        File projectSettings = null;
+        projectSettings = File.createTempFile(EXPORTED_PROJECT, ".json");
+        // Directory to store source documents and annotation documents
+        exportTempDir = File.createTempFile("webanno-project", "export");
+        exportTempDir.delete();
+        exportTempDir.mkdirs();
+        if (aProjectModel.getObject().getId() == 0) {
+            error("Project not yet created. Please save project details first!");
+        }
+        else {
+
+            Thread.sleep(100);
+            exportProjectSettings(aProjectModel.getObject(), projectSettings, exportTempDir);
+            Thread.sleep(100);
+            progress = 20;
+            exportAnnotationDocuments(aProjectModel.getObject(), exportTempDir);
+            progress = progress + 1;
+            exportProjectLog(aProjectModel.getObject(), exportTempDir);
+            Thread.sleep(100);
+            progress = progress + 1;
+            exportGuideLine(aProjectModel.getObject(), exportTempDir);
+            Thread.sleep(100);
+            progress = progress + 1;
+            exportProjectMetaInf(aProjectModel.getObject(), exportTempDir);
+            Thread.sleep(400);
+            progress = 90;
+            exportCuratedDocuments(aProjectModel.getObject(), exportTempDir);
+            try {
+                DaoUtils.zipFolder(exportTempDir,
+                        new File(exportTempDir.getAbsolutePath() + ".zip"));
+            }
+            catch (Exception e) {
+                throw new ZippingException("Unable to Zipp the file");
+            }
+            Thread.sleep(100);
+            progress = 100;
+        }
+        return new File(exportTempDir.getAbsolutePath() + ".zip");
     }
 
     /**
      * Copy, if exists, curation documents to a folder that will be exported as Zip file
-     *
+     * 
      * @param aProject
      *            The {@link Project}
      * @param aCurationDocumentExist
@@ -300,8 +390,6 @@ public class ProjectExportPanel
         throws FileNotFoundException, UIMAException, IOException, WLFormatException,
         ClassNotFoundException
     {
-
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
         // Get all the source documents from the project
         List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = projectRepository
@@ -419,7 +507,7 @@ public class ProjectExportPanel
     /**
      * Copy annotation document as Serialized CAS from the file system of this project to the export
      * folder
-     *
+     * 
      * @throws ClassNotFoundException
      * @throws WLFormatException
      * @throws UIMAException
@@ -429,7 +517,6 @@ public class ProjectExportPanel
     {
         List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = projectRepository
                 .listSourceDocuments(aProject);
-
         for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
             for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : projectRepository
                     .listAnnotationDocuments(sourceDocument)) {
@@ -453,7 +540,7 @@ public class ProjectExportPanel
 
                     File annotationFile = null;
                     if (annotationFileAsSerialisedCas.exists()) {
-                        Class writer = projectRepository.getWritableFormats().get(
+                        Class<?> writer = projectRepository.getWritableFormats().get(
                                 sourceDocument.getFormat());
                         annotationFile = projectRepository.exportAnnotationDocument(sourceDocument,
                                 annotationDocument.getUser(), writer, sourceDocument.getName(),
@@ -467,7 +554,7 @@ public class ProjectExportPanel
                     }
                 }
             }
-
+            progress = progress+1;
         }
 
     }

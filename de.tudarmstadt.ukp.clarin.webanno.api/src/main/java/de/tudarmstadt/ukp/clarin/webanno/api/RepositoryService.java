@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.JCas;
 import org.springframework.security.access.prepost.PreAuthorize;
 
@@ -761,4 +762,10 @@ public interface RepositoryService
      * @return
      */
     File getDir();
+    /**
+     * Upgrade JCAS
+     * @param aDocument
+     * @param aMode
+     */
+    void upgradeCasAndSave(SourceDocument aDocument, Mode aMode);
 }

@@ -70,9 +70,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 /**
  * A wicket page for the Brat Annotation/Visualization page. Included components for pagination,
  * annotation layer configuration, and Exporting document
- *
+ * 
  * @author Seid Muhie Yimam
- *
+ * 
  */
 public class AnnotationPage
     extends ApplicationPageBase
@@ -88,8 +88,6 @@ public class AnnotationPage
     private AnnotationService annotationService;
 
     private BratAnnotator annotator;
-
-
 
     FinishImage finish;
     private int windowSize;
@@ -201,7 +199,6 @@ public class AnnotationPage
                     }
                 }).setOutputMarkupId(true));
 
-
         final ModalWindow openDocumentsModal;
         add(openDocumentsModal = new ModalWindow("openDocumentsModal"));
         openDocumentsModal.setOutputMarkupId(true);
@@ -255,13 +252,13 @@ public class AnnotationPage
                                 && bratAnnotatorModel.getDocument() != null) {
                             if (!closeButtonClicked) {
                                 try {
-                                    BratAnnotatorUtility.upgradeCasAndSave(repository,
-                                            bratAnnotatorModel.getDocument(), Mode.ANNOTATION);
+                                    repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(),
+                                            Mode.ANNOTATION);
 
                                     loadDocumentAction();
 
-                                    String collection = "#" + bratAnnotatorModel.getProject().getName()
-                                            + "/";
+                                    String collection = "#"
+                                            + bratAnnotatorModel.getProject().getName() + "/";
                                     String document = bratAnnotatorModel.getDocument().getName();
                                     target.add(finish.setOutputMarkupId(true));
                                     // annotator.reloadContent(target);
@@ -356,8 +353,8 @@ public class AnnotationPage
                             currentDocumentIndex - 1).getName());
                     bratAnnotatorModel.setDocument(listOfSourceDocuements
                             .get(currentDocumentIndex - 1));
-                    BratAnnotatorUtility.upgradeCasAndSave(repository,
-                            bratAnnotatorModel.getDocument(), Mode.ANNOTATION);
+                    repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(),
+                            Mode.ANNOTATION);
                     try {
                         // setAttributesForGetCollection();
                         loadDocumentAction();
@@ -426,8 +423,8 @@ public class AnnotationPage
                             currentDocumentIndex + 1).getName());
                     bratAnnotatorModel.setDocument(listOfSourceDocuements
                             .get(currentDocumentIndex + 1));
-                    BratAnnotatorUtility.upgradeCasAndSave(repository,
-                            bratAnnotatorModel.getDocument(), Mode.ANNOTATION);
+                    repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(),
+                            Mode.ANNOTATION);
                     try {
                         // setAttributesForGetCollection();
                         loadDocumentAction();
@@ -747,8 +744,8 @@ public class AnnotationPage
             bratAnnotatorModel.setFirstSentenceAddress(bratAnnotatorModel.getSentenceAddress());
             bratAnnotatorModel.setWindowSize(10);
 
-            ProjectUtil.setAnnotationPreference( username, repository,
-                    annotationService, bratAnnotatorModel, Mode.ANNOTATION);
+            ProjectUtil.setAnnotationPreference(username, repository, annotationService,
+                    bratAnnotatorModel, Mode.ANNOTATION);
 
             Sentence sentence = selectByAddr(jCas, Sentence.class,
                     bratAnnotatorModel.getSentenceAddress());
@@ -759,7 +756,6 @@ public class AnnotationPage
         currentprojectId = bratAnnotatorModel.getProject().getId();
         currentDocumentId = bratAnnotatorModel.getDocument().getId();
     }
-
 
     private JCas getCas(Project aProject, User user, SourceDocument aDocument)
         throws UIMAException, IOException, ClassNotFoundException

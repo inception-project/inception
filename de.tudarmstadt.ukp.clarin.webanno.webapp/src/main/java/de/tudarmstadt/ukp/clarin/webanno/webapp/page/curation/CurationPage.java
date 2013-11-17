@@ -244,8 +244,8 @@ public class CurationPage
                         }
                         try {
                             repository.createSourceDocument(bratAnnotatorModel.getDocument(), user);
-                            BratAnnotatorUtility.upgradeCasAndSave(repository,
-                                    bratAnnotatorModel.getDocument(), Mode.CURATION);
+                            repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(),
+                                    Mode.CURATION);
 
                             loadDocumentAction();
                             CurationBuilder builder = new CurationBuilder(repository,
@@ -360,8 +360,8 @@ public class CurationPage
                             currentDocumentIndex - 1).getName());
                     bratAnnotatorModel.setDocument(listOfSourceDocuements
                             .get(currentDocumentIndex - 1));
-                    BratAnnotatorUtility.upgradeCasAndSave(repository,
-                            bratAnnotatorModel.getDocument(), Mode.CURATION);
+                    repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(),
+                            Mode.CURATION);
                     try {
                         loadDocumentAction();
                         CurationBuilder builder = new CurationBuilder(repository, annotationService);
@@ -435,8 +435,8 @@ public class CurationPage
                             currentDocumentIndex + 1).getName());
                     bratAnnotatorModel.setDocument(listOfSourceDocuements
                             .get(currentDocumentIndex + 1));
-                    BratAnnotatorUtility.upgradeCasAndSave(repository,
-                            bratAnnotatorModel.getDocument(), Mode.CURATION);
+                    repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(),
+                            Mode.CURATION);
                     try {
                         loadDocumentAction();
                         CurationBuilder builder = new CurationBuilder(repository, annotationService);

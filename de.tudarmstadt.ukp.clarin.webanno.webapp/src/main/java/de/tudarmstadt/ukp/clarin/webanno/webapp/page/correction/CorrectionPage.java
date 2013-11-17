@@ -333,8 +333,8 @@ public class CorrectionPage
                                 bratAnnotatorModel.setDocument(bratAnnotatorModel.getDocument());
                                 bratAnnotatorModel.setProject(bratAnnotatorModel.getProject());
 
-                                BratAnnotatorUtility.upgradeCasAndSave(repository,
-                                        bratAnnotatorModel.getDocument(), Mode.CORRECTION);
+                                repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(),
+                                        Mode.CORRECTION);
                                 loadDocumentAction();
                                 setCurationSegmentBeginEnd();
                                 update(target);
@@ -561,8 +561,8 @@ public class CorrectionPage
                             currentDocumentIndex - 1).getName());
                     bratAnnotatorModel.setDocument(listOfSourceDocuements
                             .get(currentDocumentIndex - 1));
-                    BratAnnotatorUtility.upgradeCasAndSave(repository,
-                            bratAnnotatorModel.getDocument(), Mode.CORRECTION);
+                    repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(),
+                            Mode.CORRECTION);
                     try {
                         loadDocumentAction();
                         setCurationSegmentBeginEnd();
@@ -633,8 +633,8 @@ public class CorrectionPage
                             currentDocumentIndex + 1).getName());
                     bratAnnotatorModel.setDocument(listOfSourceDocuements
                             .get(currentDocumentIndex + 1));
-                    BratAnnotatorUtility.upgradeCasAndSave(repository,
-                            bratAnnotatorModel.getDocument(), Mode.CORRECTION);
+                    repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(),
+                            Mode.CORRECTION);
                     try {
                         loadDocumentAction();
                         setCurationSegmentBeginEnd();

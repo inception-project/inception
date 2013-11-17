@@ -24,6 +24,8 @@ import static org.uimafit.factory.AnalysisEngineFactory.createPrimitiveDescripti
 import static org.uimafit.pipeline.SimplePipeline.runPipeline;
 
 import java.beans.PropertyDescriptor;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
@@ -62,6 +64,10 @@ import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.TypeSystem;
+import org.apache.uima.cas.impl.CASCompleteSerializer;
+import org.apache.uima.cas.impl.CASImpl;
+import org.apache.uima.cas.impl.Serialization;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
@@ -70,6 +76,7 @@ import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.uimafit.factory.AnalysisEngineFactory;
 import org.uimafit.factory.CollectionReaderFactory;
@@ -498,6 +505,8 @@ public class RepositoryServiceDbData
                 + DOCUMENT + aDocument.getId() + SOURCE + "/" + aFileName).toURI().toURL()
                 .toExternalForm());
 
+        // update the cas first
+        upgrade(cas);
         // update with the correct tagset name
         List<AnnotationType> types = annotationService.listAnnotationType(project);
         for (AnnotationType annotationType : types) {
@@ -513,14 +522,14 @@ public class RepositoryServiceDbData
                 BratAjaxCasUtil.updateCasWithTagSet(cas, Dependency.class.getName(),
                         tagSet.getName());
             }
-            else if (annotationType.getName().equals(AnnotationTypeConstant.COREFRELTYPE)) {
+          /*  else if (annotationType.getName().equals(AnnotationTypeConstant.COREFRELTYPE)) {
                 BratAjaxCasUtil.updateCasWithTagSet(cas, CoreferenceLink.class.getName(),
                         tagSet.getName());
             }
             else if (annotationType.getName().equals(AnnotationTypeConstant.COREFERENCE)) {
                 BratAjaxCasUtil.updateCasWithTagSet(cas, CoreferenceChain.class.getName(),
                         tagSet.getName());
-            }
+            }*/
         }
 
         runPipeline(cas, writer);
@@ -1587,4 +1596,71 @@ public class RepositoryServiceDbData
 
         return users;
     }
+    
+    @Override
+    public  void upgradeCasAndSave(SourceDocument aDocument
+            , Mode aMode)
+    {
+        String username = SecurityContextHolder.getContext().getAuthentication()
+                .getName();
+
+        User user = getUser(username);
+        if(existsAnnotationDocument(aDocument, user)){
+        AnnotationDocument annotationDocument = getAnnotationDocument(aDocument, user);
+        try {
+            if (aMode.equals(Mode.ANNOTATION) || aMode.equals(Mode.CORRECTION)) {
+                CAS cas = getAnnotationDocumentContent(
+                        annotationDocument).getCas();
+                upgrade(cas);
+                createAnnotationDocumentContent(cas.getJCas(),
+                        annotationDocument.getDocument(), user);
+            }
+            else {
+                CAS cas = getCurationDocumentContent(
+                        aDocument).getCas();
+                upgrade(cas);
+                createCurationDocumentContent(cas.getJCas(),
+                        aDocument, user);
+            }
+
+        }
+        catch (UIMAException e) {
+
+        }
+        catch (ClassNotFoundException e) {
+
+        }
+        catch (IOException e) {
+
+        }
+        catch (Exception e) {
+            // no need to catch, it is acceptable that no curation document
+            // exists to be upgraded while there are annotation documents
+        }
+
+        }
+    }
+
+    public static void upgrade(CAS aCas)
+        throws UIMAException, IOException
+    {
+        // Prepare template for new CAS
+        CAS newCas = JCasFactory.createJCas().getCas();
+        CASCompleteSerializer serializer = Serialization.serializeCASComplete((CASImpl) newCas);
+
+        // Save old type system
+        TypeSystem oldTypeSystem = aCas.getTypeSystem();
+
+        // Save old CAS contents
+        ByteArrayOutputStream os2 = new ByteArrayOutputStream();
+        Serialization.serializeWithCompression(aCas, os2, oldTypeSystem);
+
+        // Prepare CAS with new type system
+        Serialization.deserializeCASComplete(serializer, (CASImpl) aCas);
+
+        // Restore CAS data to new type system
+        Serialization.deserializeCAS(aCas, new ByteArrayInputStream(os2.toByteArray()),
+                oldTypeSystem, null);
+    }
+
 }
