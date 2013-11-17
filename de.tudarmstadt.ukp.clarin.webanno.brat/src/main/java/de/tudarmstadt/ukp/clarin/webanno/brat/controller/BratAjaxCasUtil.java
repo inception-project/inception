@@ -58,9 +58,9 @@ import de.tudarmstadt.ukp.dkpro.core.tokit.BreakIteratorSegmenter;
 /**
  * Contain Methods for updating CAS Objects directed from brat UI, different utility methods to
  * process the CAS such getting the sentence address, determine page numbers,...
- *
+ * 
  * @author Seid Muhie Yimam
- *
+ * 
  */
 public class BratAjaxCasUtil
 {
@@ -68,7 +68,7 @@ public class BratAjaxCasUtil
     /**
      * Annotation a and annotation b are the same if the have the same address ( used for
      * {@link CoreferenceChain})
-     *
+     * 
      * @param a
      * @param b
      * @return
@@ -80,7 +80,7 @@ public class BratAjaxCasUtil
 
     /**
      * Check if the start/end offsets of an annotation belongs to the same sentence.
-     *
+     * 
      * @return
      */
     public static boolean isSameSentence(JCas aJcas, int aStartOffset, int aEndOffset)
@@ -94,32 +94,32 @@ public class BratAjaxCasUtil
         return false;
     }
 
-//    public static boolean isSame(Annotation a, Annotation b)
-//    {
-//        return a.getBegin() == b.getBegin() && a.getEnd() == b.getEnd();
-//    }
+    // public static boolean isSame(Annotation a, Annotation b)
+    // {
+    // return a.getBegin() == b.getBegin() && a.getEnd() == b.getEnd();
+    // }
 
-//    public static boolean isAt(Annotation a, int begin, int end)
-//    {
-//        return a.getBegin() == begin && a.getEnd() == end;
-//    }
+    // public static boolean isAt(Annotation a, int begin, int end)
+    // {
+    // return a.getBegin() == begin && a.getEnd() == end;
+    // }
 
     /*
      * public static void deleteCoreference(BratAnnotatorModel aBratAnnotatorModel, String aType,
      * BratAnnotatorUIData aUIData) {
-     *
+     * 
      * CoreferenceChain newChain = new CoreferenceChain(aUIData.getjCas()); boolean found = false;
-     *
+     * 
      * CoreferenceLink originCorefType = selectAnnotationByAddress(aUIData.getjCas(),
      * CoreferenceLink.class, aUIData.getOrigin()); for (CoreferenceChain chain :
      * select(aUIData.getjCas(), CoreferenceChain.class)) { CoreferenceLink link = chain.getFirst();
-     *
+     * 
      * if (found) { break; } while (link != null && !found) { if (link.getBegin() ==
      * originCorefType.getBegin()) { newChain.setFirst(link.getNext()); link.setNext(null); found =
      * true; break; } link = link.getNext(); } } newChain.addToIndexes();
-     *
+     * 
      * // removeInvalidChain(aUIData.getjCas());
-     *
+     * 
      * }
      */
 
@@ -128,8 +128,8 @@ public class BratAjaxCasUtil
         return selectByAddr(aJCas, AnnotationFS.class, aAddress);
     }
 
-    public static <T extends FeatureStructure> T selectByAddr(JCas aJCas,
-            Class<T> aType, int aAddress)
+    public static <T extends FeatureStructure> T selectByAddr(JCas aJCas, Class<T> aType,
+            int aAddress)
     {
         return aType.cast(aJCas.getLowLevelCas().ll_getFSForRef(aAddress));
     }
@@ -166,8 +166,8 @@ public class BratAjaxCasUtil
     }
 
     /**
-     * Get the sentence for this CAS based on the begin and end offsets. This is basically
-     * used to transform sentence address in one CAS to other sentence address for different CAS
+     * Get the sentence for this CAS based on the begin and end offsets. This is basically used to
+     * transform sentence address in one CAS to other sentence address for different CAS
      */
     public static Sentence selectSentenceAt(JCas aJcas, int aBegin, int aEnd)
     {
@@ -180,7 +180,7 @@ public class BratAjaxCasUtil
      * 13) is returned as overlapped selection <br>
      * If multiple annotations are [(3, 8), (9, 15), (16, 21)] and selection covered was from (10,
      * 18), overlapped annotation [(9, 15), (16, 21)] should be returned
-     *
+     * 
      * @param <T>
      *            the JCas type.
      * @param jCas
@@ -216,7 +216,7 @@ public class BratAjaxCasUtil
     /**
      * Get the internal address of the first sentence annotation from JCAS. This will be used as a
      * reference for moving forward/backward sentences positions
-     *
+     * 
      * @param aJcas
      *            The CAS object assumed to contains some sentence annotations
      * @return the sentence number or -1 if aJcas don't have sentence annotation
@@ -244,7 +244,7 @@ public class BratAjaxCasUtil
 
     /**
      * Get the last sentence CAS address in the current display window
-     *
+     * 
      * @param aJcas
      * @param aFirstSentenceAddress
      *            the CAS address of the first sentence in the dispaly window
@@ -271,7 +271,7 @@ public class BratAjaxCasUtil
 
     /**
      * Get the beginning address of a sentence to be displayed in BRAT.
-     *
+     * 
      * @param aJcas
      *            the CAS object
      * @param aSentenceAddress
@@ -314,7 +314,7 @@ public class BratAjaxCasUtil
 
     /**
      * Move to the next page of size display window.
-     *
+     * 
      * @param aCurrenSentenceBeginAddress
      *            The beginning sentence address of the current window.
      * @return the Beginning address of the next window
@@ -350,7 +350,7 @@ public class BratAjaxCasUtil
 
     /**
      * Return the beginning position of the Sentence for the previous display window
-     *
+     * 
      * @param aCurrenSentenceBeginAddress
      *            The beginning address of the current sentence of the display window
      * @return
@@ -380,7 +380,7 @@ public class BratAjaxCasUtil
 
     /**
      * Get the sentence address of the next sentence
-     *
+     * 
      * @param aJcas
      *            The CAS object
      * @param aRef
@@ -436,7 +436,7 @@ public class BratAjaxCasUtil
 
     /**
      * Get the ordinal sentence number for this sentence address
-     *
+     * 
      * @return
      */
     public static int getSentenceNumber(JCas aJcas, int aSentenceAddress)
@@ -460,9 +460,8 @@ public class BratAjaxCasUtil
 
         int i = 1;
         int address = 0;
-        // Negative numbers entered for page number
-        if (aSentenceNumber < 1) {
-            return -2; // FIXME: Magic number!
+        if (aSentenceNumber <1){
+            return 0;
         }
         for (Sentence sentence : select(aJcas, Sentence.class)) {
             if (i == aSentenceNumber) {
@@ -472,9 +471,8 @@ public class BratAjaxCasUtil
             address = sentence.getAddress();
             i++;
         }
-        // out of sentence boundary
         if (aSentenceNumber > i) {
-            return -2; // FIXME: Magic number!
+            return 0; 
         }
         return address;
 
@@ -483,7 +481,8 @@ public class BratAjaxCasUtil
     /**
      * Get CAS object for the first time, from the source document using the provided reader
      */
-    public static JCas getJCasFromFile(File aFile, Class aReader)
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public static JCas getJCasFromFile(File aFile, Class  aReader)
         throws UIMAException, IOException
     {
         CAS cas = JCasFactory.createJCas().getCas();
