@@ -438,7 +438,7 @@ public interface RepositoryService
      *
      * @throws IOException
      */
-    void removeCurationDocumentContent(SourceDocument sourceDocument)
+    void removeCurationDocumentContent(SourceDocument sourceDocument, String username)
         throws IOException;
 
     // --------------------------------------------------------------------------------------------
@@ -574,7 +574,7 @@ public interface RepositoryService
      * @return
      * @throws IOException
      */
-    void createGuideline(Project project, File content, String fileName)
+    void createGuideline(Project project, File content, String fileName, String username)
         throws IOException;
 
     /**
@@ -605,7 +605,7 @@ public interface RepositoryService
      * @param fileName
      * @throws IOException
      */
-    void removeGuideline(Project project, String fileName)
+    void removeGuideline(Project project, String fileName, String username)
         throws IOException;
 
     // --------------------------------------------------------------------------------------------
@@ -767,8 +767,9 @@ public interface RepositoryService
      * Upgrade JCAS
      * @param aDocument
      * @param aMode
+     * @throws IOException
      */
-    void upgradeCasAndSave(SourceDocument aDocument, Mode aMode);
+    void upgradeCasAndSave(SourceDocument aDocument, Mode aMode, String username) throws IOException;
 
     /**
      * Get the CAS object for the document in the project created by the the User. If this is the

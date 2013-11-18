@@ -2,13 +2,13 @@
  * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.webapp.page.project;
 
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
-import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,6 +34,7 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
@@ -82,26 +82,29 @@ public class AnnotationGuideLinePanel
                 uploadedFiles = fileUpload.getFileUploads();
                 Project project = selectedProjectModel.getObject();
 
-                if (isNotEmpty(uploadedFiles) && project.getId() != 0) {
-                    for (FileUpload guidelineFile : uploadedFiles) {
-
-                        try {
-                            File tempFile = guidelineFile.writeToTempFile();
-                            // String text = IOUtils.toString(tcfInputStream, "UTF-8");
-                            String fileName = guidelineFile.getClientFileName();
-                            projectRepository.createGuideline(project, tempFile, fileName);
-                        }
-                        catch (IOException e) {
-                            error("Unable to write guideline file "
-                                    + ExceptionUtils.getRootCauseMessage(e));
-                        }
-                    }
-                }
-                else if (isEmpty(uploadedFiles)) {
-                    error("No document is selected to upload, please select a document first");
-                }
-                else if (project.getId() == 0) {
+                if (project.getId() == 0) {
                     error("Project not yet created, please save project Details!");
+                    return;
+                }
+                if (isEmpty(uploadedFiles)) {
+                    error("No document is selected to upload, please select a document first");
+                    return;
+                }
+
+                for (FileUpload guidelineFile : uploadedFiles) {
+
+                    try {
+                        File tempFile = guidelineFile.writeToTempFile();
+                        // String text = IOUtils.toString(tcfInputStream, "UTF-8");
+                        String fileName = guidelineFile.getClientFileName();
+                        String username = SecurityContextHolder.getContext().getAuthentication()
+                                .getName();
+                        projectRepository.createGuideline(project, tempFile, fileName, username);
+                    }
+                    catch (IOException e) {
+                        error("Unable to write guideline file "
+                                + ExceptionUtils.getRootCauseMessage(e));
+                    }
                 }
 
             }
@@ -122,8 +125,7 @@ public class AnnotationGuideLinePanel
                         Project project = selectedProjectModel.getObject();
                         documents.clear();
                         if (project.getId() != 0) {
-                            documents.addAll(projectRepository
-                                    .listGuidelines(project));
+                            documents.addAll(projectRepository.listGuidelines(project));
                         }
                         return documents;
                     }
@@ -141,8 +143,9 @@ public class AnnotationGuideLinePanel
                 Project project = selectedProjectModel.getObject();
                 for (String document : selectedDocuments) {
                     try {
-
-                        projectRepository.removeGuideline(project, document);
+                        String username = SecurityContextHolder.getContext().getAuthentication()
+                                .getName();
+                        projectRepository.removeGuideline(project, document, username);
                     }
                     catch (IOException e) {
                         error("Error while removing a document document "

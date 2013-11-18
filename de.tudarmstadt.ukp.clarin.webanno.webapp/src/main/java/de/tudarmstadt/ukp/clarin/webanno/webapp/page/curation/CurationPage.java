@@ -58,7 +58,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -80,7 +79,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
  * This is the main class for the curation page. It contains an interface which displays differences
  * between user annotations for a specific document. The interface provides a tool for merging these
  * annotations and storing them as a new annotation.
- * 
+ *
  * @author Andreas Straninger
  * @author Seid Muhie Yimam
  */
@@ -245,7 +244,7 @@ public class CurationPage
                         try {
                             repository.createSourceDocument(bratAnnotatorModel.getDocument(), user);
                             repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(),
-                                    Mode.CURATION);
+                                    Mode.CURATION, username);
 
                             loadDocumentAction();
                             CurationBuilder builder = new CurationBuilder(repository,
@@ -360,8 +359,9 @@ public class CurationPage
                             currentDocumentIndex - 1).getName());
                     bratAnnotatorModel.setDocument(listOfSourceDocuements
                             .get(currentDocumentIndex - 1));
-                    repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(), Mode.CURATION);
                     try {
+                        repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(),
+                                Mode.CURATION, bratAnnotatorModel.getUser().getUsername());
                         loadDocumentAction();
                         CurationBuilder builder = new CurationBuilder(repository, annotationService);
                         curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
@@ -434,8 +434,10 @@ public class CurationPage
                             currentDocumentIndex + 1).getName());
                     bratAnnotatorModel.setDocument(listOfSourceDocuements
                             .get(currentDocumentIndex + 1));
-                    repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(), Mode.CURATION);
+
                     try {
+                        repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(),
+                                Mode.CURATION, bratAnnotatorModel.getUser().getUsername());
                         loadDocumentAction();
                         CurationBuilder builder = new CurationBuilder(repository, annotationService);
                         curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
@@ -671,7 +673,7 @@ public class CurationPage
                         if (reMerge.isReMerege()) {
                             try {
                                 repository.removeCurationDocumentContent(bratAnnotatorModel
-                                        .getDocument());
+                                        .getDocument(), bratAnnotatorModel.getUser().getUsername());
                                 loadDocumentAction();
                                 CurationBuilder builder = new CurationBuilder(repository,
                                         annotationService);

@@ -734,13 +734,17 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public void createGuideline(Project aProject, File aContent, String aFileName)
+    public void createGuideline(Project aProject, File aContent, String aFileName, String aUsername)
         throws IOException
     {
         String guidelinePath = dir.getAbsolutePath() + PROJECT + aProject.getId() + GUIDELINE;
         FileUtils.forceMkdir(new File(guidelinePath));
         copyLarge(new FileInputStream(aContent), new FileOutputStream(new File(guidelinePath
                 + aFileName)));
+
+        createLog(aProject, aUsername).info(
+                " Created Guideline file[ "+aFileName+ "] for Project [" + aProject.getName() + "] with ID [" + aProject.getId() + "]");
+        createLog(aProject, aUsername).removeAllAppenders();
     }
 
     @Override
@@ -1031,20 +1035,29 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public void removeGuideline(Project aProject, String aFileName)
+    public void removeGuideline(Project aProject, String aFileName, String username)
         throws IOException
     {
         FileUtils.forceDelete(new File(dir.getAbsolutePath() + PROJECT + aProject.getId()
                 + GUIDELINE + aFileName));
+        createLog(aProject, username).info(
+                " Removed Guideline document from [" + aProject.getName() + "] with ID ["
+                        + aProject.getId() + "]");
+        createLog(aProject, username).removeAllAppenders();
     }
 
     @Override
-    public void removeCurationDocumentContent(SourceDocument aSourceDocument)
+    public void removeCurationDocumentContent(SourceDocument aSourceDocument, String aUsername)
         throws IOException
     {
         if (new File(getAnnotationFolder(aSourceDocument), CURATION_USER + ".ser").exists()) {
             FileUtils.forceDelete(new File(getAnnotationFolder(aSourceDocument), CURATION_USER
                     + ".ser"));
+
+            createLog(aSourceDocument.getProject(), aUsername).info(
+                    " Removed Curated document from  project [" + aSourceDocument.getProject()
+                            + "] for the source document [" + aSourceDocument.getId());
+            createLog(aSourceDocument.getProject(), aUsername).removeAllAppenders();
         }
     }
 
@@ -1621,7 +1634,7 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public void upgradeCasAndSave(SourceDocument aDocument, Mode aMode)
+    public void upgradeCasAndSave(SourceDocument aDocument, Mode aMode, String aUsername) throws IOException
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
@@ -1655,7 +1668,11 @@ public class RepositoryServiceDbData
                 // no need to catch, it is acceptable that no curation document
                 // exists to be upgraded while there are annotation documents
             }
-
+            createLog(aDocument.getProject(), aUsername).info(
+                    " upgraded an annotation file [" + aDocument.getName() + "] " + "with ID ["
+                            + aDocument.getId() + "] in project ID ["
+                            + aDocument.getProject().getId() + "]");
+            createLog(aDocument.getProject(), aUsername).removeAllAppenders();
         }
     }
 

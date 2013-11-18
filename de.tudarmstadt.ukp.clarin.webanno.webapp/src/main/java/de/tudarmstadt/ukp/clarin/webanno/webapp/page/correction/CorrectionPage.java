@@ -325,48 +325,44 @@ public class CorrectionPage
                     @Override
                     public void onClose(AjaxRequestTarget target)
                     {
-                        if (bratAnnotatorModel.getDocument() != null) {
-
-                            try {
-
-                                bratAnnotatorModel.setDocument(bratAnnotatorModel.getDocument());
-                                bratAnnotatorModel.setProject(bratAnnotatorModel.getProject());
-
-                                repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(),
-                                        Mode.CORRECTION);
-                                loadDocumentAction();
-                                setCurationSegmentBeginEnd();
-                                update(target);
-
-                            }
-                            catch (UIMAException e) {
-                                target.add(getFeedbackPanel());
-                                error(ExceptionUtils.getRootCause(e));
-                            }
-                            catch (ClassNotFoundException e) {
-                                target.add(getFeedbackPanel());
-                                error(e.getMessage());
-                            }
-                            catch (IOException e) {
-                                target.add(getFeedbackPanel());
-                                error(e.getMessage());
-                            }
-                            catch (BratAnnotationException e) {
-                                target.add(getFeedbackPanel());
-                                error(e.getMessage());
-                            }
-                            finish.setModelObject(bratAnnotatorModel);
-                            target.add(finish.setOutputMarkupId(true));
-                            target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
-
-                        }
-                        else if (bratAnnotatorModel.getDocument() == null) {
+                        if (bratAnnotatorModel.getDocument() == null) {
                             setResponsePage(WelcomePage.class);
                         }
-                        else {
-                            target.appendJavaScript("alert('Annotation in progress for document ["
-                                    + bratAnnotatorModel.getDocument().getName() + "]')");
+
+                        try {
+
+                            bratAnnotatorModel.setDocument(bratAnnotatorModel.getDocument());
+                            bratAnnotatorModel.setProject(bratAnnotatorModel.getProject());
+
+                            String username = SecurityContextHolder.getContext()
+                                    .getAuthentication().getName();
+
+                            repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(),
+                                    Mode.CORRECTION, username);
+                            loadDocumentAction();
+                            setCurationSegmentBeginEnd();
+                            update(target);
+
                         }
+                        catch (UIMAException e) {
+                            target.add(getFeedbackPanel());
+                            error(ExceptionUtils.getRootCause(e));
+                        }
+                        catch (ClassNotFoundException e) {
+                            target.add(getFeedbackPanel());
+                            error(e.getMessage());
+                        }
+                        catch (IOException e) {
+                            target.add(getFeedbackPanel());
+                            error(e.getMessage());
+                        }
+                        catch (BratAnnotationException e) {
+                            target.add(getFeedbackPanel());
+                            error(e.getMessage());
+                        }
+                        finish.setModelObject(bratAnnotatorModel);
+                        target.add(finish.setOutputMarkupId(true));
+                        target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
                         target.add(documentNamePanel.setOutputMarkupId(true));
                         target.add(numberOfPages);
                     }
@@ -554,8 +550,10 @@ public class CorrectionPage
                             currentDocumentIndex - 1).getName());
                     bratAnnotatorModel.setDocument(listOfSourceDocuements
                             .get(currentDocumentIndex - 1));
-                    repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(), Mode.CORRECTION);
+
                     try {
+                        repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(),
+                                Mode.CORRECTION, bratAnnotatorModel.getUser().getUsername());
                         loadDocumentAction();
                         setCurationSegmentBeginEnd();
                         update(target);
@@ -619,37 +617,38 @@ public class CorrectionPage
                 // If the first document
                 if (currentDocumentIndex == listOfSourceDocuements.size() - 1) {
                     target.appendJavaScript("alert('This is the last document!')");
+                    return;
                 }
-                else {
-                    bratAnnotatorModel.setDocumentName(listOfSourceDocuements.get(
-                            currentDocumentIndex + 1).getName());
-                    bratAnnotatorModel.setDocument(listOfSourceDocuements
-                            .get(currentDocumentIndex + 1));
-                    repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(), Mode.CORRECTION);
-                    try {
-                        loadDocumentAction();
-                        setCurationSegmentBeginEnd();
-                        update(target);
+                bratAnnotatorModel.setDocumentName(listOfSourceDocuements.get(
+                        currentDocumentIndex + 1).getName());
+                bratAnnotatorModel
+                        .setDocument(listOfSourceDocuements.get(currentDocumentIndex + 1));
 
-                    }
-                    catch (UIMAException e) {
-                        error(ExceptionUtils.getRootCause(e));
-                    }
-                    catch (ClassNotFoundException e) {
-                        error(ExceptionUtils.getRootCause(e));
-                    }
-                    catch (IOException e) {
-                        error(ExceptionUtils.getRootCause(e));
-                    }
-                    catch (BratAnnotationException e) {
-                        target.add(getFeedbackPanel());
-                        error(e.getMessage());
-                    }
+                try {
+                    repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(), Mode.CORRECTION,
+                            bratAnnotatorModel.getUser().getUsername());
+                    loadDocumentAction();
+                    setCurationSegmentBeginEnd();
+                    update(target);
 
-                    finish.setModelObject(bratAnnotatorModel);
-                    target.add(finish.setOutputMarkupId(true));
-                    mergeVisualizer.reloadContent(target);
                 }
+                catch (UIMAException e) {
+                    error(ExceptionUtils.getRootCause(e));
+                }
+                catch (ClassNotFoundException e) {
+                    error(ExceptionUtils.getRootCause(e));
+                }
+                catch (IOException e) {
+                    error(ExceptionUtils.getRootCause(e));
+                }
+                catch (BratAnnotationException e) {
+                    target.add(getFeedbackPanel());
+                    error(e.getMessage());
+                }
+
+                finish.setModelObject(bratAnnotatorModel);
+                target.add(finish.setOutputMarkupId(true));
+                mergeVisualizer.reloadContent(target);
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down }, EventType.click)));
 

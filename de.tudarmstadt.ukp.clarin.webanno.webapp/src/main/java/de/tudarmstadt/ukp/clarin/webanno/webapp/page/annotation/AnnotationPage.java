@@ -247,44 +247,46 @@ public class AnnotationPage
                     @Override
                     public void onClose(AjaxRequestTarget target)
                     {
-                        if (bratAnnotatorModel.getProject() != null
-                                && bratAnnotatorModel.getDocument() != null) {
-                            if (!closeButtonClicked) {
-                                try {
-                                    repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(),
-                                            Mode.ANNOTATION);
-
-                                    loadDocumentAction();
-
-                                    String collection = "#"
-                                            + bratAnnotatorModel.getProject().getName() + "/";
-                                    String document = bratAnnotatorModel.getDocument().getName();
-                                    target.add(finish.setOutputMarkupId(true));
-                                    // annotator.reloadContent(target);
-                                    target.appendJavaScript("window.location.hash = '"
-                                            + collection
-                                            + document
-                                            + "';Wicket.Window.unloadConfirmation=false;window.location.reload()");
-                                }
-                                catch (IOException e) {
-                                    target.add(getFeedbackPanel());
-                                    error(e.getMessage());
-                                }
-                                catch (UIMAException e) {
-                                    target.add(getFeedbackPanel());
-                                    error(ExceptionUtils.getRootCauseMessage(e));
-                                }
-                                catch (ClassNotFoundException e) {
-                                    target.add(getFeedbackPanel());
-                                    error(e.getMessage());
-                                }
-                            }
-                        }
-                        else {
+                        if (bratAnnotatorModel.getProject() == null
+                                || bratAnnotatorModel.getDocument() == null) {
                             // A hack, the dialog opens for the first time, and if no document is
                             // selected
                             // window will be "blind down". SOmething in the brat js causes this!
                             setResponsePage(WelcomePage.class);
+                        }
+
+                        if (closeButtonClicked) {
+                            return;
+                        }
+                        try {
+                            String username = SecurityContextHolder.getContext()
+                                    .getAuthentication().getName();
+                            repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(),
+                                    Mode.ANNOTATION, username);
+
+                            loadDocumentAction();
+
+                            String collection = "#" + bratAnnotatorModel.getProject().getName()
+                                    + "/";
+                            String document = bratAnnotatorModel.getDocument().getName();
+                            target.add(finish.setOutputMarkupId(true));
+                            // annotator.reloadContent(target);
+                            target.appendJavaScript("window.location.hash = '"
+                                    + collection
+                                    + document
+                                    + "';Wicket.Window.unloadConfirmation=false;window.location.reload()");
+                        }
+                        catch (IOException e) {
+                            target.add(getFeedbackPanel());
+                            error(e.getMessage());
+                        }
+                        catch (UIMAException e) {
+                            target.add(getFeedbackPanel());
+                            error(ExceptionUtils.getRootCauseMessage(e));
+                        }
+                        catch (ClassNotFoundException e) {
+                            target.add(getFeedbackPanel());
+                            error(e.getMessage());
                         }
                     }
                 });
@@ -346,35 +348,35 @@ public class AnnotationPage
                 // If the first the document
                 if (currentDocumentIndex == 0) {
                     aTarget.appendJavaScript("alert('This is the first document!')");
+                    return;
                 }
-                else {
-                    bratAnnotatorModel.setDocumentName(listOfSourceDocuements.get(
-                            currentDocumentIndex - 1).getName());
-                    bratAnnotatorModel.setDocument(listOfSourceDocuements
-                            .get(currentDocumentIndex - 1));
-                    repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(), Mode.ANNOTATION);
-                    try {
-                        // setAttributesForGetCollection();
-                        loadDocumentAction();
-                    }
-                    catch (UIMAException e) {
-                        aTarget.add(getFeedbackPanel());
-                        error(ExceptionUtils.getRootCauseMessage(e));
-                    }
-                    catch (ClassNotFoundException e) {
-                        aTarget.add(getFeedbackPanel());
-                        error(e.getMessage());
-                    }
-                    catch (IOException e) {
-                        aTarget.add(getFeedbackPanel());
-                        error(e.getMessage());
-                    }
-                    aTarget.add(finish.setOutputMarkupId(true));
-                    annotator.reloadContent(aTarget);
-                    aTarget.add(numberOfPages);
-                    updateSentenceAddress();
-                    aTarget.add(documentNamePanel);
+                bratAnnotatorModel.setDocumentName(listOfSourceDocuements.get(
+                        currentDocumentIndex - 1).getName());
+                bratAnnotatorModel
+                        .setDocument(listOfSourceDocuements.get(currentDocumentIndex - 1));
+
+                try {
+                    loadDocumentAction();
+                    repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(), Mode.ANNOTATION,
+                            bratAnnotatorModel.getUser().getUsername());
                 }
+                catch (UIMAException e) {
+                    aTarget.add(getFeedbackPanel());
+                    error(ExceptionUtils.getRootCauseMessage(e));
+                }
+                catch (ClassNotFoundException e) {
+                    aTarget.add(getFeedbackPanel());
+                    error(e.getMessage());
+                }
+                catch (IOException e) {
+                    aTarget.add(getFeedbackPanel());
+                    error(e.getMessage());
+                }
+                aTarget.add(finish.setOutputMarkupId(true));
+                annotator.reloadContent(aTarget);
+                aTarget.add(numberOfPages);
+                updateSentenceAddress();
+                aTarget.add(documentNamePanel);
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up }, EventType.click)));
 
@@ -415,35 +417,34 @@ public class AnnotationPage
                 // If the first document
                 if (currentDocumentIndex == listOfSourceDocuements.size() - 1) {
                     aTarget.appendJavaScript("alert('This is the last document!')");
+                    return;
                 }
-                else {
-                    bratAnnotatorModel.setDocumentName(listOfSourceDocuements.get(
-                            currentDocumentIndex + 1).getName());
-                    bratAnnotatorModel.setDocument(listOfSourceDocuements
-                            .get(currentDocumentIndex + 1));
-                    repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(), Mode.ANNOTATION);
-                    try {
-                        // setAttributesForGetCollection();
-                        loadDocumentAction();
-                    }
-                    catch (UIMAException e) {
-                        aTarget.add(getFeedbackPanel());
-                        error(ExceptionUtils.getRootCauseMessage(e));
-                    }
-                    catch (ClassNotFoundException e) {
-                        aTarget.add(getFeedbackPanel());
-                        error(e.getMessage());
-                    }
-                    catch (IOException e) {
-                        aTarget.add(getFeedbackPanel());
-                        error(e.getMessage());
-                    }
-                    aTarget.add(finish.setOutputMarkupId(true));
-                    aTarget.add(numberOfPages);
-                    aTarget.add(documentNamePanel);
-                    updateSentenceAddress();
-                    annotator.reloadContent(aTarget);
+                bratAnnotatorModel.setDocumentName(listOfSourceDocuements.get(
+                        currentDocumentIndex + 1).getName());
+                bratAnnotatorModel
+                        .setDocument(listOfSourceDocuements.get(currentDocumentIndex + 1));
+                try {
+                    repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(), Mode.ANNOTATION,
+                            bratAnnotatorModel.getUser().getUsername());
+                    loadDocumentAction();
                 }
+                catch (UIMAException e) {
+                    aTarget.add(getFeedbackPanel());
+                    error(ExceptionUtils.getRootCauseMessage(e));
+                }
+                catch (ClassNotFoundException e) {
+                    aTarget.add(getFeedbackPanel());
+                    error(e.getMessage());
+                }
+                catch (IOException e) {
+                    aTarget.add(getFeedbackPanel());
+                    error(e.getMessage());
+                }
+                aTarget.add(finish.setOutputMarkupId(true));
+                aTarget.add(numberOfPages);
+                aTarget.add(documentNamePanel);
+                updateSentenceAddress();
+                annotator.reloadContent(aTarget);
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down }, EventType.click)));
 
