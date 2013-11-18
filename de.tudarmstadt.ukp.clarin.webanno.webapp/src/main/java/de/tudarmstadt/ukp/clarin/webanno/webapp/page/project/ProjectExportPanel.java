@@ -82,6 +82,7 @@ public class ProjectExportPanel
 
     private static final String META_INF = "/META-INF";
     public static final String EXPORTED_PROJECT = "exportedproject";
+    private static final String SOURCE = "/source";
     private static final String CURATION_AS_SERIALISED_CAS = "/curation_ser/";
     private static final String CURATION = "/curation/";
     private static final String LOG = "/log";
@@ -294,7 +295,8 @@ public class ProjectExportPanel
                     public void run()
                     {
                         File file = null;
-                        try { // file =
+                        try {
+                            Thread.sleep(200);
                             file = generateZipFile(aProjectModel, target);
                             fileName = file.getAbsolutePath();
                             projectName = aProjectModel.getObject().getName();
@@ -341,20 +343,17 @@ public class ProjectExportPanel
         }
         else {
 
-            Thread.sleep(100);
+
             exportProjectSettings(aProjectModel.getObject(), projectSettings, exportTempDir);
-            Thread.sleep(100);
+            exportSourceDocuments(aProjectModel.getObject(), exportTempDir);
             progress = 20;
             exportAnnotationDocuments(aProjectModel.getObject(), exportTempDir);
             progress = progress + 1;
             exportProjectLog(aProjectModel.getObject(), exportTempDir);
-            Thread.sleep(100);
             progress = progress + 1;
             exportGuideLine(aProjectModel.getObject(), exportTempDir);
-            Thread.sleep(100);
             progress = progress + 1;
             exportProjectMetaInf(aProjectModel.getObject(), exportTempDir);
-            Thread.sleep(400);
             progress = 90;
             exportCuratedDocuments(aProjectModel.getObject(), exportTempDir);
             try {
@@ -364,12 +363,29 @@ public class ProjectExportPanel
             catch (Exception e) {
                 throw new ZippingException("Unable to Zipp the file");
             }
-            Thread.sleep(100);
             progress = 100;
         }
         return new File(exportTempDir.getAbsolutePath() + ".zip");
     }
 
+    /**
+     * Copy source documents from the file system of this project to the export folder
+     */
+    private void exportSourceDocuments(Project aProject, File aCopyDir)
+        throws IOException
+    {
+        File sourceDocumentDir = new File(aCopyDir + SOURCE);
+        FileUtils.forceMkdir(sourceDocumentDir);
+        // Get all the source documents from the project
+        List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = projectRepository
+                .listSourceDocuments(aProject);
+
+        for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
+            FileUtils.copyFileToDirectory(
+                    projectRepository.exportSourceDocument(sourceDocument),
+                    sourceDocumentDir);
+        }
+    }
     /**
      * Copy, if exists, curation documents to a folder that will be exported as Zip file
      *
