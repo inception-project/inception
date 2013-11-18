@@ -97,8 +97,6 @@ public class ProjectPage
     private ProjectDetailForm projectDetailForm;
     private ImportProjectForm importProjectForm;
 
-    private boolean createProject = false; // TODO: remove and use project id
-
     private RadioChoice<Mode> projectType;
 
     public ProjectPage()
@@ -135,11 +133,10 @@ public class ProjectPage
                 public void onSubmit()
                 {
                     projectDetailForm.setModelObject(new Project());
-                    createProject = true;
                     projectDetailForm.setVisible(true);
                     ProjectSelectionForm.this.setVisible(true);
                     if (projectType != null) {
-                        projectType.setEnabled(createProject);
+                        projectType.setEnabled(true);
                     }
                 }
             });
@@ -192,13 +189,12 @@ public class ProjectPage
                 protected void onSelectionChanged(Project aNewSelection)
                 {
                     if (aNewSelection != null) {
-                        createProject = false;
                         projectDetailForm.setModelObject(aNewSelection);
                         projectDetailForm.setVisible(true);
                         ProjectSelectionForm.this.setVisible(true);
                     }
                     if (projectType != null) {
-                        projectType.setEnabled(createProject);
+                        projectType.setEnabled(false);
                     }
                 }
 
@@ -362,7 +358,7 @@ public class ProjectPage
                 @Override
                 public boolean isVisible()
                 {
-                    return !createProject;
+                    return project.getObject().getId() != 0;
                 }
             });
 
@@ -379,7 +375,7 @@ public class ProjectPage
                 @Override
                 public boolean isVisible()
                 {
-                    return !createProject;
+                    return project.getObject().getId() != 0;
                 }
             });
 
@@ -414,7 +410,7 @@ public class ProjectPage
                 @Override
                 public boolean isVisible()
                 {
-                    return !createProject;
+                    return project.getObject().getId() != 0;
                 }
             });
 
@@ -431,7 +427,7 @@ public class ProjectPage
                 @Override
                 public boolean isVisible()
                 {
-                    return !createProject;
+                    return project.getObject().getId() != 0;
                 }
             });
 
@@ -449,7 +445,7 @@ public class ProjectPage
                 @Override
                 public boolean isVisible()
                 {
-                    return !createProject;
+                    return project.getObject().getId() != 0;
 
                 }
             });
@@ -489,7 +485,7 @@ public class ProjectPage
             add(new CheckBox("reverseDependencyDirection"));
             add(projectType = (RadioChoice<Mode>) new RadioChoice<Mode>("mode",
                     Arrays.asList(new Mode[] { Mode.ANNOTATION, Mode.CORRECTION }))
-                    .setEnabled(createProject));
+                    .setEnabled(projectDetailForm.getModelObject().getId() == 0));
             add(new Button("save", new ResourceModel("label"))
             {
 
@@ -512,11 +508,15 @@ public class ProjectPage
                         LOG.error("Project name shouldn't contain characters such as /\\*?&!$+[^]");
                         return;
                     }
-                    if (projectRepository.existsProject(project.getName())) {
-                        error("Another project with name [" + project.getName() + "] exists!");
+                    if (projectRepository.existsProject(project.getName()) && project.getId() == 0) {
+                        error("Another project with name [" + project.getName() + "] exists");
                         return;
                     }
 
+                    if (projectRepository.existsProject(project.getName()) && project.getId() != 0) {
+                        error("project updated with name [" + project.getName() + "]");
+                        return;
+                    }
                     try {
                         String username = SecurityContextHolder.getContext().getAuthentication()
                                 .getName();
@@ -531,7 +531,6 @@ public class ProjectPage
                         LOG.error("Project repository path not found " + ":"
                                 + ExceptionUtils.getRootCauseMessage(e));
                     }
-                    createProject = false;
                 }
             });
             add(new Button("remove", new ResourceModel("label"))

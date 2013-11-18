@@ -417,6 +417,16 @@ public class ProjectUtil
     }
 
     /**
+     * Remove Invalid characters
+     */
+    public static String validName(String aName)
+    {
+        return aName.replace("^", "").replace("/", "").replace("\\", "").replace("&", "")
+                .replace("*", "").replace("?", "").replace("+", "").replace("$", "")
+                .replace("!", "").replace("[", "").replace("]", "");
+    }
+
+    /**
      * Create a {@link TagSet} for the imported project,
      */
     public static void createTagset(Project aProjecct,
