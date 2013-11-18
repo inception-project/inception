@@ -706,64 +706,62 @@ public class MonitoringPage
         int userInRow = 0;
         List<User> rowUsers = new ArrayList<User>();
         for (User user1 : users) {
-            if (finishedDocumentLists.get(user1).size() != 0) {
-                int userInColumn = 0;
-                for (User user2 : users) {
-                    if (user1.getUsername().equals(user2.getUsername())) {// no need to
-                                                                          // compute
-                        // with itself, diagonal one
-                        results[userInRow][userInColumn] = 1.0;
-                        userInColumn++;
-                        continue;
-                    }
-                    else if (rowUsers.contains(user2)) {// already done, upper part of
-                                                        // matrix
-                        userInColumn++;
-                        continue;
-                    }
-
-                    Map<String, Map<String, String>> allUserAnnotations = new TreeMap<String, Map<String, String>>();
-
-                    if (finishedDocumentLists.get(user2).size() != 0) {
-                        // TODO: linearize
-                        for (SourceDocument document1 : finishedDocumentLists.get(user1)) {
-                            for (SourceDocument document2 : finishedDocumentLists.get(user2)) {
-
-                                if (document1.getId() == document2.getId()) {
-                                    twoPairedKappa.getStudy(adapter.getAnnotationTypeName(),
-                                            adapter.getLabelFeatureName(), user1, user2,
-                                            allUserAnnotations, document2,
-                                            documentJCases.get(document1));
-                                }
-                            }
-
-                        }
-                    }
-
-                    if (twoPairedKappa.getAgreement(allUserAnnotations).length != 0) {
-                        double[][] thisResults = twoPairedKappa.getAgreement(allUserAnnotations);
-                        // for a user with itself, we have
-                        // u1
-                        // u1 1.0
-                        // we took it as it is
-                        if (allUserAnnotations.keySet().size() == 1) {
-                            results[userInRow][userInColumn] = (double) Math
-                                    .round(thisResults[0][0] * 100) / 100;
-                        }
-                        else {
-                            // in result for the two users will be in the form of
-                            // u1 u2
-                            // --------------
-                            // u1 1.0 0.84
-                            // u2 0.84 1.0
-                            // only value from first row, second column is important
-                            results[userInRow][userInColumn] = (double) Math
-                                    .round(thisResults[0][1] * 100) / 100;
-                        }
-                        rowUsers.add(user1);
-                    }
+            if (finishedDocumentLists.get(user1).size() == 0) {
+                userInRow++;
+                continue;
+            }
+            int userInColumn = 0;
+            for (User user2 : users) {
+                if (user1.getUsername().equals(user2.getUsername())) {// no need to
+                                                                      // compute
+                    // with itself, diagonal one
+                    results[userInRow][userInColumn] = 1.0;
                     userInColumn++;
+                    continue;
                 }
+                else if (rowUsers.contains(user2)) {// already done, upper part of
+                                                    // matrix
+                    userInColumn++;
+                    continue;
+                }
+
+                Map<String, Map<String, String>> allUserAnnotations = new TreeMap<String, Map<String, String>>();
+
+                if (finishedDocumentLists.get(user2).size() != 0) {
+                    List<SourceDocument> sameDocuments = finishedDocumentLists.get(user1);
+                    // sameDocuments finished (intersection of anno docs)
+                    sameDocuments.retainAll(finishedDocumentLists.get(user2));
+                    for (SourceDocument document : sameDocuments) {
+                        twoPairedKappa.getStudy(adapter.getAnnotationTypeName(),
+                                adapter.getLabelFeatureName(), user1, user2, allUserAnnotations,
+                                document, documentJCases.get(document));
+
+                    }
+                }
+
+                if (twoPairedKappa.getAgreement(allUserAnnotations).length != 0) {
+                    double[][] thisResults = twoPairedKappa.getAgreement(allUserAnnotations);
+                    // for a user with itself, we have
+                    // u1
+                    // u1 1.0
+                    // we took it as it is
+                    if (allUserAnnotations.keySet().size() == 1) {
+                        results[userInRow][userInColumn] = (double) Math
+                                .round(thisResults[0][0] * 100) / 100;
+                    }
+                    else {
+                        // in result for the two users will be in the form of
+                        // u1 u2
+                        // --------------
+                        // u1 1.0 0.84
+                        // u2 0.84 1.0
+                        // only value from first row, second column is important
+                        results[userInRow][userInColumn] = (double) Math
+                                .round(thisResults[0][1] * 100) / 100;
+                    }
+                    rowUsers.add(user1);
+                }
+                userInColumn++;
             }
             userInRow++;
         }
@@ -825,7 +823,7 @@ public class MonitoringPage
         plot.setInsets(new RectangleInsets(UnitType.ABSOLUTE, 0, 20, 0, 20));
         plot.getRangeAxis().setRange(0.0, aMaxValue);
         ((NumberAxis) plot.getRangeAxis()).setNumberFormatOverride(new DecimalFormat("0"));
-        // For documents lessan 10, avoid repeating the number of documents  such as 0 0 1 1 1
+        // For documents lessan 10, avoid repeating the number of documents such as 0 0 1 1 1
         // NumberTickUnit automatically determin the range
         if (!aIsPercentage && aMaxValue <= 10) {
             TickUnits standardUnits = new TickUnits();
