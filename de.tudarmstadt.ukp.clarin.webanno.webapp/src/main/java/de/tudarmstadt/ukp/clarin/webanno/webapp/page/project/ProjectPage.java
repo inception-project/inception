@@ -97,7 +97,7 @@ public class ProjectPage
     private ProjectDetailForm projectDetailForm;
     private ImportProjectForm importProjectForm;
 
-    private boolean createProject = false; //TODO: remove and use project id
+    private boolean createProject = false; // TODO: remove and use project id
 
     private RadioChoice<Mode> projectType;
 
@@ -134,7 +134,6 @@ public class ProjectPage
                 @Override
                 public void onSubmit()
                 {
-                    ProjectSelectionForm.this.getModelObject().project = null; //TODO remove
                     projectDetailForm.setModelObject(new Project());
                     createProject = true;
                     projectDetailForm.setVisible(true);
@@ -178,8 +177,7 @@ public class ProjectPage
 
                             // else only projects she is admin of
                             for (Project project : allProjects) {
-                                if (ProjectUtil.isProjectAdmin(project, projectRepository,
-                                        user)) {
+                                if (ProjectUtil.isProjectAdmin(project, projectRepository, user)) {
                                     allowedProject.add(project);
                                 }
                             }
@@ -251,84 +249,71 @@ public class ProjectPage
                 public void onSubmit()
                 {
                     uploadedFile = fileUpload.getFileUpload();
-                    if (uploadedFile != null) {
-                        try {
-
-                            if (ProjectUtil.isZipStream(uploadedFile.getInputStream())) {
-
-                                File zipFfile = uploadedFile.writeToTempFile();
-                                if (ProjectUtil.isZipValidWebanno(zipFfile)) {
-                                    ZipFile zip = new ZipFile(zipFfile);
-                                    InputStream projectInputStream = null;
-                                    for (Enumeration zipEnumerate = zip.entries(); zipEnumerate
-                                            .hasMoreElements();) {
-                                        ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
-                                        if (entry.toString().replace("/", "")
-                                                .startsWith(ProjectUtil.EXPORTED_PROJECT)
-                                                && entry.toString().replace("/", "")
-                                                        .endsWith(".json")) {
-                                            projectInputStream = zip.getInputStream(entry);
-                                            break;
-                                        }
-                                    }
-
-                                    // projectInputStream = uploadedFile.getInputStream();
-                                    String text = IOUtils.toString(projectInputStream, "UTF-8");
-                                    MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
-                                    de.tudarmstadt.ukp.clarin.webanno.export.model.Project importedProjectSetting = jsonConverter
-                                            .getObjectMapper()
-                                            .readValue(
-                                                    text,
-                                                    de.tudarmstadt.ukp.clarin.webanno.export.model.Project.class);
-
-                                    Project importedProject = ProjectUtil.createProject(
-                                            importedProjectSetting, projectRepository);
-                                    ProjectUtil.createSourceDocument(importedProjectSetting,
-                                            importedProject, projectRepository);
-                                    ProjectUtil.createAnnotationDocument(
-                                            importedProjectSetting, importedProject,
-                                            projectRepository);
-                                    ProjectUtil.createProjectPermission(
-                                            importedProjectSetting, importedProject,
-                                            projectRepository);
-                                    for (TagSet tagset : importedProjectSetting.getTagSets()) {
-                                        ProjectUtil.createTagset(importedProject, tagset,
-                                                projectRepository, annotationService);
-                                    }
-                                    // add source document content
-                                    ProjectUtil.createSourceDocumentContent(zip,
-                                            importedProject, projectRepository);
-                                    // add annotation document content
-                                    ProjectUtil.createAnnotationDocumentContent(zip,
-                                            importedProject, projectRepository);
-                                    // create curation document content
-                                    ProjectUtil.createCurationDocumentContent(zip,
-                                            importedProject, projectRepository);
-                                    // create project log
-                                    ProjectUtil.createProjectLog(zip, importedProject,
-                                            projectRepository);
-                                    // create project guideline
-                                    ProjectUtil.createProjectGuideline(zip, importedProject,
-                                            projectRepository);
-                                    // cretae project META-INF
-                                    ProjectUtil.createProjectMetaInf(zip, importedProject,
-                                            projectRepository);
-                                }
-                                else {
-                                    error("Incompatible to webanno ZIP file");
-                                }
-                            }
-                            else {
-                                error("Invalid ZIP file");
-                            }
-                        }
-                        catch (IOException e) {
-                            error("Error Importing Project "
-                                    + ExceptionUtils.getRootCauseMessage(e));
-                        }
-                    }
-                    else if (uploadedFile == null) {
+                    if (uploadedFile == null) {
                         error("Please choose appropriate project in zip format");
+                        return;
+                    }
+                    try {
+                        if (!ProjectUtil.isZipStream(uploadedFile.getInputStream())) {
+                            error("Invalid ZIP file");
+                            return;
+                        }
+                        File zipFfile = uploadedFile.writeToTempFile();
+                        if (!ProjectUtil.isZipValidWebanno(zipFfile)) {
+                            error("Incompatible to webanno ZIP file");
+                        }
+                        ZipFile zip = new ZipFile(zipFfile);
+                        InputStream projectInputStream = null;
+                        for (Enumeration zipEnumerate = zip.entries(); zipEnumerate
+                                .hasMoreElements();) {
+                            ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
+                            if (entry.toString().replace("/", "")
+                                    .startsWith(ProjectUtil.EXPORTED_PROJECT)
+                                    && entry.toString().replace("/", "").endsWith(".json")) {
+                                projectInputStream = zip.getInputStream(entry);
+                                break;
+                            }
+                        }
+
+                        // projectInputStream = uploadedFile.getInputStream();
+                        String text = IOUtils.toString(projectInputStream, "UTF-8");
+                        MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
+                        de.tudarmstadt.ukp.clarin.webanno.export.model.Project importedProjectSetting = jsonConverter
+                                .getObjectMapper()
+                                .readValue(
+                                        text,
+                                        de.tudarmstadt.ukp.clarin.webanno.export.model.Project.class);
+
+                        Project importedProject = ProjectUtil.createProject(importedProjectSetting,
+                                projectRepository);
+                        ProjectUtil.createSourceDocument(importedProjectSetting, importedProject,
+                                projectRepository);
+                        ProjectUtil.createAnnotationDocument(importedProjectSetting,
+                                importedProject, projectRepository);
+                        ProjectUtil.createProjectPermission(importedProjectSetting,
+                                importedProject, projectRepository);
+                        for (TagSet tagset : importedProjectSetting.getTagSets()) {
+                            ProjectUtil.createTagset(importedProject, tagset, projectRepository,
+                                    annotationService);
+                        }
+                        // add source document content
+                        ProjectUtil.createSourceDocumentContent(zip, importedProject,
+                                projectRepository);
+                        // add annotation document content
+                        ProjectUtil.createAnnotationDocumentContent(zip, importedProject,
+                                projectRepository);
+                        // create curation document content
+                        ProjectUtil.createCurationDocumentContent(zip, importedProject,
+                                projectRepository);
+                        // create project log
+                        ProjectUtil.createProjectLog(zip, importedProject, projectRepository);
+                        // create project guideline
+                        ProjectUtil.createProjectGuideline(zip, importedProject, projectRepository);
+                        // cretae project META-INF
+                        ProjectUtil.createProjectMetaInf(zip, importedProject, projectRepository);
+                    }
+                    catch (IOException e) {
+                        error("Error Importing Project " + ExceptionUtils.getRootCauseMessage(e));
                     }
                 }
             });
@@ -336,7 +321,7 @@ public class ProjectPage
 
     }
 
-    private class ProjectDetailForm
+    public class ProjectDetailForm
         extends Form<Project>
     {
         private static final long serialVersionUID = -1L;
@@ -345,6 +330,7 @@ public class ProjectPage
         AbstractTab users;
         AbstractTab tagSets;
         AbstractTab documents;
+        @SuppressWarnings("rawtypes")
         AjaxTabbedPanel allTabs;
 
         public ProjectDetailForm(String id)
@@ -396,7 +382,7 @@ public class ProjectPage
                     return !createProject;
                 }
             });
-            
+
             // not used in 1.0.0 release
             tabs.add(tagSets = new AbstractTab(new Model<String>("Layers"))
             {
@@ -512,63 +498,38 @@ public class ProjectPage
                 @Override
                 public void onSubmit()
                 {
-                    //TODO: if else improve
                     Project project = projectDetailForm.getModelObject();
-                    boolean projectExist = false;
-                    try {// TODO: dispegatify
-                        projectRepository.existsProject(project.getName());
+                    if (!ProjectUtil.isNameValid(project.getName())) {
+
+                        // Maintain already loaded project and selected Users
+                        // Hence Illegal Project modification (limited privilege, illegal
+                        // project
+                        // name,...) preserves the original one
+                        if (project.getId() != 0) {
+                            project.setName(ProjectUtil.validName(project.getName()));
+                        }
+                        error("Project name shouldn't contain characters such as /\\*?&!$+[^]");
+                        LOG.error("Project name shouldn't contain characters such as /\\*?&!$+[^]");
+                        return;
                     }
-                    catch (Exception e) {
-                        error("Another project with name [" + project.getName() + "] exists!"
+                    if (projectRepository.existsProject(project.getName())) {
+                        error("Another project with name [" + project.getName() + "] exists!");
+                        return;
+                    }
+
+                    try {
+                        String username = SecurityContextHolder.getContext().getAuthentication()
+                                .getName();
+                        User user = projectRepository.getUser(username);
+                        projectRepository.createProject(project, user);
+                        annotationService.initializeTypesForProject(project, user);
+                        projectDetailForm.setVisible(true);
+                    }
+                    catch (IOException e) {
+                        error("Project repository path not found " + ":"
                                 + ExceptionUtils.getRootCauseMessage(e));
-                        projectExist = true;
-                    }
-                    // Only if the project is new
-                    if (project.getId() == 0 && !projectExist) {
-                        // Check if the project with this name already exist
-                        if (projectRepository.existsProject(project.getName())) {
-                            error("Project with this name already exist !");
-                            LOG.error("Project with this name already exist !");
-                        }
-                        else if (ProjectUtil.isNameValid(project.getName())) {
-                            try {
-                                String username = SecurityContextHolder.getContext()
-                                        .getAuthentication().getName();
-                                User user = projectRepository.getUser(username);
-                                projectRepository.createProject(project, user);
-                                annotationService.initializeTypesForProject(project, user);
-                                projectDetailForm.setVisible(true);
-                            }
-                            catch (IOException e) {
-                                error("Project repository path not found " + ":"
-                                        + ExceptionUtils.getRootCauseMessage(e));
-                                LOG.error("Project repository path not found " + ":"
-                                        + ExceptionUtils.getRootCauseMessage(e));
-                            }
-                        }
-                        else {
-                            //TODO: manage it in name valid
-                            error("Project name shouldn't contain characters such as /\\*?&!$+[^]");
-                            LOG.error("Project name shouldn't contain characters such as /\\*?&!$+[^]");
-                        }
-                    }
-                    // This is updating Project details
-                    else {
-                        // Invalid Project name, restore
-                        if (!ProjectUtil.isNameValid(project.getName()) && !projectExist) {
-
-                            // Maintain already loaded project and selected Users
-                            // Hence Illegal Project modification (limited privilege, illegal
-                            // project
-                            // name,...) preserves the original one
-
-                            String oldProjectName = projectRepository.getProject(project.getId())
-                                    .getName();
-
-                            project.setName(oldProjectName);
-                            error("Project name shouldn't contain characters such as /\\*?&!$+[^]");
-                            LOG.error("Project name shouldn't contain characters such as /\\*?&!$+[^]");
-                        }
+                        LOG.error("Project repository path not found " + ":"
+                                + ExceptionUtils.getRootCauseMessage(e));
                     }
                     createProject = false;
                 }
@@ -581,23 +542,22 @@ public class ProjectPage
                 public void onSubmit()
                 {
                     Project project = projectDetailForm.getModelObject();
-                    if (project.getId() != 0) {
-                        try {
-                            String username = SecurityContextHolder.getContext()
-                                    .getAuthentication().getName();
-                            User user = projectRepository.getUser(username);
+                    if (project.getId() == 0) {
 
-                            projectRepository.removeProject(projectDetailForm.getModelObject(),
-                                    user);
-                            projectDetailForm.setVisible(false);
-                        }
-                        catch (IOException e) {
-                            LOG.error("Unable to remove project :"
-                                    + ExceptionUtils.getRootCauseMessage(e));
-                            error("Unable to remove project " + ":"
-                                    + ExceptionUtils.getRootCauseMessage(e));
-                        }
+                    }
+                    try {
+                        String username = SecurityContextHolder.getContext().getAuthentication()
+                                .getName();
+                        User user = projectRepository.getUser(username);
 
+                        projectRepository.removeProject(projectDetailForm.getModelObject(), user);
+                        projectDetailForm.setVisible(false);
+                    }
+                    catch (IOException e) {
+                        LOG.error("Unable to remove project :"
+                                + ExceptionUtils.getRootCauseMessage(e));
+                        error("Unable to remove project " + ":"
+                                + ExceptionUtils.getRootCauseMessage(e));
                     }
                 }
             });
