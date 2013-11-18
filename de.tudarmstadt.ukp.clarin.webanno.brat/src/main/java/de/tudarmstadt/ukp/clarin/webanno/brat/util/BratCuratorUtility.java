@@ -47,6 +47,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationOption;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
@@ -518,7 +519,7 @@ public class BratCuratorUtility
             Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
             CurationSegmentForSourceDocument aCurationSegment,
             AnnotationService aAnnotationService, MappingJacksonHttpMessageConverter aJsonConverter)
-        throws UIMAException, ClassNotFoundException, IOException
+        throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
         SourceDocument sourceDocument = aCurationContainer.getBratAnnotatorModel().getDocument();
         List<AnnotationDocument> annotationDocuments = aRepository
@@ -557,8 +558,7 @@ public class BratCuratorUtility
                     aCurationSegment.getEnd());
         }
         catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+           throw new CasDiffException(e.getMessage());
         }
 
         // fill lookup variable for annotation selections

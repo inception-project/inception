@@ -243,13 +243,13 @@ public class CasDiff {
                             + " not yet checkd!");
                 }
 
-                // TODO check other Values
+                // check other Values
             } else if(feature.toString().equals("uima.cas.AnnotationBase:sofa")) {
                 continue;
             }
             else {
                 // compare composite types
-                // TODO assumtion: if feature is not primitive, it is a
+                // assumtion: if feature is not primitive, it is a
                 // composite feature
                 FeatureStructure featureValue1 = fsNew.getFeatureValue(feature);
                 FeatureStructure featureValue2 = fsOld.getFeatureValue(olFeature);
@@ -276,7 +276,7 @@ public class CasDiff {
             compareResult.getDiffs().put(fsNew, fsOld);
         }
 
-        // TODO if no diffs, agree (here or elsewhere)?
+        // if no diffs, agree (here or elsewhere)?
         if(compareResult.getDiffs().isEmpty()) {
             compareResult.getAgreements().put(fsNew, fsOld);
             diffFSNew.remove(fsNew);

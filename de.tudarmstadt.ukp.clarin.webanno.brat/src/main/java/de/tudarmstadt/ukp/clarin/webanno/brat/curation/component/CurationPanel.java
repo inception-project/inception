@@ -46,6 +46,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationSegmentForSourceDocument;
@@ -163,6 +164,9 @@ public class CurationPanel
                 catch (IOException e) {
                    error(e.getMessage());
                 }
+                catch (BratAnnotationException e) {
+                    error(e.getMessage());
+                }
             }
         };
 
@@ -193,6 +197,9 @@ public class CurationPanel
                 }
                 catch (IOException e) {
                    error(e.getMessage());
+                }
+                catch (BratAnnotationException e) {
+                    error(e.getMessage());
                 }
             }
         };
@@ -245,6 +252,9 @@ public class CurationPanel
                         }
                         catch (IOException e) {
                            error(e.getMessage());
+                        }
+                        catch (BratAnnotationException e) {
+                            error(e.getMessage());
                         }
                     }
 

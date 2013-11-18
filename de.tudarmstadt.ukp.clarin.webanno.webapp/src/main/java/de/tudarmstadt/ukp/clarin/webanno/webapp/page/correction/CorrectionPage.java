@@ -168,6 +168,9 @@ public class CorrectionPage
                     aTarget.add(getFeedbackPanel());
                     error(e.getMessage());
                 }
+                catch (BratAnnotationException e) {
+                    error(e.getMessage());
+                }
                 mergeVisualizer.reloadContent(aTarget);
                 aTarget.add(numberOfPages);
             }
@@ -1016,6 +1019,9 @@ public class CorrectionPage
             error(e.getMessage());
         }
         catch (IOException e) {
+            error(e.getMessage());
+        }
+        catch (BratAnnotationException e) {
             error(e.getMessage());
         }
         target.add(automateView);
