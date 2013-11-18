@@ -594,6 +594,7 @@ public class NamedEntityTaskManager
      */
     private String getStatusString(String jobId)
     {
+        Log LOG = LogFactory.getLog(getClass());
         JsonNode uploadStatus;
         try{
         uploadStatus = crowdclient.getUploadStatus(jobId);
@@ -617,7 +618,7 @@ public class NamedEntityTaskManager
         //No error and JSON has required fields
         if (uploadStatus != null && uploadStatus.has(JSON_FIELD_COUNT) && uploadStatus.has(JSON_FIELD_DONE)) {
             uploadedUnits = uploadStatus.path(JSON_FIELD_COUNT).getIntValue();
-            System.out.println("status job1:" + uploadStatus.toString());
+            LOG.info("status job1:" + uploadStatus.toString());
             finsishedUpload = uploadStatus.path(JSON_FIELD_DONE).getBooleanValue();
             if(finsishedUpload)
             {
@@ -829,7 +830,6 @@ public class NamedEntityTaskManager
                             if (!judgment.path(JSON_FIELD_DATA).path(NamedEntityTask1Data.FIELD_MARKERTEXT).isMissingNode()) {
                                 String markertext = judgment.path(JSON_FIELD_DATA).path(NamedEntityTask1Data.FIELD_MARKERTEXT)
                                         .getTextValue();
-                                System.out.println("markertext votes:" + markertext);
 
                                 JsonNode markers = mapper.readTree(markertext);
 
