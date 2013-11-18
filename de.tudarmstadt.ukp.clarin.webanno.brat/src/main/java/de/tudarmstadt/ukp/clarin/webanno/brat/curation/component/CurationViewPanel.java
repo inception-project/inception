@@ -57,7 +57,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.NoOriginOrTargetAnnotationSelectedException;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -228,7 +227,7 @@ public class CurationViewPanel
     private void mergeSpan(IRequestParameters aRequest,
             CurationUserSegmentForAnnotationDocument aCurationUserSegment, JCas aJcas,
             RepositoryService aRepository, AnnotationService aAnnotationService)
-        throws BratAnnotationException
+        throws BratAnnotationException, UIMAException, ClassNotFoundException, IOException
     {
         Integer address = aRequest.getParameterValue("id").toInteger();
         String spanType = removePrefix(aRequest.getParameterValue("type").toString());
@@ -253,22 +252,8 @@ public class CurationViewPanel
             }
         }
 
-        try {
             createSpan(spanType, aCurationUserSegment.getBratAnnotatorModel(), aJcas,
                     clickedAnnotationDocument, address, aRepository, aAnnotationService);
-        }
-        catch (UIMAException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        catch (ClassNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
     }
 
     private void createSpan(String spanType, BratAnnotatorModel aBratAnnotatorModel,
@@ -308,7 +293,7 @@ public class CurationViewPanel
             CurationUserSegmentForAnnotationDocument aCurationUserSegment, JCas aJcas,
             RepositoryService repository, AnnotationService annotationService)
         throws NoOriginOrTargetAnnotationSelectedException, ArcCrossedMultipleSentenceException,
-        BratAnnotationException
+        BratAnnotationException, IOException
     {
         Integer addressOriginClicked = aRequest.getParameterValue("originSpanId").toInteger();
         Integer addressTargetClicked = aRequest.getParameterValue("targetSpanId").toInteger();
@@ -317,7 +302,6 @@ public class CurationViewPanel
         // add span for merge
         // get information of the span clicked
         String username = aCurationUserSegment.getUsername();
-        Project project = aCurationUserSegment.getBratAnnotatorModel().getProject();
         SourceDocument sourceDocument = aCurationUserSegment.getBratAnnotatorModel().getDocument();
 
         AnnotationSelection annotationSelectionOrigin = aCurationUserSegment
@@ -348,8 +332,7 @@ public class CurationViewPanel
                         clickedAnnotationDocument);
             }
             catch (IOException e1) {
-                // TODO Auto-generated catch block
-                e1.printStackTrace();
+                throw new IOException();
             }
             AnnotationFS originFsClicked = selectByAddr(clickedJCas, addressOrigin);
             AnnotationFS targetFsClicked = selectByAddr(clickedJCas, addressTarget);
@@ -377,8 +360,7 @@ public class CurationViewPanel
                 }
             }
             catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                throw new IOException();
             }
 
             if (aCurationUserSegment.getBratAnnotatorModel().isScrollPage()) {

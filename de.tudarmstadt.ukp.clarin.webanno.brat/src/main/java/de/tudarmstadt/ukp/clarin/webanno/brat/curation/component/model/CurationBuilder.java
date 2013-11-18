@@ -46,6 +46,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationOption;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.CurationPanel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.util.CasDiffException;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -144,8 +145,7 @@ public class CurationBuilder
                 annotationOptions = CasDiff.doDiff(entryTypes, jCases, begin, end);
             }
             catch (Exception e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                throw new CasDiffException(e.getMessage());
             }
 
             Boolean hasDiff = false;
