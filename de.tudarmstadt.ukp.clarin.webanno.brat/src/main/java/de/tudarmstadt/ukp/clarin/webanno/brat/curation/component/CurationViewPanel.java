@@ -240,7 +240,7 @@ public class CurationViewPanel
         if (annotationSelection == null) {
             return;
         }
-        
+
         SourceDocument sourceDocument = aCurationUserSegment.getBratAnnotatorModel().getDocument();
 
         AnnotationDocument clickedAnnotationDocument = null;
@@ -286,7 +286,7 @@ public class CurationViewPanel
         // the correct origin and target AnnotationFS
         controller.createSpanAnnotation(aMergeJCas, fsClicked.getBegin(), fsClicked.getEnd(),
                 spanType, null, null);
-        controller.updateJCas(aBratAnnotatorModel.getMode(), aBratAnnotatorModel.getDocument(),
+        repository.updateJCas(aBratAnnotatorModel.getMode(), aBratAnnotatorModel.getDocument(),
                 aBratAnnotatorModel.getUser(), aMergeJCas);
 
         if (aBratAnnotatorModel.isScrollPage()) {
@@ -371,7 +371,7 @@ public class CurationViewPanel
                 else {
                     controller.createArcAnnotation(aCurationUserSegment.getBratAnnotatorModel(),
                             arcType, 0, 0, originFs, targetFs, aJcas);
-                    controller.updateJCas(aCurationUserSegment.getBratAnnotatorModel().getMode(),
+                    repository.updateJCas(aCurationUserSegment.getBratAnnotatorModel().getMode(),
                             aCurationUserSegment.getBratAnnotatorModel().getDocument(),
                             aCurationUserSegment.getBratAnnotatorModel().getUser(), aJcas);
                 }

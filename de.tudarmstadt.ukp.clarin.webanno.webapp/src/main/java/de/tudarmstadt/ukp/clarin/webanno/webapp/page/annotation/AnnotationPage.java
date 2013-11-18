@@ -47,10 +47,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -70,9 +68,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 /**
  * A wicket page for the Brat Annotation/Visualization page. Included components for pagination,
  * annotation layer configuration, and Exporting document
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 public class AnnotationPage
     extends ApplicationPageBase
@@ -696,9 +694,7 @@ public class AnnotationPage
             String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
             User user = repository.getUser(username);
-            BratAjaxCasController controller = new BratAjaxCasController(repository,
-                    annotationService);
-            jCas = controller.readJCas(aDocument, aProject, user);
+            jCas = repository.readJCas(aDocument, aProject, user);
         }
         catch (UIMAException e) {
             error("CAS object not found :" + ExceptionUtils.getRootCauseMessage(e));
@@ -724,7 +720,6 @@ public class AnnotationPage
         windowSize = aWindowSize;
     }
 
-    // TODO: refactor ( loadDocument)
     public void loadDocumentAction()
         throws UIMAException, IOException, ClassNotFoundException
     {
@@ -758,8 +753,7 @@ public class AnnotationPage
         throws UIMAException, IOException, ClassNotFoundException
     {
         JCas jCas = null;
-        BratAjaxCasController controller = new BratAjaxCasController(repository, annotationService);
-        jCas = controller.readJCas(aDocument, aProject, user);
+        jCas = repository.readJCas(aDocument, aProject, user);
         return jCas;
     }
 

@@ -17,50 +17,36 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
-import static org.uimafit.factory.AnalysisEngineFactory.createPrimitive;
-import static org.uimafit.factory.AnalysisEngineFactory.createPrimitiveDescription;
 import static org.uimafit.util.CasUtil.selectCovered;
 import static org.uimafit.util.JCasUtil.select;
 import static org.uimafit.util.JCasUtil.selectCovered;
 import static org.uimafit.util.JCasUtil.selectFollowing;
 import static org.uimafit.util.JCasUtil.selectPreceding;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.uima.UIMAException;
-import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
-import org.uimafit.factory.CollectionReaderFactory;
-import org.uimafit.factory.JCasFactory;
 import org.uimafit.util.CasUtil;
-import org.uimafit.util.JCasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
-import de.tudarmstadt.ukp.dkpro.core.api.io.ResourceCollectionReaderBase;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.TagsetDescription;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.dkpro.core.tokit.BreakIteratorSegmenter;
 
 /**
  * Contain Methods for updating CAS Objects directed from brat UI, different utility methods to
  * process the CAS such getting the sentence address, determine page numbers,...
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 public class BratAjaxCasUtil
 {
@@ -68,7 +54,7 @@ public class BratAjaxCasUtil
     /**
      * Annotation a and annotation b are the same if the have the same address ( used for
      * {@link CoreferenceChain})
-     * 
+     *
      * @param a
      * @param b
      * @return
@@ -80,7 +66,7 @@ public class BratAjaxCasUtil
 
     /**
      * Check if the start/end offsets of an annotation belongs to the same sentence.
-     * 
+     *
      * @return
      */
     public static boolean isSameSentence(JCas aJcas, int aStartOffset, int aEndOffset)
@@ -107,19 +93,19 @@ public class BratAjaxCasUtil
     /*
      * public static void deleteCoreference(BratAnnotatorModel aBratAnnotatorModel, String aType,
      * BratAnnotatorUIData aUIData) {
-     * 
+     *
      * CoreferenceChain newChain = new CoreferenceChain(aUIData.getjCas()); boolean found = false;
-     * 
+     *
      * CoreferenceLink originCorefType = selectAnnotationByAddress(aUIData.getjCas(),
      * CoreferenceLink.class, aUIData.getOrigin()); for (CoreferenceChain chain :
      * select(aUIData.getjCas(), CoreferenceChain.class)) { CoreferenceLink link = chain.getFirst();
-     * 
+     *
      * if (found) { break; } while (link != null && !found) { if (link.getBegin() ==
      * originCorefType.getBegin()) { newChain.setFirst(link.getNext()); link.setNext(null); found =
      * true; break; } link = link.getNext(); } } newChain.addToIndexes();
-     * 
+     *
      * // removeInvalidChain(aUIData.getjCas());
-     * 
+     *
      * }
      */
 
@@ -180,7 +166,7 @@ public class BratAjaxCasUtil
      * 13) is returned as overlapped selection <br>
      * If multiple annotations are [(3, 8), (9, 15), (16, 21)] and selection covered was from (10,
      * 18), overlapped annotation [(9, 15), (16, 21)] should be returned
-     * 
+     *
      * @param <T>
      *            the JCas type.
      * @param jCas
@@ -216,7 +202,7 @@ public class BratAjaxCasUtil
     /**
      * Get the internal address of the first sentence annotation from JCAS. This will be used as a
      * reference for moving forward/backward sentences positions
-     * 
+     *
      * @param aJcas
      *            The CAS object assumed to contains some sentence annotations
      * @return the sentence number or -1 if aJcas don't have sentence annotation
@@ -244,7 +230,7 @@ public class BratAjaxCasUtil
 
     /**
      * Get the last sentence CAS address in the current display window
-     * 
+     *
      * @param aJcas
      * @param aFirstSentenceAddress
      *            the CAS address of the first sentence in the dispaly window
@@ -271,7 +257,7 @@ public class BratAjaxCasUtil
 
     /**
      * Get the beginning address of a sentence to be displayed in BRAT.
-     * 
+     *
      * @param aJcas
      *            the CAS object
      * @param aSentenceAddress
@@ -314,7 +300,7 @@ public class BratAjaxCasUtil
 
     /**
      * Move to the next page of size display window.
-     * 
+     *
      * @param aCurrenSentenceBeginAddress
      *            The beginning sentence address of the current window.
      * @return the Beginning address of the next window
@@ -350,7 +336,7 @@ public class BratAjaxCasUtil
 
     /**
      * Return the beginning position of the Sentence for the previous display window
-     * 
+     *
      * @param aCurrenSentenceBeginAddress
      *            The beginning address of the current sentence of the display window
      * @return
@@ -380,7 +366,7 @@ public class BratAjaxCasUtil
 
     /**
      * Get the sentence address of the next sentence
-     * 
+     *
      * @param aJcas
      *            The CAS object
      * @param aRef
@@ -436,7 +422,7 @@ public class BratAjaxCasUtil
 
     /**
      * Get the ordinal sentence number for this sentence address
-     * 
+     *
      * @return
      */
     public static int getSentenceNumber(JCas aJcas, int aSentenceAddress)
@@ -472,40 +458,10 @@ public class BratAjaxCasUtil
             i++;
         }
         if (aSentenceNumber > i) {
-            return 0; 
+            return 0;
         }
         return address;
 
-    }
-
-    /**
-     * Get CAS object for the first time, from the source document using the provided reader
-     */
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    public static JCas getJCasFromFile(File aFile, Class  aReader)
-        throws UIMAException, IOException
-    {
-        CAS cas = JCasFactory.createJCas().getCas();
-
-        CollectionReader reader = CollectionReaderFactory.createCollectionReader(aReader,
-                ResourceCollectionReaderBase.PARAM_PATH, aFile.getParentFile().getAbsolutePath(),
-                ResourceCollectionReaderBase.PARAM_PATTERNS,
-                new String[] { "[+]" + aFile.getName() });
-        if (!reader.hasNext()) {
-            throw new FileNotFoundException("Annotation file [" + aFile.getName()
-                    + "] not found in [" + aFile.getPath() + "]");
-        }
-        reader.getNext(cas);
-        JCas jCas = cas.getJCas();
-        boolean hasTokens = JCasUtil.exists(jCas, Token.class);
-        boolean hasSentences = JCasUtil.exists(jCas, Sentence.class);
-        if (!hasTokens || !hasSentences) {
-            AnalysisEngine pipeline = createPrimitive(createPrimitiveDescription(
-                    BreakIteratorSegmenter.class, BreakIteratorSegmenter.PARAM_CREATE_TOKENS,
-                    !hasTokens, BreakIteratorSegmenter.PARAM_CREATE_SENTENCES, !hasSentences));
-            pipeline.process(cas.getJCas());
-        }
-        return jCas;
     }
 
     /**

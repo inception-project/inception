@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.uima.UIMAException;
-import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.JCas;
 import org.springframework.security.access.prepost.PreAuthorize;
 
@@ -480,7 +479,7 @@ public interface RepositoryService
      * a curator start curating)
      */
     boolean existsProjectTimeStamp(Project project);
-    
+
 
     /**
      * Export the associated project log for this {@link Project} while copying a project
@@ -510,7 +509,7 @@ public interface RepositoryService
      * @return
      */
     Date getProjectTimeStamp(Project project, String username);
-    
+
     /**
      * get the timestamp, of the curator, if exist
      */
@@ -768,4 +767,29 @@ public interface RepositoryService
      * @param aMode
      */
     void upgradeCasAndSave(SourceDocument aDocument, Mode aMode);
+
+    /**
+     * Get the CAS object for the document in the project created by the the User. If this is the
+     * first time the user is accessing the annotation document, it will be read from the source
+     * document, and converted to CAS
+     */
+    JCas readJCas(SourceDocument document, Project project, User user)
+        throws UIMAException, IOException, ClassNotFoundException;
+
+
+    /**
+     * Save the modified CAS in the file system as Serialized CAS
+     */
+    void updateJCas(Mode mode, SourceDocument document, User user, JCas jCas)
+        throws IOException;
+
+    JCas createJCas(SourceDocument document, AnnotationDocument annoDoc,
+            Project project, User user)
+        throws IOException;
+
+    /**
+     * Get CAS object for the first time, from the source document using the provided reader
+     */
+    JCas getJCasFromFile(File file, Class reader)
+        throws UIMAException, IOException;
 }

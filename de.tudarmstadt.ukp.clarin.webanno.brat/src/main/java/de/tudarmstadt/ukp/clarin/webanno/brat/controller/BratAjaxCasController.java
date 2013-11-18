@@ -26,7 +26,6 @@ import java.util.HashSet;
 import java.util.List;
 
 import javax.annotation.Resource;
-import javax.persistence.NoResultException;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.logging.Log;
@@ -34,7 +33,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
-import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.MultiValueMap;
 
@@ -50,12 +48,8 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.LoadConfResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.StoreSvgResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.WhoamiResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -380,87 +374,5 @@ public class BratAjaxCasController
         for (TagSet tagSet : aBratAnnotatorModel.getAnnotationLayers()) {
             getAdapter(tagSet.getType()).render(aJCas, aResponse, aBratAnnotatorModel);
         }
-    }
-
-    /**
-     * Get the CAS object for the document in the project created by the the User. If this is the
-     * first time the user is accessing the annotation document, it will be read from the source
-     * document, and converted to CAS
-     */
-    // TODO move to projectRepository
-    public JCas readJCas(SourceDocument aDocument, Project aProject, User aUser)
-        throws UIMAException, IOException, ClassNotFoundException
-    {
-        AnnotationDocument annotationDocument = null;
-        JCas jCas = null;
-        try {
-            annotationDocument = repository.getAnnotationDocument(aDocument, aUser);
-            if (annotationDocument.getState().equals(AnnotationDocumentState.NEW)
-                    && !repository.existsAnnotationDocumentContent(aDocument, aUser.getUsername())) {
-                jCas = createJCas(aDocument, annotationDocument, aProject, aUser, repository);
-            }
-            else {
-                jCas = repository.getAnnotationDocumentContent(annotationDocument);
-            }
-
-        }
-        // it is new, create it and get CAS object
-        catch (NoResultException ex) {
-            jCas = createJCas(aDocument, annotationDocument, aProject, aUser, repository);
-        }
-        catch (DataRetrievalFailureException e) {
-            throw e;
-        }
-        return jCas;
-    }
-
-    /**
-     * Save the modified CAS in the file system as Serialized CAS
-     */
-    // TODO move to projectRepository
-    public void updateJCas(Mode aMode, SourceDocument aSourceDocument, User aUser, JCas aJcas)
-        throws IOException
-    {
-        if (aMode.equals(Mode.ANNOTATION) || aMode.equals(Mode.CORRECTION)
-                || aMode.equals(Mode.CORRECTION_MERGE)) {
-            repository.createAnnotationDocumentContent(aJcas, aSourceDocument, aUser);
-        }
-        else if (aMode.equals(Mode.CURATION) || aMode.equals(Mode.CURATION_MERGE)) {
-            repository.createCurationDocumentContent(aJcas, aSourceDocument, aUser);
-        }
-    }
-
-    // TODO move to projectRepository
-    public static JCas createJCas(SourceDocument aDocument, AnnotationDocument aAnnotationDocument,
-            Project aProject, User aUser, RepositoryService repository)
-        throws IOException
-    {
-        JCas jCas;
-        // change the state of the source document to inprogress
-        aDocument.setState(SourceDocumentStateTransition
-                .transition(SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
-
-        if (!repository.existsAnnotationDocument(aDocument, aUser)) {
-            aAnnotationDocument = new AnnotationDocument();
-            aAnnotationDocument.setDocument(aDocument);
-            aAnnotationDocument.setName(aDocument.getName());
-            aAnnotationDocument.setUser(aUser.getUsername());
-            aAnnotationDocument.setProject(aProject);
-        }
-
-        try {
-            jCas = BratAjaxCasUtil.getJCasFromFile(repository.getSourceDocumentContent(aDocument),
-                    repository.getReadableFormats().get(aDocument.getFormat()));
-        }
-        catch (UIMAException e) {
-            throw new IOException(e);
-        }
-        catch (ClassNotFoundException e) {
-            throw new IOException(e);
-        }
-
-        repository.createAnnotationDocument(aAnnotationDocument);
-        repository.createAnnotationDocumentContent(jCas, aDocument, aUser);
-        return jCas;
     }
 }

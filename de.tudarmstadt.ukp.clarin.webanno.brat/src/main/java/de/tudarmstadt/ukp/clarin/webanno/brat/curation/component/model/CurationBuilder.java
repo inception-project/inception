@@ -40,7 +40,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationOption;
@@ -60,11 +59,11 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  * This class is responsible for two things. Firstly, it creates a pre-merged cas, which contains
  * all annotations, where all annotators agree on. This is done by copying a random cas and removing
  * all differing annotations.
- * 
+ *
  * Secondly, the class creates an instance of {@link CurationContainer}, which is the wicket model
  * for the curation panel. The {@link CurationContainer} contains the text for all sentences, which
  * are displayed at a specific page.
- * 
+ *
  * @author Andreas Straninger
  * @author Seid Muhie Yimam
  */
@@ -251,7 +250,7 @@ public class CurationBuilder
     /**
      * Puts JCases into a list and get a random annotation document that will be used as a base for
      * the {@link CasDiff}
-     * 
+     *
      * @throws IOException
      * @throws ClassNotFoundException
      * @throws UIMAException
@@ -305,7 +304,7 @@ public class CurationBuilder
     /**
      * For the first time a curation page is opened, create a MergeCas that contains only agreeing
      * annotations Using the CAS of the curator user.
-     * 
+     *
      * @throws IOException
      * @throws ClassNotFoundException
      * @throws UIMAException
@@ -363,10 +362,9 @@ public class CurationBuilder
             AnnotationDocument randomAnnotationDocument)
         throws UIMAException, ClassNotFoundException, IOException
     {
-        BratAjaxCasController controller = new BratAjaxCasController(repository, annotationService);
         User userLoggedIn = repository.getUser(SecurityContextHolder.getContext()
                 .getAuthentication().getName());
-        mergeJCas = controller.readJCas(aBratAnnotatorModel.getDocument(), aBratAnnotatorModel
+        mergeJCas = repository.readJCas(aBratAnnotatorModel.getDocument(), aBratAnnotatorModel
                 .getDocument().getProject(), userLoggedIn);
         repository.createCorrectionDocumentContent(mergeJCas,
                 randomAnnotationDocument.getDocument(), userLoggedIn);

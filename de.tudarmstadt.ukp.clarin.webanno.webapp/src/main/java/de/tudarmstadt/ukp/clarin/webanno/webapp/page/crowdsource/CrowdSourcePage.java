@@ -65,7 +65,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.crowdflower.NamedEntityTaskManager;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -97,7 +96,7 @@ public class CrowdSourcePage
     private AnnotationService annotationService;
 
     @SpringBean(name = "documentRepository")
-    private RepositoryService projectRepository;
+    private RepositoryService repository;
 
     @SpringBean(name = "userRepository")
     private UserDao userRepository;
@@ -175,11 +174,11 @@ public class CrowdSourcePage
                         @Override
                         protected List<Project> load()
                         {
-                            List<Project> allProjects = projectRepository.listProjects();
+                            List<Project> allProjects = repository.listProjects();
                             List<Project> crowdProjects = new ArrayList<Project>();
                             User user = userRepository.get(CROWD_USER);
                             for (Project project : allProjects) {
-                                List<User> users = projectRepository
+                                List<User> users = repository
                                         .listProjectUsersWithPermissions(project);
                                 if (users.contains(user)) {
                                     crowdProjects.add(project);
@@ -235,7 +234,7 @@ public class CrowdSourcePage
 
             List<List<String>> rowData = new ArrayList<List<String>>();
             if (selectedProject != null) {
-                List<CrowdJob> crowdJobs = projectRepository.listCrowdJobs(selectedProject);
+                List<CrowdJob> crowdJobs = repository.listCrowdJobs(selectedProject);
                 // no Document is added yet
                 for (CrowdJob crowdJob : crowdJobs) {
                     if (crowdJob.getDocuments().size() == 0) {
@@ -569,28 +568,28 @@ public class CrowdSourcePage
                 {
                     String name = crowdJobDetailForm.getModelObject().name;
                     // rename task
-                    if (selectedCrowdJob != null && !projectRepository.existsCrowdJob(name)) {
+                    if (selectedCrowdJob != null && !repository.existsCrowdJob(name)) {
                         selectedCrowdJob.setName(name);
                         selectedCrowdJob.setProject(selectedProject);
                         selectedCrowdJob.setApiKey(crowdJobDetailForm.getModelObject().apiKey);
-                        projectRepository.createCrowdJob(selectedCrowdJob);
+                        repository.createCrowdJob(selectedCrowdJob);
                         createCrowdJob = false;
                         updateTable();
 
                     }
                     // save new task
-                    else if (!projectRepository.existsCrowdJob(name)) {
+                    else if (!repository.existsCrowdJob(name)) {
                         CrowdJob crowdJob = new CrowdJob();
                         crowdJob.setName(name);
                         selectedCrowdJob.setProject(selectedProject);
-                        projectRepository.createCrowdJob(crowdJob);
+                        repository.createCrowdJob(crowdJob);
                         selectedCrowdJob = crowdJob;
                         createCrowdJob = false;
                         updateTable();
                     }
                     else {
                         selectedCrowdJob.setApiKey(crowdJobDetailForm.getModelObject().apiKey);
-                        projectRepository.createCrowdJob(selectedCrowdJob);
+                        repository.createCrowdJob(selectedCrowdJob);
                         error("Task [" + name + " ] already created!");
                     }
                 }
@@ -604,7 +603,7 @@ public class CrowdSourcePage
                 @Override
                 public void onSubmit()
                 {
-                    projectRepository.removeCrowdJob(selectedCrowdJob);
+                    repository.removeCrowdJob(selectedCrowdJob);
                     updateTable();
                     crowdJobDetailForm.setVisible(false);
                 }
@@ -668,7 +667,7 @@ public class CrowdSourcePage
                     sourceDocuments
                             .removeAll(CrowdProjectDetailForm.this.getModelObject().documents);
                     selectedCrowdJob.setDocuments(new HashSet<SourceDocument>(sourceDocuments));
-                    projectRepository.createCrowdJob(selectedCrowdJob);
+                    repository.createCrowdJob(selectedCrowdJob);
                     documents.removeAll(CrowdProjectDetailForm.this.getModelObject().documents);
                     crowdDocumentListForm.setModelObject(new SelectionModel());
                     updateTable();
@@ -695,7 +694,7 @@ public class CrowdSourcePage
                     goldSourceDocuments
                             .removeAll(CrowdProjectDetailForm.this.getModelObject().goldDocuments);
                     selectedCrowdJob.setGoldDocuments(new HashSet<SourceDocument>(goldSourceDocuments));
-                    projectRepository.createCrowdJob(selectedCrowdJob);
+                    repository.createCrowdJob(selectedCrowdJob);
                     goldDocuments.removeAll(CrowdProjectDetailForm.this.getModelObject().goldDocuments);
                     goldDocumentListForm.setModelObject(new SelectionModel());
 
@@ -733,7 +732,7 @@ public class CrowdSourcePage
                     List<JCas> goldJCases = getGoldDocumentsJCases(user);
 
                     try {
-                        String template = FileUtils.readFileToString(projectRepository.getTemplate(CROWD_NERTASK1_TEMPLATE));
+                        String template = FileUtils.readFileToString(repository.getTemplate(CROWD_NERTASK1_TEMPLATE));
 
                         String strUseSents = crowdJobDetailForm.getModelObject().useSents;
                         String strUseGoldSents = crowdJobDetailForm.getModelObject().useGoldSents;
@@ -756,7 +755,7 @@ public class CrowdSourcePage
                         selectedCrowdJob.setTask1Id(task1ID);
                         selectedCrowdJob.setStatus(namedEntityTaskManager.getStatusString(task1ID, ""));
 
-                        projectRepository.createCrowdJob(selectedCrowdJob);
+                        repository.createCrowdJob(selectedCrowdJob);
 
                         int omittedSentences = namedEntityTaskManager.getOmittedSentences();
                         if(omittedSentences==0)
@@ -815,10 +814,10 @@ public class CrowdSourcePage
                         return;
                     }
 
-                    String template = FileUtils.readFileToString(projectRepository.getTemplate(CROWD_NERTASK2_TEMPLATE));
+                    String template = FileUtils.readFileToString(repository.getTemplate(CROWD_NERTASK2_TEMPLATE));
                     String task2ID = namedEntityTaskManager.uploadNewNERTask2(template, task1ID, jCases, goldJCases);
                     selectedCrowdJob.setTask2Id(task2ID);
-                    projectRepository.createCrowdJob(selectedCrowdJob);
+                    repository.createCrowdJob(selectedCrowdJob);
 
                     int omittedSentences = namedEntityTaskManager.getOmittedSentences();
                     if(omittedSentences==0)
@@ -884,7 +883,7 @@ public class CrowdSourcePage
                         int i=0;
                         for(JCas cas : jCases)
                         {
-                            BratAnnotatorUtility.clearJcasAnnotations(cas, sourceDocuments.get(i), user, projectRepository);
+                            BratAnnotatorUtility.clearJcasAnnotations(cas, sourceDocuments.get(i), user, repository);
                             i++;
                         }
 
@@ -896,7 +895,7 @@ public class CrowdSourcePage
                         for(JCas cas : jCases)
                         {
                             SourceDocument document = sourceDocuments.get(i);
-                            projectRepository.createAnnotationDocumentContent(cas, document, user);
+                            repository.createAnnotationDocumentContent(cas, document, user);
                             i++;
                         }
                         int omittedEntities = namedEntityTaskManager.getOmittedEntities();
@@ -958,7 +957,7 @@ public class CrowdSourcePage
 
                     String status = namedEntityTaskManager.getStatusString(id1,id2);
                     selectedCrowdJob.setStatus(status);
-                    projectRepository.createCrowdJob(selectedCrowdJob);
+                    repository.createCrowdJob(selectedCrowdJob);
                 }
 
                 @Override
@@ -987,12 +986,12 @@ public class CrowdSourcePage
         AnnotationDocument annotationDocument;
         JCas jCas;
         try {
-            if (projectRepository.existsAnnotationDocument(sourceDocument, user)) {
+            if (repository.existsAnnotationDocument(sourceDocument, user)) {
 
-                BratAjaxCasController controller = new BratAjaxCasController(projectRepository,
+                BratAjaxCasController controller = new BratAjaxCasController(repository,
                         annotationService);
 
-                jCas =  controller.readJCas(sourceDocument,
+                jCas =  repository.readJCas(sourceDocument,
                         selectedProject, user);
 
                 jCases.add(jCas);
@@ -1004,13 +1003,13 @@ public class CrowdSourcePage
                 annotationDocument.setProject(selectedProject);
                 // annotationDocument.setState(AnnotationDocumentState.IN_PROGRESS);
                 annotationDocument.setName(sourceDocument.getName());
-                projectRepository.createAnnotationDocument(annotationDocument);
+                repository.createAnnotationDocument(annotationDocument);
 
-                jCas = BratAjaxCasUtil.getJCasFromFile(
-                        projectRepository.getSourceDocumentContent(sourceDocument),
-                        projectRepository.getReadableFormats().get(
+                jCas = repository.getJCasFromFile(
+                        repository.getSourceDocumentContent(sourceDocument),
+                        repository.getReadableFormats().get(
                                 sourceDocument.getFormat()));
-                projectRepository.createAnnotationDocumentContent(jCas, sourceDocument, user);
+                repository.createAnnotationDocumentContent(jCas, sourceDocument, user);
                 jCases.add(jCas);
             }
         }
@@ -1047,7 +1046,7 @@ public class CrowdSourcePage
                         protected List<SourceDocument> load()
                         {
                             List<SourceDocument> sourceDocuments = new ArrayList<SourceDocument>();
-                            for (SourceDocument sourceDocument : projectRepository
+                            for (SourceDocument sourceDocument : repository
                                     .listSourceDocuments(selectedProject)) {
                                 // if not a GOLD data!
                                 if(!sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
@@ -1056,7 +1055,7 @@ public class CrowdSourcePage
                             }
 
                             // filter already added documents
-                            for (CrowdJob crowdJob : projectRepository.listCrowdJobs()) {
+                            for (CrowdJob crowdJob : repository.listCrowdJobs()) {
                                 sourceDocuments.removeAll(new ArrayList<SourceDocument>(crowdJob
                                         .getDocuments()));
                             }
@@ -1101,7 +1100,7 @@ public class CrowdSourcePage
                         Set<SourceDocument> existingDocuments = selectedCrowdJob.getDocuments();
                         sourceDocuments.addAll(new ArrayList<SourceDocument>(existingDocuments));
                         selectedCrowdJob.setDocuments(new HashSet<SourceDocument>(sourceDocuments));
-                        projectRepository.createCrowdJob(selectedCrowdJob);
+                        repository.createCrowdJob(selectedCrowdJob);
                     }
                     CrowdDocumentListForm.this.setVisible(false);
                     updateTable();
@@ -1144,7 +1143,7 @@ public class CrowdSourcePage
                     protected List<SourceDocument> load()
                     {
                         List<SourceDocument> sourceDocuments = new ArrayList<SourceDocument>();
-                        for (SourceDocument sourceDocument : projectRepository
+                        for (SourceDocument sourceDocument : repository
                                 .listSourceDocuments(selectedProject)) {
                             if(sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
                                 sourceDocuments.add(sourceDocument);
@@ -1152,7 +1151,7 @@ public class CrowdSourcePage
                         }
 
                         // remove already added gold documents from the list
-                        for (CrowdJob crowdJob : projectRepository.listCrowdJobs()) {
+                        for (CrowdJob crowdJob : repository.listCrowdJobs()) {
                             sourceDocuments.removeAll(new ArrayList<SourceDocument>(crowdJob
                                     .getGoldDocuments()));
                         }
@@ -1197,7 +1196,7 @@ public class CrowdSourcePage
                     Set<SourceDocument> oldDocuments = selectedCrowdJob.getGoldDocuments();
                     sourceDocuments.addAll(new ArrayList<SourceDocument>(oldDocuments));
                     selectedCrowdJob.setGoldDocuments(new HashSet<SourceDocument>(sourceDocuments));
-                    projectRepository.createCrowdJob(selectedCrowdJob);
+                    repository.createCrowdJob(selectedCrowdJob);
                 }
                 GoldDocumentListForm.this.setVisible(false);
             }
@@ -1270,7 +1269,7 @@ public class CrowdSourcePage
                     @Override
                     protected void onEvent(AjaxRequestTarget aTarget)
                     {
-                        selectedCrowdJob = projectRepository.getCrowdJob(value);
+                        selectedCrowdJob = repository.getCrowdJob(value);
                         SelectionModel selectionModel = new SelectionModel();
                         selectionModel.name = selectedCrowdJob.getName();
                         selectionModel.apiKey = selectedCrowdJob.getApiKey();

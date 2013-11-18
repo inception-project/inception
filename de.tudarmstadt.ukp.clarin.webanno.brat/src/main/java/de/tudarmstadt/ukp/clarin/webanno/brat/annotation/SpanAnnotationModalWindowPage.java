@@ -240,7 +240,7 @@ public class SpanAnnotationModalWindowPage
 
                             controller.createSpanAnnotation(jCas, beginOffset, endOffset, annotationType, null,
                                     null);
-                            controller.updateJCas(bratAnnotatorModel.getMode(),
+                            repository.updateJCas(bratAnnotatorModel.getMode(),
                                     bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
                                     jCas);
 
@@ -311,7 +311,7 @@ public class SpanAnnotationModalWindowPage
                         }
                         else {
                             controller.deleteAnnotation(jCas, selectedSpanId);
-                            controller.updateJCas(bratAnnotatorModel.getMode(),
+                            repository.updateJCas(bratAnnotatorModel.getMode(),
                                     bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
                                     jCas);
 
@@ -386,7 +386,7 @@ public class SpanAnnotationModalWindowPage
             BratAjaxCasController controller = new BratAjaxCasController(repository,
                     annotationService);
 
-            return controller.readJCas(aBratAnnotatorModel.getDocument(),
+            return repository.readJCas(aBratAnnotatorModel.getDocument(),
                     aBratAnnotatorModel.getProject(), aBratAnnotatorModel.getUser());
         }
         else {

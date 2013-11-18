@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.dao;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.commons.io.IOUtils.copyLarge;
 import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.uimafit.factory.AnalysisEngineFactory.createPrimitive;
 import static org.uimafit.factory.AnalysisEngineFactory.createPrimitiveDescription;
 import static org.uimafit.pipeline.SimplePipeline.runPipeline;
 
@@ -81,6 +82,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.uimafit.factory.AnalysisEngineFactory;
 import org.uimafit.factory.CollectionReaderFactory;
 import org.uimafit.factory.JCasFactory;
+import org.uimafit.util.JCasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
@@ -97,23 +99,26 @@ import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
-import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
-import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
 import de.tudarmstadt.ukp.dkpro.core.api.io.JCasFileWriter_ImplBase;
+import de.tudarmstadt.ukp.dkpro.core.api.io.ResourceCollectionReaderBase;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.dkpro.core.io.bincas.SerializedCasReader;
 import de.tudarmstadt.ukp.dkpro.core.io.bincas.SerializedCasWriter;
+import de.tudarmstadt.ukp.dkpro.core.tokit.BreakIteratorSegmenter;
 
 /**
  * Implementation of methods defined in the {@link RepositoryService} interface
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 public class RepositoryServiceDbData
     implements RepositoryService
@@ -190,7 +195,7 @@ public class RepositoryServiceDbData
 
     /**
      * Renames a file.
-     * 
+     *
      * @throws IOException
      *             if the file cannot be renamed.
      * @return the target file.
@@ -208,7 +213,7 @@ public class RepositoryServiceDbData
 
     /**
      * Get the folder where the annotations are stored. Creates the folder if necessary.
-     * 
+     *
      * @throws IOException
      *             if the folder cannot be created.
      */
@@ -415,6 +420,7 @@ public class RepositoryServiceDbData
         }
     }
 
+    @Override
     public boolean existsProjectTimeStamp(Project aProject)
     {
         try {
@@ -762,6 +768,7 @@ public class RepositoryServiceDbData
                 .getSingleResult();
     }
 
+    @Override
     public Date getProjectTimeStamp(Project aProject)
     {
         return entityManager
@@ -1370,7 +1377,7 @@ public class RepositoryServiceDbData
     /**
      * Creates an annotation document (either user's annotation document or CURATION_USER's
      * annotation document)
-     * 
+     *
      * @param aDocument
      *            the {@link SourceDocument}
      * @param aJcas
@@ -1527,7 +1534,7 @@ public class RepositoryServiceDbData
     /**
      * For a given {@link SourceDocument}, return the {@link AnnotationDocument} for the user or for
      * the CURATION_USER
-     * 
+     *
      * @param aDocument
      *            the {@link SourceDocument}
      * @param aUsername
@@ -1596,7 +1603,7 @@ public class RepositoryServiceDbData
 
         return users;
     }
-    
+
     @Override
     public  void upgradeCasAndSave(SourceDocument aDocument
             , Mode aMode)
@@ -1663,4 +1670,106 @@ public class RepositoryServiceDbData
                 oldTypeSystem, null);
     }
 
+
+    @Override
+    public JCas readJCas(SourceDocument aDocument, Project aProject, User aUser)
+        throws UIMAException, IOException, ClassNotFoundException
+    {
+        AnnotationDocument annotationDocument = null;
+        JCas jCas = null;
+        try {
+            annotationDocument = getAnnotationDocument(aDocument, aUser);
+            if (annotationDocument.getState().equals(AnnotationDocumentState.NEW)
+                    && !existsAnnotationDocumentContent(aDocument, aUser.getUsername())) {
+                jCas = createJCas(aDocument, annotationDocument, aProject, aUser);
+            }
+            else {
+                jCas = getAnnotationDocumentContent(annotationDocument);
+            }
+
+        }
+        // it is new, create it and get CAS object
+        catch (NoResultException ex) {
+            jCas = createJCas(aDocument, annotationDocument, aProject, aUser);
+        }
+        catch (DataRetrievalFailureException e) {
+            throw e;
+        }
+        return jCas;
+    }
+
+    @Override
+    public void updateJCas(Mode aMode, SourceDocument aSourceDocument, User aUser, JCas aJcas)
+        throws IOException
+    {
+        if (aMode.equals(Mode.ANNOTATION) || aMode.equals(Mode.CORRECTION)
+                || aMode.equals(Mode.CORRECTION_MERGE)) {
+            createAnnotationDocumentContent(aJcas, aSourceDocument, aUser);
+        }
+        else if (aMode.equals(Mode.CURATION) || aMode.equals(Mode.CURATION_MERGE)) {
+            createCurationDocumentContent(aJcas, aSourceDocument, aUser);
+        }
+    }
+
+    @Override
+    public  JCas createJCas(SourceDocument aDocument, AnnotationDocument aAnnotationDocument,
+            Project aProject, User aUser)
+        throws IOException
+    {
+        JCas jCas;
+        // change the state of the source document to inprogress
+        aDocument.setState(SourceDocumentStateTransition
+                .transition(SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
+
+        if (!existsAnnotationDocument(aDocument, aUser)) {
+            aAnnotationDocument = new AnnotationDocument();
+            aAnnotationDocument.setDocument(aDocument);
+            aAnnotationDocument.setName(aDocument.getName());
+            aAnnotationDocument.setUser(aUser.getUsername());
+            aAnnotationDocument.setProject(aProject);
+        }
+
+        try {
+            jCas = getJCasFromFile(getSourceDocumentContent(aDocument),
+                    getReadableFormats().get(aDocument.getFormat()));
+        }
+        catch (UIMAException e) {
+            throw new IOException(e);
+        }
+        catch (ClassNotFoundException e) {
+            throw new IOException(e);
+        }
+
+        createAnnotationDocument(aAnnotationDocument);
+        createAnnotationDocumentContent(jCas, aDocument, aUser);
+        return jCas;
+    }
+
+    @Override
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public  JCas getJCasFromFile(File aFile, Class  aReader)
+        throws UIMAException, IOException
+    {
+        CAS cas = JCasFactory.createJCas().getCas();
+
+        CollectionReader reader = CollectionReaderFactory.createCollectionReader(aReader,
+                ResourceCollectionReaderBase.PARAM_PATH, aFile.getParentFile().getAbsolutePath(),
+                ResourceCollectionReaderBase.PARAM_PATTERNS,
+                new String[] { "[+]" + aFile.getName() });
+        if (!reader.hasNext()) {
+            throw new FileNotFoundException("Annotation file [" + aFile.getName()
+                    + "] not found in [" + aFile.getPath() + "]");
+        }
+        reader.getNext(cas);
+        JCas jCas = cas.getJCas();
+        boolean hasTokens = JCasUtil.exists(jCas, Token.class);
+        boolean hasSentences = JCasUtil.exists(jCas, Sentence.class);
+        if (!hasTokens || !hasSentences) {
+            AnalysisEngine pipeline = createPrimitive(createPrimitiveDescription(
+                    BreakIteratorSegmenter.class, BreakIteratorSegmenter.PARAM_CREATE_TOKENS,
+                    !hasTokens, BreakIteratorSegmenter.PARAM_CREATE_SENTENCES, !hasSentences));
+            pipeline.process(cas.getJCas());
+        }
+        return jCas;
+    }
 }

@@ -544,10 +544,8 @@ public class BratAnnotator
     {
         if (aMode.equals(Mode.ANNOTATION) || aMode.equals(Mode.CORRECTION)
                 || aMode.equals(Mode.CORRECTION_MERGE)) {
-            BratAjaxCasController controller = new BratAjaxCasController(repository,
-                    annotationService);
 
-            return controller.readJCas(aDocument, aProject, user);
+            return repository.readJCas(aDocument, aProject, user);
         }
         else {
             return repository.getCurationDocumentContent(getModelObject().getDocument());

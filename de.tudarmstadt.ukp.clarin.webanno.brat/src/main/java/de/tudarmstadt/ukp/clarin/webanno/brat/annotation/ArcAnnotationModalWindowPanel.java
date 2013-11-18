@@ -198,7 +198,7 @@ public class ArcAnnotationModalWindowPanel
                             controller.createArcAnnotation(bratAnnotatorModel, annotationType, -1,
                                     -1, originFs, targetFs, jCas);
 
-                            controller.updateJCas(bratAnnotatorModel.getMode(),
+                            repository.updateJCas(bratAnnotatorModel.getMode(),
                                     bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
                                     jCas);
 
@@ -257,7 +257,7 @@ public class ArcAnnotationModalWindowPanel
                         jCas = getCas(bratAnnotatorModel);
 
                         controller.deleteAnnotation(jCas, selectedArcId);
-                        controller.updateJCas(bratAnnotatorModel.getMode(),
+                        repository.updateJCas(bratAnnotatorModel.getMode(),
                                 bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
                                 jCas);
 
@@ -320,7 +320,7 @@ public class ArcAnnotationModalWindowPanel
                         controller.createArcAnnotation(bratAnnotatorModel, annotationType, -1, -1,
                                 targetFs, originFs, jCas);
 
-                        controller.updateJCas(bratAnnotatorModel.getMode(),
+                        repository.updateJCas(bratAnnotatorModel.getMode(),
                                 bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
                                 jCas);
 
@@ -382,7 +382,7 @@ public class ArcAnnotationModalWindowPanel
             BratAjaxCasController controller = new BratAjaxCasController(repository,
                     annotationService);
 
-            return controller.readJCas(aBratAnnotatorModel.getDocument(),
+            return repository.readJCas(aBratAnnotatorModel.getDocument(),
                     aBratAnnotatorModel.getProject(), aBratAnnotatorModel.getUser());
         }
         else {
