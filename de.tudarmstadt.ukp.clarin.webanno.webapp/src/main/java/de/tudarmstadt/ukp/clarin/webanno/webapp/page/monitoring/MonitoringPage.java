@@ -618,12 +618,6 @@ public class MonitoringPage
                         .equals(AnnotationTypeConstant.COREFERENCE)) {
 
             TypeAdapter adapter = TypeUtil.getAdapter(annotationTypes.getModelObject());
-            // initialize results with zero
-            for (int m = 0; m < users.size(); m++) {
-                for (int j = 0; j < users.size(); j++) {
-                    results[m][j] = 0.0;
-                }
-            }
 
             // assume all users finished only one document
             double[][] multipleDocumentsFinished = new double[users.size()][users.size()];
@@ -649,7 +643,7 @@ public class MonitoringPage
                 finishedDocumentLists.put(user, finishedDocuments);
             }
 
-            computeKappa(project, users, results, adapter, finishedDocumentLists);
+            results =  computeKappa(project, users, adapter, finishedDocumentLists);
         }
 
         // Users with some annotations of this type
@@ -698,10 +692,11 @@ public class MonitoringPage
      * same document <br>
      * The result is per {@link AnnotationType} for all {@link Tag}s
      */
-    // TODO: return a result value
-    private void computeKappa(Project project, List<User> users, double[][] results,
+
+    private  double[][] computeKappa(Project project, List<User> users,
             TypeAdapter adapter, Map<User, List<SourceDocument>> finishedDocumentLists)
     {
+        double[][] results = new double[users.size()][users.size()];
         TwoPairedKappa twoPairedKappa = new TwoPairedKappa();
         int userInRow = 0;
         List<User> rowUsers = new ArrayList<User>();
@@ -765,6 +760,7 @@ public class MonitoringPage
             }
             userInRow++;
         }
+        return results;
     }
 
     /**
