@@ -24,67 +24,86 @@ import java.util.Map;
 import org.apache.uima.cas.FeatureStructure;
 
 /**
- * This class comprises usernames, which agree on a
- * specific annotation (same annotation type, same annotation value, same position).
+ * This class comprises usernames, which agree on a specific annotation (same annotation type, same
+ * annotation value, same position).
  *
  * @author Andreas Straninger
  */
-public class AnnotationSelection implements Serializable {
-	private Map<String, Integer> addressByUsername = new HashMap<String, Integer>();
-	private transient Map<String, FeatureStructure> fsStringByUsername = new HashMap<String, FeatureStructure>();
-	private AnnotationOption annotationOption = null;
+public class AnnotationSelection
+    implements Serializable
+{
 
-	public Map<String, Integer> getAddressByUsername() {
-		return addressByUsername;
-	}
+    private static final long serialVersionUID = -8839941493657969753L;
+    private Map<String, Integer> addressByUsername = new HashMap<String, Integer>();
+    private transient Map<String, FeatureStructure> fsStringByUsername = new HashMap<String, FeatureStructure>();
+    private AnnotationOption annotationOption = null;
 
-	/**
-	 * Set Map of Username-Address-Tuples. The Map contains only annotations,
-	 * which have the same annotation type and annotation value, and the same position in the cas.
-	 * <br><br>
-	 * Example: <pre>{"Anno1": 1234, "Anno2": 1235}</pre>
-	 * @param aAddressByUsername HashMap of Username-Address-Tuples
-	 */
-	public void setAddressByUsername(Map<String, Integer> aAddressByUsername) {
-		this.addressByUsername = aAddressByUsername;
-	}
+    public Map<String, Integer> getAddressByUsername()
+    {
+        return addressByUsername;
+    }
 
-	public AnnotationOption getAnnotationOption() {
-		return annotationOption;
-	}
+    /**
+     * Set Map of Username-Address-Tuples. The Map contains only annotations, which have the same
+     * annotation type and annotation value, and the same position in the cas. <br>
+     * <br>
+     * Example:
+     *
+     * <pre>
+     * {"Anno1": 1234, "Anno2": 1235}
+     * </pre>
+     *
+     * @param aAddressByUsername
+     *            HashMap of Username-Address-Tuples
+     */
+    public void setAddressByUsername(Map<String, Integer> aAddressByUsername)
+    {
+        this.addressByUsername = aAddressByUsername;
+    }
 
-	/**
-	 *
-	 * @param annotationOption
-	 */
-	public void setAnnotationOption(AnnotationOption annotationOption) {
-		this.annotationOption = annotationOption;
-	}
+    public AnnotationOption getAnnotationOption()
+    {
+        return annotationOption;
+    }
 
-	@Override
-    public String toString() {
-		return fsStringByUsername.toString();
-	}
+    /**
+     *
+     * @param annotationOption
+     */
+    public void setAnnotationOption(AnnotationOption annotationOption)
+    {
+        this.annotationOption = annotationOption;
+    }
 
-	@Override
-    public boolean equals(Object obj) {
-		if(!(obj instanceof AnnotationSelection)) {
-			return false;
-		}
-		AnnotationSelection as = (AnnotationSelection) obj;
-		return addressByUsername.equals(as.getAddressByUsername());
-	}
+    @Override
+    public String toString()
+    {
+        return fsStringByUsername.toString();
+    }
 
-	@Override
-    public int hashCode() {
-		return addressByUsername.hashCode();
-	}
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (!(obj instanceof AnnotationSelection)) {
+            return false;
+        }
+        AnnotationSelection as = (AnnotationSelection) obj;
+        return addressByUsername.equals(as.getAddressByUsername());
+    }
 
-	public Map<String, FeatureStructure> getFsStringByUsername() {
-		return fsStringByUsername;
-	}
+    @Override
+    public int hashCode()
+    {
+        return addressByUsername.hashCode();
+    }
 
-	public void setFsStringByUsername(Map<String, FeatureStructure> fsStringByUsername) {
-		this.fsStringByUsername = fsStringByUsername;
-	}
+    public Map<String, FeatureStructure> getFsStringByUsername()
+    {
+        return fsStringByUsername;
+    }
+
+    public void setFsStringByUsername(Map<String, FeatureStructure> fsStringByUsername)
+    {
+        this.fsStringByUsername = fsStringByUsername;
+    }
 }

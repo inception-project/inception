@@ -25,8 +25,6 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
@@ -65,8 +63,6 @@ public class AnnotationPreferenceModalPanel
 {
     private static final long serialVersionUID = -2102136855109258306L;
 
-    private static final Log LOG = LogFactory.getLog(AnnotationPreferenceModalPanel.class);
-
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
 
@@ -75,7 +71,6 @@ public class AnnotationPreferenceModalPanel
 
     private AnnotationLayerDetailForm tagSelectionForm;
 
-    private CheckBoxMultipleChoice<TagSet> tagSets;
     private NumberTextField<Integer> windowSizeField;
 
     private BratAnnotatorModel bratAnnotatorModel;
@@ -85,7 +80,7 @@ public class AnnotationPreferenceModalPanel
     {
         private static final long serialVersionUID = -683824912741426241L;
 
-        @SuppressWarnings({ "unchecked", "rawtypes" })
+        @SuppressWarnings({ })
         public AnnotationLayerDetailForm(String id, final ModalWindow modalWindow)
         {
             super(id, new CompoundPropertyModel<AnnotationLayerDetailFormModel>(
@@ -104,7 +99,7 @@ public class AnnotationPreferenceModalPanel
             windowSizeField.setMinimum(1);
             add(windowSizeField);
 
-            add(tagSets = (CheckBoxMultipleChoice<TagSet>) new CheckBoxMultipleChoice<TagSet>(
+            add(new CheckBoxMultipleChoice<TagSet>(
                     "annotationLayers")
             {
                 private static final long serialVersionUID = 1L;
@@ -140,7 +135,7 @@ public class AnnotationPreferenceModalPanel
                     setChoiceRenderer(new ChoiceRenderer<TagSet>("name", "id"));
                 }
             });
-            
+
             // Add a Checkbox to enable/disable automatic page navigations while annotating
             add(new CheckBox("scrollPage")
             {
@@ -228,7 +223,7 @@ public class AnnotationPreferenceModalPanel
     protected void onCancel(AjaxRequestTarget aTarget)
     {
     }
-    private static class AnnotationLayerDetailFormModel
+    public static class AnnotationLayerDetailFormModel
         implements Serializable
     {
         private static final long serialVersionUID = -1L;

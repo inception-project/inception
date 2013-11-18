@@ -133,7 +133,7 @@ public class ProjectTagSetsPanel
     {
         private static final long serialVersionUID = -1L;
 
-        @SuppressWarnings({ "unchecked" })
+        @SuppressWarnings({ })
         public TagSetSelectionForm(String id)
         {
             // super(id);
@@ -183,6 +183,8 @@ public class ProjectTagSetsPanel
                     });
                     setChoiceRenderer(new ChoiceRenderer<de.tudarmstadt.ukp.clarin.webanno.model.TagSet>()
                     {
+                        private static final long serialVersionUID = -2000622431037285685L;
+
                         @Override
                         public Object getDisplayValue(
                                 de.tudarmstadt.ukp.clarin.webanno.model.TagSet aObject)
@@ -238,6 +240,7 @@ public class ProjectTagSetsPanel
 
         private static final long serialVersionUID = 5286655225171641733L;
 
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         public ImportTagSetForm(String id)
         {
             super(id);
@@ -259,7 +262,6 @@ public class ProjectTagSetsPanel
                             .getName();
                     User user = projectRepository.getUser(username);
 
-                    de.tudarmstadt.ukp.clarin.webanno.model.TagSet selectionModelTagSet = null;
                     if (isNotEmpty(uploadedFiles)) {
                         if (importTagsetFormat.getModelObject().equals(
                                 ExportedTagSetConstant.JSON_FORMAT)) {
@@ -309,7 +311,6 @@ public class ProjectTagSetsPanel
                                             newTag.setTagSet(newTagSet);
                                             annotationService.createTag(newTag, user);
                                         }
-                                        selectionModelTagSet = newTagSet;
                                     }
 
                                 }
@@ -422,11 +423,12 @@ public class ProjectTagSetsPanel
 
     }
 
-    private class SelectionModel
+    public class SelectionModel
         implements Serializable
     {
         private static final long serialVersionUID = -1L;
 
+        @SuppressWarnings("unused")
         private de.tudarmstadt.ukp.clarin.webanno.model.TagSet tagSet;
         private Tag tag;
     }
@@ -521,6 +523,7 @@ public class ProjectTagSetsPanel
                     Arrays.asList(new String[] { ExportedTagSetConstant.JSON_FORMAT,
                             ExportedTagSetConstant.TAB_FORMAT })).add(new OnChangeAjaxBehavior()
             {
+                private static final long serialVersionUID = -3149305683012829848L;
 
                 @Override
                 protected void onUpdate(AjaxRequestTarget target)
@@ -534,6 +537,7 @@ public class ProjectTagSetsPanel
             {
                 private static final long serialVersionUID = 840863954694163375L;
 
+                @SuppressWarnings("resource")
                 @Override
                 protected File load()
                 {
@@ -707,10 +711,11 @@ public class ProjectTagSetsPanel
         }
     }
 
-    private class TagSelectionForm
+    public class TagSelectionForm
         extends Form<SelectionModel>
     {
         private static final long serialVersionUID = -1L;
+        @SuppressWarnings("unused")
         private Tag selectedTag;
         private ListChoice<Tag> tags;
 

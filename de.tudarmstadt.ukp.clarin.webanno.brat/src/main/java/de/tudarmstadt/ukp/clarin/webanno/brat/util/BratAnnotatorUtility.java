@@ -19,29 +19,19 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.util;
 
 import static org.uimafit.util.JCasUtil.select;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.uima.UIMAException;
-import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.TypeSystem;
-import org.apache.uima.cas.impl.CASCompleteSerializer;
-import org.apache.uima.cas.impl.CASImpl;
-import org.apache.uima.cas.impl.Serialization;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.uimafit.factory.JCasFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;

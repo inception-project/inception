@@ -190,7 +190,7 @@ public class CorrectionPage
             {
                 try {
                     bratAnnotatorModel = aBratAnnotatorModel;
-                    CurationBuilder builder = new CurationBuilder(repository, annotationService);
+                    CurationBuilder builder = new CurationBuilder(repository);
                     curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                     setCurationSegmentBeginEnd();
                     curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
@@ -460,7 +460,7 @@ public class CorrectionPage
                         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                        CurationBuilder builder = new CurationBuilder(repository, annotationService);
+                        CurationBuilder builder = new CurationBuilder(repository);
                         curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                         setCurationSegmentBeginEnd();
                         curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
@@ -683,8 +683,7 @@ public class CorrectionPage
                             bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                             bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                            CurationBuilder builder = new CurationBuilder(repository,
-                                    annotationService);
+                            CurationBuilder builder = new CurationBuilder(repository      );
                             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                             setCurationSegmentBeginEnd();
                             curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
@@ -745,8 +744,7 @@ public class CorrectionPage
                             bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                             bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                            CurationBuilder builder = new CurationBuilder(repository,
-                                    annotationService);
+                            CurationBuilder builder = new CurationBuilder(repository);
 
                             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                             setCurationSegmentBeginEnd();
@@ -807,8 +805,7 @@ public class CorrectionPage
                             bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                             bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                            CurationBuilder builder = new CurationBuilder(repository,
-                                    annotationService);
+                            CurationBuilder builder = new CurationBuilder(repository);
                             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                             setCurationSegmentBeginEnd();
                             curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
@@ -867,8 +864,7 @@ public class CorrectionPage
                             bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                             bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                            CurationBuilder builder = new CurationBuilder(repository,
-                                    annotationService);
+                            CurationBuilder builder = new CurationBuilder(repository);
                             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                             setCurationSegmentBeginEnd();
                             curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
@@ -937,7 +933,7 @@ public class CorrectionPage
                 .getAuthentication().getName());
         List<AnnotationDocument> annotationDocuments = repository
                 .listAnnotationDocuments(bratAnnotatorModel.getDocument());
-        CurationBuilder cb = new CurationBuilder(repository, annotationService);
+        CurationBuilder cb = new CurationBuilder(repository);
         AnnotationDocument randomAnnotationDocument = null;
         Map<String, JCas> jCases = cb.listJcasesforCuration(annotationDocuments,
                 randomAnnotationDocument);

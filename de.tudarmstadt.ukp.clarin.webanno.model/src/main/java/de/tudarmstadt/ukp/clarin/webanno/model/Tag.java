@@ -27,7 +27,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
 /**
  * A persistence object for a Tag
  * @author Seid Muhie Yimam

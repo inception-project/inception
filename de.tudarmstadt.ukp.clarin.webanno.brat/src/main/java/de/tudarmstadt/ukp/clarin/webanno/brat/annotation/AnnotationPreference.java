@@ -31,7 +31,6 @@ public class AnnotationPreference
     // Id of annotation layers, to be stored in the properties file comma separated: 12, 34,....
     private ArrayList<Long> annotationLayers;
     private int windowSize = 10;
-    private boolean displayLemmaSelected;
     private boolean scrollPage;
 
     public ArrayList<Long> getAnnotationLayers()

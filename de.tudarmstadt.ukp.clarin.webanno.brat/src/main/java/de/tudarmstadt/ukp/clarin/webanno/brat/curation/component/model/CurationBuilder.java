@@ -28,15 +28,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.jcas.JCas;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
@@ -72,16 +69,12 @@ public class CurationBuilder
 {
 
     private final RepositoryService repository;
-    private final AnnotationService annotationService;
-
-    private final static Log LOG = LogFactory.getLog(CurationPanel.class);
     int sentenceNumber;
     int begin, end;
 
-    public CurationBuilder(RepositoryService repository, AnnotationService aAnnotationService)
+    public CurationBuilder(RepositoryService repository)
     {
         this.repository = repository;
-        this.annotationService = aAnnotationService;
     }
 
     public CurationContainer buildCurationContainer(BratAnnotatorModel aBratAnnotatorModel)

@@ -163,7 +163,6 @@ public class TcfWriter
      * @param aJCas
      * @param aTextCorpus
      */
-    @SuppressWarnings("unchecked")
     public static void writeToTcf(JCas aJCas, TextCorpusStored aTextCorpus)
     {
         Map<Integer, eu.clarin.weblicht.wlfxb.tc.api.Token> tokensBeginPositionMap = new HashMap<Integer, eu.clarin.weblicht.wlfxb.tc.api.Token>();

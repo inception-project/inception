@@ -313,6 +313,7 @@ public interface RepositoryService
      * @param user
      *            the {@link User } who annotates the document.
      */
+    @SuppressWarnings("rawtypes")
     File exportAnnotationDocument(SourceDocument document, String user, Class writer,
             String fileName, Mode mode)
         throws FileNotFoundException, UIMAException, IOException, ClassNotFoundException;
@@ -683,6 +684,7 @@ public interface RepositoryService
      * @throws IOException
      * @throws ClassNotFoundException
      */
+    @SuppressWarnings("rawtypes")
     Map<String, Class> getReadableFormats()
         throws IOException, ClassNotFoundException;
 
@@ -713,6 +715,7 @@ public interface RepositoryService
      * @throws IOException
      * @throws ClassNotFoundException
      */
+    @SuppressWarnings("rawtypes")
     Map<String, Class> getWritableFormats()
         throws IOException, ClassNotFoundException;
 
@@ -793,6 +796,7 @@ public interface RepositoryService
     /**
      * Get CAS object for the first time, from the source document using the provided reader
      */
+    @SuppressWarnings("rawtypes")
     JCas getJCasFromFile(File file, Class reader)
         throws UIMAException, IOException;
 }

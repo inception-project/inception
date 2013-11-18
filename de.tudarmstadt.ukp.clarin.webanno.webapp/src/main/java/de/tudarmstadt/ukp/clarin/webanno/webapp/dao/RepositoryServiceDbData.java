@@ -470,6 +470,7 @@ public class RepositoryServiceDbData
      * Writer class used.
      */
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     @Transactional
     public File exportAnnotationDocument(SourceDocument aDocument, String aUser, Class aWriter,
@@ -662,7 +663,6 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    @SuppressWarnings("unchecked")
     public List<ProjectPermission> listProjectPermisionLevel(User aUser, Project aProject)
     {
         return entityManager
@@ -1167,7 +1167,7 @@ public class RepositoryServiceDbData
         FileUtils
                 .forceDeleteOnExit(new File(propertiesPath, annotationPreferencePropertiesFileName));
         FileUtils.forceMkdir(new File(propertiesPath));
-        property.save(new FileOutputStream(new File(propertiesPath,
+        property.store(new FileOutputStream(new File(propertiesPath,
                 annotationPreferencePropertiesFileName)), null);
 
         createLog(aProject, aUsername).info(
@@ -1292,6 +1292,7 @@ public class RepositoryServiceDbData
         return readableFormat;
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     public Map<String, Class> getReadableFormats()
         throws ClassNotFoundException
@@ -1341,6 +1342,7 @@ public class RepositoryServiceDbData
         return writableFormat;
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public Map<String, Class> getWritableFormats()
         throws ClassNotFoundException

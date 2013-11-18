@@ -37,8 +37,6 @@ import org.apache.uima.UIMAException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.markup.html.form.Button;
-import org.apache.wicket.markup.html.form.upload.FileUpload;
-import org.apache.wicket.markup.html.form.upload.FileUploadField;
 import org.apache.wicket.markup.html.link.DownloadLink;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.LoadableDetachableModel;
@@ -72,9 +70,9 @@ import eu.clarin.weblicht.wlfxb.io.WLFormatException;
 
 /**
  * A Panel used to add Project Guidelines in a selected {@link Project}
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 @SuppressWarnings("deprecation")
 public class ProjectExportPanel
@@ -84,7 +82,6 @@ public class ProjectExportPanel
 
     private static final String META_INF = "/META-INF";
     public static final String EXPORTED_PROJECT = "exportedproject";
-    private static final String SOURCE = "/source";
     private static final String CURATION_AS_SERIALISED_CAS = "/curation_ser/";
     private static final String CURATION = "/curation/";
     private static final String LOG = "/log";
@@ -104,11 +101,6 @@ public class ProjectExportPanel
     @SpringBean(name = "userRepository")
     private UserDao userRepository;
 
-    @SuppressWarnings("unused")
-    private FileUploadField fileUpload;
-    @SuppressWarnings("unused")
-    private FileUpload uploadedFile;
-
     private int progress = 0;
     private ProgressBar Progress;
 
@@ -117,7 +109,6 @@ public class ProjectExportPanel
     String downloadedFile;
     String projectName;
 
-    @SuppressWarnings({ "rawtypes" })
     public ProjectExportPanel(String id, final Model<Project> aProjectModel)
     {
         super(id);
@@ -264,6 +255,7 @@ public class ProjectExportPanel
         {
             private static final long serialVersionUID = 1971929040248482474L;
 
+            @Override
             protected Progression getProgression()
             {
                 return new Progression(progress);
@@ -272,6 +264,7 @@ public class ProjectExportPanel
         {
             private static final long serialVersionUID = -6599620911784164177L;
 
+            @Override
             protected void onFinished(AjaxRequestTarget target)
             {
                 if (!fileName.equals(downloadedFile)) {
@@ -284,7 +277,7 @@ public class ProjectExportPanel
         Progress.add(exportProject);
         add(Progress);
 
-        add(new AjaxLink("exportProject")
+        add(new AjaxLink<Void>("exportProject")
         {
 
             private static final long serialVersionUID = -5758406309688341664L;
@@ -297,6 +290,7 @@ public class ProjectExportPanel
 
                 new Thread()
                 {
+                    @Override
                     public void run()
                     {
                         File file = null;
@@ -378,7 +372,7 @@ public class ProjectExportPanel
 
     /**
      * Copy, if exists, curation documents to a folder that will be exported as Zip file
-     * 
+     *
      * @param aProject
      *            The {@link Project}
      * @param aCurationDocumentExist
@@ -442,24 +436,6 @@ public class ProjectExportPanel
     }
 
     /**
-     * Copy source documents from the file system of this project to the export folder
-     */
-    private void exportSourceDocuments(Project aProject, File aCopyDir)
-        throws IOException
-    {
-        File sourceDocumentDir = new File(aCopyDir + SOURCE);
-        FileUtils.forceMkdir(sourceDocumentDir);
-        // Get all the source documents from the project
-        List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = projectRepository
-                .listSourceDocuments(aProject);
-
-        for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
-            FileUtils.copyFileToDirectory(projectRepository.exportSourceDocument(sourceDocument),
-                    sourceDocumentDir);
-        }
-    }
-
-    /**
      * Copy Project logs from the file system of this project to the export folder
      */
     private void exportProjectLog(Project aProject, File aCopyDir)
@@ -507,7 +483,7 @@ public class ProjectExportPanel
     /**
      * Copy annotation document as Serialized CAS from the file system of this project to the export
      * folder
-     * 
+     *
      * @throws ClassNotFoundException
      * @throws WLFormatException
      * @throws UIMAException

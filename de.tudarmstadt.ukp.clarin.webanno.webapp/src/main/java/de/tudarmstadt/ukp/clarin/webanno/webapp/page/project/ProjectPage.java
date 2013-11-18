@@ -227,10 +227,11 @@ public class ProjectPage
     private class ImportProjectForm
         extends Form<Void>
     {
-
+        private static final long serialVersionUID = -6361609153142402692L;
         private FileUploadField fileUpload;
         private FileUpload uploadedFile;
 
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         public ImportProjectForm(String id)
         {
             super(id);
@@ -450,7 +451,7 @@ public class ProjectPage
                 }
             });
 
-            add(allTabs = new AjaxTabbedPanel("tabs", tabs));
+            add(allTabs = new AjaxTabbedPanel<ITab>("tabs", tabs));
             ProjectDetailForm.this.setMultiPart(true);
         }
 

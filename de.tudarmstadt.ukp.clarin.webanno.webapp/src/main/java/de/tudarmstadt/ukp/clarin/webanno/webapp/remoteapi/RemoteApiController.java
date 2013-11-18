@@ -144,7 +144,7 @@ public class RemoteApiController
         aFile.transferTo(zimpFile);
         ZipFile zip = new ZipFile(zimpFile);
 
-        for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
+        for (Enumeration<?> zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
             //
             // Get ZipEntry which is a file or a directory
             //
@@ -196,6 +196,5 @@ public class RemoteApiController
         projectRepository.createSourceDocument(document, user);
         // Import source document to the project repository folder
         projectRepository.uploadSourceDocument(zipStream, document, user);
-        ProjectUtil g;
     }
 }

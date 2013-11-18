@@ -383,8 +383,6 @@ public class SpanAnnotationModalWindowPage
         if (aBratAnnotatorModel.getMode().equals(Mode.ANNOTATION)
                 || aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)
                 || aBratAnnotatorModel.getMode().equals(Mode.CORRECTION_MERGE)) {
-            BratAjaxCasController controller = new BratAjaxCasController(repository,
-                    annotationService);
 
             return repository.readJCas(aBratAnnotatorModel.getDocument(),
                     aBratAnnotatorModel.getProject(), aBratAnnotatorModel.getUser());
@@ -394,14 +392,13 @@ public class SpanAnnotationModalWindowPage
         }
     }
 
-    static private class SelectionModel
+    public class SelectionModel
         implements Serializable
-    {
-        private static final long serialVersionUID = -1L;
-
-        private TagSet tagSets;
-        private Tag tags;
-        private String selectedText;
+        {
+        private static final long serialVersionUID = -4178958678920895292L;
+        public TagSet tagSets;
+        public Tag tags;
+        public String selectedText;
     }
 
     public SpanAnnotationModalWindowPage(ModalWindow modalWindow,

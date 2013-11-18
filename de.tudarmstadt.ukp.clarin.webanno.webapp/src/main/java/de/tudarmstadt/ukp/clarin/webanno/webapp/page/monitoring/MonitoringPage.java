@@ -167,7 +167,7 @@ public class MonitoringPage
 
         List<List<String>> userAnnotationDocumentLists = new ArrayList<List<String>>();
         List<SourceDocument> dc = projectRepository.listSourceDocuments(project);
-        for (User user : projectRepository.listProjectUsersWithPermissions(project)) {
+        for (int j = 0; j < projectRepository.listProjectUsersWithPermissions(project).size(); j++) {
             List<String> userAnnotationDocument = new ArrayList<String>();
             userAnnotationDocument.add("");
             for (int i = 0; i < dc.size(); i++) {
@@ -550,6 +550,7 @@ public class MonitoringPage
         private static final long serialVersionUID = -1L;
 
         private Project project;
+        @SuppressWarnings("unused")
         private AnnotationType annotationTypes;
     }
 
@@ -643,7 +644,7 @@ public class MonitoringPage
                 finishedDocumentLists.put(user, finishedDocuments);
             }
 
-            results =  computeKappa(project, users, adapter, finishedDocumentLists);
+            results = computeKappa(project, users, adapter, finishedDocumentLists);
         }
 
         // Users with some annotations of this type
@@ -693,8 +694,8 @@ public class MonitoringPage
      * The result is per {@link AnnotationType} for all {@link Tag}s
      */
 
-    private  double[][] computeKappa(Project project, List<User> users,
-            TypeAdapter adapter, Map<User, List<SourceDocument>> finishedDocumentLists)
+    private double[][] computeKappa(Project project, List<User> users, TypeAdapter adapter,
+            Map<User, List<SourceDocument>> finishedDocumentLists)
     {
         double[][] results = new double[users.size()][users.size()];
         TwoPairedKappa twoPairedKappa = new TwoPairedKappa();

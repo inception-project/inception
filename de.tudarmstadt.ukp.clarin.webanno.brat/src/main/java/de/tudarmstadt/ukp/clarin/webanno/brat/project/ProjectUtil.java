@@ -382,6 +382,7 @@ public class ProjectUtil
      * Check if the zip file is webanno compatible
      *
      */
+    @SuppressWarnings({ "resource", "rawtypes" })
     public static boolean isZipValidWebanno(File aZipFile)
         throws ZipException, IOException
     {
@@ -582,6 +583,7 @@ public class ProjectUtil
     /**
      * copy source document files from the exported source documents
      */
+    @SuppressWarnings("rawtypes")
     public static void createSourceDocumentContent(ZipFile zip, Project aProject,
             RepositoryService aRepository)
         throws IOException
@@ -601,6 +603,7 @@ public class ProjectUtil
     /**
      * copy annotation documents (serialized CASs) from the exported project
      */
+    @SuppressWarnings("rawtypes")
     public static void createAnnotationDocumentContent(ZipFile zip, Project aProject,
             RepositoryService aRepository)
         throws IOException
@@ -627,6 +630,7 @@ public class ProjectUtil
     /**
      * Copy curation documents from the exported project
      */
+    @SuppressWarnings("rawtypes")
     public static void createCurationDocumentContent(ZipFile zip, Project aProject,
             RepositoryService aRepository)
         throws IOException
@@ -653,6 +657,7 @@ public class ProjectUtil
     /**
      * copy guidelines from the exported project
      */
+    @SuppressWarnings("rawtypes")
     public static void createProjectGuideline(ZipFile zip, Project aProject,
             RepositoryService aRepository)
         throws IOException
@@ -671,6 +676,7 @@ public class ProjectUtil
     /**
      * copy Project META_INF from the exported project
      */
+    @SuppressWarnings("rawtypes")
     public static void createProjectMetaInf(ZipFile zip, Project aProject,
             RepositoryService aRepository)
         throws IOException
@@ -691,6 +697,7 @@ public class ProjectUtil
     /**
      * copy project log files from the exported project
      */
+    @SuppressWarnings("rawtypes")
     public static void createProjectLog(ZipFile zip, Project aProject, RepositoryService aRepository)
         throws IOException
     {

@@ -111,7 +111,6 @@ public class OpenModalWindowPanel
         extends Form<SelectionModel>
     {
         private static final long serialVersionUID = -1L;
-        @SuppressWarnings({ "unchecked" })
         private ListChoice<Project> projects;
 
         public ProjectSelectionForm(String id)
@@ -213,8 +212,9 @@ public class OpenModalWindowPanel
     public class StaticImage
         extends WebComponent
     {
+        private static final long serialVersionUID = 3648088737917246374L;
 
-        public StaticImage(String id, IModel model)
+        public StaticImage(String id, IModel<?> model)
         {
             super(id, model);
         }
@@ -341,6 +341,8 @@ public class OpenModalWindowPanel
     private class ButtonsForm
         extends Form<Void>
     {
+        private static final long serialVersionUID = -1879323194964417564L;
+
         public ButtonsForm(String id, final ModalWindow modalWindow)
         {
             super(id);

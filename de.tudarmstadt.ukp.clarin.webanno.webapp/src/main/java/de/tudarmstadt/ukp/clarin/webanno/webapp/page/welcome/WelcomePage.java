@@ -38,7 +38,6 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.CurationPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.login.LoginPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.monitoring.MonitoringPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.project.ProjectPage;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.security.LogoutPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.security.page.ManageUsersPage;
 
 /**
@@ -56,18 +55,18 @@ public class WelcomePage
     @SpringBean(name = "documentRepository")
     private RepositoryService projectRepository;
 
-    AjaxLink projectSettings;
-    AjaxLink curation;
-    AjaxLink annotation;
-    AjaxLink monitoring;
-    AjaxLink usremanagement;
-    AjaxLink crowdSource;
-    AjaxLink correction;
+    AjaxLink<Void> projectSettings;
+    AjaxLink<Void> curation;
+    AjaxLink<Void> annotation;
+    AjaxLink<Void> monitoring;
+    AjaxLink<Void> usremanagement;
+    AjaxLink<Void> crowdSource;
+    AjaxLink<Void> correction;
 
     public WelcomePage()
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-       
+
         // if a user is logged recently, session will not expire,
         // This causes a problem, if the data base is re-created while user's session not expired OR
         // the user is deleted while the session is not expired

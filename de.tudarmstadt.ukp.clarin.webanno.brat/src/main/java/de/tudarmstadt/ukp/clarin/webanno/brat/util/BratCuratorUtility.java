@@ -313,6 +313,7 @@ public class BratCuratorUtility
         return collData;
     }
 
+    @SuppressWarnings("unchecked")
     private static void getEntityTypes(GetDocumentResponse response,
             Map<Integer, AnnotationSelection> annotationSelectionByAddress, int numUsers,
             Map<String, Map<String, Object>> entityTypes,

@@ -25,8 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
@@ -56,7 +54,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 public class ChainAdapter
     implements TypeAdapter
 {
-    private Log LOG = LogFactory.getLog(getClass());
 
     public static final String EXPLETIVE = "expletive";
 

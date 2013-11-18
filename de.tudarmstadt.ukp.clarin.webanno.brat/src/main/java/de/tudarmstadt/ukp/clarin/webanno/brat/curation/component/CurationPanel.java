@@ -24,8 +24,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
@@ -64,8 +62,6 @@ public class CurationPanel
     extends Panel
 {
     private static final long serialVersionUID = -5128648754044819314L;
-
-    private final static Log LOG = LogFactory.getLog(CurationPanel.class);
 
     @SpringBean(name = "jsonConverter")
     private MappingJacksonHttpMessageConverter jsonConverter;

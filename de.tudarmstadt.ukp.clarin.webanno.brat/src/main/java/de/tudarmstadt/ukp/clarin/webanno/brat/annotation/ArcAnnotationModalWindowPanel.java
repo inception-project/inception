@@ -379,8 +379,6 @@ public class ArcAnnotationModalWindowPanel
         if (aBratAnnotatorModel.getMode().equals(Mode.ANNOTATION)
                 || aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)
                 || aBratAnnotatorModel.getMode().equals(Mode.CORRECTION_MERGE)) {
-            BratAjaxCasController controller = new BratAjaxCasController(repository,
-                    annotationService);
 
             return repository.readJCas(aBratAnnotatorModel.getDocument(),
                     aBratAnnotatorModel.getProject(), aBratAnnotatorModel.getUser());
@@ -390,10 +388,12 @@ public class ArcAnnotationModalWindowPanel
         }
     }
 
+    @SuppressWarnings("unused")
     static private class SelectionModel
         implements Serializable
     {
         private static final long serialVersionUID = -1L;
+
 
         private List<TagSet> tagSets;
         private List<Tag> tags;

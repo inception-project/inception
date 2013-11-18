@@ -23,8 +23,8 @@ import java.util.Properties;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
-import org.apache.wicket.behavior.SimpleAttributeModifier;
 import org.apache.wicket.feedback.FeedbackMessage;
 import org.apache.wicket.feedback.IFeedbackMessageFilter;
 import org.apache.wicket.markup.html.WebPage;
@@ -69,7 +69,7 @@ public abstract class ApplicationPageBase
         commonInit();
     }
 
-    @SuppressWarnings({ "serial", "rawtypes", "deprecation" })
+    @SuppressWarnings({ "serial" })
     private void commonInit()
     {
         getSession().setLocale(Locale.ENGLISH);
@@ -77,7 +77,7 @@ public abstract class ApplicationPageBase
         logoutPanel = new LogoutPanel("logoutPanel");
         feedbackPanel = new FeedbackPanel("feedbackPanel");
         feedbackPanel.setOutputMarkupId(true);
-        feedbackPanel.add(new SimpleAttributeModifier("class", "error"));
+        feedbackPanel.add(new AttributeModifier("class", "error"));
         feedbackPanel.setFilter(new IFeedbackMessageFilter()
         {
             @Override

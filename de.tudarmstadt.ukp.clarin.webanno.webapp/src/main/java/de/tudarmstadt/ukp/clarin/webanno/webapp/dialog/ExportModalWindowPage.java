@@ -23,8 +23,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
@@ -42,7 +40,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
  * Modal window to Export annotated document
@@ -55,8 +52,6 @@ public class ExportModalWindowPage
 {
     private static final long serialVersionUID = -2102136855109258306L;
 
-    private static final Log LOG = LogFactory.getLog(ExportModalWindowPage.class);
-
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
 
@@ -65,7 +60,6 @@ public class ExportModalWindowPage
     {
         private static final long serialVersionUID = -4104665452144589457L;
 
-        private DownloadLink export;
 
         private ArrayList<String> writeableFormats;
 
@@ -103,7 +97,7 @@ public class ExportModalWindowPage
                 }
             });
 
-            add(export = (DownloadLink) new DownloadLink("export",
+            add(new DownloadLink("export",
                     new LoadableDetachableModel<File>()
                     {
                         private static final long serialVersionUID = 840863954694163375L;
@@ -115,7 +109,6 @@ public class ExportModalWindowPage
 
                             String username = SecurityContextHolder.getContext()
                                     .getAuthentication().getName();
-                            User user = repository.getUser(username);
                             if (bratAnnotatorModel.getDocument() == null) {
                                 error("NO Document is opened yet !");
                             }

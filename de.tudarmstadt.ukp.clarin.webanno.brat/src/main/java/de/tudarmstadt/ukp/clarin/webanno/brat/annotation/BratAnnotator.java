@@ -91,7 +91,7 @@ public class BratAnnotator
     private AnnotationService annotationService;
 
     private String collection = "";
-    private String document = "";
+
 
     String selectedSpan, offsets, selectedSpanType, selectedArcType;
     Integer selectedSpanID, selectedArcId;
@@ -131,7 +131,6 @@ public class BratAnnotator
 
         if (getModelObject().getDocument() != null) {
             collection = "#" + getModelObject().getProject().getName() + "/";
-            document = getModelObject().getDocument().getName();
 
         }
 
