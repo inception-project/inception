@@ -269,10 +269,11 @@ public interface RepositoryService
      * @param annotationDocument
      *            {@link AnnotationDocument} comprises of the the name of the {@link SourceDocument}
      *            , id of {@link SourceDocument}, id of the {@link Project}, and id of {@link User}
+     * @throws IOException
      *
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void createAnnotationDocument(AnnotationDocument annotationDocument);
+    void createAnnotationDocument(AnnotationDocument annotationDocument) throws IOException;
 
     /**
      * Creates an annotation document. The {@link AnnotationDocument} is stored in the
@@ -615,8 +616,9 @@ public interface RepositoryService
      * Create a crowd Project which contains some source document. A crowd project contains source
      * documents from {@link Project}(s), a {@link SourceDocument} belongs at most to one
      * {@link CrowdJob}.
+     * @throws IOException
      */
-    void createCrowdJob(CrowdJob crowdProject);
+    void createCrowdJob(CrowdJob crowdProject) throws IOException;
 
     /**
      * Check if a crowd job already exist or not with its name

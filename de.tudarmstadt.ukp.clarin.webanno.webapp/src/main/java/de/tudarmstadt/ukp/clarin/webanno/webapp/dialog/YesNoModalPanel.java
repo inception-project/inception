@@ -98,7 +98,12 @@ public class YesNoModalPanel
                         // with
                         // out calling
                         // createAnnotationDocument(...)
-                        repository.createAnnotationDocument(annotationDocument);
+                        try {
+                            repository.createAnnotationDocument(annotationDocument);
+                        }
+                        catch (IOException e) {
+                           error("Unable to get the LOG file");
+                        }
 
                     }
                     else {

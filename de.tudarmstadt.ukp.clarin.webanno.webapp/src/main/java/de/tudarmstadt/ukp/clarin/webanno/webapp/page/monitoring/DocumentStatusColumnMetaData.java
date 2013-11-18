@@ -89,6 +89,7 @@ public class DocumentStatusColumnMetaData
     public void populateItem(final Item<ICellPopulator<List<String>>> aCellItem,
             final String componentId, final IModel<List<String>> rowModel)
     {
+
         int rowNumber = aCellItem.getIndex();
         aCellItem.setOutputMarkupId(true);
 
@@ -186,7 +187,12 @@ public class DocumentStatusColumnMetaData
                 annotationDocument.setProject(project);
                 annotationDocument.setUser(user.getUsername());
                 annotationDocument.setState(state);
-                projectRepositoryService.createAnnotationDocument(annotationDocument);
+                try {
+                    projectRepositoryService.createAnnotationDocument(annotationDocument);
+                }
+                catch (IOException e) {
+                    LOG.info("Unable to get the LOG file");
+                 }
             }
 
             aCellItem.add(new EmbeddableImage(componentId, new ContextRelativeResource(
@@ -240,7 +246,12 @@ public class DocumentStatusColumnMetaData
                         annotationDocument.setUser(user.getUsername());
                         annotationDocument.setState(AnnotationDocumentStateTransition
                                 .transition(AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
-                        projectRepositoryService.createAnnotationDocument(annotationDocument);
+                        try {
+                            projectRepositoryService.createAnnotationDocument(annotationDocument);
+                        }
+                        catch (IOException e) {
+                            LOG.info("Unable to get the LOG file");
+                        }
 
                     }
                     aTarget.add(aCellItem);
@@ -295,7 +306,12 @@ public class DocumentStatusColumnMetaData
                 aSourceDocument, aUser);
         annotationDocument.setState(AnnotationDocumentStateTransition
                 .transition(aAnnotationDocumentStateTransition));
-        projectRepositoryService.createAnnotationDocument(annotationDocument);
+        try {
+            projectRepositoryService.createAnnotationDocument(annotationDocument);
+        }
+        catch (IOException e) {
+            LOG.info("Unable to get the LOG file");
+        }
 
     }
 

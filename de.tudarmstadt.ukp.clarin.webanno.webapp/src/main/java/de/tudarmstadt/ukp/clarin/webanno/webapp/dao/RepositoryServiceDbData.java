@@ -184,6 +184,7 @@ public class RepositoryServiceDbData
     @Override
     @Transactional
     public void createAnnotationDocument(AnnotationDocument aAnnotationDocument)
+        throws IOException
     {
         if (aAnnotationDocument.getId() == 0) {
             entityManager.persist(aAnnotationDocument);
@@ -191,6 +192,15 @@ public class RepositoryServiceDbData
         else {
             entityManager.merge(aAnnotationDocument);
         }
+
+        createLog(aAnnotationDocument.getProject(), aAnnotationDocument.getUser()).info(
+                " User [" + aAnnotationDocument.getUser()
+                        + "] creates annotation document for source document ["
+                        + aAnnotationDocument.getDocument().getId() + "] in project ["
+                        + aAnnotationDocument.getProject().getId() + "] with id ["
+                        + aAnnotationDocument.getId() + "]");
+        createLog(aAnnotationDocument.getProject(), aAnnotationDocument.getUser())
+                .removeAllAppenders();
     }
 
     /**
@@ -252,6 +262,7 @@ public class RepositoryServiceDbData
     @Override
     @Transactional
     public void createCrowdJob(CrowdJob aCrowdJob)
+        throws IOException
     {
         if (aCrowdJob.getId() == 0) {
             entityManager.persist(aCrowdJob);
@@ -259,6 +270,11 @@ public class RepositoryServiceDbData
         else {
             entityManager.merge(aCrowdJob);
         }
+
+        createLog(aCrowdJob.getProject(), "crowd_user").info(
+                " Created  crowd job from project [" + aCrowdJob.getProject() + "] with ID ["
+                        + aCrowdJob.getId() + "]");
+        createLog(aCrowdJob.getProject(), "crowd_user").removeAllAppenders();
     }
 
     @Override
@@ -528,14 +544,14 @@ public class RepositoryServiceDbData
                 BratAjaxCasUtil.updateCasWithTagSet(cas, Dependency.class.getName(),
                         tagSet.getName());
             }
-          /*  else if (annotationType.getName().equals(AnnotationTypeConstant.COREFRELTYPE)) {
-                BratAjaxCasUtil.updateCasWithTagSet(cas, CoreferenceLink.class.getName(),
-                        tagSet.getName());
-            }
-            else if (annotationType.getName().equals(AnnotationTypeConstant.COREFERENCE)) {
-                BratAjaxCasUtil.updateCasWithTagSet(cas, CoreferenceChain.class.getName(),
-                        tagSet.getName());
-            }*/
+            /*
+             * else if (annotationType.getName().equals(AnnotationTypeConstant.COREFRELTYPE)) {
+             * BratAjaxCasUtil.updateCasWithTagSet(cas, CoreferenceLink.class.getName(),
+             * tagSet.getName()); } else if
+             * (annotationType.getName().equals(AnnotationTypeConstant.COREFERENCE)) {
+             * BratAjaxCasUtil.updateCasWithTagSet(cas, CoreferenceChain.class.getName(),
+             * tagSet.getName()); }
+             */
         }
 
         runPipeline(cas, writer);
@@ -1605,45 +1621,40 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public  void upgradeCasAndSave(SourceDocument aDocument
-            , Mode aMode)
+    public void upgradeCasAndSave(SourceDocument aDocument, Mode aMode)
     {
-        String username = SecurityContextHolder.getContext().getAuthentication()
-                .getName();
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
         User user = getUser(username);
-        if(existsAnnotationDocument(aDocument, user)){
-        AnnotationDocument annotationDocument = getAnnotationDocument(aDocument, user);
-        try {
-            if (aMode.equals(Mode.ANNOTATION) || aMode.equals(Mode.CORRECTION)) {
-                CAS cas = getAnnotationDocumentContent(
-                        annotationDocument).getCas();
-                upgrade(cas);
-                createAnnotationDocumentContent(cas.getJCas(),
-                        annotationDocument.getDocument(), user);
+        if (existsAnnotationDocument(aDocument, user)) {
+            AnnotationDocument annotationDocument = getAnnotationDocument(aDocument, user);
+            try {
+                if (aMode.equals(Mode.ANNOTATION) || aMode.equals(Mode.CORRECTION)) {
+                    CAS cas = getAnnotationDocumentContent(annotationDocument).getCas();
+                    upgrade(cas);
+                    createAnnotationDocumentContent(cas.getJCas(),
+                            annotationDocument.getDocument(), user);
+                }
+                else {
+                    CAS cas = getCurationDocumentContent(aDocument).getCas();
+                    upgrade(cas);
+                    createCurationDocumentContent(cas.getJCas(), aDocument, user);
+                }
+
             }
-            else {
-                CAS cas = getCurationDocumentContent(
-                        aDocument).getCas();
-                upgrade(cas);
-                createCurationDocumentContent(cas.getJCas(),
-                        aDocument, user);
+            catch (UIMAException e) {
+
             }
+            catch (ClassNotFoundException e) {
 
-        }
-        catch (UIMAException e) {
+            }
+            catch (IOException e) {
 
-        }
-        catch (ClassNotFoundException e) {
-
-        }
-        catch (IOException e) {
-
-        }
-        catch (Exception e) {
-            // no need to catch, it is acceptable that no curation document
-            // exists to be upgraded while there are annotation documents
-        }
+            }
+            catch (Exception e) {
+                // no need to catch, it is acceptable that no curation document
+                // exists to be upgraded while there are annotation documents
+            }
 
         }
     }
@@ -1669,7 +1680,6 @@ public class RepositoryServiceDbData
         Serialization.deserializeCAS(aCas, new ByteArrayInputStream(os2.toByteArray()),
                 oldTypeSystem, null);
     }
-
 
     @Override
     public JCas readJCas(SourceDocument aDocument, Project aProject, User aUser)
@@ -1712,7 +1722,7 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public  JCas createJCas(SourceDocument aDocument, AnnotationDocument aAnnotationDocument,
+    public JCas createJCas(SourceDocument aDocument, AnnotationDocument aAnnotationDocument,
             Project aProject, User aUser)
         throws IOException
     {
@@ -1747,7 +1757,7 @@ public class RepositoryServiceDbData
 
     @Override
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public  JCas getJCasFromFile(File aFile, Class  aReader)
+    public JCas getJCasFromFile(File aFile, Class aReader)
         throws UIMAException, IOException
     {
         CAS cas = JCasFactory.createJCas().getCas();

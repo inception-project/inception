@@ -572,7 +572,12 @@ public class CrowdSourcePage
                         selectedCrowdJob.setName(name);
                         selectedCrowdJob.setProject(selectedProject);
                         selectedCrowdJob.setApiKey(crowdJobDetailForm.getModelObject().apiKey);
-                        repository.createCrowdJob(selectedCrowdJob);
+                        try {
+                            repository.createCrowdJob(selectedCrowdJob);
+                        }
+                        catch (IOException e) {
+                          error("Problem Processing Log file");
+                        }
                         createCrowdJob = false;
                         updateTable();
 
@@ -582,14 +587,24 @@ public class CrowdSourcePage
                         CrowdJob crowdJob = new CrowdJob();
                         crowdJob.setName(name);
                         selectedCrowdJob.setProject(selectedProject);
-                        repository.createCrowdJob(crowdJob);
+                        try {
+                            repository.createCrowdJob(crowdJob);
+                        }
+                        catch (IOException e) {
+                            error("Problem Processing Log file");
+                        }
                         selectedCrowdJob = crowdJob;
                         createCrowdJob = false;
                         updateTable();
                     }
                     else {
                         selectedCrowdJob.setApiKey(crowdJobDetailForm.getModelObject().apiKey);
-                        repository.createCrowdJob(selectedCrowdJob);
+                        try {
+                            repository.createCrowdJob(selectedCrowdJob);
+                        }
+                        catch (IOException e) {
+                            error("Problem Processing Log file");
+                        }
                         error("Task [" + name + " ] already created!");
                     }
                 }
@@ -667,7 +682,12 @@ public class CrowdSourcePage
                     sourceDocuments
                             .removeAll(CrowdProjectDetailForm.this.getModelObject().documents);
                     selectedCrowdJob.setDocuments(new HashSet<SourceDocument>(sourceDocuments));
-                    repository.createCrowdJob(selectedCrowdJob);
+                    try {
+                        repository.createCrowdJob(selectedCrowdJob);
+                    }
+                    catch (IOException e) {
+                        error("Problem Processing Log file");
+                    }
                     documents.removeAll(CrowdProjectDetailForm.this.getModelObject().documents);
                     crowdDocumentListForm.setModelObject(new SelectionModel());
                     updateTable();
@@ -694,7 +714,12 @@ public class CrowdSourcePage
                     goldSourceDocuments
                             .removeAll(CrowdProjectDetailForm.this.getModelObject().goldDocuments);
                     selectedCrowdJob.setGoldDocuments(new HashSet<SourceDocument>(goldSourceDocuments));
-                    repository.createCrowdJob(selectedCrowdJob);
+                    try {
+                        repository.createCrowdJob(selectedCrowdJob);
+                    }
+                    catch (IOException e) {
+                        error("Problem Processing Log file");
+                    }
                     goldDocuments.removeAll(CrowdProjectDetailForm.this.getModelObject().goldDocuments);
                     goldDocumentListForm.setModelObject(new SelectionModel());
 
@@ -957,7 +982,12 @@ public class CrowdSourcePage
 
                     String status = namedEntityTaskManager.getStatusString(id1,id2);
                     selectedCrowdJob.setStatus(status);
-                    repository.createCrowdJob(selectedCrowdJob);
+                    try {
+                        repository.createCrowdJob(selectedCrowdJob);
+                    }
+                    catch (IOException e) {
+                        error("Problem Processing Log file");
+                    }
                 }
 
                 @Override
@@ -1100,7 +1130,12 @@ public class CrowdSourcePage
                         Set<SourceDocument> existingDocuments = selectedCrowdJob.getDocuments();
                         sourceDocuments.addAll(new ArrayList<SourceDocument>(existingDocuments));
                         selectedCrowdJob.setDocuments(new HashSet<SourceDocument>(sourceDocuments));
-                        repository.createCrowdJob(selectedCrowdJob);
+                        try {
+                            repository.createCrowdJob(selectedCrowdJob);
+                        }
+                        catch (IOException e) {
+                            error("Problem Processing Log file");
+                        }
                     }
                     CrowdDocumentListForm.this.setVisible(false);
                     updateTable();
@@ -1196,7 +1231,12 @@ public class CrowdSourcePage
                     Set<SourceDocument> oldDocuments = selectedCrowdJob.getGoldDocuments();
                     sourceDocuments.addAll(new ArrayList<SourceDocument>(oldDocuments));
                     selectedCrowdJob.setGoldDocuments(new HashSet<SourceDocument>(sourceDocuments));
-                    repository.createCrowdJob(selectedCrowdJob);
+                    try {
+                        repository.createCrowdJob(selectedCrowdJob);
+                    }
+                    catch (IOException e) {
+                        error("Problem Processing Log file");
+                    }
                 }
                 GoldDocumentListForm.this.setVisible(false);
             }
