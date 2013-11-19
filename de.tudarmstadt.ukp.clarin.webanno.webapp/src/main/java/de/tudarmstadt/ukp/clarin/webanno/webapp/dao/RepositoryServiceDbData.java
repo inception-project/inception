@@ -743,7 +743,8 @@ public class RepositoryServiceDbData
                 + aFileName)));
 
         createLog(aProject, aUsername).info(
-                " Created Guideline file[ "+aFileName+ "] for Project [" + aProject.getName() + "] with ID [" + aProject.getId() + "]");
+                " Created Guideline file[ " + aFileName + "] for Project [" + aProject.getName()
+                        + "] with ID [" + aProject.getId() + "]");
         createLog(aProject, aUsername).removeAllAppenders();
     }
 
@@ -1553,12 +1554,6 @@ public class RepositoryServiceDbData
                     }
                 }
             }
-
-            // update timestamp now
-            AnnotationDocument annotationDocument = getAnnotationDocument(aDocument, aUser);
-            annotationDocument.setTimestamp(new Timestamp(new Date().getTime()));
-            createAnnotationDocument(annotationDocument);
-
         }
     }
 
@@ -1636,7 +1631,8 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public void upgradeCasAndSave(SourceDocument aDocument, Mode aMode, String aUsername) throws IOException
+    public void upgradeCasAndSave(SourceDocument aDocument, Mode aMode, String aUsername)
+        throws IOException
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
@@ -1756,6 +1752,7 @@ public class RepositoryServiceDbData
             aAnnotationDocument.setName(aDocument.getName());
             aAnnotationDocument.setUser(aUser.getUsername());
             aAnnotationDocument.setProject(aProject);
+            createAnnotationDocument(aAnnotationDocument);
         }
 
         try {
@@ -1769,7 +1766,6 @@ public class RepositoryServiceDbData
             throw new IOException(e);
         }
 
-        createAnnotationDocument(aAnnotationDocument);
         createAnnotationDocumentContent(jCas, aDocument, aUser);
         return jCas;
     }
@@ -1800,5 +1796,15 @@ public class RepositoryServiceDbData
             pipeline.process(cas.getJCas());
         }
         return jCas;
+    }
+
+    @Override
+    public void updateTimeStamp(AnnotationDocument annotationDocument)
+        throws IOException
+    {
+
+        annotationDocument.setTimestamp(new Timestamp(new Date().getTime()));
+        createAnnotationDocument(annotationDocument);
+
     }
 }

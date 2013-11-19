@@ -63,6 +63,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
@@ -244,6 +245,12 @@ public class SpanAnnotationModalWindowPage
                                     bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
                                     jCas);
 
+                            // update timestamp now
+                            AnnotationDocument annotationDocument = repository
+                                    .getAnnotationDocument(bratAnnotatorModel.getDocument(),
+                                            bratAnnotatorModel.getUser());
+                            repository.updateTimeStamp(annotationDocument);
+
                             if (bratAnnotatorModel.isScrollPage()) {
                                 updateSentenceAddressAndOffsets(jCas, beginOffset);
                             }
@@ -314,6 +321,11 @@ public class SpanAnnotationModalWindowPage
                             repository.updateJCas(bratAnnotatorModel.getMode(),
                                     bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
                                     jCas);
+                            // update timestamp now
+                            AnnotationDocument annotationDocument = repository
+                                    .getAnnotationDocument(bratAnnotatorModel.getDocument(),
+                                            bratAnnotatorModel.getUser());
+                            repository.updateTimeStamp(annotationDocument);
 
                             if (bratAnnotatorModel.isScrollPage()) {
                                 updateSentenceAddressAndOffsets(jCas, beginOffset);
