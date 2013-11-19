@@ -6,4 +6,4 @@
 6	over	_	IN	O	O	5	prep	_	_
 7	the	_	DT	O	O	9	DET	_	_
 8	lazy	_	JJ	O	O	9	amod	_	_
-9	dog	_	NN	O	O	6	pobj	_	_
+9	dog	_	NN	O	O	6	SUBJ	_	_

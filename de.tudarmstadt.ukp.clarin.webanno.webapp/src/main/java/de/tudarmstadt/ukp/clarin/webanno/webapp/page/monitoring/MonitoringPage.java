@@ -644,7 +644,7 @@ public class MonitoringPage
                 finishedDocumentLists.put(user, finishedDocuments);
             }
 
-            results = computeKappa(project, users, adapter, finishedDocumentLists);
+            results = computeKappa(users, adapter, finishedDocumentLists, documentJCases);
         }
 
         // Users with some annotations of this type
@@ -694,8 +694,9 @@ public class MonitoringPage
      * The result is per {@link AnnotationType} for all {@link Tag}s
      */
 
-    private double[][] computeKappa(Project project, List<User> users, TypeAdapter adapter,
-            Map<User, List<SourceDocument>> finishedDocumentLists)
+    public static double[][] computeKappa(List<User> users, TypeAdapter adapter,
+            Map<User, List<SourceDocument>> finishedDocumentLists,
+            Map<SourceDocument, Map<User, JCas>> documentJCases)
     {
         double[][] results = new double[users.size()][users.size()];
         TwoPairedKappa twoPairedKappa = new TwoPairedKappa();

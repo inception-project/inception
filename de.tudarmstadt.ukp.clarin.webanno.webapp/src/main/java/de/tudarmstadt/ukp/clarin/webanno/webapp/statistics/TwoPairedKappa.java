@@ -34,8 +34,10 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.uimafit.util.CasUtil;
 
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.AnnotationStudy;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.IAnnotationStudy;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.TwoRaterKappaAgreement;
@@ -68,7 +70,21 @@ public class TwoPairedKappa
         Set<String> annotationPositions = new HashSet<String>();
         Type type = CasUtil.getType(aJCas.getCas(), aType);
         for (AnnotationFS fs : CasUtil.select(aJCas.getCas(), type)) {
-            annotationPositions.add(docId + getPosition(type, fs));
+            String parenPosition = "";
+            Set<FeatureStructure> featureStructures = CasDiff.traverseFS(fs);
+            for (FeatureStructure subFS : featureStructures) {
+                Type subType = subFS.getType();
+                if (subType.getName().equals(Token.class.getName())) {
+                    continue;
+                }
+                if (subType.getName().equals(type.getName())) {
+                    parenPosition = parenPosition + getPosition(type, subFS);
+                    continue;
+                }
+                parenPosition = parenPosition + getPosition(subType, subFS);
+                annotationPositions.add(docId + getPosition(subType, subFS));
+            }
+            annotationPositions.add(docId + parenPosition);
         }
         return annotationPositions;
     }
@@ -128,8 +144,27 @@ public class TwoPairedKappa
             // update the already initialised EMPTY annotation with actual annotations,
             // when exist
             if (fs.getStringValue(labelFeature) != null) {
-                aUserAnnotations.get(aUser.getUsername()).put(docId + "" + getPosition(type, fs),
-                        getValue(type, fs));
+
+                String parenPosition = "";
+                String parentValue = "";
+                Set<FeatureStructure> featureStructures = CasDiff.traverseFS(fs);
+                for (FeatureStructure subFS : featureStructures) {
+                    Type subType = subFS.getType();
+                    if (subType.getName().equals(Token.class.getName())) {
+                        continue;
+                    }
+                    if (subType.getName().equals(type.getName())) {
+                        parenPosition = parenPosition + getPosition(type, subFS);
+                        parentValue = parentValue + getValue(type, subFS);
+                        continue;
+                    }
+                    parenPosition = parenPosition + getPosition(subType, subFS);
+                    parentValue = parentValue + getValue(subType, subFS);
+                    aUserAnnotations.get(aUser.getUsername()).put(
+                            docId + "" + getPosition(subType, subFS), getValue(type, fs));
+                }
+                aUserAnnotations.get(aUser.getUsername()).put(docId + "" + parenPosition,
+                        parentValue);
             }
         }
         // return the updated annotations
