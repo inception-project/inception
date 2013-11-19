@@ -130,7 +130,16 @@ public class SpanAnnotationModalWindowPage
 
             if (selectedSpanId != -1) {
                 tagSetsModel = new Model<TagSet>(selectedtTagSet);
-                tagsModel = new Model<String>(selectedSpanType);
+                tagSetsModel = new Model<TagSet>(selectedtTagSet);
+                Tag tag;
+                try {
+                    tag = annotationService.getTag(TypeUtil.getLabel(selectedSpanType),
+                            selectedtTagSet);
+                    tagsModel = new Model<String>(tag.getName());
+                }
+                catch (Exception e) {// It is a tag which is not in the tag list.
+                    tagsModel = new Model<String>("");
+                }
             }
             else if (bratAnnotatorModel.getRememberedSpanTagSet() != null
                     && conatinsTagSet(bratAnnotatorModel.getAnnotationLayers(),
@@ -239,8 +248,8 @@ public class SpanAnnotationModalWindowPage
                                 annotationType = TypeUtil.getQualifiedLabel(selectedTag);
                             }
 
-                            controller.createSpanAnnotation(jCas, beginOffset, endOffset, annotationType, null,
-                                    null);
+                            controller.createSpanAnnotation(jCas, beginOffset, endOffset,
+                                    annotationType, null, null);
                             repository.updateJCas(bratAnnotatorModel.getMode(),
                                     bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
                                     jCas);
@@ -406,7 +415,7 @@ public class SpanAnnotationModalWindowPage
 
     public class SelectionModel
         implements Serializable
-        {
+    {
         private static final long serialVersionUID = -4178958678920895292L;
         public TagSet tagSets;
         public Tag tags;

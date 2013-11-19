@@ -139,9 +139,29 @@ public class ArcAnnotationModalWindowPanel
             }
             else {
                 tagSetsModel = new Model<TagSet>(selectedtTagSet);
-                Tag tag = annotationService.getTag(TypeUtil.getLabel(selectedArcType),
-                        selectedtTagSet);
-                tagsModel = new Model<Tag>(tag);
+                Tag tag;
+                try {
+                    tag = annotationService.getTag(TypeUtil.getLabel(selectedArcType),
+                            selectedtTagSet);
+                    tagsModel = new Model<Tag>(tag);
+                }
+                catch (Exception e) { // It is a tag which is not in the tag list.
+                   // If we allow user to add Tags from the monitor, we can do as follows
+                    // post 1.0.0
+              /*      tag  = new Tag();
+                    tag.setName(TypeUtil.getLabel(selectedArcType));
+                    tag.setTagSet(selectedtTagSet);
+                    try {
+                        annotationService.createTag(tag, bratAnnotatorModel.getUser());
+                    }
+                    catch (IOException e1) {
+                        error(e1.getMessage());
+                    }
+                    tagsModel = new Model<Tag>(tag);*/
+                    // Otherwise just clear the tag and the user select from the existing tag lists
+                    tagsModel = new Model<Tag>(null);
+                }
+
             }
 
             tags = new ComboBox<Tag>("tags", new Model<String>(tagsModel.getObject() == null ? ""
@@ -180,7 +200,8 @@ public class ArcAnnotationModalWindowPanel
                         String annotationType = "";
 
                         if (tags.getModelObject() == null) {
-                            aTarget.appendJavaScript("alert('No Tag is selected!')");
+                            aTarget.add(feedbackPanel);
+                            error("No Tag is selected");
                         }
                         else if (!annotationService.existsTag(tags.getModelObject(),
                                 selectedtTagSet)) {
@@ -269,9 +290,8 @@ public class ArcAnnotationModalWindowPanel
                                 jCas);
 
                         // update timestamp now
-                        AnnotationDocument annotationDocument = repository
-                                .getAnnotationDocument(bratAnnotatorModel.getDocument(),
-                                        bratAnnotatorModel.getUser());
+                        AnnotationDocument annotationDocument = repository.getAnnotationDocument(
+                                bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser());
                         repository.updateTimeStamp(annotationDocument);
 
                         if (bratAnnotatorModel.isScrollPage()) {
@@ -337,9 +357,8 @@ public class ArcAnnotationModalWindowPanel
                                 bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
                                 jCas);
                         // update timestamp now
-                        AnnotationDocument annotationDocument = repository
-                                .getAnnotationDocument(bratAnnotatorModel.getDocument(),
-                                        bratAnnotatorModel.getUser());
+                        AnnotationDocument annotationDocument = repository.getAnnotationDocument(
+                                bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser());
                         repository.updateTimeStamp(annotationDocument);
 
                         if (bratAnnotatorModel.isScrollPage()) {
