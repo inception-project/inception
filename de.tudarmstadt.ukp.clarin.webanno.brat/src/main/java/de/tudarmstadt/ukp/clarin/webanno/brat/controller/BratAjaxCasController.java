@@ -332,8 +332,7 @@ public class BratAjaxCasController
 
         if (labelPrefix.equals(AnnotationTypeConstant.DEP_PREFIX)) {
             ArcAdapter.getDependencyAdapter().add(label, aOriginFs, aTargetFs, aJCas,
-                    aBratAnnotatorModel,
-                    aBratAnnotatorModel.getProject().isReverseDependencyDirection());
+                    aBratAnnotatorModel);
         }
         else if (labelPrefix.equals(AnnotationTypeConstant.COREFERENCE_PREFIX)) {
             ChainAdapter.getCoreferenceChainAdapter().add(label, aJCas, aAnnotationOffsetStart,

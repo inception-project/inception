@@ -97,7 +97,6 @@ public class ArcAdapter
      */
     private String arcTokenType;
 
-
     private boolean deletable;
 
     public ArcAdapter(String aLabelPrefix, String aTypeName, String aLabelFeatureName,
@@ -142,8 +141,6 @@ public class ArcAdapter
         Sentence lastSentenceInPage = (Sentence) BratAjaxCasUtil.selectByAddr(aJcas,
                 FeatureStructure.class, lastAddressInPage);
 
-        boolean reverse = aBratAnnotatorModel.getProject().isReverseDependencyDirection();
-
         Type type = getType(aJcas.getCas(), annotationTypeName);
         Feature dependentFeature = type.getFeatureByBaseName(dependentFeatureName);
         Feature governorFeature = type.getFeatureByBaseName(governorFeatureName);
@@ -151,21 +148,21 @@ public class ArcAdapter
         Type spanType = getType(aJcas.getCas(), arcSpanType);
         Feature arcSpanFeature = spanType.getFeatureByBaseName(arcSpanTypeFeatureName);
 
-            for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, firstSentence.getBegin(),
-                    lastSentenceInPage.getEnd())) {
+        for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, firstSentence.getBegin(),
+                lastSentenceInPage.getEnd())) {
 
-                FeatureStructure dependentFs = fs.getFeatureValue(dependentFeature)
-                        .getFeatureValue(arcSpanFeature);
-                FeatureStructure governorFs = fs.getFeatureValue(governorFeature).getFeatureValue(
-                        arcSpanFeature);
+            FeatureStructure dependentFs = fs.getFeatureValue(dependentFeature).getFeatureValue(
+                    arcSpanFeature);
+            FeatureStructure governorFs = fs.getFeatureValue(governorFeature).getFeatureValue(
+                    arcSpanFeature);
 
-                List<Argument> argumentList = getArgument(governorFs, dependentFs, reverse);
+            List<Argument> argumentList = getArgument(governorFs, dependentFs);
 
-                Feature labelFeature = fs.getType().getFeatureByBaseName(labelFeatureName);
+            Feature labelFeature = fs.getType().getFeatureByBaseName(labelFeatureName);
 
-                aResponse.addRelation(new Relation(((FeatureStructureImpl) fs).getAddress(),
-                        labelPrefix + fs.getStringValue(labelFeature), argumentList));
-            }
+            aResponse.addRelation(new Relation(((FeatureStructureImpl) fs).getAddress(),
+                    labelPrefix + fs.getStringValue(labelFeature), argumentList));
+        }
     }
 
     /**
@@ -178,17 +175,9 @@ public class ArcAdapter
      * @throws BratAnnotationException
      */
     public void add(String aLabelValue, AnnotationFS aOriginFs, AnnotationFS aTargetFs, JCas aJCas,
-            BratAnnotatorModel aBratAnnotatorModel, boolean aReverse) throws
-            BratAnnotationException
+            BratAnnotatorModel aBratAnnotatorModel)
+        throws BratAnnotationException
     {
-        AnnotationFS temp;
-        // swap
-        if (aReverse) {
-            temp = aOriginFs;
-            aOriginFs = aTargetFs;
-            aTargetFs = temp;
-        }
-
         Sentence sentence = BratAjaxCasUtil.selectSentenceAt(aJCas,
                 aBratAnnotatorModel.getSentenceBeginOffset(),
                 aBratAnnotatorModel.getSentenceEndOffset());
@@ -199,11 +188,12 @@ public class ArcAdapter
                 Sentence.class,
                 BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(aJCas, sentence.getAddress(),
                         aBratAnnotatorModel.getWindowSize())).getEnd();
-        if(BratAjaxCasUtil.isSameSentence(aJCas, aOriginFs.getBegin(), aTargetFs.getEnd())) {
+        if (BratAjaxCasUtil.isSameSentence(aJCas, aOriginFs.getBegin(), aTargetFs.getEnd())) {
             updateCas(aJCas, beginOffset, endOffset, aOriginFs, aTargetFs, aLabelValue);
         }
-        else{
-            throw new ArcCrossedMultipleSentenceException("Arc Annotation shouldn't cross sentence boundary");
+        else {
+            throw new ArcCrossedMultipleSentenceException(
+                    "Arc Annotation shouldn't cross sentence boundary");
         }
     }
 
@@ -308,10 +298,8 @@ public class ArcAdapter
     public static final ArcAdapter getDependencyAdapter()
     {
         ArcAdapter adapter = new ArcAdapter(AnnotationTypeConstant.DEP_PREFIX,
-                Dependency.class.getName(), "DependencyType",
-                "Dependent",
-                "Governor", Token.class.getName(),
-                "pos", Token.class.getName());
+                Dependency.class.getName(), "DependencyType", "Dependent", "Governor",
+                Token.class.getName(), "pos", Token.class.getName());
         return adapter;
     }
 
@@ -320,17 +308,10 @@ public class ArcAdapter
      *
      * @return
      */
-    private List<Argument> getArgument(FeatureStructure aGovernorFs, FeatureStructure aDependentFs,
-            boolean arevers)
+    private List<Argument> getArgument(FeatureStructure aGovernorFs, FeatureStructure aDependentFs)
     {
-        if (arevers) {
-            return asList(new Argument("Arg1", ((FeatureStructureImpl) aDependentFs).getAddress()),
-                    new Argument("Arg2", ((FeatureStructureImpl) aGovernorFs).getAddress()));
-        }
-        else {
-            return asList(new Argument("Arg1", ((FeatureStructureImpl) aGovernorFs).getAddress()),
-                    new Argument("Arg2", ((FeatureStructureImpl) aDependentFs).getAddress()));
-        }
+        return asList(new Argument("Arg1", ((FeatureStructureImpl) aGovernorFs).getAddress()),
+                new Argument("Arg2", ((FeatureStructureImpl) aDependentFs).getAddress()));
     }
 
     private boolean isDuplicate(AnnotationFS aAnnotationFSOldOrigin,
@@ -359,12 +340,12 @@ public class ArcAdapter
     {
         return labelPrefix;
     }
+
     @Override
     public Type getAnnotationType(CAS cas)
     {
-      return  CasUtil.getType(cas, annotationTypeName);
+        return CasUtil.getType(cas, annotationTypeName);
     }
-
 
     @Override
     public String getAnnotationTypeName()

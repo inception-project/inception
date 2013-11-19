@@ -52,8 +52,6 @@ public class Project
     @Lob
     private String description;
 
-    private boolean reverseDependencyDirection;
-
     @Type(type="de.tudarmstadt.ukp.clarin.webanno.model.ModeType")
     private Mode mode = Mode.ANNOTATION;
 
@@ -91,16 +89,6 @@ public class Project
     public void setDescription(String description)
     {
         this.description = description;
-    }
-
-    public boolean isReverseDependencyDirection()
-    {
-        return reverseDependencyDirection;
-    }
-
-    public void setReverseDependencyDirection(boolean aReverseDependencyDirection)
-    {
-        reverseDependencyDirection = aReverseDependencyDirection;
     }
 
     @Override

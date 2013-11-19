@@ -489,7 +489,6 @@ public class ProjectUtil
         }
         project.setName(projectName);
         project.setDescription(aProject.getDescription());
-        project.setReverseDependencyDirection(aProject.isReverse());
         project.setMode(aProject.getMode());
         aRepository.createProject(project, user);
         return project;

@@ -228,7 +228,6 @@ public class CasToBratJsonTest extends TestCase {
 		bratannotatorModel.setSentenceEndOffset(sentence.getEnd());
 
 		Project project = new Project();
-		project.setReverseDependencyDirection(true);
 		bratannotatorModel.setProject(project);
 		bratannotatorModel.setMode(Mode.ANNOTATION);
 

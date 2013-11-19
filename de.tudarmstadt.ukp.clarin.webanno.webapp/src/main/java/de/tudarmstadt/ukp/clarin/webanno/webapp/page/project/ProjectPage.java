@@ -38,7 +38,6 @@ import org.apache.wicket.extensions.ajax.markup.html.tabs.AjaxTabbedPanel;
 import org.apache.wicket.extensions.markup.html.tabs.AbstractTab;
 import org.apache.wicket.extensions.markup.html.tabs.ITab;
 import org.apache.wicket.markup.html.form.Button;
-import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.ListChoice;
@@ -482,8 +481,7 @@ public class ProjectPage
             add(new TextField<String>("name").setRequired(true));
 
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
-            // Add check box to enable/disable arc directions of dependency parsing
-            add(new CheckBox("reverseDependencyDirection"));
+
             add(projectType = (RadioChoice<Mode>) new RadioChoice<Mode>("mode",
                     Arrays.asList(new Mode[] { Mode.ANNOTATION, Mode.CORRECTION }))
                     .setEnabled(projectDetailForm.getModelObject().getId() == 0));

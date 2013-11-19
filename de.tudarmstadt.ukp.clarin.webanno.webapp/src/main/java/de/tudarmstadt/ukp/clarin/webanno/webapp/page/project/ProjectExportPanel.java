@@ -574,7 +574,6 @@ public class ProjectExportPanel
         de.tudarmstadt.ukp.clarin.webanno.export.model.Project project = new de.tudarmstadt.ukp.clarin.webanno.export.model.Project();
         project.setDescription(aProject.getDescription());
         project.setName(aProject.getName());
-        project.setReverse(aProject.isReverseDependencyDirection());
         project.setMode(aProject.getMode());
 
         List<TagSet> tagsets = new ArrayList<TagSet>();
