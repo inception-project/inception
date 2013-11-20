@@ -104,6 +104,7 @@ public class ProjectExportPanel
 
     private int progress = 0;
     private ProgressBar Progress;
+    AjaxLink<Void> exportProjectLink;
 
     private String username;
     private String fileName;
@@ -268,6 +269,8 @@ public class ProjectExportPanel
             @Override
             protected void onFinished(AjaxRequestTarget target)
             {
+                exportProjectLink.setEnabled(true);
+                target.add(exportProjectLink);
                 if (!fileName.equals(downloadedFile)) {
                     exportProject.initiate(target, fileName);
                     downloadedFile = fileName;
@@ -278,7 +281,7 @@ public class ProjectExportPanel
         Progress.add(exportProject);
         add(Progress);
 
-        add(new AjaxLink<Void>("exportProject")
+        add(exportProjectLink = new AjaxLink<Void>("exportProject")
         {
 
             private static final long serialVersionUID = -5758406309688341664L;
@@ -286,7 +289,7 @@ public class ProjectExportPanel
             @Override
             public void onClick(final AjaxRequestTarget target)
             {
-
+                setEnabled(false);
                 Progress.start(target);
 
                 new Thread()
