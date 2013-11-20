@@ -27,14 +27,14 @@
 							<legend>Projects</legend>
 							<select class="hfill" wicket:id="project" size="29"></select>
 						</fieldset>
-					</form>
+					</form>					
 				</td>
 				<td width="80%">
-					<form wicket:id="monitoringDetailForm" class="hfill">
-						<fieldset class="ui-widget-content ui-corner-all">
-						  <legend>Overall progress</legend>
+					<fieldset class="ui-widget-content ui-corner-all">
+					  <legend wicket:id=overview></legend>
 							<img wicket:id="overallProjectProgressImage" alt="Overall Project Progress"></img>
-						</fieldset>
+					</fieldset>
+					<form wicket:id="monitoringDetailForm" class="hfill">
 						<fieldset class="ui-widget-content ui-corner-all">
 							<legend>Project</legend>
 							<div>

@@ -123,6 +123,7 @@ public class MonitoringPage
     private final Image annotatorsProgressImage;
     private final Image annotatorsProgressPercentageImage;
     private final Image overallProjectProgressImage;
+    private Label overview;
     private DefaultDataTable<?> annotationDocumentStatusTable;
     private DefaultDataTable<?> agreementTable;
     private final Label projectName;
@@ -157,8 +158,13 @@ public class MonitoringPage
         annotatorsProgressPercentageImage.setVisible(false);
 
         overallProjectProgressImage = new NonCachingImage("overallProjectProgressImage");
+        final Map<String, Integer> overallProjectProgress = getOverallProjectProgress();
+        overallProjectProgressImage.setImageResource(createProgressChart(
+                overallProjectProgress, 100, true));
         overallProjectProgressImage.setOutputMarkupPlaceholderTag(true);
-        overallProjectProgressImage.setVisible(false);
+        overallProjectProgressImage.setVisible(true);
+        add(overallProjectProgressImage);
+        add(overview =new Label("overview", "overview of projects"));
 
         add(projectSelectionForm);
         projectName = new Label("projectName", "");
@@ -192,7 +198,7 @@ public class MonitoringPage
         monitoringDetailForm.setVisible(false);
         add(monitoringDetailForm.add(annotatorsProgressImage)
                 .add(annotatorsProgressPercentageImage).add(projectName)
-                .add(annotationDocumentStatusTable).add(overallProjectProgressImage));
+                .add(annotationDocumentStatusTable));
         annotationDocumentStatusTable.setVisible(false);
     }
 
@@ -273,7 +279,6 @@ public class MonitoringPage
 
                     final Map<String, Integer> annotatorsProgress = new TreeMap<String, Integer>();
                     final Map<String, Integer> annotatorsProgressInPercent = new TreeMap<String, Integer>();
-                    final Map<String, Integer> overallProjectProgress = new TreeMap<String, Integer>();
                     final Project project = aNewSelection;
                     List<SourceDocument> documents = projectRepository.listSourceDocuments(project);
 
@@ -287,11 +292,8 @@ public class MonitoringPage
 
                     }
                     projectName.setDefaultModelObject(project.getName());
-
-                    overallProjectProgress.putAll(getOverallProjectProgress());
-                    overallProjectProgressImage.setImageResource(createProgressChart(
-                            overallProjectProgress, 100, true));
-                    overallProjectProgressImage.setVisible(true);
+                    overallProjectProgressImage.setVisible(false);
+                    overview.setVisible(false);
 
                     annotatorsProgressImage.setImageResource(createProgressChart(
                             annotatorsProgress, totalDocuments, false));
@@ -390,12 +392,6 @@ public class MonitoringPage
                             annotatorsProgressPercentageImage.setImageResource(createProgressChart(
                                     annotatorsProgressInPercent, 100, true));
                             aTarget.add(annotatorsProgressPercentageImage.setOutputMarkupId(true));
-
-                            overallProjectProgress.clear();
-                            overallProjectProgress.putAll(getOverallProjectProgress());
-                            overallProjectProgressImage.setImageResource(createProgressChart(
-                                    overallProjectProgress, 100, true));
-                            aTarget.add(overallProjectProgressImage.setOutputMarkupId(true));
 
                             aTarget.add(monitoringDetailForm.setOutputMarkupId(true));
                             updateAgreementTable(aTarget);
