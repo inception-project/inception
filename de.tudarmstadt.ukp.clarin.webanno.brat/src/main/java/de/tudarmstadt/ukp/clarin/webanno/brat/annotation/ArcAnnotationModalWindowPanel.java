@@ -55,7 +55,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
@@ -146,18 +145,14 @@ public class ArcAnnotationModalWindowPanel
                     tagsModel = new Model<Tag>(tag);
                 }
                 catch (Exception e) { // It is a tag which is not in the tag list.
-                   // If we allow user to add Tags from the monitor, we can do as follows
+                    // If we allow user to add Tags from the monitor, we can do as follows
                     // post 1.0.0
-              /*      tag  = new Tag();
-                    tag.setName(TypeUtil.getLabel(selectedArcType));
-                    tag.setTagSet(selectedtTagSet);
-                    try {
-                        annotationService.createTag(tag, bratAnnotatorModel.getUser());
-                    }
-                    catch (IOException e1) {
-                        error(e1.getMessage());
-                    }
-                    tagsModel = new Model<Tag>(tag);*/
+                    /*
+                     * tag = new Tag(); tag.setName(TypeUtil.getLabel(selectedArcType));
+                     * tag.setTagSet(selectedtTagSet); try { annotationService.createTag(tag,
+                     * bratAnnotatorModel.getUser()); } catch (IOException e1) {
+                     * error(e1.getMessage()); } tagsModel = new Model<Tag>(tag);
+                     */
                     // Otherwise just clear the tag and the user select from the existing tag lists
                     tagsModel = new Model<Tag>(null);
                 }
@@ -221,10 +216,11 @@ public class ArcAnnotationModalWindowPanel
                                     -1, originFs, targetFs, jCas);
 
                             // update timestamp now
-                            AnnotationDocument annotationDocument = repository
-                                    .getAnnotationDocument(bratAnnotatorModel.getDocument(),
-                                            bratAnnotatorModel.getUser());
-                            repository.updateTimeStamp(annotationDocument);
+                            int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas,
+                                    originFs.getBegin());
+                            bratAnnotatorModel.getDocument().setSentenceAccessed(sentenceNumber);
+                            repository.updateTimeStamp(bratAnnotatorModel.getDocument(),
+                                    bratAnnotatorModel.getUser(), bratAnnotatorModel.getMode());
 
                             repository.updateJCas(bratAnnotatorModel.getMode(),
                                     bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
@@ -290,9 +286,11 @@ public class ArcAnnotationModalWindowPanel
                                 jCas);
 
                         // update timestamp now
-                        AnnotationDocument annotationDocument = repository.getAnnotationDocument(
-                                bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser());
-                        repository.updateTimeStamp(annotationDocument);
+                        int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas,
+                                BratAjaxCasUtil.selectByAddr(jCas, selectedArcId).getBegin());
+                        bratAnnotatorModel.getDocument().setSentenceAccessed(sentenceNumber);
+                        repository.updateTimeStamp(bratAnnotatorModel.getDocument(),
+                                bratAnnotatorModel.getUser(), bratAnnotatorModel.getMode());
 
                         if (bratAnnotatorModel.isScrollPage()) {
                             AnnotationFS originFs = selectByAddr(jCas, originSpanId);
@@ -357,9 +355,12 @@ public class ArcAnnotationModalWindowPanel
                                 bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
                                 jCas);
                         // update timestamp now
-                        AnnotationDocument annotationDocument = repository.getAnnotationDocument(
-                                bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser());
-                        repository.updateTimeStamp(annotationDocument);
+
+                        int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas,
+                                originFs.getBegin());
+                        bratAnnotatorModel.getDocument().setSentenceAccessed(sentenceNumber);
+                        repository.updateTimeStamp(bratAnnotatorModel.getDocument(),
+                                bratAnnotatorModel.getUser(), bratAnnotatorModel.getMode());
 
                         if (bratAnnotatorModel.isScrollPage()) {
                             int start = originFs.getBegin();

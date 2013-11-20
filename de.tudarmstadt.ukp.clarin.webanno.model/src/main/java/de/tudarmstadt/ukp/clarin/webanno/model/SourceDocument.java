@@ -36,9 +36,9 @@ import org.hibernate.annotations.Type;
 /**
  * A persistence object for meta-data of source documents. The content of the source document is
  * stored in the file system.
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 @Entity
 @Table(name = "source_document", uniqueConstraints = { @UniqueConstraint(columnNames = { "name",
@@ -67,6 +67,8 @@ public class SourceDocument
 
     @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
+
+    private int sentenceAccessed;
 
     public long getId()
     {
@@ -128,6 +130,15 @@ public class SourceDocument
         this.timestamp = timestamp;
     }
 
+    public int getSentenceAccessed()
+    {
+        return sentenceAccessed;
+    }
+
+    public void setSentenceAccessed(int sentenceAccessed)
+    {
+        this.sentenceAccessed = sentenceAccessed;
+    }
     @Override
     public int hashCode()
     {

@@ -158,7 +158,7 @@ public class AnnotationPage
                                     bratAnnotatorModel.setSentenceAddress(bratAnnotatorModel
                                             .getFirstSentenceAddress());
                                 }
-                                sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas,
+                                sentenceNumber = BratAjaxCasUtil.getFirstSentenceNumber(jCas,
                                         bratAnnotatorModel.getSentenceAddress());
                                 int firstSentenceNumber = sentenceNumber + 1;
                                 int lastSentenceNumber;

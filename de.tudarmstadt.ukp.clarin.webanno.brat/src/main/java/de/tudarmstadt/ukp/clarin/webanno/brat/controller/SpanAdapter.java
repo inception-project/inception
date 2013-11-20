@@ -184,7 +184,7 @@ public class SpanAdapter
                     FeatureStructure.class, lastAddressInPage);
         }
 
-        int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(aJcas, firstSentence.getAddress());
+        int sentenceNumber = BratAjaxCasUtil.getFirstSentenceNumber(aJcas, firstSentence.getAddress());
         aResponse.setSentenceNumberOffset(sentenceNumber);
 
         int aFirstSentenceOffset = firstSentence.getBegin();

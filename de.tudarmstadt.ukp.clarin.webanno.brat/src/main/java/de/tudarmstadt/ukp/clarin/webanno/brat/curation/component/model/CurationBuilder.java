@@ -268,7 +268,7 @@ public class CurationBuilder
 
         begin = firstSentence.getBegin();
         end = lastSentence.getEnd();
-        sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas, firstSentence.getAddress());
+        sentenceNumber = BratAjaxCasUtil.getFirstSentenceNumber(jCas, firstSentence.getAddress());
         segmentAdress.put(username, new HashMap<Integer, Integer>());
 
         for (Sentence sentence : selectCovered(jCas, Sentence.class, begin, end)) {

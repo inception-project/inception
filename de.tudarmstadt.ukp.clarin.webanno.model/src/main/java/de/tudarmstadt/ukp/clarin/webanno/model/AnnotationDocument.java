@@ -36,7 +36,7 @@ import org.hibernate.annotations.Type;
 /**
  * A persistence object for meta-data of annotation documents. The content of annotation document is
  * stored in a file system.
- * 
+ *
  * @author Seid Muhie Yimam
  */
 @Entity
@@ -71,6 +71,8 @@ public class AnnotationDocument
 
     @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
+
+    private int sentenceAccessed;
 
     public SourceDocument getDocument()
     {
@@ -140,6 +142,16 @@ public class AnnotationDocument
     public void setTimestamp(Date timestamp)
     {
         this.timestamp = timestamp;
+    }
+
+    public int getSentenceAccessed()
+    {
+        return sentenceAccessed;
+    }
+
+    public void setSentenceAccessed(int sentenceAccessed)
+    {
+        this.sentenceAccessed = sentenceAccessed;
     }
 
 }

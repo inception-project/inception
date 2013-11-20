@@ -421,15 +421,33 @@ public class BratAjaxCasUtil
     }
 
     /**
-     * Get the ordinal sentence number for this sentence address
+     * Get the ordinal sentence number in the display window. This will be sent to brat so that it
+     * will adjust the sentence number to display accordingly
      *
-     * @return
      */
-    public static int getSentenceNumber(JCas aJcas, int aSentenceAddress)
+    public static int getFirstSentenceNumber(JCas aJcas, int aSentenceAddress)
     {
         int sentenceNumber = 0;
         for (Sentence sentence : select(aJcas, Sentence.class)) {
             if (sentence.getAddress() == aSentenceAddress) {
+                break;
+            }
+            sentenceNumber++;
+        }
+        return sentenceNumber;
+
+    }
+
+    /**
+     * Get the sentence number at this specific position
+     * @return
+     */
+    public static int getSentenceNumber(JCas aJcas, int aBeginOffset)
+    {
+        int sentenceNumber = 0;
+        for (Sentence sentence : select(aJcas, Sentence.class)) {
+            if (sentence.getBegin() <= aBeginOffset && aBeginOffset<=sentence.getEnd()) {
+                sentenceNumber++;
                 break;
             }
             sentenceNumber++;

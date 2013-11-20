@@ -799,5 +799,5 @@ public interface RepositoryService
     @SuppressWarnings("rawtypes")
     JCas getJCasFromFile(File file, Class reader)
         throws UIMAException, IOException;
-    void updateTimeStamp(AnnotationDocument annotationDocument) throws IOException;
+    void updateTimeStamp(SourceDocument document, User user, Mode mode) throws IOException;
 }

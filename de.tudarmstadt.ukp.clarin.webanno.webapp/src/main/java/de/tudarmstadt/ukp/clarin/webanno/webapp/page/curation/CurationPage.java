@@ -21,9 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -160,7 +158,7 @@ public class CurationPage
                                     bratAnnotatorModel.setSentenceAddress(bratAnnotatorModel
                                             .getFirstSentenceAddress());
                                 }
-                                sentenceNumber = BratAjaxCasUtil.getSentenceNumber(mergeJCas,
+                                sentenceNumber = BratAjaxCasUtil.getFirstSentenceNumber(mergeJCas,
                                         bratAnnotatorModel.getSentenceAddress());
                                 int firstSentenceNumber = sentenceNumber + 1;
                                 int lastSentenceNumber;
@@ -237,9 +235,6 @@ public class CurationPage
 
                             bratAnnotatorModel.getDocument().setState(
                                     SourceDocumentState.CURATION_IN_PROGRESS);
-                            // add timestamp
-                            bratAnnotatorModel.getDocument().setTimestamp(
-                                    new Timestamp(new Date().getTime()));
                         }
                         try {
                             repository.createSourceDocument(bratAnnotatorModel.getDocument(), user);

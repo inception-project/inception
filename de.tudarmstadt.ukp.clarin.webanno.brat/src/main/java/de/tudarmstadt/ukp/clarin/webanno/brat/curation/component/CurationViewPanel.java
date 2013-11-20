@@ -252,8 +252,8 @@ public class CurationViewPanel
             }
         }
 
-            createSpan(spanType, aCurationUserSegment.getBratAnnotatorModel(), aJcas,
-                    clickedAnnotationDocument, address, aRepository, aAnnotationService);
+        createSpan(spanType, aCurationUserSegment.getBratAnnotatorModel(), aJcas,
+                clickedAnnotationDocument, address, aRepository, aAnnotationService);
     }
 
     private void createSpan(String spanType, BratAnnotatorModel aBratAnnotatorModel,
@@ -273,6 +273,12 @@ public class CurationViewPanel
                 spanType, null, null);
         repository.updateJCas(aBratAnnotatorModel.getMode(), aBratAnnotatorModel.getDocument(),
                 aBratAnnotatorModel.getUser(), aMergeJCas);
+
+        // update timestamp
+        int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(clickedJCas, fsClicked.getBegin());
+        aBratAnnotatorModel.getDocument().setSentenceAccessed(sentenceNumber);
+        repository.updateTimeStamp(aBratAnnotatorModel.getDocument(),
+                aBratAnnotatorModel.getUser(), aBratAnnotatorModel.getMode());
 
         if (aBratAnnotatorModel.isScrollPage()) {
             int address = BratAjaxCasUtil.selectSentenceAt(clickedJCas,
@@ -314,73 +320,76 @@ public class CurationViewPanel
         Integer addressOrigin = annotationSelectionOrigin.getAddressByUsername().get(username);
         Integer addressTarget = annotationSelectionTarget.getAddressByUsername().get(username);
 
-        if (annotationSelectionOrigin != null && annotationSelectionTarget != null) {
+        if (annotationSelectionOrigin == null || annotationSelectionTarget == null) {
+            return;
+        }
 
-            AnnotationDocument clickedAnnotationDocument = null;
-            List<AnnotationDocument> annotationDocuments = repository
-                    .listAnnotationDocuments(sourceDocument);
-            for (AnnotationDocument annotationDocument : annotationDocuments) {
-                if (annotationDocument.getUser().equals(username)) {
-                    clickedAnnotationDocument = annotationDocument;
-                    break;
-                }
+        AnnotationDocument clickedAnnotationDocument = null;
+        List<AnnotationDocument> annotationDocuments = repository
+                .listAnnotationDocuments(sourceDocument);
+        for (AnnotationDocument annotationDocument : annotationDocuments) {
+            if (annotationDocument.getUser().equals(username)) {
+                clickedAnnotationDocument = annotationDocument;
+                break;
             }
+        }
 
-            JCas clickedJCas = null;
-            try {
-                clickedJCas = getJCas(aCurationUserSegment.getBratAnnotatorModel(),
-                        clickedAnnotationDocument);
+        JCas clickedJCas = null;
+        try {
+            clickedJCas = getJCas(aCurationUserSegment.getBratAnnotatorModel(),
+                    clickedAnnotationDocument);
+        }
+        catch (IOException e1) {
+            throw new IOException();
+        }
+        AnnotationFS originFsClicked = selectByAddr(clickedJCas, addressOrigin);
+        AnnotationFS targetFsClicked = selectByAddr(clickedJCas, addressTarget);
+
+        AnnotationFS originFs = BratAjaxCasUtil.selectSingleFsAt(aJcas, originFsClicked.getType(),
+                originFsClicked.getBegin(), originFsClicked.getEnd());
+
+        AnnotationFS targetFs = BratAjaxCasUtil.selectSingleFsAt(aJcas, targetFsClicked.getType(),
+                targetFsClicked.getBegin(), targetFsClicked.getEnd());
+        BratAjaxCasController controller = new BratAjaxCasController(repository, annotationService);
+        try {
+            if (originFs == null | targetFs == null) {
+                throw new NoOriginOrTargetAnnotationSelectedException(
+                        "Either origin or target annotations not selected");
             }
-            catch (IOException e1) {
-                throw new IOException();
-            }
-            AnnotationFS originFsClicked = selectByAddr(clickedJCas, addressOrigin);
-            AnnotationFS targetFsClicked = selectByAddr(clickedJCas, addressTarget);
+            controller.createArcAnnotation(aCurationUserSegment.getBratAnnotatorModel(), arcType,
+                    0, 0, originFs, targetFs, aJcas);
+            repository.updateJCas(aCurationUserSegment.getBratAnnotatorModel().getMode(),
+                    aCurationUserSegment.getBratAnnotatorModel().getDocument(),
+                    aCurationUserSegment.getBratAnnotatorModel().getUser(), aJcas);
 
-            AnnotationFS originFs = BratAjaxCasUtil
-                    .selectSingleFsAt(aJcas, originFsClicked.getType(), originFsClicked.getBegin(),
-                            originFsClicked.getEnd());
+            // update timestamp
+            int sentenceNumber = BratAjaxCasUtil
+                    .getSentenceNumber(clickedJCas, originFs.getBegin());
+            aCurationUserSegment.getBratAnnotatorModel().getDocument()
+                    .setSentenceAccessed(sentenceNumber);
+            repository.updateTimeStamp(aCurationUserSegment.getBratAnnotatorModel().getDocument(),
+                    aCurationUserSegment.getBratAnnotatorModel().getUser(), aCurationUserSegment
+                            .getBratAnnotatorModel().getMode());
+        }
+        catch (IOException e) {
+            throw new IOException();
+        }
 
-            AnnotationFS targetFs = BratAjaxCasUtil
-                    .selectSingleFsAt(aJcas, targetFsClicked.getType(), targetFsClicked.getBegin(),
-                            targetFsClicked.getEnd());
-            BratAjaxCasController controller = new BratAjaxCasController(repository,
-                    annotationService);
-            try {
-                if (originFs == null | targetFs == null) {
-                    throw new NoOriginOrTargetAnnotationSelectedException(
-                            "Either origin or target annotations not selected");
-                }
-                else {
-                    controller.createArcAnnotation(aCurationUserSegment.getBratAnnotatorModel(),
-                            arcType, 0, 0, originFs, targetFs, aJcas);
-                    repository.updateJCas(aCurationUserSegment.getBratAnnotatorModel().getMode(),
+        if (aCurationUserSegment.getBratAnnotatorModel().isScrollPage()) {
+            int address = BratAjaxCasUtil.selectSentenceAt(aJcas,
+                    aCurationUserSegment.getBratAnnotatorModel().getSentenceBeginOffset(),
+                    aCurationUserSegment.getBratAnnotatorModel().getSentenceEndOffset())
+                    .getAddress();
+            aCurationUserSegment.getBratAnnotatorModel().setSentenceAddress(
+                    BratAjaxCasUtil.getSentenceBeginAddress(aJcas, address, originFs.getBegin(),
+                            aCurationUserSegment.getBratAnnotatorModel().getProject(),
                             aCurationUserSegment.getBratAnnotatorModel().getDocument(),
-                            aCurationUserSegment.getBratAnnotatorModel().getUser(), aJcas);
-                }
-            }
-            catch (IOException e) {
-                throw new IOException();
-            }
-
-            if (aCurationUserSegment.getBratAnnotatorModel().isScrollPage()) {
-                int address = BratAjaxCasUtil.selectSentenceAt(aJcas,
-                        aCurationUserSegment.getBratAnnotatorModel().getSentenceBeginOffset(),
-                        aCurationUserSegment.getBratAnnotatorModel().getSentenceEndOffset())
-                        .getAddress();
-                aCurationUserSegment.getBratAnnotatorModel().setSentenceAddress(
-                        BratAjaxCasUtil.getSentenceBeginAddress(aJcas, address,
-                                originFs.getBegin(), aCurationUserSegment.getBratAnnotatorModel()
-                                        .getProject(), aCurationUserSegment.getBratAnnotatorModel()
-                                        .getDocument(), aCurationUserSegment
-                                        .getBratAnnotatorModel().getWindowSize()));
-                Sentence sentence = selectByAddr(aJcas, Sentence.class, aCurationUserSegment
-                        .getBratAnnotatorModel().getSentenceAddress());
-                aCurationUserSegment.getBratAnnotatorModel().setSentenceBeginOffset(
-                        sentence.getBegin());
-                aCurationUserSegment.getBratAnnotatorModel()
-                        .setSentenceEndOffset(sentence.getEnd());
-            }
+                            aCurationUserSegment.getBratAnnotatorModel().getWindowSize()));
+            Sentence sentence = selectByAddr(aJcas, Sentence.class, aCurationUserSegment
+                    .getBratAnnotatorModel().getSentenceAddress());
+            aCurationUserSegment.getBratAnnotatorModel()
+                    .setSentenceBeginOffset(sentence.getBegin());
+            aCurationUserSegment.getBratAnnotatorModel().setSentenceEndOffset(sentence.getEnd());
         }
     }
 

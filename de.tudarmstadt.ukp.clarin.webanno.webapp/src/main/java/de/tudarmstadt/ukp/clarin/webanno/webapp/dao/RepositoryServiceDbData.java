@@ -1388,7 +1388,6 @@ public class RepositoryServiceDbData
         throws IOException
     {
         createAnnotationContent(aDocument, aJcas, CURATION_USER, aUser);
-        aDocument.setTimestamp(new Timestamp(new Date().getTime()));
     }
 
     @Override
@@ -1697,6 +1696,7 @@ public class RepositoryServiceDbData
     }
 
     @Override
+    @Transactional
     public JCas readJCas(SourceDocument aDocument, Project aProject, User aUser)
         throws UIMAException, IOException, ClassNotFoundException
     {
@@ -1724,6 +1724,7 @@ public class RepositoryServiceDbData
     }
 
     @Override
+    @Transactional
     public void updateJCas(Mode aMode, SourceDocument aSourceDocument, User aUser, JCas aJcas)
         throws IOException
     {
@@ -1737,6 +1738,7 @@ public class RepositoryServiceDbData
     }
 
     @Override
+    @Transactional
     public JCas createJCas(SourceDocument aDocument, AnnotationDocument aAnnotationDocument,
             Project aProject, User aUser)
         throws IOException
@@ -1799,12 +1801,22 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public void updateTimeStamp(AnnotationDocument annotationDocument)
+    @Transactional
+    public void updateTimeStamp(SourceDocument aDocument, User aUser, Mode aMode)
         throws IOException
     {
+        if(aMode.equals(Mode.CURATION)){
+            aDocument.setTimestamp(new Timestamp(new Date().getTime()));
+            entityManager.merge(aDocument);
+        }
+        else{
+            AnnotationDocument annotationDocument = getAnnotationDocument(aDocument, aUser);
+            annotationDocument.setSentenceAccessed(aDocument.getSentenceAccessed());
+            annotationDocument.setTimestamp(new Timestamp(new Date().getTime()));
+            entityManager.merge(annotationDocument);
+        }
 
-        annotationDocument.setTimestamp(new Timestamp(new Date().getTime()));
-        createAnnotationDocument(annotationDocument);
+
 
     }
 }

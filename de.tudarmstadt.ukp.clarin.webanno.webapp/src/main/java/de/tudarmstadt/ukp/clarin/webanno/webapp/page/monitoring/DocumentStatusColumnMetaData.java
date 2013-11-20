@@ -102,8 +102,8 @@ public class DocumentStatusColumnMetaData
             aCellItem.add(AttributeModifier.append("class", "centering"));
         }
         else if (value.substring(0, value.indexOf(":")).equals(CurationPanel.CURATION_USER)) {
-            SourceDocument document = projectRepositoryService.getSourceDocument(
-                    project, value.substring(value.indexOf(":") + 1));
+            SourceDocument document = projectRepositoryService.getSourceDocument(project,
+                    value.substring(value.indexOf(":") + 1));
             SourceDocumentState state = document.getState();
             String iconNameForState = SourceDocumentState.NEW.toString();
             // If state is annotation finished or annotation in progress, curation is not yet
@@ -120,8 +120,14 @@ public class DocumentStatusColumnMetaData
             else if (state.equals(SourceDocumentState.CURATION_FINISHED)) {
                 iconNameForState = AnnotationDocumentState.FINISHED.toString();
             }
-            aCellItem.add(new EmbeddableImage(componentId, new ContextRelativeResource(
-                    "/images_small/" + iconNameForState + ".png")));
+            if (iconNameForState.equals(AnnotationDocumentState.IN_PROGRESS.toString())
+                    && document.getSentenceAccessed() != 0) {
+                aCellItem.add(new Label(componentId, document.getSentenceAccessed() + ""));
+            }
+            else {
+                aCellItem.add(new EmbeddableImage(componentId, new ContextRelativeResource(
+                        "/images_small/" + iconNameForState + ".png")));
+            }
             aCellItem.add(AttributeModifier.append("class", "centering"));
             aCellItem.add(new AjaxEventBehavior("onclick")
             {
@@ -130,8 +136,8 @@ public class DocumentStatusColumnMetaData
                 @Override
                 protected void onEvent(AjaxRequestTarget aTarget)
                 {
-                    SourceDocument document = projectRepositoryService.getSourceDocument(
-                            project, value.substring(value.indexOf(":") + 1));
+                    SourceDocument document = projectRepositoryService.getSourceDocument(project,
+                            value.substring(value.indexOf(":") + 1));
                     String username = SecurityContextHolder.getContext().getAuthentication()
                             .getName();
                     User user = projectRepositoryService.getUser(username);
@@ -168,14 +174,14 @@ public class DocumentStatusColumnMetaData
             });
         }
         else {
-            SourceDocument document = projectRepositoryService.getSourceDocument(
-                    project, value.substring(value.indexOf(":") + 1));
+            SourceDocument document = projectRepositoryService.getSourceDocument(project,
+                    value.substring(value.indexOf(":") + 1));
             User user = projectRepositoryService.getUser(value.substring(0, value.indexOf(":")));
 
             AnnotationDocumentState state;
+            AnnotationDocument annoDoc = null;
             if (projectRepositoryService.existsAnnotationDocument(document, user)) {
-                AnnotationDocument annoDoc = projectRepositoryService.getAnnotationDocument(
-                        document, user);
+                annoDoc = projectRepositoryService.getAnnotationDocument(document, user);
                 state = annoDoc.getState();
             }
             // user didn't even start working on it
@@ -192,11 +198,18 @@ public class DocumentStatusColumnMetaData
                 }
                 catch (IOException e) {
                     LOG.info("Unable to get the LOG file");
-                 }
+                }
             }
 
-            aCellItem.add(new EmbeddableImage(componentId, new ContextRelativeResource(
-                    "/images_small/" + state.toString() + ".png")));
+            // if state is in progress, add the last sentence number accessed
+            if (annoDoc != null && (annoDoc.getSentenceAccessed() != 0)
+                    && annoDoc.getState().equals(AnnotationDocumentState.IN_PROGRESS)) {
+                aCellItem.add(new Label(componentId, annoDoc.getSentenceAccessed() + ""));
+            }
+            else {
+                aCellItem.add(new EmbeddableImage(componentId, new ContextRelativeResource(
+                        "/images_small/" + state.toString() + ".png")));
+            }
             aCellItem.add(AttributeModifier.append("class", "centering"));
             aCellItem.add(new AjaxEventBehavior("onclick")
             {
@@ -205,8 +218,8 @@ public class DocumentStatusColumnMetaData
                 @Override
                 protected void onEvent(AjaxRequestTarget aTarget)
                 {
-                    SourceDocument document = projectRepositoryService.getSourceDocument(
-                            project, value.substring(value.indexOf(":") + 1));
+                    SourceDocument document = projectRepositoryService.getSourceDocument(project,
+                            value.substring(value.indexOf(":") + 1));
                     User user = projectRepositoryService.getUser(value.substring(0,
                             value.indexOf(":")));
 

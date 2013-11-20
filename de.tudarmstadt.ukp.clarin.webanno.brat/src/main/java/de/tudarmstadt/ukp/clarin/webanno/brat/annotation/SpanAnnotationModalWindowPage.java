@@ -63,7 +63,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
@@ -255,10 +254,11 @@ public class SpanAnnotationModalWindowPage
                                     jCas);
 
                             // update timestamp now
-                            AnnotationDocument annotationDocument = repository
-                                    .getAnnotationDocument(bratAnnotatorModel.getDocument(),
-                                            bratAnnotatorModel.getUser());
-                            repository.updateTimeStamp(annotationDocument);
+                            int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas,
+                                    beginOffset);
+                            bratAnnotatorModel.getDocument().setSentenceAccessed(sentenceNumber);
+                            repository.updateTimeStamp(bratAnnotatorModel.getDocument(),
+                                    bratAnnotatorModel.getUser(), bratAnnotatorModel.getMode());
 
                             if (bratAnnotatorModel.isScrollPage()) {
                                 updateSentenceAddressAndOffsets(jCas, beginOffset);
@@ -331,10 +331,11 @@ public class SpanAnnotationModalWindowPage
                                     bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
                                     jCas);
                             // update timestamp now
-                            AnnotationDocument annotationDocument = repository
-                                    .getAnnotationDocument(bratAnnotatorModel.getDocument(),
-                                            bratAnnotatorModel.getUser());
-                            repository.updateTimeStamp(annotationDocument);
+                            int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas,
+                                    beginOffset);
+                            bratAnnotatorModel.getDocument().setSentenceAccessed(sentenceNumber);
+                            repository.updateTimeStamp(bratAnnotatorModel.getDocument(),
+                                    bratAnnotatorModel.getUser(), bratAnnotatorModel.getMode());
 
                             if (bratAnnotatorModel.isScrollPage()) {
                                 updateSentenceAddressAndOffsets(jCas, beginOffset);
