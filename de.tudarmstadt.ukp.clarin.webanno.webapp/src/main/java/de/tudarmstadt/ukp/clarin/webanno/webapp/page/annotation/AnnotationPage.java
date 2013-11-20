@@ -150,8 +150,7 @@ public class AnnotationPage
                                 JCas jCas = getCas(bratAnnotatorModel.getProject(),
                                         bratAnnotatorModel.getUser(),
                                         bratAnnotatorModel.getDocument());
-                                totalNumberOfSentence = BratAjaxCasUtil.getNumberOfPages(jCas,
-                                        bratAnnotatorModel.getWindowSize());
+                                totalNumberOfSentence = BratAjaxCasUtil.getNumberOfPages(jCas);
 
                                 // If only one page, start displaying from sentence 1
                                 if (totalNumberOfSentence == 1) {

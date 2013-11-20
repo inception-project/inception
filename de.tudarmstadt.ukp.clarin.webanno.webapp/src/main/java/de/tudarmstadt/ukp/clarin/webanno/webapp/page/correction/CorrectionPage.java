@@ -249,8 +249,7 @@ public class CorrectionPage
                                         .getCorrectionDocumentContent(bratAnnotatorModel
                                                 .getDocument());
 
-                                totalNumberOfSentence = BratAjaxCasUtil.getNumberOfPages(mergeJCas,
-                                        bratAnnotatorModel.getWindowSize());
+                                totalNumberOfSentence = BratAjaxCasUtil.getNumberOfPages(mergeJCas);
 
                                 // If only one page, start displaying from sentence 1
                                 /*

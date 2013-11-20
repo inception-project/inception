@@ -396,7 +396,7 @@ public class BratAjaxCasUtil
     /**
      * Get the total number of sentences
      */
-    public static int getNumberOfPages(JCas aJcas, int aWindowSize)
+    public static int getNumberOfPages(JCas aJcas)
     {
         return select(aJcas, Sentence.class).size();
 

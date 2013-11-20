@@ -20,8 +20,11 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.page.monitoring;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.uima.UIMAException;
+import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -36,6 +39,7 @@ import org.apache.wicket.request.resource.ContextRelativeResource;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -90,6 +94,11 @@ public class DocumentStatusColumnMetaData
             final String componentId, final IModel<List<String>> rowModel)
     {
 
+
+        String username = SecurityContextHolder.getContext().getAuthentication()
+                .getName();
+        final User user = projectRepositoryService.getUser(username);
+
         int rowNumber = aCellItem.getIndex();
         aCellItem.setOutputMarkupId(true);
 
@@ -122,7 +131,21 @@ public class DocumentStatusColumnMetaData
             }
             if (iconNameForState.equals(AnnotationDocumentState.IN_PROGRESS.toString())
                     && document.getSentenceAccessed() != 0) {
-                aCellItem.add(new Label(componentId, document.getSentenceAccessed() + ""));
+                JCas jCas = null;
+                try {
+                    jCas = projectRepositoryService.readJCas(document, document.getProject(), user);
+                }
+                catch (UIMAException e) {
+                    LOG.info(ExceptionUtils.getRootCauseMessage(e));
+                }
+                catch (ClassNotFoundException e) {
+                    LOG.info(e.getMessage());
+                }
+                catch (IOException e) {
+                    LOG.info(e.getMessage());
+                }
+               int totalSN = BratAjaxCasUtil.getNumberOfPages(jCas);
+                aCellItem.add(new Label(componentId, document.getSentenceAccessed() + "/"+totalSN));
             }
             else {
                 aCellItem.add(new EmbeddableImage(componentId, new ContextRelativeResource(
@@ -138,9 +161,6 @@ public class DocumentStatusColumnMetaData
                 {
                     SourceDocument document = projectRepositoryService.getSourceDocument(project,
                             value.substring(value.indexOf(":") + 1));
-                    String username = SecurityContextHolder.getContext().getAuthentication()
-                            .getName();
-                    User user = projectRepositoryService.getUser(username);
                     SourceDocumentState state = document.getState();
                     if (state.toString().equals(SourceDocumentState.CURATION_FINISHED.toString())) {
                         try {
@@ -176,12 +196,12 @@ public class DocumentStatusColumnMetaData
         else {
             SourceDocument document = projectRepositoryService.getSourceDocument(project,
                     value.substring(value.indexOf(":") + 1));
-            User user = projectRepositoryService.getUser(value.substring(0, value.indexOf(":")));
+            User annotator = projectRepositoryService.getUser(value.substring(0, value.indexOf(":")));
 
             AnnotationDocumentState state;
             AnnotationDocument annoDoc = null;
-            if (projectRepositoryService.existsAnnotationDocument(document, user)) {
-                annoDoc = projectRepositoryService.getAnnotationDocument(document, user);
+            if (projectRepositoryService.existsAnnotationDocument(document, annotator)) {
+                annoDoc = projectRepositoryService.getAnnotationDocument(document, annotator);
                 state = annoDoc.getState();
             }
             // user didn't even start working on it
@@ -191,7 +211,7 @@ public class DocumentStatusColumnMetaData
                 annotationDocument.setDocument(document);
                 annotationDocument.setName(document.getName());
                 annotationDocument.setProject(project);
-                annotationDocument.setUser(user.getUsername());
+                annotationDocument.setUser(annotator.getUsername());
                 annotationDocument.setState(state);
                 try {
                     projectRepositoryService.createAnnotationDocument(annotationDocument);
@@ -204,7 +224,21 @@ public class DocumentStatusColumnMetaData
             // if state is in progress, add the last sentence number accessed
             if (annoDoc != null && (annoDoc.getSentenceAccessed() != 0)
                     && annoDoc.getState().equals(AnnotationDocumentState.IN_PROGRESS)) {
-                aCellItem.add(new Label(componentId, annoDoc.getSentenceAccessed() + ""));
+                JCas jCas = null;
+                try {
+                    jCas = projectRepositoryService.readJCas(document, document.getProject(), user);
+                }
+                catch (UIMAException e) {
+                    LOG.info(ExceptionUtils.getRootCauseMessage(e));
+                }
+                catch (ClassNotFoundException e) {
+                    LOG.info(e.getMessage());
+                }
+                catch (IOException e) {
+                    LOG.info(e.getMessage());
+                }
+               int totalSN = BratAjaxCasUtil.getNumberOfPages(jCas);
+                aCellItem.add(new Label(componentId, document.getSentenceAccessed() + "/"+totalSN));
             }
             else {
                 aCellItem.add(new EmbeddableImage(componentId, new ContextRelativeResource(
