@@ -22,7 +22,9 @@ import static org.uimafit.util.CasUtil.getType;
 import static org.uimafit.util.CasUtil.selectCovered;
 import static org.uimafit.util.JCasUtil.selectCovered;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -290,6 +292,38 @@ public class ArcAdapter
         aJCas.removeFsFromIndexes(fs);
     }
 
+    @Override
+    public void deleteBySpan(JCas aJCas, AnnotationFS afs, int aBegin, int aEnd)
+    {
+        Type type = getType(aJCas.getCas(), annotationTypeName);
+        Feature dependentFeature = type.getFeatureByBaseName(dependentFeatureName);
+        Feature governorFeature = type.getFeatureByBaseName(governorFeatureName);
+
+        Type spanType = getType(aJCas.getCas(), arcSpanType);
+        Feature arcSpanFeature = spanType.getFeatureByBaseName(arcSpanTypeFeatureName);
+
+        Set<AnnotationFS> fsToDelete = new HashSet<AnnotationFS>();
+
+        for (AnnotationFS fs : selectCovered(aJCas.getCas(), type, aBegin, aEnd)) {
+            FeatureStructure dependentFs = fs.getFeatureValue(dependentFeature).getFeatureValue(
+                    arcSpanFeature);
+            if (((FeatureStructureImpl) afs).getAddress() == ((FeatureStructureImpl) dependentFs)
+                    .getAddress()) {
+                fsToDelete.add(fs);
+            }
+            FeatureStructure governorFs = fs.getFeatureValue(governorFeature).getFeatureValue(
+                    arcSpanFeature);
+            if (((FeatureStructureImpl) afs).getAddress() == ((FeatureStructureImpl) governorFs)
+                    .getAddress()) {
+                fsToDelete.add(fs);
+            }
+        }
+        for (AnnotationFS fs : fsToDelete) {
+            aJCas.removeFsFromIndexes(fs);
+        }
+
+    }
+
     /**
      * Convenience method to get an adapter for Dependency Parsing.
      *
@@ -357,6 +391,12 @@ public class ArcAdapter
     public boolean isDeletable()
     {
         return deletable;
+    }
+
+    @Override
+    public String getArcSpanTypeFeatureName()
+    {
+        return arcSpanTypeFeatureName;
     }
 
 }

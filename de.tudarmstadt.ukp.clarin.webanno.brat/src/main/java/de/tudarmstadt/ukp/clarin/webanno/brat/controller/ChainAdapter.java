@@ -794,4 +794,17 @@ public class ChainAdapter
         return deletable;
     }
 
+    @Override
+    public String getArcSpanTypeFeatureName()
+    {
+        return null;
+    }
+
+    @Override
+    public void deleteBySpan(JCas aJCas, AnnotationFS fs, int aBegin, int aEnd)
+    {
+        // TODO Auto-generated method stub
+
+    }
+
 }

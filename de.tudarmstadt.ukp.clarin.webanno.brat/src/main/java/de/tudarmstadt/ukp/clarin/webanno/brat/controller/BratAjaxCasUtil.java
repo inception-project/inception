@@ -227,6 +227,19 @@ public class BratAjaxCasUtil
         }
         return lastSentenceAddress;
     }
+    /**
+     * Get the cureent sentence based on the anotation begin/end offset
+     */
+    public static Sentence getCurrentSentence(JCas aJCas, int aBegin, int aEnd){
+        Sentence currentSentence = null;
+        for(Sentence sentence :select(aJCas, Sentence.class)){
+            if(sentence.getBegin()<=aBegin && sentence.getEnd()>=aEnd){
+                currentSentence = sentence;
+                break;
+            }
+        }
+        return currentSentence;
+    }
 
     /**
      * Get the last sentence CAS address in the current display window

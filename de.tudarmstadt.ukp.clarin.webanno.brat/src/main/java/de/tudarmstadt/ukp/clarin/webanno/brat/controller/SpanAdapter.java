@@ -290,7 +290,7 @@ public class SpanAdapter
         SpanAdapter adapter = new SpanAdapter(AnnotationTypeConstant.POS_PREFIX,
                 POS.class.getName(), "PosValue", "pos", Token.class.getName());
         adapter.setSingleTokenBehavior(true);
-        adapter.setDeletable(false);
+        adapter.setDeletable(true);
         return adapter;
     }
 
@@ -304,7 +304,7 @@ public class SpanAdapter
         SpanAdapter adapter = new SpanAdapter("", Lemma.class.getName(), "value", "lemma",
                 Token.class.getName());
         adapter.setSingleTokenBehavior(true);
-        adapter.setDeletable(false);
+        adapter.setDeletable(true);
         return adapter;
     }
 
@@ -355,6 +355,18 @@ public class SpanAdapter
     public boolean isDeletable()
     {
         return deletable;
+    }
+
+    @Override
+    public String getArcSpanTypeFeatureName()
+    {
+        return attachFeature;
+    }
+
+    @Override
+    public void deleteBySpan(JCas aJCas, AnnotationFS fs, int aBegin, int aEnd)
+    {
+
     }
 
 }

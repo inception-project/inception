@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.listTypeAdapters;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -30,6 +31,7 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
@@ -314,42 +316,49 @@ public class SpanAnnotationModalWindowPage
                 @Override
                 public void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
                 {
-
-                    BratAjaxCasController controller = new BratAjaxCasController(repository,
-                            annotationService);
                     try {
                         JCas jCas = getCas(bratAnnotatorModel);
-
+                        AnnotationFS fs = selectByAddr(jCas, selectedSpanId);
                         TypeAdapter adapter = getAdapter(selectedtTagSet.getType());
-                        if (!adapter.isDeletable()) {
-                            aTarget.add(feedbackPanel);
-                            error("This annotation can't be deleted!");
-                        }
-                        else {
-                            controller.deleteAnnotation(jCas, selectedSpanId);
-                            repository.updateJCas(bratAnnotatorModel.getMode(),
-                                    bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
-                                    jCas);
-                            // update timestamp now
-                            int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas,
-                                    beginOffset);
-                            bratAnnotatorModel.getDocument().setSentenceAccessed(sentenceNumber);
-                            repository.updateTimeStamp(bratAnnotatorModel.getDocument(),
-                                    bratAnnotatorModel.getUser(), bratAnnotatorModel.getMode());
-
-                            if (bratAnnotatorModel.isScrollPage()) {
-                                updateSentenceAddressAndOffsets(jCas, beginOffset);
+                        String spanFeatureName = adapter.getArcSpanTypeFeatureName();
+                        for (TypeAdapter ad : listTypeAdapters()) {
+                            if (adapter.getAnnotationTypeName().equals(ad.getAnnotationTypeName())) {
+                                continue;
                             }
-
-                            bratAnnotatorModel.setMessage("The span annotation ["
-                                    + selectedSpanType + "] is deleted");
-
-                            // A hack to rememeber the Visural DropDown display value
-                            HttpSession session = ((ServletWebRequest) RequestCycle.get()
-                                    .getRequest()).getContainerRequest().getSession();
-                            session.setAttribute("model", bratAnnotatorModel);
-                            aModalWindow.close(aTarget);
+                            String fn = ad.getArcSpanTypeFeatureName();
+                            if (fn == null) {
+                                continue;
+                            }
+                            if (fn.equals(spanFeatureName)) {
+                                Sentence thisSentence = BratAjaxCasUtil.getCurrentSentence(jCas,
+                                        beginOffset, endOffset);
+                                ad.deleteBySpan(jCas, fs, thisSentence.getBegin(),
+                                        thisSentence.getEnd());
+                                break;
+                            }
                         }
+                        adapter.delete(jCas, selectedSpanId);
+                        repository.updateJCas(bratAnnotatorModel.getMode(),
+                                bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
+                                jCas);
+                        // update timestamp now
+                        int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas, beginOffset);
+                        bratAnnotatorModel.getDocument().setSentenceAccessed(sentenceNumber);
+                        repository.updateTimeStamp(bratAnnotatorModel.getDocument(),
+                                bratAnnotatorModel.getUser(), bratAnnotatorModel.getMode());
+
+                        if (bratAnnotatorModel.isScrollPage()) {
+                            updateSentenceAddressAndOffsets(jCas, beginOffset);
+                        }
+
+                        bratAnnotatorModel.setMessage("The span annotation [" + selectedSpanType
+                                + "] is deleted");
+
+                        // A hack to rememeber the Visural DropDown display value
+                        HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())
+                                .getContainerRequest().getSession();
+                        session.setAttribute("model", bratAnnotatorModel);
+                        aModalWindow.close(aTarget);
                     }
                     catch (UIMAException e) {
                         aTarget.add(feedbackPanel);

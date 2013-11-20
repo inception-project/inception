@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
@@ -67,7 +68,11 @@ public interface TypeAdapter
      * Get the CAS type of the this {@link TypeAdapter}
      */
     String getAnnotationTypeName();
-
+/**
+ * determine the type of Span annotation to be used to have arc annotations (as Origin and target)
+ *
+ */
+  String getArcSpanTypeFeatureName();
 //    /**
 //     * Update the CAS with new/modification of span annotations from brat
 //     *
@@ -89,4 +94,6 @@ public interface TypeAdapter
      */
     boolean isDeletable();
     public void delete(JCas aJCas, int aAddress);
+
+    void deleteBySpan(JCas aJCas, AnnotationFS fs, int aBegin, int aEnd);
 }

@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -54,6 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -274,13 +276,11 @@ public class ArcAnnotationModalWindowPanel
                 @Override
                 public void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
                 {
-                    BratAjaxCasController controller = new BratAjaxCasController(repository,
-                            annotationService);
                     JCas jCas;
                     try {
                         jCas = getCas(bratAnnotatorModel);
-
-                        controller.deleteAnnotation(jCas, selectedArcId);
+                        TypeAdapter adapter = getAdapter(selectedtTagSet.getType());
+                        adapter.delete(jCas, selectedArcId);
                         repository.updateJCas(bratAnnotatorModel.getMode(),
                                 bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
                                 jCas);

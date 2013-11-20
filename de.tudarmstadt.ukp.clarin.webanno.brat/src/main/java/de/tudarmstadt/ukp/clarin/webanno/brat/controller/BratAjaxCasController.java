@@ -17,7 +17,6 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
 
 import java.io.IOException;
@@ -338,21 +337,6 @@ public class BratAjaxCasController
             ChainAdapter.getCoreferenceChainAdapter().add(label, aJCas, aAnnotationOffsetStart,
                     aAnnotationOffsetEnd, aOriginFs, aTargetFs);
         }
-    }
-
-    /**
-     * Delete an annotation from the CAS.
-     *
-     * @param aJcas
-     *            The JCAS from which annotation will deleted
-     * @param aAddress
-     *            the CAS address of the annotation
-     */
-    public void deleteAnnotation(JCas aJcas, int aAddress)
-    {
-        AnnotationFS fs = selectByAddr(aJcas, aAddress);
-        TypeAdapter adapter = getAdapter(fs.getType());
-        adapter.delete(aJcas, aAddress);
     }
 
     /**

@@ -17,7 +17,9 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.uima.cas.CAS;
@@ -34,6 +36,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 /**
  * Utility Class for {@link TypeAdapter} with static methods such as geting {@link TypeAdapter}
  * based on its {@link CAS} {@link Type}
+ *
  * @author Richard Eckart de Castilho
  * @author Seid Muhie Yimam
  *
@@ -45,12 +48,21 @@ public final class TypeUtil
         // No instances
     }
 
+    public static List<TypeAdapter> listTypeAdapters()
+    {
+       return Arrays.asList(new TypeAdapter[]{SpanAdapter.getPosAdapter(),
+               SpanAdapter.getNamedEntityAdapter(),ArcAdapter.getDependencyAdapter(),
+               ChainAdapter.getCoreferenceChainAdapter(), ChainAdapter.getCoreferenceLinkAdapter()});
+    }
+
     public static TypeAdapter getAdapter(Type aType)
     {
-        /*
-         * if (aType.getName().equals(POS.class.getName())) { return SpanAdapter.getPosAdapter(); }
-         * else
-         */if (aType.getName().equals(NamedEntity.class.getName())) {
+
+        if (aType.getName().equals(POS.class.getName())) {
+            return SpanAdapter.getPosAdapter();
+        }
+
+        else if (aType.getName().equals(NamedEntity.class.getName())) {
             return SpanAdapter.getNamedEntityAdapter();
         }
         else if (aType.getName().equals(Dependency.class.getName())) {
@@ -97,16 +109,13 @@ public final class TypeUtil
 
     public static TypeAdapter getAdapter(String aPrefix)
     {
-        TypeAdapter[] adapterList = new TypeAdapter[] {
-                SpanAdapter.getLemmaAdapter(),
-                SpanAdapter.getNamedEntityAdapter(),
-                SpanAdapter.getPosAdapter(),
+        TypeAdapter[] adapterList = new TypeAdapter[] { SpanAdapter.getLemmaAdapter(),
+                SpanAdapter.getNamedEntityAdapter(), SpanAdapter.getPosAdapter(),
 
                 ChainAdapter.getCoreferenceChainAdapter(),
                 ChainAdapter.getCoreferenceLinkAdapter(),
 
-                ArcAdapter.getDependencyAdapter()
-        };
+                ArcAdapter.getDependencyAdapter() };
 
         Map<String, TypeAdapter> adapters = new HashMap<String, TypeAdapter>();
         for (TypeAdapter adapter : adapterList) {
