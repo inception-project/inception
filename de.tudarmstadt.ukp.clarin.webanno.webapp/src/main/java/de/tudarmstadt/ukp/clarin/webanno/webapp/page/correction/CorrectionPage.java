@@ -28,6 +28,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.NoResultException;
+
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
@@ -62,6 +64,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationC
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationSegmentForSourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationUserSegmentForAnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratCuratorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -258,7 +261,7 @@ public class CorrectionPage
                                 int address = BratAjaxCasUtil.selectSentenceAt(mergeJCas,
                                         bratAnnotatorModel.getSentenceBeginOffset(),
                                         bratAnnotatorModel.getSentenceEndOffset()).getAddress();
-                                sentenceNumber = BratAjaxCasUtil.getSentenceNumber(mergeJCas,
+                                sentenceNumber = BratAjaxCasUtil.getFirstSentenceNumber(mergeJCas,
                                         address);
                                 int firstSentenceNumber = sentenceNumber + 1;
                                 int lastSentenceNumber;
@@ -683,7 +686,7 @@ public class CorrectionPage
                             bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                             bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                            CurationBuilder builder = new CurationBuilder(repository      );
+                            CurationBuilder builder = new CurationBuilder(repository);
                             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                             setCurationSegmentBeginEnd();
                             curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
@@ -931,27 +934,59 @@ public class CorrectionPage
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User logedInUser = repository.getUser(SecurityContextHolder.getContext()
                 .getAuthentication().getName());
-        List<AnnotationDocument> annotationDocuments = repository
-                .listAnnotationDocuments(bratAnnotatorModel.getDocument());
-        CurationBuilder cb = new CurationBuilder(repository);
-        AnnotationDocument randomAnnotationDocument = null;
-        Map<String, JCas> jCases = cb.listJcasesforCuration(annotationDocuments,
-                randomAnnotationDocument);
-        JCas mergeJCas = cb.getMergeCas(bratAnnotatorModel, bratAnnotatorModel.getDocument(),
-                jCases, randomAnnotationDocument);
+        JCas jCas = null;
+        try {
+            AnnotationDocument logedInUserAnnotationDocument = repository.getAnnotationDocument(
+                    bratAnnotatorModel.getDocument(), logedInUser);
+            jCas = repository.getAnnotationDocumentContent(logedInUserAnnotationDocument);
+
+        }
+        catch (UIMAException e) {
+            throw e;
+        }
+        catch (ClassNotFoundException e) {
+            throw e;
+        }
+        // First time the Merge Cas is opened
+        catch (IOException e) {
+            throw e;
+        }
+        // Get information to be populated to bratAnnotatorModel from the JCAS of the logged in user
+        //
+        catch (DataRetrievalFailureException e) {
+
+            jCas = repository.readJCas(bratAnnotatorModel.getDocument(), bratAnnotatorModel
+                    .getDocument().getProject(), logedInUser);
+            // This is the auto annotation, save it under CURATION_USER
+            repository.createCorrectionDocumentContent(jCas, bratAnnotatorModel.getDocument(),
+                    logedInUser);
+            // remove all annotation so that the user can correct from the auto annotation
+            BratAnnotatorUtility.clearJcasAnnotations(jCas, bratAnnotatorModel.getDocument(),
+                    logedInUser, repository);
+        }
+        catch (NoResultException e) {
+            jCas = repository.readJCas(bratAnnotatorModel.getDocument(), bratAnnotatorModel
+                    .getDocument().getProject(), logedInUser);
+            // This is the auto annotation, save it under CURATION_USER
+            repository.createCorrectionDocumentContent(jCas, bratAnnotatorModel.getDocument(),
+                    logedInUser);
+            // remove all annotation so that the user can correct from the auto annotation
+            BratAnnotatorUtility.clearJcasAnnotations(jCas, bratAnnotatorModel.getDocument(),
+                    logedInUser, repository);
+        }
 
         if (bratAnnotatorModel.getSentenceAddress() == -1
                 || bratAnnotatorModel.getDocument().getId() != currentDocumentId
                 || bratAnnotatorModel.getProject().getId() != currentprojectId) {
 
             try {
-                bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil
-                        .getFirstSentenceAddress(mergeJCas));
+                bratAnnotatorModel
+                        .setSentenceAddress(BratAjaxCasUtil.getFirstSentenceAddress(jCas));
                 bratAnnotatorModel.setLastSentenceAddress(BratAjaxCasUtil
-                        .getLastSentenceAddress(mergeJCas));
+                        .getLastSentenceAddress(jCas));
                 bratAnnotatorModel.setFirstSentenceAddress(bratAnnotatorModel.getSentenceAddress());
 
-                Sentence sentence = selectByAddr(mergeJCas, Sentence.class,
+                Sentence sentence = selectByAddr(jCas, Sentence.class,
                         bratAnnotatorModel.getSentenceAddress());
                 bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                 bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
