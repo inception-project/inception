@@ -70,9 +70,9 @@ import eu.clarin.weblicht.wlfxb.io.WLFormatException;
 
 /**
  * A Panel used to add Project Guidelines in a selected {@link Project}
- *
+ * 
  * @author Seid Muhie Yimam
- *
+ * 
  */
 @SuppressWarnings("deprecation")
 public class ProjectExportPanel
@@ -111,6 +111,8 @@ public class ProjectExportPanel
     String downloadedFile;
     String projectName;
 
+    private boolean enabled = true;
+
     public ProjectExportPanel(String id, final Model<Project> aProjectModel)
     {
         super(id);
@@ -125,6 +127,13 @@ public class ProjectExportPanel
             public boolean isVisible()
             {
                 return projectRepository.isRemoteProject(aProjectModel.getObject());
+
+            }
+
+            @Override
+            public boolean isEnabled()
+            {
+                return enabled;
 
             }
 
@@ -249,6 +258,13 @@ public class ProjectExportPanel
                 return isCurationDocumentExists(aProjectModel.getObject());
 
             }
+
+            @Override
+            public boolean isEnabled()
+            {
+                return enabled;
+
+            }
         }).setOutputMarkupId(true);
 
         final AJAXDownload exportProject = new AJAXDownload();
@@ -269,12 +285,17 @@ public class ProjectExportPanel
             @Override
             protected void onFinished(AjaxRequestTarget target)
             {
-                exportProjectLink.setEnabled(true);
-                target.add(exportProjectLink);
+
                 if (!fileName.equals(downloadedFile)) {
                     exportProject.initiate(target, fileName);
                     downloadedFile = fileName;
+
+                    enabled = true;
+                    ProjectPage.visible = true;
+                    target.add(ProjectPage.projectSelectionForm.setEnabled(true));
+                    target.add(ProjectPage.projectDetailForm);
                 }
+
             }
         };
 
@@ -283,13 +304,22 @@ public class ProjectExportPanel
 
         add(exportProjectLink = new AjaxLink<Void>("exportProject")
         {
-
             private static final long serialVersionUID = -5758406309688341664L;
+
+            @Override
+            public boolean isEnabled()
+            {
+                return enabled;
+
+            }
 
             @Override
             public void onClick(final AjaxRequestTarget target)
             {
-                setEnabled(false);
+                enabled = false;
+                ProjectPage.projectSelectionForm.setEnabled(false);
+                ProjectPage.visible = false;
+                target.add(ProjectExportPanel.this.getPage());
                 Progress.start(target);
 
                 new Thread()
@@ -346,7 +376,6 @@ public class ProjectExportPanel
         }
         else {
 
-
             exportProjectSettings(aProjectModel.getObject(), projectSettings, exportTempDir);
             exportSourceDocuments(aProjectModel.getObject(), exportTempDir);
             progress = 20;
@@ -384,14 +413,14 @@ public class ProjectExportPanel
                 .listSourceDocuments(aProject);
 
         for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
-            FileUtils.copyFileToDirectory(
-                    projectRepository.exportSourceDocument(sourceDocument),
+            FileUtils.copyFileToDirectory(projectRepository.exportSourceDocument(sourceDocument),
                     sourceDocumentDir);
         }
     }
+
     /**
      * Copy, if exists, curation documents to a folder that will be exported as Zip file
-     *
+     * 
      * @param aProject
      *            The {@link Project}
      * @param aCurationDocumentExist
@@ -502,7 +531,7 @@ public class ProjectExportPanel
     /**
      * Copy annotation document as Serialized CAS from the file system of this project to the export
      * folder
-     *
+     * 
      * @throws ClassNotFoundException
      * @throws WLFormatException
      * @throws UIMAException
@@ -549,7 +578,7 @@ public class ProjectExportPanel
                     }
                 }
             }
-            progress = progress+1;
+            progress = progress + 1;
         }
 
     }

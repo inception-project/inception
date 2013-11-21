@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter.DEFAULT;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
@@ -92,12 +94,13 @@ public class ProjectPage
     @SpringBean(name = "documentRepository")
     private RepositoryService projectRepository;
 
-    private ProjectSelectionForm projectSelectionForm;
-    private ProjectDetailForm projectDetailForm;
+    public static ProjectSelectionForm projectSelectionForm;
+    public static  ProjectDetailForm projectDetailForm;
     private ImportProjectForm importProjectForm;
 
     private RadioChoice<Mode> projectType;
-
+    public static boolean visible = true;
+    
     public ProjectPage()
     {
         projectSelectionForm = new ProjectSelectionForm("projectSelectionForm");
@@ -114,7 +117,7 @@ public class ProjectPage
                 "ROLE_ADMIN");
     }
 
-    private class ProjectSelectionForm
+     class ProjectSelectionForm
         extends Form<SelectionModel>
     {
         private static final long serialVersionUID = -1L;
@@ -343,6 +346,11 @@ public class ProjectPage
                 {
                     return new ProjectDetailsPanel(panelId);
                 }
+                @Override
+                public boolean isVisible()
+                {
+                    return visible;
+                }
             });
 
             tabs.add(users = new AbstractTab(new Model<String>("Users"))
@@ -358,7 +366,7 @@ public class ProjectPage
                 @Override
                 public boolean isVisible()
                 {
-                    return project.getObject().getId() != 0;
+                    return project.getObject().getId() != 0 && visible;
                 }
             });
 
@@ -375,7 +383,7 @@ public class ProjectPage
                 @Override
                 public boolean isVisible()
                 {
-                    return project.getObject().getId() != 0;
+                    return project.getObject().getId() != 0 && visible;
                 }
             });
 
@@ -410,7 +418,7 @@ public class ProjectPage
                 @Override
                 public boolean isVisible()
                 {
-                    return project.getObject().getId() != 0;
+                    return project.getObject().getId() != 0 && visible;
                 }
             });
 
@@ -427,7 +435,7 @@ public class ProjectPage
                 @Override
                 public boolean isVisible()
                 {
-                    return project.getObject().getId() != 0;
+                    return project.getObject().getId() != 0 && visible;
                 }
             });
 
