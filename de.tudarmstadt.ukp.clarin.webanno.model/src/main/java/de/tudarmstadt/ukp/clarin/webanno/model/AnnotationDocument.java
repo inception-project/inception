@@ -72,7 +72,7 @@ public class AnnotationDocument
     @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
 
-    private int sentenceAccessed;
+    private int sentenceAccessed = 0;
 
     public SourceDocument getDocument()
     {
