@@ -34,10 +34,12 @@ import org.apache.http.entity.FileEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.apache.uima.UIMAException;
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.link.DownloadLink;
+import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
@@ -70,9 +72,9 @@ import eu.clarin.weblicht.wlfxb.io.WLFormatException;
 
 /**
  * A Panel used to add Project Guidelines in a selected {@link Project}
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 @SuppressWarnings("deprecation")
 public class ProjectExportPanel
@@ -103,19 +105,29 @@ public class ProjectExportPanel
     private UserDao userRepository;
 
     private int progress = 0;
-    private ProgressBar Progress;
-    AjaxLink<Void> exportProjectLink;
+    private ProgressBar fileGenerationProgress;
+    private AjaxLink<Void> exportProjectLink;
 
     private String username;
     private String fileName;
-    String downloadedFile;
-    String projectName;
+    private String downloadedFile;
+    private String projectName;
+
+    private transient Thread thread = null;
+    private transient FileGenerator runnable = null;
 
     private boolean enabled = true;
+    private boolean canceled = false;
 
     public ProjectExportPanel(String id, final Model<Project> aProjectModel)
     {
         super(id);
+
+        final FeedbackPanel feedbackPanel = new FeedbackPanel("feedbackPanel");
+        add(feedbackPanel);
+        feedbackPanel.setOutputMarkupId(true);
+        feedbackPanel.add(new AttributeModifier("class", "info"));
+        feedbackPanel.add(new AttributeModifier("class", "error"));
 
         username = SecurityContextHolder.getContext().getAuthentication().getName();
 
@@ -269,7 +281,7 @@ public class ProjectExportPanel
 
         final AJAXDownload exportProject = new AJAXDownload();
 
-        Progress = new ProgressBar("progress", new ProgressionModel()
+        fileGenerationProgress = new ProgressBar("progress", new ProgressionModel()
         {
             private static final long serialVersionUID = 1971929040248482474L;
 
@@ -286,7 +298,8 @@ public class ProjectExportPanel
             protected void onFinished(AjaxRequestTarget target)
             {
 
-                if (!fileName.equals(downloadedFile)) {
+
+                if (!canceled && !fileName.equals(downloadedFile)) {
                     exportProject.initiate(target, fileName);
                     downloadedFile = fileName;
 
@@ -294,13 +307,23 @@ public class ProjectExportPanel
                     ProjectPage.visible = true;
                     target.add(ProjectPage.projectSelectionForm.setEnabled(true));
                     target.add(ProjectPage.projectDetailForm);
+                    target.add(feedbackPanel);
+                    info("project export processing done");
+                }
+                else if (canceled) {
+                    enabled = true;
+                    ProjectPage.visible = true;
+                    target.add(ProjectPage.projectSelectionForm.setEnabled(true));
+                    target.add(ProjectPage.projectDetailForm);
+                    target.add(feedbackPanel);
+                    info("project export processing canceled");
                 }
 
             }
         };
 
-        Progress.add(exportProject);
-        add(Progress);
+        fileGenerationProgress.add(exportProject);
+        add(fileGenerationProgress);
 
         add(exportProjectLink = new AjaxLink<Void>("exportProject")
         {
@@ -317,42 +340,30 @@ public class ProjectExportPanel
             public void onClick(final AjaxRequestTarget target)
             {
                 enabled = false;
+                canceled = true;
+                progress = 0;
                 ProjectPage.projectSelectionForm.setEnabled(false);
                 ProjectPage.visible = false;
                 target.add(ProjectExportPanel.this.getPage());
-                Progress.start(target);
+                fileGenerationProgress.start(target);
+                runnable = new FileGenerator(aProjectModel, target);
+                thread = new Thread(runnable);
+                thread.start();
+            }
 
-                new Thread()
-                {
-                    @Override
-                    public void run()
-                    {
-                        File file = null;
-                        try {
-                            Thread.sleep(200);
-                            file = generateZipFile(aProjectModel, target);
-                            fileName = file.getAbsolutePath();
-                            projectName = aProjectModel.getObject().getName();
-                        }
-                        catch (UIMAException e) {
-                            error(ExceptionUtils.getRootCause(e));
-                        }
-                        catch (ClassNotFoundException e) {
-                            error(e.getMessage());
-                        }
-                        catch (IOException e) {
-                            error(e.getMessage());
-                        }
-                        catch (WLFormatException e) {
-                            error(e.getMessage());
-                        }
-                        catch (ZippingException e) {
-                            error(e.getMessage());
-                        }
-                        catch (InterruptedException e) {
-                        }
-                    }
-                }.start();
+        });
+
+        add(new AjaxLink<Void>("cancel")
+        {
+            private static final long serialVersionUID = 5856284172060991446L;
+
+            @Override
+            public void onClick(final AjaxRequestTarget target)
+            {
+                if (thread != null) {
+                    progress = 100;
+                    thread.interrupt();
+                }
             }
 
         });
@@ -378,7 +389,7 @@ public class ProjectExportPanel
 
             exportProjectSettings(aProjectModel.getObject(), projectSettings, exportTempDir);
             exportSourceDocuments(aProjectModel.getObject(), exportTempDir);
-            progress = 20;
+            progress = 10;
             exportAnnotationDocuments(aProjectModel.getObject(), exportTempDir);
             progress = progress + 1;
             exportProjectLog(aProjectModel.getObject(), exportTempDir);
@@ -420,7 +431,7 @@ public class ProjectExportPanel
 
     /**
      * Copy, if exists, curation documents to a folder that will be exported as Zip file
-     * 
+     *
      * @param aProject
      *            The {@link Project}
      * @param aCurationDocumentExist
@@ -531,7 +542,7 @@ public class ProjectExportPanel
     /**
      * Copy annotation document as Serialized CAS from the file system of this project to the export
      * folder
-     * 
+     *
      * @throws ClassNotFoundException
      * @throws WLFormatException
      * @throws UIMAException
@@ -683,6 +694,53 @@ public class ProjectExportPanel
         }
         catch (IOException e) {
             error("File Path not found or No permision to save the file!");
+        }
+    }
+
+    public class FileGenerator
+        implements Runnable
+    {
+
+        Model<Project> projectModel;
+        AjaxRequestTarget target;
+
+        public FileGenerator(Model<Project> aProjectModel, AjaxRequestTarget aTarget)
+        {
+            this.projectModel = aProjectModel;
+            this.target = aTarget;
+        }
+
+        @Override
+        public void run()
+        {
+
+            File file;
+            try {
+                Thread.sleep(100);
+                file = generateZipFile(projectModel, target);
+                fileName = file.getAbsolutePath();
+                projectName = projectModel.getObject().getName();
+                canceled = false;
+            }
+
+            catch (UIMAException e) {
+                canceled = true;
+            }
+            catch (ClassNotFoundException e) {
+                canceled = true;
+            }
+            catch (IOException e) {
+                canceled = true;
+            }
+            catch (WLFormatException e) {
+                canceled = true;
+            }
+            catch (ZippingException e) {
+                canceled = true;
+            }
+            catch (InterruptedException e) {
+                canceled = true;
+            }
         }
     }
 }
