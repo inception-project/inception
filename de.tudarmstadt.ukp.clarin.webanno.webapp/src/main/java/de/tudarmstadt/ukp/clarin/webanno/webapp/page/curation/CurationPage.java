@@ -974,6 +974,9 @@ public class CurationPage
                 .listAnnotationDocuments(bratAnnotatorModel.getDocument());
         CurationBuilder cb = new CurationBuilder(repository);
         AnnotationDocument randomAnnotationDocument = null;
+        if(annotationDocuments.size()>0) {
+            randomAnnotationDocument = annotationDocuments.get(0);
+        }
         Map<String, JCas> jCases = cb.listJcasesforCuration(annotationDocuments,
                 randomAnnotationDocument);
         JCas mergeJCas = cb.getMergeCas(bratAnnotatorModel, bratAnnotatorModel.getDocument(),
