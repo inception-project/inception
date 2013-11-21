@@ -21,6 +21,10 @@ import java.io.IOException;
 import java.util.Locale;
 import java.util.Properties;
 
+import javax.sql.DataSource;
+
+import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.wicket.AttributeModifier;
@@ -31,6 +35,7 @@ import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.odlabs.wiquery.core.IWiQueryPlugin;
 import org.odlabs.wiquery.core.javascript.JsStatement;
 import org.odlabs.wiquery.ui.commons.WiQueryUIPlugin;
@@ -57,6 +62,10 @@ public abstract class ApplicationPageBase
     private LogoutPanel logoutPanel;
     private FeedbackPanel feedbackPanel;
     private Label versionLabel;
+    private Label embeddedDbWarning;
+    
+    @SpringBean(name = "dataSource")
+    private DataSource dataSource;
 
     protected ApplicationPageBase()
     {
@@ -104,12 +113,23 @@ public abstract class ApplicationPageBase
         });
 
         Properties props = getVersionProperties();
-        versionLabel = new Label("version", props.getProperty("version") + " ("
-                + props.getProperty("timestamp") + ")");
+        String versionString = props.getProperty("version") + " (" + props.getProperty("timestamp")
+                + ")";
+        versionLabel = new Label("version", versionString);
 
+        embeddedDbWarning = new Label("embeddedDbWarning", 
+                "USE THIS INSTALLATION FOR TESTING ONLY -- "
+                + "AN EMBEDDED DATABASE IS NOT SUPPORTED FOR PRODUCTION USE");
+        if (dataSource instanceof BasicDataSource) {
+            embeddedDbWarning.setVisible(StringUtils.contains(
+                    ((BasicDataSource) dataSource).getDriverClassName().toLowerCase(Locale.US), 
+                    "hsqldb"));
+        }
+        
         add(logoutPanel);
         add(feedbackPanel);
         add(versionLabel);
+        add(embeddedDbWarning);
     }
 
     @Override
