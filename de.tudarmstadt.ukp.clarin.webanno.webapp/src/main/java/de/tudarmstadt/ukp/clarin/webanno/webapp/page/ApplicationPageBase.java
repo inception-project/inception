@@ -21,9 +21,6 @@ import java.io.IOException;
 import java.util.Locale;
 import java.util.Properties;
 
-import javax.sql.DataSource;
-
-import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -42,6 +39,7 @@ import org.odlabs.wiquery.ui.commons.WiQueryUIPlugin;
 import org.springframework.core.io.support.PropertiesLoaderUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.security.LogoutPanel;
 
 /**
@@ -64,8 +62,8 @@ public abstract class ApplicationPageBase
     private Label versionLabel;
     private Label embeddedDbWarning;
     
-    @SpringBean(name = "dataSource")
-    private DataSource dataSource;
+    @SpringBean(name = "documentRepository")
+    private RepositoryService repository;
 
     protected ApplicationPageBase()
     {
@@ -120,10 +118,14 @@ public abstract class ApplicationPageBase
         embeddedDbWarning = new Label("embeddedDbWarning", 
                 "USE THIS INSTALLATION FOR TESTING ONLY -- "
                 + "AN EMBEDDED DATABASE IS NOT SUPPORTED FOR PRODUCTION USE");
-        if (dataSource instanceof BasicDataSource) {
-            embeddedDbWarning.setVisible(StringUtils.contains(
-                    ((BasicDataSource) dataSource).getDriverClassName().toLowerCase(Locale.US), 
-                    "hsqldb"));
+        embeddedDbWarning.setVisible(false);
+        try {
+            String driver = repository.getDatabaseDriverName();
+            embeddedDbWarning.setVisible(StringUtils.contains(driver.toLowerCase(Locale.US),
+                    "hsql"));
+        }
+        catch (Throwable e) {
+            LOG.warn("Unable to determine which database is being used", e);
         }
         
         add(logoutPanel);

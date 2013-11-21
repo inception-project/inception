@@ -800,4 +800,9 @@ public interface RepositoryService
     JCas getJCasFromFile(File file, Class reader)
         throws UIMAException, IOException;
     void updateTimeStamp(SourceDocument document, User user, Mode mode) throws IOException;
+    
+    /**
+     * Get the name of the database driver in use.
+     */
+    String getDatabaseDriverName();
 }

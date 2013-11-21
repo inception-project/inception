@@ -35,6 +35,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -72,6 +74,8 @@ import org.apache.uima.cas.impl.Serialization;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
+import org.hibernate.Session;
+import org.hibernate.jdbc.Work;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -149,7 +153,7 @@ public class RepositoryServiceDbData
 
     @Value(value = "${backup.keep.number}")
     private int backupKeepNumber;
-
+    
     @Resource(name = "formats")
     private Properties readWriteFileFormats;
 
@@ -1815,8 +1819,23 @@ public class RepositoryServiceDbData
             annotationDocument.setTimestamp(new Timestamp(new Date().getTime()));
             entityManager.merge(annotationDocument);
         }
-
-
-
+    }
+    
+    @Override
+    public String getDatabaseDriverName()
+    {
+        final StringBuilder sb = new StringBuilder();
+        Session session = entityManager.unwrap(Session.class);
+        session.doWork(new Work()
+        {
+            @Override
+            public void execute(Connection aConnection)
+                throws SQLException
+            {
+               sb.append(aConnection.getMetaData().getDriverName());
+            }
+        });
+        
+        return sb.toString();
     }
 }
