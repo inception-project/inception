@@ -49,6 +49,7 @@ import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.markup.html.form.ListMultipleChoice;
+import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.link.ExternalLink;
 import org.apache.wicket.markup.repeater.Item;
@@ -64,7 +65,6 @@ import org.codehaus.jackson.JsonProcessingException;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.crowdflower.NamedEntityTaskManager;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -103,12 +103,12 @@ public class CrowdSourcePage
 
     private static final String CROWD_USER = "crowd_user";
 
-    //TODO: explain how to export these templates from Crowdflower
+    // TODO: explain how to export these templates from Crowdflower
     // & move to manager
     private static final String CROWD_NERTASK1_TEMPLATE = "NERtask1.template";
     private static final String CROWD_NERTASK2_TEMPLATE = "NERtask2.template";
 
-    //TODO: rename
+    // TODO: rename
     private CrowdJob selectedCrowdJob;
 
     private Project selectedProject;
@@ -118,7 +118,6 @@ public class CrowdSourcePage
     private ArrayList<SourceDocument> documents = new ArrayList<SourceDocument>();
     private ArrayList<SourceDocument> goldDocuments = new ArrayList<SourceDocument>();
 
-
     private NamedEntityTaskManager namedEntityTaskManager;
 
     private CrowdSourceForm crowdSourceForm;
@@ -126,7 +125,8 @@ public class CrowdSourcePage
     private CrowdDocumentListForm crowdDocumentListForm;
     private GoldDocumentListForm goldDocumentListForm;
     private CrowdProjectDetailForm crowdJobDetailForm;
-
+    private NumberTextField<Integer> useSentenceTextField;
+    private NumberTextField<Integer> useGoldSentenceTextField;
 
     /**
      * Crowd source page, user interface to manage and upload Crowdjobs with WebAnno
@@ -266,7 +266,7 @@ public class CrowdSourcePage
             for (int i = 0; i < provider.getColumnCount(); i++) {
                 columns.add(new DocumentColumnMetaData(provider, i));
             }
-            //TODO: look into what generic is used here
+            // TODO: look into what generic is used here
             add(new DefaultDataTable("crowdSourceInformationTable", columns, provider, 20));
 
             add(new Button("new", new ResourceModel("label"))
@@ -298,6 +298,7 @@ public class CrowdSourcePage
 
         /**
          * Returns jCases for source documents for the selected Crowdjob
+         *
          * @param user
          * @return
          */
@@ -316,10 +317,11 @@ public class CrowdSourcePage
             return jCases;
         }
 
-
         /**
          * Returns jCases for gold documents for the selected crowdjob
-         * @param user - user for the jcases
+         *
+         * @param user
+         *            - user for the jcases
          * @return list of jCases
          */
 
@@ -343,8 +345,7 @@ public class CrowdSourcePage
 
             int numSents = 0;
 
-            for(JCas cas : jCases)
-            {
+            for (JCas cas : jCases) {
                 numSents += select(cas, Sentence.class).size();
             }
 
@@ -362,14 +363,12 @@ public class CrowdSourcePage
 
             int numSents = 0;
 
-            for(JCas cas : jCases)
-            {
+            for (JCas cas : jCases) {
                 numSents += select(cas, Sentence.class).size();
             }
 
             return numSents;
         }
-
 
         public CrowdProjectDetailForm(String id)
         {
@@ -379,18 +378,48 @@ public class CrowdSourcePage
 
             add(new TextField<String>("apiKey"));
 
-            add(new TextField<String>("useSents"));
-            add(new TextField<String>("useGoldSents"));
+            useSentenceTextField = new NumberTextField<Integer>("useSents",
+                    new LoadableDetachableModel<Integer>()
+                    {
+
+                        private static final long serialVersionUID = 1L;
+
+                        @Override
+                        protected Integer load()
+                        {
+                            return selectedCrowdJob == null ? -1 : selectedCrowdJob.getUseSents();
+                        }
+                    });
+            useSentenceTextField.setType(Integer.class);
+            add(useSentenceTextField);
+
+            useGoldSentenceTextField = new NumberTextField<Integer>("useGoldSents",
+                    new LoadableDetachableModel<Integer>()
+                    {
+
+                        private static final long serialVersionUID = 1L;
+
+                        @Override
+                        protected Integer load()
+                        {
+                            return selectedCrowdJob == null ? -1
+                                    : selectedCrowdJob.getUseGoldSents();
+                        }
+                    });
+            useGoldSentenceTextField.setType(Integer.class);
+            add(useGoldSentenceTextField);
 
             ExternalLink link1;
             ExternalLink link2;
 
-            IModel<String> link1_model=new LoadableDetachableModel<String>() {
+            IModel<String> link1_model = new LoadableDetachableModel<String>()
+            {
                 private static final long serialVersionUID = -2140663269255140643L;
 
                 @Override
-                protected String load() {
-                    if(selectedCrowdJob != null) {
+                protected String load()
+                {
+                    if (selectedCrowdJob != null) {
                         return selectedCrowdJob.getLink1();
                     }
                     else {
@@ -399,12 +428,14 @@ public class CrowdSourcePage
                 }
             };
 
-            IModel<String> link2_model=new LoadableDetachableModel<String>() {
+            IModel<String> link2_model = new LoadableDetachableModel<String>()
+            {
                 private static final long serialVersionUID = -2140663269255140643L;
 
                 @Override
-                protected String load() {
-                    if(selectedCrowdJob != null) {
+                protected String load()
+                {
+                    if (selectedCrowdJob != null) {
                         return selectedCrowdJob.getLink2();
                     }
                     else {
@@ -416,47 +447,62 @@ public class CrowdSourcePage
             add(link1 = new ExternalLink("link1", link1_model));
             add(link2 = new ExternalLink("link2", link2_model));
 
-            link1.add(new Label("label1", new LoadableDetachableModel<String>() {
-                private static final long   serialVersionUID    = 1L;
+            link1.add(new Label("label1", new LoadableDetachableModel<String>()
+            {
+                private static final long serialVersionUID = 1L;
+
                 @Override
-                protected String load() {
-                        return selectedCrowdJob.getLink1();
+                protected String load()
+                {
+                    return selectedCrowdJob.getLink1();
                 }
             }));
 
-            link2.add(new Label("label2", new LoadableDetachableModel<String>() {
-                private static final long   serialVersionUID    = 1L;
+            link2.add(new Label("label2", new LoadableDetachableModel<String>()
+            {
+                private static final long serialVersionUID = 1L;
+
                 @Override
-                protected String load() {
-                        return selectedCrowdJob.getLink2();
+                protected String load()
+                {
+                    return selectedCrowdJob.getLink2();
                 }
             }));
 
-            add(new Label("status", new LoadableDetachableModel<String>() {
-                private static final long   serialVersionUID    = 1L;
+            add(new Label("status", new LoadableDetachableModel<String>()
+            {
+                private static final long serialVersionUID = 1L;
+
                 @Override
-                protected String load() {
-                        return selectedCrowdJob.getStatus();
+                protected String load()
+                {
+                    return selectedCrowdJob.getStatus();
                 }
             }));
 
-            add(new Label("availSentences", new LoadableDetachableModel<String>() {
-                private static final long   serialVersionUID    = 1L;
+            add(new Label("availSentences", new LoadableDetachableModel<String>()
+            {
+                private static final long serialVersionUID = 1L;
+
                 @Override
-                protected String load() {
-                        return String.valueOf(getSourceDocumentsSentCount());
+                protected String load()
+                {
+                    return String.valueOf(getSourceDocumentsSentCount());
                 }
             }));
 
-            add(new Label("availGoldSentences", new LoadableDetachableModel<String>() {
-                private static final long   serialVersionUID    = 1L;
+            add(new Label("availGoldSentences", new LoadableDetachableModel<String>()
+            {
+                private static final long serialVersionUID = 1L;
+
                 @Override
-                protected String load() {
+                protected String load()
+                {
                     return String.valueOf(getGoldDocumentsSentCount());
                 }
             }));
 
-            //TODO: more comments
+            // TODO: more comments
             add(new ListMultipleChoice<SourceDocument>("documents")
             {
                 private static final long serialVersionUID = 1L;
@@ -576,7 +622,7 @@ public class CrowdSourcePage
                             repository.createCrowdJob(selectedCrowdJob);
                         }
                         catch (IOException e) {
-                          error("Problem Processing Log file");
+                            error("Problem Processing Log file");
                         }
                         createCrowdJob = false;
                         updateTable();
@@ -713,14 +759,16 @@ public class CrowdSourcePage
                             selectedCrowdJob.getGoldDocuments());
                     goldSourceDocuments
                             .removeAll(CrowdProjectDetailForm.this.getModelObject().goldDocuments);
-                    selectedCrowdJob.setGoldDocuments(new HashSet<SourceDocument>(goldSourceDocuments));
+                    selectedCrowdJob.setGoldDocuments(new HashSet<SourceDocument>(
+                            goldSourceDocuments));
                     try {
                         repository.createCrowdJob(selectedCrowdJob);
                     }
                     catch (IOException e) {
                         error("Problem Processing Log file");
                     }
-                    goldDocuments.removeAll(CrowdProjectDetailForm.this.getModelObject().goldDocuments);
+                    goldDocuments
+                            .removeAll(CrowdProjectDetailForm.this.getModelObject().goldDocuments);
                     goldDocumentListForm.setModelObject(new SelectionModel());
 
                 }
@@ -733,7 +781,6 @@ public class CrowdSourcePage
                 }
             });
 
-
             // send document to crowd flower and get back status and link
             add(new Button("uploadT1", new ResourceModel("label"))
             {
@@ -743,8 +790,7 @@ public class CrowdSourcePage
                 public void onSubmit()
                 {
 
-                    if(namedEntityTaskManager == null)
-                    {
+                    if (namedEntityTaskManager == null) {
                         namedEntityTaskManager = new NamedEntityTaskManager();
                     }
 
@@ -752,57 +798,49 @@ public class CrowdSourcePage
                     User user = userRepository.get(CROWD_USER);
 
                     List<JCas> jCases = getSourceDocumentsJCases(user);
-
                     // Get the JCASes for each gold document
                     List<JCas> goldJCases = getGoldDocumentsJCases(user);
+               /*     int useSent = useSentenceTextField.getModelObject() ==0?-1:useSentenceTextField.getModelObject();
+                    int useGoldSent = useGoldSentenceTextField.getModelObject() ==0?*/
 
                     try {
-                        String template = FileUtils.readFileToString(repository.getTemplate(CROWD_NERTASK1_TEMPLATE));
+                        String template = FileUtils.readFileToString(repository
+                                .getTemplate(CROWD_NERTASK1_TEMPLATE));
+                        selectedCrowdJob.setUseSents(useSentenceTextField.getModelObject());
+                        selectedCrowdJob.setUseGoldSents(useGoldSentenceTextField.getModelObject());
 
-                        String strUseSents = crowdJobDetailForm.getModelObject().useSents;
-                        String strUseGoldSents = crowdJobDetailForm.getModelObject().useGoldSents;
-
-                        //default value: use all available sentences
-                        int useSents = -1;
-                        int useGoldSents = -1;
-
-                        if(strUseSents != null && strUseSents != "" && isPositiveNumber(strUseSents))
-                        {
-                            useSents = Integer.valueOf(strUseSents);
-                        }
-
-                        if(strUseGoldSents != null && strUseGoldSents != "" && isPositiveNumber(strUseGoldSents))
-                        {
-                            useGoldSents = Integer.valueOf(strUseGoldSents);
-                        }
-
-                        String task1ID = namedEntityTaskManager.uploadNewNERTask1(template, jCases, goldJCases, useSents, useGoldSents);
+                        String task1ID = namedEntityTaskManager.uploadNewNERTask1(template, jCases,
+                                goldJCases, useSentenceTextField.getModelObject()==0?-1:useSentenceTextField.getModelObject(),
+                                useGoldSentenceTextField.getModelObject());
                         selectedCrowdJob.setTask1Id(task1ID);
-                        selectedCrowdJob.setStatus(namedEntityTaskManager.getStatusString(task1ID, ""));
+                        selectedCrowdJob.setStatus(namedEntityTaskManager.getStatusString(task1ID,
+                                ""));
 
                         repository.createCrowdJob(selectedCrowdJob);
 
                         int omittedSentences = namedEntityTaskManager.getOmittedSentences();
-                        if(omittedSentences==0)
-                        {
+                        if (omittedSentences == 0) {
                             info("Crowdflower task " + task1ID + " uploaded succesfully.");
-                        }else
-                        {
-                            warn("Crowdflower task " + task1ID + " uploaded succesfully, but " + omittedSentences
+                        }
+                        else {
+                            warn("Crowdflower task " + task1ID + " uploaded succesfully, but "
+                                    + omittedSentences
                                     + " sentences were omitted due to processing errors (see log).");
                         }
                     }
-                    catch (FileNotFoundException e)
-                    {
+                    catch (FileNotFoundException e) {
                         error("Could not find the template file for NER task 1: " + e.getMessage());
                     }
                     catch (JsonProcessingException e) {
                         error("Template for NER task 1 is mal formated: " + e.getMessage());
                     }
                     catch (IOException e) {
-                        error("There was a problem reading the NER task 1 template file: " + e.getMessage());
-                    }catch (Exception e) {
-                        error("Something went wrong uploading your document(s) to crowdflower.com: " + e.getMessage());
+                        error("There was a problem reading the NER task 1 template file: "
+                                + e.getMessage());
+                    }
+                    catch (Exception e) {
+                        error("Something went wrong uploading your document(s) to crowdflower.com: "
+                                + e.getMessage());
                     }
 
                 }
@@ -817,8 +855,7 @@ public class CrowdSourcePage
                 @Override
                 public void onSubmit()
                 {
-                    if(namedEntityTaskManager == null)
-                    {
+                    if (namedEntityTaskManager == null) {
                         namedEntityTaskManager = new NamedEntityTaskManager();
                     }
 
@@ -829,42 +866,46 @@ public class CrowdSourcePage
 
                     // Get the JCASes for each gold document
                     List<JCas> goldJCases = getGoldDocumentsJCases(user);
-                    try{
+                    try {
 
-                    String task1ID = selectedCrowdJob.getTask1Id();
+                        String task1ID = selectedCrowdJob.getTask1Id();
 
-                    if(task1ID == null)
-                    {
-                        error("Task1 not yet completed");
-                        return;
+                        if (task1ID == null) {
+                            error("Task1 not yet completed");
+                            return;
+                        }
+
+                        String template = FileUtils.readFileToString(repository
+                                .getTemplate(CROWD_NERTASK2_TEMPLATE));
+                        String task2ID = namedEntityTaskManager.uploadNewNERTask2(template,
+                                task1ID, jCases, goldJCases);
+                        selectedCrowdJob.setTask2Id(task2ID);
+                        repository.createCrowdJob(selectedCrowdJob);
+
+                        int omittedSentences = namedEntityTaskManager.getOmittedSentences();
+                        if (omittedSentences == 0) {
+                            info("Crowdflower task " + task2ID + " uploaded succesfully.");
+                        }
+                        else {
+                            warn("Crowdflower task " + task2ID + " uploaded succesfully, but "
+                                    + omittedSentences
+                                    + " sentences were omitted due to processing errors (see log).");
+                        }
+
                     }
-
-                    String template = FileUtils.readFileToString(repository.getTemplate(CROWD_NERTASK2_TEMPLATE));
-                    String task2ID = namedEntityTaskManager.uploadNewNERTask2(template, task1ID, jCases, goldJCases);
-                    selectedCrowdJob.setTask2Id(task2ID);
-                    repository.createCrowdJob(selectedCrowdJob);
-
-                    int omittedSentences = namedEntityTaskManager.getOmittedSentences();
-                    if(omittedSentences==0)
-                    {
-                        info("Crowdflower task " + task2ID + " uploaded succesfully.");
-                    }else
-                    {
-                        warn("Crowdflower task " + task2ID + " uploaded succesfully, but " + omittedSentences
-                                + " sentences were omitted due to processing errors (see log).");
-                    }
-
-                    }catch (FileNotFoundException e)
-                    {
+                    catch (FileNotFoundException e) {
                         error("Could not find the template file for NER task 1: " + e.getMessage());
                     }
                     catch (JsonProcessingException e) {
                         error("Template for NER task 1 is mal formated: " + e.getMessage());
                     }
                     catch (IOException e) {
-                        error("There was a problem reading the NER task 1 template file: " + e.getMessage());
-                    }catch (Exception e) {
-                        error("Something went wrong uploading your document(s) to crowdflower.com: " + e.getMessage());
+                        error("There was a problem reading the NER task 1 template file: "
+                                + e.getMessage());
+                    }
+                    catch (Exception e) {
+                        error("Something went wrong uploading your document(s) to crowdflower.com: "
+                                + e.getMessage());
                     }
 
                 }
@@ -876,16 +917,15 @@ public class CrowdSourcePage
                 }
             });
 
-
             add(new Button("retrieveT2", new ResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;
+
                 @Override
                 public void onSubmit()
                 {
                     try {
-                        if(namedEntityTaskManager == null)
-                        {
+                        if (namedEntityTaskManager == null) {
                             namedEntityTaskManager = new NamedEntityTaskManager();
                         }
 
@@ -898,39 +938,37 @@ public class CrowdSourcePage
 
                         String task2ID = selectedCrowdJob.getTask2Id();
 
-                        if(task2ID == null)
-                        {
+                        if (task2ID == null) {
                             error("Task2 not yet completed");
                             return;
                         }
 
-                        //clear previous annotation / imports for the crowd user
-                        int i=0;
-                        for(JCas cas : jCases)
-                        {
-                            BratAnnotatorUtility.clearJcasAnnotations(cas, sourceDocuments.get(i), user, repository);
+                        // clear previous annotation / imports for the crowd user
+                        int i = 0;
+                        for (JCas cas : jCases) {
+                            BratAnnotatorUtility.clearJcasAnnotations(cas, sourceDocuments.get(i),
+                                    user, repository);
                             i++;
                         }
 
-                        //import job results from crowdflwoer
+                        // import job results from crowdflwoer
                         namedEntityTaskManager.setCrowdJobAnnotationsInDocs(task2ID, jCases);
 
-                        //save all changed document annotations on disk
-                        i=0;
-                        for(JCas cas : jCases)
-                        {
+                        // save all changed document annotations on disk
+                        i = 0;
+                        for (JCas cas : jCases) {
                             SourceDocument document = sourceDocuments.get(i);
                             repository.createAnnotationDocumentContent(cas, document, user);
                             i++;
                         }
                         int omittedEntities = namedEntityTaskManager.getOmittedEntities();
 
-                        if(omittedEntities==0)
-                        {
+                        if (omittedEntities == 0) {
                             info("Crowdflower job annotations imported succesfully for this task.");
-                        }else
-                        {
-                            warn("Warning: Crowdflower job annotations imported succesfully for this task, but " + omittedEntities
+                        }
+                        else {
+                            warn("Warning: Crowdflower job annotations imported succesfully for this task, but "
+                                    + omittedEntities
                                     + " annotations were omitted due to processing errors (see log).");
                         }
                     }
@@ -939,8 +977,10 @@ public class CrowdSourcePage
                     }
                     catch (IOException e) {
                         error("Input/Output exception: " + e.getMessage());
-                    }catch (Exception e) {
-                        error("Something went wrong importing your document(s) from crowdflower.com: " + e.getMessage());
+                    }
+                    catch (Exception e) {
+                        error("Something went wrong importing your document(s) from crowdflower.com: "
+                                + e.getMessage());
                     }
                 }
 
@@ -951,7 +991,6 @@ public class CrowdSourcePage
                 }
             });
 
-
             // update the status of this source document from crowd
             add(new Button("update", new ResourceModel("label"))
             {
@@ -960,27 +999,21 @@ public class CrowdSourcePage
                 @Override
                 public void onSubmit()
                 {
-                    if(namedEntityTaskManager == null)
-                    {
+                    if (namedEntityTaskManager == null) {
                         namedEntityTaskManager = new NamedEntityTaskManager();
                     }
                     namedEntityTaskManager.setAPIKey(selectedCrowdJob.getApiKey());
 
-                    // Get the source document here
-                    List<SourceDocument> sourceDocuments = new ArrayList<SourceDocument>(
-                            selectedCrowdJob.getDocuments());
-
-
                     String id1 = selectedCrowdJob.getTask1Id();
-                    if(id1 == null) {
+                    if (id1 == null) {
                         id1 = "";
                     }
                     String id2 = selectedCrowdJob.getTask2Id();
-                    if(id2 == null) {
+                    if (id2 == null) {
                         id2 = "";
                     }
 
-                    String status = namedEntityTaskManager.getStatusString(id1,id2);
+                    String status = namedEntityTaskManager.getStatusString(id1, id2);
                     selectedCrowdJob.setStatus(status);
                     try {
                         repository.createCrowdJob(selectedCrowdJob);
@@ -999,18 +1032,6 @@ public class CrowdSourcePage
             });
         }
     }
-
-    private static boolean isPositiveNumber(String str)
-    {
-        for (char c : str.toCharArray())
-        {
-            if (!Character.isDigit(c)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     private void addJCas(List<JCas> jCases, User user, SourceDocument sourceDocument)
     {
         AnnotationDocument annotationDocument;
@@ -1018,11 +1039,7 @@ public class CrowdSourcePage
         try {
             if (repository.existsAnnotationDocument(sourceDocument, user)) {
 
-                BratAjaxCasController controller = new BratAjaxCasController(repository,
-                        annotationService);
-
-                jCas =  repository.readJCas(sourceDocument,
-                        selectedProject, user);
+                jCas = repository.readJCas(sourceDocument, selectedProject, user);
 
                 jCases.add(jCas);
             }
@@ -1035,10 +1052,9 @@ public class CrowdSourcePage
                 annotationDocument.setName(sourceDocument.getName());
                 repository.createAnnotationDocument(annotationDocument);
 
-                jCas = repository.getJCasFromFile(
-                        repository.getSourceDocumentContent(sourceDocument),
-                        repository.getReadableFormats().get(
-                                sourceDocument.getFormat()));
+                jCas = repository.getJCasFromFile(repository
+                        .getSourceDocumentContent(sourceDocument), repository.getReadableFormats()
+                        .get(sourceDocument.getFormat()));
                 repository.createAnnotationDocumentContent(jCas, sourceDocument, user);
                 jCases.add(jCas);
             }
@@ -1079,7 +1095,8 @@ public class CrowdSourcePage
                             for (SourceDocument sourceDocument : repository
                                     .listSourceDocuments(selectedProject)) {
                                 // if not a GOLD data!
-                                if(!sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
+                                if (!sourceDocument.getState().equals(
+                                        SourceDocumentState.CURATION_FINISHED)) {
                                     sourceDocuments.add(sourceDocument);
                                 }
                             }
@@ -1157,105 +1174,107 @@ public class CrowdSourcePage
     }
 
     private class GoldDocumentListForm
-    extends Form<SelectionModel>
-{
-    private static final long serialVersionUID = 293213755095594897L;
-
-    public GoldDocumentListForm(String id)
+        extends Form<SelectionModel>
     {
-        super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
+        private static final long serialVersionUID = 293213755095594897L;
 
-        add(new CheckBoxMultipleChoice<SourceDocument>("goldDocuments")
+        public GoldDocumentListForm(String id)
         {
-            private static final long serialVersionUID = 1L;
+            super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
 
+            add(new CheckBoxMultipleChoice<SourceDocument>("goldDocuments")
             {
-                setChoices(new LoadableDetachableModel<List<SourceDocument>>()
+                private static final long serialVersionUID = 1L;
+
                 {
-                    private static final long serialVersionUID = -6821990375210752730L;
-
-                    @Override
-                    protected List<SourceDocument> load()
+                    setChoices(new LoadableDetachableModel<List<SourceDocument>>()
                     {
-                        List<SourceDocument> sourceDocuments = new ArrayList<SourceDocument>();
-                        for (SourceDocument sourceDocument : repository
-                                .listSourceDocuments(selectedProject)) {
-                            if(sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
-                                sourceDocuments.add(sourceDocument);
-                            }
-                        }
+                        private static final long serialVersionUID = -6821990375210752730L;
 
-                        // remove already added gold documents from the list
-                        for (CrowdJob crowdJob : repository.listCrowdJobs()) {
-                            sourceDocuments.removeAll(new ArrayList<SourceDocument>(crowdJob
-                                    .getGoldDocuments()));
-                        }
-
-                        Collections.sort(sourceDocuments, new Comparator<SourceDocument>()
+                        @Override
+                        protected List<SourceDocument> load()
                         {
-                            @Override
-                            public int compare(SourceDocument doc1, SourceDocument doc2)
-                            {
-                                return (doc1.getProject().getName() + doc1.getName())
-                                        .compareTo(doc2.getProject().getName() + doc2.getName());
+                            List<SourceDocument> sourceDocuments = new ArrayList<SourceDocument>();
+                            for (SourceDocument sourceDocument : repository
+                                    .listSourceDocuments(selectedProject)) {
+                                if (sourceDocument.getState().equals(
+                                        SourceDocumentState.CURATION_FINISHED)) {
+                                    sourceDocuments.add(sourceDocument);
+                                }
                             }
-                        });
 
-                        return sourceDocuments;
-                    }
-                });
-                setChoiceRenderer(new ChoiceRenderer<SourceDocument>()
-                {
-                    private static final long serialVersionUID = 5990012140581607347L;
+                            // remove already added gold documents from the list
+                            for (CrowdJob crowdJob : repository.listCrowdJobs()) {
+                                sourceDocuments.removeAll(new ArrayList<SourceDocument>(crowdJob
+                                        .getGoldDocuments()));
+                            }
 
-                    @Override
-                    public Object getDisplayValue(SourceDocument aObject)
+                            Collections.sort(sourceDocuments, new Comparator<SourceDocument>()
+                            {
+                                @Override
+                                public int compare(SourceDocument doc1, SourceDocument doc2)
+                                {
+                                    return (doc1.getProject().getName() + doc1.getName())
+                                            .compareTo(doc2.getProject().getName() + doc2.getName());
+                                }
+                            });
+
+                            return sourceDocuments;
+                        }
+                    });
+                    setChoiceRenderer(new ChoiceRenderer<SourceDocument>()
                     {
-                        return aObject.getName();
-                    }
-                });
-            }
-        }).setOutputMarkupId(true);
+                        private static final long serialVersionUID = 5990012140581607347L;
 
-        add(new Button("add", new ResourceModel("label"))
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void onSubmit()
-            {
-
-                List<SourceDocument> sourceDocuments = GoldDocumentListForm.this
-                        .getModelObject().goldDocuments;
-                if (sourceDocuments != null) {
-                    Set<SourceDocument> oldDocuments = selectedCrowdJob.getGoldDocuments();
-                    sourceDocuments.addAll(new ArrayList<SourceDocument>(oldDocuments));
-                    selectedCrowdJob.setGoldDocuments(new HashSet<SourceDocument>(sourceDocuments));
-                    try {
-                        repository.createCrowdJob(selectedCrowdJob);
-                    }
-                    catch (IOException e) {
-                        error("Problem Processing Log file");
-                    }
+                        @Override
+                        public Object getDisplayValue(SourceDocument aObject)
+                        {
+                            return aObject.getName();
+                        }
+                    });
                 }
-                GoldDocumentListForm.this.setVisible(false);
-            }
-        });
+            }).setOutputMarkupId(true);
 
-        // add documents to the crowd source project
-        add(new Button("cancel", new ResourceModel("label"))
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void onSubmit()
+            add(new Button("add", new ResourceModel("label"))
             {
-                GoldDocumentListForm.this.setVisible(false);
-            }
-        });
-    }
+                private static final long serialVersionUID = 1L;
 
-}
+                @Override
+                public void onSubmit()
+                {
+
+                    List<SourceDocument> sourceDocuments = GoldDocumentListForm.this
+                            .getModelObject().goldDocuments;
+                    if (sourceDocuments != null) {
+                        Set<SourceDocument> oldDocuments = selectedCrowdJob.getGoldDocuments();
+                        sourceDocuments.addAll(new ArrayList<SourceDocument>(oldDocuments));
+                        selectedCrowdJob.setGoldDocuments(new HashSet<SourceDocument>(
+                                sourceDocuments));
+                        try {
+                            repository.createCrowdJob(selectedCrowdJob);
+                        }
+                        catch (IOException e) {
+                            error("Problem Processing Log file");
+                        }
+                    }
+                    GoldDocumentListForm.this.setVisible(false);
+                }
+            });
+
+            // add documents to the crowd source project
+            add(new Button("cancel", new ResourceModel("label"))
+            {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public void onSubmit()
+                {
+                    GoldDocumentListForm.this.setVisible(false);
+                }
+            });
+        }
+
+    }
 
     private void updateTable()
     {
@@ -1270,8 +1289,6 @@ public class CrowdSourcePage
         private static final long serialVersionUID = -3632527878408587144L;
 
         private int columnNumber;
-
-        private Project project;
 
         public DocumentColumnMetaData(final TableDataProvider prov, final int colNumber)
         {
@@ -1333,21 +1350,16 @@ public class CrowdSourcePage
         }
     }
 
-    static private class SelectionModel
+    static public class SelectionModel
         implements Serializable
     {
 
-
-        private static final long serialVersionUID = -1L;
-
-        /*
-         * private Project project; private SourceDocument document;
-         */
+        private static final long serialVersionUID = 4339073913927301132L;
         Project project;
         String name;
         String apiKey;
-        String useSents;
-        String useGoldSents;
+        int useSents;
+        int useGoldSents;
         List<SourceDocument> documents;
         List<SourceDocument> goldDocuments;
         String link;

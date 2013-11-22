@@ -84,6 +84,9 @@ public class CrowdJob
     @JoinColumn(name = "task2_id")
     private String task2Id;
 
+    int useSents =-1;
+    int useGoldSents =-1;
+
 
     public long getId()
     {
@@ -207,6 +210,27 @@ public class CrowdJob
     {
         return goldDocuments;
     }
+
+    public int getUseSents()
+    {
+        return useSents;
+    }
+
+    public void setUseSents(int useSents)
+    {
+        this.useSents = useSents;
+    }
+
+    public int getUseGoldSents()
+    {
+        return useGoldSents;
+    }
+
+    public void setUseGoldSents(int useGoldSents)
+    {
+        this.useGoldSents = useGoldSents;
+    }
+
     @PersistenceContext(type=PersistenceContextType.EXTENDED)
     public void setGoldDocuments(Set<SourceDocument> goldDocuments)
     {
