@@ -33,6 +33,7 @@ import javax.persistence.NoResultException;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
@@ -40,6 +41,7 @@ import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.IHeaderResponse;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.NumberTextField;
+import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -130,6 +132,13 @@ public class CorrectionPage
 
     public CorrectionPage()
     {
+        
+        final FeedbackPanel feedbackPanel = new FeedbackPanel("feedback");
+        add(feedbackPanel);
+        feedbackPanel.setOutputMarkupId(true);
+        feedbackPanel.add(new AttributeModifier("class", "info"));
+        feedbackPanel.add(new AttributeModifier("class", "error"));
+        
         bratAnnotatorModel = new BratAnnotatorModel();
         bratAnnotatorModel.setMode(Mode.CORRECTION);
 
@@ -152,6 +161,7 @@ public class CorrectionPage
                 try {
                     // update begin/end of the curationsegment based on bratAnnotatorModel changes
                     // (like sentence change in auto-scroll mode,....
+                    aTarget.add(feedbackPanel);
                     curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
                     setCurationSegmentBeginEnd();
 
@@ -160,15 +170,12 @@ public class CorrectionPage
                             curationSegment, annotationService, jsonConverter);
                 }
                 catch (UIMAException e) {
-                    aTarget.add(getFeedbackPanel());
                     error(ExceptionUtils.getRootCause(e));
                 }
                 catch (ClassNotFoundException e) {
-                    aTarget.add(getFeedbackPanel());
                     error(e.getMessage());
                 }
                 catch (IOException e) {
-                    aTarget.add(getFeedbackPanel());
                     error(e.getMessage());
                 }
                 catch (BratAnnotationException e) {
@@ -192,6 +199,9 @@ public class CorrectionPage
                     BratAnnotatorModel aBratAnnotatorModel)
             {
                 try {
+                    aTarget.add(feedbackPanel);
+                    info(bratAnnotatorModel.getMessage());
+                    aTarget.add(feedbackPanel);
                     bratAnnotatorModel = aBratAnnotatorModel;
                     CurationBuilder builder = new CurationBuilder(repository);
                     curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
@@ -205,19 +215,15 @@ public class CorrectionPage
                     aTarget.add(numberOfPages);
                 }
                 catch (UIMAException e) {
-                    aTarget.add(getFeedbackPanel());
                     error(ExceptionUtils.getRootCause(e));
                 }
                 catch (ClassNotFoundException e) {
-                    aTarget.add(getFeedbackPanel());
                     error(e.getMessage());
                 }
                 catch (IOException e) {
-                    aTarget.add(getFeedbackPanel());
                     error(e.getMessage());
                 }
                 catch (BratAnnotationException e) {
-                    aTarget.add(getFeedbackPanel());
                     error(e.getMessage());
                 }
             }
@@ -245,6 +251,7 @@ public class CorrectionPage
 
                             JCas mergeJCas = null;
                             try {
+                                
                                 mergeJCas = repository
                                         .getCorrectionDocumentContent(bratAnnotatorModel
                                                 .getDocument());
@@ -332,7 +339,7 @@ public class CorrectionPage
                         }
 
                         try {
-
+                            target.add(feedbackPanel);
                             bratAnnotatorModel.setDocument(bratAnnotatorModel.getDocument());
                             bratAnnotatorModel.setProject(bratAnnotatorModel.getProject());
 
@@ -347,19 +354,15 @@ public class CorrectionPage
 
                         }
                         catch (UIMAException e) {
-                            target.add(getFeedbackPanel());
                             error(ExceptionUtils.getRootCause(e));
                         }
                         catch (ClassNotFoundException e) {
-                            target.add(getFeedbackPanel());
                             error(e.getMessage());
                         }
                         catch (IOException e) {
-                            target.add(getFeedbackPanel());
                             error(e.getMessage());
                         }
                         catch (BratAnnotationException e) {
-                            target.add(getFeedbackPanel());
                             error(e.getMessage());
                         }
                         finish.setModelObject(bratAnnotatorModel);
@@ -383,6 +386,7 @@ public class CorrectionPage
             {
                 curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
                 try {
+                    aTarget.add(feedbackPanel);
                     setCurationSegmentBeginEnd();
                 }
                 catch (UIMAException e) {
@@ -453,6 +457,7 @@ public class CorrectionPage
                 }
                 JCas mergeJCas = null;
                 try {
+                    aTarget.add(feedbackPanel);
                     mergeJCas = repository.getCorrectionDocumentContent(bratAnnotatorModel
                             .getDocument());
                     if (bratAnnotatorModel.getSentenceAddress() != gotoPageAddress) {
@@ -474,19 +479,15 @@ public class CorrectionPage
                     }
                 }
                 catch (UIMAException e) {
-                    aTarget.add(getFeedbackPanel());
                     error(ExceptionUtils.getRootCause(e));
                 }
                 catch (ClassNotFoundException e) {
-                    aTarget.add(getFeedbackPanel());
                     error(e.getMessage());
                 }
                 catch (IOException e) {
-                    aTarget.add(getFeedbackPanel());
                     error(e.getMessage());
                 }
                 catch (BratAnnotationException e) {
-                    aTarget.add(getFeedbackPanel());
                     error(e.getMessage());
                 }
             }
@@ -521,6 +522,7 @@ public class CorrectionPage
             @Override
             public void onClick(AjaxRequestTarget target)
             {
+                target.add(feedbackPanel);
                 // List of all Source Documents in the project
                 List<SourceDocument> listOfSourceDocuements = repository
                         .listSourceDocuments(bratAnnotatorModel.getProject());
@@ -571,7 +573,7 @@ public class CorrectionPage
                         error(ExceptionUtils.getRootCause(e));
                     }
                     catch (BratAnnotationException e) {
-                        target.add(getFeedbackPanel());
+                        target.add(feedbackPanel);
                         error(e.getMessage());
                     }
 
@@ -594,6 +596,7 @@ public class CorrectionPage
             @Override
             public void onClick(AjaxRequestTarget target)
             {
+                target.add(feedbackPanel);
                 // List of all Source Documents in the project
                 List<SourceDocument> listOfSourceDocuements = repository
                         .listSourceDocuments(bratAnnotatorModel.getProject());
@@ -644,7 +647,7 @@ public class CorrectionPage
                     error(ExceptionUtils.getRootCause(e));
                 }
                 catch (BratAnnotationException e) {
-                    target.add(getFeedbackPanel());
+                    target.add(feedbackPanel);
                     error(e.getMessage());
                 }
 
@@ -669,6 +672,7 @@ public class CorrectionPage
                 if (bratAnnotatorModel.getDocument() != null) {
                     JCas mergeJCas = null;
                     try {
+                        aTarget.add(feedbackPanel);
                         mergeJCas = repository.getCorrectionDocumentContent(bratAnnotatorModel
                                 .getDocument());
                         int address = BratAjaxCasUtil.selectSentenceAt(mergeJCas,
@@ -698,19 +702,15 @@ public class CorrectionPage
                         }
                     }
                     catch (UIMAException e) {
-                        aTarget.add(getFeedbackPanel());
                         error(ExceptionUtils.getRootCause(e));
                     }
                     catch (ClassNotFoundException e) {
-                        aTarget.add(getFeedbackPanel());
                         error(e.getMessage());
                     }
                     catch (IOException e) {
-                        aTarget.add(getFeedbackPanel());
                         error(e.getMessage());
                     }
                     catch (BratAnnotationException e) {
-                        aTarget.add(getFeedbackPanel());
                         error(e.getMessage());
                     }
                 }
@@ -732,6 +732,7 @@ public class CorrectionPage
 
                     JCas mergeJCas = null;
                     try {
+                        aTarget.add(feedbackPanel);
                         mergeJCas = repository.getCorrectionDocumentContent(bratAnnotatorModel
                                 .getDocument());
                         int previousSentenceAddress = BratAjaxCasUtil
@@ -759,19 +760,15 @@ public class CorrectionPage
                         }
                     }
                     catch (UIMAException e) {
-                        aTarget.add(getFeedbackPanel());
                         error(ExceptionUtils.getRootCause(e));
                     }
                     catch (ClassNotFoundException e) {
-                        aTarget.add(getFeedbackPanel());
                         error(e.getMessage());
                     }
-                    catch (IOException e) {
-                        aTarget.add(getFeedbackPanel());
+                    catch (IOException e) {;
                         error(e.getMessage());
                     }
                     catch (BratAnnotationException e) {
-                        aTarget.add(getFeedbackPanel());
                         error(e.getMessage());
                     }
                 }
@@ -791,6 +788,7 @@ public class CorrectionPage
                 if (bratAnnotatorModel.getDocument() != null) {
                     JCas mergeJCas = null;
                     try {
+                        aTarget.add(feedbackPanel);
                         mergeJCas = repository.getCorrectionDocumentContent(bratAnnotatorModel
                                 .getDocument());
 
@@ -819,19 +817,15 @@ public class CorrectionPage
                         }
                     }
                     catch (UIMAException e) {
-                        aTarget.add(getFeedbackPanel());
                         error(ExceptionUtils.getRootCause(e));
                     }
                     catch (ClassNotFoundException e) {
-                        aTarget.add(getFeedbackPanel());
                         error(e.getMessage());
                     }
                     catch (IOException e) {
-                        aTarget.add(getFeedbackPanel());
                         error(e.getMessage());
                     }
                     catch (BratAnnotationException e) {
-                        aTarget.add(getFeedbackPanel());
                         error(e.getMessage());
                     }
                 }
@@ -851,6 +845,7 @@ public class CorrectionPage
                 if (bratAnnotatorModel.getDocument() != null) {
                     JCas mergeJCas = null;
                     try {
+                        aTarget.add(feedbackPanel);
                         mergeJCas = repository.getCorrectionDocumentContent(bratAnnotatorModel
                                 .getDocument());
                         int lastDisplayWindowBeginingSentenceAddress = BratAjaxCasUtil
@@ -879,19 +874,15 @@ public class CorrectionPage
                         }
                     }
                     catch (UIMAException e) {
-                        aTarget.add(getFeedbackPanel());
                         error(ExceptionUtils.getRootCause(e));
                     }
                     catch (ClassNotFoundException e) {
-                        aTarget.add(getFeedbackPanel());
                         error(e.getMessage());
                     }
                     catch (IOException e) {
-                        aTarget.add(getFeedbackPanel());
                         error(e.getMessage());
                     }
                     catch (BratAnnotationException e) {
-                        aTarget.add(getFeedbackPanel());
                         error(e.getMessage());
                     }
                 }

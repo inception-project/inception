@@ -170,9 +170,6 @@ public class BratAnnotator
             @Override
             protected void respond(AjaxRequestTarget aTarget)
             {
-                if (!getModelObject().getMessage().equals("")) {
-                    info(getModelObject().getMessage());
-                }
                 JCas jCas = null;
                 if (getModelObject().getDocument() != null) {
                     try {
@@ -536,6 +533,12 @@ public class BratAnnotator
         // + "dispatcher.post('collectionChanged');"
         };
         aTarget.appendJavaScript("\n" + StringUtils.join(script, "\n"));
+    }
+    
+    @Override
+    protected void onAfterRender(){
+        super.onAfterRender();
+        Session.get().getFeedbackMessages().clear();
     }
 
     private JCas getCas(Project aProject, User user, SourceDocument aDocument, Mode aMode)

@@ -26,6 +26,7 @@ import java.util.List;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
@@ -33,6 +34,7 @@ import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.IHeaderResponse;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.NumberTextField;
+import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -112,6 +114,12 @@ public class AnnotationPage
     public AnnotationPage()
     {
 
+        final FeedbackPanel feedbackPanel = new FeedbackPanel("feedback");
+        add(feedbackPanel);
+        feedbackPanel.setOutputMarkupId(true);
+        feedbackPanel.add(new AttributeModifier("class", "info"));
+        feedbackPanel.add(new AttributeModifier("class", "error"));
+        
         annotator = new BratAnnotator("embedder1",
                 new Model<BratAnnotatorModel>(bratAnnotatorModel))
         {
@@ -124,6 +132,8 @@ public class AnnotationPage
             {
                 // updateRightSide(aTarget, sentenceOuterView, curationContainer, this);
                 bratAnnotatorModel = aBratAnnotatorModel;
+                aTarget.add(feedbackPanel);
+                info(bratAnnotatorModel.getMessage());
                 aTarget.add(numberOfPages);
             }
         };
@@ -276,15 +286,15 @@ public class AnnotationPage
                                     + "';Wicket.Window.unloadConfirmation=false;window.location.reload()");
                         }
                         catch (IOException e) {
-                            target.add(getFeedbackPanel());
+                            target.add(feedbackPanel);
                             error(e.getMessage());
                         }
                         catch (UIMAException e) {
-                            target.add(getFeedbackPanel());
+                            target.add(feedbackPanel);
                             error(ExceptionUtils.getRootCauseMessage(e));
                         }
                         catch (ClassNotFoundException e) {
-                            target.add(getFeedbackPanel());
+                            target.add(feedbackPanel);
                             error(e.getMessage());
                         }
                     }
@@ -360,19 +370,19 @@ public class AnnotationPage
                             bratAnnotatorModel.getUser().getUsername());
                 }
                 catch (UIMAException e) {
-                    aTarget.add(getFeedbackPanel());
+                    aTarget.add(feedbackPanel);
                     error(ExceptionUtils.getRootCauseMessage(e));
                 }
                 catch (ClassNotFoundException e) {
-                    aTarget.add(getFeedbackPanel());
+                    aTarget.add(feedbackPanel);
                     error(e.getMessage());
                 }
                 catch (IOException e) {
-                    aTarget.add(getFeedbackPanel());
+                    aTarget.add(feedbackPanel);
                     error(e.getMessage());
                 }
+                aTarget.add(feedbackPanel);
                 aTarget.add(finish.setOutputMarkupId(true));
-                annotator.reloadContent(aTarget);
                 aTarget.add(numberOfPages);
                 updateSentenceAddress();
                 aTarget.add(documentNamePanel);
@@ -427,18 +437,16 @@ public class AnnotationPage
                             bratAnnotatorModel.getUser().getUsername());
                     loadDocumentAction();
                 }
-                catch (UIMAException e) {
-                    aTarget.add(getFeedbackPanel());
+                catch (UIMAException e) {                
                     error(ExceptionUtils.getRootCauseMessage(e));
                 }
                 catch (ClassNotFoundException e) {
-                    aTarget.add(getFeedbackPanel());
                     error(e.getMessage());
                 }
                 catch (IOException e) {
-                    aTarget.add(getFeedbackPanel());
                     error(e.getMessage());
                 }
+                aTarget.add(feedbackPanel);
                 aTarget.add(finish.setOutputMarkupId(true));
                 aTarget.add(numberOfPages);
                 aTarget.add(documentNamePanel);
@@ -457,7 +465,7 @@ public class AnnotationPage
              * window
              */
             @Override
-            public void onClick(AjaxRequestTarget target)
+            public void onClick(AjaxRequestTarget aTarget)
             {
                 if (bratAnnotatorModel.getDocument() != null) {
                     JCas jCas = getJCas(bratAnnotatorModel.getProject(),
@@ -472,17 +480,17 @@ public class AnnotationPage
                         Sentence sentence = selectByAddr(jCas, Sentence.class, nextSentenceAddress);
                         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
-                        // target.add(annotator);
-                        annotator.reloadContent(target);
-                        target.add(numberOfPages);
+                        aTarget.add(feedbackPanel);
+                        annotator.reloadContent(aTarget);
+                        aTarget.add(numberOfPages);
                     }
 
                     else {
-                        target.appendJavaScript("alert('This is last page!')");
+                        aTarget.appendJavaScript("alert('This is last page!')");
                     }
                 }
                 else {
-                    target.appendJavaScript("alert('Please open a document first!')");
+                    aTarget.appendJavaScript("alert('Please open a document first!')");
                 }
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Page_down }, EventType.click)));
@@ -493,7 +501,7 @@ public class AnnotationPage
             private static final long serialVersionUID = 7496156015186497496L;
 
             @Override
-            public void onClick(AjaxRequestTarget target)
+            public void onClick(AjaxRequestTarget aTarget)
             {
                 if (bratAnnotatorModel.getDocument() != null) {
 
@@ -511,16 +519,16 @@ public class AnnotationPage
                                 previousSentenceAddress);
                         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
-                        // target.add(annotator);
-                        annotator.reloadContent(target);
-                        target.add(numberOfPages);
+                        aTarget.add(feedbackPanel);
+                        annotator.reloadContent(aTarget);
+                        aTarget.add(numberOfPages);
                     }
                     else {
-                        target.appendJavaScript("alert('This is First Page!')");
+                        aTarget.appendJavaScript("alert('This is First Page!')");
                     }
                 }
                 else {
-                    target.appendJavaScript("alert('Please open a document first!')");
+                    aTarget.appendJavaScript("alert('Please open a document first!')");
                 }
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Page_up }, EventType.click)));
@@ -530,7 +538,7 @@ public class AnnotationPage
             private static final long serialVersionUID = 7496156015186497496L;
 
             @Override
-            public void onClick(AjaxRequestTarget target)
+            public void onClick(AjaxRequestTarget aTarget)
             {
                 if (bratAnnotatorModel.getDocument() != null) {
 
@@ -547,16 +555,16 @@ public class AnnotationPage
                         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                        // target.add(annotator);
-                        annotator.reloadContent(target);
-                        target.add(numberOfPages);
+                        aTarget.add(feedbackPanel);
+                        annotator.reloadContent(aTarget);
+                        aTarget.add(numberOfPages);
                     }
                     else {
-                        target.appendJavaScript("alert('This is first page!')");
+                        aTarget.appendJavaScript("alert('This is first page!')");
                     }
                 }
                 else {
-                    target.appendJavaScript("alert('Please open a document first!')");
+                    aTarget.appendJavaScript("alert('Please open a document first!')");
                 }
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Home }, EventType.click)));
@@ -566,7 +574,7 @@ public class AnnotationPage
             private static final long serialVersionUID = 7496156015186497496L;
 
             @Override
-            public void onClick(AjaxRequestTarget target)
+            public void onClick(AjaxRequestTarget aTarget)
             {
                 if (bratAnnotatorModel.getDocument() != null) {
 
@@ -587,16 +595,16 @@ public class AnnotationPage
                                 lastDisplayWindowBeginingSentenceAddress);
                         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
-                        // target.add(annotator);
-                        annotator.reloadContent(target);
-                        target.add(numberOfPages);
+                        aTarget.add(feedbackPanel);
+                        annotator.reloadContent(aTarget);
+                        aTarget.add(numberOfPages);
                     }
                     else {
-                        target.appendJavaScript("alert('This is last Page!')");
+                        aTarget.appendJavaScript("alert('This is last Page!')");
                     }
                 }
                 else {
-                    target.appendJavaScript("alert('Please open a document first!')");
+                    aTarget.appendJavaScript("alert('Please open a document first!')");
                 }
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.End }, EventType.click)));
@@ -630,14 +638,14 @@ public class AnnotationPage
             private static final long serialVersionUID = 7496156015186497496L;
 
             @Override
-            public void onClick(AjaxRequestTarget target)
+            public void onClick(AjaxRequestTarget aTarget)
             {
                 if (gotoPageAddress == 0) {
-                    target.appendJavaScript("alert('The sentence number entered is not valid')");
+                    aTarget.appendJavaScript("alert('The sentence number entered is not valid')");
                     return;
                 }
                 if (bratAnnotatorModel.getDocument() == null) {
-                    target.appendJavaScript("alert('Please open a document first!')");
+                    aTarget.appendJavaScript("alert('Please open a document first!')");
                     return;
                 }
                 if (bratAnnotatorModel.getSentenceAddress() != gotoPageAddress) {
@@ -650,12 +658,12 @@ public class AnnotationPage
                     bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                     bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                    // target.add(annotator);
-                    annotator.reloadContent(target);
-                    target.add(numberOfPages);
+                    aTarget.add(feedbackPanel);
+                    annotator.reloadContent(aTarget);
+                    aTarget.add(numberOfPages);
                 }
                 else {
-                    target.appendJavaScript("alert('This sentence is on the same page!')");
+                    aTarget.appendJavaScript("alert('This sentence is on the same page!')");
                 }
             }
         });

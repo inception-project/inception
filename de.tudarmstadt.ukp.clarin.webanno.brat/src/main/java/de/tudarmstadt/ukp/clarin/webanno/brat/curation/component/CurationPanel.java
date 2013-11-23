@@ -35,6 +35,7 @@ import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
+import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -122,6 +123,12 @@ public class CurationPanel
     public CurationPanel(String id, final CurationContainer curationContainer)
     {
         super(id);
+        
+        final FeedbackPanel feedbackPanel = new FeedbackPanel("feedbackPanel");
+        add(feedbackPanel);
+        feedbackPanel.setOutputMarkupId(true);
+        feedbackPanel.add(new AttributeModifier("class", "info"));
+        feedbackPanel.add(new AttributeModifier("class", "error"));
 
         // add container for updating ajax
         final WebMarkupContainer textOuterView = new WebMarkupContainer("textOuterView");
@@ -178,6 +185,8 @@ public class CurationPanel
             @Override
             protected void onChange(AjaxRequestTarget aTarget, BratAnnotatorModel bratAnnotatorModel)
             {
+                aTarget.add(feedbackPanel);
+                info(bratAnnotatorModel.getMessage());
                 aTarget.add(sentenceOuterView);
                 try {
                     BratCuratorUtility.updatePanel(aTarget, sentenceOuterView,
