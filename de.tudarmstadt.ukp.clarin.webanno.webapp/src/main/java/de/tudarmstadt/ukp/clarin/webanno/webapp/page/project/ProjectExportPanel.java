@@ -106,11 +106,13 @@ public class ProjectExportPanel
 
     private int progress = 0;
     private ProgressBar fileGenerationProgress;
+    @SuppressWarnings("unused")
     private AjaxLink<Void> exportProjectLink;
 
     private String username;
     private String fileName;
     private String downloadedFile;
+    @SuppressWarnings("unused")
     private String projectName;
 
     private transient Thread thread = null;
@@ -228,13 +230,15 @@ public class ProjectExportPanel
         add(new DownloadLink("export", new LoadableDetachableModel<File>()
         {
             private static final long serialVersionUID = 840863954694163375L;
-
+            
+            
             @Override
             protected File load()
             {
                 File exportFile = null;
+                File exportTempDir = null;
                 try {
-                    File exportTempDir = File.createTempFile("webanno", "export");
+                    exportTempDir = File.createTempFile("webanno", "export");
                     exportTempDir.delete();
                     exportTempDir.mkdirs();
 
@@ -249,6 +253,7 @@ public class ProjectExportPanel
                         DaoUtils.zipFolder(exportTempDir, new File(exportTempDir.getAbsolutePath()
                                 + ".zip"));
                         exportFile = new File(exportTempDir.getAbsolutePath() + ".zip");
+                       
                     }
                 }
                 catch (IOException e) {
@@ -257,7 +262,15 @@ public class ProjectExportPanel
                 catch (Exception e) {
                     error(e.getMessage());
                 }
-
+                finally{
+                    try {
+                        FileUtils.forceDelete(exportTempDir);
+                    }
+                    catch (IOException e) {
+                        error("Unable to delete temp file");
+                    }
+                }
+              
                 return exportFile;
             }
         })
@@ -277,7 +290,7 @@ public class ProjectExportPanel
                 return enabled;
 
             }
-        }).setOutputMarkupId(true);
+        }.setDeleteAfterDownload(true)).setOutputMarkupId(true);
 
         final AJAXDownload exportProject = new AJAXDownload();
 
@@ -382,6 +395,7 @@ public class ProjectExportPanel
         exportTempDir = File.createTempFile("webanno-project", "export");
         exportTempDir.delete();
         exportTempDir.mkdirs();
+        File projectZipFile =  new File(exportTempDir.getAbsolutePath() + ".zip");
         if (aProjectModel.getObject().getId() == 0) {
             error("Project not yet created. Please save project details first!");
         }
@@ -401,14 +415,19 @@ public class ProjectExportPanel
             exportCuratedDocuments(aProjectModel.getObject(), exportTempDir);
             try {
                 DaoUtils.zipFolder(exportTempDir,
-                        new File(exportTempDir.getAbsolutePath() + ".zip"));
+                        projectZipFile);
             }
             catch (Exception e) {
                 throw new ZippingException("Unable to Zipp the file");
             }
+            finally{
+                FileUtils.forceDelete(projectSettings);
+                System.gc();
+                FileUtils.forceDelete(exportTempDir); 
+            }
             progress = 100;
         }
-        return new File(exportTempDir.getAbsolutePath() + ".zip");
+        return projectZipFile;
     }
 
     /**
@@ -696,7 +715,6 @@ public class ProjectExportPanel
             error("File Path not found or No permision to save the file!");
         }
     }
-
     public class FileGenerator
         implements Runnable
     {

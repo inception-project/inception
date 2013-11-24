@@ -20,15 +20,21 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.dialog;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
 import org.apache.wicket.request.Response;
 import org.apache.wicket.request.handler.resource.ResourceStreamRequestHandler;
 import org.apache.wicket.request.http.WebResponse;
 import org.apache.wicket.request.resource.ContentDisposition;
+import org.apache.wicket.util.resource.AbstractResourceStream;
 import org.apache.wicket.util.resource.AbstractResourceStreamWriter;
 import org.apache.wicket.util.resource.IResourceStream;
+import org.apache.wicket.util.resource.ResourceStreamNotFoundException;
 
 /**
  * @author Sven Meier
@@ -94,33 +100,24 @@ public class AJAXDownload
      */
     protected IResourceStream getResourceStream()
     {
-        return new AbstractResourceStreamWriter()
-        {
-            private static final long serialVersionUID = -8082795107860327077L;
-
-            public void write(Response output)
-            {
-                WebResponse response = (WebResponse) output;
-                byte[] buffer = new byte[256];
+        
+        IResourceStream resStream = new AbstractResourceStream() {
+            private static final long serialVersionUID = 1L;
+            InputStream inStream;
+            public InputStream getInputStream() throws ResourceStreamNotFoundException{
                 try {
-
-                    int read;
-                    @SuppressWarnings("resource")
-                    FileInputStream is = new FileInputStream(fileName);
-
-                    while ((read = is.read(buffer)) != -1) {
-                        response.write(buffer, 0, read);
-                        response.flush();
-                    }
-
-                    response.close();
-
+                    inStream =  new FileInputStream(fileName);
+                } catch (IOException e) {                               
                 }
-                catch (Exception e) {
-                    response.write(e.toString().getBytes());
-                    response.close();
-                }
+                return inStream;
+            }
+            public void close() throws IOException {
+                inStream.close();
+                inStream = null;
+                FileUtils.forceDelete(new File(fileName));
             }
         };
+        return resStream; 
+
     }
 }

@@ -143,7 +143,7 @@ public class ExportModalWindowPage
                             }
                             return downloadFile;
                         }
-                    }).setOutputMarkupId(true));
+                    }).setDeleteAfterDownload(true).setOutputMarkupId(true));
 
             add(new AjaxLink<Void>("close")
             {
