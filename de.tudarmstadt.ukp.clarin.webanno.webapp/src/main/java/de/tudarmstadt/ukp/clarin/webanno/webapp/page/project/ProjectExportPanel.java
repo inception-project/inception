@@ -230,8 +230,8 @@ public class ProjectExportPanel
         add(new DownloadLink("export", new LoadableDetachableModel<File>()
         {
             private static final long serialVersionUID = 840863954694163375L;
-            
-            
+
+
             @Override
             protected File load()
             {
@@ -253,7 +253,7 @@ public class ProjectExportPanel
                         DaoUtils.zipFolder(exportTempDir, new File(exportTempDir.getAbsolutePath()
                                 + ".zip"));
                         exportFile = new File(exportTempDir.getAbsolutePath() + ".zip");
-                       
+
                     }
                 }
                 catch (IOException e) {
@@ -270,7 +270,7 @@ public class ProjectExportPanel
                         error("Unable to delete temp file");
                     }
                 }
-              
+
                 return exportFile;
             }
         })
@@ -423,7 +423,7 @@ public class ProjectExportPanel
             finally{
                 FileUtils.forceDelete(projectSettings);
                 System.gc();
-                FileUtils.forceDelete(exportTempDir); 
+                FileUtils.forceDelete(exportTempDir);
             }
             progress = 100;
         }
@@ -491,6 +491,7 @@ public class ProjectExportPanel
                 if (CurationFileAsSerialisedCas.exists()) {
                     FileUtils.copyFileToDirectory(curationFile, curationDir);
                     FileUtils.copyFileToDirectory(CurationFileAsSerialisedCas, curationCasDir);
+                    FileUtils.forceDelete(curationFile);
                 }
             }
 
@@ -508,6 +509,7 @@ public class ProjectExportPanel
                 if (CorrectionFileAsSerialisedCas.exists()) {
                     FileUtils.copyFileToDirectory(correctionFile, curationDir);
                     FileUtils.copyFileToDirectory(CorrectionFileAsSerialisedCas, curationCasDir);
+                    FileUtils.forceDelete(correctionFile);
                 }
             }
         }
@@ -604,6 +606,7 @@ public class ProjectExportPanel
                         FileUtils.copyFileToDirectory(annotationFileAsSerialisedCas,
                                 annotationDocumentAsSerialisedCasDir);
                         FileUtils.copyFileToDirectory(annotationFile, annotationDocumentDir);
+                        FileUtils.forceDelete(annotationFile);
 
                     }
                 }

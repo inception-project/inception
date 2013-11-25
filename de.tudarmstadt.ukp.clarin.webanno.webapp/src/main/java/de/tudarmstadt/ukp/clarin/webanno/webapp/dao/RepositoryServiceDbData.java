@@ -153,7 +153,7 @@ public class RepositoryServiceDbData
 
     @Value(value = "${backup.keep.number}")
     private int backupKeepNumber;
-    
+
     @Resource(name = "formats")
     private Properties readWriteFileFormats;
 
@@ -482,6 +482,7 @@ public class RepositoryServiceDbData
         throws UIMAException, IOException, ClassNotFoundException
     {
         File exportTempDir = File.createTempFile("webanno", "export");
+        File exportFile;
         exportTempDir.delete();
         exportTempDir.mkdirs();
 
@@ -574,9 +575,16 @@ public class RepositoryServiceDbData
             catch (Exception e) {
                 createLog(project, aUser).info("Unable to create Zip File");
             }
-            return new File(exportTempDir.getAbsolutePath() + ".zip");
+            exportFile = new File(exportTempDir.getParent(), exportTempDir.getName() + ".zip");
+            FileUtils.forceDelete(exportTempDir);
+
+            return exportFile;
         }
-        return exportTempDir.listFiles()[0];
+        exportFile = new File(exportTempDir.getParent(), exportTempDir.listFiles()[0].getName());
+        FileUtils.copyFile(exportTempDir.listFiles()[0], exportFile);
+        FileUtils.forceDelete(exportTempDir);
+
+        return exportFile;
 
     }
 
@@ -1809,18 +1817,18 @@ public class RepositoryServiceDbData
     public void updateTimeStamp(SourceDocument aDocument, User aUser, Mode aMode)
         throws IOException
     {
-        if(aMode.equals(Mode.CURATION)){
+        if (aMode.equals(Mode.CURATION)) {
             aDocument.setTimestamp(new Timestamp(new Date().getTime()));
             entityManager.merge(aDocument);
         }
-        else{
+        else {
             AnnotationDocument annotationDocument = getAnnotationDocument(aDocument, aUser);
             annotationDocument.setSentenceAccessed(aDocument.getSentenceAccessed());
             annotationDocument.setTimestamp(new Timestamp(new Date().getTime()));
             entityManager.merge(annotationDocument);
         }
     }
-    
+
     @Override
     public String getDatabaseDriverName()
     {
@@ -1832,10 +1840,10 @@ public class RepositoryServiceDbData
             public void execute(Connection aConnection)
                 throws SQLException
             {
-               sb.append(aConnection.getMetaData().getDriverName());
+                sb.append(aConnection.getMetaData().getDriverName());
             }
         });
-        
+
         return sb.toString();
     }
 }
