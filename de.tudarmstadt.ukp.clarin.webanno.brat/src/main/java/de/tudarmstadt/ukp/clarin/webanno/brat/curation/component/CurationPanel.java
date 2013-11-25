@@ -48,8 +48,8 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationContainer;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationViewForSourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationUserSegmentForAnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationViewForSourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratCuratorUtility;
 
 /**
@@ -88,7 +88,7 @@ public class CurationPanel
      */
     private Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress = new HashMap<String, Map<Integer, AnnotationSelection>>();
 
-    private CurationViewForSourceDocument curationSegment;
+    private CurationViewForSourceDocument curationView;
 
     ListView<CurationViewForSourceDocument> textListView;
 
@@ -123,7 +123,7 @@ public class CurationPanel
     public CurationPanel(String id, final CurationContainer curationContainer)
     {
         super(id);
-        
+
         final FeedbackPanel feedbackPanel = new FeedbackPanel("feedbackPanel");
         add(feedbackPanel);
         feedbackPanel.setOutputMarkupId(true);
@@ -156,7 +156,7 @@ public class CurationPanel
                 try {
                     BratCuratorUtility.updatePanel(aTarget, this, curationContainer,
                             mergeVisualizer, repository, annotationSelectionByUsernameAndAddress,
-                            curationSegment, annotationService, jsonConverter);
+                            curationView, annotationService, jsonConverter);
                 }
                 catch (UIMAException e) {
                     error(ExceptionUtils.getRootCause(e));
@@ -191,7 +191,7 @@ public class CurationPanel
                 try {
                     BratCuratorUtility.updatePanel(aTarget, sentenceOuterView,
                             curationContainer, this, repository,
-                            annotationSelectionByUsernameAndAddress, curationSegment,
+                            annotationSelectionByUsernameAndAddress, curationView,
                             annotationService, jsonConverter);
                 }
                 catch (UIMAException e) {
@@ -221,7 +221,7 @@ public class CurationPanel
             @Override
             protected void populateItem(ListItem<CurationViewForSourceDocument> item)
             {
-                final CurationViewForSourceDocument curationSegmentItem = item.getModelObject();
+                final CurationViewForSourceDocument curationViewItem = item.getModelObject();
 
                 // ajax call when clicking on a sentence on the left side
                 final AbstractDefaultAjaxBehavior click = new AbstractDefaultAjaxBehavior()
@@ -231,17 +231,17 @@ public class CurationPanel
                     @Override
                     protected void respond(AjaxRequestTarget aTarget)
                     {
-                        curationSegment = curationSegmentItem;
+                        curationView = curationViewItem;
                         try {
                             BratCuratorUtility.updatePanel(aTarget, sentenceOuterView,
                                     curationContainer, mergeVisualizer, repository,
-                                    annotationSelectionByUsernameAndAddress, curationSegment,
+                                    annotationSelectionByUsernameAndAddress, curationView,
                                     annotationService, jsonConverter);
 
                         List<CurationViewForSourceDocument> views = curationContainer
                                 .getCurationViews();
                         for (CurationViewForSourceDocument segment : views) {
-                            segment.setCurrentSentence(curationSegmentItem.getSentenceNumber()
+                            segment.setCurrentSentence(curationViewItem.getSentenceNumber()
                                     .equals(segment.getSentenceNumber()));
                         }
                         textListView.setModelObject(views);
@@ -267,18 +267,18 @@ public class CurationPanel
 
                 // add subcomponents to the component
                 item.add(click);
-                String colorCode = curationSegmentItem.getSentenceState().getColorCode();
+                String colorCode = curationViewItem.getSentenceState().getColorCode();
 
                 if (colorCode != null) {
                     item.add(AttributeModifier.append("style", "background-color: " + colorCode
                             + ";"));
                 }
 
-                Label currentSentence = new AjaxLabel("sentence", curationSegmentItem.getText(),
+                Label currentSentence = new AjaxLabel("sentence", curationViewItem.getText(),
                         click);
                 item.add(currentSentence);
 
-                Label sentenceNumber = new AjaxLabel("sentenceNumber", curationSegmentItem
+                Label sentenceNumber = new AjaxLabel("sentenceNumber", curationViewItem
                         .getSentenceNumber().toString(), click);
                 item.add(sentenceNumber);
             }
