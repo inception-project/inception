@@ -56,7 +56,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.CurationViewPan
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.AnnotationState;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationContainer;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationSegmentForSourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationViewForSourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationUserSegmentForAnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Argument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
@@ -109,7 +109,7 @@ public class BratCuratorUtility
 
     /**
      * Set different attributes for {@link BratAnnotatorModel} that will be used for the
-     * {@link CurationSegmentForSourceDocument}
+     * {@link CurationViewForSourceDocument}
      *
      * @throws IOException
      * @throws FileNotFoundException
@@ -117,7 +117,7 @@ public class BratCuratorUtility
      */
 
     public static BratAnnotatorModel setBratAnnotatorModel(SourceDocument aSourceDocument,
-            RepositoryService aRepository, CurationSegmentForSourceDocument aCurationSegment,
+            RepositoryService aRepository, CurationViewForSourceDocument aCurationSegment,
             AnnotationService aAnnotationService)
         throws BeansException, FileNotFoundException, IOException
     {
@@ -518,7 +518,7 @@ public class BratCuratorUtility
             BratAnnotator aMergeVisualizer,
             RepositoryService aRepository,
             Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
-            CurationSegmentForSourceDocument aCurationSegment,
+            CurationViewForSourceDocument aCurationSegment,
             AnnotationService aAnnotationService, MappingJacksonHttpMessageConverter aJsonConverter)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {

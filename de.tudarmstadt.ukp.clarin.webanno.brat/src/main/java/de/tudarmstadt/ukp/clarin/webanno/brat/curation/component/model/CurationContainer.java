@@ -29,7 +29,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 /**
- * A model for curation container comprises of {@link CurationSegmentForSourceDocument}, {@link SourceDocument},
+ * A model for curation container comprises of {@link CurationViewForSourceDocument}, {@link SourceDocument},
  * and {@link Project}
  * @author  Andreas Straninger
  * @author  Seid Muhie Yimam
@@ -40,36 +40,36 @@ public class CurationContainer
 {
     private static final long serialVersionUID = -6632707037285383353L;
 
-    private Map<Integer, CurationSegmentForSourceDocument> curationSegmentByBegin = new HashMap<Integer, CurationSegmentForSourceDocument>();
+    private Map<Integer, CurationViewForSourceDocument> curationViewByBegin = new HashMap<Integer, CurationViewForSourceDocument>();
 
     private BratAnnotatorModel bratAnnotatorModel;
 
-    public List<CurationSegmentForSourceDocument> getCurationSegments()
+    public List<CurationViewForSourceDocument> getCurationViews()
     {
-        LinkedList<Integer> segmentsBegin = new LinkedList<Integer>(curationSegmentByBegin.keySet());
-        Collections.sort(segmentsBegin);
-        List<CurationSegmentForSourceDocument> curationSegments = new LinkedList<CurationSegmentForSourceDocument>();
-        for (Integer begin : segmentsBegin) {
-            curationSegments.add(curationSegmentByBegin.get(begin));
+        LinkedList<Integer> viewsBegin = new LinkedList<Integer>(curationViewByBegin.keySet());
+        Collections.sort(viewsBegin);
+        List<CurationViewForSourceDocument> curationViews = new LinkedList<CurationViewForSourceDocument>();
+        for (Integer begin : viewsBegin) {
+            curationViews.add(curationViewByBegin.get(begin));
         }
-        return curationSegments;
+        return curationViews;
     }
 
-    public Map<Integer, CurationSegmentForSourceDocument> getCurationSegmentByBegin()
+    public Map<Integer, CurationViewForSourceDocument> getCurationViewByBegin()
     {
-        return curationSegmentByBegin;
+        return curationViewByBegin;
     }
 
-    public void setCurationSegmentByBegin(Map<Integer, CurationSegmentForSourceDocument> curationSegmentByBegin)
+    public void setCurationSegmentByBegin(Map<Integer, CurationViewForSourceDocument> curationViewByBegin)
     {
-        this.curationSegmentByBegin = curationSegmentByBegin;
+        this.curationViewByBegin = curationViewByBegin;
     }
 
 
     @Override
     public String toString()
     {
-        return "curationSegmentByBegin" + curationSegmentByBegin.toString();
+        return "curationSegmentByBegin" + curationViewByBegin.toString();
 
     }
 

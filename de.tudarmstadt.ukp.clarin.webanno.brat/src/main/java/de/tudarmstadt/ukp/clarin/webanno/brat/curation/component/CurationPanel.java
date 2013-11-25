@@ -48,7 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationContainer;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationSegmentForSourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationViewForSourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationUserSegmentForAnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratCuratorUtility;
 
@@ -88,9 +88,9 @@ public class CurationPanel
      */
     private Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress = new HashMap<String, Map<Integer, AnnotationSelection>>();
 
-    private CurationSegmentForSourceDocument curationSegment;
+    private CurationViewForSourceDocument curationSegment;
 
-    ListView<CurationSegmentForSourceDocument> textListView;
+    ListView<CurationViewForSourceDocument> textListView;
 
     /**
      * Class for combining an on click ajax call and a label
@@ -213,15 +213,15 @@ public class CurationPanel
         mergeVisualizer.setOutputMarkupId(true);
         add(mergeVisualizer);
 
-        textListView = new ListView<CurationSegmentForSourceDocument>("textListView",
-                curationContainer.getCurationSegments())
+        textListView = new ListView<CurationViewForSourceDocument>("textListView",
+                curationContainer.getCurationViews())
         {
             private static final long serialVersionUID = 8539162089561432091L;
 
             @Override
-            protected void populateItem(ListItem<CurationSegmentForSourceDocument> item)
+            protected void populateItem(ListItem<CurationViewForSourceDocument> item)
             {
-                final CurationSegmentForSourceDocument curationSegmentItem = item.getModelObject();
+                final CurationViewForSourceDocument curationSegmentItem = item.getModelObject();
 
                 // ajax call when clicking on a sentence on the left side
                 final AbstractDefaultAjaxBehavior click = new AbstractDefaultAjaxBehavior()
@@ -238,13 +238,13 @@ public class CurationPanel
                                     annotationSelectionByUsernameAndAddress, curationSegment,
                                     annotationService, jsonConverter);
 
-                        List<CurationSegmentForSourceDocument> segments = curationContainer
-                                .getCurationSegments();
-                        for (CurationSegmentForSourceDocument segment : segments) {
+                        List<CurationViewForSourceDocument> views = curationContainer
+                                .getCurationViews();
+                        for (CurationViewForSourceDocument segment : views) {
                             segment.setCurrentSentence(curationSegmentItem.getSentenceNumber()
                                     .equals(segment.getSentenceNumber()));
                         }
-                        textListView.setModelObject(segments);
+                        textListView.setModelObject(views);
                         textOuterView.addOrReplace(textListView);
                         aTarget.add(textOuterView);
                         aTarget.add(sentenceOuterView);

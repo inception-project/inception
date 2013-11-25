@@ -156,7 +156,7 @@ public class CurationBuilder
                 }
             }
 
-            CurationSegmentForSourceDocument curationSegment = new CurationSegmentForSourceDocument();
+            CurationViewForSourceDocument curationSegment = new CurationViewForSourceDocument();
             curationSegment.setBegin(begin);
             curationSegment.setEnd(end);
             if (hasDiff) {
@@ -172,7 +172,7 @@ public class CurationBuilder
                 curationSegment.getSentenceAddress().put(username,
                         segmentAdress.get(username).get(begin));
             }
-            curationContainer.getCurationSegmentByBegin().put(begin, curationSegment);
+            curationContainer.getCurationViewByBegin().put(begin, curationSegment);
         }
         return curationContainer;
     }
