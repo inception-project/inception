@@ -17,6 +17,8 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.curation.component;
 
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -25,6 +27,7 @@ import java.util.Map;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
+import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -45,17 +48,21 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationUserSegmentForAnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationViewForSourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratCuratorUtility;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
  * Main Panel for the curation page. It displays a box with the complete text on the left side and a
  * box for a selected sentence on the right side.
- *
+ * 
  * @author Andreas Straninger
  * @author Seid Muhie Yimam
  */
@@ -162,10 +169,10 @@ public class CurationPanel
                     error(ExceptionUtils.getRootCause(e));
                 }
                 catch (ClassNotFoundException e) {
-                   error(e.getMessage());
+                    error(e.getMessage());
                 }
                 catch (IOException e) {
-                   error(e.getMessage());
+                    error(e.getMessage());
                 }
                 catch (BratAnnotationException e) {
                     error(e.getMessage());
@@ -189,19 +196,18 @@ public class CurationPanel
                 info(bratAnnotatorModel.getMessage());
                 aTarget.add(sentenceOuterView);
                 try {
-                    BratCuratorUtility.updatePanel(aTarget, sentenceOuterView,
-                            curationContainer, this, repository,
-                            annotationSelectionByUsernameAndAddress, curationView,
-                            annotationService, jsonConverter);
+                    BratCuratorUtility.updatePanel(aTarget, sentenceOuterView, curationContainer,
+                            this, repository, annotationSelectionByUsernameAndAddress,
+                            curationView, annotationService, jsonConverter);
                 }
                 catch (UIMAException e) {
                     error(ExceptionUtils.getRootCause(e));
                 }
                 catch (ClassNotFoundException e) {
-                   error(e.getMessage());
+                    error(e.getMessage());
                 }
                 catch (IOException e) {
-                   error(e.getMessage());
+                    error(e.getMessage());
                 }
                 catch (BratAnnotationException e) {
                     error(e.getMessage());
@@ -238,25 +244,60 @@ public class CurationPanel
                                     annotationSelectionByUsernameAndAddress, curationView,
                                     annotationService, jsonConverter);
 
-                        List<CurationViewForSourceDocument> views = curationContainer
-                                .getCurationViews();
-                        for (CurationViewForSourceDocument segment : views) {
-                            segment.setCurrentSentence(curationViewItem.getSentenceNumber()
-                                    .equals(segment.getSentenceNumber()));
-                        }
-                        textListView.setModelObject(views);
-                        textOuterView.addOrReplace(textListView);
-                        aTarget.add(textOuterView);
-                        aTarget.add(sentenceOuterView);
+                            List<CurationViewForSourceDocument> views = curationContainer
+                                    .getCurationViews();
+                            for (CurationViewForSourceDocument segment : views) {
+                                segment.setCurrentSentence(curationViewItem.getSentenceNumber()
+                                        .equals(segment.getSentenceNumber()));
+                            }
+
+                            if (bratAnnotatorModel.isScrollPage()) {
+                                JCas jCas = null;
+                                if (bratAnnotatorModel.getMode().equals(Mode.ANNOTATION)
+                                        || bratAnnotatorModel.getMode().equals(Mode.CORRECTION)
+                                        || bratAnnotatorModel.getMode().equals(
+                                                Mode.CORRECTION_MERGE)) {
+
+                                    jCas = repository.readJCas(bratAnnotatorModel.getDocument(),
+                                            bratAnnotatorModel.getProject(),
+                                            bratAnnotatorModel.getUser());
+                                }
+                                else {
+                                    jCas = repository.getCurationDocumentContent(bratAnnotatorModel
+                                            .getDocument());
+                                }
+                                bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil
+                                        .getSentenceBeginAddress(jCas,
+                                                bratAnnotatorModel.getSentenceAddress(),
+                                                curationViewItem.getBegin(),
+                                                bratAnnotatorModel.getProject(),
+                                                bratAnnotatorModel.getDocument(),
+                                                bratAnnotatorModel.getWindowSize()));
+
+                                Sentence sentence = selectByAddr(jCas, Sentence.class,
+                                        bratAnnotatorModel.getSentenceAddress());
+                                bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
+                                bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
+
+                                CurationBuilder builder = new CurationBuilder(repository);
+                                curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
+                                textListView.setModelObject(builder.buildCurationContainer(
+                                        bratAnnotatorModel).getCurationViews());
+                            }
+
+                            // textListView.setModelObject(views);
+                            textOuterView.addOrReplace(textListView);
+                            aTarget.add(textOuterView);
+                            aTarget.add(sentenceOuterView);
                         }
                         catch (UIMAException e) {
                             error(ExceptionUtils.getRootCause(e));
                         }
                         catch (ClassNotFoundException e) {
-                           error(e.getMessage());
+                            error(e.getMessage());
                         }
                         catch (IOException e) {
-                           error(e.getMessage());
+                            error(e.getMessage());
                         }
                         catch (BratAnnotationException e) {
                             error(e.getMessage());
@@ -274,8 +315,7 @@ public class CurationPanel
                             + ";"));
                 }
 
-                Label currentSentence = new AjaxLabel("sentence", curationViewItem.getText(),
-                        click);
+                Label currentSentence = new AjaxLabel("sentence", curationViewItem.getText(), click);
                 item.add(currentSentence);
 
                 Label sentenceNumber = new AjaxLabel("sentenceNumber", curationViewItem
@@ -292,11 +332,11 @@ public class CurationPanel
     @Override
     public void renderHead(IHeaderResponse response)
     {
-        if(firstLoad){
+        if (firstLoad) {
             firstLoad = false;
         }
-        else if(bratAnnotatorModel.getProject() != null){
-           // mergeVisualizer.setModelObject(bratAnnotatorModel);
+        else if (bratAnnotatorModel.getProject() != null) {
+            // mergeVisualizer.setModelObject(bratAnnotatorModel);
             mergeVisualizer.setCollection("#" + bratAnnotatorModel.getProject().getName() + "/");
             mergeVisualizer.reloadContent(response);
         }

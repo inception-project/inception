@@ -137,27 +137,9 @@ public class AnnotationPreferenceModalPanel
             });
 
             // Add a Checkbox to enable/disable automatic page navigations while annotating
-            add(new CheckBox("scrollPage")
-            {
-                private static final long serialVersionUID = 8103688361110230362L;
+            add(new CheckBox("scrollPage"));
 
-                @Override
-                public boolean isVisible()
-                {
-                    return !bratAnnotatorModel.getMode().equals(Mode.CURATION);
-                }
-            });
-
-            add(new Label("scrollPageLabel", "Auto-scroll document while annotating :")
-            {
-                private static final long serialVersionUID = 7687134329746897190L;
-
-                @Override
-                public boolean isVisible()
-                {
-                    return !bratAnnotatorModel.getMode().equals(Mode.CURATION);
-                }
-            });
+            add(new Label("scrollPageLabel", "Auto-scroll document while annotating :"));
 
             add(new AjaxSubmitLink("saveButton")
             {
