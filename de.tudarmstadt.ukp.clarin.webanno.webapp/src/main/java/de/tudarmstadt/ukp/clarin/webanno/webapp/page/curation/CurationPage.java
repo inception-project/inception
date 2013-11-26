@@ -223,6 +223,7 @@ public class CurationPage
 
                         if (bratAnnotatorModel.getDocument() == null) {
                             setResponsePage(WelcomePage.class);
+                            return;
                         }
 
                         User user = repository.getUser(username);

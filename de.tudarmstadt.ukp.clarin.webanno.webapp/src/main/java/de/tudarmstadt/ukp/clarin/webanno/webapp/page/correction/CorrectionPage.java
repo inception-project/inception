@@ -63,8 +63,8 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.CurationViewPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationContainer;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationViewForSourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationUserSegmentForAnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationViewForSourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratCuratorUtility;
@@ -132,13 +132,13 @@ public class CorrectionPage
 
     public CorrectionPage()
     {
-        
+
         final FeedbackPanel feedbackPanel = new FeedbackPanel("feedback");
         add(feedbackPanel);
         feedbackPanel.setOutputMarkupId(true);
         feedbackPanel.add(new AttributeModifier("class", "info"));
         feedbackPanel.add(new AttributeModifier("class", "error"));
-        
+
         bratAnnotatorModel = new BratAnnotatorModel();
         bratAnnotatorModel.setMode(Mode.CORRECTION);
 
@@ -251,7 +251,7 @@ public class CorrectionPage
 
                             JCas mergeJCas = null;
                             try {
-                                
+
                                 mergeJCas = repository
                                         .getCorrectionDocumentContent(bratAnnotatorModel
                                                 .getDocument());
@@ -336,6 +336,7 @@ public class CorrectionPage
                     {
                         if (bratAnnotatorModel.getDocument() == null) {
                             setResponsePage(WelcomePage.class);
+                            return;
                         }
 
                         try {
