@@ -16,7 +16,6 @@
 #limitations under the License.
 -->
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-
   <wicket:panel>
     <table  align="left">
       <tr style="color:blue; font-weight:bold;">
@@ -39,8 +38,11 @@
         </td>
         <td>
           <form wicket:id="documentSelectionForm">
-            <select  wicket:id="document" style="color:black; font-weight:bold;width:300px; height:230px">
-            </select>
+          <select wicket:id="documentSelection" size="10" style="font-weight:bold;width:300px; height:230px">
+			<span wicket:id="documents">
+			<option wicket:id="document"></option>
+			</span>
+			</select>
           </form>
         </td>
       </tr>

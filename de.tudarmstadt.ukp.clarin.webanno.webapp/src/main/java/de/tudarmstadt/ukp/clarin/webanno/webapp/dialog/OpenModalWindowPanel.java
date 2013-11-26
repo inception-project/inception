@@ -19,23 +19,32 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.dialog;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
+import org.apache.wicket.extensions.markup.html.form.select.Select;
+import org.apache.wicket.extensions.markup.html.form.select.SelectOption;
 import org.apache.wicket.markup.ComponentTag;
+import org.apache.wicket.markup.MarkupStream;
 import org.apache.wicket.markup.html.WebComponent;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.ListChoice;
+import org.apache.wicket.markup.html.list.ListItem;
+import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.odlabs.wiquery.ui.resizable.ResizableBehavior;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -43,10 +52,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
@@ -74,7 +85,7 @@ public class OpenModalWindowPanel
     // The first document in the project // auto selected in the first time.
     private SourceDocument selectedDocument;
 
-    private ListChoice<SourceDocument> documents;
+    private Select<SourceDocument> documentSelection;
 
     private String username;
     private User user;
@@ -156,7 +167,7 @@ public class OpenModalWindowPanel
                     selectedProject = getModelObject().project;
                     // Remove selected document from other project
                     selectedDocument = null;
-                    aTarget.add(documents.setOutputMarkupId(true));
+                    aTarget.add(documentSelection.setOutputMarkupId(true));
                 }
             }).add(new ResizableBehavior());
 
@@ -237,7 +248,7 @@ public class OpenModalWindowPanel
         private static final long serialVersionUID = -1L;
 
         private Project project;
-        private SourceDocument document;
+        private SourceDocument documentSelection;
     }
 
     private class DocumentSelectionForm
@@ -249,13 +260,11 @@ public class OpenModalWindowPanel
         {
             // super(id);
             super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
+            final Map<SourceDocument, String> states = new HashMap<SourceDocument, String>();
 
-            add(documents = new ListChoice<SourceDocument>("document")
-            {
-                private static final long serialVersionUID = 1L;
-
-                {
-                    setChoices(new LoadableDetachableModel<List<SourceDocument>>()
+            documentSelection = new Select<SourceDocument>("documentSelection");
+            ListView<SourceDocument> lv = new ListView<SourceDocument>("documents",
+                    new LoadableDetachableModel<List<SourceDocument>>()
                     {
                         private static final long serialVersionUID = 1L;
 
@@ -271,25 +280,47 @@ public class OpenModalWindowPanel
                             // Remove from the list source documents that are in IGNORE state OR
                             // that do not have at least one annotation document marked as
                             // finished for curation dialog
+
                             List<SourceDocument> excludeDocuments = new ArrayList<SourceDocument>();
                             for (SourceDocument sourceDocument : allDocuments) {
                                 switch (mode) {
                                 case ANNOTATION:
+                                case CORRECTION:
                                     if (projectRepository.existsAnnotationDocument(sourceDocument,
-                                            user)
-                                            && projectRepository
-                                                    .getAnnotationDocument(sourceDocument, user)
-                                                    .getState()
-                                                    .equals(AnnotationDocumentState.IGNORE)) {
-                                        excludeDocuments.add(sourceDocument);
+                                            user)) {
+                                        AnnotationDocument anno = projectRepository
+                                                .getAnnotationDocument(sourceDocument, user);
+                                        if (anno.getState().equals(AnnotationDocumentState.IGNORE)) {
+                                            excludeDocuments.add(sourceDocument);
+                                        }
+                                        else if (anno.getState().equals(
+                                                AnnotationDocumentState.FINISHED)) {
+                                            states.put(sourceDocument, "red");
+                                        }
+                                        else if (anno.getState().equals(
+                                                AnnotationDocumentState.IN_PROGRESS)) {
+                                            states.put(sourceDocument, "blue");
+                                        }
                                     }
                                     break;
                                 case CURATION:
-                                    if (mode.equals(Mode.CURATION)
-                                            && !ProjectUtil.existFinishedDocument(sourceDocument,
-                                                    user, projectRepository, selectedProject)) {
+                                    if (!ProjectUtil.existFinishedDocument(sourceDocument, user,
+                                            projectRepository, selectedProject)) {
                                         excludeDocuments.add(sourceDocument);
                                     }
+                                    else if (sourceDocument.getState().equals(
+                                            SourceDocumentState.ANNOTATION_FINISHED)
+                                            || sourceDocument.getState().equals(
+                                                    SourceDocumentState.CURATION_FINISHED)) {
+                                        states.put(sourceDocument, "red");
+                                    }
+                                    else if (sourceDocument.getState().equals(
+                                            SourceDocumentState.ANNOTATION_IN_PROGRESS)
+                                            || sourceDocument.getState().equals(
+                                                    SourceDocumentState.CURATION_IN_PROGRESS)) {
+                                        states.put(sourceDocument, "blue");
+                                    }
+
                                     break;
                                 default:
                                     break;
@@ -297,29 +328,41 @@ public class OpenModalWindowPanel
 
                             }
                             allDocuments.removeAll(excludeDocuments);
-                            return allDocuments;
+                            return (ArrayList<SourceDocument>) allDocuments;
                         }
-                    });
-                    setChoiceRenderer(new ChoiceRenderer<SourceDocument>("name"));
-                    setNullValid(false);
-                }
+                    })
+            {
+                private static final long serialVersionUID = 8901519963052692214L;
 
                 @Override
-                protected CharSequence getDefaultChoice(String aSelectedValue)
+                protected void populateItem(final ListItem<SourceDocument> item)
                 {
-                    return "";
+                    item.add(new SelectOption<SourceDocument>("document",
+                            new Model<SourceDocument>(item.getModelObject()))
+                    {
+                        private static final long serialVersionUID = 3095089418860168215L;
+
+                        @Override
+                        public void onComponentTagBody(MarkupStream markupStream,
+                                ComponentTag openTag)
+                        {
+                            replaceComponentTagBody(markupStream, openTag, item.getModelObject()
+                                    .getName());
+                        }
+                    }.add(new AttributeModifier("style", "color:"
+                            + states.get(item.getModelObject()) + ";")));
                 }
-            });
-            documents.setOutputMarkupId(true);
-            documents.setMaxRows(10);
-            documents.add(new OnChangeAjaxBehavior()
+            };
+            add(documentSelection.add(lv));
+            documentSelection.setOutputMarkupId(true);
+            documentSelection.add(new OnChangeAjaxBehavior()
             {
                 private static final long serialVersionUID = 1L;
 
                 @Override
                 protected void onUpdate(AjaxRequestTarget aTarget)
                 {
-                    selectedDocument = getModelObject().document;
+                    selectedDocument = getModelObject().documentSelection;
                 }
             }).add(new AjaxEventBehavior("ondblclick")
             {
