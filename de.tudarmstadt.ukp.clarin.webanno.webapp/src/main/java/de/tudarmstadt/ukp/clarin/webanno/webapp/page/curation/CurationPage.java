@@ -118,7 +118,7 @@ public class CurationPage
 
     @SuppressWarnings("deprecation")
     public CurationPage()
-    {     
+    {
         bratAnnotatorModel = new BratAnnotatorModel();
         bratAnnotatorModel.setMode(Mode.CURATION);
         reMerge = new ReMergeCasModel();
@@ -284,7 +284,7 @@ public class CurationPage
             {
                 CurationBuilder builder = new CurationBuilder(repository);
                 try {
-                    
+
                     aTarget.add(getFeedbackPanel());
                     curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                     curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
@@ -810,7 +810,7 @@ public class CurationPage
                     JCas mergeJCas = null;
                     try {
                         aTarget.add(getFeedbackPanel());
-                        mergeJCas = repository.getCorrectionDocumentContent(bratAnnotatorModel
+                        mergeJCas = repository.getCurationDocumentContent(bratAnnotatorModel
                                 .getDocument());
 
                         int address = BratAjaxCasUtil.selectSentenceAt(mergeJCas,
