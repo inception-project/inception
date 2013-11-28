@@ -238,7 +238,7 @@ public class DocumentStatusColumnMetaData
                     LOG.info(e.getMessage());
                 }
                int totalSN = BratAjaxCasUtil.getNumberOfPages(jCas);
-                aCellItem.add(new Label(componentId, document.getSentenceAccessed() + "/"+totalSN));
+                aCellItem.add(new Label(componentId, annoDoc.getSentenceAccessed() + "/"+totalSN));
             }
             else {
                 aCellItem.add(new EmbeddableImage(componentId, new ContextRelativeResource(
