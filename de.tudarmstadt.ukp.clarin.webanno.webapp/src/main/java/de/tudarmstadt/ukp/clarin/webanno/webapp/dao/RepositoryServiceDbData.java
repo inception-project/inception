@@ -1008,6 +1008,10 @@ public class RepositoryServiceDbData
         throws IOException
     {
 
+        // remove, if exists, a crowdsource job created from this project
+        for (CrowdJob crowdJob : listCrowdJobs(aProject)) {
+            removeCrowdJob(crowdJob);
+        }
         for (SourceDocument document : listSourceDocuments(aProject)) {
             removeSourceDocument(document, aUser);
         }
@@ -1015,10 +1019,7 @@ public class RepositoryServiceDbData
         for (TagSet tagset : annotationService.listTagSets(aProject)) {
             annotationService.removeTagSet(tagset);
         }
-        // remove, if exists, a crowdsource job created from this project
-        for (CrowdJob crowdJob : listCrowdJobs(aProject)) {
-            removeCrowdJob(crowdJob);
-        }
+      
         // remove the project directory from the file system
         String path = dir.getAbsolutePath() + PROJECT + aProject.getId();
         try {
