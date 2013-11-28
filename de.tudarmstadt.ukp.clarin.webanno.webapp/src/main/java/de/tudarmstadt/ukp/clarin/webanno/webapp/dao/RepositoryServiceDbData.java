@@ -1826,6 +1826,7 @@ public class RepositoryServiceDbData
             AnnotationDocument annotationDocument = getAnnotationDocument(aDocument, aUser);
             annotationDocument.setSentenceAccessed(aDocument.getSentenceAccessed());
             annotationDocument.setTimestamp(new Timestamp(new Date().getTime()));
+            annotationDocument.setState(AnnotationDocumentState.IN_PROGRESS);
             entityManager.merge(annotationDocument);
         }
     }
