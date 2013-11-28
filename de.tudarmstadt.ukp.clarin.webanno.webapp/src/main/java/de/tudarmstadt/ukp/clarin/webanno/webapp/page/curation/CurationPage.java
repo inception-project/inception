@@ -57,7 +57,9 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationB
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -942,21 +944,28 @@ public class CurationPage
     private void loadDocumentAction()
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
-        List<AnnotationDocument> annotationDocuments = repository
-                .listAnnotationDocuments(bratAnnotatorModel.getDocument());
+        List<AnnotationDocument> finishedAnnotationDocuments = new ArrayList<AnnotationDocument>();
+        
+       for(AnnotationDocument annotationDocument: repository
+                .listAnnotationDocuments(bratAnnotatorModel.getDocument())){
+           if(annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)){
+               finishedAnnotationDocuments.add(annotationDocument);
+           }
+       }
         CurationBuilder cb = new CurationBuilder(repository);
         AnnotationDocument randomAnnotationDocument = null;
-        if(annotationDocuments.size()>0) {
-            randomAnnotationDocument = annotationDocuments.get(0);
+        if(finishedAnnotationDocuments.size()>0) {
+            randomAnnotationDocument = finishedAnnotationDocuments.get(0);
         }
-        Map<String, JCas> jCases = cb.listJcasesforCuration(annotationDocuments,
-                randomAnnotationDocument);
-        JCas mergeJCas = cb.getMergeCas(bratAnnotatorModel, bratAnnotatorModel.getDocument(),
-                jCases, randomAnnotationDocument);
-
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User userLoggedIn = repository.getUser(SecurityContextHolder.getContext()
                 .getAuthentication().getName());
+        ProjectUtil.setAnnotationPreference(username, repository, annotationService,
+                bratAnnotatorModel, Mode.CURATION);
+        Map<String, JCas> jCases = cb.listJcasesforCuration(finishedAnnotationDocuments,
+                randomAnnotationDocument);
+        JCas mergeJCas = cb.getMergeCas(bratAnnotatorModel, bratAnnotatorModel.getDocument(),
+                jCases, randomAnnotationDocument);
 
         if (bratAnnotatorModel.getSentenceAddress() == -1
                 || bratAnnotatorModel.getDocument().getId() != currentDocumentId
@@ -974,19 +983,11 @@ public class CurationPage
                 bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                 bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                ProjectUtil.setAnnotationPreference(username, repository, annotationService,
-                        bratAnnotatorModel, Mode.CURATION);
             }
             catch (DataRetrievalFailureException ex) {
                 throw ex;
             }
             catch (BeansException e) {
-                throw e;
-            }
-            catch (FileNotFoundException e) {
-                throw e;
-            }
-            catch (IOException e) {
                 throw e;
             }
         }

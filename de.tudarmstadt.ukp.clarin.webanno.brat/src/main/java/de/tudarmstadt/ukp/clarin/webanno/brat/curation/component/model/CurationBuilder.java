@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdap
 import static org.uimafit.util.JCasUtil.selectCovered;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -57,11 +58,11 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  * This class is responsible for two things. Firstly, it creates a pre-merged cas, which contains
  * all annotations, where all annotators agree on. This is done by copying a random cas and removing
  * all differing annotations.
- *
+ * 
  * Secondly, the class creates an instance of {@link CurationContainer}, which is the wicket model
  * for the curation panel. The {@link CurationContainer} contains the text for all sentences, which
  * are displayed at a specific page.
- *
+ * 
  * @author Andreas Straninger
  * @author Seid Muhie Yimam
  */
@@ -88,8 +89,15 @@ public class CurationBuilder
         Map<Integer, String> segmentText = new HashMap<Integer, String>();
         Map<String, Map<Integer, Integer>> segmentAdress = new HashMap<String, Map<Integer, Integer>>();
         // get annotation documents
-        List<AnnotationDocument> annotationDocuments = repository
-                .listAnnotationDocuments(sourceDocument);
+
+        List<AnnotationDocument> finishedAnnotationDocuments = new ArrayList<AnnotationDocument>();
+
+        for (AnnotationDocument annotationDocument : repository
+                .listAnnotationDocuments(aBratAnnotatorModel.getDocument())) {
+            if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
+                finishedAnnotationDocuments.add(annotationDocument);
+            }
+        }
 
         Map<String, JCas> jCases = new HashMap<String, JCas>();
 
@@ -105,7 +113,7 @@ public class CurationBuilder
         }
         else {
 
-            jCases = listJcasesforCuration(annotationDocuments, randomAnnotationDocument);
+            jCases = listJcasesforCuration(finishedAnnotationDocuments, randomAnnotationDocument);
             for (String username : jCases.keySet()) {
                 JCas jCas = jCases.get(username);
                 updateSegment(aBratAnnotatorModel, segmentBeginEnd, segmentNumber, segmentText,
@@ -233,8 +241,8 @@ public class CurationBuilder
                         randomAnnotationDocument);
             }
             else {
-                mergeJCas = createMergeCas(mergeJCas, randomAnnotationDocument, jCases,
-                        aBratAnnotatorModel);
+                mergeJCas = createMergeCas(mergeJCas, randomAnnotationDocument, jCases,-1, -1,
+                        aBratAnnotatorModel.getAnnotationLayers());
             }
         }
         return mergeJCas;
@@ -243,7 +251,7 @@ public class CurationBuilder
     /**
      * Puts JCases into a list and get a random annotation document that will be used as a base for
      * the {@link CasDiff}
-     *
+     * 
      * @throws IOException
      * @throws ClassNotFoundException
      * @throws UIMAException
@@ -297,14 +305,14 @@ public class CurationBuilder
     /**
      * For the first time a curation page is opened, create a MergeCas that contains only agreeing
      * annotations Using the CAS of the curator user.
-     *
+     * 
      * @throws IOException
      * @throws ClassNotFoundException
      * @throws UIMAException
      * @throws BratAnnotationException
      */
     public JCas createMergeCas(JCas mergeJCas, AnnotationDocument randomAnnotationDocument,
-            Map<String, JCas> jCases, BratAnnotatorModel aBratAnnotatorModel)
+            Map<String, JCas> jCases, int aBegin, int aEnd, Set<TagSet> aAnnotationLayers  )
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
         User userLoggedIn = repository.getUser(SecurityContextHolder.getContext()
@@ -314,12 +322,12 @@ public class CurationBuilder
         int numUsers = jCases.size();
         mergeJCas = repository.getAnnotationDocumentContent(randomAnnotationDocument);
 
-        entryTypes = getEntryTypes(mergeJCas, aBratAnnotatorModel.getAnnotationLayers());
+        entryTypes = getEntryTypes(mergeJCas,aAnnotationLayers);
         jCases.put(CurationPanel.CURATION_USER, mergeJCas);
 
         List<AnnotationOption> annotationOptions = null;
 
-        annotationOptions = CasDiff.doDiff(entryTypes, jCases, begin, end);
+        annotationOptions = CasDiff.doDiff(entryTypes, jCases, aBegin, aEnd);
         for (AnnotationOption annotationOption : annotationOptions) {
             // remove the featureStructure if more than 1 annotationSelection exists per
             // annotationOption
