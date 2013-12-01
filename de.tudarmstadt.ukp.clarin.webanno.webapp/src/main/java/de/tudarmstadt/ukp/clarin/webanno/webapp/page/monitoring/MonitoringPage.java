@@ -723,10 +723,15 @@ public class MonitoringPage
                 Map<String, Map<String, String>> allUserAnnotations = new TreeMap<String, Map<String, String>>();
 
                 if (finishedDocumentLists.get(user2).size() != 0) {
-                    List<SourceDocument> sameDocuments = finishedDocumentLists.get(user1);
+                    List<SourceDocument> user1Documents =  new ArrayList<SourceDocument>();
+                    user1Documents.addAll(finishedDocumentLists.get(user1));
+
+                    List<SourceDocument> user2Documents =  new ArrayList<SourceDocument>();
+                    user2Documents.addAll(finishedDocumentLists.get(user2));
+
                     // sameDocuments finished (intersection of anno docs)
-                    sameDocuments.retainAll(finishedDocumentLists.get(user2));
-                    for (SourceDocument document : sameDocuments) {
+                    user1Documents.retainAll(user2Documents);
+                    for (SourceDocument document : user1Documents) {
                         twoPairedKappa.getStudy(adapter.getAnnotationTypeName(),
                                 adapter.getLabelFeatureName(), user1, user2, allUserAnnotations,
                                 document, documentJCases.get(document));
