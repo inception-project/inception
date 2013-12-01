@@ -806,7 +806,7 @@ public class RepositoryServiceDbData
     {
         return entityManager
                 .createQuery(
-                        "SELECT max(timestamp) FROM AnnotationDocument WHERE project = :project",
+                        "SELECT max(timestamp) FROM SourceDocument WHERE project = :project",
                         Date.class).setParameter("project", aProject).getSingleResult();
     }
 
@@ -1019,7 +1019,7 @@ public class RepositoryServiceDbData
         for (TagSet tagset : annotationService.listTagSets(aProject)) {
             annotationService.removeTagSet(tagset);
         }
-      
+
         // remove the project directory from the file system
         String path = dir.getAbsolutePath() + PROJECT + aProject.getId();
         try {

@@ -159,12 +159,12 @@ public class MonitoringPage
 
         overallProjectProgressImage = new NonCachingImage("overallProjectProgressImage");
         final Map<String, Integer> overallProjectProgress = getOverallProjectProgress();
-        overallProjectProgressImage.setImageResource(createProgressChart(
-                overallProjectProgress, 100, true));
+        overallProjectProgressImage.setImageResource(createProgressChart(overallProjectProgress,
+                100, true));
         overallProjectProgressImage.setOutputMarkupPlaceholderTag(true);
         overallProjectProgressImage.setVisible(true);
         add(overallProjectProgressImage);
-        add(overview =new Label("overview", "overview of projects"));
+        add(overview = new Label("overview", "overview of projects"));
 
         add(projectSelectionForm);
         projectName = new Label("projectName", "");
@@ -324,7 +324,9 @@ public class MonitoringPage
                     projectTimeStamp.add(LAST_ACCESS + LAST_ACCESS_ROW); // first column
                     if (projectRepository.existsProjectTimeStamp(aNewSelection)) {
                         projectTimeStamp.add(LAST_ACCESS
-                                + projectRepository.getProjectTimeStamp(aNewSelection));
+                                + new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
+                                        .format(projectRepository
+                                                .getProjectTimeStamp(aNewSelection)));
                     }
                     else {
                         projectTimeStamp.add(LAST_ACCESS + "__");
@@ -641,7 +643,6 @@ public class MonitoringPage
             }
 
             results = computeKappa(users, adapter, finishedDocumentLists, documentJCases);
-        }
 
         // Users with some annotations of this type
 
@@ -681,6 +682,7 @@ public class MonitoringPage
         agreementTable = new DefaultDataTable("agreementTable", columns, provider, 10);
         agreementForm.add(agreementTable);
         aTarget.add(agreementForm);
+    }
     }
 
     /**
