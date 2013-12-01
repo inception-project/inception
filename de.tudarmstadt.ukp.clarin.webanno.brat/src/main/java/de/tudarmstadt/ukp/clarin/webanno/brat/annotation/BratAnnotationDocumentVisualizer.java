@@ -28,6 +28,7 @@ import org.apache.uima.jcas.JCas;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.codehaus.jackson.JsonGenerator;
+import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
@@ -121,13 +122,15 @@ public class BratAnnotationDocumentVisualizer
             error(ExceptionUtils.getRootCauseMessage(e));
             return docData;
         }
+        catch (DataRetrievalFailureException e) {
+            error(e.getCause().getMessage());
+        }
         catch (IOException e) {
             error("Unable to find annotation document " + ExceptionUtils.getRootCauseMessage(e));
         }
         catch (ClassNotFoundException e) {
             error("Unable to get the class name for conversion +"
                     + ExceptionUtils.getRootCauseMessage(e));
-
         }
         // Generate BRAT object model from CAS
         GetDocumentResponse response = new GetDocumentResponse();

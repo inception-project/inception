@@ -259,6 +259,10 @@ public class CurationPage
                             target.add(getFeedbackPanel());
                             error(e.getMessage());
                         }
+                        catch (DataRetrievalFailureException e) {
+                            target.add(getFeedbackPanel());
+                            error(e.getCause().getMessage());
+                        }
                         catch (IOException e) {
                             target.add(getFeedbackPanel());
                             error(e.getMessage());
@@ -370,6 +374,9 @@ public class CurationPage
                     catch (ClassNotFoundException e) {
                         error(e.getMessage());
                     }
+                    catch (DataRetrievalFailureException e) {
+                        error(e.getCause().getMessage());
+                    }
                     catch (IOException e) {
                         error(e.getMessage());
                     }
@@ -441,6 +448,9 @@ public class CurationPage
                     }
                     catch (ClassNotFoundException e) {
                         error(e.getMessage());
+                    }
+                    catch (DataRetrievalFailureException e) {
+                        error(e.getCause().getMessage());
                     }
                     catch (IOException e) {
                         error(e.getMessage());
@@ -669,6 +679,9 @@ public class CurationPage
                             }
                             catch (ClassNotFoundException e) {
                                 error(e.getMessage());
+                            }
+                            catch (DataRetrievalFailureException e) {
+                                error(e.getCause().getMessage());
                             }
                             catch (IOException e) {
                                 error(e.getMessage());

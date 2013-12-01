@@ -58,6 +58,7 @@ import org.jfree.chart.renderer.category.StandardBarPainter;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.ui.RectangleInsets;
 import org.jfree.util.UnitType;
+import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
@@ -793,12 +794,17 @@ public class MonitoringPage
                         catch (UIMAException e) {
                             error(ExceptionUtils.getRootCause(e));
                         }
+                        catch (DataRetrievalFailureException e) {
+                            error(e.getCause().getMessage());
+                        }
                         catch (IOException e) {
                             error(e.getMessage());
                         }
                         catch (ClassNotFoundException e) {
                             error(e.getMessage());
                         }
+
+
 
                     }
                 }

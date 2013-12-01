@@ -39,6 +39,7 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
+import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
@@ -190,6 +191,9 @@ public class CurationViewPanel
                                 // aTarget.add(feedbackPanel);
                                 // error(e.getMessage());
                                 aTarget.appendJavaScript(e.getMessage());
+                            }
+                            catch (DataRetrievalFailureException e) {
+                                aTarget.appendJavaScript(e.getCause().getMessage());
                             }
                             catch (IOException e) {
                                 // aTarget.add(feedbackPanel);
