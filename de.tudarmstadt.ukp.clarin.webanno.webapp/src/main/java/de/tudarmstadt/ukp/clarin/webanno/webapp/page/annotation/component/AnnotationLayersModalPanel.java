@@ -120,7 +120,7 @@ public class AnnotationLayersModalPanel
 
     protected void onChange(AjaxRequestTarget aTarget)
     {
-        // Overriden in curationPanel
+
     }
 
     public boolean isCloseButtonClicked()

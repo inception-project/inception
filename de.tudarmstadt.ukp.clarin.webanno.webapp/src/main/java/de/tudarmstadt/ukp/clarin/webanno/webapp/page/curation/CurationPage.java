@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -59,7 +58,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
-import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -922,7 +920,15 @@ public class CurationPage
     {
         // remove old panel, create new one, add it
         remove(curationPanel);
-        curationPanel = new CurationPanel("curationPanel", aCurationContainer);
+        curationPanel = new CurationPanel("curationPanel", aCurationContainer){
+            private static final long serialVersionUID = 2175915644696513166L;
+
+            @Override
+            protected void onChange(AjaxRequestTarget aTarget)
+            {
+                aTarget.add(numberOfPages);
+            }
+        };
         curationPanel.setOutputMarkupId(true);
         add(curationPanel);
     }
@@ -945,7 +951,7 @@ public class CurationPage
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
         List<AnnotationDocument> finishedAnnotationDocuments = new ArrayList<AnnotationDocument>();
-        
+
        for(AnnotationDocument annotationDocument: repository
                 .listAnnotationDocuments(bratAnnotatorModel.getDocument())){
            if(annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)){
