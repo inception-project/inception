@@ -119,7 +119,7 @@ public class AnnotationPage
         feedbackPanel.setOutputMarkupId(true);
         feedbackPanel.add(new AttributeModifier("class", "info"));
         feedbackPanel.add(new AttributeModifier("class", "error"));
-        
+
         annotator = new BratAnnotator("embedder1",
                 new Model<BratAnnotatorModel>(bratAnnotatorModel))
         {
@@ -386,6 +386,7 @@ public class AnnotationPage
                 aTarget.add(numberOfPages);
                 updateSentenceAddress();
                 aTarget.add(documentNamePanel);
+                annotator.reloadContent(aTarget);
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up }, EventType.click)));
 
@@ -437,7 +438,7 @@ public class AnnotationPage
                             bratAnnotatorModel.getUser().getUsername());
                     loadDocumentAction();
                 }
-                catch (UIMAException e) {                
+                catch (UIMAException e) {
                     error(ExceptionUtils.getRootCauseMessage(e));
                 }
                 catch (ClassNotFoundException e) {
