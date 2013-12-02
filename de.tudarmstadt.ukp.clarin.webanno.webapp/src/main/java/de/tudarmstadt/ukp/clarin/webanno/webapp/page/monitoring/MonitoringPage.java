@@ -24,6 +24,7 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -533,7 +534,7 @@ public class MonitoringPage
 
     private Map<String, Integer> getOverallProjectProgress()
     {
-        Map<String, Integer> overallProjectProgress = new TreeMap<String, Integer>();
+        Map<String, Integer> overallProjectProgress = new LinkedHashMap<String, Integer>();
         for (Project project : projectRepository.listProjects()) {
             int annoFinished = projectRepository.listFinishedAnnotationDocuments(project).size();
             int allAnno = projectRepository.numberOfExpectedAnnotationDocuments(project);
