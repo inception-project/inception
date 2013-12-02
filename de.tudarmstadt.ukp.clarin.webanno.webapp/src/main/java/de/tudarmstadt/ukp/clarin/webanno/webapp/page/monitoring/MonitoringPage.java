@@ -533,7 +533,7 @@ public class MonitoringPage
 
     private Map<String, Integer> getOverallProjectProgress()
     {
-        Map<String, Integer> overallProjectProgress = new HashMap<String, Integer>();
+        Map<String, Integer> overallProjectProgress = new TreeMap<String, Integer>();
         for (Project project : projectRepository.listProjects()) {
             int annoFinished = projectRepository.listFinishedAnnotationDocuments(project).size();
             int allAnno = projectRepository.numberOfExpectedAnnotationDocuments(project);
