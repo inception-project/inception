@@ -133,7 +133,7 @@ public class ProjectTagSetsPanel
     {
         private static final long serialVersionUID = -1L;
 
-        @SuppressWarnings({ })
+        @SuppressWarnings({})
         public TagSetSelectionForm(String id)
         {
             // super(id);
@@ -206,11 +206,11 @@ public class ProjectTagSetsPanel
                         tagSetDetailForm.setVisible(true);
                         TagSetSelectionForm.this.setVisible(true);
                         // no need to add tag for lemma
-                        if(aNewSelection.getType().getName().equals(AnnotationTypeConstant.LEMMA)){
+                        if (aNewSelection.getType().getName().equals(AnnotationTypeConstant.LEMMA)) {
                             tagSelectionForm.setVisible(false);
                             tagDetailForm.setVisible(false);
                         }
-                        else{
+                        else {
                             tagSelectionForm.setVisible(true);
                             tagDetailForm.setVisible(true);
                         }
@@ -484,11 +484,11 @@ public class ProjectTagSetsPanel
                                         + ExceptionUtils.getRootCauseMessage(e));
                             }
                             TagSetDetailForm.this.setModelObject(tagSet);
-                            if(tagSet.getType().getName().equals(AnnotationTypeConstant.LEMMA)){
+                            if (tagSet.getType().getName().equals(AnnotationTypeConstant.LEMMA)) {
                                 tagSelectionForm.setVisible(false);
                                 tagDetailForm.setVisible(false);
                             }
-                            else{
+                            else {
                                 tagSelectionForm.setVisible(true);
                                 tagDetailForm.setVisible(true);
                             }
@@ -521,17 +521,23 @@ public class ProjectTagSetsPanel
             add(exportTagsetFormat = (DropDownChoice<String>) new DropDownChoice<String>(
                     "exportTagsetFormat", new Model<String>(selectedExporTagsetFormat),
                     Arrays.asList(new String[] { ExportedTagSetConstant.JSON_FORMAT,
-                            ExportedTagSetConstant.TAB_FORMAT })).add(new OnChangeAjaxBehavior()
+                            ExportedTagSetConstant.TAB_FORMAT }))
             {
                 private static final long serialVersionUID = -3149305683012829848L;
 
                 @Override
-                protected void onUpdate(AjaxRequestTarget target)
+                protected void onSelectionChanged(String newSelection)
                 {
-                    selectedExporTagsetFormat = exportTagsetFormat.getModelObject();
-
+                    selectedExporTagsetFormat = newSelection;
                 }
-            }));
+
+                @Override
+                protected boolean wantOnSelectionChangedNotifications()
+                {
+                    return true;
+                }
+
+            });
 
             add(new DownloadLink("export", new LoadableDetachableModel<File>()
             {
@@ -618,8 +624,8 @@ public class ProjectTagSetsPanel
                             for (Tag tag : annotationService.listTags(tagSet)) {
                                 String tagDescription = tag.getDescription() == null ? "" : tag
                                         .getDescription();
-                                bw.write(tag.getName() + "\t"
-                                        + tagDescription.replace("\n", "\\n") + "\n");
+                                bw.write(tag.getName() + "\t" + tagDescription.replace("\n", "\\n")
+                                        + "\n");
                             }
 
                             bw.flush();
