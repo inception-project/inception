@@ -118,7 +118,7 @@ public class MonitoringPage
     private AnnotationService annotationService;
 
     @SpringBean(name = "documentRepository")
-    private RepositoryService projectRepository;
+    private RepositoryService repository;
 
     private final ProjectSelectionForm projectSelectionForm;
     private final MonitoringDetailForm monitoringDetailForm;
@@ -171,11 +171,11 @@ public class MonitoringPage
         add(projectSelectionForm);
         projectName = new Label("projectName", "");
 
-        Project project = projectRepository.listProjects().get(0);
+        Project project = repository.listProjects().get(0);
 
         List<List<String>> userAnnotationDocumentLists = new ArrayList<List<String>>();
-        List<SourceDocument> dc = projectRepository.listSourceDocuments(project);
-        for (int j = 0; j < projectRepository.listProjectUsersWithPermissions(project).size(); j++) {
+        List<SourceDocument> dc = repository.listSourceDocuments(project);
+        for (int j = 0; j < repository.listProjectUsersWithPermissions(project).size(); j++) {
             List<String> userAnnotationDocument = new ArrayList<String>();
             userAnnotationDocument.add("");
             for (int i = 0; i < dc.size(); i++) {
@@ -194,7 +194,7 @@ public class MonitoringPage
         List<IColumn<?>> cols = new ArrayList<IColumn<?>>();
 
         for (int i = 0; i < prov.getColumnCount(); i++) {
-            cols.add(new DocumentStatusColumnMetaData(prov, i, new Project(), projectRepository));
+            cols.add(new DocumentStatusColumnMetaData(prov, i, new Project(), repository));
         }
         annotationDocumentStatusTable = new DefaultDataTable("rsTable", cols, prov, 2);
         monitoringDetailForm.setVisible(false);
@@ -229,10 +229,10 @@ public class MonitoringPage
 
                             String username = SecurityContextHolder.getContext()
                                     .getAuthentication().getName();
-                            User user = projectRepository.getUser(username);
+                            User user = repository.getUser(username);
 
-                            List<Project> allProjects = projectRepository.listProjects();
-                            List<Authority> authorities = projectRepository.listAuthorities(user);
+                            List<Project> allProjects = repository.listProjects();
+                            List<Authority> authorities = repository.listAuthorities(user);
 
                             // if global admin, show all projects
                             for (Authority authority : authorities) {
@@ -243,8 +243,8 @@ public class MonitoringPage
 
                             // else only projects she is admin of
                             for (Project project : allProjects) {
-                                if (ProjectUtil.isProjectAdmin(project, projectRepository, user)
-                                        || ProjectUtil.isCurator(project, projectRepository, user)) {
+                                if (ProjectUtil.isProjectAdmin(project, repository, user)
+                                        || ProjectUtil.isCurator(project, repository, user)) {
                                     allowedProject.add(project);
                                 }
                             }
@@ -259,9 +259,9 @@ public class MonitoringPage
                 @Override
                 protected void onSelectionChanged(Project aNewSelection)
                 {
-                    List<User> users = projectRepository.listProjectUsersWithPermissions(
-                            aNewSelection, PermissionLevel.USER);
-                    List<SourceDocument> sourceDocuments = projectRepository
+                    List<User> users = repository.listProjectUsersWithPermissions(aNewSelection,
+                            PermissionLevel.USER);
+                    List<SourceDocument> sourceDocuments = repository
                             .listSourceDocuments(aNewSelection);
                     documentJCases = getJCases(users, sourceDocuments);
 
@@ -282,7 +282,7 @@ public class MonitoringPage
                     final Map<String, Integer> annotatorsProgress = new TreeMap<String, Integer>();
                     final Map<String, Integer> annotatorsProgressInPercent = new TreeMap<String, Integer>();
                     final Project project = aNewSelection;
-                    List<SourceDocument> documents = projectRepository.listSourceDocuments(project);
+                    List<SourceDocument> documents = repository.listSourceDocuments(project);
 
                     final int totalDocuments = documents.size();
 
@@ -312,8 +312,8 @@ public class MonitoringPage
                     documentListAsColumnHeader.add(CURATION);
 
                     // List of users with USER permission level
-                    List<User> usersWithPermissions = projectRepository
-                            .listProjectUsersWithPermissions(project, PermissionLevel.USER);
+                    List<User> usersWithPermissions = repository.listProjectUsersWithPermissions(
+                            project, PermissionLevel.USER);
 
                     for (User user : usersWithPermissions) {
                         documentListAsColumnHeader.add(user.getUsername());
@@ -324,22 +324,20 @@ public class MonitoringPage
                     // Add a timestamp row for every user.
                     List<String> projectTimeStamp = new ArrayList<String>();
                     projectTimeStamp.add(LAST_ACCESS + LAST_ACCESS_ROW); // first column
-                    if (projectRepository.existsProjectTimeStamp(aNewSelection)) {
+                    if (repository.existsProjectTimeStamp(aNewSelection)) {
                         projectTimeStamp.add(LAST_ACCESS
-                                + new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
-                                        .format(projectRepository
-                                                .getProjectTimeStamp(aNewSelection)));
+                                + new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(repository
+                                        .getProjectTimeStamp(aNewSelection)));
                     }
                     else {
                         projectTimeStamp.add(LAST_ACCESS + "__");
                     }
 
                     for (User user : usersWithPermissions) {
-                        if (projectRepository.existsProjectTimeStamp(project, user.getUsername())) {
+                        if (repository.existsProjectTimeStamp(project, user.getUsername())) {
                             projectTimeStamp.add(LAST_ACCESS
-                                    + new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
-                                            .format(projectRepository.getProjectTimeStamp(project,
-                                                    user.getUsername())));
+                                    + new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(repository
+                                            .getProjectTimeStamp(project, user.getUsername())));
                         }
                         else {
                             projectTimeStamp.add(LAST_ACCESS + "__");
@@ -372,7 +370,7 @@ public class MonitoringPage
 
                     for (int i = 0; i < provider.getColumnCount(); i++) {
                         columns.add(new DocumentStatusColumnMetaData(provider, i, project,
-                                projectRepository));
+                                repository));
                     }
                     annotationDocumentStatusTable.remove();
                     annotationDocumentStatusTable = new DefaultDataTable("rsTable", columns,
@@ -484,9 +482,9 @@ public class MonitoringPage
     {
         Map<String, Integer> annotatorsProgress = new HashMap<String, Integer>();
         if (aProject != null) {
-            for (User user : projectRepository.listProjectUsersWithPermissions(aProject)) {
-                for (SourceDocument document : projectRepository.listSourceDocuments(aProject)) {
-                    if (projectRepository.isAnnotationFinished(document, user)) {
+            for (User user : repository.listProjectUsersWithPermissions(aProject)) {
+                for (SourceDocument document : repository.listSourceDocuments(aProject)) {
+                    if (repository.isAnnotationFinished(document, user)) {
                         if (annotatorsProgress.get(user.getUsername()) == null) {
                             annotatorsProgress.put(user.getUsername(), 1);
                         }
@@ -508,18 +506,18 @@ public class MonitoringPage
     {
         Map<String, Integer> annotatorsProgress = new HashMap<String, Integer>();
         if (aProject != null) {
-            for (User user : projectRepository.listProjectUsersWithPermissions(aProject)) {
+            for (User user : repository.listProjectUsersWithPermissions(aProject)) {
                 int finished = 0;
                 int ignored = 0;
                 int totalDocs = 0;
-                for (SourceDocument document : projectRepository.listSourceDocuments(aProject)) {
+                for (SourceDocument document : repository.listSourceDocuments(aProject)) {
                     totalDocs++;
-                    if (projectRepository.isAnnotationFinished(document, user)) {
+                    if (repository.isAnnotationFinished(document, user)) {
                         finished++;
                     }
-                    else if (projectRepository.existsAnnotationDocument(document, user)) {
-                        AnnotationDocument annotationDocument = projectRepository
-                                .getAnnotationDocument(document, user);
+                    else if (repository.existsAnnotationDocument(document, user)) {
+                        AnnotationDocument annotationDocument = repository.getAnnotationDocument(
+                                document, user);
                         if (annotationDocument.getState().equals(AnnotationDocumentState.IGNORE)) {
                             ignored++;
                         }
@@ -535,11 +533,16 @@ public class MonitoringPage
     private Map<String, Integer> getOverallProjectProgress()
     {
         Map<String, Integer> overallProjectProgress = new LinkedHashMap<String, Integer>();
-        for (Project project : projectRepository.listProjects()) {
-            int annoFinished = projectRepository.listFinishedAnnotationDocuments(project).size();
-            int allAnno = projectRepository.numberOfExpectedAnnotationDocuments(project);
-            int progress = (int) Math.round((double) (annoFinished * 100) / (allAnno));
-            overallProjectProgress.put(project.getName(), progress);
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = repository.getUser(username);
+        for (Project project : repository.listProjects()) {
+            if (ProjectUtil.isCurator(project, repository, user)
+                    || ProjectUtil.isProjectAdmin(project, repository, user)) {
+                int annoFinished = repository.listFinishedAnnotationDocuments(project).size();
+                int allAnno = repository.numberOfExpectedAnnotationDocuments(project);
+                int progress = (int) Math.round((double) (annoFinished * 100) / (allAnno));
+                overallProjectProgress.put(project.getName(), progress);
+            }
         }
         return overallProjectProgress;
     }
@@ -611,8 +614,8 @@ public class MonitoringPage
     {
 
         Project project = projectSelectionForm.getModelObject().project;
-        List<User> users = projectRepository.listProjectUsersWithPermissions(project,
-                PermissionLevel.USER);
+        List<User> users = repository
+                .listProjectUsersWithPermissions(project, PermissionLevel.USER);
         double[][] results = new double[users.size()][users.size()];
         if (annotationTypes.getModelObject() != null
                 && !annotationTypes.getModelObject().getName()
@@ -628,15 +631,15 @@ public class MonitoringPage
                 }
             }
 
-            List<SourceDocument> sourceDocuments = projectRepository.listSourceDocuments(project);
+            List<SourceDocument> sourceDocuments = repository.listSourceDocuments(project);
 
             // a map that contains list of finished annotation documents for a given user
             Map<User, List<SourceDocument>> finishedDocumentLists = new HashMap<User, List<SourceDocument>>();
             for (User user : users) {
                 List<SourceDocument> finishedDocuments = new ArrayList<SourceDocument>();
                 for (SourceDocument document : sourceDocuments) {
-                    AnnotationDocument annotationDocument = projectRepository
-                            .getAnnotationDocument(document, user);
+                    AnnotationDocument annotationDocument = repository.getAnnotationDocument(
+                            document, user);
                     if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
                         finishedDocuments.add(document);
                     }
@@ -646,45 +649,45 @@ public class MonitoringPage
 
             results = computeKappa(users, adapter, finishedDocumentLists, documentJCases);
 
-        // Users with some annotations of this type
+            // Users with some annotations of this type
 
-        List<String> usersListAsColumnHeader = new ArrayList<String>();
-        usersListAsColumnHeader.add("users");
+            List<String> usersListAsColumnHeader = new ArrayList<String>();
+            usersListAsColumnHeader.add("users");
 
-        for (User user : users) {
-            usersListAsColumnHeader.add(user.getUsername());
-        }
-        List<List<String>> agreementResults = new ArrayList<List<String>>();
-        int i = 0;
-        for (User user1 : users) {
-            List<String> agreementResult = new ArrayList<String>();
-            agreementResult.add(user1.getUsername());
-
-            for (int j = 0; j < users.size(); j++) {
-                if (j < i) {
-                    agreementResult.add("");
-                }
-                else {
-                    agreementResult.add((double) Math.round(results[i][j] * 100) / 100 + "");
-                }
+            for (User user : users) {
+                usersListAsColumnHeader.add(user.getUsername());
             }
-            i++;
-            agreementResults.add(agreementResult);
+            List<List<String>> agreementResults = new ArrayList<List<String>>();
+            int i = 0;
+            for (User user1 : users) {
+                List<String> agreementResult = new ArrayList<String>();
+                agreementResult.add(user1.getUsername());
+
+                for (int j = 0; j < users.size(); j++) {
+                    if (j < i) {
+                        agreementResult.add("");
+                    }
+                    else {
+                        agreementResult.add((double) Math.round(results[i][j] * 100) / 100 + "");
+                    }
+                }
+                i++;
+                agreementResults.add(agreementResult);
+            }
+
+            TableDataProvider provider = new TableDataProvider(usersListAsColumnHeader,
+                    agreementResults);
+
+            List<IColumn<?>> columns = new ArrayList<IColumn<?>>();
+
+            for (int m = 0; m < provider.getColumnCount(); m++) {
+                columns.add(new DynamicColumnMetaData(provider, m));
+            }
+            agreementTable.remove();
+            agreementTable = new DefaultDataTable("agreementTable", columns, provider, 10);
+            agreementForm.add(agreementTable);
+            aTarget.add(agreementForm);
         }
-
-        TableDataProvider provider = new TableDataProvider(usersListAsColumnHeader,
-                agreementResults);
-
-        List<IColumn<?>> columns = new ArrayList<IColumn<?>>();
-
-        for (int m = 0; m < provider.getColumnCount(); m++) {
-            columns.add(new DynamicColumnMetaData(provider, m));
-        }
-        agreementTable.remove();
-        agreementTable = new DefaultDataTable("agreementTable", columns, provider, 10);
-        agreementForm.add(agreementTable);
-        aTarget.add(agreementForm);
-    }
     }
 
     /**
@@ -725,10 +728,10 @@ public class MonitoringPage
                 Map<String, Map<String, String>> allUserAnnotations = new TreeMap<String, Map<String, String>>();
 
                 if (finishedDocumentLists.get(user2).size() != 0) {
-                    List<SourceDocument> user1Documents =  new ArrayList<SourceDocument>();
+                    List<SourceDocument> user1Documents = new ArrayList<SourceDocument>();
                     user1Documents.addAll(finishedDocumentLists.get(user1));
 
-                    List<SourceDocument> user2Documents =  new ArrayList<SourceDocument>();
+                    List<SourceDocument> user2Documents = new ArrayList<SourceDocument>();
                     user2Documents.addAll(finishedDocumentLists.get(user2));
 
                     // sameDocuments finished (intersection of anno docs)
@@ -782,14 +785,13 @@ public class MonitoringPage
         for (SourceDocument document : sourceDocuments) {
             Map<User, JCas> jCases = new HashMap<User, JCas>();
             for (User user : users) {
-                if (projectRepository.existsAnnotationDocument(document, user)) {
-                    AnnotationDocument annotationDocument = projectRepository
-                            .getAnnotationDocument(document, user);
+                if (repository.existsAnnotationDocument(document, user)) {
+                    AnnotationDocument annotationDocument = repository.getAnnotationDocument(
+                            document, user);
                     if (!(annotationDocument.getState().equals(AnnotationDocumentState.IGNORE) || annotationDocument
                             .getState().equals(AnnotationDocumentState.NEW))) {
                         try {
-                            JCas jCas = projectRepository
-                                    .getAnnotationDocumentContent(annotationDocument);
+                            JCas jCas = repository.getAnnotationDocumentContent(annotationDocument);
                             jCases.put(user, jCas);
                         }
                         catch (UIMAException e) {
@@ -804,8 +806,6 @@ public class MonitoringPage
                         catch (ClassNotFoundException e) {
                             error(e.getMessage());
                         }
-
-
 
                     }
                 }

@@ -168,9 +168,12 @@ public class WelcomePage
         else if (!memberAdded) {
             add(annotation);
             annotation.setVisible(false);
-            error("You are not member of any projects to annotate or curate");
         }
 
+        // if not either a curator or annotator, display warning message
+        if(!memberAdded && !curatorAdded){
+            info("You are not member of any projects to annotate or curate");
+        }
         // Add monitoring link
         // Only Admins can see this link
 
