@@ -50,7 +50,7 @@
 				<prop key="backup.keep.time">0</prop>
 				<prop key="backup.interval">0</prop>
 				<prop key="backup.keep.number">0</prop>
-				<prop key="crowdsource.enabled">1</prop>
+				<prop key="crowdsource.enabled">0</prop>
 			</props>
 		</property>
 		<property name="locations">
