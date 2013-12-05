@@ -285,6 +285,10 @@ public class AnnotationPage
                                     + document
                                     + "';Wicket.Window.unloadConfirmation=false;window.location.reload()");
                         }
+                        catch (DataRetrievalFailureException e) {
+                            target.add(feedbackPanel);
+                            error(e.getMessage());
+                        }
                         catch (IOException e) {
                             target.add(feedbackPanel);
                             error(e.getMessage());

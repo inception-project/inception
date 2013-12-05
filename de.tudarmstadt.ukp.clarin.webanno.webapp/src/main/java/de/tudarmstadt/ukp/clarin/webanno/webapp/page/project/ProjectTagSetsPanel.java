@@ -438,7 +438,6 @@ public class ProjectTagSetsPanel
     {
         private static final long serialVersionUID = -1L;
 
-        @SuppressWarnings("unchecked")
         public TagSetDetailForm(String id)
         {
             super(id, new CompoundPropertyModel<de.tudarmstadt.ukp.clarin.webanno.model.TagSet>(
