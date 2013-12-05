@@ -800,9 +800,16 @@ public interface RepositoryService
     JCas getJCasFromFile(File file, Class reader)
         throws UIMAException, IOException;
     void updateTimeStamp(SourceDocument document, User user, Mode mode) throws IOException;
-    
+
     /**
      * Get the name of the database driver in use.
      */
     String getDatabaseDriverName();
+
+    /**
+     * For 1.0.0 release, the settings.properties file contains a key that is indicates if
+     *  crowdsourcing is enabled or not (0 disabled, 1 enabled)
+     * @return
+     */
+    int isCrowdSourceEnabled();
 }

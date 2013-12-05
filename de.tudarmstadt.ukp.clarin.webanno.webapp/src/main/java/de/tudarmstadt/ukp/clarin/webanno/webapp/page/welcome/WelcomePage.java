@@ -53,7 +53,7 @@ public class WelcomePage
     extends ApplicationPageBase
 {
     @SpringBean(name = "documentRepository")
-    private RepositoryService projectRepository;
+    private RepositoryService repository;
 
     AjaxLink<Void> projectSettings;
     AjaxLink<Void> curation;
@@ -72,7 +72,7 @@ public class WelcomePage
         // the user is deleted while the session is not expired
         User user = null;
         try{
-         user = projectRepository.getUser(username);
+         user = repository.getUser(username);
         }
         // redirect to login page (if no usr is found, admin/admin will be created)
         catch (NoResultException e){
@@ -92,15 +92,15 @@ public class WelcomePage
                 setResponsePage(ProjectPage.class);
             }
         };
-        for (Project project : projectRepository.listProjects()) {
+        for (Project project : repository.listProjects()) {
 
-            if (ProjectUtil.isProjectAdmin(project, projectRepository, user)) {
+            if (ProjectUtil.isProjectAdmin(project, repository, user)) {
                 add(projectSettings);
                 projectSettingAdded = true;
                 break;
             }
         }
-        if (ProjectUtil.isSuperAdmin(projectRepository, user) && !projectSettingAdded) {
+        if (ProjectUtil.isSuperAdmin(repository, user) && !projectSettingAdded) {
             add(projectSettings);
         }
         else if (!projectSettingAdded) {
@@ -123,16 +123,16 @@ public class WelcomePage
                 setResponsePage(CurationPage.class);
             }
         };
-        for (Project project : projectRepository.listProjects()) {
+        for (Project project : repository.listProjects()) {
 
-            if (ProjectUtil.isCurator(project, projectRepository, user)) {
+            if (ProjectUtil.isCurator(project, repository, user)) {
                 add(curation);
                 curatorAdded = true;
                 break;
             }
 
         }
-        if (ProjectUtil.isSuperAdmin(projectRepository, user) && !projectSettingAdded) {
+        if (ProjectUtil.isSuperAdmin(repository, user) && !projectSettingAdded) {
             add(curation);
         }
         else if (!curatorAdded) {
@@ -154,15 +154,15 @@ public class WelcomePage
         };
 
         boolean memberAdded = false;
-        for (Project project : projectRepository.listProjects()) {
+        for (Project project : repository.listProjects()) {
 
-            if (ProjectUtil.isMember(project, projectRepository, user)) {
+            if (ProjectUtil.isMember(project, repository, user)) {
                 add(annotation);
                 memberAdded = true;
                 break;
             }
         }
-        if (ProjectUtil.isSuperAdmin(projectRepository, user) && !projectSettingAdded) {
+        if (ProjectUtil.isSuperAdmin(repository, user) && !projectSettingAdded) {
             add(annotation);
         }
         else if (!memberAdded) {
@@ -189,16 +189,16 @@ public class WelcomePage
             }
         };
 
-        for (Project project : projectRepository.listProjects()) {
+        for (Project project : repository.listProjects()) {
 
-            if (ProjectUtil.isProjectAdmin(project, projectRepository, user)
-                    || ProjectUtil.isCurator(project, projectRepository, user)) {
+            if (ProjectUtil.isProjectAdmin(project, repository, user)
+                    || ProjectUtil.isCurator(project, repository, user)) {
                 add(monitoring);
                 monitoringAdded = true;
                 break;
             }
         }
-        if (ProjectUtil.isSuperAdmin(projectRepository, user) && !monitoringAdded) {
+        if (ProjectUtil.isSuperAdmin(repository, user) && !monitoringAdded) {
             add(monitoring);
         }
         else if (!monitoringAdded) {
@@ -238,23 +238,24 @@ public class WelcomePage
             }
         };
 
-        for (Project project : projectRepository.listProjects()) {
+        for (Project project : repository.listProjects()) {
 
-            if (ProjectUtil.isProjectAdmin(project, projectRepository, user)
-                    || ProjectUtil.isCurator(project, projectRepository, user)) {
+            if (ProjectUtil.isProjectAdmin(project, repository, user)
+                    || ProjectUtil.isCurator(project, repository, user)) {
                 add(crowdSource);
                 crowdSourceAdded = true;
                 break;
             }
         }
-        if (ProjectUtil.isSuperAdmin(projectRepository, user) && !crowdSourceAdded) {
+        if (ProjectUtil.isSuperAdmin(repository, user) && !crowdSourceAdded) {
             add(crowdSource);
         }
         else if (!crowdSourceAdded) {
-
             add(crowdSource);
             crowdSource.setVisible(false);
-
+        }
+        if(repository.isCrowdSourceEnabled()==0){
+            crowdSource.setVisible(false);
         }
 
         // Add correction Link
@@ -270,16 +271,16 @@ public class WelcomePage
                 setResponsePage(CorrectionPage.class);
             }
         };
-        for (Project project : projectRepository.listProjects()) {
+        for (Project project : repository.listProjects()) {
 
-            if (ProjectUtil.isCurator(project, projectRepository, user)) {
+            if (ProjectUtil.isCurator(project, repository, user)) {
                 add(correction);
                 correctionAdded = true;
                 break;
             }
 
         }
-        if (ProjectUtil.isSuperAdmin(projectRepository, user) && !projectSettingAdded) {
+        if (ProjectUtil.isSuperAdmin(repository, user) && !projectSettingAdded) {
             add(correction);
         }
         else if (!correctionAdded) {

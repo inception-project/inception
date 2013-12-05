@@ -148,6 +148,9 @@ public class RepositoryServiceDbData
     @Value(value = "${backup.keep.time}")
     private long backupKeepTime;
 
+    @Value(value = "${crowdsource.enabled}")
+    private int crowdsourceEnabled;
+
     @Value(value = "${backup.interval}")
     private long backupInterval;
 
@@ -1847,5 +1850,11 @@ public class RepositoryServiceDbData
         });
 
         return sb.toString();
+    }
+
+    @Override
+    public int isCrowdSourceEnabled()
+    {
+        return crowdsourceEnabled;
     }
 }
