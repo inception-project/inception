@@ -522,8 +522,8 @@ public class BratCuratorUtility
             BratAnnotator aMergeVisualizer,
             RepositoryService aRepository,
             Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
-            CurationViewForSourceDocument aCurationSegment,
-            AnnotationService aAnnotationService, MappingJacksonHttpMessageConverter aJsonConverter)
+            CurationViewForSourceDocument aCurationSegment, AnnotationService aAnnotationService,
+            MappingJacksonHttpMessageConverter aJsonConverter)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
         SourceDocument sourceDocument = aCurationContainer.getBratAnnotatorModel().getDocument();
@@ -563,7 +563,7 @@ public class BratCuratorUtility
                     aCurationSegment.getEnd());
         }
         catch (Exception e) {
-           throw new CasDiffException(e.getMessage());
+            throw new CasDiffException(e.getMessage());
         }
 
         // fill lookup variable for annotation selections
@@ -594,33 +594,40 @@ public class BratCuratorUtility
         aTarget.add(aParent);
     }
 
-    public static void automate(
-            BratAnnotatorModel  aBratAnnotatorModel,
-            RepositoryService aRepository,AnnotationService aAnnotationService, int aStart, int aEnd, Tag aTag)
+    public static void automate(BratAnnotatorModel aModel, RepositoryService aRepository,
+            AnnotationService aAnnotationService, int aStart, int aEnd, Tag aTag)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
 
-        SourceDocument sourceDocument = aBratAnnotatorModel.getDocument();
+        SourceDocument sourceDocument = aModel.getDocument();
         JCas jCas = aRepository.getCorrectionDocumentContent(sourceDocument);
 
-        String text = jCas.getDocumentText();
+        StringBuffer text = new StringBuffer();
+
+        for (Sentence sentence : selectCovered(
+                jCas,Sentence.class,aModel.getSentenceBeginOffset(),
+                BratAjaxCasUtil.getLastSentenceEndOffsetInDisplayWindow(jCas,
+                        aModel.getSentenceAddress(), aModel.getWindowSize()))) {
+            text.append(sentence.getCoveredText() + "\n");
+        }
 
         // get selected text, concatenations of tokens
         String selectedText = "";
-        for (Token coveredToken : selectCovered(jCas, Token.class, aStart,aEnd)) {
+        for (Token coveredToken : selectCovered(jCas, Token.class, aStart, aEnd)) {
             selectedText = selectedText + " " + coveredToken.getCoveredText();
         }
         selectedText = selectedText.trim();
 
-        BratAjaxCasController bratAjaxCasController = new BratAjaxCasController(aRepository, aAnnotationService);
+        BratAjaxCasController bratAjaxCasController = new BratAjaxCasController(aRepository,
+                aAnnotationService);
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User logedInUser = aRepository.getUser(username);
         // find all occurrences forward and add to cas
-        for (int i = -1; (i = text.indexOf(selectedText, i + 1)) != -1; ) {
-            bratAjaxCasController.createSpanAnnotation(jCas, i, i+selectedText.length(), getQualifiedLabel(aTag), null, null);
+        for (int i = -1; (i = text.indexOf(selectedText, i + 1)) != -1;) {
+            bratAjaxCasController.createSpanAnnotation(jCas, i, i + selectedText.length(),
+                    getQualifiedLabel(aTag), null, null);
         }
 
-        aRepository.createCorrectionDocumentContent(jCas, aBratAnnotatorModel.getDocument(),
-                logedInUser);
+        aRepository.createCorrectionDocumentContent(jCas, aModel.getDocument(), logedInUser);
     }
 }
