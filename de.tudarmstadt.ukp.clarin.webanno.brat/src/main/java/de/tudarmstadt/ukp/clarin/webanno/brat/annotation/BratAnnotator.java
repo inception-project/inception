@@ -53,7 +53,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.OffsetsList;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -92,7 +91,6 @@ public class BratAnnotator
 
     private String collection = "";
 
-
     String selectedSpan, offsets, selectedSpanType, selectedArcType;
     Integer selectedSpanID, selectedArcId;
 
@@ -100,6 +98,10 @@ public class BratAnnotator
     private boolean closeButtonClicked;// check if the annotation dialog has a change
 
     private String originSpanType = null, targetSpanType = null;
+
+    int beginOffset;
+    int endOffset;
+    boolean annotate;
 
     /**
      * Data models for {@link BratAnnotator}
@@ -212,19 +214,16 @@ public class BratAnnotator
                         }
 
                         offsets = request.getParameterValue("offsets").toString();
-                        OffsetsList offsetLists = (OffsetsList) jsonConverter.getObjectMapper()
-                                .readValue(offsets, OffsetsList.class);
+                        OffsetsList offsetLists = jsonConverter.getObjectMapper().readValue(
+                                offsets, OffsetsList.class);
 
-                        int beginOffset;
-                        int endOffset;
                         if (selectedSpanID == -1) {
                             Sentence sentence = BratAjaxCasUtil.selectSentenceAt(jCas,
                                     getModelObject().getSentenceBeginOffset(), getModelObject()
                                             .getSentenceEndOffset());
-                            beginOffset = sentence.getBegin()
-                                    + ((Offsets) offsetLists.get(0)).getBegin();
+                            beginOffset = sentence.getBegin() + offsetLists.get(0).getBegin();
                             endOffset = sentence.getBegin()
-                                    + ((Offsets) offsetLists.get(offsetLists.size() - 1)).getEnd();
+                                    + offsetLists.get(offsetLists.size() - 1).getEnd();
                         }
 
                         // get the begin/end from the annotation, no need to re-calculate
@@ -389,6 +388,9 @@ public class BratAnnotator
                 }
 
                 if (!closeButtonClicked) {
+                    if (selectedSpanID == -1) {
+                        onChange(getModelObject(), beginOffset, endOffset);
+                    }
                     onChange(aTarget, getModelObject());
                     reloadContent(aTarget);
                 }
@@ -534,9 +536,10 @@ public class BratAnnotator
         };
         aTarget.appendJavaScript("\n" + StringUtils.join(script, "\n"));
     }
-    
+
     @Override
-    protected void onAfterRender(){
+    protected void onAfterRender()
+    {
         super.onAfterRender();
         Session.get().getFeedbackMessages().clear();
     }
@@ -586,4 +589,11 @@ public class BratAnnotator
     {
 
     }
+
+    protected void onChange(BratAnnotatorModel aModel, int aStart,
+            int aEnd)
+    {
+        // Overriden in AutomationPage
+    }
+
 }

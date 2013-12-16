@@ -32,6 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.page.automation.AutomationPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.correction.CorrectionPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.crowdsource.CrowdSourcePage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.CurationPage;
@@ -62,6 +63,7 @@ public class WelcomePage
     AjaxLink<Void> usremanagement;
     AjaxLink<Void> crowdSource;
     AjaxLink<Void> correction;
+    AjaxLink<Void> automation;
 
     public WelcomePage()
     {
@@ -288,7 +290,39 @@ public class WelcomePage
             correction.setVisible(false);
         }
 
+
+    // Add automation Link
+    // Only Admins or users can see this link
+    boolean automationAdded = false;
+    automation = new AjaxLink<Void>("automation")
+    {
+
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public void onClick(AjaxRequestTarget target)
+        {
+            setResponsePage(AutomationPage.class);
+        }
+    };
+    for (Project project : repository.listProjects()) {
+
+        if (ProjectUtil.isMember(project, repository, user)) {
+            add(automation);
+            automationAdded = true;
+            break;
+        }
+
     }
+    if (ProjectUtil.isSuperAdmin(repository, user) && !projectSettingAdded) {
+        add(automation);
+    }
+    else if (!automationAdded) {
+        add(automation);
+        automation.setVisible(false);
+    }
+
+}
 
     private static final long serialVersionUID = -530084892002620197L;
 }

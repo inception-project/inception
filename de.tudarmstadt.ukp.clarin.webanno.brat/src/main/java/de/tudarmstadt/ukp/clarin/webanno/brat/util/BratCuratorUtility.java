@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.util;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getQualifiedLabel;
+import static org.uimafit.util.JCasUtil.selectCovered;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -56,8 +58,8 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.CurationViewPan
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.AnnotationState;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationContainer;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationViewForSourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationUserSegmentForAnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationViewForSourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Argument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Relation;
@@ -68,8 +70,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * A utility class for the curation AND Correction modules
@@ -588,6 +592,35 @@ public class BratCuratorUtility
             aMergeVisualizer.reloadContent(aTarget);
         }
         aTarget.add(aParent);
+    }
 
+    public static void automate(
+            BratAnnotatorModel  aBratAnnotatorModel,
+            RepositoryService aRepository,AnnotationService aAnnotationService, int aStart, int aEnd, Tag aTag)
+        throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
+    {
+
+        SourceDocument sourceDocument = aBratAnnotatorModel.getDocument();
+        JCas jCas = aRepository.getCorrectionDocumentContent(sourceDocument);
+
+        String text = jCas.getDocumentText();
+
+        // get selected text, concatenations of tokens
+        String selectedText = "";
+        for (Token coveredToken : selectCovered(jCas, Token.class, aStart,aEnd)) {
+            selectedText = selectedText + " " + coveredToken.getCoveredText();
+        }
+        selectedText = selectedText.trim();
+
+        BratAjaxCasController bratAjaxCasController = new BratAjaxCasController(aRepository, aAnnotationService);
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User logedInUser = aRepository.getUser(username);
+        // find all occurrences forward and add to cas
+        for (int i = -1; (i = text.indexOf(selectedText, i + 1)) != -1; ) {
+            bratAjaxCasController.createSpanAnnotation(jCas, i, i+selectedText.length(), getQualifiedLabel(aTag), null, null);
+        }
+
+        aRepository.createCorrectionDocumentContent(jCas, aBratAnnotatorModel.getDocument(),
+                logedInUser);
     }
 }
