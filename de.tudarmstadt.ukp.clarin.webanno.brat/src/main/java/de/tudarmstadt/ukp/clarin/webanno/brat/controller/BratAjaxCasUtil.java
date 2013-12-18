@@ -268,6 +268,24 @@ public class BratAjaxCasUtil
         return i;
     }
 
+
+    /**
+     * Get the last sentence CAS End Offset in the current display window
+     *
+     * @param aJcas
+     * @param aFirstSentenceAddress
+     *            the CAS address of the first sentence in the dispaly window
+     * @param aWindowSize
+     *            the window size
+     * @return The address of the last sentence address in the current display window.
+     */
+    public static int getLastSentenceEndOffsetInDisplayWindow(JCas aJcas, int aFirstSentenceAddress,
+            int aWindowSize)
+    {
+        int i = getLastSentenceAddressInDisplayWindow(aJcas, aFirstSentenceAddress, aWindowSize);
+        return selectByAddr(aJcas, i).getEnd();
+    }
+
     /**
      * Get the beginning address of a sentence to be displayed in BRAT.
      *
