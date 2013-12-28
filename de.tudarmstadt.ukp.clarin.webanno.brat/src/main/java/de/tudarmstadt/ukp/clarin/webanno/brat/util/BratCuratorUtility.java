@@ -602,15 +602,6 @@ public class BratCuratorUtility
         SourceDocument sourceDocument = aModel.getDocument();
         JCas jCas = aRepository.getCorrectionDocumentContent(sourceDocument);
 
-        StringBuffer text = new StringBuffer();
-
-        for (Sentence sentence : selectCovered(
-                jCas,Sentence.class,aModel.getSentenceBeginOffset(),
-                BratAjaxCasUtil.getLastSentenceEndOffsetInDisplayWindow(jCas,
-                        aModel.getSentenceAddress(), aModel.getWindowSize()))) {
-            text.append(sentence.getCoveredText() + "\n");
-        }
-
         // get selected text, concatenations of tokens
         String selectedText = "";
         for (Token coveredToken : selectCovered(jCas, Token.class, aStart, aEnd)) {
@@ -622,12 +613,20 @@ public class BratCuratorUtility
                 aAnnotationService);
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User logedInUser = aRepository.getUser(username);
-        // find all occurrences forward and add to cas
-        for (int i = -1; (i = text.indexOf(selectedText, i + 1)) != -1;) {
-            bratAjaxCasController.createSpanAnnotation(jCas, i, i + selectedText.length(),
-                    getQualifiedLabel(aTag), null, null);
-        }
 
+        int beginOffset = aModel.getSentenceBeginOffset();
+        int endOffset = BratAjaxCasUtil.getLastSentenceEndOffsetInDisplayWindow(jCas,
+                aModel.getSentenceAddress(), aModel.getWindowSize());
+        for (Sentence sentence : selectCovered(jCas, Sentence.class, beginOffset, endOffset)) {
+            String sentenceText = sentence.getCoveredText().toLowerCase();
+            for (int i = -1; (i = sentenceText.indexOf(selectedText.toLowerCase(), i + 1)) != -1
+                    && selectCovered(jCas, Token.class, sentence.getBegin() + i,
+                            sentence.getBegin() + i + selectedText.length()).size() > 0;) {
+                bratAjaxCasController.createSpanAnnotation(jCas, sentence.getBegin() + i,
+                        sentence.getBegin() + i + selectedText.length(), getQualifiedLabel(aTag),
+                        null, null);
+            }
+        }
         aRepository.createCorrectionDocumentContent(jCas, aModel.getDocument(), logedInUser);
     }
 }
