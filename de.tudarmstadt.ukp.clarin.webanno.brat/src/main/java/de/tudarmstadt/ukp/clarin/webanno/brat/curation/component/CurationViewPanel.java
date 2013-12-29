@@ -73,7 +73,7 @@ public class CurationViewPanel
     extends WebMarkupContainer
 {
     private static final long serialVersionUID = 8736268179612831795L;
-    private ListView<CurationUserSegmentForAnnotationDocument> sentenceListView;
+    private final ListView<CurationUserSegmentForAnnotationDocument> sentenceListView;
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
 
@@ -160,8 +160,9 @@ public class CurationViewPanel
                                         .getBratAnnotatorModel().getDocument();
                                 JCas annotationJCas = null;
 
-                                annotationJCas = curationUserSegment.getBratAnnotatorModel()
-                                        .getMode().equals(Mode.CORRECTION) ? repository
+                                annotationJCas = (curationUserSegment.getBratAnnotatorModel()
+                                        .getMode().equals(Mode.AUTOMATION) || curationUserSegment
+                                        .getBratAnnotatorModel().getMode().equals(Mode.CORRECTION)) ? repository
                                         .getAnnotationDocumentContent(repository
                                                 .getAnnotationDocument(sourceDocument, user))
                                         : repository.getCurationDocumentContent(sourceDocument);
@@ -401,7 +402,8 @@ public class CurationViewPanel
         throws IOException
     {
         try {
-            if (aModel.getMode().equals(Mode.CORRECTION)) {
+            if (aModel.getMode().equals(Mode.AUTOMATION)
+                    || aModel.getMode().equals(Mode.CORRECTION)) {
                 return repository.getCorrectionDocumentContent(aModel.getDocument());
             }
             else {

@@ -159,8 +159,9 @@ public class BratCuratorUtility
                 for (String username : annotationSelection.getAddressByUsername().keySet()) {
                     if ((!username.equals(CURATION_USER) && bratAnnotatorModel.getMode().equals(
                             Mode.CURATION))
-                            || (username.equals(CURATION_USER) && bratAnnotatorModel.getMode()
-                                    .equals(Mode.CORRECTION))) {
+                            || (username.equals(CURATION_USER) && (bratAnnotatorModel.getMode()
+                                    .equals(Mode.AUTOMATION) || bratAnnotatorModel.getMode()
+                                    .equals(Mode.CORRECTION)))) {
                         Integer address = annotationSelection.getAddressByUsername().get(username);
                         // aAnnotationSelectionByUsernameAndAddress.put(username,
                         // new
@@ -188,8 +189,9 @@ public class BratCuratorUtility
         for (String username : usernamesSorted) {
             if ((!username.equals(CURATION_USER) && aBratAnnotatorModel.getMode().equals(
                     Mode.CURATION))
-                    || (username.equals(CURATION_USER) && aBratAnnotatorModel.getMode().equals(
-                            Mode.CORRECTION))) {
+                    || (username.equals(CURATION_USER) && (aBratAnnotatorModel.getMode().equals(
+                            Mode.AUTOMATION) || aBratAnnotatorModel.getMode().equals(
+                            Mode.CORRECTION)))) {
                 Map<Integer, AnnotationSelection> annotationSelectionByAddress = new HashMap<Integer, AnnotationSelection>();
 
                 for (AnnotationOption annotationOption : aAnnotationOptions) {
@@ -210,7 +212,8 @@ public class BratCuratorUtility
                         .getName();
                 int sentenceAddress = aBratAnnotatorModel.getSentenceAddress();
                 int lastSentenceAddress = aBratAnnotatorModel.getLastSentenceAddress();
-                if (aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)) {
+                if (aBratAnnotatorModel.getMode().equals(Mode.AUTOMATION)
+                        || aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)) {
                     userJCas = aJCases.get(logedUsername);
 
                     aBratAnnotatorModel.setSentenceAddress(getSentenceAddress(aBratAnnotatorModel,
@@ -328,7 +331,7 @@ public class BratCuratorUtility
             int address = entity.getId();
             AnnotationSelection annotationSelection = annotationSelectionByAddress.get(address);
             AnnotationState newState = null;
-            if (aMode.equals(Mode.CORRECTION)) {
+            if (aMode.equals(Mode.AUTOMATION) || aMode.equals(Mode.CORRECTION)) {
                 newState = getCorrectionState(annotationSelection, aAnnotationOptions, numUsers,
                         address);
             }
@@ -343,7 +346,7 @@ public class BratCuratorUtility
             int address = entity.getId();
             AnnotationSelection annotationSelection = annotationSelectionByAddress.get(address);
             AnnotationState newState = null;
-            if (aMode.equals(Mode.CORRECTION)) {
+            if (aMode.equals(Mode.AUTOMATION) || aMode.equals(Mode.CORRECTION)) {
                 newState = getCorrectionState(annotationSelection, aAnnotationOptions, numUsers,
                         address);
             }
@@ -438,7 +441,7 @@ public class BratCuratorUtility
         int address = relation.getId();
         AnnotationSelection annotationSelection = annotationSelectionByAddress.get(address);
         AnnotationState newState = null;
-        if (aMode.equals(Mode.CORRECTION)) {
+        if (aMode.equals(Mode.AUTOMATION)||aMode.equals(Mode.CORRECTION)) {
             newState = getCorrectionState(annotationSelection, aAnnotationOptions, numUsers,
                     address);
         }
@@ -532,7 +535,8 @@ public class BratCuratorUtility
         Map<String, JCas> jCases = new HashMap<String, JCas>();
         JCas annotatorCas = null;
         // this is a CORRECTION project
-        if (aCurationContainer.getBratAnnotatorModel().getMode().equals(Mode.CORRECTION)) {
+        if (aCurationContainer.getBratAnnotatorModel().getMode().equals(Mode.AUTOMATION)
+                || aCurationContainer.getBratAnnotatorModel().getMode().equals(Mode.CORRECTION)) {
             annotatorCas = aRepository.getCorrectionDocumentContent(sourceDocument);
 
             String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -574,7 +578,8 @@ public class BratCuratorUtility
         LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<CurationUserSegmentForAnnotationDocument>();
 
         BratAnnotatorModel bratAnnotatorModel = null;
-        if (!aCurationContainer.getBratAnnotatorModel().getMode().equals(Mode.CORRECTION)) {
+        if (!(aCurationContainer.getBratAnnotatorModel().getMode().equals(Mode.AUTOMATION) || aCurationContainer
+                .getBratAnnotatorModel().getMode().equals(Mode.CORRECTION))) {
             // update sentence address, offsets,... per sentence/per user in the curation view
             bratAnnotatorModel = BratCuratorUtility.setBratAnnotatorModel(sourceDocument,
                     aRepository, aCurationSegment, aAnnotationService);

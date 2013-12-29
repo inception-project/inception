@@ -135,7 +135,7 @@ public class RepositoryServiceDbData
         FileAppender apndr = new FileAppender(new PatternLayout("%d [" + aUser + "] %m%n"),
                 targetLog, true);
         logger.addAppender(apndr);
-        logger.setLevel((Level) Level.ALL);
+        logger.setLevel(Level.ALL);
         return logger;
     }
 
@@ -181,7 +181,7 @@ public class RepositoryServiceDbData
     // The annotation preference properties File name
     String annotationPreferencePropertiesFileName;
 
-    private Object lock = new Object();
+    private final Object lock = new Object();
 
     public RepositoryServiceDbData()
     {
@@ -808,8 +808,7 @@ public class RepositoryServiceDbData
     public Date getProjectTimeStamp(Project aProject)
     {
         return entityManager
-                .createQuery(
-                        "SELECT max(timestamp) FROM SourceDocument WHERE project = :project",
+                .createQuery("SELECT max(timestamp) FROM SourceDocument WHERE project = :project",
                         Date.class).setParameter("project", aProject).getSingleResult();
     }
 
@@ -1489,7 +1488,7 @@ public class RepositoryServiceDbData
                 // Get all history files for the current user
                 File[] history = annotationFolder.listFiles(new FileFilter()
                 {
-                    private Matcher matcher = Pattern.compile(
+                    private final Matcher matcher = Pattern.compile(
                             Pattern.quote(username) + "\\.ser\\.[0-9]+\\.bak").matcher("");
 
                     @Override
@@ -1655,7 +1654,8 @@ public class RepositoryServiceDbData
         if (existsAnnotationDocument(aDocument, user)) {
             AnnotationDocument annotationDocument = getAnnotationDocument(aDocument, user);
             try {
-                if (aMode.equals(Mode.ANNOTATION) || aMode.equals(Mode.CORRECTION)) {
+                if (aMode.equals(Mode.ANNOTATION) || aMode.equals(Mode.AUTOMATION)
+                        || aMode.equals(Mode.CORRECTION)) {
                     CAS cas = getAnnotationDocumentContent(annotationDocument).getCas();
                     upgrade(cas);
                     createAnnotationDocumentContent(cas.getJCas(),
@@ -1744,8 +1744,8 @@ public class RepositoryServiceDbData
     public void updateJCas(Mode aMode, SourceDocument aSourceDocument, User aUser, JCas aJcas)
         throws IOException
     {
-        if (aMode.equals(Mode.ANNOTATION) || aMode.equals(Mode.CORRECTION)
-                || aMode.equals(Mode.CORRECTION_MERGE)) {
+        if (aMode.equals(Mode.ANNOTATION) || aMode.equals(Mode.AUTOMATION)
+                || aMode.equals(Mode.CORRECTION) || aMode.equals(Mode.CORRECTION_MERGE)) {
             createAnnotationDocumentContent(aJcas, aSourceDocument, aUser);
         }
         else if (aMode.equals(Mode.CURATION) || aMode.equals(Mode.CURATION_MERGE)) {

@@ -76,9 +76,9 @@ public class OpenModalWindowPanel
     private RepositoryService projectRepository;
 
     // Project list, Document List and buttons List, contained in separet forms
-    private ProjectSelectionForm projectSelectionForm;
-    private DocumentSelectionForm documentSelectionForm;
-    private ButtonsForm buttonsForm;
+    private final ProjectSelectionForm projectSelectionForm;
+    private final DocumentSelectionForm documentSelectionForm;
+    private final ButtonsForm buttonsForm;
 
     // The first project - selected by default
     private Project selectedProject;
@@ -87,13 +87,13 @@ public class OpenModalWindowPanel
 
     private Select<SourceDocument> documentSelection;
 
-    private String username;
-    private User user;
+    private final String username;
+    private final User user;
 
     // Dialog is for annotation or curation
 
-    private Mode mode;
-    private BratAnnotatorModel bratAnnotatorModel;
+    private final Mode mode;
+    private final BratAnnotatorModel bratAnnotatorModel;
 
     List<Project> allowedProject = new ArrayList<Project>();
 
@@ -213,6 +213,14 @@ public class OpenModalWindowPanel
                 }
             }
             break;
+        case AUTOMATION:
+            for (Project project : projectRepository.listProjects()) {
+                if (ProjectUtil.isMember(project, projectRepository, user)
+                        && project.getMode().equals(Mode.AUTOMATION)) {
+                    allowedProject.add(project);
+                }
+            }
+            break;
         default:
             break;
         }
@@ -285,6 +293,7 @@ public class OpenModalWindowPanel
                             for (SourceDocument sourceDocument : allDocuments) {
                                 switch (mode) {
                                 case ANNOTATION:
+                                case AUTOMATION:
                                 case CORRECTION:
                                     if (projectRepository.existsAnnotationDocument(sourceDocument,
                                             user)) {
@@ -328,7 +337,7 @@ public class OpenModalWindowPanel
 
                             }
                             allDocuments.removeAll(excludeDocuments);
-                            return (ArrayList<SourceDocument>) allDocuments;
+                            return allDocuments;
                         }
                     })
             {

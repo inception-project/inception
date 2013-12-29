@@ -338,7 +338,7 @@ public class ProjectUtil
                 }
             }
 
-            if (aMode.equals(Mode.CORRECTION) || aMode.equals(Mode.CORRECTION)) {
+            if (aMode.equals(Mode.CORRECTION) || aMode.equals(Mode.AUTOMATION) || aMode.equals(Mode.CURATION )) {
                 tagSets.removeAll(corefTagSets);
             }
             abAnnotatorModel.setAnnotationLayers(new HashSet<TagSet>(tagSets));

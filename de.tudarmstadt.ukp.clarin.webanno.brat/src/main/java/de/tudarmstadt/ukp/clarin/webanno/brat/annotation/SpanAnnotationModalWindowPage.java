@@ -97,10 +97,10 @@ public class SpanAnnotationModalWindowPage
 
     Model<TagSet> tagSetsModel;
     Model<String> tagsModel;
-    private AnnotationDialogForm annotationDialogForm;
-    private BratAnnotatorModel bratAnnotatorModel;
-    private int beginOffset;
-    private int endOffset;
+    private final AnnotationDialogForm annotationDialogForm;
+    private final BratAnnotatorModel bratAnnotatorModel;
+    private final int beginOffset;
+    private final int endOffset;
     private String selectedText = null;
     int selectedSpanId = -1;
     String selectedSpanType;
@@ -154,7 +154,7 @@ public class SpanAnnotationModalWindowPage
                 }
             }
             else {
-                selectedtTagSet = ((TagSet) spanLayers.get(0));
+                selectedtTagSet = (spanLayers.get(0));
                 tagSetsModel = new Model<TagSet>(selectedtTagSet);
                 tagsModel = new Model<String>("");
 
@@ -244,7 +244,7 @@ public class SpanAnnotationModalWindowPage
                                 annotationType = tags.getModelObject();
                             }
                             else {
-                                selectedTag = (Tag) annotationService.getTag(tags.getModelObject(),
+                                selectedTag = annotationService.getTag(tags.getModelObject(),
                                         selectedtTagSet);
                                 annotationType = TypeUtil.getQualifiedLabel(selectedTag);
                             }
@@ -412,6 +412,7 @@ public class SpanAnnotationModalWindowPage
     {
 
         if (aBratAnnotatorModel.getMode().equals(Mode.ANNOTATION)
+                || aBratAnnotatorModel.getMode().equals(Mode.AUTOMATION)
                 || aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)
                 || aBratAnnotatorModel.getMode().equals(Mode.CORRECTION_MERGE)) {
 

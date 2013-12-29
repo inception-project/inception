@@ -547,8 +547,8 @@ public class BratAnnotator
     private JCas getCas(Project aProject, User user, SourceDocument aDocument, Mode aMode)
         throws UIMAException, IOException, ClassNotFoundException
     {
-        if (aMode.equals(Mode.ANNOTATION) || aMode.equals(Mode.CORRECTION)
-                || aMode.equals(Mode.CORRECTION_MERGE)) {
+        if (aMode.equals(Mode.ANNOTATION) || aMode.equals(Mode.AUTOMATION)
+                || aMode.equals(Mode.CORRECTION) || aMode.equals(Mode.CORRECTION_MERGE)) {
 
             return repository.readJCas(aDocument, aProject, user);
         }
@@ -590,8 +590,7 @@ public class BratAnnotator
 
     }
 
-    protected void onChange(BratAnnotatorModel aModel, int aStart,
-            int aEnd)
+    protected void onChange(BratAnnotatorModel aModel, int aStart, int aEnd)
     {
         // Overriden in AutomationPage
     }

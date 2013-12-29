@@ -139,7 +139,7 @@ public class AutomationPage
         feedbackPanel.add(new AttributeModifier("class", "error"));
 
         bratAnnotatorModel = new BratAnnotatorModel();
-        bratAnnotatorModel.setMode(Mode.CORRECTION);
+        bratAnnotatorModel.setMode(Mode.AUTOMATION);
 
         LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<CurationUserSegmentForAnnotationDocument>();
         CurationUserSegmentForAnnotationDocument curationUserSegmentForAnnotationDocument = new CurationUserSegmentForAnnotationDocument();
@@ -347,7 +347,7 @@ public class AutomationPage
             public void onClick(AjaxRequestTarget aTarget)
             {
                 openDocumentsModal.setContent(new OpenModalWindowPanel(openDocumentsModal
-                        .getContentId(), bratAnnotatorModel, openDocumentsModal, Mode.CORRECTION));
+                        .getContentId(), bratAnnotatorModel, openDocumentsModal, Mode.AUTOMATION));
                 openDocumentsModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
                 {
                     private static final long serialVersionUID = -1746088901018629567L;
@@ -369,7 +369,7 @@ public class AutomationPage
                                     .getAuthentication().getName();
 
                             repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(),
-                                    Mode.CORRECTION, username);
+                                    Mode.AUTOMATION, username);
                             loadDocumentAction();
                             setCurationSegmentBeginEnd();
                             update(target);
@@ -578,7 +578,7 @@ public class AutomationPage
 
                     try {
                         repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(),
-                                Mode.CORRECTION, bratAnnotatorModel.getUser().getUsername());
+                                Mode.AUTOMATION, bratAnnotatorModel.getUser().getUsername());
                         loadDocumentAction();
                         setCurationSegmentBeginEnd();
                         update(target);
@@ -651,7 +651,7 @@ public class AutomationPage
                         .setDocument(listOfSourceDocuements.get(currentDocumentIndex + 1));
 
                 try {
-                    repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(), Mode.CORRECTION,
+                    repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(), Mode.AUTOMATION,
                             bratAnnotatorModel.getUser().getUsername());
                     loadDocumentAction();
                     setCurationSegmentBeginEnd();
@@ -1007,7 +1007,7 @@ public class AutomationPage
                 bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
                 ProjectUtil.setAnnotationPreference(username, repository, annotationService,
-                        bratAnnotatorModel, Mode.CORRECTION);
+                        bratAnnotatorModel, Mode.AUTOMATION);
             }
             catch (DataRetrievalFailureException ex) {
                 throw ex;
