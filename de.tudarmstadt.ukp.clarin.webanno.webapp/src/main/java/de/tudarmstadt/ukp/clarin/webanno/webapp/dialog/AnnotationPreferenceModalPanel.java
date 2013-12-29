@@ -69,18 +69,18 @@ public class AnnotationPreferenceModalPanel
     @SpringBean(name = "documentRepository")
     private RepositoryService projectRepository;
 
-    private AnnotationLayerDetailForm tagSelectionForm;
+    private final AnnotationLayerDetailForm tagSelectionForm;
 
     private NumberTextField<Integer> windowSizeField;
 
-    private BratAnnotatorModel bratAnnotatorModel;
+    private final BratAnnotatorModel bratAnnotatorModel;
 
     private class AnnotationLayerDetailForm
         extends Form<AnnotationLayerDetailFormModel>
     {
         private static final long serialVersionUID = -683824912741426241L;
 
-        @SuppressWarnings({ })
+        @SuppressWarnings({})
         public AnnotationLayerDetailForm(String id, final ModalWindow modalWindow)
         {
             super(id, new CompoundPropertyModel<AnnotationLayerDetailFormModel>(
@@ -89,18 +89,17 @@ public class AnnotationPreferenceModalPanel
             // Import current settings from the annotator
             getModelObject().numberOfSentences = bratAnnotatorModel.getWindowSize();
             getModelObject().scrollPage = bratAnnotatorModel.isScrollPage();
+            getModelObject().predictInThisPage = bratAnnotatorModel.isPredictInThisPage();
 
             for (TagSet tagSet : bratAnnotatorModel.getAnnotationLayers()) {
                 getModelObject().annotationLayers.add(tagSet);
             }
-            windowSizeField = (NumberTextField<Integer>) new NumberTextField<Integer>(
-                    "numberOfSentences");
+            windowSizeField = new NumberTextField<Integer>("numberOfSentences");
             windowSizeField.setType(Integer.class);
             windowSizeField.setMinimum(1);
             add(windowSizeField);
 
-            add(new CheckBoxMultipleChoice<TagSet>(
-                    "annotationLayers")
+            add(new CheckBoxMultipleChoice<TagSet>("annotationLayers")
             {
                 private static final long serialVersionUID = 1L;
 
@@ -129,13 +128,27 @@ public class AnnotationPreferenceModalPanel
                                 tagSets.removeAll(corefTagSets);
                             }
                             return tagSets;
-                         //   return annotationService.listTagSets(bratAnnotatorModel.getProject());
+                            // return
+                            // annotationService.listTagSets(bratAnnotatorModel.getProject());
                         }
                     });
                     setChoiceRenderer(new ChoiceRenderer<TagSet>("name", "id"));
                 }
             });
 
+            // checkbox to limit prediction of annotation on same page or not, for Automation page
+
+            add(new CheckBox("predictInThisPage")
+            {
+                @Override
+                public boolean isVisible()
+                {
+                    return bratAnnotatorModel.getProject().getMode().equals(Mode.AUTOMATION);
+                }
+            });
+
+            add(new Label("predictInThisPageLabel",
+                    "Limit automatic annotation prediction on this page :"));
             // Add a Checkbox to enable/disable automatic page navigations while annotating
             add(new CheckBox("scrollPage"));
 
@@ -175,6 +188,7 @@ public class AnnotationPreferenceModalPanel
                     }
 
                     bratAnnotatorModel.setScrollPage(getModelObject().scrollPage);
+                    bratAnnotatorModel.setPredictInThisPage(getModelObject().predictInThisPage);
                     bratAnnotatorModel.setAnnotationLayers(getModelObject().annotationLayers);
                     bratAnnotatorModel.setWindowSize(getModelObject().numberOfSentences);
                     modalWindow.close(aTarget);
@@ -205,6 +219,7 @@ public class AnnotationPreferenceModalPanel
     protected void onCancel(AjaxRequestTarget aTarget)
     {
     }
+
     public static class AnnotationLayerDetailFormModel
         implements Serializable
     {
@@ -213,7 +228,7 @@ public class AnnotationPreferenceModalPanel
         public SourceDocument document;
         public int numberOfSentences;
         public boolean scrollPage;
-        public boolean reverseDependencyDirection;
+        public boolean predictInThisPage;
         public HashSet<TagSet> annotationLayers = new HashSet<TagSet>();
     }
 

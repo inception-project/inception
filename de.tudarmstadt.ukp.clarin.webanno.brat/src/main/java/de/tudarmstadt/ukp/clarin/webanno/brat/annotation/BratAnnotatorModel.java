@@ -89,6 +89,10 @@ public class BratAnnotatorModel
      */
     private boolean scrollPage;
     /**
+     * Limit prediction only to this page while automatic annotation
+     */
+    private boolean predictInThisPage;
+    /**
      * If the document is opened through the next/previous buttons on the annotation page, not with
      * the open dialog method, used to change {@link #document}
      */
@@ -205,6 +209,16 @@ public class BratAnnotatorModel
         scrollPage = aScrollPage;
     }
 
+    public boolean isPredictInThisPage()
+    {
+        return predictInThisPage;
+    }
+
+    public void setPredictInThisPage(boolean predictInThisPage)
+    {
+        this.predictInThisPage = predictInThisPage;
+    }
+
     public String getDocumentName()
     {
         return documentName;
@@ -294,6 +308,5 @@ public class BratAnnotatorModel
     {
         this.message = message;
     }
-
 
 }

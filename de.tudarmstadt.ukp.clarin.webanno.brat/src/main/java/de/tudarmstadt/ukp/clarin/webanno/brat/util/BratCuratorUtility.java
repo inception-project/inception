@@ -441,7 +441,7 @@ public class BratCuratorUtility
         int address = relation.getId();
         AnnotationSelection annotationSelection = annotationSelectionByAddress.get(address);
         AnnotationState newState = null;
-        if (aMode.equals(Mode.AUTOMATION)||aMode.equals(Mode.CORRECTION)) {
+        if (aMode.equals(Mode.AUTOMATION) || aMode.equals(Mode.CORRECTION)) {
             newState = getCorrectionState(annotationSelection, aAnnotationOptions, numUsers,
                     address);
         }
@@ -620,8 +620,16 @@ public class BratCuratorUtility
         User logedInUser = aRepository.getUser(username);
 
         int beginOffset = aModel.getSentenceBeginOffset();
-        int endOffset = BratAjaxCasUtil.getLastSentenceEndOffsetInDisplayWindow(jCas,
-                aModel.getSentenceAddress(), aModel.getWindowSize());
+
+        int endOffset;
+        if (aModel.isPredictInThisPage()) {
+            endOffset = BratAjaxCasUtil.getLastSentenceEndOffsetInDisplayWindow(jCas,
+                    aModel.getSentenceAddress(), aModel.getWindowSize());
+        }
+        else {
+
+            endOffset = BratAjaxCasUtil.selectByAddr(jCas, aModel.getLastSentenceAddress()).getEnd();
+        }
         for (Sentence sentence : selectCovered(jCas, Sentence.class, beginOffset, endOffset)) {
             String sentenceText = sentence.getCoveredText().toLowerCase();
             for (int i = -1; (i = sentenceText.indexOf(selectedText.toLowerCase(), i + 1)) != -1
