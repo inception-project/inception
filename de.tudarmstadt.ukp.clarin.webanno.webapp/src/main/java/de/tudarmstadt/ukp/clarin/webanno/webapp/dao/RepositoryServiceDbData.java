@@ -23,8 +23,11 @@ import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.uimafit.factory.AnalysisEngineFactory.createPrimitive;
 import static org.uimafit.factory.AnalysisEngineFactory.createPrimitiveDescription;
 import static org.uimafit.pipeline.SimplePipeline.runPipeline;
+import static org.uimafit.util.JCasUtil.select;
+import static org.uimafit.util.JCasUtil.selectCovered;
 
 import java.beans.PropertyDescriptor;
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -32,9 +35,12 @@ import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -47,6 +53,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -57,6 +65,8 @@ import javax.persistence.PersistenceContext;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.LineIterator;
 import org.apache.commons.io.comparator.LastModifiedFileComparator;
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.Level;
@@ -67,6 +77,7 @@ import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.CASImpl;
@@ -103,6 +114,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -117,6 +129,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.dkpro.core.io.bincas.SerializedCasReader;
 import de.tudarmstadt.ukp.dkpro.core.io.bincas.SerializedCasWriter;
 import de.tudarmstadt.ukp.dkpro.core.tokit.BreakIteratorSegmenter;
+import edu.lium.mira.Mira;
 
 /**
  * Implementation of methods defined in the {@link RepositoryService} interface
@@ -161,6 +174,8 @@ public class RepositoryServiceDbData
     private Properties readWriteFileFormats;
 
     private static final String PROJECT = "/project/";
+    private static final String MIRA = "/mira/";
+    private static final String MIRA_TEMPLATE = "template/";
     private static final String DOCUMENT = "/document/";
     private static final String SOURCE = "/source";
     private static final String GUIDELINE = "/guideline/";
@@ -764,6 +779,22 @@ public class RepositoryServiceDbData
     }
 
     @Override
+    public void createTemplate(Project aProject, File aContent, String aFileName, String aUsername)
+        throws IOException
+    {
+        String templatePath = dir.getAbsolutePath() + PROJECT + aProject.getId() + MIRA
+                + MIRA_TEMPLATE;
+        FileUtils.forceMkdir(new File(templatePath));
+        copyLarge(new FileInputStream(aContent), new FileOutputStream(new File(templatePath
+                + aFileName)));
+
+        createLog(aProject, aUsername).info(
+                " Created Template file[ " + aFileName + "] for Project [" + aProject.getName()
+                        + "] with ID [" + aProject.getId() + "]");
+        createLog(aProject, aUsername).removeAllAppenders();
+    }
+
+    @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public List<ProjectPermission> getProjectPermisions(Project aProject)
     {
@@ -955,6 +986,24 @@ public class RepositoryServiceDbData
     }
 
     @Override
+    public List<String> listTemplates(Project aProject)
+    {
+        // list all MIRA template files
+        File[] files = new File(dir.getAbsolutePath() + PROJECT + aProject.getId() + MIRA
+                + MIRA_TEMPLATE).listFiles();
+
+        // Name of the MIRA template files
+        List<String> templateFiles = new ArrayList<String>();
+        if (files != null) {
+            for (File file : files) {
+                templateFiles.add(file.getName());
+            }
+        }
+
+        return templateFiles;
+    }
+
+    @Override
     @Transactional
     public List<Project> listProjects()
     {
@@ -1057,7 +1106,19 @@ public class RepositoryServiceDbData
         FileUtils.forceDelete(new File(dir.getAbsolutePath() + PROJECT + aProject.getId()
                 + GUIDELINE + aFileName));
         createLog(aProject, username).info(
-                " Removed Guideline document from [" + aProject.getName() + "] with ID ["
+                " Removed Guideline file from [" + aProject.getName() + "] with ID ["
+                        + aProject.getId() + "]");
+        createLog(aProject, username).removeAllAppenders();
+    }
+
+    @Override
+    public void removeTemplate(Project aProject, String aFileName, String username)
+        throws IOException
+    {
+        FileUtils.forceDelete(new File(dir.getAbsolutePath() + PROJECT + aProject.getId() + MIRA
+                + MIRA_TEMPLATE + aFileName));
+        createLog(aProject, username).info(
+                " Removed Template file from [" + aProject.getName() + "] with ID ["
                         + aProject.getId() + "]");
         createLog(aProject, username).removeAllAppenders();
     }
@@ -1857,4 +1918,233 @@ public class RepositoryServiceDbData
     {
         return crowdsourceEnabled;
     }
+
+    @Override
+    public void casToMiraTrainData(Project aProject)
+        throws IOException, UIMAException, ClassNotFoundException
+    {
+        File miraDir = new File(dir, PROJECT + aProject.getId() + MIRA);
+        FileUtils.forceMkdir(miraDir);
+        File trainFile = new File(miraDir, "train");
+        File testFile = new File(miraDir, "test");
+        /*
+         * if(trainFile.exists()){ trainFile.delete(); trainFile = new File(miraDir, "train"); }
+         */
+
+        StringBuffer sbTrain = new StringBuffer();
+        StringBuffer sbTest = new StringBuffer();
+
+        for (SourceDocument sourceDocument : listSourceDocuments(aProject)) {
+            if (sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
+
+                JCas jCas = getCurationDocumentContent(sourceDocument);
+                int sentCount = select(jCas, Sentence.class).size();
+                int i = 0;
+                for (Sentence sentence : select(jCas, Sentence.class)) {
+                    if (((double) i / sentCount) * 100 < 74) {
+                        miraSentence(sentence, sbTrain, false);
+                        sbTrain.append("\n");
+                    }
+                    else {
+                        miraSentence(sentence, sbTest, false);
+                        sbTest.append("\n");
+                    }
+                    i++;
+                }
+            }
+
+        }
+        FileUtils.writeStringToFile(trainFile, sbTrain.toString());
+        FileUtils.writeStringToFile(testFile, sbTest.toString());
+    }
+
+    private void miraSentence(Sentence sentence, StringBuffer aSb, boolean aTest)
+        throws CASException
+    {
+        for (Token token : selectCovered(sentence.getCAS().getJCas(), Token.class,
+                sentence.getBegin(), sentence.getEnd())) {
+            String word = token.getCoveredText();
+            String containsNUmber = word.matches(".*\\d.*") ? "Y" : "N";
+
+            char[] words = word.toCharArray();
+            System.out.println(words);
+
+            String prefix1 = Character.toString(words[0]);
+            String prefix2 = words.length > 1 ? (Character.toString(words[1]).trim().equals("") ? "__nil__"
+                    : Character.toString(words[1]))
+                    : "__nil__";
+            String prefix3 = words.length > 2 ? (Character.toString(words[2]).trim().equals("") ? "__nil__"
+                    : Character.toString(words[2]))
+                    : "__nil__";
+            String prefix4 = words.length > 3 ? (Character.toString(words[3]).trim().equals("") ? "__nil__"
+                    : Character.toString(words[3]))
+                    : "__nil__";
+            String prefix5 = words.length > 4 ? (Character.toString(words[4]).trim().equals("") ? "__nil__"
+                    : Character.toString(words[4]))
+                    : "__nil__";
+
+            String suffix1 = Character.toString(words[words.length - 1]);
+            String suffix2 = words.length > 1 ? (Character.toString(words[words.length - 2]).trim()
+                    .equals("") ? "__nil__" : Character.toString(words[words.length - 2]))
+                    : "__nil__";
+            String suffix3 = words.length > 2 ? (Character.toString(words[words.length - 3]).trim()
+                    .equals("") ? "__nil__" : Character.toString(words[words.length - 3]))
+                    : "__nil__";
+            String suffix4 = words.length > 3 ? (Character.toString(words[words.length - 4]).trim()
+                    .equals("") ? "__nil__" : Character.toString(words[words.length - 4]))
+                    : "__nil__";
+            String suffix5 = words.length > 4 ? (Character.toString(words[words.length - 5]).trim()
+                    .equals("") ? "__nil__" : Character.toString(words[words.length - 5]))
+                    : "__nil__";
+
+            String nl = "\n";
+            String tag = aTest == true ? "" : token.getPos() == null ? "__nill__" : token.getPos()
+                    .getPosValue();
+            aSb.append(word + " "
+
+            /* + getVowels(word, FileUtils.readFileToString(new File(argv[1]))) + " " */
+
+            + containsNUmber + " " + prefix1 + " " + prefix2 + " " + prefix3 + " " + prefix4 + " "
+                    + prefix5 + " " + suffix1 + " " + suffix2 + " " + suffix3 + " " + suffix4 + " "
+                    + suffix5 + " " + tag + nl);
+        }
+
+    }
+
+    @Override
+    public void train(Project aProject)
+    {
+        try {
+            Mira mira = new Mira();
+            int frequency = 2;
+            double sigma = 1;
+            int iterations = 10;
+            int beamSize = 0;
+            boolean maxPosteriors = false;
+            String templateName = null;
+            long lastMod = Long.MIN_VALUE;
+            File[] files = new File(dir.getAbsolutePath() + PROJECT + aProject.getId() + MIRA
+                    + MIRA_TEMPLATE).listFiles();
+            for (File file : files) {
+                if (file.lastModified() > lastMod) {
+                    templateName = file.getAbsolutePath();
+                    lastMod = file.lastModified();
+                }
+            }
+
+            File miraDir = new File(dir, PROJECT + aProject.getId() + MIRA);
+            File trainFile = new File(miraDir, "train");
+            File testFile = new File(miraDir, "test");
+            String trainName = trainFile.getAbsolutePath();
+            String modelName = trainFile.getParent() + "/" + aProject.getName() + "-model";
+            String testName = testFile.getAbsolutePath();
+            new Vector<String>();
+            boolean randomInit = false;
+            mira.loadTemplates(templateName);
+            mira.setClip(sigma);
+            mira.maxPosteriors = maxPosteriors;
+            mira.beamSize = beamSize;
+            int numExamples = mira.count(trainName, frequency);
+            mira.initModel(randomInit);
+            for (int i = 0; i < iterations; i++) {
+                mira.train(trainName, iterations, numExamples, i);
+                mira.averageWeights(iterations * numExamples);
+                if (testName != null) {
+                    BufferedReader input = new BufferedReader(new FileReader(testName));
+                    mira.test(input, null);
+                }
+            }
+            mira.saveModel(modelName);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void predict(SourceDocument aDocument, String aUSername)
+    {
+        try {
+            File predFile = casToMiraFile(aDocument, aUSername);
+
+            Mira mira = new Mira();
+            int shiftColumns = 0;
+            int nbest = 1;
+            int beamSize = 0;
+            boolean maxPosteriors = false;
+            String modelName = predFile.getParent() + "/" + aDocument.getProject().getName()
+                    + "-model";
+            String testName = predFile.getAbsolutePath();
+            File predcitedFile = new File(predFile.getAbsolutePath() + "-pred");
+            PrintStream stream = new PrintStream(predcitedFile);
+            BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
+            if (testName != null) {
+                input = new BufferedReader(new FileReader(testName));
+            }
+            mira.loadModel(modelName);
+            mira.setShiftColumns(shiftColumns);
+            mira.nbest = nbest;
+            mira.beamSize = beamSize;
+            mira.maxPosteriors = maxPosteriors;
+            mira.test(input, stream);
+
+            JCas jCas = getAnnotationContent(aDocument, aUSername);
+
+            LineIterator it = IOUtils.lineIterator(new FileReader(predcitedFile));
+            List<String> tags = new ArrayList<String>();
+            while (it.hasNext()) {
+                String line = it.next();
+                if (line.trim().equals("")) {
+                    continue;
+                }
+                StringTokenizer st = new StringTokenizer(line, " ");
+                String tag = "";
+                while (st.hasMoreTokens()) {
+                    tag = st.nextToken();
+                }
+                tags.add(tag);
+            }
+            int i = 0;
+            for (Token token : select(jCas, Token.class)) {
+                List<POS> poses = selectCovered(jCas, POS.class,token.getBegin(), token.getEnd());
+                if(poses.size()==0){
+                POS pos = new POS(jCas, token.getBegin(), token.getEnd());
+                pos.setPosValue(tags.get(i));
+                pos.addToIndexes();
+                }
+                else{
+                    POS pos = poses.get(0);
+                    pos.setPosValue(tags.get(i));
+                    pos.addToIndexes();
+                }
+                i++;
+            }
+            //TODO: make updating of correction view from the prediction configurable in the GUI
+            createAnnotationDocumentContent(jCas, aDocument, getUser(aUSername));
+            createCorrectionDocumentContent(jCas, aDocument, getUser(aUSername));
+
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private File casToMiraFile(SourceDocument aDocument, String aUsername)
+        throws UIMAException, IOException, ClassNotFoundException, CASException
+    {
+        File predFile;
+        File miraDir = new File(dir, PROJECT + aDocument.getProject().getId() + MIRA);
+        predFile = new File(miraDir, "predFile");
+        StringBuffer sb = new StringBuffer();
+        JCas jCas = getAnnotationContent(aDocument, aUsername);
+        for (Sentence sentence : select(jCas, Sentence.class)) {
+            miraSentence(sentence, sb, true);
+            sb.append("\n");
+        }
+
+        FileUtils.writeStringToFile(predFile, sb.toString());
+
+        return predFile;
+    }
+
 }

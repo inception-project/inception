@@ -28,8 +28,6 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter.DEFAULT;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
@@ -95,12 +93,12 @@ public class ProjectPage
     private RepositoryService projectRepository;
 
     public static ProjectSelectionForm projectSelectionForm;
-    public static  ProjectDetailForm projectDetailForm;
+    public static ProjectDetailForm projectDetailForm;
     private ImportProjectForm importProjectForm;
 
     private RadioChoice<Mode> projectType;
     public static boolean visible = true;
-    
+
     public ProjectPage()
     {
         projectSelectionForm = new ProjectSelectionForm("projectSelectionForm");
@@ -117,7 +115,7 @@ public class ProjectPage
                 "ROLE_ADMIN");
     }
 
-     class ProjectSelectionForm
+    class ProjectSelectionForm
         extends Form<SelectionModel>
     {
         private static final long serialVersionUID = -1L;
@@ -346,6 +344,7 @@ public class ProjectPage
                 {
                     return new ProjectDetailsPanel(panelId);
                 }
+
                 @Override
                 public boolean isVisible()
                 {
@@ -439,6 +438,24 @@ public class ProjectPage
                 }
             });
 
+            tabs.add(new AbstractTab(new Model<String>("Templates"))
+            {
+                private static final long serialVersionUID = 7887973231065189200L;
+
+                @Override
+                public Panel getPanel(String panelId)
+                {
+                    return new AutomationTemplate(panelId, project);
+                }
+
+                @Override
+                public boolean isVisible()
+                {
+                    return project.getObject().getId() != 0 && visible
+                            && project.getObject().getMode().equals(Mode.AUTOMATION);
+                }
+            });
+
             tabs.add(new AbstractTab(new Model<String>("Export/Import"))
             {
 
@@ -491,7 +508,7 @@ public class ProjectPage
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
 
             add(projectType = (RadioChoice<Mode>) new RadioChoice<Mode>("mode",
-                    Arrays.asList(new Mode[] { Mode.ANNOTATION, Mode.CORRECTION }))
+                    Arrays.asList(new Mode[] { Mode.ANNOTATION, Mode.AUTOMATION, Mode.CORRECTION }))
                     .setEnabled(projectDetailForm.getModelObject().getId() == 0));
             add(new Button("save", new ResourceModel("label"))
             {

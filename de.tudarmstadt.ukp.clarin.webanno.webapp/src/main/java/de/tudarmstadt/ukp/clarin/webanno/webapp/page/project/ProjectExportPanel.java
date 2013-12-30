@@ -99,7 +99,7 @@ public class ProjectExportPanel
     private AnnotationService annotationService;
 
     @SpringBean(name = "documentRepository")
-    private RepositoryService projectRepository;
+    private RepositoryService repository;
 
     @SpringBean(name = "userRepository")
     private UserDao userRepository;
@@ -140,7 +140,7 @@ public class ProjectExportPanel
             @Override
             public boolean isVisible()
             {
-                return projectRepository.isRemoteProject(aProjectModel.getObject());
+                return repository.isRemoteProject(aProjectModel.getObject());
 
             }
 
@@ -169,33 +169,32 @@ public class ProjectExportPanel
                     File metaInfDir = new File(exportTempDir + META_INF);
                     FileUtils.forceMkdir(metaInfDir);
 
-                    boolean curationDocumentExist = isCurationDocumentExists(aProjectModel
+                    boolean curationDocumentExist = existsCurationDocument(aProjectModel
                             .getObject());
 
                     if (!curationDocumentExist) {
                         error("No curation document created yet for this document");
+                        return;
                     }
-                    else {
-                        // copy curated documents into the export folder
-                        exportCuratedDocuments(aProjectModel.getObject(), exportTempDir);
-                        // copy META_INF contents from the project directory to the export folder
-                        FileUtils.copyDirectory(new File(projectRepository.getDir(), "/project/"
-                                + aProjectModel.getObject().getId() + META_INF), metaInfDir);
+                    // copy curated documents into the export folder
+                    exportCuratedDocuments(aProjectModel.getObject(), exportTempDir);
+                    // copy META_INF contents from the project directory to the export folder
+                    FileUtils.copyDirectory(new File(repository.getDir(), "/project/"
+                            + aProjectModel.getObject().getId() + META_INF), metaInfDir);
 
-                        DaoUtils.zipFolder(exportTempDir, new File(exportTempDir.getAbsolutePath()
-                                + ".zip"));
+                    DaoUtils.zipFolder(exportTempDir, new File(exportTempDir.getAbsolutePath()
+                            + ".zip"));
 
-                        FileEntity reqEntity = new FileEntity(new File(exportTempDir
-                                .getAbsolutePath() + ".zip"), "application/octet-stream");
+                    FileEntity reqEntity = new FileEntity(new File(exportTempDir.getAbsolutePath()
+                            + ".zip"), "application/octet-stream");
 
-                        httppost.setEntity(reqEntity);
+                    httppost.setEntity(reqEntity);
 
-                        HttpResponse response = httpclient.execute(httppost);
-                        HttpEntity resEntity = response.getEntity();
+                    HttpResponse response = httpclient.execute(httppost);
+                    HttpEntity resEntity = response.getEntity();
 
-                        info(response.getStatusLine().toString());
-                        EntityUtils.consume(resEntity);
-                    }
+                    info(response.getStatusLine().toString());
+                    EntityUtils.consume(resEntity);
                 }
                 catch (ClientProtocolException e) {
                     error(ExceptionUtils.getRootCause(e));
@@ -231,7 +230,6 @@ public class ProjectExportPanel
         {
             private static final long serialVersionUID = 840863954694163375L;
 
-
             @Override
             protected File load()
             {
@@ -242,7 +240,7 @@ public class ProjectExportPanel
                     exportTempDir.delete();
                     exportTempDir.mkdirs();
 
-                    boolean curationDocumentExist = isCurationDocumentExists(aProjectModel
+                    boolean curationDocumentExist = existsCurationDocument(aProjectModel
                             .getObject());
 
                     if (!curationDocumentExist) {
@@ -262,7 +260,7 @@ public class ProjectExportPanel
                 catch (Exception e) {
                     error(e.getMessage());
                 }
-                finally{
+                finally {
                     try {
                         FileUtils.forceDelete(exportTempDir);
                     }
@@ -280,7 +278,7 @@ public class ProjectExportPanel
             @Override
             public boolean isVisible()
             {
-                return isCurationDocumentExists(aProjectModel.getObject());
+                return existsCurationDocument(aProjectModel.getObject());
 
             }
 
@@ -310,7 +308,6 @@ public class ProjectExportPanel
             @Override
             protected void onFinished(AjaxRequestTarget target)
             {
-
 
                 if (!canceled && !fileName.equals(downloadedFile)) {
                     exportProject.initiate(target, fileName);
@@ -395,7 +392,7 @@ public class ProjectExportPanel
         exportTempDir = File.createTempFile("webanno-project", "export");
         exportTempDir.delete();
         exportTempDir.mkdirs();
-        File projectZipFile =  new File(exportTempDir.getAbsolutePath() + ".zip");
+        File projectZipFile = new File(exportTempDir.getAbsolutePath() + ".zip");
         if (aProjectModel.getObject().getId() == 0) {
             error("Project not yet created. Please save project details first!");
         }
@@ -414,13 +411,12 @@ public class ProjectExportPanel
             progress = 90;
             exportCuratedDocuments(aProjectModel.getObject(), exportTempDir);
             try {
-                DaoUtils.zipFolder(exportTempDir,
-                        projectZipFile);
+                DaoUtils.zipFolder(exportTempDir, projectZipFile);
             }
             catch (Exception e) {
                 throw new ZippingException("Unable to Zipp the file");
             }
-            finally{
+            finally {
                 FileUtils.forceDelete(projectSettings);
                 System.gc();
                 FileUtils.forceDelete(exportTempDir);
@@ -439,11 +435,11 @@ public class ProjectExportPanel
         File sourceDocumentDir = new File(aCopyDir + SOURCE);
         FileUtils.forceMkdir(sourceDocumentDir);
         // Get all the source documents from the project
-        List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = projectRepository
+        List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = repository
                 .listSourceDocuments(aProject);
 
         for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
-            FileUtils.copyFileToDirectory(projectRepository.exportSourceDocument(sourceDocument),
+            FileUtils.copyFileToDirectory(repository.exportSourceDocument(sourceDocument),
                     sourceDocumentDir);
         }
     }
@@ -464,7 +460,7 @@ public class ProjectExportPanel
     {
 
         // Get all the source documents from the project
-        List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = projectRepository
+        List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = repository
                 .listSourceDocuments(aProject);
 
         for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
@@ -480,12 +476,12 @@ public class ProjectExportPanel
             if (sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)
                     || sourceDocument.getState().equals(SourceDocumentState.CURATION_IN_PROGRESS)) {
 
-                File CurationFileAsSerialisedCas = projectRepository.exportserializedCas(
-                        sourceDocument, CURATION_USER);
+                File CurationFileAsSerialisedCas = repository.exportserializedCas(sourceDocument,
+                        CURATION_USER);
                 File curationFile = null;
                 if (CurationFileAsSerialisedCas.exists()) {
-                    curationFile = projectRepository.exportAnnotationDocument(sourceDocument,
-                            username, TcfWriter.class, sourceDocument.getName(), Mode.CURATION);
+                    curationFile = repository.exportAnnotationDocument(sourceDocument, username,
+                            TcfWriter.class, sourceDocument.getName(), Mode.CURATION);
                 }
                 // in Case they didn't exist
                 if (CurationFileAsSerialisedCas.exists()) {
@@ -498,12 +494,12 @@ public class ProjectExportPanel
             // If this project is a correction project, add the auto-annotated CAS to same folder as
             // CURATION
             if (aProject.getMode().equals(Mode.CORRECTION)) {
-                File CorrectionFileAsSerialisedCas = projectRepository.exportserializedCas(
-                        sourceDocument, CORRECTION_USER);
+                File CorrectionFileAsSerialisedCas = repository.exportserializedCas(sourceDocument,
+                        CORRECTION_USER);
                 File correctionFile = null;
                 if (CorrectionFileAsSerialisedCas.exists()) {
-                    correctionFile = projectRepository.exportAnnotationDocument(sourceDocument,
-                            username, TcfWriter.class, sourceDocument.getName(), Mode.CORRECTION);
+                    correctionFile = repository.exportAnnotationDocument(sourceDocument, username,
+                            TcfWriter.class, sourceDocument.getName(), Mode.CORRECTION);
                 }
                 // in Case they didn't exist
                 if (CorrectionFileAsSerialisedCas.exists()) {
@@ -523,8 +519,8 @@ public class ProjectExportPanel
     {
         File logDir = new File(aCopyDir + LOG);
         FileUtils.forceMkdir(logDir);
-        if (projectRepository.exportProjectLog(aProject).exists()) {
-            FileUtils.copyFileToDirectory(projectRepository.exportProjectLog(aProject), logDir);
+        if (repository.exportProjectLog(aProject).exists()) {
+            FileUtils.copyFileToDirectory(repository.exportProjectLog(aProject), logDir);
 
         }
     }
@@ -537,7 +533,7 @@ public class ProjectExportPanel
     {
         File guidelineDir = new File(aCopyDir + GUIDELINE);
         FileUtils.forceMkdir(guidelineDir);
-        File annotationGuidlines = projectRepository.exportGuidelines(aProject);
+        File annotationGuidlines = repository.exportGuidelines(aProject);
         if (annotationGuidlines.exists()) {
             for (File annotationGuideline : annotationGuidlines.listFiles()) {
                 FileUtils.copyFileToDirectory(annotationGuideline, guidelineDir);
@@ -553,7 +549,7 @@ public class ProjectExportPanel
     {
         File metaInfDir = new File(aCopyDir + META_INF);
         FileUtils.forceMkdir(metaInfDir);
-        File metaInf = projectRepository.exportProjectMetaInf(aProject);
+        File metaInf = repository.exportProjectMetaInf(aProject);
         if (metaInf.exists()) {
             FileUtils.copyDirectory(metaInf, metaInfDir);
         }
@@ -571,10 +567,10 @@ public class ProjectExportPanel
     private void exportAnnotationDocuments(Project aProject, File aCopyDir)
         throws IOException, UIMAException, WLFormatException, ClassNotFoundException
     {
-        List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = projectRepository
+        List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = repository
                 .listSourceDocuments(aProject);
         for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
-            for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : projectRepository
+            for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : repository
                     .listAnnotationDocuments(sourceDocument)) {
 
                 // copy annotation document only for ACTIVE users and the state of the annotation
@@ -591,14 +587,14 @@ public class ProjectExportPanel
                     FileUtils.forceMkdir(annotationDocumentAsSerialisedCasDir);
                     FileUtils.forceMkdir(annotationDocumentDir);
 
-                    File annotationFileAsSerialisedCas = projectRepository.exportserializedCas(
+                    File annotationFileAsSerialisedCas = repository.exportserializedCas(
                             sourceDocument, annotationDocument.getUser());
 
                     File annotationFile = null;
                     if (annotationFileAsSerialisedCas.exists()) {
-                        Class<?> writer = projectRepository.getWritableFormats().get(
+                        Class<?> writer = repository.getWritableFormats().get(
                                 sourceDocument.getFormat());
-                        annotationFile = projectRepository.exportAnnotationDocument(sourceDocument,
+                        annotationFile = repository.exportAnnotationDocument(sourceDocument,
                                 annotationDocument.getUser(), writer, sourceDocument.getName(),
                                 Mode.ANNOTATION);
                     }
@@ -616,10 +612,10 @@ public class ProjectExportPanel
 
     }
 
-    private boolean isCurationDocumentExists(Project aProject)
+    private boolean existsCurationDocument(Project aProject)
     {
         boolean curationDocumentExist = false;
-        List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = projectRepository
+        List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = repository
                 .listSourceDocuments(aProject);
 
         for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
@@ -671,7 +667,7 @@ public class ProjectExportPanel
         List<AnnotationDocument> annotationDocuments = new ArrayList<AnnotationDocument>();
 
         // add source documents to a project
-        for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : projectRepository
+        for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : repository
                 .listSourceDocuments(aProject)) {
             SourceDocument sourceDocumentToExport = new SourceDocument();
             sourceDocumentToExport.setFormat(sourceDocument.getFormat());
@@ -679,7 +675,7 @@ public class ProjectExportPanel
             sourceDocumentToExport.setState(sourceDocument.getState());
 
             // add annotation document to Project
-            for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : projectRepository
+            for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : repository
                     .listAnnotationDocuments(sourceDocument)) {
                 AnnotationDocument annotationDocumentToExport = new AnnotationDocument();
                 annotationDocumentToExport.setName(annotationDocument.getName());
@@ -695,8 +691,8 @@ public class ProjectExportPanel
         List<ProjectPermission> projectPermissions = new ArrayList<ProjectPermission>();
 
         // add project permissions to the project
-        for (User user : projectRepository.listProjectUsersWithPermissions(aProject)) {
-            for (de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission permission : projectRepository
+        for (User user : repository.listProjectUsersWithPermissions(aProject)) {
+            for (de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission permission : repository
                     .listProjectPermisionLevel(user, aProject)) {
                 ProjectPermission permissionToExport = new ProjectPermission();
                 permissionToExport.setLevel(permission.getLevel());
@@ -718,6 +714,7 @@ public class ProjectExportPanel
             error("File Path not found or No permision to save the file!");
         }
     }
+
     public class FileGenerator
         implements Runnable
     {

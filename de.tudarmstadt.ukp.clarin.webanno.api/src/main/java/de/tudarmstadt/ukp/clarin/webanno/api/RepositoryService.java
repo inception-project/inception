@@ -578,6 +578,8 @@ public interface RepositoryService
     void createGuideline(Project project, File content, String fileName, String username)
         throws IOException;
 
+    void createTemplate(Project project, File content, String fileName, String username)
+            throws IOException;
     /**
      * get the annotation guideline document from the file system
      *
@@ -600,6 +602,11 @@ public interface RepositoryService
     List<String> listGuidelines(Project project);
 
     /**
+     * List MIRA template files
+     */
+    List<String> listTemplates(Project project);
+
+    /**
      * Remove an annotation guideline document from the file system
      *
      * @param project
@@ -608,6 +615,11 @@ public interface RepositoryService
      */
     void removeGuideline(Project project, String fileName, String username)
         throws IOException;
+    /**
+     * Remove an MIRA template
+     */
+    void removeTemplate(Project project, String fileName, String username)
+            throws IOException;
 
     // --------------------------------------------------------------------------------------------
     // Methods related to CrowdJobs
@@ -812,4 +824,19 @@ public interface RepositoryService
      * @return
      */
     int isCrowdSourceEnabled();
+
+    /**
+     * convert all the curated document in the project into MIRA train/Test format
+     */
+    void casToMiraTrainData(Project aProject) throws IOException, UIMAException, ClassNotFoundException;
+
+    /**
+     * Train with MIRA
+     */
+    void train(Project aProject);
+    /**
+     * Predict the tag of this source document of a user using the MIRA train model
+     */
+    void predict(SourceDocument aDocument, String username);
+
 }

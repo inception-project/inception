@@ -55,7 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationB
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationUserSegmentForAnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationViewForSourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratCuratorUtility;
+import de.tudarmstadt.ukp.clarin.webanno.brat.util.CuratorUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
@@ -161,7 +161,7 @@ public class CurationPanel
             protected void onChange(AjaxRequestTarget aTarget)
             {
                 try {
-                    BratCuratorUtility.updatePanel(aTarget, this, curationContainer,
+                    CuratorUtil.updatePanel(aTarget, this, curationContainer,
                             mergeVisualizer, repository, annotationSelectionByUsernameAndAddress,
                             curationView, annotationService, jsonConverter);
                 }
@@ -196,7 +196,7 @@ public class CurationPanel
                 info(bratAnnotatorModel.getMessage());
                 aTarget.add(sentenceOuterView);
                 try {
-                    BratCuratorUtility.updatePanel(aTarget, sentenceOuterView, curationContainer,
+                    CuratorUtil.updatePanel(aTarget, sentenceOuterView, curationContainer,
                             this, repository, annotationSelectionByUsernameAndAddress,
                             curationView, annotationService, jsonConverter);
                 }
@@ -239,7 +239,7 @@ public class CurationPanel
                     {
                         curationView = curationViewItem;
                         try {
-                            BratCuratorUtility.updatePanel(aTarget, sentenceOuterView,
+                            CuratorUtil.updatePanel(aTarget, sentenceOuterView,
                                     curationContainer, mergeVisualizer, repository,
                                     annotationSelectionByUsernameAndAddress, curationView,
                                     annotationService, jsonConverter);

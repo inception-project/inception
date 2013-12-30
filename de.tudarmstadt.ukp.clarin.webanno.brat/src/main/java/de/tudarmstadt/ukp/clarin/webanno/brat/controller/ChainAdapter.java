@@ -180,6 +180,7 @@ public class ChainAdapter
             }
             j++;
         }
+
     }
 
     /**

@@ -18,8 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.util;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getQualifiedLabel;
-import static org.uimafit.util.JCasUtil.selectCovered;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -70,10 +68,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * A utility class for the curation AND Correction modules
@@ -81,7 +77,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  * @author Seid Muhie Yimam
  *
  */
-public class BratCuratorUtility
+public class CuratorUtil
 {
     public final static String CURATION_USER = "CURATION_USER";
 
@@ -368,7 +364,7 @@ public class BratCuratorUtility
                                 annotationSelectionByAddress, numUsers, relation,
                                 targetAnnotations.get(relation.getArguments().get(1).getToken()),
                                 aAnnotationOptions, aMode, entity);
-                        Map<String, Object> enityTypeWithArcs = BratCuratorUtility.getEntity(type,
+                        Map<String, Object> enityTypeWithArcs = CuratorUtil.getEntity(type,
                                 label, newState);
                         if (entityTypes.get(type) == null
                                 || (entityTypes.get(type) != null && entityTypes.get(type).get(
@@ -389,7 +385,7 @@ public class BratCuratorUtility
                 if (!hasArc) {
                     if (entityTypes.get(type) == null
                             || (entityTypes.get(type) != null && entityTypes.get(type).get("arcs") == null)) {
-                        entityTypes.put(type, BratCuratorUtility.getEntity(type, label, newState));
+                        entityTypes.put(type, CuratorUtil.getEntity(type, label, newState));
                     }
                 }
             }
@@ -552,7 +548,7 @@ public class BratCuratorUtility
         else {
             annotatorCas = aRepository.getCurationDocumentContent(sourceDocument);
             // get cases from repository
-            BratCuratorUtility.getCases(jCases, annotationDocuments, aRepository,
+            CuratorUtil.getCases(jCases, annotationDocuments, aRepository,
                     aAnnotationSelectionByUsernameAndAddress);
         }
         // add mergeJCas separately
@@ -571,7 +567,7 @@ public class BratCuratorUtility
         }
 
         // fill lookup variable for annotation selections
-        BratCuratorUtility.fillLookupVariables(annotationOptions,
+        CuratorUtil.fillLookupVariables(annotationOptions,
                 aAnnotationSelectionByUsernameAndAddress,
                 aCurationContainer.getBratAnnotatorModel());
 
@@ -581,14 +577,14 @@ public class BratCuratorUtility
         if (!(aCurationContainer.getBratAnnotatorModel().getMode().equals(Mode.AUTOMATION) || aCurationContainer
                 .getBratAnnotatorModel().getMode().equals(Mode.CORRECTION))) {
             // update sentence address, offsets,... per sentence/per user in the curation view
-            bratAnnotatorModel = BratCuratorUtility.setBratAnnotatorModel(sourceDocument,
+            bratAnnotatorModel = CuratorUtil.setBratAnnotatorModel(sourceDocument,
                     aRepository, aCurationSegment, aAnnotationService);
         }
         else {
             bratAnnotatorModel = aCurationContainer.getBratAnnotatorModel();
         }
 
-        BratCuratorUtility.populateCurationSentences(jCases, sentences, bratAnnotatorModel,
+        CuratorUtil.populateCurationSentences(jCases, sentences, bratAnnotatorModel,
                 annotationOptions, aAnnotationSelectionByUsernameAndAddress, aJsonConverter);
         // update sentence list on the right side
         aParent.setModelObject(sentences);
@@ -597,49 +593,5 @@ public class BratCuratorUtility
             aMergeVisualizer.reloadContent(aTarget);
         }
         aTarget.add(aParent);
-    }
-
-    public static void automate(BratAnnotatorModel aModel, RepositoryService aRepository,
-            AnnotationService aAnnotationService, int aStart, int aEnd, Tag aTag)
-        throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
-    {
-
-        SourceDocument sourceDocument = aModel.getDocument();
-        JCas jCas = aRepository.getCorrectionDocumentContent(sourceDocument);
-
-        // get selected text, concatenations of tokens
-        String selectedText = "";
-        for (Token coveredToken : selectCovered(jCas, Token.class, aStart, aEnd)) {
-            selectedText = selectedText + " " + coveredToken.getCoveredText();
-        }
-        selectedText = selectedText.trim();
-
-        BratAjaxCasController bratAjaxCasController = new BratAjaxCasController(aRepository,
-                aAnnotationService);
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User logedInUser = aRepository.getUser(username);
-
-        int beginOffset = aModel.getSentenceBeginOffset();
-
-        int endOffset;
-        if (aModel.isPredictInThisPage()) {
-            endOffset = BratAjaxCasUtil.getLastSentenceEndOffsetInDisplayWindow(jCas,
-                    aModel.getSentenceAddress(), aModel.getWindowSize());
-        }
-        else {
-
-            endOffset = BratAjaxCasUtil.selectByAddr(jCas, aModel.getLastSentenceAddress()).getEnd();
-        }
-        for (Sentence sentence : selectCovered(jCas, Sentence.class, beginOffset, endOffset)) {
-            String sentenceText = sentence.getCoveredText().toLowerCase();
-            for (int i = -1; (i = sentenceText.indexOf(selectedText.toLowerCase(), i + 1)) != -1
-                    && selectCovered(jCas, Token.class, sentence.getBegin() + i,
-                            sentence.getBegin() + i + selectedText.length()).size() > 0;) {
-                bratAjaxCasController.createSpanAnnotation(jCas, sentence.getBegin() + i,
-                        sentence.getBegin() + i + selectedText.length(), getQualifiedLabel(aTag),
-                        null, null);
-            }
-        }
-        aRepository.createCorrectionDocumentContent(jCas, aModel.getDocument(), logedInUser);
     }
 }

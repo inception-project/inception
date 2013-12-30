@@ -67,7 +67,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationU
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationViewForSourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
-import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratCuratorUtility;
+import de.tudarmstadt.ukp.clarin.webanno.brat.util.CuratorUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -165,7 +165,7 @@ public class CorrectionPage
                     curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
                     setCurationSegmentBeginEnd();
 
-                    BratCuratorUtility.updatePanel(aTarget, this, curationContainer,
+                    CuratorUtil.updatePanel(aTarget, this, curationContainer,
                             mergeVisualizer, repository, annotationSelectionByUsernameAndAddress,
                             curationSegment, annotationService, jsonConverter);
                 }
@@ -208,7 +208,7 @@ public class CorrectionPage
                     setCurationSegmentBeginEnd();
                     curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
 
-                    BratCuratorUtility.updatePanel(aTarget, automateView, curationContainer, this,
+                    CuratorUtil.updatePanel(aTarget, automateView, curationContainer, this,
                             repository, annotationSelectionByUsernameAndAddress, curationSegment,
                             annotationService, jsonConverter);
                     aTarget.add(automateView);
@@ -1029,7 +1029,7 @@ public class CorrectionPage
     private void update(AjaxRequestTarget target)
     {
         try {
-            BratCuratorUtility.updatePanel(target, automateView, curationContainer,
+            CuratorUtil.updatePanel(target, automateView, curationContainer,
                     mergeVisualizer, repository, annotationSelectionByUsernameAndAddress,
                     curationSegment, annotationService, jsonConverter);
         }
