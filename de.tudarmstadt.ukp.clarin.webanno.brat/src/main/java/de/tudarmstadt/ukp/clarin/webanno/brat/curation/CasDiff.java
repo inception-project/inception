@@ -99,10 +99,10 @@ public class CasDiff {
                     usernameByFeatureStructure.put(annotationFS, username);
                 }
             }
-
-            Map<FeatureStructure, AnnotationSelection> annotationSelectionByFeatureStructure = new HashMap<FeatureStructure, AnnotationSelection>();
             for (Map<Integer, Set<AnnotationFS>> annotationFSsByEnd : annotationFSsByBeginEnd
                     .values()) {
+                Map<FeatureStructure, AnnotationSelection> annotationSelectionByFeatureStructure = new HashMap<FeatureStructure, AnnotationSelection>();
+
                 for (Set<AnnotationFS> annotationFSs : annotationFSsByEnd.values()) {
                     Map<String, AnnotationOption> annotationOptionPerType = new HashMap<String, AnnotationOption>();
                     for (FeatureStructure fsNew : annotationFSs) {
@@ -112,6 +112,7 @@ public class CasDiff {
                         Set<FeatureStructure> diffFSNew = traverseFS(fsNew);
 
                         Map<FeatureStructure, AnnotationSelection> annotationSelectionByFeatureStructureNew = new HashMap<FeatureStructure, AnnotationSelection>(annotationSelectionByFeatureStructure);
+
                         for (FeatureStructure fsOld : annotationSelectionByFeatureStructure.keySet()) {
                             if (fsNew != fsOld && fsNew.getType().toString().equals(fsOld.getType().toString())) {
                                 CompareResult compareResult = compareFeatureFS(fsNew.getType(),
