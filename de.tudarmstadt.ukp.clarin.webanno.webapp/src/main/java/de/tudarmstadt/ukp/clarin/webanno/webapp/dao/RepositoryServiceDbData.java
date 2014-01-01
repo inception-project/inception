@@ -509,7 +509,8 @@ public class RepositoryServiceDbData
         // for Correction, it will export the corrected result (of the logged in user)
         // (CORRECTION_USER.ser is
         // the automated result displayed for the user to correct it, not the final result)
-        if (aMode.equals(Mode.ANNOTATION) || aMode.equals(Mode.CORRECTION)) {
+        if (aMode.equals(Mode.ANNOTATION) || aMode.equals(Mode.AUTOMATION)
+                || aMode.equals(Mode.CORRECTION)) {
             serializedCaseFileName = aUser + ".ser";
         }
         // The merge result will be exported
@@ -2106,20 +2107,20 @@ public class RepositoryServiceDbData
             }
             int i = 0;
             for (Token token : select(jCas, Token.class)) {
-                List<POS> poses = selectCovered(jCas, POS.class,token.getBegin(), token.getEnd());
-                if(poses.size()==0){
-                POS pos = new POS(jCas, token.getBegin(), token.getEnd());
-                pos.setPosValue(tags.get(i));
-                pos.addToIndexes();
+                List<POS> poses = selectCovered(jCas, POS.class, token.getBegin(), token.getEnd());
+                if (poses.size() == 0) {
+                    POS pos = new POS(jCas, token.getBegin(), token.getEnd());
+                    pos.setPosValue(tags.get(i));
+                    pos.addToIndexes();
                 }
-                else{
+                else {
                     POS pos = poses.get(0);
                     pos.setPosValue(tags.get(i));
                     pos.addToIndexes();
                 }
                 i++;
             }
-            //TODO: make updating of correction view from the prediction configurable in the GUI
+            // TODO: make updating of correction view from the prediction configurable in the GUI
             createAnnotationDocumentContent(jCas, aDocument, getUser(aUSername));
             createCorrectionDocumentContent(jCas, aDocument, getUser(aUSername));
 
