@@ -670,6 +670,8 @@ public class AutomationPage
 
                     finish.setModelObject(bratAnnotatorModel);
                     target.add(finish.setOutputMarkupId(true));
+                    target.add(numberOfPages);
+                    target.add(documentNamePanel);
                     mergeVisualizer.reloadContent(target);
                 }
             }
@@ -744,6 +746,8 @@ public class AutomationPage
 
                 finish.setModelObject(bratAnnotatorModel);
                 target.add(finish.setOutputMarkupId(true));
+                target.add(numberOfPages);
+                target.add(documentNamePanel);
                 mergeVisualizer.reloadContent(target);
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down }, EventType.click)));

@@ -147,7 +147,7 @@ public class AnnotationPreferenceModalPanel
                 @Override
                 public boolean isVisible()
                 {
-                    return bratAnnotatorModel.getProject().getMode().equals(Mode.AUTOMATION);
+                    return bratAnnotatorModel.getMode().equals(Mode.AUTOMATION);
                 }
             });
 
@@ -158,7 +158,7 @@ public class AnnotationPreferenceModalPanel
                 @Override
                 public boolean isVisible()
                 {
-                    return bratAnnotatorModel.getProject().getMode().equals(Mode.AUTOMATION);
+                    return bratAnnotatorModel.getMode().equals(Mode.AUTOMATION);
                 }
             });
 
@@ -169,7 +169,7 @@ public class AnnotationPreferenceModalPanel
                 @Override
                 public boolean isVisible()
                 {
-                    return bratAnnotatorModel.getProject().getMode().equals(Mode.AUTOMATION);
+                    return bratAnnotatorModel.getMode().equals(Mode.AUTOMATION);
                 }
             });
 
@@ -180,7 +180,7 @@ public class AnnotationPreferenceModalPanel
                 @Override
                 public boolean isVisible()
                 {
-                    return bratAnnotatorModel.getProject().getMode().equals(Mode.AUTOMATION);
+                    return bratAnnotatorModel.getMode().equals(Mode.AUTOMATION);
                 }
             });
 
@@ -197,7 +197,7 @@ public class AnnotationPreferenceModalPanel
                 @Override
                 public boolean isVisible()
                 {
-                    return bratAnnotatorModel.getProject().getMode().equals(Mode.AUTOMATION);
+                    return bratAnnotatorModel.getMode().equals(Mode.AUTOMATION);
                 }
 
             }.setChoiceRenderer(new ChoiceRenderer<TagSet>("name", "id")));
@@ -209,7 +209,7 @@ public class AnnotationPreferenceModalPanel
                 @Override
                 public boolean isVisible()
                 {
-                    return bratAnnotatorModel.getProject().getMode().equals(Mode.AUTOMATION);
+                    return bratAnnotatorModel.getMode().equals(Mode.AUTOMATION);
                 }
             });
 
