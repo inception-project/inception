@@ -1230,6 +1230,9 @@ public class RepositoryServiceDbData
         BeanWrapper wrapper = PropertyAccessorFactory.forBeanPropertyAccess(aConfigurationObject);
         Properties property = new Properties();
         for (PropertyDescriptor value : wrapper.getPropertyDescriptors()) {
+            if(wrapper.getPropertyValue(value.getName()) == null) {
+                continue;
+            }
             property.setProperty(aSubject + "." + value.getName(),
                     wrapper.getPropertyValue(value.getName()).toString());
         }
@@ -2003,9 +2006,10 @@ public class RepositoryServiceDbData
 
             String nl = "\n";
             TypeAdapter adapter = TypeUtil.getAdapter(aTagSet);
-            List<String> annotations  = adapter.listAnnotation(sentence.getCAS().getJCas(),
+            List<String> annotations = adapter.listAnnotation(sentence.getCAS().getJCas(),
                     token.getBegin(), token.getEnd());
-            String tag = aTest == true ? "" : annotations.size() == 0 ? "__nill__" : annotations.get(0);
+            String tag = aTest == true ? "" : annotations.size() == 0 ? "__nill__" : annotations
+                    .get(0);
             aSb.append(word + " "
 
             /* + getVowels(word, FileUtils.readFileToString(new File(argv[1]))) + " " */
@@ -2029,7 +2033,8 @@ public class RepositoryServiceDbData
             boolean maxPosteriors = false;
             String templateName = null;
             long lastMod = Long.MIN_VALUE;
-            File[] files = new File(getMiraDir(aProject).getAbsolutePath() + MIRA_TEMPLATE).listFiles();
+            File[] files = new File(getMiraDir(aProject).getAbsolutePath() + MIRA_TEMPLATE)
+                    .listFiles();
             for (File file : files) {
                 if (file.lastModified() > lastMod) {
                     templateName = file.getAbsolutePath();
@@ -2110,6 +2115,7 @@ public class RepositoryServiceDbData
             }
             int i = 0;
             for (Token token : select(jCas, Token.class)) {
+                System.out.println(tags.get(i));
                 Tag tag = annotationService.getTag(tags.get(i), aTagSet);
                 String annotationType = TypeUtil.getQualifiedLabel(tag);
                 BratAjaxCasController controller = new BratAjaxCasController(this,
