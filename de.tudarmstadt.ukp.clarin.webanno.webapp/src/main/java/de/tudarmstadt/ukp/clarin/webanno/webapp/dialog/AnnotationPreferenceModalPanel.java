@@ -220,6 +220,11 @@ public class AnnotationPreferenceModalPanel
                 @Override
                 protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
                 {
+                    if(bratAnnotatorModel.getMode().equals(Mode.AUTOMATION)
+                            && getModelObject().trainLayer==null){
+                        aTarget.appendJavaScript("alert('Please select a layer to train with')");
+                        return;
+                    }
                     AnnotationPreference preference = new AnnotationPreference();
                     preference.setScrollPage(getModelObject().scrollPage);
                     preference.setWindowSize(getModelObject().numberOfSentences);
