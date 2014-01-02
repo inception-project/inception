@@ -51,8 +51,8 @@ public class AnnotationLayersModalPanel
         final ModalWindow annotationLayerSelectionModal;
         add(annotationLayerSelectionModal = new ModalWindow("annotationLayerModal"));
         annotationLayerSelectionModal.setOutputMarkupId(true);
-        annotationLayerSelectionModal.setInitialWidth(440);
-        annotationLayerSelectionModal.setInitialHeight(250);
+        annotationLayerSelectionModal.setInitialWidth(450);
+        annotationLayerSelectionModal.setInitialHeight(350);
         annotationLayerSelectionModal.setResizable(true);
         annotationLayerSelectionModal.setWidthUnit("px");
         annotationLayerSelectionModal.setHeightUnit("px");
