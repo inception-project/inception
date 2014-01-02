@@ -17,6 +17,8 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
+import java.util.List;
+
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -96,4 +98,5 @@ public interface TypeAdapter
     public void delete(JCas aJCas, int aAddress);
 
     void deleteBySpan(JCas aJCas, AnnotationFS fs, int aBegin, int aEnd);
+    List<String> listAnnotation(JCas aJcas, int begin, int end);
 }

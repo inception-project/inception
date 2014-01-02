@@ -39,6 +39,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
@@ -828,15 +829,20 @@ public interface RepositoryService
     /**
      * convert all the curated document in the project into MIRA train/Test format
      */
-    void casToMiraTrainData(Project aProject) throws IOException, UIMAException, ClassNotFoundException;
+    void casToMiraTrainData(Project aProject, TagSet tagSet) throws IOException, UIMAException, ClassNotFoundException;
 
     /**
      * Train with MIRA
      */
-    void train(Project aProject);
+    void train(Project aProject, TagSet tagSet);
     /**
      * Predict the tag of this source document of a user using the MIRA train model
      */
-    void predict(SourceDocument aDocument, String username);
+    void predict(SourceDocument aDocument, String username, TagSet tagSet);
+
+    /**
+     * Get an Mira model (either uploaded manually or previously created from curated docs.
+     */
+    File getMiraModel(Project project);
 
 }

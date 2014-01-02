@@ -27,6 +27,7 @@ import org.apache.uima.cas.Type;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
@@ -176,6 +177,32 @@ public final class TypeUtil
             annotationType = AnnotationTypeConstant.COREFERENCE_PREFIX + aSelectedTag.getName();
         }
         return annotationType;
+    }
+
+    public static TypeAdapter getAdapter(TagSet aTagSet)
+    {
+        if (aTagSet.getType().getName().equals(AnnotationTypeConstant.POS)) {
+            return SpanAdapter.getPosAdapter();
+        }
+        else if (aTagSet.getType().getName()
+                .equals(AnnotationTypeConstant.DEPENDENCY)) {
+            return ArcAdapter.getDependencyAdapter();
+        }
+        else if (aTagSet.getType().getName()
+                .equals(AnnotationTypeConstant.NAMEDENTITY)) {
+            return SpanAdapter.getNamedEntityAdapter();
+        }
+        else if (aTagSet.getType().getName()
+                .equals(AnnotationTypeConstant.COREFRELTYPE)) {
+            return ChainAdapter.getCoreferenceLinkAdapter();
+        }
+        else if (aTagSet.getType().getName()
+                .equals(AnnotationTypeConstant.COREFERENCE)) {
+            return ChainAdapter.getCoreferenceChainAdapter();
+        }
+        else {
+            throw new IllegalArgumentException("No adapter for type with name [" + aTagSet.getName() + "]");
+        }
     }
 
     /**

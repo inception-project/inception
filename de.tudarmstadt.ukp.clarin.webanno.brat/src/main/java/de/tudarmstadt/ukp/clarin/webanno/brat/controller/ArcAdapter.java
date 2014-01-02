@@ -58,46 +58,46 @@ public class ArcAdapter
      * same label, e.g. a POS tag "N" and a named entity type "N".
      *
      */
-    private String labelPrefix;
+    private final String labelPrefix;
 
     /**
      * The UIMA type name.
      */
-    private String annotationTypeName;
+    private final String annotationTypeName;
 
     /**
      * The feature of an UIMA annotation containing the label to be displayed in the UI.
      */
-    private String labelFeatureName;
+    private final String labelFeatureName;
     /**
      * The feature of an UIMA annotation containing the label to be used as a governor for arc
      * annotations
      */
-    private String governorFeatureName;
+    private final String governorFeatureName;
     /**
      * The feature of an UIMA annotation containing the label to be used as a dependent for arc
      * annotations
      */
 
-    private String dependentFeatureName;
+    private final String dependentFeatureName;
 
     /**
      * The UIMA type name used as for origin/target span annotations, e.g. {@link POS} for
      * {@link Dependency}
      */
-    private String arcSpanType;
+    private final String arcSpanType;
 
     /**
      * The feature of an UIMA annotation containing the label to be used as origin/target spans for
      * arc annotations
      */
-    private String arcSpanTypeFeatureName;
+    private final String arcSpanTypeFeatureName;
 
     /**
      * as Governor and Dependent of Dependency annotation type are based on Token, we need the UIMA
      * type for token
      */
-    private String arcTokenType;
+    private final String arcTokenType;
 
     private boolean deletable;
 
@@ -287,7 +287,7 @@ public class ArcAdapter
     @Override
     public void delete(JCas aJCas, int aAddress)
     {
-        FeatureStructure fs = (FeatureStructure) BratAjaxCasUtil.selectByAddr(aJCas,
+        FeatureStructure fs = BratAjaxCasUtil.selectByAddr(aJCas,
                 FeatureStructure.class, aAddress);
         aJCas.removeFsFromIndexes(fs);
     }
@@ -397,6 +397,13 @@ public class ArcAdapter
     public String getArcSpanTypeFeatureName()
     {
         return arcSpanTypeFeatureName;
+    }
+
+    @Override
+    public List<String> listAnnotation(JCas aJcas, int begin, int end)
+    {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

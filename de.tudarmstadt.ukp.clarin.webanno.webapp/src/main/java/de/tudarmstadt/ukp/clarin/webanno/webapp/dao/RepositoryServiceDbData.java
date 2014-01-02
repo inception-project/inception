@@ -103,7 +103,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
@@ -116,6 +119,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
+import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.io.JCasFileWriter_ImplBase;
@@ -175,7 +179,7 @@ public class RepositoryServiceDbData
 
     private static final String PROJECT = "/project/";
     private static final String MIRA = "/mira/";
-    private static final String MIRA_TEMPLATE = "template/";
+    private static final String MIRA_TEMPLATE = "/template/";
     private static final String DOCUMENT = "/document/";
     private static final String SOURCE = "/source";
     private static final String GUIDELINE = "/guideline/";
@@ -1921,10 +1925,10 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public void casToMiraTrainData(Project aProject)
+    public void casToMiraTrainData(Project aProject, TagSet aTagSet)
         throws IOException, UIMAException, ClassNotFoundException
     {
-        File miraDir = new File(dir, PROJECT + aProject.getId() + MIRA);
+        File miraDir = getMiraDir(aProject);
         FileUtils.forceMkdir(miraDir);
         File trainFile = new File(miraDir, "train");
         File testFile = new File(miraDir, "test");
@@ -1943,11 +1947,11 @@ public class RepositoryServiceDbData
                 int i = 0;
                 for (Sentence sentence : select(jCas, Sentence.class)) {
                     if (((double) i / sentCount) * 100 < 74) {
-                        miraSentence(sentence, sbTrain, false);
+                        miraSentence(sentence, sbTrain, false, aTagSet);
                         sbTrain.append("\n");
                     }
                     else {
-                        miraSentence(sentence, sbTest, false);
+                        miraSentence(sentence, sbTest, false, aTagSet);
                         sbTest.append("\n");
                     }
                     i++;
@@ -1959,7 +1963,7 @@ public class RepositoryServiceDbData
         FileUtils.writeStringToFile(testFile, sbTest.toString());
     }
 
-    private void miraSentence(Sentence sentence, StringBuffer aSb, boolean aTest)
+    private void miraSentence(Sentence sentence, StringBuffer aSb, boolean aTest, TagSet aTagSet)
         throws CASException
     {
         for (Token token : selectCovered(sentence.getCAS().getJCas(), Token.class,
@@ -1968,7 +1972,6 @@ public class RepositoryServiceDbData
             String containsNUmber = word.matches(".*\\d.*") ? "Y" : "N";
 
             char[] words = word.toCharArray();
-            System.out.println(words);
 
             String prefix1 = Character.toString(words[0]);
             String prefix2 = words.length > 1 ? (Character.toString(words[1]).trim().equals("") ? "__nil__"
@@ -1999,8 +2002,10 @@ public class RepositoryServiceDbData
                     : "__nil__";
 
             String nl = "\n";
-            String tag = aTest == true ? "" : token.getPos() == null ? "__nill__" : token.getPos()
-                    .getPosValue();
+            TypeAdapter adapter = TypeUtil.getAdapter(aTagSet);
+            List<String> annotations  = adapter.listAnnotation(sentence.getCAS().getJCas(),
+                    token.getBegin(), token.getEnd());
+            String tag = aTest == true ? "" : annotations.size() == 0 ? "__nill__" : annotations.get(0);
             aSb.append(word + " "
 
             /* + getVowels(word, FileUtils.readFileToString(new File(argv[1]))) + " " */
@@ -2013,7 +2018,7 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public void train(Project aProject)
+    public void train(Project aProject, TagSet aTagset)
     {
         try {
             Mira mira = new Mira();
@@ -2024,8 +2029,7 @@ public class RepositoryServiceDbData
             boolean maxPosteriors = false;
             String templateName = null;
             long lastMod = Long.MIN_VALUE;
-            File[] files = new File(dir.getAbsolutePath() + PROJECT + aProject.getId() + MIRA
-                    + MIRA_TEMPLATE).listFiles();
+            File[] files = new File(getMiraDir(aProject).getAbsolutePath() + MIRA_TEMPLATE).listFiles();
             for (File file : files) {
                 if (file.lastModified() > lastMod) {
                     templateName = file.getAbsolutePath();
@@ -2033,11 +2037,11 @@ public class RepositoryServiceDbData
                 }
             }
 
-            File miraDir = new File(dir, PROJECT + aProject.getId() + MIRA);
+            File miraDir = getMiraDir(aProject);
             File trainFile = new File(miraDir, "train");
             File testFile = new File(miraDir, "test");
             String trainName = trainFile.getAbsolutePath();
-            String modelName = trainFile.getParent() + "/" + aProject.getName() + "-model";
+            String modelName = getMiraModel(aProject).getAbsolutePath();
             String testName = testFile.getAbsolutePath();
             new Vector<String>();
             boolean randomInit = false;
@@ -2063,18 +2067,17 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public void predict(SourceDocument aDocument, String aUSername)
+    public void predict(SourceDocument aDocument, String aUSername, TagSet aTagSet)
     {
         try {
-            File predFile = casToMiraFile(aDocument, aUSername);
+            File predFile = casToMiraFile(aDocument, aUSername, aTagSet);
 
             Mira mira = new Mira();
             int shiftColumns = 0;
             int nbest = 1;
             int beamSize = 0;
             boolean maxPosteriors = false;
-            String modelName = predFile.getParent() + "/" + aDocument.getProject().getName()
-                    + "-model";
+            String modelName = getMiraModel(aDocument.getProject()).getAbsolutePath();
             String testName = predFile.getAbsolutePath();
             File predcitedFile = new File(predFile.getAbsolutePath() + "-pred");
             PrintStream stream = new PrintStream(predcitedFile);
@@ -2107,17 +2110,12 @@ public class RepositoryServiceDbData
             }
             int i = 0;
             for (Token token : select(jCas, Token.class)) {
-                List<POS> poses = selectCovered(jCas, POS.class, token.getBegin(), token.getEnd());
-                if (poses.size() == 0) {
-                    POS pos = new POS(jCas, token.getBegin(), token.getEnd());
-                    pos.setPosValue(tags.get(i));
-                    pos.addToIndexes();
-                }
-                else {
-                    POS pos = poses.get(0);
-                    pos.setPosValue(tags.get(i));
-                    pos.addToIndexes();
-                }
+                Tag tag = annotationService.getTag(tags.get(i), aTagSet);
+                String annotationType = TypeUtil.getQualifiedLabel(tag);
+                BratAjaxCasController controller = new BratAjaxCasController(this,
+                        annotationService);
+                controller.createSpanAnnotation(jCas, token.getBegin(), token.getEnd(),
+                        annotationType, null, null);
                 i++;
             }
             // TODO: make updating of correction view from the prediction configurable in the GUI
@@ -2130,16 +2128,16 @@ public class RepositoryServiceDbData
         }
     }
 
-    private File casToMiraFile(SourceDocument aDocument, String aUsername)
+    private File casToMiraFile(SourceDocument aDocument, String aUsername, TagSet aTagSet)
         throws UIMAException, IOException, ClassNotFoundException, CASException
     {
         File predFile;
-        File miraDir = new File(dir, PROJECT + aDocument.getProject().getId() + MIRA);
+        File miraDir = getMiraDir(aDocument.getProject());
         predFile = new File(miraDir, "predFile");
         StringBuffer sb = new StringBuffer();
         JCas jCas = getAnnotationContent(aDocument, aUsername);
         for (Sentence sentence : select(jCas, Sentence.class)) {
-            miraSentence(sentence, sb, true);
+            miraSentence(sentence, sb, true, aTagSet);
             sb.append("\n");
         }
 
@@ -2148,4 +2146,14 @@ public class RepositoryServiceDbData
         return predFile;
     }
 
+    @Override
+    public File getMiraModel(Project aProject)
+    {
+        return new File(getMiraDir(aProject), aProject.getName() + "-model");
+    }
+
+    public File getMiraDir(Project aProject)
+    {
+        return new File(dir, PROJECT + aProject.getId() + MIRA);
+    }
 }

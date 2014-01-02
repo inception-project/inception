@@ -100,8 +100,8 @@ public class ArcAnnotationModalWindowPanel
 
     ComboBox<Tag> tags;
 
-    private AnnotationDialogForm annotationDialogForm;
-    private BratAnnotatorModel bratAnnotatorModel;
+    private final AnnotationDialogForm annotationDialogForm;
+    private final BratAnnotatorModel bratAnnotatorModel;
 
     private String originSpanType = null;
     int selectedArcId = -1;
@@ -207,7 +207,7 @@ public class ArcAnnotationModalWindowPanel
                                     + " is not in the tag list. Please choose form the existing tags");
                         }
                         else {
-                            Tag selectedTag = (Tag) annotationService.getTag(tags.getModelObject(),
+                            Tag selectedTag = annotationService.getTag(tags.getModelObject(),
                                     selectedtTagSet);
                             annotationType = TypeUtil.getQualifiedLabel(selectedTag);
 
@@ -341,7 +341,7 @@ public class ArcAnnotationModalWindowPanel
                         jCas.removeFsFromIndexes(idFs);
 
                         String annotationType = "";
-                        Tag selectedTag = (Tag) tagsModel.getObject();
+                        Tag selectedTag = tagsModel.getObject();
 
                         annotationType = TypeUtil.getQualifiedLabel(selectedTag);
 
@@ -415,6 +415,7 @@ public class ArcAnnotationModalWindowPanel
     {
 
         if (aBratAnnotatorModel.getMode().equals(Mode.ANNOTATION)
+                || aBratAnnotatorModel.getMode().equals(Mode.AUTOMATION)
                 || aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)
                 || aBratAnnotatorModel.getMode().equals(Mode.CORRECTION_MERGE)) {
 

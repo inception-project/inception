@@ -350,24 +350,43 @@ public class AutomationPage
             @Override
             public void onClick(AjaxRequestTarget aTarget)
             {
-                if (!existsFinishedCurationDocument(bratAnnotatorModel.getProject())) {
+                if (bratAnnotatorModel.getTrainTagSet() == null) {
                     aTarget.add(feedbackPanel);
-                    error("No curation document exists for training");
+                    error("No annotation layer is selected for MIRA tarining/prediction");
                     return;
                 }
 
                 if (repository.isAnnotationFinished(bratAnnotatorModel.getDocument(),
                         bratAnnotatorModel.getUser())) {
-                    aTarget.add(automateView);
-                    aTarget.add(mergeVisualizer);
+                    aTarget.add(feedbackPanel);
+                    error("This document is closed");
                     return;
                 }
 
                 try {
-                    repository.casToMiraTrainData(bratAnnotatorModel.getProject());
-                    repository.train(bratAnnotatorModel.getProject());
-                    repository.predict(bratAnnotatorModel.getDocument(), bratAnnotatorModel
-                            .getUser().getUsername());
+                    if (bratAnnotatorModel.isUseExistingModel()) {
+                        if (!repository.getMiraModel(bratAnnotatorModel.getProject()).exists()) {
+                            aTarget.add(feedbackPanel);
+                            error("No model exist in this project");
+                            return;
+                        }
+
+                        repository.predict(bratAnnotatorModel.getDocument(), bratAnnotatorModel
+                                .getUser().getUsername(), bratAnnotatorModel.getTrainTagSet());
+                    }
+                    else {
+                        if (!existsFinishedCurationDocument(bratAnnotatorModel.getProject())) {
+                            aTarget.add(feedbackPanel);
+                            error("No curation document exists for training");
+                            return;
+                        }
+                        repository.casToMiraTrainData(bratAnnotatorModel.getProject(),
+                                bratAnnotatorModel.getTrainTagSet());
+                        repository.train(bratAnnotatorModel.getProject(),
+                                bratAnnotatorModel.getTrainTagSet());
+                        repository.predict(bratAnnotatorModel.getDocument(), bratAnnotatorModel
+                                .getUser().getUsername(), bratAnnotatorModel.getTrainTagSet());
+                    }
                     update(aTarget);
                     aTarget.appendJavaScript("Wicket.Window.unloadConfirmation = false;window.location.reload()");
                 }

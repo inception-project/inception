@@ -35,6 +35,7 @@ import org.apache.wicket.markup.html.form.CheckBoxMultipleChoice;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
+import org.apache.wicket.markup.html.form.RadioChoice;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.LoadableDetachableModel;
@@ -90,7 +91,8 @@ public class AnnotationPreferenceModalPanel
             getModelObject().numberOfSentences = bratAnnotatorModel.getWindowSize();
             getModelObject().scrollPage = bratAnnotatorModel.isScrollPage();
             getModelObject().predictInThisPage = bratAnnotatorModel.isPredictInThisPage();
-
+            getModelObject().useExistingModel = bratAnnotatorModel.isUseExistingModel();
+            getModelObject().trainLayer = bratAnnotatorModel.getTrainTagSet();
             for (TagSet tagSet : bratAnnotatorModel.getAnnotationLayers()) {
                 getModelObject().annotationLayers.add(tagSet);
             }
@@ -140,6 +142,8 @@ public class AnnotationPreferenceModalPanel
 
             add(new CheckBox("predictInThisPage")
             {
+                private static final long serialVersionUID = 4075631498209412897L;
+
                 @Override
                 public boolean isVisible()
                 {
@@ -147,12 +151,67 @@ public class AnnotationPreferenceModalPanel
                 }
             });
 
-            add(new Label("predictInThisPageLabel",
-                    "Limit automatic annotation prediction on this page :"));
+            add(new Label("predictInThisPageLabel", "Limit prediction on this page :")
+            {
+                private static final long serialVersionUID = 8184961242875048936L;
+
+                @Override
+                public boolean isVisible()
+                {
+                    return bratAnnotatorModel.getProject().getMode().equals(Mode.AUTOMATION);
+                }
+            });
+
+            add(new CheckBox("useExistingModel")
+            {
+                private static final long serialVersionUID = 8103688361110230362L;
+
+                @Override
+                public boolean isVisible()
+                {
+                    return bratAnnotatorModel.getProject().getMode().equals(Mode.AUTOMATION);
+                }
+            });
+
+            add(new Label("useExistingModelLabel", "Use existing models in the project :")
+            {
+                private static final long serialVersionUID = 3241951376209078639L;
+
+                @Override
+                public boolean isVisible()
+                {
+                    return bratAnnotatorModel.getProject().getMode().equals(Mode.AUTOMATION);
+                }
+            });
+
             // Add a Checkbox to enable/disable automatic page navigations while annotating
             add(new CheckBox("scrollPage"));
 
             add(new Label("scrollPageLabel", "Auto-scroll document while annotating :"));
+
+            add(new RadioChoice<TagSet>("trainLayer", new ArrayList<TagSet>(
+                    bratAnnotatorModel.getAnnotationLayers()))
+            {
+                private static final long serialVersionUID = -2453023116889223685L;
+
+                @Override
+                public boolean isVisible()
+                {
+                    return bratAnnotatorModel.getProject().getMode().equals(Mode.AUTOMATION);
+                }
+
+            }.setChoiceRenderer(new ChoiceRenderer<TagSet>("name", "id")));
+
+            add(new Label("trainLayerLabel", "Select a Layer for training :")
+            {
+                private static final long serialVersionUID = -4041610351694272437L;
+
+                @Override
+                public boolean isVisible()
+                {
+                    return bratAnnotatorModel.getProject().getMode().equals(Mode.AUTOMATION);
+                }
+            });
 
             add(new AjaxSubmitLink("saveButton")
             {
@@ -165,12 +224,17 @@ public class AnnotationPreferenceModalPanel
                     preference.setScrollPage(getModelObject().scrollPage);
                     preference.setWindowSize(getModelObject().numberOfSentences);
 
+                    preference.setPredictInThisPage(getModelObject().predictInThisPage);
+                    preference.setUseExistingModel(getModelObject().useExistingModel);
+                    preference.setTrainLayer(getModelObject().trainLayer);
+
                     ArrayList<Long> layers = new ArrayList<Long>();
 
                     for (TagSet tagset : getModelObject().annotationLayers) {
                         layers.add(tagset.getId());
                     }
                     preference.setAnnotationLayers(layers);
+
                     String username = SecurityContextHolder.getContext().getAuthentication()
                             .getName();
                     try {
@@ -188,7 +252,11 @@ public class AnnotationPreferenceModalPanel
                     }
 
                     bratAnnotatorModel.setScrollPage(getModelObject().scrollPage);
+
                     bratAnnotatorModel.setPredictInThisPage(getModelObject().predictInThisPage);
+                    bratAnnotatorModel.setUseExistingModel(getModelObject().useExistingModel);
+                    bratAnnotatorModel.setTrainTagSet(getModelObject().trainLayer);
+
                     bratAnnotatorModel.setAnnotationLayers(getModelObject().annotationLayers);
                     bratAnnotatorModel.setWindowSize(getModelObject().numberOfSentences);
                     modalWindow.close(aTarget);
@@ -229,6 +297,8 @@ public class AnnotationPreferenceModalPanel
         public int numberOfSentences;
         public boolean scrollPage;
         public boolean predictInThisPage;
+        public boolean useExistingModel;
+        public TagSet trainLayer;
         public HashSet<TagSet> annotationLayers = new HashSet<TagSet>();
     }
 

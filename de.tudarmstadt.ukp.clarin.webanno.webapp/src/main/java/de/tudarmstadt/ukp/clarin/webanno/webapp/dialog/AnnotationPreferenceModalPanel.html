@@ -18,8 +18,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
   <wicket:panel>
     <form wicket:id="tagSelectionForm">
-      <table>
-        <tr>
+      <table style="border-collapse:separate; empty-cells:hide;">
+        <tr class="border_bottom">
           <td>
             <label>
               Annotation Layers:
@@ -30,7 +30,7 @@
             </span>
           </td>
         </tr>
-        <tr>
+         <tr class="border_bottom">
           <td>
             <label>
               Number of Sentences:
@@ -41,7 +41,7 @@
             <input type="number" wicket:id="numberOfSentences" style="width: 100px;" />
           </td>
         </tr>
-        <tr>
+         <tr class="border_bottom">
           <td> <label wicket:id="scrollPageLabel"> </label>
           </td>
           <td>
@@ -49,14 +49,30 @@
           </td>
         </tr>
         
-       <tr>
+        <tr class="border_bottom">
           <td> <label wicket:id="predictInThisPageLabel"> </label>
           </td>
           <td>
             <input type="checkbox" wicket:id="predictInThisPage" />
           </td>
         </tr>
-
+        
+        <tr class="border_bottom">
+          <td> <label wicket:id="useExistingModelLabel"> </label>
+          </td>
+          <td>
+            <input type="checkbox" wicket:id="useExistingModel" />
+          </td>
+        </tr>
+        
+       <tr class="border_bottom">
+            <td> <label wicket:id="trainLayerLabel"> </label>
+          </td>
+          <td>
+            <span valign="top" wicket:id="trainLayer">
+            </span>
+          </td>
+		</tr>
       </table>
       <div class="buttons">
         <button wicket:id="saveButton">

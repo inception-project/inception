@@ -22,6 +22,7 @@ import static org.uimafit.util.CasUtil.getType;
 import static org.uimafit.util.CasUtil.selectCovered;
 import static org.uimafit.util.JCasUtil.selectCovered;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
@@ -60,28 +61,28 @@ public class SpanAdapter
      * This is used to differentiate the different types in the brat annotation/visualization. The
      * prefix will not stored in the CAS (striped away at {@link BratAjaxCasController#getType} )
      */
-    private String labelPrefix;
+    private final String labelPrefix;
 
     /**
      * A field that takes the name of the feature which should be set, e.e. "pos" or "lemma".
      */
-    private String attachFeature;
+    private final String attachFeature;
 
     /**
      * A field that takes the name of the annotation to attach to, e.g.
      * "de.tudarmstadt...type.Token" (Token.class.getName())
      */
-    private String attachType;
+    private final String attachType;
 
     /**
      * The UIMA type name.
      */
-    private String annotationTypeName;
+    private final String annotationTypeName;
 
     /**
      * The feature of an UIMA annotation containing the label to be displayed in the UI.
      */
-    private String labelFeatureName;
+    private final String labelFeatureName;
 
     private boolean singleTokenBehavior = false;
 
@@ -275,7 +276,7 @@ public class SpanAdapter
     @Override
     public void delete(JCas aJCas, int aAddress)
     {
-        FeatureStructure fs = (FeatureStructure) BratAjaxCasUtil.selectByAddr(aJCas,
+        FeatureStructure fs = BratAjaxCasUtil.selectByAddr(aJCas,
                 FeatureStructure.class, aAddress);
         aJCas.removeFsFromIndexes(fs);
     }
@@ -367,6 +368,19 @@ public class SpanAdapter
     public void deleteBySpan(JCas aJCas, AnnotationFS fs, int aBegin, int aEnd)
     {
 
+    }
+
+    @Override
+    public List<String> listAnnotation(JCas aJcas, int begin, int end)
+    {
+        Type type = getType(aJcas.getCas(), annotationTypeName);
+        List<String> annotations = new ArrayList<String>();
+        for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, begin,
+               end)) {
+            Feature labelFeature = fs.getType().getFeatureByBaseName(labelFeatureName);
+            annotations.add(fs.getStringValue(labelFeature));
+        }
+        return annotations;
     }
 
 }

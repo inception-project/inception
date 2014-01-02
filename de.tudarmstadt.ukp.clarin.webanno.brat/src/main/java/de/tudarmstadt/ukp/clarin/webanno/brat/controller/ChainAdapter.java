@@ -64,27 +64,27 @@ public class ChainAdapter
      * This is used to differentiate the different types in the brat annotation/visualization. The
      * prefix will not stored in the CAS(striped away at {@link BratAjaxCasController#getType} )
      */
-    private String labelPrefix;
+    private final String labelPrefix;
 
     /**
      * The UIMA type name.
      */
-    private String annotationTypeName;
+    private final String annotationTypeName;
 
     /**
      * The feature of an UIMA annotation containing the label to be displayed in the UI.
      */
-    private String labelFeatureName;
+    private final String labelFeatureName;
 
     /**
      * The feature of an UIMA annotation for the first span in the chain
      */
-    private String chainFirstFeatureName;
+    private final String chainFirstFeatureName;
 
     /**
      * The feature of an UIMA annotation for the next span in the chain
      */
-    private String linkNextFeatureName;
+    private final String linkNextFeatureName;
 
     // private boolean singleTokenBehavior = false;
 
@@ -618,7 +618,7 @@ public class ChainAdapter
      */
     public void updateCasBeforeDelete(JCas aJCas, int aRef)
     {
-        FeatureStructure fsToRemove = (FeatureStructure) BratAjaxCasUtil.selectByAddr(aJCas,
+        FeatureStructure fsToRemove = BratAjaxCasUtil.selectByAddr(aJCas,
                 FeatureStructure.class, aRef);
 
         Type type = CasUtil.getType(aJCas.getCas(), annotationTypeName);
@@ -700,7 +700,7 @@ public class ChainAdapter
         else {
             ChainAdapter.getCoreferenceChainAdapter().updateCasBeforeDelete(aJCas, aAddress);
 
-            FeatureStructure fsToRemove = (FeatureStructure) BratAjaxCasUtil.selectByAddr(aJCas,
+            FeatureStructure fsToRemove = BratAjaxCasUtil.selectByAddr(aJCas,
                     FeatureStructure.class, aAddress);
 
             aJCas.removeFsFromIndexes(fsToRemove);
@@ -806,6 +806,13 @@ public class ChainAdapter
     {
         // TODO Auto-generated method stub
 
+    }
+
+    @Override
+    public List<String> listAnnotation(JCas aJcas, int begin, int end)
+    {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

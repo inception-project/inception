@@ -91,7 +91,17 @@ public class BratAnnotatorModel
     /**
      * Limit prediction only to this page while automatic annotation
      */
+
     private boolean predictInThisPage;
+    /**
+     * USe an existing MIRA model in stead of producing the model from curated documents
+     */
+    private boolean useExistingModel;
+
+    /**
+     * Train {@link TagSet} used for MIRA prediction
+     */
+    private TagSet trainTagSet;
     /**
      * If the document is opened through the next/previous buttons on the annotation page, not with
      * the open dialog method, used to change {@link #document}
@@ -308,5 +318,27 @@ public class BratAnnotatorModel
     {
         this.message = message;
     }
+
+
+    public boolean isUseExistingModel()
+    {
+        return useExistingModel;
+    }
+
+    public void setUseExistingModel(boolean useExistingModel)
+    {
+        this.useExistingModel = useExistingModel;
+    }
+
+    public TagSet getTrainTagSet()
+    {
+        return trainTagSet;
+    }
+
+    public void setTrainTagSet(TagSet trainTagSet)
+    {
+        this.trainTagSet = trainTagSet;
+    }
+
 
 }
