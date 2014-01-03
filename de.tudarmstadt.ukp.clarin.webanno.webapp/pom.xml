@@ -285,14 +285,14 @@
 			<version>4.3-beta1</version>
 		</dependency>
 		<dependency>
-			<groupId>mira</groupId>
+			<groupId>edu.lium.mira</groupId>
 			<artifactId>mira</artifactId>
-			<version>1.0</version>
+			<version>1.0.0</version>
 		</dependency>
 		<dependency>
 			<groupId>cplex</groupId>
 			<artifactId>cplex</artifactId>
-			<version>1.0</version>
+			<version>1.0.0</version>
 		</dependency>
 		<dependency>
 			<groupId>trove</groupId>
