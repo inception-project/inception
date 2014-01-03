@@ -28,6 +28,7 @@ import static org.uimafit.util.JCasUtil.selectCovered;
 
 import java.beans.PropertyDescriptor;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -36,11 +37,13 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -1230,7 +1233,7 @@ public class RepositoryServiceDbData
         BeanWrapper wrapper = PropertyAccessorFactory.forBeanPropertyAccess(aConfigurationObject);
         Properties property = new Properties();
         for (PropertyDescriptor value : wrapper.getPropertyDescriptors()) {
-            if(wrapper.getPropertyValue(value.getName()) == null) {
+            if (wrapper.getPropertyValue(value.getName()) == null) {
                 continue;
             }
             property.setProperty(aSubject + "." + value.getName(),
@@ -1935,12 +1938,16 @@ public class RepositoryServiceDbData
         FileUtils.forceMkdir(miraDir);
         File trainFile = new File(miraDir, "train");
         File testFile = new File(miraDir, "test");
-        /*
-         * if(trainFile.exists()){ trainFile.delete(); trainFile = new File(miraDir, "train"); }
-         */
 
-        StringBuffer sbTrain = new StringBuffer();
-        StringBuffer sbTest = new StringBuffer();
+        if (trainFile.exists()) {
+            trainFile.delete();
+            trainFile.createNewFile();
+             testFile.delete();
+             testFile.createNewFile();
+        }
+
+        PrintWriter trainOut = new PrintWriter(new BufferedWriter(new FileWriter(trainFile, true)));
+        PrintWriter testOut = new PrintWriter(new BufferedWriter(new FileWriter(testFile, true)));
 
         for (SourceDocument sourceDocument : listSourceDocuments(aProject)) {
             if (sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
@@ -1950,28 +1957,31 @@ public class RepositoryServiceDbData
                 int i = 0;
                 for (Sentence sentence : select(jCas, Sentence.class)) {
                     if (((double) i / sentCount) * 100 < 74) {
-                        miraSentence(sentence, sbTrain, false, aTagSet);
-                        sbTrain.append("\n");
+
+                        trainOut.println(miraSentence(sentence, false, aTagSet).toString() + "\n");
                     }
                     else {
-                        miraSentence(sentence, sbTest, false, aTagSet);
-                        sbTest.append("\n");
+                        testOut.println(miraSentence(sentence, false, aTagSet).toString() + "\n");
                     }
                     i++;
                 }
             }
 
         }
-        FileUtils.writeStringToFile(trainFile, sbTrain.toString());
-        FileUtils.writeStringToFile(testFile, sbTest.toString());
+        trainOut.close();
+        testOut.close();
+
+        // FileUtils.writeStringToFile(trainFile, sbTrain.toString());
+        // FileUtils.writeStringToFile(testFile, sbTest.toString());
     }
 
-    private void miraSentence(Sentence sentence, StringBuffer aSb, boolean aTest, TagSet aTagSet)
+    private StringBuffer miraSentence(Sentence sentence, boolean aTest, TagSet aTagSet)
         throws CASException
     {
+        StringBuffer sb = new StringBuffer();
         for (Token token : selectCovered(sentence.getCAS().getJCas(), Token.class,
                 sentence.getBegin(), sentence.getEnd())) {
-            String word = token.getCoveredText();
+            String word = normalize(token.getCoveredText());
             String containsNUmber = word.matches(".*\\d.*") ? "Y" : "N";
 
             char[] words = word.toCharArray();
@@ -2010,7 +2020,7 @@ public class RepositoryServiceDbData
                     token.getBegin(), token.getEnd());
             String tag = aTest == true ? "" : annotations.size() == 0 ? "__nill__" : annotations
                     .get(0);
-            aSb.append(word + " "
+            sb.append(word + " "
 
             /* + getVowels(word, FileUtils.readFileToString(new File(argv[1]))) + " " */
 
@@ -2018,6 +2028,7 @@ public class RepositoryServiceDbData
                     + prefix5 + " " + suffix1 + " " + suffix2 + " " + suffix3 + " " + suffix4 + " "
                     + suffix5 + " " + tag + nl);
         }
+        return sb;
 
     }
 
@@ -2115,7 +2126,6 @@ public class RepositoryServiceDbData
             }
             int i = 0;
             for (Token token : select(jCas, Token.class)) {
-                System.out.println(tags.get(i));
                 Tag tag = annotationService.getTag(tags.get(i), aTagSet);
                 String annotationType = TypeUtil.getQualifiedLabel(tag);
                 BratAjaxCasController controller = new BratAjaxCasController(this,
@@ -2140,14 +2150,17 @@ public class RepositoryServiceDbData
         File predFile;
         File miraDir = getMiraDir(aDocument.getProject());
         predFile = new File(miraDir, "predFile");
-        StringBuffer sb = new StringBuffer();
+        if (predFile.exists()) {
+            predFile.delete();
+            predFile.createNewFile();
+        }
+        PrintWriter predictOut = new PrintWriter(new BufferedWriter(new FileWriter(predFile, true)));
         JCas jCas = getAnnotationContent(aDocument, aUsername);
         for (Sentence sentence : select(jCas, Sentence.class)) {
-            miraSentence(sentence, sb, true, aTagSet);
-            sb.append("\n");
+            predictOut.println(miraSentence(sentence, true, aTagSet) + "\n");
         }
 
-        FileUtils.writeStringToFile(predFile, sb.toString());
+        predictOut.close();
 
         return predFile;
     }
@@ -2161,5 +2174,62 @@ public class RepositoryServiceDbData
     public File getMiraDir(Project aProject)
     {
         return new File(dir, PROJECT + aProject.getId() + MIRA);
+    }
+
+    public static String normalize(String norm)
+    {
+        norm = norm.replace("ሃ", "ሀ");
+        norm = norm.replace("ሐ", "ሀ");
+        norm = norm.replace("ሓ", "ሀ");
+        norm = norm.replace("ኅ", "ሀ");
+        norm = norm.replace("ኃ", "ሀ");
+        norm = norm.replace("ኋ", "ኋ");
+        norm = norm.replace("ሗ", "ኋ");
+        norm = norm.replace("ኁ", "ሁ");
+        norm = norm.replace("ኂ", "ሂ");
+        norm = norm.replace("ኄ", "ሄ");
+        norm = norm.replace("ኅ", "ህ");
+        norm = norm.replace("ኆ", "ሆ");
+        norm = norm.replace("ሑ", "ሁ");
+        norm = norm.replace("ሒ", "ሂ");
+        norm = norm.replace("ሔ", "ሄ");
+        norm = norm.replace("ሕ", "ህ");
+        norm = norm.replace("ሖ", "ሆ");
+        norm = norm.replace("ሠ", "ሰ");
+        norm = norm.replace("ሡ", "ሱ");
+        norm = norm.replace("ሢ", "ሲ");
+        norm = norm.replace("ሣ", "ሳ");
+        norm = norm.replace("ሤ", "ሴ");
+        norm = norm.replace("ሥ", "ስ");
+        norm = norm.replace("ሦ", "ሶ");
+        norm = norm.replace("ሼ", "ሸ");
+        norm = norm.replace("ቼ", "ቸ");
+        norm = norm.replace("ዬ", "የ");
+        norm = norm.replace("ዲ", "ድ");
+        norm = norm.replace("ጄ", "ጀ");
+        norm = norm.replace("ጸ", "ፀ");
+        norm = norm.replace("ጹ", "ፁ");
+        norm = norm.replace("ጺ", "ፂ");
+        norm = norm.replace("ጻ", "ፃ");
+        norm = norm.replace("ጼ", "ፄ");
+        norm = norm.replace("ጽ", "ፅ");
+        norm = norm.replace("ጾ", "ፆ");
+        norm = norm.replace("ዉ", "ው");
+        norm = norm.replace("ዴ", "ደ");
+        norm = norm.replace("ቺ", "ች");
+        norm = norm.replace("ዪ", "ይ");
+        norm = norm.replace("ጪ", "ጭ");
+        norm = norm.replace("ዓ", "አ");
+        norm = norm.replace("ዑ", "ኡ");
+        norm = norm.replace("ዒ", "ኢ");
+        norm = norm.replace("ዐ", "አ");
+        norm = norm.replace("ኣ", "አ");
+        norm = norm.replace("ዔ", "ኤ");
+        norm = norm.replace("ዕ", "እ");
+        norm = norm.replace("ዖ", "ኦ");
+        norm = norm.replace("ኚ", "ኝ");
+        norm = norm.replace("ሺ", "ሽ");
+        // System.out.println(norm);
+        return norm;
     }
 }
