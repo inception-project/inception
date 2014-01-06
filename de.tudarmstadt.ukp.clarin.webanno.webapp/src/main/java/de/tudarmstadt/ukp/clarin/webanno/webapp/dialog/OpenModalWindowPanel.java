@@ -318,14 +318,10 @@ public class OpenModalWindowPanel
                                         excludeDocuments.add(sourceDocument);
                                     }
                                     else if (sourceDocument.getState().equals(
-                                            SourceDocumentState.ANNOTATION_FINISHED)
-                                            || sourceDocument.getState().equals(
                                                     SourceDocumentState.CURATION_FINISHED)) {
                                         states.put(sourceDocument, "red");
                                     }
                                     else if (sourceDocument.getState().equals(
-                                            SourceDocumentState.ANNOTATION_IN_PROGRESS)
-                                            || sourceDocument.getState().equals(
                                                     SourceDocumentState.CURATION_IN_PROGRESS)) {
                                         states.put(sourceDocument, "blue");
                                     }
