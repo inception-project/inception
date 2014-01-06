@@ -364,6 +364,22 @@ public class AutomationPage
                 }
 
                 try {
+                    int begin, end;
+                    JCas jCas = repository.readJCas(bratAnnotatorModel.getDocument(),
+                            bratAnnotatorModel.getProject(), bratAnnotatorModel.getUser());
+
+                    if (bratAnnotatorModel.isPredictInThisPage()) {
+                        begin = BratAjaxCasUtil.selectByAddr(jCas,
+                                bratAnnotatorModel.getSentenceAddress()).getBegin();
+                        end = BratAjaxCasUtil.getLastSentenceEndOffsetInDisplayWindow(jCas,
+                                bratAnnotatorModel.getSentenceAddress(),
+                                bratAnnotatorModel.getWindowSize());
+                    }
+                    else {
+                        begin = 0;
+                        end = BratAjaxCasUtil.selectByAddr(jCas,
+                                bratAnnotatorModel.getLastSentenceAddress()).getEnd();
+                    }
                     if (bratAnnotatorModel.isUseExistingModel()) {
                         if (!repository.getMiraModel(bratAnnotatorModel.getProject()).exists()) {
                             aTarget.add(feedbackPanel);
@@ -372,7 +388,8 @@ public class AutomationPage
                         }
 
                         repository.predict(bratAnnotatorModel.getDocument(), bratAnnotatorModel
-                                .getUser().getUsername(), bratAnnotatorModel.getTrainTagSet());
+                                .getUser().getUsername(), bratAnnotatorModel.getTrainTagSet(),
+                                begin, end);
                     }
                     else {
                         if (!existsFinishedCurationDocument(bratAnnotatorModel.getProject())) {
@@ -385,7 +402,8 @@ public class AutomationPage
                         repository.train(bratAnnotatorModel.getProject(),
                                 bratAnnotatorModel.getTrainTagSet());
                         repository.predict(bratAnnotatorModel.getDocument(), bratAnnotatorModel
-                                .getUser().getUsername(), bratAnnotatorModel.getTrainTagSet());
+                                .getUser().getUsername(), bratAnnotatorModel.getTrainTagSet(),
+                                begin, end);
                     }
                     update(aTarget);
                     aTarget.appendJavaScript("Wicket.Window.unloadConfirmation = false;window.location.reload()");

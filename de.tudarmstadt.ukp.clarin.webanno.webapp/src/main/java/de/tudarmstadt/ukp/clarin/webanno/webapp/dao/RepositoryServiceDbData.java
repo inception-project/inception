@@ -86,6 +86,10 @@ import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.CASImpl;
 import org.apache.uima.cas.impl.Serialization;
 import org.apache.uima.collection.CollectionReader;
+import org.apache.uima.fit.factory.AnalysisEngineFactory;
+import org.apache.uima.fit.factory.CollectionReaderFactory;
+import org.apache.uima.fit.factory.JCasFactory;
+import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.hibernate.Session;
@@ -97,10 +101,6 @@ import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
-import org.apache.uima.fit.factory.AnalysisEngineFactory;
-import org.apache.uima.fit.factory.CollectionReaderFactory;
-import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.fit.util.JCasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
@@ -1981,7 +1981,7 @@ public class RepositoryServiceDbData
         StringBuffer sb = new StringBuffer();
         for (Token token : selectCovered(sentence.getCAS().getJCas(), Token.class,
                 sentence.getBegin(), sentence.getEnd())) {
-            String word = normalize(token.getCoveredText());
+            String word = token.getCoveredText();
             String containsNUmber = word.matches(".*\\d.*") ? "Y" : "N";
 
             char[] words = word.toCharArray();
@@ -2083,10 +2083,10 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public void predict(SourceDocument aDocument, String aUSername, TagSet aTagSet)
+    public void predict(SourceDocument aDocument, String aUSername, TagSet aTagSet, int aBegin, int aEnd)
     {
         try {
-            File predFile = casToMiraFile(aDocument, aUSername, aTagSet);
+            File predFile = casToMiraFile(aDocument, aUSername, aTagSet, aBegin, aEnd);
 
             Mira mira = new Mira();
             int shiftColumns = 0;
@@ -2125,7 +2125,7 @@ public class RepositoryServiceDbData
                 tags.add(tag);
             }
             int i = 0;
-            for (Token token : select(jCas, Token.class)) {
+            for (Token token : selectCovered(jCas, Token.class, aBegin, aEnd)) {
                 Tag tag = annotationService.getTag(tags.get(i), aTagSet);
                 String annotationType = TypeUtil.getQualifiedLabel(tag);
                 BratAjaxCasController controller = new BratAjaxCasController(this,
@@ -2144,7 +2144,7 @@ public class RepositoryServiceDbData
         }
     }
 
-    private File casToMiraFile(SourceDocument aDocument, String aUsername, TagSet aTagSet)
+    private File casToMiraFile(SourceDocument aDocument, String aUsername, TagSet aTagSet, int aBegin, int aEnd)
         throws UIMAException, IOException, ClassNotFoundException, CASException
     {
         File predFile;
@@ -2156,7 +2156,7 @@ public class RepositoryServiceDbData
         }
         PrintWriter predictOut = new PrintWriter(new BufferedWriter(new FileWriter(predFile, true)));
         JCas jCas = getAnnotationContent(aDocument, aUsername);
-        for (Sentence sentence : select(jCas, Sentence.class)) {
+        for (Sentence sentence : selectCovered(jCas, Sentence.class, aBegin, aEnd)) {
             predictOut.println(miraSentence(sentence, true, aTagSet) + "\n");
         }
 
@@ -2176,60 +2176,4 @@ public class RepositoryServiceDbData
         return new File(dir, PROJECT + aProject.getId() + MIRA);
     }
 
-    public static String normalize(String norm)
-    {
-        norm = norm.replace("ሃ", "ሀ");
-        norm = norm.replace("ሐ", "ሀ");
-        norm = norm.replace("ሓ", "ሀ");
-        norm = norm.replace("ኅ", "ሀ");
-        norm = norm.replace("ኃ", "ሀ");
-        norm = norm.replace("ኋ", "ኋ");
-        norm = norm.replace("ሗ", "ኋ");
-        norm = norm.replace("ኁ", "ሁ");
-        norm = norm.replace("ኂ", "ሂ");
-        norm = norm.replace("ኄ", "ሄ");
-        norm = norm.replace("ኅ", "ህ");
-        norm = norm.replace("ኆ", "ሆ");
-        norm = norm.replace("ሑ", "ሁ");
-        norm = norm.replace("ሒ", "ሂ");
-        norm = norm.replace("ሔ", "ሄ");
-        norm = norm.replace("ሕ", "ህ");
-        norm = norm.replace("ሖ", "ሆ");
-        norm = norm.replace("ሠ", "ሰ");
-        norm = norm.replace("ሡ", "ሱ");
-        norm = norm.replace("ሢ", "ሲ");
-        norm = norm.replace("ሣ", "ሳ");
-        norm = norm.replace("ሤ", "ሴ");
-        norm = norm.replace("ሥ", "ስ");
-        norm = norm.replace("ሦ", "ሶ");
-        norm = norm.replace("ሼ", "ሸ");
-        norm = norm.replace("ቼ", "ቸ");
-        norm = norm.replace("ዬ", "የ");
-        norm = norm.replace("ዲ", "ድ");
-        norm = norm.replace("ጄ", "ጀ");
-        norm = norm.replace("ጸ", "ፀ");
-        norm = norm.replace("ጹ", "ፁ");
-        norm = norm.replace("ጺ", "ፂ");
-        norm = norm.replace("ጻ", "ፃ");
-        norm = norm.replace("ጼ", "ፄ");
-        norm = norm.replace("ጽ", "ፅ");
-        norm = norm.replace("ጾ", "ፆ");
-        norm = norm.replace("ዉ", "ው");
-        norm = norm.replace("ዴ", "ደ");
-        norm = norm.replace("ቺ", "ች");
-        norm = norm.replace("ዪ", "ይ");
-        norm = norm.replace("ጪ", "ጭ");
-        norm = norm.replace("ዓ", "አ");
-        norm = norm.replace("ዑ", "ኡ");
-        norm = norm.replace("ዒ", "ኢ");
-        norm = norm.replace("ዐ", "አ");
-        norm = norm.replace("ኣ", "አ");
-        norm = norm.replace("ዔ", "ኤ");
-        norm = norm.replace("ዕ", "እ");
-        norm = norm.replace("ዖ", "ኦ");
-        norm = norm.replace("ኚ", "ኝ");
-        norm = norm.replace("ሺ", "ሽ");
-        // System.out.println(norm);
-        return norm;
-    }
 }

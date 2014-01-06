@@ -274,7 +274,8 @@ public interface RepositoryService
      *
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void createAnnotationDocument(AnnotationDocument annotationDocument) throws IOException;
+    void createAnnotationDocument(AnnotationDocument annotationDocument)
+        throws IOException;
 
     /**
      * Creates an annotation document. The {@link AnnotationDocument} is stored in the
@@ -363,7 +364,7 @@ public interface RepositoryService
     /**
      * Number of expected annotation documents in this project (numUser X document - Ignored)
      */
-    int  numberOfExpectedAnnotationDocuments(Project project);
+    int numberOfExpectedAnnotationDocuments(Project project);
 
     /**
      * List all annotation Documents in a project that are already closed. used to compute overall
@@ -477,12 +478,12 @@ public interface RepositoryService
      *
      */
     boolean existsProjectTimeStamp(Project project, String username);
+
     /**
-     * check if there exists a timestamp for at least one source document in aproject (add when
-     * a curator start curating)
+     * check if there exists a timestamp for at least one source document in aproject (add when a
+     * curator start curating)
      */
     boolean existsProjectTimeStamp(Project project);
-
 
     /**
      * Export the associated project log for this {@link Project} while copying a project
@@ -580,7 +581,8 @@ public interface RepositoryService
         throws IOException;
 
     void createTemplate(Project project, File content, String fileName, String username)
-            throws IOException;
+        throws IOException;
+
     /**
      * get the annotation guideline document from the file system
      *
@@ -616,11 +618,12 @@ public interface RepositoryService
      */
     void removeGuideline(Project project, String fileName, String username)
         throws IOException;
+
     /**
      * Remove an MIRA template
      */
     void removeTemplate(Project project, String fileName, String username)
-            throws IOException;
+        throws IOException;
 
     // --------------------------------------------------------------------------------------------
     // Methods related to CrowdJobs
@@ -630,9 +633,11 @@ public interface RepositoryService
      * Create a crowd Project which contains some source document. A crowd project contains source
      * documents from {@link Project}(s), a {@link SourceDocument} belongs at most to one
      * {@link CrowdJob}.
+     *
      * @throws IOException
      */
-    void createCrowdJob(CrowdJob crowdProject) throws IOException;
+    void createCrowdJob(CrowdJob crowdProject)
+        throws IOException;
 
     /**
      * Check if a crowd job already exist or not with its name
@@ -779,13 +784,16 @@ public interface RepositoryService
      * @return
      */
     File getDir();
+
     /**
      * Upgrade JCAS
+     *
      * @param aDocument
      * @param aMode
      * @throws IOException
      */
-    void upgradeCasAndSave(SourceDocument aDocument, Mode aMode, String username) throws IOException;
+    void upgradeCasAndSave(SourceDocument aDocument, Mode aMode, String username)
+        throws IOException;
 
     /**
      * Get the CAS object for the document in the project created by the the User. If this is the
@@ -795,15 +803,13 @@ public interface RepositoryService
     JCas readJCas(SourceDocument document, Project project, User user)
         throws UIMAException, IOException, ClassNotFoundException;
 
-
     /**
      * Save the modified CAS in the file system as Serialized CAS
      */
     void updateJCas(Mode mode, SourceDocument document, User user, JCas jCas)
         throws IOException;
 
-    JCas createJCas(SourceDocument document, AnnotationDocument annoDoc,
-            Project project, User user)
+    JCas createJCas(SourceDocument document, AnnotationDocument annoDoc, Project project, User user)
         throws IOException;
 
     /**
@@ -812,7 +818,9 @@ public interface RepositoryService
     @SuppressWarnings("rawtypes")
     JCas getJCasFromFile(File file, Class reader)
         throws UIMAException, IOException;
-    void updateTimeStamp(SourceDocument document, User user, Mode mode) throws IOException;
+
+    void updateTimeStamp(SourceDocument document, User user, Mode mode)
+        throws IOException;
 
     /**
      * Get the name of the database driver in use.
@@ -821,7 +829,8 @@ public interface RepositoryService
 
     /**
      * For 1.0.0 release, the settings.properties file contains a key that is indicates if
-     *  crowdsourcing is enabled or not (0 disabled, 1 enabled)
+     * crowdsourcing is enabled or not (0 disabled, 1 enabled)
+     *
      * @return
      */
     int isCrowdSourceEnabled();
@@ -829,16 +838,28 @@ public interface RepositoryService
     /**
      * convert all the curated document in the project into MIRA train/Test format
      */
-    void casToMiraTrainData(Project aProject, TagSet tagSet) throws IOException, UIMAException, ClassNotFoundException;
+    void casToMiraTrainData(Project aProject, TagSet tagSet)
+        throws IOException, UIMAException, ClassNotFoundException;
 
     /**
      * Train with MIRA
      */
     void train(Project aProject, TagSet tagSet);
+
     /**
      * Predict the tag of this source document of a user using the MIRA train model
+     *
+     * @param aDocument
+     *            The source document to be predicted
+     * @param username
+     * @param tagSet
+     *            Tagset used for prediction
+     * @param begin
+     *            the begin offset of the source document where prediction is planned
+     * @param end
+     *            the end offset of the source document where predcitiopn is planned
      */
-    void predict(SourceDocument aDocument, String username, TagSet tagSet);
+    void predict(SourceDocument aDocument, String username, TagSet tagSet, int begin, int end);
 
     /**
      * Get an Mira model (either uploaded manually or previously created from curated docs.
