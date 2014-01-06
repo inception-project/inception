@@ -317,6 +317,12 @@ public class ProjectUtil
             }
             abAnnotatorModel.setWindowSize(preference.getWindowSize());
             abAnnotatorModel.setScrollPage(preference.isScrollPage());
+
+            abAnnotatorModel.setUseExistingModel(preference.isUseExistingModel());
+            abAnnotatorModel.setPredictInThisPage(preference.isPredictInThisPage());
+            if(preference.getTrainLayer() != -1){
+            abAnnotatorModel.setTrainTagSet(aAnnotationService.getTagSet(preference.getTrainLayer()));
+            }
             // Get tagset using the id, from the properties file
             abAnnotatorModel.getAnnotationLayers().clear();
             if (preference.getAnnotationLayers() != null) {

@@ -19,8 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import java.util.ArrayList;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-
 /**
  * This is a class representing the bean objects to store users preference of annotation settings
  * such as annotation layers, number of sentence to display at a time, visibility of lemma and
@@ -37,7 +35,7 @@ public class AnnotationPreference
 
     private boolean predictInThisPage;
     private boolean useExistingModel;
-    private TagSet trainLayer;
+    private long trainLayer = -1;
 
     public ArrayList<Long> getAnnotationLayers()
     {
@@ -89,14 +87,14 @@ public class AnnotationPreference
         this.useExistingModel = useExistingModel;
     }
 
-    public TagSet getTrainLayer()
+    public long getTrainLayer()
     {
         return trainLayer;
     }
 
-    public void setTrainLayer(TagSet trainLayer)
+    public void setTrainLayer(long trainLayerId)
     {
-        this.trainLayer = trainLayer;
+        this.trainLayer = trainLayerId;
     }
 
 

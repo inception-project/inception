@@ -226,7 +226,7 @@ public class AnnotationPreferenceModalPanel
 
                     preference.setPredictInThisPage(getModelObject().predictInThisPage);
                     preference.setUseExistingModel(getModelObject().useExistingModel);
-                    preference.setTrainLayer(getModelObject().trainLayer);
+                    preference.setTrainLayer(getModelObject().trainLayer.getId());
 
                     ArrayList<Long> layers = new ArrayList<Long>();
 
