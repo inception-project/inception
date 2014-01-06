@@ -1987,31 +1987,31 @@ public class RepositoryServiceDbData
             char[] words = word.toCharArray();
 
             String prefix1 = Character.toString(words[0]);
-            String prefix2 = words.length > 1 ? (Character.toString(words[1]).trim().equals("") ? "__nil__"
+            String prefix2 = words.length > 1 ? prefix1+(Character.toString(words[1]).trim().equals("") ? "__nil__"
                     : Character.toString(words[1]))
                     : "__nil__";
-            String prefix3 = words.length > 2 ? (Character.toString(words[2]).trim().equals("") ? "__nil__"
+            String prefix3 = words.length > 2 ? prefix2+ (Character.toString(words[2]).trim().equals("") ? "__nil__"
                     : Character.toString(words[2]))
                     : "__nil__";
-            String prefix4 = words.length > 3 ? (Character.toString(words[3]).trim().equals("") ? "__nil__"
+            String prefix4 = words.length > 3 ? prefix3+ (Character.toString(words[3]).trim().equals("") ? "__nil__"
                     : Character.toString(words[3]))
                     : "__nil__";
-            String prefix5 = words.length > 4 ? (Character.toString(words[4]).trim().equals("") ? "__nil__"
+            String prefix5 = words.length > 4 ? prefix4+(Character.toString(words[4]).trim().equals("") ? "__nil__"
                     : Character.toString(words[4]))
                     : "__nil__";
 
             String suffix1 = Character.toString(words[words.length - 1]);
-            String suffix2 = words.length > 1 ? (Character.toString(words[words.length - 2]).trim()
-                    .equals("") ? "__nil__" : Character.toString(words[words.length - 2]))
+            String suffix2 = words.length > 1 ?  (Character.toString(words[words.length - 2]).trim()
+                    .equals("") ? "__nil__" : Character.toString(words[words.length - 2]))+suffix1
                     : "__nil__";
             String suffix3 = words.length > 2 ? (Character.toString(words[words.length - 3]).trim()
-                    .equals("") ? "__nil__" : Character.toString(words[words.length - 3]))
+                    .equals("") ? "__nil__" : Character.toString(words[words.length - 3]))+suffix2
                     : "__nil__";
             String suffix4 = words.length > 3 ? (Character.toString(words[words.length - 4]).trim()
-                    .equals("") ? "__nil__" : Character.toString(words[words.length - 4]))
+                    .equals("") ? "__nil__" : Character.toString(words[words.length - 4]))+suffix3
                     : "__nil__";
             String suffix5 = words.length > 4 ? (Character.toString(words[words.length - 5]).trim()
-                    .equals("") ? "__nil__" : Character.toString(words[words.length - 5]))
+                    .equals("") ? "__nil__" : Character.toString(words[words.length - 5])) +suffix4
                     : "__nil__";
 
             String nl = "\n";

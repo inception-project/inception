@@ -19,7 +19,7 @@
   <wicket:panel>
     <form wicket:id="tagSelectionForm">
       <table style="border-collapse:separate; empty-cells:hide;">
-        <tr class="border_bottom">
+        <tr>
           <td>
             <label>
               Annotation Layers:
@@ -48,31 +48,7 @@
             <input type="checkbox" wicket:id="scrollPage" />
           </td>
         </tr>
-        
-        <tr class="border_bottom">
-          <td> <label wicket:id="predictInThisPageLabel"> </label>
-          </td>
-          <td>
-            <input type="checkbox" wicket:id="predictInThisPage" />
-          </td>
-        </tr>
-        
-        <tr class="border_bottom">
-          <td> <label wicket:id="useExistingModelLabel"> </label>
-          </td>
-          <td>
-            <input type="checkbox" wicket:id="useExistingModel" />
-          </td>
-        </tr>
-        
-       <tr class="border_bottom">
-            <td> <label wicket:id="trainLayerLabel"> </label>
-          </td>
-          <td>
-            <span valign="top" wicket:id="trainLayer">
-            </span>
-          </td>
-		</tr>
+             
       </table>
       <div class="buttons">
         <button wicket:id="saveButton">

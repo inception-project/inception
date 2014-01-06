@@ -1,0 +1,93 @@
+<!--
+#Copyright 2012
+#Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+#Technische Universität Darmstadt
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+-->
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<wicket:panel>
+	<form wicket:id="automationTemplateForm">
+		<fieldset>
+			<legend>Morphological features</legend>
+			<table align="left">
+				<tr>
+					<td>is Capitalized:</td>
+					<td><input type="checkbox" wicket:id="capitalized" /></td>
+					<td>Contains Number:</td>
+					<td><input type="checkbox" wicket:id="containsNumber" /></td>
+					<td>prefix1:</td>
+					<td><input type="checkbox" wicket:id="prefix1" /></td>
+				</tr>
+				<tr>
+					<td>prefix2:</td>
+					<td><input type="checkbox" wicket:id="prefix2" /></td>
+					<td>prefix3:</td>
+					<td><input type="checkbox" wicket:id="prefix3" /></td>
+					<td>prefix4:</td>
+					<td><input type="checkbox" wicket:id="prefix4" /></td>
+				</tr>
+				<tr>
+					<td>prefix5:</td>
+					<td><input type="checkbox" wicket:id="prefix5" /></td>
+					<td>suffix1:</td>
+					<td><input type="checkbox" wicket:id="suffix1" /></td>
+					<td>suffix2:</td>
+					<td><input type="checkbox" wicket:id="suffix2" /></td>
+				</tr>
+				<tr>
+					<td>suffix3:</td>
+					<td><input type="checkbox" wicket:id="suffix3" /></td>
+					<td>suffix4:</td>
+					<td><input type="checkbox" wicket:id="suffix4" /></td>
+					<td>suffix5:</td>
+					<td><input type="checkbox" wicket:id="suffix5" /></td>
+				</tr>
+			</table>
+		</fieldset>
+		<fieldset>
+			<legend>ngram and bigram features</legend>
+			<table>
+				<tr>
+					<td>no. ngrams <select wicket:id="ngram"></select></td>
+					<td>no. bigrams <select wicket:id="bigram"></select></td>
+				</tr>
+			</table>
+		</fieldset>
+		<fieldset>
+			<legend>Automation Preferences</legend>
+			<table>
+				<tr>
+					<td><label wicket:id="predictInThisPageLabel"> </label></td>
+					<td><input type="checkbox" wicket:id="predictInThisPage" /></td>
+				</tr>
+
+				<tr class="border_bottom">
+					<td><label wicket:id="useExistingModelLabel"> </label></td>
+					<td><input type="checkbox" wicket:id="useExistingModel" /></td>
+				</tr>
+
+				<tr class="border_bottom">
+					<td><label wicket:id="trainLayerLabel"> </label></td>
+					<td><span valign="top" wicket:id="trainLayer"> </span></td>
+				</tr>
+			</table>
+		</fieldset>
+		<div class="buttons">
+			<button wicket:id="saveButton">Save</button>
+			<button wicket:id="cancelButton">Cancel</button>
+		</div>
+	</form>
+</wicket:panel>
+</html>

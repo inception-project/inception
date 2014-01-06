@@ -309,7 +309,7 @@ public class AnnotationPage
         });
 
         add(new AnnotationLayersModalPanel("annotationLayersModalPanel",
-                new Model<BratAnnotatorModel>(bratAnnotatorModel))
+                new Model<BratAnnotatorModel>(bratAnnotatorModel), null)
         {
             private static final long serialVersionUID = -4657965743173979437L;
 
@@ -750,7 +750,7 @@ public class AnnotationPage
             bratAnnotatorModel.setWindowSize(10);
 
             ProjectUtil.setAnnotationPreference(username, repository, annotationService,
-                    bratAnnotatorModel, Mode.ANNOTATION);
+                    bratAnnotatorModel, null, Mode.ANNOTATION);
 
             Sentence sentence = selectByAddr(jCas, Sentence.class,
                     bratAnnotatorModel.getSentenceAddress());

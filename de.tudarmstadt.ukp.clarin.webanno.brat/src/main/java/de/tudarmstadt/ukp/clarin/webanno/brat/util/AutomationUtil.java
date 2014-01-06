@@ -28,6 +28,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AutomationModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
@@ -46,8 +47,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  */
 public class AutomationUtil
 {
-    public static void predict(BratAnnotatorModel aModel, RepositoryService aRepository,
-            AnnotationService aAnnotationService, int aStart, int aEnd, Tag aTag)
+    public static void predict(BratAnnotatorModel aModel, AutomationModel aAutomationModel,
+            RepositoryService aRepository, AnnotationService aAnnotationService, int aStart,
+            int aEnd, Tag aTag)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
 
@@ -69,13 +71,14 @@ public class AutomationUtil
         int beginOffset = aModel.getSentenceBeginOffset();
 
         int endOffset;
-        if (aModel.isPredictInThisPage()) {
+        if (aAutomationModel.isPredictInThisPage()) {
             endOffset = BratAjaxCasUtil.getLastSentenceEndOffsetInDisplayWindow(jCas,
                     aModel.getSentenceAddress(), aModel.getWindowSize());
         }
         else {
 
-            endOffset = BratAjaxCasUtil.selectByAddr(jCas, aModel.getLastSentenceAddress()).getEnd();
+            endOffset = BratAjaxCasUtil.selectByAddr(jCas, aModel.getLastSentenceAddress())
+                    .getEnd();
         }
         for (Sentence sentence : selectCovered(jCas, Sentence.class, beginOffset, endOffset)) {
             String sentenceText = sentence.getCoveredText().toLowerCase();
@@ -88,5 +91,17 @@ public class AutomationUtil
             }
         }
         aRepository.createCorrectionDocumentContent(jCas, aModel.getDocument(), logedInUser);
+    }
+
+    public static boolean isTemplateConfigured(AutomationModel aModel)
+    {
+        if (aModel.isCapitalized() || aModel.isContainsNumber() || aModel.isPrefix1()
+                || aModel.isPrefix2() || aModel.isPrefix3() || aModel.isPrefix4()
+                || aModel.isPrefix5() || aModel.isSuffix1() || aModel.isSuffix2()
+                || aModel.isSuffix3() || aModel.isSuffix4() || aModel.isSuffix5()) {
+            return true;
+        }
+        return false;
+
     }
 }

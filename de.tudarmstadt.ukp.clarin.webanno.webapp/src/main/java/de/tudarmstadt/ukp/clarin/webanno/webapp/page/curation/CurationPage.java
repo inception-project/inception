@@ -280,7 +280,7 @@ public class CurationPage
         });
 
         add(new AnnotationLayersModalPanel("annotationLayersModalPanel",
-                new Model<BratAnnotatorModel>(bratAnnotatorModel))
+                new Model<BratAnnotatorModel>(bratAnnotatorModel), null)
         {
             private static final long serialVersionUID = -4657965743173979437L;
 
@@ -933,7 +933,8 @@ public class CurationPage
     {
         // remove old panel, create new one, add it
         remove(curationPanel);
-        curationPanel = new CurationPanel("curationPanel", aCurationContainer){
+        curationPanel = new CurationPanel("curationPanel", aCurationContainer)
+        {
             private static final long serialVersionUID = 2175915644696513166L;
 
             @Override
@@ -965,22 +966,22 @@ public class CurationPage
     {
         List<AnnotationDocument> finishedAnnotationDocuments = new ArrayList<AnnotationDocument>();
 
-       for(AnnotationDocument annotationDocument: repository
-                .listAnnotationDocuments(bratAnnotatorModel.getDocument())){
-           if(annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)){
-               finishedAnnotationDocuments.add(annotationDocument);
-           }
-       }
+        for (AnnotationDocument annotationDocument : repository
+                .listAnnotationDocuments(bratAnnotatorModel.getDocument())) {
+            if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
+                finishedAnnotationDocuments.add(annotationDocument);
+            }
+        }
         CurationBuilder cb = new CurationBuilder(repository);
         AnnotationDocument randomAnnotationDocument = null;
-        if(finishedAnnotationDocuments.size()>0) {
+        if (finishedAnnotationDocuments.size() > 0) {
             randomAnnotationDocument = finishedAnnotationDocuments.get(0);
         }
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User userLoggedIn = repository.getUser(SecurityContextHolder.getContext()
                 .getAuthentication().getName());
         ProjectUtil.setAnnotationPreference(username, repository, annotationService,
-                bratAnnotatorModel, Mode.CURATION);
+                bratAnnotatorModel, null, Mode.CURATION);
         Map<String, JCas> jCases = cb.listJcasesforCuration(finishedAnnotationDocuments,
                 randomAnnotationDocument);
         JCas mergeJCas = cb.getMergeCas(bratAnnotatorModel, bratAnnotatorModel.getDocument(),

@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
@@ -35,17 +34,16 @@ import org.apache.wicket.markup.html.form.CheckBoxMultipleChoice;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
-import org.apache.wicket.markup.html.form.RadioChoice;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AutomationModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -68,13 +66,14 @@ public class AnnotationPreferenceModalPanel
     private AnnotationService annotationService;
 
     @SpringBean(name = "documentRepository")
-    private RepositoryService projectRepository;
+    private RepositoryService repository;
 
     private final AnnotationLayerDetailForm tagSelectionForm;
 
     private NumberTextField<Integer> windowSizeField;
 
-    private final BratAnnotatorModel bratAnnotatorModel;
+    private final BratAnnotatorModel bModel;
+    private final AutomationModel aModel;
 
     private class AnnotationLayerDetailForm
         extends Form<AnnotationLayerDetailFormModel>
@@ -88,12 +87,9 @@ public class AnnotationPreferenceModalPanel
                     new AnnotationLayerDetailFormModel()));
 
             // Import current settings from the annotator
-            getModelObject().numberOfSentences = bratAnnotatorModel.getWindowSize();
-            getModelObject().scrollPage = bratAnnotatorModel.isScrollPage();
-            getModelObject().predictInThisPage = bratAnnotatorModel.isPredictInThisPage();
-            getModelObject().useExistingModel = bratAnnotatorModel.isUseExistingModel();
-            getModelObject().trainLayer = bratAnnotatorModel.getTrainTagSet();
-            for (TagSet tagSet : bratAnnotatorModel.getAnnotationLayers()) {
+            getModelObject().numberOfSentences = bModel.getWindowSize();
+            getModelObject().scrollPage = bModel.isScrollPage();
+            for (TagSet tagSet : bModel.getAnnotationLayers()) {
                 getModelObject().annotationLayers.add(tagSet);
             }
             windowSizeField = new NumberTextField<Integer>("numberOfSentences");
@@ -115,7 +111,7 @@ public class AnnotationPreferenceModalPanel
                         {
                             // disable corefernce annotation for correction/curation pages for 0.4.0
                             // release
-                            List<TagSet> tagSets = annotationService.listTagSets(bratAnnotatorModel
+                            List<TagSet> tagSets = annotationService.listTagSets(bModel
                                     .getProject());
                             List<TagSet> corefTagSets = new ArrayList<TagSet>();
                             for (TagSet tagSet : tagSets) {
@@ -125,8 +121,8 @@ public class AnnotationPreferenceModalPanel
                                 }
                             }
 
-                            if (bratAnnotatorModel.getMode().equals(Mode.CORRECTION)
-                                    || bratAnnotatorModel.getMode().equals(Mode.CURATION)) {
+                            if (bModel.getMode().equals(Mode.CORRECTION)
+                                    || bModel.getMode().equals(Mode.CURATION)) {
                                 tagSets.removeAll(corefTagSets);
                             }
                             return tagSets;
@@ -138,80 +134,11 @@ public class AnnotationPreferenceModalPanel
                 }
             });
 
-            // checkbox to limit prediction of annotation on same page or not, for Automation page
-
-            add(new CheckBox("predictInThisPage")
-            {
-                private static final long serialVersionUID = 4075631498209412897L;
-
-                @Override
-                public boolean isVisible()
-                {
-                    return bratAnnotatorModel.getMode().equals(Mode.AUTOMATION);
-                }
-            });
-
-            add(new Label("predictInThisPageLabel", "Limit prediction on this page :")
-            {
-                private static final long serialVersionUID = 8184961242875048936L;
-
-                @Override
-                public boolean isVisible()
-                {
-                    return bratAnnotatorModel.getMode().equals(Mode.AUTOMATION);
-                }
-            });
-
-            add(new CheckBox("useExistingModel")
-            {
-                private static final long serialVersionUID = 8103688361110230362L;
-
-                @Override
-                public boolean isVisible()
-                {
-                    return bratAnnotatorModel.getMode().equals(Mode.AUTOMATION);
-                }
-            });
-
-            add(new Label("useExistingModelLabel", "Use existing models in the project :")
-            {
-                private static final long serialVersionUID = 3241951376209078639L;
-
-                @Override
-                public boolean isVisible()
-                {
-                    return bratAnnotatorModel.getMode().equals(Mode.AUTOMATION);
-                }
-            });
 
             // Add a Checkbox to enable/disable automatic page navigations while annotating
             add(new CheckBox("scrollPage"));
 
             add(new Label("scrollPageLabel", "Auto-scroll document while annotating :"));
-
-            add(new RadioChoice<TagSet>("trainLayer", new ArrayList<TagSet>(
-                    bratAnnotatorModel.getAnnotationLayers()))
-            {
-                private static final long serialVersionUID = -2453023116889223685L;
-
-                @Override
-                public boolean isVisible()
-                {
-                    return bratAnnotatorModel.getMode().equals(Mode.AUTOMATION);
-                }
-
-            }.setChoiceRenderer(new ChoiceRenderer<TagSet>("name", "id")));
-
-            add(new Label("trainLayerLabel", "Select a Layer for training :")
-            {
-                private static final long serialVersionUID = -4041610351694272437L;
-
-                @Override
-                public boolean isVisible()
-                {
-                    return bratAnnotatorModel.getMode().equals(Mode.AUTOMATION);
-                }
-            });
 
             add(new AjaxSubmitLink("saveButton")
             {
@@ -220,45 +147,18 @@ public class AnnotationPreferenceModalPanel
                 @Override
                 protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
                 {
-                    AnnotationPreference preference = new AnnotationPreference();
-                    preference.setScrollPage(getModelObject().scrollPage);
-                    preference.setWindowSize(getModelObject().numberOfSentences);
-
-                    preference.setPredictInThisPage(getModelObject().predictInThisPage);
-                    preference.setUseExistingModel(getModelObject().useExistingModel);
-                    preference.setTrainLayer(getModelObject().trainLayer.getId());
-
-                    ArrayList<Long> layers = new ArrayList<Long>();
-
-                    for (TagSet tagset : getModelObject().annotationLayers) {
-                        layers.add(tagset.getId());
-                    }
-                    preference.setAnnotationLayers(layers);
-
-                    String username = SecurityContextHolder.getContext().getAuthentication()
-                            .getName();
+                    bModel.setScrollPage(getModelObject().scrollPage);
+                    bModel.setAnnotationLayers(getModelObject().annotationLayers);
+                    bModel.setWindowSize(getModelObject().numberOfSentences);
                     try {
-                        projectRepository.saveUserSettings(username,
-                                bratAnnotatorModel.getProject(), bratAnnotatorModel.getMode(),
-                                preference);
+                        ProjectUtil.savePreference(bModel, aModel, repository);
                     }
                     catch (FileNotFoundException e) {
-                        error("Unable to save preferences in a property file: "
-                                + ExceptionUtils.getRootCauseMessage(e));
+                      error("Preference file not found");
                     }
                     catch (IOException e) {
-                        error("Unable to save preferences in a property file: "
-                                + ExceptionUtils.getRootCauseMessage(e));
+                        error("Preference file not found");
                     }
-
-                    bratAnnotatorModel.setScrollPage(getModelObject().scrollPage);
-
-                    bratAnnotatorModel.setPredictInThisPage(getModelObject().predictInThisPage);
-                    bratAnnotatorModel.setUseExistingModel(getModelObject().useExistingModel);
-                    bratAnnotatorModel.setTrainTagSet(getModelObject().trainLayer);
-
-                    bratAnnotatorModel.setAnnotationLayers(getModelObject().annotationLayers);
-                    bratAnnotatorModel.setWindowSize(getModelObject().numberOfSentences);
                     modalWindow.close(aTarget);
                 }
 
@@ -296,17 +196,15 @@ public class AnnotationPreferenceModalPanel
         public SourceDocument document;
         public int numberOfSentences;
         public boolean scrollPage;
-        public boolean predictInThisPage;
-        public boolean useExistingModel;
-        public TagSet trainLayer;
         public HashSet<TagSet> annotationLayers = new HashSet<TagSet>();
     }
 
     public AnnotationPreferenceModalPanel(String aId, final ModalWindow modalWindow,
-            BratAnnotatorModel aBratAnnotatorModel)
+            BratAnnotatorModel aBModel, AutomationModel aAModel)
     {
         super(aId);
-        this.bratAnnotatorModel = aBratAnnotatorModel;
+        this.aModel = aAModel;
+        this.bModel = aBModel;
         tagSelectionForm = new AnnotationLayerDetailForm("tagSelectionForm", modalWindow);
         add(tagSelectionForm);
     }

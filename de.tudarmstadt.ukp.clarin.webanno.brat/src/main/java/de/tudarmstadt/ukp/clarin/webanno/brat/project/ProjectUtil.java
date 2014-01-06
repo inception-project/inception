@@ -54,6 +54,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AutomationModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.SourceDocument;
@@ -281,14 +282,14 @@ public class ProjectUtil
      * @param aUsername
      *            The {@link User} for whom we need to read the preference (preferences are stored
      *            per user)
-     * @param abAnnotatorModel
+     * @param aBModel
      *            The {@link BratAnnotatorModel} that will be populated with preferences from the
      *            file
      * @param aMode
      */
     public static void setAnnotationPreference(String aUsername,
             RepositoryService aRepositoryService, AnnotationService aAnnotationService,
-            BratAnnotatorModel abAnnotatorModel, Mode aMode)
+            BratAnnotatorModel aBModel, AutomationModel aAModel, Mode aMode)
         throws BeansException, FileNotFoundException, IOException
     {
         AnnotationPreference preference = new AnnotationPreference();
@@ -296,7 +297,7 @@ public class ProjectUtil
         // get annotation preference from file system
         try {
             for (Entry<Object, Object> entry : aRepositoryService.loadUserSettings(aUsername,
-                    abAnnotatorModel.getProject()).entrySet()) {
+                    aBModel.getProject()).entrySet()) {
                 String property = entry.getKey().toString();
                 int index = property.lastIndexOf(".");
                 String propertyName = property.substring(index + 1);
@@ -315,19 +316,21 @@ public class ProjectUtil
                     }
                 }
             }
-            abAnnotatorModel.setWindowSize(preference.getWindowSize());
-            abAnnotatorModel.setScrollPage(preference.isScrollPage());
+            aBModel.setWindowSize(preference.getWindowSize());
+            aBModel.setScrollPage(preference.isScrollPage());
 
-            abAnnotatorModel.setUseExistingModel(preference.isUseExistingModel());
-            abAnnotatorModel.setPredictInThisPage(preference.isPredictInThisPage());
-            if(preference.getTrainLayer() != -1){
-            abAnnotatorModel.setTrainTagSet(aAnnotationService.getTagSet(preference.getTrainLayer()));
+            if (aAModel != null) {
+                aAModel.setUseExistingModel(preference.isUseExistingModel());
+                aAModel.setPredictInThisPage(preference.isPredictInThisPage());
+                if (preference.getTrainLayer() != -1) {
+                    aAModel.setTrainTagSet(aAnnotationService.getTagSet(preference.getTrainLayer()));
+                }
             }
             // Get tagset using the id, from the properties file
-            abAnnotatorModel.getAnnotationLayers().clear();
+            aBModel.getAnnotationLayers().clear();
             if (preference.getAnnotationLayers() != null) {
                 for (Long id : preference.getAnnotationLayers()) {
-                    abAnnotatorModel.getAnnotationLayers().add(aAnnotationService.getTagSet(id));
+                    aBModel.getAnnotationLayers().add(aAnnotationService.getTagSet(id));
                 }
             }
         }
@@ -335,7 +338,7 @@ public class ProjectUtil
         catch (Exception e) {
 
             // disable corefernce annotation for correction/curation pages for 0.4.0 release
-            List<TagSet> tagSets = aAnnotationService.listTagSets(abAnnotatorModel.getProject());
+            List<TagSet> tagSets = aAnnotationService.listTagSets(aBModel.getProject());
             List<TagSet> corefTagSets = new ArrayList<TagSet>();
             for (TagSet tagSet : tagSets) {
                 if (tagSet.getType().getName().equals("coreference type")
@@ -344,10 +347,11 @@ public class ProjectUtil
                 }
             }
 
-            if (aMode.equals(Mode.CORRECTION) || aMode.equals(Mode.AUTOMATION) || aMode.equals(Mode.CURATION )) {
+            if (aMode.equals(Mode.CORRECTION) || aMode.equals(Mode.AUTOMATION)
+                    || aMode.equals(Mode.CURATION)) {
                 tagSets.removeAll(corefTagSets);
             }
-            abAnnotatorModel.setAnnotationLayers(new HashSet<TagSet>(tagSets));
+            aBModel.setAnnotationLayers(new HashSet<TagSet>(tagSets));
             /*
              * abAnnotatorModel.setAnnotationLayers(new HashSet<TagSet>(aAnnotationService
              * .listTagSets(abAnnotatorModel.getProject())));
@@ -734,5 +738,29 @@ public class ProjectUtil
         }
         return finishedAnnotationDocumentExist;
 
+    }
+
+    public static void savePreference(BratAnnotatorModel aBModel, AutomationModel aAModel,
+            RepositoryService aRepository) throws FileNotFoundException, IOException
+    {
+        AnnotationPreference preference = new AnnotationPreference();
+        preference.setScrollPage(aBModel.isScrollPage());
+        preference.setWindowSize(aBModel.getWindowSize());
+
+        if (aAModel != null) {
+            preference.setPredictInThisPage(aAModel.isPredictInThisPage());
+            preference.setUseExistingModel(aAModel.isUseExistingModel());
+            preference.setTrainLayer(aAModel.getTrainTagSet().getId());
+        }
+        ArrayList<Long> layers = new ArrayList<Long>();
+
+        for (TagSet tagset : aBModel.getAnnotationLayers()) {
+            layers.add(tagset.getId());
+        }
+        preference.setAnnotationLayers(layers);
+
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+            aRepository.saveUserSettings(username, aBModel.getProject(),
+                    aBModel.getMode(), preference);
     }
 }

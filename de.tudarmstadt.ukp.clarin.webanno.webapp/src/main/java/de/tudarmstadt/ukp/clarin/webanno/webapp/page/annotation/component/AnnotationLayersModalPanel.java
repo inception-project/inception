@@ -24,6 +24,7 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AutomationModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.AnnotationPreferenceModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.AnnotationPage;
@@ -44,9 +45,10 @@ public class AnnotationLayersModalPanel
 
     private boolean closeButtonClicked;
 
-    public AnnotationLayersModalPanel(String id, final IModel<BratAnnotatorModel> aModel)
+    public AnnotationLayersModalPanel(String id, final IModel<BratAnnotatorModel> aBModel,
+            final IModel<AutomationModel> aAModel)
     {
-        super(id, aModel);
+        super(id, aBModel);
         // dialog window to select annotation layer preferences
         final ModalWindow annotationLayerSelectionModal;
         add(annotationLayerSelectionModal = new ModalWindow("annotationLayerModal"));
@@ -77,25 +79,27 @@ public class AnnotationLayersModalPanel
             @Override
             public void onClick(AjaxRequestTarget target)
             {
-                if (aModel.getObject().getProject() == null) {
+                if (aBModel.getObject().getProject() == null) {
                     target.appendJavaScript("alert('Please open a project first!')");
                 }
                 else {
                     closeButtonClicked = false;
 
-                    annotationLayerSelectionModal.setContent(new AnnotationPreferenceModalPanel(
-                            annotationLayerSelectionModal.getContentId(),
-                            annotationLayerSelectionModal, aModel.getObject())
-                    {
+                    annotationLayerSelectionModal
+                            .setContent(new AnnotationPreferenceModalPanel(
+                                    annotationLayerSelectionModal.getContentId(),
+                                    annotationLayerSelectionModal, aBModel.getObject(), aAModel
+                                            .getObject())
+                            {
 
-                        private static final long serialVersionUID = -3434069761864809703L;
+                                private static final long serialVersionUID = -3434069761864809703L;
 
-                        @Override
-                        protected void onCancel(AjaxRequestTarget aTarget)
-                        {
-                            closeButtonClicked = true;
-                        };
-                    });
+                                @Override
+                                protected void onCancel(AjaxRequestTarget aTarget)
+                                {
+                                    closeButtonClicked = true;
+                                };
+                            });
 
                     annotationLayerSelectionModal
                             .setWindowClosedCallback(new ModalWindow.WindowClosedCallback()

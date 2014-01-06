@@ -32,13 +32,13 @@ import java.util.Map;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.Type;
+import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.codehaus.jackson.JsonGenerator;
 import org.springframework.beans.BeansException;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.apache.uima.fit.util.JCasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
@@ -139,7 +139,7 @@ public class CuratorUtil
 
         bratAnnotatorModel.setMode(Mode.CURATION);
         ProjectUtil.setAnnotationPreference(userLoggedIn.getUsername(), aRepository,
-                aAnnotationService, bratAnnotatorModel, Mode.CURATION);
+                aAnnotationService, bratAnnotatorModel, null, Mode.CURATION);
         return bratAnnotatorModel;
     }
 

@@ -378,7 +378,7 @@ public class CorrectionPage
         });
 
         add(new AnnotationLayersModalPanel("annotationLayersModalPanel",
-                new Model<BratAnnotatorModel>(bratAnnotatorModel))
+                new Model<BratAnnotatorModel>(bratAnnotatorModel), null)
         {
             private static final long serialVersionUID = -4657965743173979437L;
 
@@ -983,7 +983,7 @@ public class CorrectionPage
                 bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
                 ProjectUtil.setAnnotationPreference(username, repository, annotationService,
-                        bratAnnotatorModel, Mode.CORRECTION);
+                        bratAnnotatorModel, null, Mode.CORRECTION);
             }
             catch (DataRetrievalFailureException ex) {
                 throw ex;
