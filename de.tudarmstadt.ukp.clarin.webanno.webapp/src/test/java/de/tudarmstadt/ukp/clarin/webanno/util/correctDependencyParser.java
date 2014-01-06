@@ -17,7 +17,7 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.util;
 
-import static org.uimafit.util.JCasUtil.select;
+import static org.apache.uima.fit.util.JCasUtil.select;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,9 +28,9 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
-import org.uimafit.factory.AnalysisEngineFactory;
-import org.uimafit.factory.CollectionReaderFactory;
-import org.uimafit.factory.JCasFactory;
+import org.apache.uima.fit.factory.AnalysisEngineFactory;
+import org.apache.uima.fit.factory.CollectionReaderFactory;
+import org.apache.uima.fit.factory.JCasFactory;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
@@ -76,7 +76,7 @@ public class correctDependencyParser
         File targetPath = new File(
                 "/home/likewise-open/UKP/yimam/CLARIN/bugeddata/ser/testing/2988/annotation2/");
         AnalysisEngine writer = AnalysisEngineFactory.createPrimitive(SerializedCasWriter.class,
-                SerializedCasWriter.PARAM_PATH, targetPath,
+                SerializedCasWriter.PARAM_TARGET_LOCATION, targetPath,
                 SerializedCasWriter.PARAM_USE_DOCUMENT_ID, true);
         writer.process(cas);
 

@@ -18,8 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.crowdflower;
 
 import static org.apache.commons.lang.StringEscapeUtils.escapeHtml;
-import static org.uimafit.util.JCasUtil.select;
-import static org.uimafit.util.JCasUtil.selectCovered;
+import static org.apache.uima.fit.util.JCasUtil.select;
+import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
 import java.io.BufferedReader;
 import java.io.IOException;

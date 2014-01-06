@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.webapp.page.automation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
-import static org.uimafit.util.JCasUtil.selectFollowing;
+import static org.apache.uima.fit.util.JCasUtil.selectFollowing;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;

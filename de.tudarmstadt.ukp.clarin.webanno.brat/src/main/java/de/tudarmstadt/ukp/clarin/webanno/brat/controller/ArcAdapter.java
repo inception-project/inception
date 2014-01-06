@@ -18,9 +18,9 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
 import static java.util.Arrays.asList;
-import static org.uimafit.util.CasUtil.getType;
-import static org.uimafit.util.CasUtil.selectCovered;
-import static org.uimafit.util.JCasUtil.selectCovered;
+import static org.apache.uima.fit.util.CasUtil.getType;
+import static org.apache.uima.fit.util.CasUtil.selectCovered;
+import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
 import java.util.HashSet;
 import java.util.List;
@@ -33,7 +33,7 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.impl.FeatureStructureImpl;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
-import org.uimafit.util.CasUtil;
+import org.apache.uima.fit.util.CasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Argument;

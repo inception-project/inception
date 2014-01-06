@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.webapp.statistics;
 
 import static org.junit.Assert.assertEquals;
-import static org.uimafit.factory.CollectionReaderFactory.createCollectionReader;
+import static org.apache.uima.fit.factory.CollectionReaderFactory.createCollectionReader;
 
 import java.io.File;
 import java.util.Arrays;
@@ -30,7 +30,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.jcas.JCas;
 import org.junit.Test;
-import org.uimafit.factory.JCasFactory;
+import org.apache.uima.fit.factory.JCasFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;

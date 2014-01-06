@@ -30,6 +30,7 @@
 		<hibernate.version>4.1.4.Final</hibernate.version>
 		<timestamp>${maven.build.timestamp}</timestamp>
 		<maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
+		<dkpro.version>1.5.0</dkpro.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
@@ -71,14 +72,14 @@
 			<dependency>
 				<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
 				<artifactId>de.tudarmstadt.ukp.dkpro.core-asl</artifactId>
-				<version>1.4.0</version>
+				<version>${dkpro.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
 			<dependency>
 				<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
 				<artifactId>de.tudarmstadt.ukp.dkpro.core-gpl</artifactId>
-				<version>1.4.0</version>
+				<version>${dkpro.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
@@ -221,26 +222,6 @@
 					de.tudarmstadt.ukp.clarin.webanno.crowdflower
 				</artifactId>
 				<version>1.1.0-SNAPSHOT</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.uima</groupId>
-				<artifactId>uimaj-core</artifactId>
-				<version>${uima.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.uima</groupId>
-				<artifactId>uimaj-cpe</artifactId>
-				<version>${uima.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.uima</groupId>
-				<artifactId>uimaj-tools</artifactId>
-				<version>${uima.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.uima</groupId>
-				<artifactId>uimaj-document-annotation</artifactId>
-				<version>${uima.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

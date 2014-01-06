@@ -18,9 +18,9 @@
 package de.tudarmstadt.ukp.clarin.webanno.tcf;
 
 import static org.junit.Assert.assertEquals;
-import static org.uimafit.factory.AnalysisEngineFactory.createPrimitiveDescription;
-import static org.uimafit.factory.CollectionReaderFactory.createCollectionReader;
-import static org.uimafit.pipeline.SimplePipeline.runPipeline;
+import static org.apache.uima.fit.factory.AnalysisEngineFactory.createPrimitiveDescription;
+import static org.apache.uima.fit.factory.CollectionReaderFactory.createCollectionReader;
+import static org.apache.uima.fit.pipeline.SimplePipeline.runPipeline;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -29,7 +29,7 @@ import java.io.InputStream;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.collection.CollectionReader;
 import org.junit.Test;
-import org.uimafit.component.xwriter.CASDumpWriter;
+//import org.uimafit.component.xwriter.CASDumpWriter;
 
 import eu.clarin.weblicht.wlfxb.io.WLDObjector;
 import eu.clarin.weblicht.wlfxb.tc.xb.TextCorpusStored;
@@ -47,12 +47,13 @@ public class TcfReaderWriterTest
                 new String[] { "[+]tcf-after.xml" });
 
         AnalysisEngineDescription writer = createPrimitiveDescription(TcfWriter.class,
-                TcfWriter.PARAM_PATH, "target/test-output", TcfWriter.PARAM_STRIP_EXTENSION, true);
+                TcfWriter.PARAM_TARGET_LOCATION, "target/test-output", TcfWriter.PARAM_STRIP_EXTENSION, true);
 
-        AnalysisEngineDescription dumper = createPrimitiveDescription(CASDumpWriter.class,
+       /* AnalysisEngineDescription dumper = createPrimitiveDescription(CASDumpWriter.class,
                 CASDumpWriter.PARAM_OUTPUT_FILE, "target/test-output/dump.txt");
-
-        runPipeline(reader, writer, dumper);
+*/
+       // runPipeline(reader, writer, dumper);
+        runPipeline(reader, writer);
 
         InputStream isReference = new FileInputStream(new File(
                 "src/test/resources/tcf-after-expected.xml"));

@@ -20,11 +20,11 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.dao;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.commons.io.IOUtils.copyLarge;
 import static org.apache.commons.lang.StringUtils.isBlank;
-import static org.uimafit.factory.AnalysisEngineFactory.createPrimitive;
-import static org.uimafit.factory.AnalysisEngineFactory.createPrimitiveDescription;
-import static org.uimafit.pipeline.SimplePipeline.runPipeline;
-import static org.uimafit.util.JCasUtil.select;
-import static org.uimafit.util.JCasUtil.selectCovered;
+import static org.apache.uima.fit.factory.AnalysisEngineFactory.createPrimitive;
+import static org.apache.uima.fit.factory.AnalysisEngineFactory.createPrimitiveDescription;
+import static org.apache.uima.fit.pipeline.SimplePipeline.runPipeline;
+import static org.apache.uima.fit.util.JCasUtil.select;
+import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
 import java.beans.PropertyDescriptor;
 import java.io.BufferedReader;
@@ -97,10 +97,10 @@ import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
-import org.uimafit.factory.AnalysisEngineFactory;
-import org.uimafit.factory.CollectionReaderFactory;
-import org.uimafit.factory.JCasFactory;
-import org.uimafit.util.JCasUtil;
+import org.apache.uima.fit.factory.AnalysisEngineFactory;
+import org.apache.uima.fit.factory.CollectionReaderFactory;
+import org.apache.uima.fit.factory.JCasFactory;
+import org.apache.uima.fit.util.JCasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
@@ -535,7 +535,7 @@ public class RepositoryServiceDbData
         }
 
         AnalysisEngineDescription writer = createPrimitiveDescription(aWriter,
-                JCasFileWriter_ImplBase.PARAM_PATH, exportTempDir,
+                JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
                 JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, true);
 
         CAS cas = JCasFactory.createJCas().getCas();
@@ -1328,7 +1328,7 @@ public class RepositoryServiceDbData
         try {
             File targetPath = getAnnotationFolder(aDocument);
             AnalysisEngine writer = AnalysisEngineFactory.createPrimitive(
-                    SerializedCasWriter.class, SerializedCasWriter.PARAM_PATH, targetPath,
+                    SerializedCasWriter.class, SerializedCasWriter.PARAM_TARGET_LOCATION, targetPath,
                     SerializedCasWriter.PARAM_USE_DOCUMENT_ID, true);
             DocumentMetaData md;
             try {

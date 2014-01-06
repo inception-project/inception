@@ -18,9 +18,9 @@
 package de.tudarmstadt.ukp.clarin.webanno.tsv;
 
 import static org.junit.Assert.assertEquals;
-import static org.uimafit.factory.AnalysisEngineFactory.createPrimitiveDescription;
-import static org.uimafit.factory.CollectionReaderFactory.createCollectionReader;
-import static org.uimafit.pipeline.SimplePipeline.runPipeline;
+import static org.apache.uima.fit.factory.AnalysisEngineFactory.createPrimitiveDescription;
+import static org.apache.uima.fit.factory.CollectionReaderFactory.createCollectionReader;
+import static org.apache.uima.fit.pipeline.SimplePipeline.runPipeline;
 
 import java.io.File;
 
@@ -28,7 +28,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.collection.CollectionReader;
 import org.junit.Test;
-import org.uimafit.component.xwriter.CASDumpWriter;
+
 
 public class ConllReaderWriterTest
 {
@@ -42,13 +42,14 @@ public class ConllReaderWriterTest
                 new String[] { "[+]fk003_2006_08_ZH1.tsv" });
 
         AnalysisEngineDescription writer = createPrimitiveDescription(WebannoTsvWriter.class,
-                WebannoTsvWriter.PARAM_PATH, "target/test-output", WebannoTsvWriter.PARAM_STRIP_EXTENSION,
+                WebannoTsvWriter.PARAM_TARGET_LOCATION, "target/test-output", WebannoTsvWriter.PARAM_STRIP_EXTENSION,
                 true);
 
-        AnalysisEngineDescription dumper = createPrimitiveDescription(CASDumpWriter.class,
-                CASDumpWriter.PARAM_OUTPUT_FILE, "target/test-output/dump.txt");
+    /*    AnalysisEngineDescription dumper = createPrimitiveDescription(CASDumpWriter.class,
+                CASDumpWriter.PARAM_OUTPUT_FILE, "target/test-output/dump.txt");*/
 
-        runPipeline(reader, writer, dumper);
+      //  runPipeline(reader, writer, dumper);
+        runPipeline(reader, writer);
 
         String reference = FileUtils.readFileToString(new File(
                 "src/test/resources/tsv/fk003_2006_08_ZH1.tsv"), "UTF-8");
