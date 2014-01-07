@@ -115,6 +115,8 @@ public class AutomationPage
     private AutomationModel automationModel;
 
     private Label numberOfPages;
+    private Label trainResult;
+    private String result = "";
     private DocumentNamePanel documentNamePanel;
 
     private int sentenceNumber = 1;
@@ -349,6 +351,17 @@ public class AutomationPage
         openDocumentsModal.setHeightUnit("px");
         openDocumentsModal.setTitle("Open document");
 
+        add(trainResult = (Label) new Label("trainResult",
+                new LoadableDetachableModel<String>()
+                {
+                    private static final long serialVersionUID = 7868885965679641022L;
+
+                    @Override
+                    protected String load()
+                    {
+                        return result;
+                    }
+                }).setOutputMarkupId(true));
         // Add project and document information at the top
         add(new AjaxLink<Void>("miraTrain")
         {
@@ -362,7 +375,7 @@ public class AutomationPage
                     error("No MIRA template is configured");
                     return;
                 }
-                String result = null ;
+
                 try {
                     if (!existsFinishedCurationDocument(bratAnnotatorModel.getProject())) {
                         aTarget.add(feedbackPanel);
@@ -375,10 +388,8 @@ public class AutomationPage
                             automationModel.getTrainTagSet(), automationModel, repository);
                     update(aTarget);
                     aTarget.appendJavaScript("Wicket.Window.unloadConfirmation = false;window.location.reload()");
-                    if(result != null){
-                        aTarget.add(feedbackPanel);
-                        info(result);
-                    }
+                    aTarget.add(trainResult.setOutputMarkupId(true));
+
                 }
                 catch (UIMAException e) {
                     aTarget.add(feedbackPanel);

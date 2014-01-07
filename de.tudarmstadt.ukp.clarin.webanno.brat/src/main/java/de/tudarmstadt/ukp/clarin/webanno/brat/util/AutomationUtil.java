@@ -287,7 +287,7 @@ public class AutomationUtil
         catch (Exception e) {
             e.printStackTrace();
         }
-        return trainResult + "$" + testResult;
+        return "TRAIN:"+trainResult + "~~~" + "TEST:"+testResult;
     }
 
     public static String createMiraTemplate(Project aProject, RepositoryService aRepository,
