@@ -183,38 +183,49 @@ public class AutomationUtil
         for (Token token : selectCovered(sentence.getCAS().getJCas(), Token.class,
                 sentence.getBegin(), sentence.getEnd())) {
             String word = token.getCoveredText();
-            String capitalized = aAModel.isCapitalized()?(Character.isUpperCase(word.codePointAt(0))? "Y " : "N "):"";
-            String containsNUmber = aAModel.isContainsNumber()?(word.matches(".*\\d.*") ? "Y " : "N "):"";
+            String capitalized = aAModel.isCapitalized() ? (Character.isUpperCase(word
+                    .codePointAt(0)) ? "Y " : "N ") : "";
+            String containsNUmber = aAModel.isContainsNumber() ? (word.matches(".*\\d.*") ? "Y "
+                    : "N ") : "";
 
             char[] words = word.toCharArray();
 
             String prefix1 = aAModel.isPrefix1() ? Character.toString(words[0]) + " " : "";
             String prefix2 = aAModel.isPrefix2() ? (words.length > 1 ? prefix1.trim()
                     + (Character.toString(words[1]).trim().equals("") ? "__nil__" : Character
-                            .toString(words[1])) : "__nil__") + " " : "";
+                            .toString(words[1])) : "__nil__")
+                    + " " : "";
             String prefix3 = aAModel.isPrefix3() ? (words.length > 2 ? prefix2.trim()
                     + (Character.toString(words[2]).trim().equals("") ? "__nil__" : Character
-                            .toString(words[2])) : "__nil__") + " " : "";
+                            .toString(words[2])) : "__nil__")
+                    + " " : "";
             String prefix4 = aAModel.isPrefix4() ? (words.length > 3 ? prefix3.trim()
                     + (Character.toString(words[3]).trim().equals("") ? "__nil__" : Character
-                            .toString(words[3])) : "__nil__") + " " : "";
+                            .toString(words[3])) : "__nil__")
+                    + " " : "";
             String prefix5 = aAModel.isPrefix5() ? (words.length > 4 ? prefix4.trim()
                     + (Character.toString(words[4]).trim().equals("") ? "__nil__" : Character
-                            .toString(words[4])) : "__nil__") + " " : "";
+                            .toString(words[4])) : "__nil__")
+                    + " " : "";
 
-            String suffix1 = aAModel.isSuffix1() ? Character.toString(words[words.length - 1]) + " " : "";
+            String suffix1 = aAModel.isSuffix1() ? Character.toString(words[words.length - 1])
+                    + " " : "";
             String suffix2 = aAModel.isSuffix2() ? (words.length > 1 ? (Character
                     .toString(words[words.length - 2]).trim().equals("") ? "__nil__" : Character
-                    .toString(words[words.length - 2])) + suffix1.trim() : "__nil__")  + " ": "";
+                    .toString(words[words.length - 2])) + suffix1.trim() : "__nil__")
+                    + " " : "";
             String suffix3 = aAModel.isSuffix3() ? (words.length > 2 ? (Character
                     .toString(words[words.length - 3]).trim().equals("") ? "__nil__" : Character
-                    .toString(words[words.length - 3])) + suffix2.trim() : "__nil__") + " ": "";
+                    .toString(words[words.length - 3])) + suffix2.trim() : "__nil__")
+                    + " " : "";
             String suffix4 = aAModel.isSuffix4() ? (words.length > 3 ? (Character
                     .toString(words[words.length - 4]).trim().equals("") ? "__nil__" : Character
-                    .toString(words[words.length - 4])) + suffix3.trim() : "__nil__") + " ": "";
+                    .toString(words[words.length - 4])) + suffix3.trim() : "__nil__")
+                    + " " : "";
             String suffix5 = aAModel.isSuffix5() ? (words.length > 4 ? (Character
                     .toString(words[words.length - 5]).trim().equals("") ? "__nil__" : Character
-                    .toString(words[words.length - 5])) + suffix4.trim() : "__nil__") + " ": "";
+                    .toString(words[words.length - 5])) + suffix4.trim() : "__nil__")
+                    + " " : "";
 
             String nl = "\n";
             TypeAdapter adapter = TypeUtil.getAdapter(aTagSet);
@@ -226,16 +237,18 @@ public class AutomationUtil
 
             /* + getVowels(word, FileUtils.readFileToString(new File(argv[1]))) + " " */
 
-            + containsNUmber +  prefix1 + prefix2 + prefix3 +prefix4 + prefix5 +  suffix1
-            + suffix2 + suffix3 +  suffix4 + suffix5  + tag + nl);
+            + containsNUmber + prefix1 + prefix2 + prefix3 + prefix4 + prefix5 + suffix1 + suffix2
+                    + suffix3 + suffix4 + suffix5 + tag + nl);
         }
         return sb;
 
     }
 
-    public static void train(Project aProject, TagSet aTagset, AutomationModel aAModel,
+    public static String train(Project aProject, TagSet aTagset, AutomationModel aAModel,
             RepositoryService aRepository)
     {
+        String trainResult = "";
+        String testResult = "";
         try {
             Mira mira = new Mira();
             int frequency = 2;
@@ -245,8 +258,8 @@ public class AutomationUtil
             boolean maxPosteriors = false;
             String templateName = null;
 
-            templateName = createMiraTemplate(aProject, aRepository, aAModel);
-
+            templateName = createMiraTemplate(aProject, aRepository, aAModel,
+                    getMiraTemplateFile(aProject, aRepository));
             File miraDir = aRepository.getMiraDir(aProject);
             File trainFile = new File(miraDir, "train");
             File testFile = new File(miraDir, "test");
@@ -262,11 +275,11 @@ public class AutomationUtil
             int numExamples = mira.count(trainName, frequency);
             mira.initModel(randomInit);
             for (int i = 0; i < iterations; i++) {
-                mira.train(trainName, iterations, numExamples, i);
+                trainResult = mira.train(trainName, iterations, numExamples, i);
                 mira.averageWeights(iterations * numExamples);
                 if (testName != null) {
                     BufferedReader input = new BufferedReader(new FileReader(testName));
-                    mira.test(input, null);
+                    testResult = mira.test(input, null);
                 }
             }
             mira.saveModel(modelName);
@@ -274,10 +287,12 @@ public class AutomationUtil
         catch (Exception e) {
             e.printStackTrace();
         }
+        return trainResult + "$" + testResult;
     }
 
-    private static String createMiraTemplate(Project aProject, RepositoryService aRepository,
-            AutomationModel aAModel) throws IOException
+    public static String createMiraTemplate(Project aProject, RepositoryService aRepository,
+            AutomationModel aAModel, File templateFile)
+        throws IOException
     {
 
         StringBuffer sb = new StringBuffer();
@@ -392,12 +407,14 @@ public class AutomationUtil
 
         sb.append("\n");
         sb.append("B\n");
-        File templateFile = new File(aRepository.getMiraDir(aProject).getAbsolutePath(),
-                aProject.getName() + "-template");
         FileUtils.writeStringToFile(templateFile, sb.toString());
-        File[] files = new File(aRepository.getMiraDir(aProject).getAbsolutePath() + MIRA_TEMPLATE)
-                .listFiles();
         return templateFile.getAbsolutePath();
+    }
+
+    public static File getMiraTemplateFile(Project aProject, RepositoryService aRepository)
+    {
+        return new File(aRepository.getMiraDir(aProject).getAbsolutePath(), aProject.getName()
+                + "-template");
     }
 
     public static void predict(SourceDocument aDocument, String aUsername, TagSet aTagSet,
@@ -405,9 +422,9 @@ public class AutomationUtil
             AnnotationService aAnnotationService)
     {
         try {
+
             File predFile = casToMiraFile(aDocument, aUsername, aTagSet, aBegin, aEnd, aAModel,
                     aRepository);
-
             Mira mira = new Mira();
             int shiftColumns = 0;
             int nbest = 1;

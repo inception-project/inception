@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.page.automation;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
 import static org.apache.uima.fit.util.JCasUtil.selectFollowing;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ import java.util.Map;
 
 import javax.persistence.NoResultException;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
@@ -348,7 +350,52 @@ public class AutomationPage
         openDocumentsModal.setTitle("Open document");
 
         // Add project and document information at the top
-        add(new AjaxLink<Void>("miraAutomate")
+        add(new AjaxLink<Void>("miraTrain")
+        {
+            private static final long serialVersionUID = 2177457942401020660L;
+
+            @Override
+            public void onClick(AjaxRequestTarget aTarget)
+            {
+                if (!AutomationUtil.isTemplateConfigured(automationModel)) {
+                    aTarget.add(feedbackPanel);
+                    error("No MIRA template is configured");
+                    return;
+                }
+                String result = null ;
+                try {
+                    if (!existsFinishedCurationDocument(bratAnnotatorModel.getProject())) {
+                        aTarget.add(feedbackPanel);
+                        error("No curation document exists for training");
+                        return;
+                    }
+                    AutomationUtil.casToMiraTrainData(bratAnnotatorModel.getProject(),
+                            automationModel.getTrainTagSet(), automationModel, repository);
+                    result = AutomationUtil.train(bratAnnotatorModel.getProject(),
+                            automationModel.getTrainTagSet(), automationModel, repository);
+                    update(aTarget);
+                    aTarget.appendJavaScript("Wicket.Window.unloadConfirmation = false;window.location.reload()");
+                    if(result != null){
+                        aTarget.add(feedbackPanel);
+                        info(result);
+                    }
+                }
+                catch (UIMAException e) {
+                    aTarget.add(feedbackPanel);
+                    error(ExceptionUtils.getRootCause(e));
+                }
+                catch (ClassNotFoundException e) {
+                    aTarget.add(feedbackPanel);
+                    error(e.getMessage());
+                }
+                catch (IOException e) {
+                    aTarget.add(feedbackPanel);
+                    error(e.getMessage());
+                }
+            }
+        });
+
+        add(new AjaxLink<Void>("miraPredict")
         {
             private static final long serialVersionUID = 2177457942401020660L;
 
@@ -368,6 +415,24 @@ public class AutomationPage
                 }
 
                 try {
+                    if (!AutomationUtil.getMiraTemplateFile(bratAnnotatorModel.getProject(),
+                            repository).exists()) {
+                        aTarget.add(feedbackPanel);
+                        error("No MIRA template is found. Click Train first");
+                        return;
+                    }
+                    File existingTemplateFile = AutomationUtil.getMiraTemplateFile(
+                            bratAnnotatorModel.getProject(), repository);
+                    File thisTemplateFile = new File(existingTemplateFile.getAbsolutePath() + "bkp");
+                    if (!FileUtils.contentEquals(
+                            existingTemplateFile,
+                            new File(AutomationUtil.createMiraTemplate(
+                                    bratAnnotatorModel.getProject(), repository, automationModel,
+                                    thisTemplateFile)))) {
+                        aTarget.add(feedbackPanel);
+                        error("MIRA template file configuration is changed. Use the same configuration for training and prediction");
+                        return;
+                    }
                     int begin, end;
                     JCas jCas = repository.readJCas(bratAnnotatorModel.getDocument(),
                             bratAnnotatorModel.getProject(), bratAnnotatorModel.getUser());
@@ -384,31 +449,17 @@ public class AutomationPage
                         end = BratAjaxCasUtil.selectByAddr(jCas,
                                 bratAnnotatorModel.getLastSentenceAddress()).getEnd();
                     }
-                    if (automationModel.isUseExistingModel()) {
-                        if (!repository.getMiraModel(bratAnnotatorModel.getProject()).exists()) {
-                            aTarget.add(feedbackPanel);
-                            error("No model exist in this project");
-                            return;
-                        }
 
-                        AutomationUtil.predict(bratAnnotatorModel.getDocument(), bratAnnotatorModel
-                                .getUser().getUsername(), automationModel.getTrainTagSet(), begin,
-                                end, automationModel,repository, annotationService);
+                    if (!repository.getMiraModel(bratAnnotatorModel.getProject()).exists()) {
+                        aTarget.add(feedbackPanel);
+                        error("No model exist in this project");
+                        return;
                     }
-                    else {
-                        if (!existsFinishedCurationDocument(bratAnnotatorModel.getProject())) {
-                            aTarget.add(feedbackPanel);
-                            error("No curation document exists for training");
-                            return;
-                        }
-                        AutomationUtil.casToMiraTrainData(bratAnnotatorModel.getProject(),
-                                automationModel.getTrainTagSet(),automationModel,repository);
-                        AutomationUtil.train(bratAnnotatorModel.getProject(),
-                                automationModel.getTrainTagSet(),automationModel,repository);
-                        AutomationUtil.predict(bratAnnotatorModel.getDocument(), bratAnnotatorModel
-                                .getUser().getUsername(), automationModel.getTrainTagSet(), begin,
-                                end, automationModel,repository, annotationService);
-                    }
+
+                    AutomationUtil.predict(bratAnnotatorModel.getDocument(), bratAnnotatorModel
+                            .getUser().getUsername(), automationModel.getTrainTagSet(), begin, end,
+                            automationModel, repository, annotationService);
+
                     update(aTarget);
                     aTarget.appendJavaScript("Wicket.Window.unloadConfirmation = false;window.location.reload()");
                 }

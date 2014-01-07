@@ -17,7 +17,7 @@
 -->
 <html lang="en-US" xml:lang="en-US" xmlns="http://www.w3.org/1999/xhtml"
 	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-	
+
 <head>
 <wicket:head>
 	<script type="text/javascript" src="client/lib/jquery.min.js"></script>
@@ -26,23 +26,25 @@
 <body>
 	<wicket:extend>
 		<div wicket:id=openDocumentsModal></div>
-		
+
 		<div class="actionbar">
-			<ul class="horizontal">	
-			
+			<ul class="horizontal">
+
 				<li>
 					<fieldset>
 						<legend>Automate</legend>
-						<ul class="horizontal">						
-							<li><a wicket:id="miraAutomate"> <img
-									src="images/update.png" title="Automate" /><br />Automate
+						<ul class="horizontal">
+							<li><a wicket:id="miraTrain"> <img
+									src="images/update.png" title="Train" /><br />Train
 							</a></li>
-							
-						    <span wicket:id="automationTemplateModalPanel"/> 
+							<li><a wicket:id="miraPredict"> <img
+									src="images/emotion_question.png" title="Predict" /><br />Predict
+							</a></li>
+							<span wicket:id="automationTemplateModalPanel" />
 						</ul>
 					</fieldset>
 				</li>
-						
+
 				<li>
 					<fieldset>
 						<legend>Document</legend>
@@ -51,33 +53,33 @@
 								id="showOpenDocumentModal"> <img
 									src="images/drawer_open.png" title="Open" /><br />Open
 							</a></li>
-						
+
 							<li><a wicket:id="showPreviousDocument"> <img
 									src="images/document_back.png" title="First page" /><br />Prev.
 							</a></li>
 							<li><a wicket:id="showNextDocument"> <img
 									src="images/document_next.png" title="Done" /><br />Next
 							</a></li>
-							<span wicket:id="exportModalPanel"/>
+							<span wicket:id="exportModalPanel" />
 
-							<span wicket:id="annotationLayersModalPanel"/> 							
-							
+							<span wicket:id="annotationLayersModalPanel" />
+
 
 						</ul>
 					</fieldset>
 				</li>
-			
+
 				<li>
 					<fieldset>
 						<legend>Page</legend>
-						<ul class="horizontal">						
+						<ul class="horizontal">
 							<li><a wicket:id="showFirst"> <img
 									src="images/document_page.png" title="First page" /><br />First
 							</a></li>
 							<li><a wicket:id="showPrevious"> <img
 									src="images/document_page_previous.png" title="Previous page" /><br />Prev.
 							</a></li>
-						
+
 							<li>
 								<div style="height: 32px;">
 									<input type="number" wicket:id="gotoPageText"
@@ -87,50 +89,48 @@
 									<a wicket:id="gotoPageLink">Go to</a>
 								</div>
 							</li>
-											
+
 							<li><a wicket:id="showNext"> <img
 									src="images/document_page_next.png" title="Next page" /><br />Next
 							</a></li>
 							<li><a wicket:id="showLast"> <img
 									src="images/document_page_last.png" title="Last page" /><br />Last
-							</a></li>							
+							</a></li>
 						</ul>
 					</fieldset>
 				</li>
-					
+
 				<li>
 					<fieldset>
 						<legend>Help</legend>
 						<ul class="horizontal">
-						<span wicket:id="guidelineModalPanel"/>
+							<span wicket:id="guidelineModalPanel" />
 						</ul>
 					</fieldset>
-				</li>	
+				</li>
 				<li>
 					<fieldset>
 						<legend>Workflow</legend>
 						<ul class="horizontal">
-							<span wicket:id="showYesNoModalPanel"/> 
+							<span wicket:id="showYesNoModalPanel" />
 						</ul>
 					</fieldset>
 				</li>
 			</ul>
 		</div>
-        <span wicket:id="documentNamePanel"></span>
-       <div style="text-align: center;color: maroon;" wicket:id="numberOfPages">
-      </div>
-      <div wicket:id="feedback">
-       	 [Feedback]
-    	</div>
+		<span wicket:id="documentNamePanel"></span>
+		<div style="text-align: center; color: maroon;"
+			wicket:id="numberOfPages"></div>
+		<div wicket:id="feedback">[Feedback]</div>
 		<div class="merge-view" wicket:id="mergeView" />
 
 		<div wicket:id="automateView">
 			<div class="sentence-list-view" wicket:id="sentenceListView">
 				<div wicket:id="sentence" />
 			</div>
-	</div>
-		
-		
+		</div>
+
+
 	</wicket:extend>
 </body>
 </html>
