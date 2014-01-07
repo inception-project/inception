@@ -31,9 +31,9 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.impl.FeatureStructureImpl;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
-import org.apache.uima.fit.util.CasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Argument;
@@ -809,10 +809,9 @@ public class ChainAdapter
     }
 
     @Override
-    public List<String> listAnnotation(JCas aJcas, int begin, int end)
+    public List<String> getAnnotation(JCas aJcas, int begin, int end)
     {
-        // TODO Auto-generated method stub
-        return null;
+        return new ArrayList<String>();
     }
 
 }

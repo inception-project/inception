@@ -98,5 +98,5 @@ public interface TypeAdapter
     public void delete(JCas aJCas, int aAddress);
 
     void deleteBySpan(JCas aJCas, AnnotationFS fs, int aBegin, int aEnd);
-    List<String> listAnnotation(JCas aJcas, int begin, int end);
+    List<String> getAnnotation(JCas aJcas, int begin, int end);
 }

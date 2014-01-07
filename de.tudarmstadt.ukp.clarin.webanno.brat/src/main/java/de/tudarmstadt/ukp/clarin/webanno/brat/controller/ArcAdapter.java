@@ -22,6 +22,7 @@ import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -32,8 +33,8 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.impl.FeatureStructureImpl;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.JCas;
 import org.apache.uima.fit.util.CasUtil;
+import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Argument;
@@ -399,11 +400,11 @@ public class ArcAdapter
         return arcSpanTypeFeatureName;
     }
 
+
     @Override
-    public List<String> listAnnotation(JCas aJcas, int begin, int end)
+    public List<String> getAnnotation(JCas aJcas, int begin, int end)
     {
-        // TODO Auto-generated method stub
-        return null;
+        return new ArrayList<String>();
     }
 
 }

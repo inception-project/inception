@@ -31,8 +31,8 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.impl.FeatureStructureImpl;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.JCas;
 import org.apache.uima.fit.util.CasUtil;
+import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
@@ -371,7 +371,7 @@ public class SpanAdapter
     }
 
     @Override
-    public List<String> listAnnotation(JCas aJcas, int begin, int end)
+    public List<String> getAnnotation(JCas aJcas, int begin, int end)
     {
         Type type = getType(aJcas.getCas(), annotationTypeName);
         List<String> annotations = new ArrayList<String>();

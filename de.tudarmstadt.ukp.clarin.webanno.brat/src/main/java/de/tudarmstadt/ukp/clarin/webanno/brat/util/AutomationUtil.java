@@ -70,7 +70,6 @@ import edu.lium.mira.Mira;
  */
 public class AutomationUtil
 {
-    private static final String MIRA_TEMPLATE = "/template/";
 
     public static void predict(BratAnnotatorModel aModel, AutomationModel aAutomationModel,
             RepositoryService aRepository, AnnotationService aAnnotationService, int aStart,
@@ -139,15 +138,8 @@ public class AutomationUtil
         File trainFile = new File(miraDir, "train");
         File testFile = new File(miraDir, "test");
 
-        if (trainFile.exists()) {
-            trainFile.delete();
-            trainFile.createNewFile();
-            testFile.delete();
-            testFile.createNewFile();
-        }
-
-        PrintWriter trainOut = new PrintWriter(new BufferedWriter(new FileWriter(trainFile, true)));
-        PrintWriter testOut = new PrintWriter(new BufferedWriter(new FileWriter(testFile, true)));
+        BufferedWriter trainOut =  new BufferedWriter(new FileWriter(trainFile));
+        BufferedWriter testOut =  new BufferedWriter(new  FileWriter(testFile));
 
         for (SourceDocument sourceDocument : aRepository.listSourceDocuments(aProject)) {
 
@@ -158,11 +150,11 @@ public class AutomationUtil
                 for (Sentence sentence : select(jCas, Sentence.class)) {
                     if (((double) i / sentCount) * 100 < 74) {
 
-                        trainOut.println(miraSentence(sentence, false, aTagSet, aAModel).toString()
+                        trainOut.append(getMiraLines(sentence, false, aTagSet, aAModel).toString()
                                 + "\n");
                     }
                     else {
-                        testOut.println(miraSentence(sentence, false, aTagSet, aAModel).toString()
+                        testOut.append(getMiraLines(sentence, false, aTagSet, aAModel).toString()
                                 + "\n");
                     }
                     i++;
@@ -175,7 +167,7 @@ public class AutomationUtil
 
     }
 
-    private static StringBuffer miraSentence(Sentence sentence, boolean aTest, TagSet aTagSet,
+    private static StringBuffer getMiraLines(Sentence sentence, boolean aPredict, TagSet aTagSet,
             AutomationModel aAModel)
         throws CASException
     {
@@ -229,9 +221,9 @@ public class AutomationUtil
 
             String nl = "\n";
             TypeAdapter adapter = TypeUtil.getAdapter(aTagSet);
-            List<String> annotations = adapter.listAnnotation(sentence.getCAS().getJCas(),
+            List<String> annotations = adapter.getAnnotation(sentence.getCAS().getJCas(),
                     token.getBegin(), token.getEnd());
-            String tag = aTest == true ? "" : annotations.size() == 0 ? "__nill__" : annotations
+            String tag = aPredict == true ? "" : annotations.size() == 0 ? "__nill__" : annotations
                     .get(0);
             sb.append(word + " " + capitalized
 
@@ -499,7 +491,7 @@ public class AutomationUtil
         JCas jCas = aRepository.readJCas(aDocument, aDocument.getProject(),
                 aRepository.getUser(aUsername));
         for (Sentence sentence : selectCovered(jCas, Sentence.class, aBegin, aEnd)) {
-            predictOut.println(miraSentence(sentence, true, aTagSet, aAModel) + "\n");
+            predictOut.println(getMiraLines(sentence, true, aTagSet, aAModel) + "\n");
         }
 
         predictOut.close();
