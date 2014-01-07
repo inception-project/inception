@@ -41,7 +41,6 @@ import org.apache.commons.io.LineIterator;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.jcas.JCas;
-import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
@@ -65,9 +64,9 @@ import edu.lium.mira.Mira;
 
 /**
  * A utility class for the automation modules
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 public class AutomationUtil
 {
@@ -184,37 +183,38 @@ public class AutomationUtil
         for (Token token : selectCovered(sentence.getCAS().getJCas(), Token.class,
                 sentence.getBegin(), sentence.getEnd())) {
             String word = token.getCoveredText();
-            String containsNUmber = word.matches(".*\\d.*") ? "Y" : "N";
+            String capitalized = aAModel.isCapitalized()?(Character.isUpperCase(word.codePointAt(0))? "Y " : "N "):"";
+            String containsNUmber = aAModel.isContainsNumber()?(word.matches(".*\\d.*") ? "Y " : "N "):"";
 
             char[] words = word.toCharArray();
 
-            String prefix1 = aAModel.isPrefix1() ? Character.toString(words[0]) : "";
-            String prefix2 = aAModel.isPrefix2() ? (words.length > 1 ? prefix1
+            String prefix1 = aAModel.isPrefix1() ? Character.toString(words[0]) + " " : "";
+            String prefix2 = aAModel.isPrefix2() ? (words.length > 1 ? prefix1.trim()
                     + (Character.toString(words[1]).trim().equals("") ? "__nil__" : Character
-                            .toString(words[1])) : "__nil__") : "";
-            String prefix3 = aAModel.isPrefix3() ? (words.length > 2 ? prefix2
+                            .toString(words[1])) : "__nil__") + " " : "";
+            String prefix3 = aAModel.isPrefix3() ? (words.length > 2 ? prefix2.trim()
                     + (Character.toString(words[2]).trim().equals("") ? "__nil__" : Character
-                            .toString(words[2])) : "__nil__") : "";
-            String prefix4 = aAModel.isPrefix4() ? (words.length > 3 ? prefix3
+                            .toString(words[2])) : "__nil__") + " " : "";
+            String prefix4 = aAModel.isPrefix4() ? (words.length > 3 ? prefix3.trim()
                     + (Character.toString(words[3]).trim().equals("") ? "__nil__" : Character
-                            .toString(words[3])) : "__nil__") : "";
-            String prefix5 = aAModel.isPrefix5() ? (words.length > 4 ? prefix4
+                            .toString(words[3])) : "__nil__") + " " : "";
+            String prefix5 = aAModel.isPrefix5() ? (words.length > 4 ? prefix4.trim()
                     + (Character.toString(words[4]).trim().equals("") ? "__nil__" : Character
-                            .toString(words[4])) : "__nil__") : "";
+                            .toString(words[4])) : "__nil__") + " " : "";
 
-            String suffix1 = aAModel.isSuffix1() ? Character.toString(words[words.length - 1]) : "";
+            String suffix1 = aAModel.isSuffix1() ? Character.toString(words[words.length - 1]) + " " : "";
             String suffix2 = aAModel.isSuffix2() ? (words.length > 1 ? (Character
                     .toString(words[words.length - 2]).trim().equals("") ? "__nil__" : Character
-                    .toString(words[words.length - 2])) + suffix1 : "__nil__") : "";
+                    .toString(words[words.length - 2])) + suffix1.trim() : "__nil__")  + " ": "";
             String suffix3 = aAModel.isSuffix3() ? (words.length > 2 ? (Character
                     .toString(words[words.length - 3]).trim().equals("") ? "__nil__" : Character
-                    .toString(words[words.length - 3])) + suffix2 : "__nil__") : "";
+                    .toString(words[words.length - 3])) + suffix2.trim() : "__nil__") + " ": "";
             String suffix4 = aAModel.isSuffix4() ? (words.length > 3 ? (Character
                     .toString(words[words.length - 4]).trim().equals("") ? "__nil__" : Character
-                    .toString(words[words.length - 4])) + suffix3 : "__nil__") : "";
+                    .toString(words[words.length - 4])) + suffix3.trim() : "__nil__") + " ": "";
             String suffix5 = aAModel.isSuffix5() ? (words.length > 4 ? (Character
                     .toString(words[words.length - 5]).trim().equals("") ? "__nil__" : Character
-                    .toString(words[words.length - 5])) + suffix4 : "__nil__") : "";
+                    .toString(words[words.length - 5])) + suffix4.trim() : "__nil__") + " ": "";
 
             String nl = "\n";
             TypeAdapter adapter = TypeUtil.getAdapter(aTagSet);
@@ -222,13 +222,12 @@ public class AutomationUtil
                     token.getBegin(), token.getEnd());
             String tag = aTest == true ? "" : annotations.size() == 0 ? "__nill__" : annotations
                     .get(0);
-            sb.append(word + " "
+            sb.append(word + " " + capitalized
 
             /* + getVowels(word, FileUtils.readFileToString(new File(argv[1]))) + " " */
 
-            + containsNUmber + " " + prefix1 + " " + prefix2 + " " + prefix3 + " " + prefix4 + " "
-                    + prefix5 + " " + suffix1 + " " + suffix2 + " " + suffix3 + " " + suffix4 + " "
-                    + suffix5 + " " + tag + nl);
+            + containsNUmber +  prefix1 + prefix2 + prefix3 +prefix4 + prefix5 +  suffix1
+            + suffix2 + suffix3 +  suffix4 + suffix5  + tag + nl);
         }
         return sb;
 
@@ -245,7 +244,7 @@ public class AutomationUtil
             int beamSize = 0;
             boolean maxPosteriors = false;
             String templateName = null;
-            
+
             templateName = createMiraTemplate(aProject, aRepository, aAModel);
 
             File miraDir = aRepository.getMiraDir(aProject);
@@ -284,119 +283,110 @@ public class AutomationUtil
         StringBuffer sb = new StringBuffer();
         int i = 1;
         if (aAModel.isCapitalized()) {
-            sb.append("U" + String.format("%02d", i) + "%x[0," + 1 + "]\n");
+            sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
             i++;
         }
         if (aAModel.isContainsNumber()) {
-            sb.append("U" + String.format("%02d", i) + "%x[0," + 1 + "]\n");
+            sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
             i++;
         }
         if (aAModel.isPrefix1()) {
-            sb.append("U" + String.format("%02d", i) + "%x[0," + 1 + "]\n");
+            sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
             i++;
         }
         if (aAModel.isPrefix2()) {
-            sb.append("U" + String.format("%02d", i) + "%x[0," + 1 + "]\n");
+            sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
             i++;
         }
         if (aAModel.isPrefix3()) {
-            sb.append("U" + String.format("%02d", i) + "%x[0," + 1 + "]\n");
+            sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
             i++;
         }
         if (aAModel.isPrefix4()) {
-            sb.append("U" + String.format("%02d", i) + "%x[0," + 1 + "]\n");
+            sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
             i++;
         }
         if (aAModel.isPrefix5()) {
-            sb.append("U" + String.format("%02d", i) + "%x[0," + 1 + "]\n");
+            sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
             i++;
         }
         if (aAModel.isSuffix1()) {
-            sb.append("U" + String.format("%02d", i) + "%x[0," + 1 + "]\n");
+            sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
             i++;
         }
         if (aAModel.isSuffix2()) {
-            sb.append("U" + String.format("%02d", i) + "%x[0," + 1 + "]\n");
+            sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
             i++;
         }
 
         if (aAModel.isSuffix3()) {
-            sb.append("U" + String.format("%02d", i) + "%x[0," + 1 + "]\n");
+            sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
             i++;
         }
         if (aAModel.isSuffix4()) {
-            sb.append("U" + String.format("%02d", i) + "%x[0," + 1 + "]\n");
+            sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
             i++;
         }
         if (aAModel.isSuffix5()) {
-            sb.append("U" + String.format("%02d", i) + "%x[0," + 1 + "]\n");
-            i++;
-        }
-
-        if (aAModel.isSuffix4()) {
-            sb.append("U" + String.format("%02d", i) + "%x[0," + 1 + "]\n");
-            i++;
-        }
-        if (aAModel.isSuffix5()) {
-            sb.append("U" + String.format("%02d", i) + "%x[0," + 1 + "]\n");
+            sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
             i++;
         }
 
         sb.append("\n");
 
         if (aAModel.getNgram() == 1) {
-            sb.append("U" + String.format("%02d", i) + "%x[0,0]");
+            sb.append("U" + String.format("%02d", i) + "%x[0,0]\n");
             i++;
         }
         else if (aAModel.getNgram() == 2) {
-            sb.append("U" + String.format("%02d", i) + "%x[0,0]");
+            sb.append("U" + String.format("%02d", i) + "%x[0,0]\n");
             i++;
-            sb.append("U" + String.format("%02d", i) + "%x[-1,0]");
+            sb.append("U" + String.format("%02d", i) + "%x[-1,0]\n");
             i++;
-            sb.append("U" + String.format("%02d", i) + "%x[1,0]");
+            sb.append("U" + String.format("%02d", i) + "%x[1,0]\n");
             i++;
-            sb.append("U" + String.format("%02d", i) + "%x[0,0]" + "%x[1,0]");
+            sb.append("U" + String.format("%02d", i) + "%x[0,0]" + "%x[1,0]\n");
             i++;
-            sb.append("U" + String.format("%02d", i) + "%x[-1,0]" + "%x[0,0]");
+            sb.append("U" + String.format("%02d", i) + "%x[-1,0]" + "%x[0,0]\n");
             i++;
-            sb.append("U" + String.format("%02d", i) + "%x[-1,0]" + "%x[0,0]" + "%x[1,0]");
+            sb.append("U" + String.format("%02d", i) + "%x[-1,0]" + "%x[0,0]" + "%x[1,0]\n");
             i++;
         }
         else {
 
-            sb.append("U" + String.format("%02d", i) + "%x[0,0]");
+            sb.append("U" + String.format("%02d", i) + "%x[0,0]\n");
             i++;
-            sb.append("U" + String.format("%02d", i) + "%x[-1,0]");
+            sb.append("U" + String.format("%02d", i) + "%x[-1,0]\n");
             i++;
-            sb.append("U" + String.format("%02d", i) + "%x[1,0]");
+            sb.append("U" + String.format("%02d", i) + "%x[1,0]\n");
             i++;
-            sb.append("U" + String.format("%02d", i) + "%x[0,0]" + "%x[1,0]");
+            sb.append("U" + String.format("%02d", i) + "%x[0,0]" + "%x[1,0]\n");
             i++;
-            sb.append("U" + String.format("%02d", i) + "%x[-1,0]" + "%x[0,0]");
+            sb.append("U" + String.format("%02d", i) + "%x[-1,0]" + "%x[0,0]\n");
             i++;
-            sb.append("U" + String.format("%02d", i) + "%x[-1,0]" + "%x[0,0]" + "%x[1,0]");
+            sb.append("U" + String.format("%02d", i) + "%x[-1,0]" + "%x[0,0]" + "%x[1,0]\n");
             i++;
 
-            sb.append("U" + String.format("%02d", i) + "%x[-2,0]");
+            sb.append("U" + String.format("%02d", i) + "%x[-2,0]\n");
             i++;
-            sb.append("U" + String.format("%02d", i) + "%x[2,0]");
+            sb.append("U" + String.format("%02d", i) + "%x[2,0]\n");
             i++;
-            sb.append("U" + String.format("%02d", i) + "%x[-2,0]" + "%x[-1,0]");
+            sb.append("U" + String.format("%02d", i) + "%x[-2,0]" + "%x[-1,0]\n");
             i++;
-            sb.append("U" + String.format("%02d", i) + "%x[1,0]" + "%x[2,0]");
+            sb.append("U" + String.format("%02d", i) + "%x[1,0]" + "%x[2,0]\n");
             i++;
-            sb.append("U" + String.format("%02d", i) + "%x[-2,0]" + "%x[-1,0]" + "%x[0,0]");
+            sb.append("U" + String.format("%02d", i) + "%x[-2,0]" + "%x[-1,0]" + "%x[0,0]\n");
             i++;
-            sb.append("U" + String.format("%02d", i) + "%x[0,0]" + "%x[1,0]" + "%x[2,0]");
+            sb.append("U" + String.format("%02d", i) + "%x[0,0]" + "%x[1,0]" + "%x[2,0]\n");
             i++;
             sb.append("U" + String.format("%02d", i) + "%x[-2,0]" + "%x[-1,0]" + "%x[0,0]"
-                    + "%x[1,0]");
+                    + "%x[1,0]\n");
             i++;
             sb.append("U" + String.format("%02d", i) + "%x[-1,0]" + "%x[0,0]" + "%x[1,0]"
-                    + "%x[2,0]");
+                    + "%x[2,0]\n");
             i++;
             sb.append("U" + String.format("%02d", i) + "%x[-2,0]" + "%x[-1,0]" + "%x[0,0]"
-                    + "%x[1,0]" + "%x[2,0]");
+                    + "%x[1,0]" + "%x[2,0]\n");
             i++;
         }
 
