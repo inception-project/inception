@@ -158,7 +158,21 @@
 			<version>1.4.1</version>
 		</dependency>
 
-
+			<dependency>
+			<groupId>edu.lium.mira</groupId>
+			<artifactId>mira</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>cplex</groupId>
+			<artifactId>cplex</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>trove</groupId>
+			<artifactId>trove</artifactId>
+			<version>2.1.0</version>
+		</dependency>
 
 	</dependencies>
 	<build>

@@ -391,9 +391,9 @@ public class AutomationPage
                             return;
                         }
 
-                        repository.predict(bratAnnotatorModel.getDocument(), bratAnnotatorModel
+                        AutomationUtil.predict(bratAnnotatorModel.getDocument(), bratAnnotatorModel
                                 .getUser().getUsername(), automationModel.getTrainTagSet(), begin,
-                                end);
+                                end, automationModel,repository, annotationService);
                     }
                     else {
                         if (!existsFinishedCurationDocument(bratAnnotatorModel.getProject())) {
@@ -401,13 +401,13 @@ public class AutomationPage
                             error("No curation document exists for training");
                             return;
                         }
-                        repository.casToMiraTrainData(bratAnnotatorModel.getProject(),
-                                automationModel.getTrainTagSet());
-                        repository.train(bratAnnotatorModel.getProject(),
-                                automationModel.getTrainTagSet());
-                        repository.predict(bratAnnotatorModel.getDocument(), bratAnnotatorModel
+                        AutomationUtil.casToMiraTrainData(bratAnnotatorModel.getProject(),
+                                automationModel.getTrainTagSet(),automationModel,repository);
+                        AutomationUtil.train(bratAnnotatorModel.getProject(),
+                                automationModel.getTrainTagSet(),automationModel,repository);
+                        AutomationUtil.predict(bratAnnotatorModel.getDocument(), bratAnnotatorModel
                                 .getUser().getUsername(), automationModel.getTrainTagSet(), begin,
-                                end);
+                                end, automationModel,repository, annotationService);
                     }
                     update(aTarget);
                     aTarget.appendJavaScript("Wicket.Window.unloadConfirmation = false;window.location.reload()");

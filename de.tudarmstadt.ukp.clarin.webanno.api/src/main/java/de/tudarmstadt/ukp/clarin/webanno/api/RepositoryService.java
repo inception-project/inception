@@ -835,35 +835,7 @@ public interface RepositoryService
      */
     int isCrowdSourceEnabled();
 
-    /**
-     * convert all the curated document in the project into MIRA train/Test format
-     */
-    void casToMiraTrainData(Project aProject, TagSet tagSet)
-        throws IOException, UIMAException, ClassNotFoundException;
-
-    /**
-     * Train with MIRA
-     */
-    void train(Project aProject, TagSet tagSet);
-
-    /**
-     * Predict the tag of this source document of a user using the MIRA train model
-     *
-     * @param aDocument
-     *            The source document to be predicted
-     * @param username
-     * @param tagSet
-     *            Tagset used for prediction
-     * @param begin
-     *            the begin offset of the source document where prediction is planned
-     * @param end
-     *            the end offset of the source document where predcitiopn is planned
-     */
-    void predict(SourceDocument aDocument, String username, TagSet tagSet, int begin, int end);
-
-    /**
-     * Get an Mira model (either uploaded manually or previously created from curated docs.
-     */
     File getMiraModel(Project project);
 
+    public File getMiraDir(Project project);
 }

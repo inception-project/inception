@@ -105,6 +105,7 @@ import org.springframework.transaction.annotation.Transactional;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AutomationModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
@@ -140,9 +141,9 @@ import edu.lium.mira.Mira;
 
 /**
  * Implementation of methods defined in the {@link RepositoryService} interface
- *
+ * 
  * @author Seid Muhie Yimam
- *
+ * 
  */
 public class RepositoryServiceDbData
     implements RepositoryService
@@ -234,7 +235,7 @@ public class RepositoryServiceDbData
 
     /**
      * Renames a file.
-     *
+     * 
      * @throws IOException
      *             if the file cannot be renamed.
      * @return the target file.
@@ -252,7 +253,7 @@ public class RepositoryServiceDbData
 
     /**
      * Get the folder where the annotations are stored. Creates the folder if necessary.
-     *
+     * 
      * @throws IOException
      *             if the folder cannot be created.
      */
@@ -1328,8 +1329,8 @@ public class RepositoryServiceDbData
         try {
             File targetPath = getAnnotationFolder(aDocument);
             AnalysisEngine writer = AnalysisEngineFactory.createPrimitive(
-                    SerializedCasWriter.class, SerializedCasWriter.PARAM_TARGET_LOCATION, targetPath,
-                    SerializedCasWriter.PARAM_USE_DOCUMENT_ID, true);
+                    SerializedCasWriter.class, SerializedCasWriter.PARAM_TARGET_LOCATION,
+                    targetPath, SerializedCasWriter.PARAM_USE_DOCUMENT_ID, true);
             DocumentMetaData md;
             try {
                 md = DocumentMetaData.get(aJcas);
@@ -1495,7 +1496,7 @@ public class RepositoryServiceDbData
     /**
      * Creates an annotation document (either user's annotation document or CURATION_USER's
      * annotation document)
-     *
+     * 
      * @param aDocument
      *            the {@link SourceDocument}
      * @param aJcas
@@ -1646,7 +1647,7 @@ public class RepositoryServiceDbData
     /**
      * For a given {@link SourceDocument}, return the {@link AnnotationDocument} for the user or for
      * the CURATION_USER
-     *
+     * 
      * @param aDocument
      *            the {@link SourceDocument}
      * @param aUsername
@@ -1931,246 +1932,12 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public void casToMiraTrainData(Project aProject, TagSet aTagSet)
-        throws IOException, UIMAException, ClassNotFoundException
-    {
-        File miraDir = getMiraDir(aProject);
-        FileUtils.forceMkdir(miraDir);
-        File trainFile = new File(miraDir, "train");
-        File testFile = new File(miraDir, "test");
-
-        if (trainFile.exists()) {
-            trainFile.delete();
-            trainFile.createNewFile();
-             testFile.delete();
-             testFile.createNewFile();
-        }
-
-        PrintWriter trainOut = new PrintWriter(new BufferedWriter(new FileWriter(trainFile, true)));
-        PrintWriter testOut = new PrintWriter(new BufferedWriter(new FileWriter(testFile, true)));
-
-        for (SourceDocument sourceDocument : listSourceDocuments(aProject)) {
-            if (sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
-
-                JCas jCas = getCurationDocumentContent(sourceDocument);
-                int sentCount = select(jCas, Sentence.class).size();
-                int i = 0;
-                for (Sentence sentence : select(jCas, Sentence.class)) {
-                    if (((double) i / sentCount) * 100 < 74) {
-
-                        trainOut.println(miraSentence(sentence, false, aTagSet).toString() + "\n");
-                    }
-                    else {
-                        testOut.println(miraSentence(sentence, false, aTagSet).toString() + "\n");
-                    }
-                    i++;
-                }
-            }
-
-        }
-        trainOut.close();
-        testOut.close();
-
-        // FileUtils.writeStringToFile(trainFile, sbTrain.toString());
-        // FileUtils.writeStringToFile(testFile, sbTest.toString());
-    }
-
-    private StringBuffer miraSentence(Sentence sentence, boolean aTest, TagSet aTagSet)
-        throws CASException
-    {
-        StringBuffer sb = new StringBuffer();
-        for (Token token : selectCovered(sentence.getCAS().getJCas(), Token.class,
-                sentence.getBegin(), sentence.getEnd())) {
-            String word = token.getCoveredText();
-            String containsNUmber = word.matches(".*\\d.*") ? "Y" : "N";
-
-            char[] words = word.toCharArray();
-
-            String prefix1 = Character.toString(words[0]);
-            String prefix2 = words.length > 1 ? prefix1+(Character.toString(words[1]).trim().equals("") ? "__nil__"
-                    : Character.toString(words[1]))
-                    : "__nil__";
-            String prefix3 = words.length > 2 ? prefix2+ (Character.toString(words[2]).trim().equals("") ? "__nil__"
-                    : Character.toString(words[2]))
-                    : "__nil__";
-            String prefix4 = words.length > 3 ? prefix3+ (Character.toString(words[3]).trim().equals("") ? "__nil__"
-                    : Character.toString(words[3]))
-                    : "__nil__";
-            String prefix5 = words.length > 4 ? prefix4+(Character.toString(words[4]).trim().equals("") ? "__nil__"
-                    : Character.toString(words[4]))
-                    : "__nil__";
-
-            String suffix1 = Character.toString(words[words.length - 1]);
-            String suffix2 = words.length > 1 ?  (Character.toString(words[words.length - 2]).trim()
-                    .equals("") ? "__nil__" : Character.toString(words[words.length - 2]))+suffix1
-                    : "__nil__";
-            String suffix3 = words.length > 2 ? (Character.toString(words[words.length - 3]).trim()
-                    .equals("") ? "__nil__" : Character.toString(words[words.length - 3]))+suffix2
-                    : "__nil__";
-            String suffix4 = words.length > 3 ? (Character.toString(words[words.length - 4]).trim()
-                    .equals("") ? "__nil__" : Character.toString(words[words.length - 4]))+suffix3
-                    : "__nil__";
-            String suffix5 = words.length > 4 ? (Character.toString(words[words.length - 5]).trim()
-                    .equals("") ? "__nil__" : Character.toString(words[words.length - 5])) +suffix4
-                    : "__nil__";
-
-            String nl = "\n";
-            TypeAdapter adapter = TypeUtil.getAdapter(aTagSet);
-            List<String> annotations = adapter.listAnnotation(sentence.getCAS().getJCas(),
-                    token.getBegin(), token.getEnd());
-            String tag = aTest == true ? "" : annotations.size() == 0 ? "__nill__" : annotations
-                    .get(0);
-            sb.append(word + " "
-
-            /* + getVowels(word, FileUtils.readFileToString(new File(argv[1]))) + " " */
-
-            + containsNUmber + " " + prefix1 + " " + prefix2 + " " + prefix3 + " " + prefix4 + " "
-                    + prefix5 + " " + suffix1 + " " + suffix2 + " " + suffix3 + " " + suffix4 + " "
-                    + suffix5 + " " + tag + nl);
-        }
-        return sb;
-
-    }
-
-    @Override
-    public void train(Project aProject, TagSet aTagset)
-    {
-        try {
-            Mira mira = new Mira();
-            int frequency = 2;
-            double sigma = 1;
-            int iterations = 10;
-            int beamSize = 0;
-            boolean maxPosteriors = false;
-            String templateName = null;
-            long lastMod = Long.MIN_VALUE;
-            File[] files = new File(getMiraDir(aProject).getAbsolutePath() + MIRA_TEMPLATE)
-                    .listFiles();
-            for (File file : files) {
-                if (file.lastModified() > lastMod) {
-                    templateName = file.getAbsolutePath();
-                    lastMod = file.lastModified();
-                }
-            }
-
-            File miraDir = getMiraDir(aProject);
-            File trainFile = new File(miraDir, "train");
-            File testFile = new File(miraDir, "test");
-            String trainName = trainFile.getAbsolutePath();
-            String modelName = getMiraModel(aProject).getAbsolutePath();
-            String testName = testFile.getAbsolutePath();
-            new Vector<String>();
-            boolean randomInit = false;
-            mira.loadTemplates(templateName);
-            mira.setClip(sigma);
-            mira.maxPosteriors = maxPosteriors;
-            mira.beamSize = beamSize;
-            int numExamples = mira.count(trainName, frequency);
-            mira.initModel(randomInit);
-            for (int i = 0; i < iterations; i++) {
-                mira.train(trainName, iterations, numExamples, i);
-                mira.averageWeights(iterations * numExamples);
-                if (testName != null) {
-                    BufferedReader input = new BufferedReader(new FileReader(testName));
-                    mira.test(input, null);
-                }
-            }
-            mira.saveModel(modelName);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void predict(SourceDocument aDocument, String aUSername, TagSet aTagSet, int aBegin, int aEnd)
-    {
-        try {
-            File predFile = casToMiraFile(aDocument, aUSername, aTagSet, aBegin, aEnd);
-
-            Mira mira = new Mira();
-            int shiftColumns = 0;
-            int nbest = 1;
-            int beamSize = 0;
-            boolean maxPosteriors = false;
-            String modelName = getMiraModel(aDocument.getProject()).getAbsolutePath();
-            String testName = predFile.getAbsolutePath();
-            File predcitedFile = new File(predFile.getAbsolutePath() + "-pred");
-            PrintStream stream = new PrintStream(predcitedFile);
-            BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
-            if (testName != null) {
-                input = new BufferedReader(new FileReader(testName));
-            }
-            mira.loadModel(modelName);
-            mira.setShiftColumns(shiftColumns);
-            mira.nbest = nbest;
-            mira.beamSize = beamSize;
-            mira.maxPosteriors = maxPosteriors;
-            mira.test(input, stream);
-
-            JCas jCas = getAnnotationContent(aDocument, aUSername);
-
-            LineIterator it = IOUtils.lineIterator(new FileReader(predcitedFile));
-            List<String> tags = new ArrayList<String>();
-            while (it.hasNext()) {
-                String line = it.next();
-                if (line.trim().equals("")) {
-                    continue;
-                }
-                StringTokenizer st = new StringTokenizer(line, " ");
-                String tag = "";
-                while (st.hasMoreTokens()) {
-                    tag = st.nextToken();
-                }
-                tags.add(tag);
-            }
-            int i = 0;
-            for (Token token : selectCovered(jCas, Token.class, aBegin, aEnd)) {
-                Tag tag = annotationService.getTag(tags.get(i), aTagSet);
-                String annotationType = TypeUtil.getQualifiedLabel(tag);
-                BratAjaxCasController controller = new BratAjaxCasController(this,
-                        annotationService);
-                controller.createSpanAnnotation(jCas, token.getBegin(), token.getEnd(),
-                        annotationType, null, null);
-                i++;
-            }
-            // TODO: make updating of correction view from the prediction configurable in the GUI
-            createAnnotationDocumentContent(jCas, aDocument, getUser(aUSername));
-            createCorrectionDocumentContent(jCas, aDocument, getUser(aUSername));
-
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private File casToMiraFile(SourceDocument aDocument, String aUsername, TagSet aTagSet, int aBegin, int aEnd)
-        throws UIMAException, IOException, ClassNotFoundException, CASException
-    {
-        File predFile;
-        File miraDir = getMiraDir(aDocument.getProject());
-        predFile = new File(miraDir, "predFile");
-        if (predFile.exists()) {
-            predFile.delete();
-            predFile.createNewFile();
-        }
-        PrintWriter predictOut = new PrintWriter(new BufferedWriter(new FileWriter(predFile, true)));
-        JCas jCas = getAnnotationContent(aDocument, aUsername);
-        for (Sentence sentence : selectCovered(jCas, Sentence.class, aBegin, aEnd)) {
-            predictOut.println(miraSentence(sentence, true, aTagSet) + "\n");
-        }
-
-        predictOut.close();
-
-        return predFile;
-    }
-
-    @Override
     public File getMiraModel(Project aProject)
     {
         return new File(getMiraDir(aProject), aProject.getName() + "-model");
     }
 
+    @Override
     public File getMiraDir(Project aProject)
     {
         return new File(dir, PROJECT + aProject.getId() + MIRA);
