@@ -68,13 +68,20 @@
 		<fieldset>
 			<legend>Automation Preferences</legend>
 			<table>
-				<tr>
-					<td><label wicket:id="predictInThisPageLabel"> </label></td>
+				<tr class="border_bottom">
+					<td>Limit prediction to this page :</td>
 					<td><input type="checkbox" wicket:id="predictInThisPage" /></td>
 				</tr>
-
 				<tr class="border_bottom">
-					<td><label wicket:id="trainLayerLabel"> </label></td>
+				<td>Predict the Annotator view :</td>
+					<td><input type="checkbox" wicket:id="predictAnnotator" /></td>
+				</tr>
+				<tr class="border_bottom">
+				<td>Predict the Automated view :</td>
+					<td><input type="checkbox" wicket:id="predictAutomator" /></td>
+				</tr>
+				<tr class="border_bottom">
+					<td>Select a Layer for training :</td>
 					<td><span valign="top" wicket:id="trainLayer"> </span></td>
 				</tr>
 			</table>

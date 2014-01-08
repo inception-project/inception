@@ -354,17 +354,16 @@ public class AutomationPage
         openDocumentsModal.setHeightUnit("px");
         openDocumentsModal.setTitle("Open document");
 
-        add(trainResult = (Label) new Label("trainResult",
-                new LoadableDetachableModel<String>()
-                {
-                    private static final long serialVersionUID = 7868885965679641022L;
+        add(trainResult = (Label) new Label("trainResult", new LoadableDetachableModel<String>()
+        {
+            private static final long serialVersionUID = 7868885965679641022L;
 
-                    @Override
-                    protected String load()
-                    {
-                        return result;
-                    }
-                }).setOutputMarkupId(true));
+            @Override
+            protected String load()
+            {
+                return result;
+            }
+        }).setOutputMarkupId(true));
         // Add project and document information at the top
         add(new AjaxLink<Void>("miraTrain")
         {
@@ -373,7 +372,7 @@ public class AutomationPage
             @Override
             public void onClick(AjaxRequestTarget aTarget)
             {
-                if(automationModel.getTrainTagSet() == null){
+                if (automationModel.getTrainTagSet() == null) {
                     aTarget.add(feedbackPanel);
                     error("No Layer is selected");
                     return;
@@ -421,9 +420,15 @@ public class AutomationPage
             @Override
             public void onClick(AjaxRequestTarget aTarget)
             {
-                if(automationModel.getTrainTagSet() == null){
+                if (automationModel.getTrainTagSet() == null) {
                     aTarget.add(feedbackPanel);
                     error("No Layer is selected");
+                    return;
+                }
+
+                if (!(automationModel.isPredictAnnotator() || automationModel.isPredictAutomator())) {
+                    aTarget.add(feedbackPanel);
+                    error("Please select either Annotator view or Automated view to predict");
                     return;
                 }
 
@@ -483,7 +488,8 @@ public class AutomationPage
 
                     AutomationUtil.predict(bratAnnotatorModel.getDocument(), bratAnnotatorModel
                             .getUser().getUsername(), automationModel.getTrainTagSet(), begin, end,
-                            automationModel, repository, annotationService);
+                            automationModel, repository, annotationService, automationModel
+                                    .isPredictAnnotator(), automationModel.isPredictAutomator());
 
                     update(aTarget);
                     aTarget.appendJavaScript("Wicket.Window.unloadConfirmation = false;window.location.reload()");

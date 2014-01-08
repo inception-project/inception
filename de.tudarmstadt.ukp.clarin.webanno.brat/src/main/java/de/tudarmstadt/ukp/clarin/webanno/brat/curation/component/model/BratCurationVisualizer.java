@@ -45,7 +45,8 @@ public class BratCurationVisualizer extends BratVisualizer {
 	public BratCurationVisualizer(String id, IModel<CurationUserSegmentForAnnotationDocument> aModel) {
 		super(id, aModel);
 		String username;
-		if(getModelObject().getBratAnnotatorModel().getMode().equals(Mode.CORRECTION)){
+		if(getModelObject().getBratAnnotatorModel().getMode().equals(Mode.AUTOMATION)
+		        ||getModelObject().getBratAnnotatorModel().getMode().equals(Mode.CORRECTION)){
 		    username = "Automated";
 		}
         else {

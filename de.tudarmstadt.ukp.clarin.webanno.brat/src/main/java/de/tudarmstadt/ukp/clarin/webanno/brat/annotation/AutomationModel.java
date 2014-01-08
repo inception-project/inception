@@ -55,6 +55,12 @@ public class AutomationModel
     private int bigram;
 
     /**
+     * Determine if MIRA automation is applicable to the annotator/correction view and automation view too
+     */
+    private boolean predictAnnotator = false;
+    private boolean predictAutomator = true;
+
+    /**
      * Limit prediction only to this page while automatic annotation
      */
 
@@ -223,6 +229,26 @@ public class AutomationModel
     public void setTrainTagSet(TagSet trainTagSet)
     {
         this.trainTagSet = trainTagSet;
+    }
+
+    public boolean isPredictAnnotator()
+    {
+        return predictAnnotator;
+    }
+
+    public void setPredictAnnotator(boolean predictAnnotator)
+    {
+        this.predictAnnotator = predictAnnotator;
+    }
+
+    public boolean isPredictAutomator()
+    {
+        return predictAutomator;
+    }
+
+    public void setPredictAutomator(boolean predictAutomator)
+    {
+        this.predictAutomator = predictAutomator;
     }
 
 

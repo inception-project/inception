@@ -27,7 +27,6 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -98,6 +97,9 @@ public class MiraTemplateModalPanel
             getModelObject().predictInThisPage = automationModel.isPredictInThisPage();
             getModelObject().trainLayer = automationModel.getTrainTagSet();
 
+            getModelObject().predictAnnotator = automationModel.isPredictAnnotator();
+            getModelObject().predictAutomator = automationModel.isPredictAutomator();
+
             add(new CheckBox("capitalized"));
             add(new CheckBox("containsNumber"));
             add(new CheckBox("prefix1"));
@@ -111,6 +113,9 @@ public class MiraTemplateModalPanel
             add(new CheckBox("suffix4"));
             add(new CheckBox("suffix5"));
 
+            add(new CheckBox("predictAnnotator"));
+            add(new CheckBox("predictAutomator"));
+
             add(new DropDownChoice<Integer>("ngram", Arrays.asList(new Integer[] { 1, 2, 3 })));
 
             add(new DropDownChoice<Integer>("bigram", Arrays.asList(new Integer[] { 1, 2, 3 })));
@@ -119,17 +124,9 @@ public class MiraTemplateModalPanel
 
             add(new CheckBox("predictInThisPage"));
 
-            add(new Label("predictInThisPageLabel", "Limit prediction on this page :"));
-
-            add(new CheckBox("useExistingModel"));
-
-            add(new Label("useExistingModelLabel", "Use existing models in the project :"));
-
             add(new RadioChoice<TagSet>("trainLayer", new ArrayList<TagSet>(
                     bratModel.getAnnotationLayers())).setChoiceRenderer(new ChoiceRenderer<TagSet>(
                     "name", "id")));
-
-            add(new Label("trainLayerLabel", "Select a Layer for training :"));
 
             add(new AjaxSubmitLink("saveButton")
             {
@@ -158,6 +155,9 @@ public class MiraTemplateModalPanel
 
                     automationModel.setTrainTagSet(getModelObject().trainLayer);
                     automationModel.setPredictInThisPage(getModelObject().predictInThisPage);
+
+                    automationModel.setPredictAnnotator(getModelObject().predictAnnotator);
+                    automationModel.setPredictAutomator(getModelObject().predictAutomator);
 
 
                     if (automationModel.getTrainTagSet() == null) {
@@ -228,6 +228,9 @@ public class MiraTemplateModalPanel
         public boolean predictInThisPage;
         public boolean useExistingModel;
         public TagSet trainLayer;
+
+        public boolean predictAnnotator;
+        public boolean predictAutomator;
     }
 
     public MiraTemplateModalPanel(String aId, final ModalWindow modalWindow,

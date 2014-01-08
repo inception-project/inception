@@ -55,6 +55,12 @@ public class AnnotationPreference
     private int ngram = 3;
     private int bigram;
 
+    /**
+     * Determine if MIRA automation is applicable to the annotator/correction view and automation view too
+     */
+    private boolean predictAnnotator;
+    private boolean predictAutomator;
+
     public ArrayList<Long> getAnnotationLayers()
     {
         return annotationLayers;
@@ -253,6 +259,26 @@ public class AnnotationPreference
     public void setBigram(int bigram)
     {
         this.bigram = bigram;
+    }
+
+    public boolean isPredictAnnotator()
+    {
+        return predictAnnotator;
+    }
+
+    public void setPredictAnnotator(boolean predictAnnotator)
+    {
+        this.predictAnnotator = predictAnnotator;
+    }
+
+    public boolean isPredictAutomator()
+    {
+        return predictAutomator;
+    }
+
+    public void setPredictAutomator(boolean predictAutomator)
+    {
+        this.predictAutomator = predictAutomator;
     }
 
 

@@ -411,7 +411,7 @@ public class AutomationUtil
 
     public static void predict(SourceDocument aDocument, String aUsername, TagSet aTagSet,
             int aBegin, int aEnd, AutomationModel aAModel, RepositoryService aRepository,
-            AnnotationService aAnnotationService)
+            AnnotationService aAnnotationService, boolean aPredictAnnotator, boolean aPredicrAutomator)
     {
         try {
 
@@ -437,9 +437,6 @@ public class AutomationUtil
             mira.maxPosteriors = maxPosteriors;
             mira.test(input, stream);
 
-            JCas jCas = aRepository.readJCas(aDocument, aDocument.getProject(),
-                    aRepository.getUser(aUsername));
-
             LineIterator it = IOUtils.lineIterator(new FileReader(predcitedFile));
             List<String> tags = new ArrayList<String>();
             while (it.hasNext()) {
@@ -454,21 +451,39 @@ public class AutomationUtil
                 }
                 tags.add(tag);
             }
+
+            if(aPredictAnnotator){
+            JCas annotatorJCas = aRepository.readJCas(aDocument, aDocument.getProject(),
+                    aRepository.getUser(aUsername));
+
             int i = 0;
-            for (Token token : selectCovered(jCas, Token.class, aBegin, aEnd)) {
+            for (Token token : selectCovered(annotatorJCas, Token.class, aBegin, aEnd)) {
                 Tag tag = aAnnotationService.getTag(tags.get(i), aTagSet);
                 String annotationType = TypeUtil.getQualifiedLabel(tag);
                 BratAjaxCasController controller = new BratAjaxCasController(aRepository,
                         aAnnotationService);
-                controller.createSpanAnnotation(jCas, token.getBegin(), token.getEnd(),
+                controller.createSpanAnnotation(annotatorJCas, token.getBegin(), token.getEnd(),
                         annotationType, null, null);
                 i++;
             }
-            // TODO: make updating of correction view from the prediction configurable in the GUI
-            aRepository.createAnnotationDocumentContent(jCas, aDocument,
+            aRepository.createAnnotationDocumentContent(annotatorJCas, aDocument,
                     aRepository.getUser(aUsername));
-            aRepository.createCorrectionDocumentContent(jCas, aDocument,
+            }
+            if(aPredicrAutomator){
+                JCas automateJCas = aRepository.getCorrectionDocumentContent(aDocument);
+                int i = 0;
+                for (Token token : selectCovered(automateJCas, Token.class, aBegin, aEnd)) {
+                    Tag tag = aAnnotationService.getTag(tags.get(i), aTagSet);
+                    String annotationType = TypeUtil.getQualifiedLabel(tag);
+                    BratAjaxCasController controller = new BratAjaxCasController(aRepository,
+                            aAnnotationService);
+                    controller.createSpanAnnotation(automateJCas, token.getBegin(), token.getEnd(),
+                            annotationType, null, null);
+                    i++;
+                }
+            aRepository.createCorrectionDocumentContent(automateJCas, aDocument,
                     aRepository.getUser(aUsername));
+            }
 
         }
         catch (Exception e) {

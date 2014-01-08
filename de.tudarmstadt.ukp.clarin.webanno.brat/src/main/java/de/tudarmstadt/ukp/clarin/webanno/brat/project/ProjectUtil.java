@@ -335,6 +335,8 @@ public class ProjectUtil
                 aAModel.setSuffix3(preference.isSuffix3());
                 aAModel.setSuffix4(preference.isSuffix4());
                 aAModel.setSuffix5(preference.isSuffix5());
+                aAModel.setPredictAnnotator(preference.isPredictAnnotator());
+                aAModel.setPredictAutomator(preference.isPredictAutomator());
                 if (preference.getTrainLayer() != -1) {
                     aAModel.setTrainTagSet(aAnnotationService.getTagSet(preference.getTrainLayer()));
                 }
@@ -776,6 +778,8 @@ public class ProjectUtil
             preference.setSuffix3(aAModel.isSuffix3());
             preference.setSuffix4(aAModel.isSuffix4());
             preference.setSuffix5(aAModel.isSuffix5());
+            preference.setPredictAnnotator(aAModel.isPredictAnnotator());
+            preference.setPredictAutomator(aAModel.isPredictAutomator());
             if(aAModel.getTrainTagSet()!=null) {
                 preference.setTrainLayer(aAModel.getTrainTagSet().getId());
             }
