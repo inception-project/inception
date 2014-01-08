@@ -321,6 +321,20 @@ public class ProjectUtil
 
             if (aAModel != null) {
                 aAModel.setPredictInThisPage(preference.isPredictInThisPage());
+                aAModel.setCapitalized(preference.isCapitalized());
+                aAModel.setContainsNumber(preference.isContainsNumber());
+                aAModel.setNgram(preference.getNgram());
+                aAModel.setBigram(preference.getBigram());
+                aAModel.setPrefix1(preference.isPrefix1());
+                aAModel.setPrefix2(preference.isPrefix2());
+                aAModel.setPrefix3(preference.isPrefix3());
+                aAModel.setPrefix4(preference.isPrefix4());
+                aAModel.setPrefix5(preference.isPrefix5());
+                aAModel.setSuffix1(preference.isSuffix1());
+                aAModel.setSuffix2(preference.isSuffix2());
+                aAModel.setSuffix3(preference.isSuffix3());
+                aAModel.setSuffix4(preference.isSuffix4());
+                aAModel.setSuffix5(preference.isSuffix5());
                 if (preference.getTrainLayer() != -1) {
                     aAModel.setTrainTagSet(aAnnotationService.getTagSet(preference.getTrainLayer()));
                 }
@@ -746,9 +760,25 @@ public class ProjectUtil
         preference.setScrollPage(aBModel.isScrollPage());
         preference.setWindowSize(aBModel.getWindowSize());
 
-        if (aAModel != null) {
+        if (aAModel != null ) {
             preference.setPredictInThisPage(aAModel.isPredictInThisPage());
-            preference.setTrainLayer(aAModel.getTrainTagSet().getId());
+            preference.setCapitalized(aAModel.isCapitalized());
+            preference.setContainsNumber(aAModel.isContainsNumber());
+            preference.setNgram(aAModel.getNgram());
+            preference.setBigram(aAModel.getBigram());
+            preference.setPrefix1(aAModel.isPrefix1());
+            preference.setPrefix2(aAModel.isPrefix2());
+            preference.setPrefix3(aAModel.isPrefix3());
+            preference.setPrefix4(aAModel.isPrefix4());
+            preference.setPrefix5(aAModel.isPrefix5());
+            preference.setSuffix1(aAModel.isSuffix1());
+            preference.setSuffix2(aAModel.isSuffix2());
+            preference.setSuffix3(aAModel.isSuffix3());
+            preference.setSuffix4(aAModel.isSuffix4());
+            preference.setSuffix5(aAModel.isSuffix5());
+            if(aAModel.getTrainTagSet()!=null) {
+                preference.setTrainLayer(aAModel.getTrainTagSet().getId());
+            }
         }
         ArrayList<Long> layers = new ArrayList<Long>();
 

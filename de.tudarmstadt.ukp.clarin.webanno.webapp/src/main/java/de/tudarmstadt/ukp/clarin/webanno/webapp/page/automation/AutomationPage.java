@@ -237,6 +237,9 @@ public class AutomationPage
                 catch (BratAnnotationException e) {
                     error(e.getMessage());
                 }
+
+                result = "";
+                aTarget.add(trainResult.setOutputMarkupId(true));
             }
 
             @Override
@@ -370,6 +373,11 @@ public class AutomationPage
             @Override
             public void onClick(AjaxRequestTarget aTarget)
             {
+                if(automationModel.getTrainTagSet() == null){
+                    aTarget.add(feedbackPanel);
+                    error("No Layer is selected");
+                    return;
+                }
                 if (!AutomationUtil.isTemplateConfigured(automationModel)) {
                     aTarget.add(feedbackPanel);
                     error("No MIRA template is configured");
@@ -413,6 +421,12 @@ public class AutomationPage
             @Override
             public void onClick(AjaxRequestTarget aTarget)
             {
+                if(automationModel.getTrainTagSet() == null){
+                    aTarget.add(feedbackPanel);
+                    error("No Layer is selected");
+                    return;
+                }
+
                 if (!AutomationUtil.isTemplateConfigured(automationModel)) {
                     aTarget.add(feedbackPanel);
                     error("No MIRA template is configured");
@@ -486,6 +500,8 @@ public class AutomationPage
                     aTarget.add(feedbackPanel);
                     error(e.getMessage());
                 }
+                result = "";
+                aTarget.add(trainResult.setOutputMarkupId(true));
             }
         });
 

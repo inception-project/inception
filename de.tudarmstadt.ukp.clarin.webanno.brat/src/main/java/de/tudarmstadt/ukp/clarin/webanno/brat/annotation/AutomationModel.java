@@ -37,21 +37,21 @@ public class AutomationModel
     private static final long serialVersionUID = 3926526929200593949L;
 
     private boolean capitalized;
-    private boolean containsNumber;
+    private boolean containsNumber = true;
 
-    private boolean prefix1;
-    private boolean prefix2;
-    private boolean prefix3;
-    private boolean prefix4;
-    private boolean prefix5;
+    private boolean prefix1 = true;
+    private boolean prefix2 = true;
+    private boolean prefix3 = true;
+    private boolean prefix4 = true;
+    private boolean prefix5 = true;
 
-    private boolean suffix1;
-    private boolean suffix2;
-    private boolean suffix3;
-    private boolean suffix4;
-    private boolean suffix5;
+    private boolean suffix1 = true;
+    private boolean suffix2 = true;
+    private boolean suffix3 = true;
+    private boolean suffix4 = true;
+    private boolean suffix5 = true;
 
-    private int ngram;
+    private int ngram = 3;
     private int bigram;
 
     /**
