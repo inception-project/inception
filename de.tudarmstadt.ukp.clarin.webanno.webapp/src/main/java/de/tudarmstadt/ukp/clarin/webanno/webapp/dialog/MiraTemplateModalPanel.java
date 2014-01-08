@@ -80,7 +80,7 @@ public class MiraTemplateModalPanel
                     new AutomationTemplateModel()));
 
             getModelObject().capitalized = automationModel.isCapitalized();
-            getModelObject().containsNumber = automationModel.isCapitalized();
+            getModelObject().containsNumber = automationModel.isContainsNumber();
             getModelObject().prefix1 = automationModel.isPrefix1();
             getModelObject().prefix2 = automationModel.isPrefix2();
             getModelObject().prefix3 = automationModel.isPrefix3();
@@ -96,7 +96,6 @@ public class MiraTemplateModalPanel
             getModelObject().bigram = automationModel.getBigram();
 
             getModelObject().predictInThisPage = automationModel.isPredictInThisPage();
-            getModelObject().useExistingModel = automationModel.isUseExistingModel();
             getModelObject().trainLayer = automationModel.getTrainTagSet();
 
             add(new CheckBox("capitalized"));
@@ -159,7 +158,6 @@ public class MiraTemplateModalPanel
 
                     automationModel.setTrainTagSet(getModelObject().trainLayer);
                     automationModel.setPredictInThisPage(getModelObject().predictInThisPage);
-                    automationModel.setUseExistingModel(getModelObject().useExistingModel);
 
 
                     if (automationModel.getTrainTagSet() == null) {

@@ -438,24 +438,6 @@ public class ProjectPage
                 }
             });
 
-            tabs.add(new AbstractTab(new Model<String>("Templates"))
-            {
-                private static final long serialVersionUID = 7887973231065189200L;
-
-                @Override
-                public Panel getPanel(String panelId)
-                {
-                    return new AutomationTemplate(panelId, project);
-                }
-
-                @Override
-                public boolean isVisible()
-                {
-                    return project.getObject().getId() != 0 && visible
-                            && project.getObject().getMode().equals(Mode.AUTOMATION);
-                }
-            });
-
             tabs.add(new AbstractTab(new Model<String>("Export/Import"))
             {
 

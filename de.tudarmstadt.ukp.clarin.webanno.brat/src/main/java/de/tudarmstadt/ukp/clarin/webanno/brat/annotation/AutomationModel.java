@@ -59,10 +59,6 @@ public class AutomationModel
      */
 
     private boolean predictInThisPage;
-    /**
-     * USe an existing MIRA model in stead of producing the model from curated documents
-     */
-    private boolean useExistingModel;
 
     /**
      * Train {@link TagSet} used for MIRA prediction
@@ -217,16 +213,6 @@ public class AutomationModel
     public void setPredictInThisPage(boolean predictInThisPage)
     {
         this.predictInThisPage = predictInThisPage;
-    }
-
-    public boolean isUseExistingModel()
-    {
-        return useExistingModel;
-    }
-
-    public void setUseExistingModel(boolean useExistingModel)
-    {
-        this.useExistingModel = useExistingModel;
     }
 
     public TagSet getTrainTagSet()

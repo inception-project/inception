@@ -320,7 +320,6 @@ public class ProjectUtil
             aBModel.setScrollPage(preference.isScrollPage());
 
             if (aAModel != null) {
-                aAModel.setUseExistingModel(preference.isUseExistingModel());
                 aAModel.setPredictInThisPage(preference.isPredictInThisPage());
                 if (preference.getTrainLayer() != -1) {
                     aAModel.setTrainTagSet(aAnnotationService.getTagSet(preference.getTrainLayer()));
@@ -749,7 +748,6 @@ public class ProjectUtil
 
         if (aAModel != null) {
             preference.setPredictInThisPage(aAModel.isPredictInThisPage());
-            preference.setUseExistingModel(aAModel.isUseExistingModel());
             preference.setTrainLayer(aAModel.getTrainTagSet().getId());
         }
         ArrayList<Long> layers = new ArrayList<Long>();
