@@ -101,4 +101,20 @@ public class BratAnnotatorUtility
         }
         repository.createAnnotationDocumentContent(aJCas, aSourceDocument, aUser);
     }
+
+    public static void clearJcasAutomated(JCas aJCas, SourceDocument aSourceDocument, User aUser,
+            RepositoryService repository)
+        throws IOException
+    {
+        List<Annotation> annotationsToRemove = new ArrayList<Annotation>();
+        for (Annotation a : select(aJCas, Annotation.class)) {
+            if (!(a instanceof Token || a instanceof Sentence || a instanceof DocumentMetaData)) {
+                annotationsToRemove.add(a);
+            }
+        }
+        for (Annotation annotation : annotationsToRemove) {
+            aJCas.removeFsFromIndexes(annotation);
+        }
+        repository.createCorrectionDocumentContent(aJCas, aSourceDocument, aUser);
+    }
 }

@@ -70,6 +70,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationU
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationViewForSourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.AutomationUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.CuratorUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -364,7 +365,7 @@ public class AutomationPage
                 return result;
             }
         }).setOutputMarkupId(true));
-        // Add project and document information at the top
+
         add(new AjaxLink<Void>("miraTrain")
         {
             private static final long serialVersionUID = 2177457942401020660L;
@@ -511,7 +512,39 @@ public class AutomationPage
             }
         });
 
-        // Add project and document information at the top
+        add(new AjaxLink<Void>("clearAutometedCas")
+        {
+            private static final long serialVersionUID = 2177457942401020660L;
+
+            @Override
+            public void onClick(AjaxRequestTarget aTarget)
+            {
+                JCas jCas;
+                try {
+                    jCas = repository
+                            .getCorrectionDocumentContent(bratAnnotatorModel.getDocument());
+                    BratAnnotatorUtility.clearJcasAutomated(jCas,
+                            bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
+                            repository);
+                    update(aTarget);
+                    aTarget.appendJavaScript("Wicket.Window.unloadConfirmation = false;window.location.reload()");
+                }
+                catch (UIMAException e) {
+                    aTarget.add(feedbackPanel);
+                    error(ExceptionUtils.getRootCause(e));
+                }
+                catch (ClassNotFoundException e) {
+                    aTarget.add(feedbackPanel);
+                    error(e.getMessage());
+                }
+                catch (IOException e) {
+                    aTarget.add(feedbackPanel);
+                    error(e.getMessage());
+                }
+
+            }
+        });
+
         add(new AjaxLink<Void>("showOpenDocumentModal")
         {
             private static final long serialVersionUID = 7496156015186497496L;

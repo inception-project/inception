@@ -24,12 +24,13 @@ import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.PrintStream;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -502,14 +503,12 @@ public class AutomationUtil
             predFile.delete();
             predFile.createNewFile();
         }
-        PrintWriter predictOut = new PrintWriter(new BufferedWriter(new FileWriter(predFile, true)));
+        OutputStream stream = new FileOutputStream(predFile);
         JCas jCas = aRepository.readJCas(aDocument, aDocument.getProject(),
                 aRepository.getUser(aUsername));
         for (Sentence sentence : selectCovered(jCas, Sentence.class, aBegin, aEnd)) {
-            predictOut.println(getMiraLines(sentence, true, aTagSet, aAModel) + "\n");
+            IOUtils.write(getMiraLines(sentence, true, aTagSet, aAModel) + "\n", stream,"UTF-8");
         }
-
-        predictOut.close();
 
         return predFile;
     }
