@@ -30,8 +30,8 @@ import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
-import org.apache.uima.jcas.JCas;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
+import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.dkpro.core.api.io.JCasFileWriter_ImplBase;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
@@ -99,7 +99,10 @@ public class WebannoTsvWriter
         throws IOException
     {
         // StringBuilder conllSb = new StringBuilder();
+
+        int sentId = 1;
         for (Sentence sentence : select(aJCas, Sentence.class)) {
+            IOUtils.write("#id=" + sentId++ + "\n", aOs, aEncoding);
             // Map of token and the dependent (token address used as a Key)
             Map<Integer, Integer> dependentMap = new HashMap<Integer, Integer>();
             // Map of governor token address and its token position
@@ -133,7 +136,7 @@ public class WebannoTsvWriter
 
             int j = 1;
             // Add named Entity to a token
-            Map<String, String> tokenNamedEntityMap = new HashMap<String, String>();
+            Map<Integer, Map<Integer, String>> tokenNamedEntityMap = new HashMap<Integer, Map<Integer, String>>();
 
             createNEColumn(sentence, tokenNamedEntityMap);
 
@@ -143,15 +146,10 @@ public class WebannoTsvWriter
                 String pos = token.getPos() == null ? "_" : token.getPos().getPosValue();
                 String dependent = "_";
 
-                String firstNamedEntity = tokenNamedEntityMap.get("first-" + token.getAddress());
-                if (firstNamedEntity == null) {
-                    firstNamedEntity = "O";
-                }
-
-                // for Nested Named Entity
-                String secondNamedEntity = tokenNamedEntityMap.get("second-" + token.getAddress());
-                if (secondNamedEntity == null) {
-                    secondNamedEntity = "O";
+                String neAnnotations = "O";
+                Map<Integer, String> ne = tokenNamedEntityMap.get(token.getAddress());
+                if (ne != null) {
+                    neAnnotations = ne.values().toString();
                 }
 
                 String type = dependencyTypeMap.get(token.getAddress()) == null ? "_"
@@ -172,12 +170,12 @@ public class WebannoTsvWriter
                         && dependencyMap.get(dependentMap.get(token.getAddress())) != null
                         && j == dependencyMap.get(dependentMap.get(token.getAddress()))) {
                     IOUtils.write(j + "\t" + token.getCoveredText() + "\t" + lemma + "\t" + pos
-                            + "\t" + firstNamedEntity + "\t" + secondNamedEntity + "\t" + 0 + "\t"
+                            + "\t" + neAnnotations + "\t" + 0 + "\t"
                             + type + "\t_\t_\n", aOs, aEncoding);
                 }
                 else {
                     IOUtils.write(j + "\t" + token.getCoveredText() + "\t" + lemma + "\t" + pos
-                            + "\t" + firstNamedEntity + "\t" + secondNamedEntity + "\t" + dependent
+                            + "\t" + neAnnotations + "\t" + dependent
                             + "\t" + type + "\t_\t_\n", aOs, aEncoding);
                 }
                 j++;
@@ -185,49 +183,75 @@ public class WebannoTsvWriter
             IOUtils.write("\n", aOs, aEncoding);
         }
 
+        //add the text at the bottom, hence, no need to re-construct texts as well as token positions
+        IOUtils.write("#text=" + aJCas.getDocumentText() + "\n\n", aOs, aEncoding);
     }
 
     /**
-     * Iterate through each sentence and obtain NE. The first occurence of the NE will be recored as
-     * B_XX where XX is the NE type in the fifth column. For multispan NE annotation, the I_ prefix
-     * will be added to the NE in the sixth column
+     * If a named entity covers multiple span, it will be recorded only to the first token, with the
+     * beign/end offsets attached to it
      */
 
-    private void createNEColumn(Sentence sentence, Map<String, String> tokenNamedEntityMap)
+    private void createNEColumn(Sentence sentence,
+            Map<Integer, Map<Integer, String>> tokenNamedEntityMap)
     {
         for (NamedEntity namedEntity : selectCovered(NamedEntity.class, sentence)) {
-            boolean secondChain = false; // maintain multiple span chains in BIO1 or BIO2
-            String previopusNamedEntity1 = "O";
-            String previopusNamedEntity2 = "O";
             for (Token token : selectCovered(Token.class, sentence)) {
                 if (namedEntity.getBegin() <= token.getBegin()
                         && namedEntity.getEnd() >= token.getEnd()) {
-                    if (tokenNamedEntityMap.get("first-" + token.getAddress()) == null
-                            & !secondChain) {
-                        if (previopusNamedEntity1.equals("O")) {
-                            tokenNamedEntityMap.put("first-" + token.getAddress(), "B_"
-                                    + namedEntity.getValue());
-                            previopusNamedEntity1 = "B_" + namedEntity.getValue();
+                    if (tokenNamedEntityMap.get(token.getAddress()) == null) {
+
+                        if (tokenNamedEntityMap.size() == 0) {
+                            Map<Integer, String> neAnnoMaps = new HashMap<Integer, String>();
+                            neAnnoMaps.put(namedEntity.getAddress(), "[" + namedEntity.getBegin()
+                                    + ":" + namedEntity.getEnd() + ":" + namedEntity.getValue()
+                                    + "]");
+                            tokenNamedEntityMap.put(token.getAddress(), neAnnoMaps);
                         }
                         else {
-                            tokenNamedEntityMap.put("first-" + token.getAddress(), "I_"
-                                    + namedEntity.getValue());
+
+                            boolean added = false;// already added to the first token in the span
+                            // annotation
+                            for (int tokIds : tokenNamedEntityMap.keySet()) {
+                                Map<Integer, String> neAnnoMaps = tokenNamedEntityMap.get(tokIds);
+                                for (int annoIds : neAnnoMaps.keySet()) {
+                                if (annoIds == namedEntity.getAddress()) {
+                                    added = true;
+                                    break;
+                                }
+                                }
+                            }
+                            if (!added) {
+                                Map<Integer, String> neAnnoMaps = new HashMap<Integer, String>();
+                                neAnnoMaps.put(namedEntity.getAddress(),
+                                        "[" + namedEntity.getBegin() + ":" + namedEntity.getEnd()
+                                                + ":" + namedEntity.getValue() + "]");
+                                tokenNamedEntityMap.put(token.getAddress(), neAnnoMaps);
+                            }
                         }
                     }
-                    else if (tokenNamedEntityMap.get("second-" + token.getAddress()) == null) {
-                        if (previopusNamedEntity2.equals("O")) {
-                            tokenNamedEntityMap.put("second-" + token.getAddress(), "B_"
-                                    + namedEntity.getValue());
-                            previopusNamedEntity2 = "B_" + namedEntity.getValue();
+                    else {
+                        Map<Integer, String> neAnnoMaps = tokenNamedEntityMap.get(token
+                                .getAddress());
+                        boolean added = false;// already added to the first token in the span
+                                              // annotation
+                        for (int annoIds : neAnnoMaps.keySet()) {
+                            if (annoIds == namedEntity.getAddress()) {
+                                added = true;
+                                break;
+                            }
                         }
-                        else {
-                            tokenNamedEntityMap.put("second-" + token.getAddress(), "I_"
-                                    + namedEntity.getValue());
+                        if (!added) {
+                            neAnnoMaps.put(namedEntity.getAddress(), "[" + namedEntity.getBegin()
+                                    + ":" + namedEntity.getEnd() + ":" + namedEntity.getValue()
+                                    + "]");
+                            tokenNamedEntityMap.put(token.getAddress(), neAnnoMaps);
                         }
-                        secondChain = true;
+
                     }
                 }
             }
         }
     }
+
 }

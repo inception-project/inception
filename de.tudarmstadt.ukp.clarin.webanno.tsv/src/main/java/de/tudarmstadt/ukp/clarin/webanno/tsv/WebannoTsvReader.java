@@ -33,9 +33,9 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionException;
+import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.util.Level;
-import org.apache.uima.fit.descriptor.ConfigurationParameter;
 
 import de.tudarmstadt.ukp.dkpro.core.api.io.JCasResourceCollectionReader_ImplBase;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
@@ -48,9 +48,11 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
  * Reads a specific TSV File (9 TAB separated) annotation and change it to CAS object. Example of
- * Input Files: <br>1   Heutzutage  heutzutage  ADV _   _   2   ADV _   _ <br>
- * Columns are separated by a TAB character and sentences are separated by a blank new line
- * see the {@link WebannoTsvReader#setAnnotations(InputStream, String, StringBuilder, Map, Map, Map, Map, Map, Map, Map, List)}
+ * Input Files: <br>
+ * 1 Heutzutage heutzutage ADV _ _ 2 ADV _ _ <br>
+ * Columns are separated by a TAB character and sentences are separated by a blank new line see the
+ * {@link WebannoTsvReader#setAnnotations(InputStream, String, StringBuilder, Map, Map, Map, Map, Map, Map, Map, List)}
+ *
  * @author Seid Muhie Yimam
  *
  */
@@ -66,14 +68,13 @@ public class WebannoTsvReader
         Map<Integer, String> tokens = new HashMap<Integer, String>();
         Map<Integer, String> pos = new HashMap<Integer, String>();
         Map<Integer, String> lemma = new HashMap<Integer, String>();
-        Map<Integer, String> namedEntity1 = new HashMap<Integer, String>();
-        Map<Integer, String> namedEntity2 = new HashMap<Integer, String>();
+        Map<Integer, String> namedEntity = new HashMap<Integer, String>();
         Map<Integer, String> dependencyFunction = new HashMap<Integer, String>();
         Map<Integer, Integer> dependencyDependent = new HashMap<Integer, Integer>();
 
         List<Integer> firstTokenInSentence = new ArrayList<Integer>();
 
-        setAnnotations(aIs, aEncoding, text, tokens, pos, lemma, namedEntity1, namedEntity2,
+        setAnnotations(aIs, aEncoding, text, tokens, pos, lemma, namedEntity,
                 dependencyFunction, dependencyDependent, firstTokenInSentence);
 
         aJCas.setDocumentText(text.toString());
@@ -82,9 +83,7 @@ public class WebannoTsvReader
 
         createToken(aJCas, text, tokens, pos, lemma, tokensStored);
 
-        createNamedEntity(namedEntity1, aJCas, tokens, tokensStored);
-        // For Nested Named Entity
-        createNamedEntity(namedEntity2, aJCas, tokens, tokensStored);
+        createNamedEntity(namedEntity, aJCas, tokens, tokensStored);
 
         createDependency(aJCas, tokens, dependencyFunction, dependencyDependent, tokensStored);
 
@@ -92,8 +91,8 @@ public class WebannoTsvReader
     }
 
     /**
-     * Create {@link Token} in the {@link CAS}. If the lemma and pos columns are not empty
-     * it will create {@link Lemma} and {@link POS} annotations
+     * Create {@link Token} in the {@link CAS}. If the lemma and pos columns are not empty it will
+     * create {@link Lemma} and {@link POS} annotations
      */
     private void createToken(JCas aJCas, StringBuilder text, Map<Integer, String> tokens,
             Map<Integer, String> pos, Map<Integer, String> lemma, Map<String, Token> tokensStored)
@@ -215,7 +214,7 @@ public class WebannoTsvReader
 
     /**
      * Iterate through all lines and get available annotations<br>
-     * First column is sentence number  and a blank new line marks end of a sentence<br>
+     * First column is sentence number and a blank new line marks end of a sentence<br>
      * The Second column is the token <br>
      * The third column is the lemma annotation <br>
      * The fourth column is the POS annotation <br>
@@ -226,9 +225,8 @@ public class WebannoTsvReader
      */
     private void setAnnotations(InputStream aIs, String aEncoding, StringBuilder text,
             Map<Integer, String> tokens, Map<Integer, String> pos, Map<Integer, String> lemma,
-            Map<Integer, String> namedEntity1, Map<Integer, String> namedEntity2,
-            Map<Integer, String> dependencyFunction, Map<Integer, Integer> dependencyDependent,
-            List<Integer> firstTokenInSentence)
+            Map<Integer, String> namedEntity, Map<Integer, String> dependencyFunction,
+            Map<Integer, Integer> dependencyDependent, List<Integer> firstTokenInSentence)
         throws IOException
     {
         int tokenNumber = 0;
@@ -238,11 +236,18 @@ public class WebannoTsvReader
         LineIterator lineIterator = IOUtils.lineIterator(aIs, aEncoding);
         while (lineIterator.hasNext()) {
             String line = lineIterator.next().trim();
+            if (line.startsWith("#text=")) {
+                text.append(line + "\n");
+                continue;
+            }
+            if (line.startsWith("#")) {
+                continue;// it is a comment line
+            }
             int count = StringUtils.countMatches(line, "\t");
             if (line.isEmpty()) {
                 continue;
             }
-            if (count != 9) {// not a proper TSV file
+            if (count != 8) {// not a proper TSV file
                 getUimaContext().getLogger().log(Level.INFO, "This is not a valid TSV File");
                 throw new IOException("This is not a valid TSV File");
             }
@@ -269,10 +274,8 @@ public class WebannoTsvReader
                 tokens.put(tokenNumber, token);
                 lemma.put(tokenNumber, lineTk.nextToken());
                 pos.put(tokenNumber, lineTk.nextToken());
-                String ne1 = lineTk.nextToken();
-                String ne2 = lineTk.nextToken();
-                namedEntity1.put(tokenNumber, ne1.equals("_") ? "O" : ne1);
-                namedEntity2.put(tokenNumber, ne2.equals("_") ? "O" : ne2);
+                String ne = lineTk.nextToken();
+                namedEntity.put(tokenNumber, ne.equals("_") ? "O" : ne);;
                 String dependentValue = lineTk.nextToken();
                 if (NumberUtils.isDigits(dependentValue)) {
                     int dependent = Integer.parseInt(dependentValue);
@@ -316,61 +319,22 @@ public class WebannoTsvReader
             Map<Integer, String> aTokensMap, Map<String, Token> aJcasTokens)
     {
         String previousNamedEntity = "O";
-        int namedEntityBegin = -1;
-        int namedEntityEnd = -1;
 
         for (int i = 1; i <= aTokensMap.size(); i++) {
             if (previousNamedEntity.equals("O") && aNamedEntityMap.get(i).equals("O")) {
                 continue;
             }
 
-            if (!aNamedEntityMap.get(i).equals("O") && namedEntityBegin == -1) {
-                // First Named Entity
-                namedEntityBegin = aJcasTokens.get("t_" + i).getBegin();
-                namedEntityEnd = aJcasTokens.get("t_" + i).getEnd();
-                previousNamedEntity = aNamedEntityMap.get(i);
+            String[] nes = aNamedEntityMap.get(i).split("\\], \\[");
+            for (String ne : nes) {
+                String[] neAnno = ne.replace("]", "").replace("[", "").split(":");
+                int begin = Integer.parseInt(neAnno[0]);
+                int end = Integer.parseInt(neAnno[1]);
+                String type = neAnno[2];
+                NamedEntity outNamedEntity = new NamedEntity(aJCas, begin, end);
+                outNamedEntity.setValue(type);
+                outNamedEntity.addToIndexes();
             }
-            else if (!previousNamedEntity.equals("O")) {
-                // Named Entity continues
-                if (aNamedEntityMap.get(i).startsWith("I_")) {
-                    namedEntityEnd = aJcasTokens.get("t_" + i).getEnd();
-                }
-                else if (aNamedEntityMap.get(i).equals("O")) {
-
-                    NamedEntity outNamedEntity = new NamedEntity(aJCas, namedEntityBegin,
-                            namedEntityEnd);
-                    outNamedEntity.setValue(previousNamedEntity.substring(2));
-                    outNamedEntity.addToIndexes();
-
-                    previousNamedEntity = "O";
-                }
-                // Different named entity
-                else if (aNamedEntityMap.get(i).startsWith("B_")) {
-
-                    NamedEntity outNamedEntity = new NamedEntity(aJCas, namedEntityBegin,
-                            namedEntityEnd);
-                    outNamedEntity.setValue(previousNamedEntity.substring(2));
-                    outNamedEntity.addToIndexes();
-
-                    namedEntityBegin = aJcasTokens.get("t_" + i).getBegin();
-                    namedEntityEnd = aJcasTokens.get("t_" + i).getEnd();
-                    previousNamedEntity = aNamedEntityMap.get(i);
-                }
-            }
-            else if (!aNamedEntityMap.get(i).equals("O")) {
-                // First Named Entity
-                namedEntityBegin = aJcasTokens.get("t_" + i).getBegin();
-                namedEntityEnd = aJcasTokens.get("t_" + i).getEnd();
-                previousNamedEntity = aNamedEntityMap.get(i);
-            }
-        }
-        // If the last token have a named Entity with Multiple span, add it
-        int lastTokenIndex = aTokensMap.size();
-        String lastNamedEntity = aNamedEntityMap.get(lastTokenIndex);
-        if (lastNamedEntity.startsWith("I_")) {
-            NamedEntity outNamedEntity = new NamedEntity(aJCas, namedEntityBegin, namedEntityEnd);
-            outNamedEntity.setValue(previousNamedEntity.substring(2));
-            outNamedEntity.addToIndexes();
         }
     }
 }
