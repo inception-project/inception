@@ -814,4 +814,12 @@ public class ChainAdapter
         return new ArrayList<String>();
     }
 
+    @Override
+    public void addForPredict(JCas aJcas, int aBegin, int aEnd, List<String> labelValues)
+        throws BratAnnotationException
+    {
+        // TODO Auto-generated method stub
+
+    }
+
 }

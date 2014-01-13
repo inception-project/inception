@@ -32,7 +32,9 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
@@ -60,15 +62,16 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import edu.lium.mira.Mira;
 
 /**
  * A utility class for the automation modules
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 public class AutomationUtil
 {
@@ -150,7 +153,7 @@ public class AutomationUtil
                 int sentCount = select(jCas, Sentence.class).size();
                 int i = 0;
                 for (Sentence sentence : select(jCas, Sentence.class)) {
-                    if (((double) i / sentCount) * 100 < 90) {
+                    if (((double) i / sentCount) * 100 < 95) {
 
                         trainOut.append(getMiraLines(sentence, false, aTagSet, aFeatureTagSet,
                                 aAModel).toString()
@@ -176,6 +179,11 @@ public class AutomationUtil
         throws CASException
     {
         StringBuffer sb = new StringBuffer();
+
+        TypeAdapter adapter = TypeUtil.getAdapter(aTagSet);
+        Map<Integer, String> neTags = new HashMap<Integer, String>();
+        getNeTags(sentence, adapter, neTags);
+
         for (Token token : selectCovered(sentence.getCAS().getJCas(), Token.class,
                 sentence.getBegin(), sentence.getEnd())) {
             String word = token.getCoveredText();
@@ -225,7 +233,6 @@ public class AutomationUtil
 
             String nl = "\n";
             String featureTagSet = "";
-            TypeAdapter adapter = TypeUtil.getAdapter(aTagSet);
             // TODO: when free annotation layers defined, check if tagset is on multiple token or
             // not
             if (adapter.getLabelPrefix().equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)) {
@@ -236,10 +243,18 @@ public class AutomationUtil
                         + " ";
 
             }
+
             List<String> annotations = adapter.getAnnotation(sentence.getCAS().getJCas(),
                     token.getBegin(), token.getEnd());
-            String tag = aPredict == true ? "" : annotations.size() == 0 ? "__nill__" : annotations
-                    .get(0);
+            String tag = "";
+            if (adapter.getLabelPrefix().equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)
+                    && !aPredict) {
+                tag = neTags.get(token.getAddress()) == null ? "O" : neTags.get(token.getAddress());
+            }
+            else {
+                tag = aPredict == true ? "" : annotations.size() == 0 ? "__nill__" : annotations
+                        .get(0);
+            }
             sb.append(word + " " + capitalized
 
             /* + getVowels(word, FileUtils.readFileToString(new File(argv[1]))) + " " */
@@ -249,6 +264,27 @@ public class AutomationUtil
         }
         return sb;
 
+    }
+
+    private static void getNeTags(Sentence sentence, TypeAdapter adapter,
+            Map<Integer, String> neTags)
+        throws CASException
+    {
+        for (NamedEntity namedEntity : selectCovered(NamedEntity.class, sentence)) {
+            boolean isBegin = true;
+            for (Token token : selectCovered(sentence.getCAS().getJCas(), Token.class,
+                    namedEntity.getBegin(), namedEntity.getEnd())) {
+                if (neTags.get(token.getAddress()) == null) {
+                    if (isBegin) {
+                        neTags.put(token.getAddress(), "B-" + namedEntity.getValue());
+                        isBegin = false;
+                    }
+                    else {
+                        neTags.put(token.getAddress(), "I-" + namedEntity.getValue());
+                    }
+                }
+            }
+        }
     }
 
     public static String train(Project aProject, TagSet aTagset, AutomationModel aAModel,
@@ -304,11 +340,14 @@ public class AutomationUtil
 
         StringBuffer sb = new StringBuffer();
         TypeAdapter adapter = TypeUtil.getAdapter(aTagSet);
+        int i = 1;
         if (adapter.getLabelPrefix().equals(AnnotationTypeConstant.POS_PREFIX)) {
-            setMorphoTemplate(aAModel, sb);
+            setMorphoTemplate(aAModel, sb, i);
+            setNgramForLable(aAModel, sb, i);
         }
         else {
-        setNgramTemplate(aAModel, sb);
+            setMorphoTemplate(aAModel, sb, i);
+            setNgramTemplate(aAModel, sb, i);
         }
 
         sb.append("\n");
@@ -317,106 +356,8 @@ public class AutomationUtil
         return templateFile.getAbsolutePath();
     }
 
-    private static void setNgramTemplate(AutomationModel aAModel, StringBuffer sb)
+    private static void setNgramForLable(AutomationModel aAModel, StringBuffer sb, int i)
     {
-        int i = 1;
-        if (aAModel.getNgram() == 1) {
-            sb.append("U" + String.format("%02d", i) + "%x[0,0]\n");
-            i++;
-            sb.append("U" + String.format("%02d", i) + "%x[0,1]\n");
-            i++;
-        }
-        else if (aAModel.getNgram() == 2) {
-            sb.append("U" + String.format("%02d", i) + "%x[0,0]\n");
-            i++;
-            sb.append("U" + String.format("%02d", i) + "%x[0,1]\n");
-            i++;
-            sb.append("U" + String.format("%02d", i) + "%x[0,0] %x[0,1]\n");
-            i++;
-            sb.append("U" + String.format("%02d", i) + "%x[-1,0] %x[0,0]\n");
-            i++;
-            sb.append("U" + String.format("%02d", i) + "%x[-1,1] %x[0,1]\n");
-            i++;
-        }
-        
-        sb.append("\n");
-        i = 1;
-        if (aAModel.getBigram() == 1) {
-            sb.append("B" + String.format("%02d", i) + "%x[0,0]\n");
-            i++;
-            sb.append("B" + String.format("%02d", i) + "%x[0,1]\n");
-            i++;
-        }
-        else if (aAModel.getNgram() == 2) {
-            sb.append("B" + String.format("%02d", i) + "%x[0,0]\n");
-            i++;
-            sb.append("B" + String.format("%02d", i) + "%x[0,1]\n");
-            i++;
-            sb.append("B" + String.format("%02d", i) + "%x[0,0] %x[0,1]\n");
-            i++;
-            sb.append("B" + String.format("%02d", i) + "%x[-1,0] %x[0,0]\n");
-            i++;
-            sb.append("B" + String.format("%02d", i) + "%x[-1,1] %x[0,1]\n");
-            i++;
-        }
-
-    }
-
-    private static void setMorphoTemplate(AutomationModel aAModel, StringBuffer sb)
-    {
-        int i = 1;
-        if (aAModel.isCapitalized()) {
-            sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
-            i++;
-        }
-        if (aAModel.isContainsNumber()) {
-            sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
-            i++;
-        }
-        if (aAModel.isPrefix1()) {
-            sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
-            i++;
-        }
-        if (aAModel.isPrefix2()) {
-            sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
-            i++;
-        }
-        if (aAModel.isPrefix3()) {
-            sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
-            i++;
-        }
-        if (aAModel.isPrefix4()) {
-            sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
-            i++;
-        }
-        if (aAModel.isPrefix5()) {
-            sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
-            i++;
-        }
-        if (aAModel.isSuffix1()) {
-            sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
-            i++;
-        }
-        if (aAModel.isSuffix2()) {
-            sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
-            i++;
-        }
-
-        if (aAModel.isSuffix3()) {
-            sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
-            i++;
-        }
-        if (aAModel.isSuffix4()) {
-            sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
-            i++;
-        }
-        if (aAModel.isSuffix5()) {
-            sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
-            i++;
-        }
-
-        sb.append("\n");
-
         if (aAModel.getNgram() == 1) {
             sb.append("U" + String.format("%02d", i) + "%x[0,0]\n");
             i++;
@@ -474,6 +415,106 @@ public class AutomationUtil
         }
     }
 
+    private static void setNgramTemplate(AutomationModel aAModel, StringBuffer sb, int i)
+    {
+
+        if (aAModel.getNgram() == 1) {
+            sb.append("U" + String.format("%02d", i) + "%x[0,0]\n");
+            i++;
+            sb.append("U" + String.format("%02d", i) + "%x[0,1]\n");
+            i++;
+        }
+        else if (aAModel.getNgram() == 2) {
+            sb.append("U" + String.format("%02d", i) + "%x[0,0]\n");
+            i++;
+            sb.append("U" + String.format("%02d", i) + "%x[0,1]\n");
+            i++;
+            sb.append("U" + String.format("%02d", i) + "%x[0,0] %x[0,1]\n");
+            i++;
+            sb.append("U" + String.format("%02d", i) + "%x[-1,0] %x[0,0]\n");
+            i++;
+            sb.append("U" + String.format("%02d", i) + "%x[-1,1] %x[0,1]\n");
+            i++;
+        }
+
+        sb.append("\n");
+        i = 1;
+        if (aAModel.getBigram() == 1) {
+            sb.append("B" + String.format("%02d", i) + "%x[0,0]\n");
+            i++;
+            sb.append("B" + String.format("%02d", i) + "%x[0,1]\n");
+            i++;
+        }
+        else if (aAModel.getNgram() == 2) {
+            sb.append("B" + String.format("%02d", i) + "%x[0,0]\n");
+            i++;
+            sb.append("B" + String.format("%02d", i) + "%x[0,1]\n");
+            i++;
+            sb.append("B" + String.format("%02d", i) + "%x[0,0] %x[0,1]\n");
+            i++;
+            sb.append("B" + String.format("%02d", i) + "%x[-1,0] %x[0,0]\n");
+            i++;
+            sb.append("B" + String.format("%02d", i) + "%x[-1,1] %x[0,1]\n");
+            i++;
+        }
+
+    }
+
+    private static void setMorphoTemplate(AutomationModel aAModel, StringBuffer sb, int i)
+    {
+        if (aAModel.isCapitalized()) {
+            sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+            i++;
+        }
+        if (aAModel.isContainsNumber()) {
+            sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+            i++;
+        }
+        if (aAModel.isPrefix1()) {
+            sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+            i++;
+        }
+        if (aAModel.isPrefix2()) {
+            sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+            i++;
+        }
+        if (aAModel.isPrefix3()) {
+            sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+            i++;
+        }
+        if (aAModel.isPrefix4()) {
+            sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+            i++;
+        }
+        if (aAModel.isPrefix5()) {
+            sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+            i++;
+        }
+        if (aAModel.isSuffix1()) {
+            sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+            i++;
+        }
+        if (aAModel.isSuffix2()) {
+            sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+            i++;
+        }
+
+        if (aAModel.isSuffix3()) {
+            sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+            i++;
+        }
+        if (aAModel.isSuffix4()) {
+            sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+            i++;
+        }
+        if (aAModel.isSuffix5()) {
+            sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+            i++;
+        }
+
+        sb.append("\n");
+    }
+
     public static File getMiraTemplateFile(Project aProject, RepositoryService aRepository)
     {
         return new File(aRepository.getMiraDir(aProject).getAbsolutePath(), aProject.getName()
@@ -511,6 +552,7 @@ public class AutomationUtil
 
             LineIterator it = IOUtils.lineIterator(new FileReader(predcitedFile));
             List<String> tags = new ArrayList<String>();
+            int j = 1;
             while (it.hasNext()) {
                 String line = it.next();
                 if (line.trim().equals("")) {
@@ -522,37 +564,23 @@ public class AutomationUtil
                     tag = st.nextToken();
                 }
                 tags.add(tag);
+                System.out.println("tag=" + tag + ";" + j++);
             }
 
             if (aPredictAnnotator) {
                 JCas annotatorJCas = aRepository.readJCas(aDocument, aDocument.getProject(),
                         aRepository.getUser(aUsername));
+                TypeAdapter adapter = TypeUtil.getAdapter(aTagSet);
+                adapter.addForPredict(annotatorJCas, aBegin, aEnd, tags);
 
-                int i = 0;
-                for (Token token : selectCovered(annotatorJCas, Token.class, aBegin, aEnd)) {
-                    Tag tag = aAnnotationService.getTag(tags.get(i), aTagSet);
-                    String annotationType = TypeUtil.getQualifiedLabel(tag);
-                    BratAjaxCasController controller = new BratAjaxCasController(aRepository,
-                            aAnnotationService);
-                    controller.createSpanAnnotation(annotatorJCas, token.getBegin(),
-                            token.getEnd(), annotationType, null, null);
-                    i++;
-                }
                 aRepository.createAnnotationDocumentContent(annotatorJCas, aDocument,
                         aRepository.getUser(aUsername));
             }
+
             if (aPredicrAutomator) {
                 JCas automateJCas = aRepository.getCorrectionDocumentContent(aDocument);
-                int i = 0;
-                for (Token token : selectCovered(automateJCas, Token.class, aBegin, aEnd)) {
-                    Tag tag = aAnnotationService.getTag(tags.get(i), aTagSet);
-                    String annotationType = TypeUtil.getQualifiedLabel(tag);
-                    BratAjaxCasController controller = new BratAjaxCasController(aRepository,
-                            aAnnotationService);
-                    controller.createSpanAnnotation(automateJCas, token.getBegin(), token.getEnd(),
-                            annotationType, null, null);
-                    i++;
-                }
+                TypeAdapter adapter = TypeUtil.getAdapter(aTagSet);
+                adapter.addForPredict(automateJCas, aBegin, aEnd, tags);
                 aRepository.createCorrectionDocumentContent(automateJCas, aDocument,
                         aRepository.getUser(aUsername));
             }
@@ -578,9 +606,11 @@ public class AutomationUtil
         OutputStream stream = new FileOutputStream(predFile);
         JCas jCas = aRepository.readJCas(aDocument, aDocument.getProject(),
                 aRepository.getUser(aUsername));
+        int i = 1;
         for (Sentence sentence : selectCovered(jCas, Sentence.class, aBegin, aEnd)) {
             IOUtils.write(getMiraLines(sentence, true, aTagSet, aFeatureTagSet, aAModel) + "\n",
                     stream, "UTF-8");
+            System.out.println(i++);
         }
 
         return predFile;

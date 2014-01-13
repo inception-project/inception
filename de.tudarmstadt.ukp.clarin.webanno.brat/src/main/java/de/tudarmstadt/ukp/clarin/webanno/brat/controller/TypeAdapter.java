@@ -29,12 +29,27 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 
 /**
  * Type Adapters for span, arc, and chain annotations
+ *
  * @author Richard Eckart de Castilho
  * @author Seid Muhie Yimam
  *
  */
 public interface TypeAdapter
 {
+    /**
+     * Add new annotation to the CAS using the MIRA prediction. This is different from the add
+     * methods in the {@link TypeAdapter}s in such a way that the begin and end offsets are always
+     * exact so that no need to re-compute
+     *
+     * @param aJcas
+     * @param aBegin
+     * @param aEnd
+     * @param aLabelValue
+     * @throws BratAnnotationException
+     */
+    void addForPredict(JCas aJcas, int aBegin, int aEnd, List<String> labelValues)
+        throws BratAnnotationException;
+
     /**
      * Add annotations from the CAS, which is controlled by the window size, to the brat response
      * {@link GetDocumentResponse}
@@ -70,18 +85,22 @@ public interface TypeAdapter
      * Get the CAS type of the this {@link TypeAdapter}
      */
     String getAnnotationTypeName();
-/**
- * determine the type of Span annotation to be used to have arc annotations (as Origin and target)
- *
- */
-  String getArcSpanTypeFeatureName();
-//    /**
-//     * Update the CAS with new/modification of span annotations from brat
-//     *
-//     * @param aLabelValue
-//     *            the value of the annotation for the span
-//     */
-//    void add(String aLabelValue, JCas aJcas, int aAnnotationOffsetStart, int aAnnotationOffsetEnd);
+
+    /**
+     * determine the type of Span annotation to be used to have arc annotations (as Origin and
+     * target)
+     *
+     */
+    String getArcSpanTypeFeatureName();
+
+    // /**
+    // * Update the CAS with new/modification of span annotations from brat
+    // *
+    // * @param aLabelValue
+    // * the value of the annotation for the span
+    // */
+    // void add(String aLabelValue, JCas aJcas, int aAnnotationOffsetStart, int
+    // aAnnotationOffsetEnd);
 
     /**
      * Delete a annotation from CAS.
@@ -95,8 +114,10 @@ public interface TypeAdapter
      * check if the annotation type is deletable
      */
     boolean isDeletable();
+
     public void delete(JCas aJCas, int aAddress);
 
     void deleteBySpan(JCas aJCas, AnnotationFS fs, int aBegin, int aEnd);
+
     List<String> getAnnotation(JCas aJcas, int begin, int end);
 }
