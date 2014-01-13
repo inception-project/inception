@@ -70,6 +70,10 @@ public class AutomationModel
      * Train {@link TagSet} used for MIRA prediction
      */
     private TagSet trainTagSet;
+    /**
+     * {@link TagSet} used as a feature for the trainTagSet
+     */
+    private TagSet featureTagSet;
 
     public boolean isCapitalized()
     {
@@ -251,5 +255,16 @@ public class AutomationModel
         this.predictAutomator = predictAutomator;
     }
 
+    public TagSet getFeatureTagSet()
+    {
+        return featureTagSet;
+    }
+
+    public void setFeatureTagSet(TagSet featureTagSet)
+    {
+        this.featureTagSet = featureTagSet;
+    }
+
+    
 
 }

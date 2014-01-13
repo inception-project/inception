@@ -94,7 +94,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
  * This is the main class for the Automation page. Displays in the lower panel the Automatically
  * annotated document and in the upper panel the annotation pane to trigger automation on the lower
  * pane.
- *
+ * 
  * @author Seid Muhie Yimam
  */
 public class AutomationPage
@@ -378,11 +378,11 @@ public class AutomationPage
                     error("No Layer is selected");
                     return;
                 }
-                if (!AutomationUtil.isTemplateConfigured(automationModel)) {
+  /*              if (!AutomationUtil.isTemplateConfigured(automationModel)) {
                     aTarget.add(feedbackPanel);
                     error("No MIRA template is configured");
                     return;
-                }
+                }*/
 
                 try {
                     if (!existsFinishedCurationDocument(bratAnnotatorModel.getProject())) {
@@ -391,7 +391,8 @@ public class AutomationPage
                         return;
                     }
                     AutomationUtil.casToMiraTrainData(bratAnnotatorModel.getProject(),
-                            automationModel.getTrainTagSet(), automationModel, repository);
+                            automationModel.getTrainTagSet(), automationModel.getFeatureTagSet(),
+                            automationModel, repository);
                     result = AutomationUtil.train(bratAnnotatorModel.getProject(),
                             automationModel.getTrainTagSet(), automationModel, repository);
                     update(aTarget);
@@ -433,11 +434,11 @@ public class AutomationPage
                     return;
                 }
 
-                if (!AutomationUtil.isTemplateConfigured(automationModel)) {
+            /*    if (!AutomationUtil.isTemplateConfigured(automationModel)) {
                     aTarget.add(feedbackPanel);
                     error("No MIRA template is configured");
                     return;
-                }
+                }*/
                 if (repository.isAnnotationFinished(bratAnnotatorModel.getDocument(),
                         bratAnnotatorModel.getUser())) {
                     aTarget.add(feedbackPanel);
@@ -459,7 +460,7 @@ public class AutomationPage
                             existingTemplateFile,
                             new File(AutomationUtil.createMiraTemplate(
                                     bratAnnotatorModel.getProject(), repository, automationModel,
-                                    thisTemplateFile)))) {
+                                    automationModel.getTrainTagSet(), thisTemplateFile)))) {
                         aTarget.add(feedbackPanel);
                         error("MIRA template file configuration is changed. Use the same configuration for training and prediction");
                         return;
@@ -488,9 +489,10 @@ public class AutomationPage
                     }
 
                     AutomationUtil.predict(bratAnnotatorModel.getDocument(), bratAnnotatorModel
-                            .getUser().getUsername(), automationModel.getTrainTagSet(), begin, end,
-                            automationModel, repository, annotationService, automationModel
-                                    .isPredictAnnotator(), automationModel.isPredictAutomator());
+                            .getUser().getUsername(), automationModel.getTrainTagSet(),
+                            automationModel.getFeatureTagSet(), begin, end, automationModel,
+                            repository, annotationService, automationModel.isPredictAnnotator(),
+                            automationModel.isPredictAutomator());
 
                     update(aTarget);
                     aTarget.appendJavaScript("Wicket.Window.unloadConfirmation = false;window.location.reload()");
@@ -523,9 +525,8 @@ public class AutomationPage
                 try {
                     jCas = repository
                             .getCorrectionDocumentContent(bratAnnotatorModel.getDocument());
-                    BratAnnotatorUtility.clearJcasAutomated(jCas,
-                            bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
-                            repository);
+                    BratAnnotatorUtility.clearJcasAutomated(jCas, bratAnnotatorModel.getDocument(),
+                            bratAnnotatorModel.getUser(), repository);
                     update(aTarget);
                     aTarget.appendJavaScript("Wicket.Window.unloadConfirmation = false;window.location.reload()");
                 }

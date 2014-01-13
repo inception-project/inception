@@ -46,10 +46,10 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.automation.AutomationPage;
 
 /**
  * Modal Window to configure {@link AutomationPage} MIRA templates for training and prediction
- *
+ * 
  * @author Seid Muhie Yimam
  * @author Richard Eckart de Castilho
- *
+ * 
  */
 public class MiraTemplateModalPanel
     extends Panel
@@ -96,6 +96,7 @@ public class MiraTemplateModalPanel
 
             getModelObject().predictInThisPage = automationModel.isPredictInThisPage();
             getModelObject().trainLayer = automationModel.getTrainTagSet();
+            getModelObject().featureLayer = automationModel.getFeatureTagSet();
 
             getModelObject().predictAnnotator = automationModel.isPredictAnnotator();
             getModelObject().predictAutomator = automationModel.isPredictAutomator();
@@ -128,6 +129,10 @@ public class MiraTemplateModalPanel
                     bratModel.getAnnotationLayers())).setChoiceRenderer(new ChoiceRenderer<TagSet>(
                     "name", "id")));
 
+            add(new RadioChoice<TagSet>("featureLayer", new ArrayList<TagSet>(
+                    bratModel.getAnnotationLayers())).setChoiceRenderer(new ChoiceRenderer<TagSet>(
+                    "name", "id")));
+
             add(new AjaxSubmitLink("saveButton")
             {
                 private static final long serialVersionUID = -755759008587787147L;
@@ -154,16 +159,17 @@ public class MiraTemplateModalPanel
                     automationModel.setSuffix5(getModelObject().suffix5);
 
                     automationModel.setTrainTagSet(getModelObject().trainLayer);
+                    if (getModelObject().featureLayer != null)
+                        automationModel.setFeatureTagSet(getModelObject().featureLayer);
                     automationModel.setPredictInThisPage(getModelObject().predictInThisPage);
 
                     automationModel.setPredictAnnotator(getModelObject().predictAnnotator);
                     automationModel.setPredictAutomator(getModelObject().predictAutomator);
 
-
                     if (automationModel.getTrainTagSet() == null) {
                         aTarget.appendJavaScript("alert('No annotation layer is selected for MIRA tarining/prediction')");
-                           return;
-                       }
+                        return;
+                    }
 
                     try {
                         ProjectUtil.savePreference(bratModel, automationModel, projectRepository);
@@ -228,6 +234,7 @@ public class MiraTemplateModalPanel
         public boolean predictInThisPage;
         public boolean useExistingModel;
         public TagSet trainLayer;
+        public TagSet featureLayer;
 
         public boolean predictAnnotator;
         public boolean predictAutomator;

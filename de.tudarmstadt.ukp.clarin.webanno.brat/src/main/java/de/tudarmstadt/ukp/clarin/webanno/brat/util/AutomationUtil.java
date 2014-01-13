@@ -48,6 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AutomationModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
@@ -65,9 +66,9 @@ import edu.lium.mira.Mira;
 
 /**
  * A utility class for the automation modules
- *
+ * 
  * @author Seid Muhie Yimam
- *
+ * 
  */
 public class AutomationUtil
 {
@@ -130,7 +131,7 @@ public class AutomationUtil
 
     }
 
-    public static void casToMiraTrainData(Project aProject, TagSet aTagSet,
+    public static void casToMiraTrainData(Project aProject, TagSet aTagSet, TagSet aFeatureTagSet,
             AutomationModel aAModel, RepositoryService aRepository)
         throws IOException, UIMAException, ClassNotFoundException
     {
@@ -139,8 +140,8 @@ public class AutomationUtil
         File trainFile = new File(miraDir, "train");
         File testFile = new File(miraDir, "test");
 
-        BufferedWriter trainOut =  new BufferedWriter(new FileWriter(trainFile));
-        BufferedWriter testOut =  new BufferedWriter(new  FileWriter(testFile));
+        BufferedWriter trainOut = new BufferedWriter(new FileWriter(trainFile));
+        BufferedWriter testOut = new BufferedWriter(new FileWriter(testFile));
 
         for (SourceDocument sourceDocument : aRepository.listSourceDocuments(aProject)) {
 
@@ -149,13 +150,15 @@ public class AutomationUtil
                 int sentCount = select(jCas, Sentence.class).size();
                 int i = 0;
                 for (Sentence sentence : select(jCas, Sentence.class)) {
-                    if (((double) i / sentCount) * 100 < 74) {
+                    if (((double) i / sentCount) * 100 < 90) {
 
-                        trainOut.append(getMiraLines(sentence, false, aTagSet, aAModel).toString()
+                        trainOut.append(getMiraLines(sentence, false, aTagSet, aFeatureTagSet,
+                                aAModel).toString()
                                 + "\n");
                     }
                     else {
-                        testOut.append(getMiraLines(sentence, false, aTagSet, aAModel).toString()
+                        testOut.append(getMiraLines(sentence, false, aTagSet, aFeatureTagSet,
+                                aAModel).toString()
                                 + "\n");
                     }
                     i++;
@@ -169,7 +172,7 @@ public class AutomationUtil
     }
 
     private static StringBuffer getMiraLines(Sentence sentence, boolean aPredict, TagSet aTagSet,
-            AutomationModel aAModel)
+            TagSet aFeatureTagSet, AutomationModel aAModel)
         throws CASException
     {
         StringBuffer sb = new StringBuffer();
@@ -221,7 +224,18 @@ public class AutomationUtil
                     + " " : "";
 
             String nl = "\n";
+            String featureTagSet = "";
             TypeAdapter adapter = TypeUtil.getAdapter(aTagSet);
+            // TODO: when free annotation layers defined, check if tagset is on multiple token or
+            // not
+            if (adapter.getLabelPrefix().equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)) {
+                TypeAdapter featureAdapter = TypeUtil.getAdapter(aFeatureTagSet);
+                List<String> featureAnnotations = featureAdapter.getAnnotation(sentence.getCAS()
+                        .getJCas(), token.getBegin(), token.getEnd());
+                featureTagSet = featureAnnotations.size() == 0 ? "" : featureAnnotations.get(0)
+                        + " ";
+
+            }
             List<String> annotations = adapter.getAnnotation(sentence.getCAS().getJCas(),
                     token.getBegin(), token.getEnd());
             String tag = aPredict == true ? "" : annotations.size() == 0 ? "__nill__" : annotations
@@ -231,7 +245,7 @@ public class AutomationUtil
             /* + getVowels(word, FileUtils.readFileToString(new File(argv[1]))) + " " */
 
             + containsNUmber + prefix1 + prefix2 + prefix3 + prefix4 + prefix5 + suffix1 + suffix2
-                    + suffix3 + suffix4 + suffix5 + tag + nl);
+                    + suffix3 + suffix4 + suffix5 + featureTagSet + tag + nl);
         }
         return sb;
 
@@ -251,7 +265,7 @@ public class AutomationUtil
             boolean maxPosteriors = false;
             String templateName = null;
 
-            templateName = createMiraTemplate(aProject, aRepository, aAModel,
+            templateName = createMiraTemplate(aProject, aRepository, aAModel, aTagset,
                     getMiraTemplateFile(aProject, aRepository));
             File miraDir = aRepository.getMiraDir(aProject);
             File trainFile = new File(miraDir, "train");
@@ -280,15 +294,76 @@ public class AutomationUtil
         catch (Exception e) {
             e.printStackTrace();
         }
-        return "TRAIN:"+trainResult + "~~~" + "TEST:"+testResult;
+        return "TRAIN:" + trainResult + "~~~" + "TEST:" + testResult;
     }
 
     public static String createMiraTemplate(Project aProject, RepositoryService aRepository,
-            AutomationModel aAModel, File templateFile)
+            AutomationModel aAModel, TagSet aTagSet, File templateFile)
         throws IOException
     {
 
         StringBuffer sb = new StringBuffer();
+        TypeAdapter adapter = TypeUtil.getAdapter(aTagSet);
+        if (adapter.getLabelPrefix().equals(AnnotationTypeConstant.POS_PREFIX)) {
+            setMorphoTemplate(aAModel, sb);
+        }
+        else {
+        setNgramTemplate(aAModel, sb);
+        }
+
+        sb.append("\n");
+        sb.append("B\n");
+        FileUtils.writeStringToFile(templateFile, sb.toString());
+        return templateFile.getAbsolutePath();
+    }
+
+    private static void setNgramTemplate(AutomationModel aAModel, StringBuffer sb)
+    {
+        int i = 1;
+        if (aAModel.getNgram() == 1) {
+            sb.append("U" + String.format("%02d", i) + "%x[0,0]\n");
+            i++;
+            sb.append("U" + String.format("%02d", i) + "%x[0,1]\n");
+            i++;
+        }
+        else if (aAModel.getNgram() == 2) {
+            sb.append("U" + String.format("%02d", i) + "%x[0,0]\n");
+            i++;
+            sb.append("U" + String.format("%02d", i) + "%x[0,1]\n");
+            i++;
+            sb.append("U" + String.format("%02d", i) + "%x[0,0] %x[0,1]\n");
+            i++;
+            sb.append("U" + String.format("%02d", i) + "%x[-1,0] %x[0,0]\n");
+            i++;
+            sb.append("U" + String.format("%02d", i) + "%x[-1,1] %x[0,1]\n");
+            i++;
+        }
+        
+        sb.append("\n");
+        i = 1;
+        if (aAModel.getBigram() == 1) {
+            sb.append("B" + String.format("%02d", i) + "%x[0,0]\n");
+            i++;
+            sb.append("B" + String.format("%02d", i) + "%x[0,1]\n");
+            i++;
+        }
+        else if (aAModel.getNgram() == 2) {
+            sb.append("B" + String.format("%02d", i) + "%x[0,0]\n");
+            i++;
+            sb.append("B" + String.format("%02d", i) + "%x[0,1]\n");
+            i++;
+            sb.append("B" + String.format("%02d", i) + "%x[0,0] %x[0,1]\n");
+            i++;
+            sb.append("B" + String.format("%02d", i) + "%x[-1,0] %x[0,0]\n");
+            i++;
+            sb.append("B" + String.format("%02d", i) + "%x[-1,1] %x[0,1]\n");
+            i++;
+        }
+
+    }
+
+    private static void setMorphoTemplate(AutomationModel aAModel, StringBuffer sb)
+    {
         int i = 1;
         if (aAModel.isCapitalized()) {
             sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
@@ -397,11 +472,6 @@ public class AutomationUtil
                     + "%x[1,0]" + "%x[2,0]\n");
             i++;
         }
-
-        sb.append("\n");
-        sb.append("B\n");
-        FileUtils.writeStringToFile(templateFile, sb.toString());
-        return templateFile.getAbsolutePath();
     }
 
     public static File getMiraTemplateFile(Project aProject, RepositoryService aRepository)
@@ -411,13 +481,14 @@ public class AutomationUtil
     }
 
     public static void predict(SourceDocument aDocument, String aUsername, TagSet aTagSet,
-            int aBegin, int aEnd, AutomationModel aAModel, RepositoryService aRepository,
-            AnnotationService aAnnotationService, boolean aPredictAnnotator, boolean aPredicrAutomator)
+            TagSet aFeatureTagSet, int aBegin, int aEnd, AutomationModel aAModel,
+            RepositoryService aRepository, AnnotationService aAnnotationService,
+            boolean aPredictAnnotator, boolean aPredicrAutomator)
     {
         try {
 
-            File predFile = casToMiraFile(aDocument, aUsername, aTagSet, aBegin, aEnd, aAModel,
-                    aRepository);
+            File predFile = casToMiraFile(aDocument, aUsername, aTagSet, aFeatureTagSet, aBegin,
+                    aEnd, aAModel, aRepository);
             Mira mira = new Mira();
             int shiftColumns = 0;
             int nbest = 1;
@@ -453,24 +524,24 @@ public class AutomationUtil
                 tags.add(tag);
             }
 
-            if(aPredictAnnotator){
-            JCas annotatorJCas = aRepository.readJCas(aDocument, aDocument.getProject(),
-                    aRepository.getUser(aUsername));
+            if (aPredictAnnotator) {
+                JCas annotatorJCas = aRepository.readJCas(aDocument, aDocument.getProject(),
+                        aRepository.getUser(aUsername));
 
-            int i = 0;
-            for (Token token : selectCovered(annotatorJCas, Token.class, aBegin, aEnd)) {
-                Tag tag = aAnnotationService.getTag(tags.get(i), aTagSet);
-                String annotationType = TypeUtil.getQualifiedLabel(tag);
-                BratAjaxCasController controller = new BratAjaxCasController(aRepository,
-                        aAnnotationService);
-                controller.createSpanAnnotation(annotatorJCas, token.getBegin(), token.getEnd(),
-                        annotationType, null, null);
-                i++;
+                int i = 0;
+                for (Token token : selectCovered(annotatorJCas, Token.class, aBegin, aEnd)) {
+                    Tag tag = aAnnotationService.getTag(tags.get(i), aTagSet);
+                    String annotationType = TypeUtil.getQualifiedLabel(tag);
+                    BratAjaxCasController controller = new BratAjaxCasController(aRepository,
+                            aAnnotationService);
+                    controller.createSpanAnnotation(annotatorJCas, token.getBegin(),
+                            token.getEnd(), annotationType, null, null);
+                    i++;
+                }
+                aRepository.createAnnotationDocumentContent(annotatorJCas, aDocument,
+                        aRepository.getUser(aUsername));
             }
-            aRepository.createAnnotationDocumentContent(annotatorJCas, aDocument,
-                    aRepository.getUser(aUsername));
-            }
-            if(aPredicrAutomator){
+            if (aPredicrAutomator) {
                 JCas automateJCas = aRepository.getCorrectionDocumentContent(aDocument);
                 int i = 0;
                 for (Token token : selectCovered(automateJCas, Token.class, aBegin, aEnd)) {
@@ -482,8 +553,8 @@ public class AutomationUtil
                             annotationType, null, null);
                     i++;
                 }
-            aRepository.createCorrectionDocumentContent(automateJCas, aDocument,
-                    aRepository.getUser(aUsername));
+                aRepository.createCorrectionDocumentContent(automateJCas, aDocument,
+                        aRepository.getUser(aUsername));
             }
 
         }
@@ -493,7 +564,8 @@ public class AutomationUtil
     }
 
     private static File casToMiraFile(SourceDocument aDocument, String aUsername, TagSet aTagSet,
-            int aBegin, int aEnd, AutomationModel aAModel, RepositoryService aRepository)
+            TagSet aFeatureTagSet, int aBegin, int aEnd, AutomationModel aAModel,
+            RepositoryService aRepository)
         throws UIMAException, IOException, ClassNotFoundException, CASException
     {
         File predFile;
@@ -507,7 +579,8 @@ public class AutomationUtil
         JCas jCas = aRepository.readJCas(aDocument, aDocument.getProject(),
                 aRepository.getUser(aUsername));
         for (Sentence sentence : selectCovered(jCas, Sentence.class, aBegin, aEnd)) {
-            IOUtils.write(getMiraLines(sentence, true, aTagSet, aAModel) + "\n", stream,"UTF-8");
+            IOUtils.write(getMiraLines(sentence, true, aTagSet, aFeatureTagSet, aAModel) + "\n",
+                    stream, "UTF-8");
         }
 
         return predFile;

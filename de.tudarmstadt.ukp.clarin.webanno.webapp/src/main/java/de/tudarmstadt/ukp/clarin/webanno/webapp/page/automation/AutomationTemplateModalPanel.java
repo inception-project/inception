@@ -49,7 +49,7 @@ public class AutomationTemplateModalPanel
         add(automationTemplateModal = new ModalWindow("automationTemplateModal"));
         automationTemplateModal.setOutputMarkupId(true);
         automationTemplateModal.setInitialWidth(450);
-        automationTemplateModal.setInitialHeight(450);
+        automationTemplateModal.setInitialHeight(550);
         automationTemplateModal.setResizable(true);
         automationTemplateModal.setWidthUnit("px");
         automationTemplateModal.setHeightUnit("px");

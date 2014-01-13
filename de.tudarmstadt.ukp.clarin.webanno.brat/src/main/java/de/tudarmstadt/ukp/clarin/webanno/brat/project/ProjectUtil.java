@@ -340,6 +340,9 @@ public class ProjectUtil
                 if (preference.getTrainLayer() != -1) {
                     aAModel.setTrainTagSet(aAnnotationService.getTagSet(preference.getTrainLayer()));
                 }
+                if (preference.getTrainLayer() != -1) {
+                    aAModel.setFeatureTagSet(aAnnotationService.getTagSet(preference.getFeatureTagSet()));
+                }
             }
             // Get tagset using the id, from the properties file
             aBModel.getAnnotationLayers().clear();
@@ -782,6 +785,9 @@ public class ProjectUtil
             preference.setPredictAutomator(aAModel.isPredictAutomator());
             if(aAModel.getTrainTagSet()!=null) {
                 preference.setTrainLayer(aAModel.getTrainTagSet().getId());
+            }
+            if(aAModel.getFeatureTagSet()!=null) {
+                preference.setFeatureTagSet(aAModel.getFeatureTagSet().getId());
             }
         }
         ArrayList<Long> layers = new ArrayList<Long>();
