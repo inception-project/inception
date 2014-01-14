@@ -393,21 +393,80 @@ public class SpanAdapter
         Feature feature = type.getFeatureByBaseName(labelFeatureName);
 
         int i = 0;
-        for (Token token : selectCovered(aJcas, Token.class, aBegin, aEnd)) {
+        String prevNe = "O";
+        int begin = 0;
+        int end = 0;
+        if (type.getName().equals(NamedEntity.class.getName())) {
+            for (Token token : selectCovered(aJcas, Token.class, aBegin, aEnd)) {
+                String value = aLabelValues.get(i);
+                AnnotationFS newAnnotation;
+                if (value.equals("O") && prevNe.equals("O")) {
+                    i++;
+                    continue;
+                }
+                else if (value.equals("O") && !prevNe.equals("O")) {
+                    newAnnotation = aJcas.getCas().createAnnotation(type, begin, end);
+                    newAnnotation.setStringValue(feature, prevNe.replace("B-", ""));
+                    prevNe = "O";
+                    aJcas.getCas().addFsToIndexes(newAnnotation);
+                }
+                else if (!value.equals("O") && prevNe.equals("O")) {
+                    begin = token.getBegin();
+                    end = token.getEnd();
+                    prevNe = value;
 
-            AnnotationFS newAnnotation = aJcas.getCas().createAnnotation(type, token.getBegin(),
-                    token.getEnd());
-            newAnnotation.setStringValue(feature,
-                    aLabelValues.get(i).replace("B-", "").replace("I-", ""));
-            i++;
-            if (attachFeature != null) {
-                Type theType = CasUtil.getType(aJcas.getCas(), attachType);
-                Feature posFeature = theType.getFeatureByBaseName(attachFeature);
-                CasUtil.selectCovered(aJcas.getCas(), theType, token.getBegin(), token.getEnd())
-                        .get(0).setFeatureValue(posFeature, newAnnotation);
+                }
+                else if (!value.equals("O") && !prevNe.equals("O")) {
+                    if (value.replace("B-", "").replace("I-", "")
+                            .equals(prevNe.replace("B-", "").replace("I-", ""))
+                            && value.startsWith("B-")) {
+                        newAnnotation = aJcas.getCas().createAnnotation(type, begin, end);
+                        newAnnotation.setStringValue(feature,
+                                prevNe.replace("B-", "").replace("I-", ""));
+                        prevNe = value;
+                        begin = token.getBegin();
+                        end = token.getEnd();
+                        aJcas.getCas().addFsToIndexes(newAnnotation);
+
+                    }
+                    else if (value.replace("B-", "").replace("I-", "")
+                            .equals(prevNe.replace("B-", "").replace("I-", ""))) {
+                        i++;
+                        end = token.getEnd();
+                        continue;
+
+                    }
+                    else {
+                        newAnnotation = aJcas.getCas().createAnnotation(type, begin, end);
+                        newAnnotation.setStringValue(feature,
+                                prevNe.replace("B-", "").replace("I-", ""));
+                        prevNe = value;
+                        begin = token.getBegin();
+                        end = token.getEnd();
+                        aJcas.getCas().addFsToIndexes(newAnnotation);
+
+                    }
+                }
+
+                i++;
+
             }
-            aJcas.getCas().addFsToIndexes(newAnnotation);
+        }
+        else {
+            for (Token token : selectCovered(aJcas, Token.class, aBegin, aEnd)) {
+
+                AnnotationFS newAnnotation = aJcas.getCas().createAnnotation(type,
+                        token.getBegin(), token.getEnd());
+                newAnnotation.setStringValue(feature, aLabelValues.get(i));
+                i++;
+                if (attachFeature != null) {
+                    Type theType = CasUtil.getType(aJcas.getCas(), attachType);
+                    Feature posFeature = theType.getFeatureByBaseName(attachFeature);
+                    CasUtil.selectCovered(aJcas.getCas(), theType, token.getBegin(), token.getEnd())
+                            .get(0).setFeatureValue(posFeature, newAnnotation);
+                }
+                aJcas.getCas().addFsToIndexes(newAnnotation);
+            }
         }
     }
-
 }

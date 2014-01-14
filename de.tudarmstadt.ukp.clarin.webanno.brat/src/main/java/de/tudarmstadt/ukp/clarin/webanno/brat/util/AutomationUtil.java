@@ -150,21 +150,10 @@ public class AutomationUtil
 
             if (sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
                 JCas jCas = aRepository.getCurationDocumentContent(sourceDocument);
-                int sentCount = select(jCas, Sentence.class).size();
-                int i = 0;
                 for (Sentence sentence : select(jCas, Sentence.class)) {
-                    if (((double) i / sentCount) * 100 < 95) {
 
-                        trainOut.append(getMiraLines(sentence, false, aTagSet, aFeatureTagSet,
-                                aAModel).toString()
-                                + "\n");
-                    }
-                    else {
-                        testOut.append(getMiraLines(sentence, false, aTagSet, aFeatureTagSet,
-                                aAModel).toString()
-                                + "\n");
-                    }
-                    i++;
+                    trainOut.append(getMiraLines(sentence, false, aTagSet, aFeatureTagSet, aAModel)
+                            .toString() + "\n");
                 }
             }
 
@@ -305,12 +294,16 @@ public class AutomationUtil
                     getMiraTemplateFile(aProject, aRepository));
             File miraDir = aRepository.getMiraDir(aProject);
             File trainFile = new File(miraDir, "train");
-            File testFile = new File(miraDir, "test");
+            // File testFile = new File(miraDir, "test");
             String trainName = trainFile.getAbsolutePath();
             String modelName = aRepository.getMiraModel(aProject).getAbsolutePath();
-            String testName = testFile.getAbsolutePath();
+            // String testName = testFile.getAbsolutePath();
             new Vector<String>();
             boolean randomInit = false;
+            TypeAdapter adapter = TypeUtil.getAdapter(aTagset);
+            if (adapter.getLabelPrefix().equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)) {
+                mira.setIobScorer();
+            }
             mira.loadTemplates(templateName);
             mira.setClip(sigma);
             mira.maxPosteriors = maxPosteriors;
@@ -320,10 +313,10 @@ public class AutomationUtil
             for (int i = 0; i < iterations; i++) {
                 trainResult = mira.train(trainName, iterations, numExamples, i);
                 mira.averageWeights(iterations * numExamples);
-                if (testName != null) {
-                    BufferedReader input = new BufferedReader(new FileReader(testName));
-                    testResult = mira.test(input, null);
-                }
+                /*
+                 * if (testName != null) { BufferedReader input = new BufferedReader(new
+                 * FileReader(testName)); testResult = mira.test(input, null); }
+                 */
             }
             mira.saveModel(modelName);
         }
