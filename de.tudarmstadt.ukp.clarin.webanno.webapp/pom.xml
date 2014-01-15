@@ -284,6 +284,12 @@
 			<artifactId>httpmime</artifactId>
 			<version>4.3-beta1</version>
 		</dependency>
+		<dependency>
+			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+			<artifactId>
+				de.tudarmstadt.ukp.clarin.webanno.tei
+			</artifactId>
+		</dependency>
 	</dependencies>
 	<build>
 		<resources>
