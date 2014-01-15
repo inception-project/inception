@@ -424,6 +424,7 @@ public class TeiReader
                 tokenId = aAttributes.getValue("from");
             }
             else if (TAG_LANG.equals(aName)) {
+                captureText = false;
                 language = aAttributes.getValue("ident");
             }
             else {
@@ -488,7 +489,7 @@ public class TeiReader
                     buffer.append(" ");
                 }
                 else if (addLemma) {
-                    posTag = sb.toString().trim();
+                    lemma = sb.toString().trim();
                 }
                 else if (addPos) {
                     posTag = sb.toString().trim();
