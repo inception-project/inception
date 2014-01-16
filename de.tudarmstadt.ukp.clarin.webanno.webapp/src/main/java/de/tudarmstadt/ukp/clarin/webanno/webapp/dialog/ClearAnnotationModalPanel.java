@@ -102,9 +102,8 @@ public class ClearAnnotationModalPanel
                     String username = SecurityContextHolder.getContext().getAuthentication()
                             .getName();
                     User user = repository.getUser(username);
-                    if (selected.size() == 0) {
-                        aTarget.appendJavaScript("alert('select Annotator or Automated to clear')");
-                        return;
+                    if (selected.get(0).equals("")) {
+                        modalWindow.close(aTarget);
                     }
                     else if (selected.size() == 2) {
 
