@@ -70,7 +70,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationU
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationViewForSourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.AutomationUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.CuratorUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -94,7 +93,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
  * This is the main class for the Automation page. Displays in the lower panel the Automatically
  * annotated document and in the upper panel the annotation pane to trigger automation on the lower
  * pane.
- * 
+ *
  * @author Seid Muhie Yimam
  */
 public class AutomationPage
@@ -514,35 +513,16 @@ public class AutomationPage
             }
         });
 
-        add(new AjaxLink<Void>("clearAutometedCas")
+        add(new ClearAnnotationLink("clearAnnotationLink",
+                new Model<BratAnnotatorModel>(bratAnnotatorModel))
         {
-            private static final long serialVersionUID = 2177457942401020660L;
-
+            private static final long serialVersionUID = -4657965743173979437L;
             @Override
-            public void onClick(AjaxRequestTarget aTarget)
+            public void onChange(AjaxRequestTarget aTarget)
             {
-                JCas jCas;
-                try {
-                    jCas = repository
-                            .getCorrectionDocumentContent(bratAnnotatorModel.getDocument());
-                    BratAnnotatorUtility.clearJcasAutomated(jCas, bratAnnotatorModel.getDocument(),
-                            bratAnnotatorModel.getUser(), repository);
-                    update(aTarget);
-                    aTarget.appendJavaScript("Wicket.Window.unloadConfirmation = false;window.location.reload()");
-                }
-                catch (UIMAException e) {
-                    aTarget.add(feedbackPanel);
-                    error(ExceptionUtils.getRootCause(e));
-                }
-                catch (ClassNotFoundException e) {
-                    aTarget.add(feedbackPanel);
-                    error(e.getMessage());
-                }
-                catch (IOException e) {
-                    aTarget.add(feedbackPanel);
-                    error(e.getMessage());
-                }
-
+                update(aTarget);
+                aTarget.appendJavaScript("Wicket.Window.unloadConfirmation = false;window.location.reload()");
+                bratAnnotatorModel.setAnnotationCleared(false);
             }
         });
 

@@ -30,7 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.YesNoModalPanel;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.YesNoFinishModalPanel;
 
 /**
  * A link to close/finish annotation/correction/curation project
@@ -77,7 +77,7 @@ public class FinishLink
                     target.appendJavaScript("alert('Document already closed!')");
                 }
                 else {
-                    FinishModal.setContent(new YesNoModalPanel(FinishModal.getContentId(),
+                    FinishModal.setContent(new YesNoFinishModalPanel(FinishModal.getContentId(),
                             aModel.getObject(), FinishModal, Mode.ANNOTATION));
                     FinishModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
                     {

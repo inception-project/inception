@@ -43,7 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
  * @author Seid Muhie Yimam
  *
  */
-public class YesNoModalPanel
+public class YesNoFinishModalPanel
     extends Panel
 {
 
@@ -56,7 +56,7 @@ public class YesNoModalPanel
 
     private BratAnnotatorModel bratAnnotatorModel;
 
-    public YesNoModalPanel(String aId, BratAnnotatorModel aOpenDocumentModel, ModalWindow aModalWindow,
+    public YesNoFinishModalPanel(String aId, BratAnnotatorModel aOpenDocumentModel, ModalWindow aModalWindow,
             Mode aSubject)
     {
         super(aId);

@@ -115,6 +115,8 @@ public class BratAnnotatorModel
      */
     private String message = "";
 
+    private boolean annotationCleared = false;
+
     public Project getProject()
     {
         return project;
@@ -293,6 +295,16 @@ public class BratAnnotatorModel
     public void setMessage(String message)
     {
         this.message = message;
+    }
+
+    public boolean isAnnotationCleared()
+    {
+        return annotationCleared;
+    }
+
+    public void setAnnotationCleared(boolean annotationCleared)
+    {
+        this.annotationCleared = annotationCleared;
     }
 
 

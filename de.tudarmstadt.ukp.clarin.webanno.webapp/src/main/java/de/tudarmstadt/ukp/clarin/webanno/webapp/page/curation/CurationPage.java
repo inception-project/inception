@@ -65,7 +65,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenModalWindowPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.ReCreateMergeCASModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.ReMergeCasModel;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.YesNoModalPanel;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.YesNoFinishModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.AnnotationLayersModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.ExportModalPanel;
@@ -609,7 +609,7 @@ public class CurationPage
                 }
                 else {
                     finishCurationModal
-                            .setContent(new YesNoModalPanel(finishCurationModal.getContentId(),
+                            .setContent(new YesNoFinishModalPanel(finishCurationModal.getContentId(),
                                     bratAnnotatorModel, finishCurationModal, Mode.CURATION));
                     finishCurationModal
                             .setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
