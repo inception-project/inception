@@ -1,9 +1,11 @@
-1	The	_	DT	O	O	4	DET	_	_
-2	quick	_	JJ	O	O	4	amod	_	_
-3	brown	_	JJ	O	O	4	amod	_	_
-4	fox	_	NN	O	O	5	nsubj	_	_
-5	jumps	_	VBZ	O	O	0	ROOT	_	_
-6	over	_	IN	O	O	5	prep	_	_
-7	the	_	DT	O	O	9	DET	_	_
-8	lazy	_	JJ	O	O	9	amod	_	_
-9	dog	_	NN	O	O	6	SUBJ	_	_
+1	The	_	DT	O	4	DET	_	_
+2	quick	_	JJ	O	4	amod	_	_
+3	brown	_	JJ	O	4	amod	_	_
+4	fox	_	NN	O	5	nsubj	_	_
+5	jumps	_	VBZ	O	0	ROOT	_	_
+6	over	_	IN	O	5	prep	_	_
+7	the	_	DT	O	9	DET	_	_
+8	lazy	_	JJ	O	9	amod	_	_
+9	dog	_	NN	O	6	SUBJ	_	_
+								
+#text=The quick brown fox jumps over the lazy dog								
