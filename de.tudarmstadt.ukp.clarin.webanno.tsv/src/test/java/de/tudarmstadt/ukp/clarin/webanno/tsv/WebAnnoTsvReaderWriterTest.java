@@ -17,10 +17,10 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.tsv;
 
-import static org.junit.Assert.assertEquals;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createPrimitiveDescription;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createCollectionReader;
 import static org.apache.uima.fit.pipeline.SimplePipeline.runPipeline;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 
@@ -30,7 +30,7 @@ import org.apache.uima.collection.CollectionReader;
 import org.junit.Test;
 
 
-public class ConllReaderWriterTest
+public class WebAnnoTsvReaderWriterTest
 {
     @Test
 
@@ -39,7 +39,7 @@ public class ConllReaderWriterTest
     {
         CollectionReader reader = createCollectionReader(WebannoTsvReader.class, WebannoTsvReader.PARAM_PATH,
                 new File("src/test/resources/tsv/").getAbsolutePath(), WebannoTsvReader.PARAM_PATTERNS,
-                new String[] { "[+]fk003_2006_08_ZH1.tsv" });
+                new String[] { "[+]brief1.tsv" });
 
         AnalysisEngineDescription writer = createPrimitiveDescription(WebannoTsvWriter.class,
                 WebannoTsvWriter.PARAM_TARGET_LOCATION, "target/test-output", WebannoTsvWriter.PARAM_STRIP_EXTENSION,
@@ -52,9 +52,9 @@ public class ConllReaderWriterTest
         runPipeline(reader, writer);
 
         String reference = FileUtils.readFileToString(new File(
-                "src/test/resources/tsv/fk003_2006_08_ZH1.tsv"), "UTF-8");
+                "src/test/resources/tsv/brief1.tsv"), "UTF-8");
         String actual = FileUtils.readFileToString(
-                new File("target/test-output/fk003_2006_08_ZH1.tsv"), "UTF-8");
+                new File("target/test-output/brief1.tsv"), "UTF-8");
         assertEquals(reference, actual);
     }
 }
