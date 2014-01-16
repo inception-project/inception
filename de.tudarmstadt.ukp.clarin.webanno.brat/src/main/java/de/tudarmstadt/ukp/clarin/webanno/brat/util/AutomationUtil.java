@@ -224,7 +224,7 @@ public class AutomationUtil
             String featureTagSet = "";
             // TODO: when free annotation layers defined, check if tagset is on multiple token or
             // not
-            if (adapter.getLabelPrefix().equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)) {
+            if (adapter.getLabelPrefix().equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX) && aFeatureTagSet.getId()>0) {
                 TypeAdapter featureAdapter = TypeUtil.getAdapter(aFeatureTagSet);
                 List<String> featureAnnotations = featureAdapter.getAnnotation(sentence.getCAS()
                         .getJCas(), token.getBegin(), token.getEnd());
@@ -276,8 +276,8 @@ public class AutomationUtil
         }
     }
 
-    public static String train(Project aProject, TagSet aTagset, AutomationModel aAModel,
-            RepositoryService aRepository)
+    public static String train(Project aProject, TagSet aTagset, TagSet aFeatureTagset,
+            AutomationModel aAModel, RepositoryService aRepository)
     {
         String trainResult = "";
         String testResult = "";
@@ -291,7 +291,7 @@ public class AutomationUtil
             String templateName = null;
 
             templateName = createMiraTemplate(aProject, aRepository, aAModel, aTagset,
-                    getMiraTemplateFile(aProject, aRepository));
+                    aFeatureTagset, getMiraTemplateFile(aProject, aRepository));
             File miraDir = aRepository.getMiraDir(aProject);
             File trainFile = new File(miraDir, "train");
             // File testFile = new File(miraDir, "test");
@@ -327,7 +327,7 @@ public class AutomationUtil
     }
 
     public static String createMiraTemplate(Project aProject, RepositoryService aRepository,
-            AutomationModel aAModel, TagSet aTagSet, File templateFile)
+            AutomationModel aAModel, TagSet aTagSet, TagSet aFeatureTagSet, File templateFile)
         throws IOException
     {
 
@@ -335,12 +335,12 @@ public class AutomationUtil
         TypeAdapter adapter = TypeUtil.getAdapter(aTagSet);
         int i = 1;
         if (adapter.getLabelPrefix().equals(AnnotationTypeConstant.POS_PREFIX)) {
-            setMorphoTemplate(aAModel, sb, i);
+            i = setMorphoTemplate(aAModel, sb, i);
             setNgramForLable(aAModel, sb, i);
         }
         else {
-            setMorphoTemplate(aAModel, sb, i);
-            setNgramTemplate(aAModel, sb, i);
+            i = setMorphoTemplate(aAModel, sb, i);
+            setNgramTemplate(aAModel, sb, i, aFeatureTagSet);
         }
 
         sb.append("\n");
@@ -408,52 +408,58 @@ public class AutomationUtil
         }
     }
 
-    private static void setNgramTemplate(AutomationModel aAModel, StringBuffer sb, int i)
+    private static void setNgramTemplate(AutomationModel aAModel, StringBuffer sb, int i,
+            TagSet aFeatureTagSet)
     {
 
+        int featureTag = i;
         if (aAModel.getNgram() == 1) {
             sb.append("U" + String.format("%02d", i) + "%x[0,0]\n");
             i++;
-            sb.append("U" + String.format("%02d", i) + "%x[0,1]\n");
+            sb.append("U" + String.format("%02d", i) + "%x[0," + featureTag + "]\n");
             i++;
         }
         else if (aAModel.getNgram() == 2) {
             sb.append("U" + String.format("%02d", i) + "%x[0,0]\n");
             i++;
-            sb.append("U" + String.format("%02d", i) + "%x[0,1]\n");
+            sb.append("U" + String.format("%02d", i) + "%x[0," + featureTag + "]\n");
             i++;
-            sb.append("U" + String.format("%02d", i) + "%x[0,0] %x[0,1]\n");
+            sb.append("U" + String.format("%02d", i) + "%x[0,0] %x[0," + featureTag + "]\n");
             i++;
             sb.append("U" + String.format("%02d", i) + "%x[-1,0] %x[0,0]\n");
             i++;
-            sb.append("U" + String.format("%02d", i) + "%x[-1,1] %x[0,1]\n");
+            sb.append("U" + String.format("%02d", i) + "%x[-1," + featureTag + "] %x[0,"
+                    + featureTag + "]\n");
             i++;
         }
 
         sb.append("\n");
         i = 1;
-        if (aAModel.getBigram() == 1) {
-            sb.append("B" + String.format("%02d", i) + "%x[0,0]\n");
-            i++;
-            sb.append("B" + String.format("%02d", i) + "%x[0,1]\n");
-            i++;
-        }
-        else if (aAModel.getNgram() == 2) {
-            sb.append("B" + String.format("%02d", i) + "%x[0,0]\n");
-            i++;
-            sb.append("B" + String.format("%02d", i) + "%x[0,1]\n");
-            i++;
-            sb.append("B" + String.format("%02d", i) + "%x[0,0] %x[0,1]\n");
-            i++;
-            sb.append("B" + String.format("%02d", i) + "%x[-1,0] %x[0,0]\n");
-            i++;
-            sb.append("B" + String.format("%02d", i) + "%x[-1,1] %x[0,1]\n");
-            i++;
+        if (aFeatureTagSet.getId()>0) {
+            if (aAModel.getBigram() == 1) {
+                sb.append("B" + String.format("%02d", i) + "%x[0,0]\n");
+                i++;
+                sb.append("B" + String.format("%02d", i) + "%x[0," + featureTag + "]\n");
+                i++;
+            }
+            else if (aAModel.getNgram() == 2) {
+                sb.append("B" + String.format("%02d", i) + "%x[0,0]\n");
+                i++;
+                sb.append("B" + String.format("%02d", i) + "%x[0," + featureTag + "]\n");
+                i++;
+                sb.append("B" + String.format("%02d", i) + "%x[0,0] %x[0," + featureTag + "]\n");
+                i++;
+                sb.append("B" + String.format("%02d", i) + "%x[-1,0] %x[0,0]\n");
+                i++;
+                sb.append("B" + String.format("%02d", i) + "%x[-1," + featureTag + "] %x[0,"
+                        + featureTag + "]\n");
+                i++;
+            }
         }
 
     }
 
-    private static void setMorphoTemplate(AutomationModel aAModel, StringBuffer sb, int i)
+    private static int setMorphoTemplate(AutomationModel aAModel, StringBuffer sb, int i)
     {
         if (aAModel.isCapitalized()) {
             sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
@@ -506,6 +512,8 @@ public class AutomationUtil
         }
 
         sb.append("\n");
+
+        return i;
     }
 
     public static File getMiraTemplateFile(Project aProject, RepositoryService aRepository)

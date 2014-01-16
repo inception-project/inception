@@ -377,11 +377,10 @@ public class AutomationPage
                     error("No Layer is selected");
                     return;
                 }
-  /*              if (!AutomationUtil.isTemplateConfigured(automationModel)) {
-                    aTarget.add(feedbackPanel);
-                    error("No MIRA template is configured");
-                    return;
-                }*/
+                /*
+                 * if (!AutomationUtil.isTemplateConfigured(automationModel)) {
+                 * aTarget.add(feedbackPanel); error("No MIRA template is configured"); return; }
+                 */
 
                 try {
                     if (!existsFinishedCurationDocument(bratAnnotatorModel.getProject())) {
@@ -393,7 +392,8 @@ public class AutomationPage
                             automationModel.getTrainTagSet(), automationModel.getFeatureTagSet(),
                             automationModel, repository);
                     result = AutomationUtil.train(bratAnnotatorModel.getProject(),
-                            automationModel.getTrainTagSet(), automationModel, repository);
+                            automationModel.getTrainTagSet(), automationModel.getFeatureTagSet(),
+                            automationModel, repository);
                     update(aTarget);
                     aTarget.appendJavaScript("Wicket.Window.unloadConfirmation = false;window.location.reload()");
                     aTarget.add(trainResult.setOutputMarkupId(true));
@@ -433,11 +433,10 @@ public class AutomationPage
                     return;
                 }
 
-            /*    if (!AutomationUtil.isTemplateConfigured(automationModel)) {
-                    aTarget.add(feedbackPanel);
-                    error("No MIRA template is configured");
-                    return;
-                }*/
+                /*
+                 * if (!AutomationUtil.isTemplateConfigured(automationModel)) {
+                 * aTarget.add(feedbackPanel); error("No MIRA template is configured"); return; }
+                 */
                 if (repository.isAnnotationFinished(bratAnnotatorModel.getDocument(),
                         bratAnnotatorModel.getUser())) {
                     aTarget.add(feedbackPanel);
@@ -459,7 +458,8 @@ public class AutomationPage
                             existingTemplateFile,
                             new File(AutomationUtil.createMiraTemplate(
                                     bratAnnotatorModel.getProject(), repository, automationModel,
-                                    automationModel.getTrainTagSet(), thisTemplateFile)))) {
+                                    automationModel.getTrainTagSet(),
+                                    automationModel.getFeatureTagSet(), thisTemplateFile)))) {
                         aTarget.add(feedbackPanel);
                         error("MIRA template file configuration is changed. Use the same configuration for training and prediction");
                         return;

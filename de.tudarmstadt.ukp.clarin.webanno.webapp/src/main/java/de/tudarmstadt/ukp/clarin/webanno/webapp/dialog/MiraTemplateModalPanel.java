@@ -46,10 +46,10 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.automation.AutomationPage;
 
 /**
  * Modal Window to configure {@link AutomationPage} MIRA templates for training and prediction
- * 
+ *
  * @author Seid Muhie Yimam
  * @author Richard Eckart de Castilho
- * 
+ *
  */
 public class MiraTemplateModalPanel
     extends Panel
@@ -129,9 +129,13 @@ public class MiraTemplateModalPanel
                     bratModel.getAnnotationLayers())).setChoiceRenderer(new ChoiceRenderer<TagSet>(
                     "name", "id")));
 
-            add(new RadioChoice<TagSet>("featureLayer", new ArrayList<TagSet>(
-                    bratModel.getAnnotationLayers())).setChoiceRenderer(new ChoiceRenderer<TagSet>(
-                    "name", "id")));
+            ArrayList<TagSet> featureLayers = new ArrayList<TagSet>(bratModel.getAnnotationLayers());
+            TagSet noLayer = new TagSet();
+            noLayer.setName("N feature layer");
+            featureLayers.add(noLayer);
+
+            add(new RadioChoice<TagSet>("featureLayer", featureLayers)
+                    .setChoiceRenderer(new ChoiceRenderer<TagSet>("name", "id")));
 
             add(new AjaxSubmitLink("saveButton")
             {
@@ -159,8 +163,9 @@ public class MiraTemplateModalPanel
                     automationModel.setSuffix5(getModelObject().suffix5);
 
                     automationModel.setTrainTagSet(getModelObject().trainLayer);
-                    if (getModelObject().featureLayer != null)
+                    if (getModelObject().featureLayer != null) {
                         automationModel.setFeatureTagSet(getModelObject().featureLayer);
+                    }
                     automationModel.setPredictInThisPage(getModelObject().predictInThisPage);
 
                     automationModel.setPredictAnnotator(getModelObject().predictAnnotator);
