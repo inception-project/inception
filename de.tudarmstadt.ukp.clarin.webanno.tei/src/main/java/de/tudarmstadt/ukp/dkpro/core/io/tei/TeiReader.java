@@ -35,6 +35,7 @@ import org.apache.uima.cas.CASException;
 import org.apache.uima.collection.CollectionException;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.fit.descriptor.TypeCapability;
+import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.util.Logger;
@@ -457,23 +458,65 @@ public class TeiReader
             else if (TAG_SPAN.equals(aName)) {
                 Token token = tokenIds.get(tokenId.substring(1));
                 if (addPos) {
-                    POS pos = new POS(getJCas(), token.getBegin(), token.getEnd());
-                    pos.setPosValue(this.posTag);
-                    pos.addToIndexes();
-                    token.setPos(pos);
-                    token.addToIndexes();
+
+                    boolean duplicate = false;
+                    for (POS pos : JCasUtil.selectCovered(getJCas(), POS.class, token.getBegin(),
+                            token.getEnd())) {
+                        if (pos.getBegin() == token.getBegin() && pos.getEnd() == token.getEnd()) {
+                            if (pos.getPosValue().equals(this.posTag)) {
+                                duplicate = true;
+                                break;
+                            }
+                        }
+
+                    }
+                    if (!duplicate) {
+                        POS pos = new POS(getJCas(), token.getBegin(), token.getEnd());
+                        pos.setPosValue(this.posTag);
+                        pos.addToIndexes();
+                        token.setPos(pos);
+                        token.addToIndexes();
+                    }
                 }
                 else if (addLemma) {
-                    Lemma lemma = new Lemma(getJCas(), token.getBegin(), token.getEnd());
-                    lemma.setValue(this.lemma);
-                    lemma.addToIndexes();
-                    token.setLemma(lemma);
-                    token.addToIndexes();
+                    boolean duplicate = false;
+                    for (Lemma lemma : JCasUtil.selectCovered(getJCas(), Lemma.class,
+                            token.getBegin(), token.getEnd())) {
+                        if (lemma.getBegin() == token.getBegin()
+                                && lemma.getEnd() == token.getEnd()) {
+                            if (lemma.getValue().equals(this.lemma)) {
+                                duplicate = true;
+                                break;
+                            }
+                        }
+
+                    }
+                    if (!duplicate) {
+                        Lemma lemma = new Lemma(getJCas(), token.getBegin(), token.getEnd());
+                        lemma.setValue(this.lemma);
+                        lemma.addToIndexes();
+                        token.setLemma(lemma);
+                        token.addToIndexes();
+                    }
                 }
                 else if (addNe) {
-                    NamedEntity ne = new NamedEntity(getJCas(), token.getBegin(), token.getEnd());
-                    ne.setValue(this.neTag);
-                    ne.addToIndexes();
+                    boolean duplicate = false;
+                    for (NamedEntity ne : JCasUtil.selectCovered(getJCas(), NamedEntity.class,
+                            token.getBegin(), token.getEnd())) {
+                        if (ne.getBegin() == token.getBegin() && ne.getEnd() == token.getEnd()) {
+                            if (ne.getValue().equals(this.neTag)) {
+                                duplicate = true;
+                                break;
+                            }
+                        }
+
+                    }
+                    if (!duplicate) {
+                        NamedEntity ne = new NamedEntity(getJCas(), token.getBegin(),
+                                token.getEnd());
+                        ne.setValue(this.neTag);
+                        ne.addToIndexes();
+                    }
                 }
             }
         }
