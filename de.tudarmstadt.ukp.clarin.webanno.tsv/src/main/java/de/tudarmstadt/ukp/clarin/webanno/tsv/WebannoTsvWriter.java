@@ -24,7 +24,9 @@ import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -136,10 +138,16 @@ public class WebannoTsvWriter
 
             int j = 1;
             // Add named Entity to a token
-            Map<Integer, Map<Integer, String>> tokenNamedEntityMap = new HashMap<Integer, Map<Integer, String>>();
+            Map<Integer, Map<Integer, String>> neAnnos = new HashMap<Integer, Map<Integer, String>>();
 
-            createNEColumn(sentence, tokenNamedEntityMap);
-
+            createNEColumn(sentence, neAnnos);
+            int max = 0;
+            for (Map<Integer, String> neAnno : neAnnos.values()) {
+                if (neAnno.size() > max) {
+                    max = neAnno.size();
+                }
+            }
+            Map<Integer, Integer> nestedNe = new HashMap<Integer, Integer>();
             for (Token token : selectCovered(Token.class, sentence)) {
 
                 String lemma = token.getLemma() == null ? "_" : token.getLemma().getValue();
@@ -147,11 +155,62 @@ public class WebannoTsvWriter
                 String dependent = "_";
 
                 String neAnnotations = "O";
-                Map<Integer, String> ne = tokenNamedEntityMap.get(token.getAddress());
-                if (ne != null) {
-                    neAnnotations = ne.values().toString();
-                }
+                Map<Integer, String> ne = neAnnos.get(token.getAddress());
+                List<Integer> prevAnnos = new ArrayList<Integer>();
 
+                // ========================GET the Previous Named Entity annotations
+                // positions=================
+
+                if (ne != null) {
+                    neAnnotations = "";
+                    for (Integer address : ne.keySet()) {
+                        if (nestedNe.get(address) != null) {
+                            prevAnnos.add(nestedNe.get(address));
+                            ne.put(address, "I_" + ne.get(address));
+                        }
+                    }
+
+                    // get unoccupied possition for ne annotation now
+
+                    int index = 1;
+                    for (Integer address : ne.keySet()) {
+                        if (nestedNe.get(address) == null) {
+                            while (true) {
+                                if (prevAnnos.contains(index)) {
+                                    index++;
+                                }
+                                else {
+                                    ne.put(address, "B_" + ne.get(address));
+                                    nestedNe.put(address, index);
+                                    prevAnnos.add(index);
+                                    index++;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    Collections.sort(prevAnnos);
+                    for (int indexRange = 1; indexRange <= Collections.max(prevAnnos); indexRange++) {
+                        boolean added = false;
+                        for (Integer address : ne.keySet()) {
+                            if (nestedNe.get(address) == indexRange) {
+                                neAnnotations = neAnnotations + ne.get(address) + "||";
+                                added = true;
+                                break;
+                            }
+                        }
+                        if (!added) {
+                            neAnnotations = neAnnotations + "O||";
+                        }
+                    }
+
+                }
+                int lastSeparator = neAnnotations.lastIndexOf("||");
+                if (lastSeparator > 0) {
+                    neAnnotations = new StringBuilder(neAnnotations).replace(lastSeparator,
+                            lastSeparator + 2, "").toString();
+                }
                 String type = dependencyTypeMap.get(token.getAddress()) == null ? "_"
                         : dependencyTypeMap.get(token.getAddress());
 
@@ -170,20 +229,21 @@ public class WebannoTsvWriter
                         && dependencyMap.get(dependentMap.get(token.getAddress())) != null
                         && j == dependencyMap.get(dependentMap.get(token.getAddress()))) {
                     IOUtils.write(j + "\t" + token.getCoveredText() + "\t" + lemma + "\t" + pos
-                            + "\t" + neAnnotations + "\t" + 0 + "\t"
-                            + type + "\t_\t_\n", aOs, aEncoding);
+                            + "\t" + neAnnotations + "\t" + 0 + "\t" + type + "\t_\t_\n", aOs,
+                            aEncoding);
                 }
                 else {
                     IOUtils.write(j + "\t" + token.getCoveredText() + "\t" + lemma + "\t" + pos
-                            + "\t" + neAnnotations + "\t" + dependent
-                            + "\t" + type + "\t_\t_\n", aOs, aEncoding);
+                            + "\t" + neAnnotations + "\t" + dependent + "\t" + type + "\t_\t_\n",
+                            aOs, aEncoding);
                 }
                 j++;
             }
             IOUtils.write("\n", aOs, aEncoding);
         }
 
-        //add the text at the bottom, hence, no need to re-construct texts as well as token positions
+        // add the text at the bottom, hence, no need to re-construct texts as well as token
+        // positions
         IOUtils.write("#text=" + aJCas.getDocumentText() + "\n\n", aOs, aEncoding);
     }
 
@@ -202,51 +262,21 @@ public class WebannoTsvWriter
                     if (tokenNamedEntityMap.get(token.getAddress()) == null) {
 
                         if (tokenNamedEntityMap.size() == 0) {
-                            Map<Integer, String> neAnnoMaps = new HashMap<Integer, String>();
-                            neAnnoMaps.put(namedEntity.getAddress(), "[" + namedEntity.getBegin()
-                                    + ":" + namedEntity.getEnd() + ":" + namedEntity.getValue()
-                                    + "]");
+                            Map<Integer, String> neAnnoMaps = new LinkedHashMap<Integer, String>();
+                            neAnnoMaps.put(namedEntity.getAddress(), namedEntity.getValue());
                             tokenNamedEntityMap.put(token.getAddress(), neAnnoMaps);
                         }
                         else {
-
-                            boolean added = false;// already added to the first token in the span
-                            // annotation
-                            for (int tokIds : tokenNamedEntityMap.keySet()) {
-                                Map<Integer, String> neAnnoMaps = tokenNamedEntityMap.get(tokIds);
-                                for (int annoIds : neAnnoMaps.keySet()) {
-                                if (annoIds == namedEntity.getAddress()) {
-                                    added = true;
-                                    break;
-                                }
-                                }
-                            }
-                            if (!added) {
-                                Map<Integer, String> neAnnoMaps = new HashMap<Integer, String>();
-                                neAnnoMaps.put(namedEntity.getAddress(),
-                                        "[" + namedEntity.getBegin() + ":" + namedEntity.getEnd()
-                                                + ":" + namedEntity.getValue() + "]");
-                                tokenNamedEntityMap.put(token.getAddress(), neAnnoMaps);
-                            }
+                            Map<Integer, String> neAnnoMaps = new LinkedHashMap<Integer, String>();
+                            neAnnoMaps.put(namedEntity.getAddress(), namedEntity.getValue());
+                            tokenNamedEntityMap.put(token.getAddress(), neAnnoMaps);
                         }
                     }
                     else {
                         Map<Integer, String> neAnnoMaps = tokenNamedEntityMap.get(token
                                 .getAddress());
-                        boolean added = false;// already added to the first token in the span
-                                              // annotation
-                        for (int annoIds : neAnnoMaps.keySet()) {
-                            if (annoIds == namedEntity.getAddress()) {
-                                added = true;
-                                break;
-                            }
-                        }
-                        if (!added) {
-                            neAnnoMaps.put(namedEntity.getAddress(), "[" + namedEntity.getBegin()
-                                    + ":" + namedEntity.getEnd() + ":" + namedEntity.getValue()
-                                    + "]");
-                            tokenNamedEntityMap.put(token.getAddress(), neAnnoMaps);
-                        }
+                        neAnnoMaps.put(namedEntity.getAddress(), namedEntity.getValue());
+                        tokenNamedEntityMap.put(token.getAddress(), neAnnoMaps);
 
                     }
                 }
