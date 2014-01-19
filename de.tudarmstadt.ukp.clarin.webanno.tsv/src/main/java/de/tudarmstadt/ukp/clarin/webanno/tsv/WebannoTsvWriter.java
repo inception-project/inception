@@ -52,11 +52,11 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  * second Column: the token <br>
  * third column: the lemma <br>
  * fourth column: the POS <br>
- * fifth/sixth xolumn: Named Entity annotations in BIO(the sixth column is used to encode nested
- * Named Entity) <br>
- * seventh column: the target token for a dependency parsing <br>
- * eighth column: the function of the dependency parsing <br>
- * ninth and tenth column: Not Yet Known
+ * fifth column: Named Entity annotations in BIO(nasted and multiple NE annotations separated by |
+ * Character) <br>
+ * sixth column: the target token for a dependency parsing <br>
+ * seventh column: the function of the dependency parsing <br>
+ * eighth and ninth column: Not Yet Known
  *
  * Columns are separated by TAB character and sentences are separated by a blank new line
  *
@@ -104,7 +104,9 @@ public class WebannoTsvWriter
 
         int sentId = 1;
         for (Sentence sentence : select(aJCas, Sentence.class)) {
+
             IOUtils.write("#id=" + sentId++ + "\n", aOs, aEncoding);
+            IOUtils.write("#text=" + sentence.getCoveredText().replace("\n", "") + "\n", aOs, aEncoding);
             // Map of token and the dependent (token address used as a Key)
             Map<Integer, Integer> dependentMap = new HashMap<Integer, Integer>();
             // Map of governor token address and its token position
@@ -190,26 +192,27 @@ public class WebannoTsvWriter
                         }
                     }
 
+                    // add nes in the column
                     Collections.sort(prevAnnos);
                     for (int indexRange = 1; indexRange <= Collections.max(prevAnnos); indexRange++) {
                         boolean added = false;
                         for (Integer address : ne.keySet()) {
                             if (nestedNe.get(address) == indexRange) {
-                                neAnnotations = neAnnotations + ne.get(address) + "||";
+                                neAnnotations = neAnnotations + ne.get(address) + "|";
                                 added = true;
                                 break;
                             }
                         }
                         if (!added) {
-                            neAnnotations = neAnnotations + "O||";
+                            neAnnotations = neAnnotations + "O|";
                         }
                     }
 
                 }
-                int lastSeparator = neAnnotations.lastIndexOf("||");
+                int lastSeparator = neAnnotations.lastIndexOf("|");
                 if (lastSeparator > 0) {
                     neAnnotations = new StringBuilder(neAnnotations).replace(lastSeparator,
-                            lastSeparator + 2, "").toString();
+                            lastSeparator + 1, "").toString();
                 }
                 String type = dependencyTypeMap.get(token.getAddress()) == null ? "_"
                         : dependencyTypeMap.get(token.getAddress());
@@ -241,10 +244,6 @@ public class WebannoTsvWriter
             }
             IOUtils.write("\n", aOs, aEncoding);
         }
-
-        // add the text at the bottom, hence, no need to re-construct texts as well as token
-        // positions
-        IOUtils.write("#text=" + aJCas.getDocumentText() + "\n\n", aOs, aEncoding);
     }
 
     /**

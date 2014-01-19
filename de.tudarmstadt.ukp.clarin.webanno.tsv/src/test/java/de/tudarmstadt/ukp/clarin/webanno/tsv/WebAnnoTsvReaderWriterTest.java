@@ -39,7 +39,7 @@ public class WebAnnoTsvReaderWriterTest
     {
         CollectionReader reader = createCollectionReader(WebannoTsvReader.class, WebannoTsvReader.PARAM_PATH,
                 new File("src/test/resources/tsv/").getAbsolutePath(), WebannoTsvReader.PARAM_PATTERNS,
-                new String[] { "[+]brief1.tsv" });
+                new String[] { "[+]example.tsv" });
 
         AnalysisEngineDescription writer = createPrimitiveDescription(WebannoTsvWriter.class,
                 WebannoTsvWriter.PARAM_TARGET_LOCATION, "target/test-output", WebannoTsvWriter.PARAM_STRIP_EXTENSION,
@@ -52,9 +52,9 @@ public class WebAnnoTsvReaderWriterTest
         runPipeline(reader, writer);
 
         String reference = FileUtils.readFileToString(new File(
-                "src/test/resources/tsv/brief1.tsv"), "UTF-8");
+                "src/test/resources/tsv/example.tsv"), "UTF-8");
         String actual = FileUtils.readFileToString(
-                new File("target/test-output/brief1.tsv"), "UTF-8");
+                new File("target/test-output/example.tsv"), "UTF-8");
         assertEquals(reference, actual);
     }
 }

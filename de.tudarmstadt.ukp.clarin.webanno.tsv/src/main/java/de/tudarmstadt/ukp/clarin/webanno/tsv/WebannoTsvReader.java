@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -74,8 +75,8 @@ public class WebannoTsvReader
 
         List<Integer> firstTokenInSentence = new ArrayList<Integer>();
 
-        setAnnotations(aIs, aEncoding, text, tokens, pos, lemma, namedEntity,
-                dependencyFunction, dependencyDependent, firstTokenInSentence);
+        setAnnotations(aIs, aEncoding, text, tokens, pos, lemma, namedEntity, dependencyFunction,
+                dependencyDependent, firstTokenInSentence);
 
         aJCas.setDocumentText(text.toString());
 
@@ -218,10 +219,11 @@ public class WebannoTsvReader
      * The Second column is the token <br>
      * The third column is the lemma annotation <br>
      * The fourth column is the POS annotation <br>
-     * The fifth and sixth columns are Named Entity annotations (sixth column nested NE) <br>
-     * The seventh column is the origin token number of dependency parsing <br>
-     * The eighth column is the function/type of the dependency parsing <br>
-     * Ninth and tenth columns are undefind currently
+     * The fifth column is used for Named Entity annotations (Multiple annotations separeted by |
+     * character) <br>
+     * The sixth column is the origin token number of dependency parsing <br>
+     * The seventh column is the function/type of the dependency parsing <br>
+     * eighth and ninth columns are undefined currently
      */
     private void setAnnotations(InputStream aIs, String aEncoding, StringBuilder text,
             Map<Integer, String> tokens, Map<Integer, String> pos, Map<Integer, String> lemma,
@@ -270,12 +272,13 @@ public class WebannoTsvReader
             while (lineTk.hasMoreElements()) {
                 lineTk.nextToken();
                 String token = lineTk.nextToken();
-             //   text.append(token + " ");
+                // text.append(token + " ");
                 tokens.put(tokenNumber, token);
                 lemma.put(tokenNumber, lineTk.nextToken());
                 pos.put(tokenNumber, lineTk.nextToken());
                 String ne = lineTk.nextToken();
-                namedEntity.put(tokenNumber, ne.equals("_") ? "O" : ne);;
+                namedEntity.put(tokenNumber, ne.equals("_") ? "O" : ne);
+                ;
                 String dependentValue = lineTk.nextToken();
                 if (NumberUtils.isDigits(dependentValue)) {
                     int dependent = Integer.parseInt(dependentValue);
@@ -318,22 +321,33 @@ public class WebannoTsvReader
     private void createNamedEntity(Map<Integer, String> aNamedEntityMap, JCas aJCas,
             Map<Integer, String> aTokensMap, Map<String, Token> aJcasTokens)
     {
-        String previousNamedEntity = "O";
+
+        Map<Integer, NamedEntity> indexedNeAnnos = new LinkedHashMap<Integer, NamedEntity>();
 
         for (int i = 1; i <= aTokensMap.size(); i++) {
-            if (previousNamedEntity.equals("O") && aNamedEntityMap.get(i).equals("O")) {
+            if (aNamedEntityMap.get(i).equals("O")) {
                 continue;
             }
+            int index = 1;// to maintain multiple span ne annotation in the same index
+            for (String ne : aNamedEntityMap.get(i).split("\\|")) {
 
-            String[] nes = aNamedEntityMap.get(i).split("\\], \\[");
-            for (String ne : nes) {
-                String[] neAnno = ne.replace("]", "").replace("[", "").split(":");
-                int begin = Integer.parseInt(neAnno[0]);
-                int end = Integer.parseInt(neAnno[1]);
-                String type = neAnno[2];
-                NamedEntity outNamedEntity = new NamedEntity(aJCas, begin, end);
-                outNamedEntity.setValue(type);
-                outNamedEntity.addToIndexes();
+                if (ne.equals("O")) {// for annotations such as B_LOC|O|I_PER and the like
+                    index++;
+                }
+                else if (ne.startsWith("B_")) {
+                    NamedEntity outNamedEntity = new NamedEntity(aJCas, aJcasTokens.get("t_" + i)
+                            .getBegin(), aJcasTokens.get("t_" + i).getEnd());
+                    outNamedEntity.setValue(ne.substring(2));
+                    outNamedEntity.addToIndexes();
+                    indexedNeAnnos.put(index, outNamedEntity);
+                    index++;
+                }
+                else {
+                    NamedEntity outNamedEntity = indexedNeAnnos.get(index);
+                    outNamedEntity.setEnd(aJcasTokens.get("t_" + i).getEnd());
+                    outNamedEntity.addToIndexes();
+                    index++;
+                }
             }
         }
     }
