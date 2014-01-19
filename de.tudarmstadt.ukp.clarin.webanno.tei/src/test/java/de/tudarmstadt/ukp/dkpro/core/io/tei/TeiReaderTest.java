@@ -37,7 +37,7 @@ public class TeiReaderTest
 {
 
     @Test
-    public void brownReaderTest()
+    public void testTeiReader()
         throws Exception
     {
         CollectionReaderDescription reader = createReaderDescription(TeiReader.class,
@@ -62,7 +62,7 @@ public class TeiReaderTest
             assertEquals(876, JCasUtil.select(jcas, Token.class).size());
             assertEquals(292, JCasUtil.select(jcas, POS.class).size());
             assertEquals(292, JCasUtil.select(jcas, Lemma.class).size());
-            assertEquals(651, JCasUtil.select(jcas, NamedEntity.class).size());
+            assertEquals(220, JCasUtil.select(jcas, NamedEntity.class).size());
             assertEquals(5, JCasUtil.select(jcas, Sentence.class).size());
 
             assertEquals(firstSentence, JCasUtil.select(jcas, Sentence.class).iterator().next()
