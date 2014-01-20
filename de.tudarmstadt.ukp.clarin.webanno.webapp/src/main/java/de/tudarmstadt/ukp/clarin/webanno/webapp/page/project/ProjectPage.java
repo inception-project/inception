@@ -490,7 +490,7 @@ public class ProjectPage
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
 
             add(projectType = (RadioChoice<Mode>) new RadioChoice<Mode>("mode",
-                    Arrays.asList(new Mode[] { Mode.ANNOTATION, Mode.AUTOMATION, Mode.CORRECTION }))
+                    Arrays.asList(new Mode[] { Mode.ANNOTATION,/* Mode.AUTOMATION,*/ Mode.CORRECTION }))
                     .setEnabled(projectDetailForm.getModelObject().getId() == 0));
             add(new Button("save", new ResourceModel("label"))
             {
