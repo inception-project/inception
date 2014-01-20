@@ -254,13 +254,12 @@ public class SpanAdapter
         Feature feature = type.getFeatureByBaseName(labelFeatureName);
         for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
 
+
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
-                if (fs.getStringValue(feature).equals(aValue)) {
-                    // fs.setStringValue(feature, aValue);
-                    // allow duplication if the annotation is different
-                    duplicate = true;
-                    break;
+                if (!fs.getStringValue(feature).equals(aValue)) {
+                    fs.setStringValue(feature, aValue);
                 }
+                duplicate = true;
             }
         }
         if (!duplicate) {
