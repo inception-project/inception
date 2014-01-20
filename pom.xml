@@ -10,7 +10,7 @@
 	<parent>
 		<artifactId>dkpro-parent-pom</artifactId>
 		<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-		<version>7-SNAPSHOT</version>
+		<version>6</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>

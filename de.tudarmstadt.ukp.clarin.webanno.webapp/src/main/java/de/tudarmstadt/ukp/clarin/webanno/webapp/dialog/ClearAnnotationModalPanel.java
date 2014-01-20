@@ -123,9 +123,14 @@ public class ClearAnnotationModalPanel
                             modalWindow.close(aTarget);
                             bratAnnotatorModel.setAnnotationCleared(true);
                         }
-                        catch (UIMAException | ClassNotFoundException | IOException e) {
+                        catch (UIMAException e){
                             aTarget.appendJavaScript("alert('" + e.getMessage() + "')");
-                            ;
+                        }
+                        catch (ClassNotFoundException e) {
+                            aTarget.appendJavaScript("alert('" + e.getMessage() + "')");
+                        }
+                        catch (IOException e) {
+                            aTarget.appendJavaScript("alert('" + e.getMessage() + "')");
                         }
                     }
                     else if (selected.get(0).equals("Annotator")) {
@@ -141,10 +146,14 @@ public class ClearAnnotationModalPanel
                             modalWindow.close(aTarget);
                             bratAnnotatorModel.setAnnotationCleared(true);
                         }
-                        catch (UIMAException | ClassNotFoundException | IOException e) {
+                        catch (UIMAException e){
                             aTarget.appendJavaScript("alert('" + e.getMessage() + "')");
-                            ;
-
+                        }
+                        catch (ClassNotFoundException e) {
+                            aTarget.appendJavaScript("alert('" + e.getMessage() + "')");
+                        }
+                        catch (IOException e) {
+                            aTarget.appendJavaScript("alert('" + e.getMessage() + "')");
                         }
                     }
                     else if (selected.get(0).equals("Automated")) {
@@ -157,10 +166,14 @@ public class ClearAnnotationModalPanel
                             modalWindow.close(aTarget);
                             bratAnnotatorModel.setAnnotationCleared(true);
                         }
-                        catch (UIMAException | ClassNotFoundException | IOException e) {
+                        catch (UIMAException e){
                             aTarget.appendJavaScript("alert('" + e.getMessage() + "')");
-                            ;
-
+                        }
+                        catch (ClassNotFoundException e) {
+                            aTarget.appendJavaScript("alert('" + e.getMessage() + "')");
+                        }
+                        catch (IOException e) {
+                            aTarget.appendJavaScript("alert('" + e.getMessage() + "')");
                         }
                     }
                 }
