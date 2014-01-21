@@ -94,7 +94,7 @@ public class ProjectPage
 
     public static ProjectSelectionForm projectSelectionForm;
     public static ProjectDetailForm projectDetailForm;
-    private ImportProjectForm importProjectForm;
+    private final ImportProjectForm importProjectForm;
 
     private RadioChoice<Mode> projectType;
     public static boolean visible = true;
@@ -457,6 +457,25 @@ public class ProjectPage
                 }
             });
 
+
+            tabs.add(new AbstractTab(new Model<String>("Automation"))
+            {
+
+                private static final long serialVersionUID = 788812791376373350L;
+
+                @Override
+                public Panel getPanel(String panelId)
+                {
+                    return new ProjectMiraTemplatePanel(panelId, project);
+                }
+
+                @Override
+                public boolean isVisible()
+                {
+                    return project.getObject().getId() != 0;
+
+                }
+            });
             add(allTabs = new AjaxTabbedPanel<ITab>("tabs", tabs));
             ProjectDetailForm.this.setMultiPart(true);
         }

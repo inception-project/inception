@@ -23,12 +23,8 @@ import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createPrimitive;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createPrimitiveDescription;
 import static org.apache.uima.fit.pipeline.SimplePipeline.runPipeline;
-import static org.apache.uima.fit.util.JCasUtil.select;
-import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
 import java.beans.PropertyDescriptor;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -36,14 +32,9 @@ import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.PrintStream;
-import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -56,8 +47,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -68,8 +57,6 @@ import javax.persistence.PersistenceContext;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.LineIterator;
 import org.apache.commons.io.comparator.LastModifiedFileComparator;
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.Level;
@@ -80,7 +67,6 @@ import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.CASImpl;
@@ -105,25 +91,20 @@ import org.springframework.transaction.annotation.Transactional;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AutomationModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.model.CrowdJob;
+import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
-import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.io.JCasFileWriter_ImplBase;
@@ -137,13 +118,12 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.dkpro.core.io.bincas.SerializedCasReader;
 import de.tudarmstadt.ukp.dkpro.core.io.bincas.SerializedCasWriter;
 import de.tudarmstadt.ukp.dkpro.core.tokit.BreakIteratorSegmenter;
-import edu.lium.mira.Mira;
 
 /**
  * Implementation of methods defined in the {@link RepositoryService} interface
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 public class RepositoryServiceDbData
     implements RepositoryService
@@ -235,7 +215,7 @@ public class RepositoryServiceDbData
 
     /**
      * Renames a file.
-     * 
+     *
      * @throws IOException
      *             if the file cannot be renamed.
      * @return the target file.
@@ -253,7 +233,7 @@ public class RepositoryServiceDbData
 
     /**
      * Get the folder where the annotations are stored. Creates the folder if necessary.
-     * 
+     *
      * @throws IOException
      *             if the folder cannot be created.
      */
@@ -1496,7 +1476,7 @@ public class RepositoryServiceDbData
     /**
      * Creates an annotation document (either user's annotation document or CURATION_USER's
      * annotation document)
-     * 
+     *
      * @param aDocument
      *            the {@link SourceDocument}
      * @param aJcas
@@ -1647,7 +1627,7 @@ public class RepositoryServiceDbData
     /**
      * For a given {@link SourceDocument}, return the {@link AnnotationDocument} for the user or for
      * the CURATION_USER
-     * 
+     *
      * @param aDocument
      *            the {@link SourceDocument}
      * @param aUsername
@@ -1943,4 +1923,54 @@ public class RepositoryServiceDbData
         return new File(dir, PROJECT + aProject.getId() + MIRA);
     }
 
+    @Override
+    public void createTemplate(MiraTemplate aTemplate)
+    {
+        if (aTemplate.getId() == 0) {
+            entityManager.persist(aTemplate);
+        }
+        else {
+            entityManager.merge(aTemplate);
+        }
+
+    }
+
+    @Override
+    public MiraTemplate getMiraTemplate(Project aProject, TagSet aTagSet)
+    {
+
+        return entityManager
+                .createQuery("FROM MiraTemplate WHERE tagSet =:tagSet AND project =:project",
+                        MiraTemplate.class).setParameter("tagSet", aTagSet)
+                .setParameter("project", aProject).getSingleResult();
+    }
+
+    @Override
+    public boolean existsMiraTemplate(TagSet tagSet)
+    {
+        try {
+            entityManager
+                    .createQuery("FROM MiraTemplate WHERE trainTagSet =:trainTagSet", MiraTemplate.class)
+                    .setParameter("trainTagSet", tagSet).getSingleResult();
+            return true;
+        }
+        catch (NoResultException ex) {
+            return false;
+
+        }
+    }
+
+    @Override
+    public List<MiraTemplate> listMiraTemplates(Project aProject)
+    {
+        List<MiraTemplate> allTenplates = entityManager.createQuery(
+                "FROM MiraTemplate ORDER BY trainTagSet ASC ", MiraTemplate.class).getResultList();
+        List<MiraTemplate> templatesInThisProject = new ArrayList<MiraTemplate>();
+        for (MiraTemplate miraTemplate : allTenplates) {
+            if (miraTemplate.getTrainTagSet().getProject().getId() == aProject.getId()) {
+                templatesInThisProject.add(miraTemplate);
+            }
+        }
+        return templatesInThisProject;
+    }
 }

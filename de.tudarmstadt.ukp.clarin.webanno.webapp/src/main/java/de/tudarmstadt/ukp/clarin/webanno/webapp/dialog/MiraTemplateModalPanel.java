@@ -72,7 +72,6 @@ public class MiraTemplateModalPanel
     {
         private static final long serialVersionUID = -683824912741426241L;
 
-        @SuppressWarnings({})
         public AutomationTemplateDetailForm(String id, final ModalWindow modalWindow)
         {
             super(id, new CompoundPropertyModel<AutomationTemplateModel>(

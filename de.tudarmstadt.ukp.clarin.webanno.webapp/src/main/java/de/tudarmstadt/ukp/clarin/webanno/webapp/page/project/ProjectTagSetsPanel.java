@@ -96,13 +96,13 @@ public class ProjectTagSetsPanel
     DropDownChoice<String> exportTagsetFormat;
     private String selectedExporTagsetFormat = ExportedTagSetConstant.JSON_FORMAT;
 
-    private TagSetSelectionForm tagSetSelectionForm;
-    private TagSelectionForm tagSelectionForm;
-    private TagSetDetailForm tagSetDetailForm;
-    private TagDetailForm tagDetailForm;
-    private ImportTagSetForm importTagSetForm;
+    private final TagSetSelectionForm tagSetSelectionForm;
+    private final TagSelectionForm tagSelectionForm;
+    private final TagSetDetailForm tagSetDetailForm;
+    private final TagDetailForm tagDetailForm;
+    private final ImportTagSetForm importTagSetForm;
 
-    private Model<Project> selectedProjectModel;
+    private final Model<Project> selectedProjectModel;
 
     public ProjectTagSetsPanel(String id, Model<Project> aProjectModel)
     {
@@ -133,10 +133,8 @@ public class ProjectTagSetsPanel
     {
         private static final long serialVersionUID = -1L;
 
-        @SuppressWarnings({})
         public TagSetSelectionForm(String id)
         {
-            // super(id);
             super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
 
             add(new Button("create", new ResourceModel("label"))
@@ -517,7 +515,7 @@ public class ProjectTagSetsPanel
                 }
             });
 
-            add(exportTagsetFormat = (DropDownChoice<String>) new DropDownChoice<String>(
+            add(exportTagsetFormat = new DropDownChoice<String>(
                     "exportTagsetFormat", new Model<String>(selectedExporTagsetFormat),
                     Arrays.asList(new String[] { ExportedTagSetConstant.JSON_FORMAT,
                             ExportedTagSetConstant.TAB_FORMAT }))
@@ -611,7 +609,7 @@ public class ProjectTagSetsPanel
                                     : tagSet.getType().getDescription();
                             String tagSetDescription = tagSet.getDescription() == null ? ""
                                     : tagSet.getDescription();
-                            os = (OutputStream) new FileOutputStream(exportFile);
+                            os = new FileOutputStream(exportFile);
                             osw = new OutputStreamWriter(os, "UTF-8");
                             bw = new BufferedWriter(osw);
                             bw.write(tagSet.getName() + "\t"

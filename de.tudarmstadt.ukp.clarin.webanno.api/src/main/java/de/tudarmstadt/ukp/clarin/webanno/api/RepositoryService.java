@@ -34,6 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.model.CrowdJob;
+import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -837,5 +838,10 @@ public interface RepositoryService
 
     File getMiraModel(Project project);
 
-    public File getMiraDir(Project project);
+    File getMiraDir(Project project);
+
+    void createTemplate (MiraTemplate template);
+    MiraTemplate getMiraTemplate(Project project, TagSet tagSet);
+    boolean existsMiraTemplate(TagSet tagSet);
+    List<MiraTemplate> listMiraTemplates(Project project);
 }
