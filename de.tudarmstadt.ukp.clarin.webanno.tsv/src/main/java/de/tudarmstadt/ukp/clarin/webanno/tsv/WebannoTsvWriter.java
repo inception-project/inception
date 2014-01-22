@@ -106,7 +106,8 @@ public class WebannoTsvWriter
         for (Sentence sentence : select(aJCas, Sentence.class)) {
 
             IOUtils.write("#id=" + sentId++ + "\n", aOs, aEncoding);
-            IOUtils.write("#text=" + sentence.getCoveredText().replace("\n", "") + "\n", aOs, aEncoding);
+            IOUtils.write("#text=" + sentence.getCoveredText().replace("\n", "") + "\n", aOs,
+                    aEncoding);
             // Map of token and the dependent (token address used as a Key)
             Map<Integer, Integer> dependentMap = new HashMap<Integer, Integer>();
             // Map of governor token address and its token position
@@ -172,7 +173,7 @@ public class WebannoTsvWriter
                         }
                     }
 
-                    // get unoccupied possition for ne annotation now
+                    // get unoccupied position for ne annotation now
 
                     int index = 1;
                     for (Integer address : ne.keySet()) {
@@ -228,17 +229,19 @@ public class WebannoTsvWriter
                     type = "ROOT";
                 }
 
+                // the "O\t" should be some where in the future. it is added for backward
+                // compatibility
                 if (dependentMap.get(token.getAddress()) != null
                         && dependencyMap.get(dependentMap.get(token.getAddress())) != null
                         && j == dependencyMap.get(dependentMap.get(token.getAddress()))) {
                     IOUtils.write(j + "\t" + token.getCoveredText() + "\t" + lemma + "\t" + pos
-                            + "\t" + neAnnotations + "\t" + 0 + "\t" + type + "\t_\t_\n", aOs,
-                            aEncoding);
+                            + "\t" + neAnnotations + "\tO" + "\t" + 0 + "\t" + type + "\t_\t_\n",
+                            aOs, aEncoding);
                 }
                 else {
                     IOUtils.write(j + "\t" + token.getCoveredText() + "\t" + lemma + "\t" + pos
-                            + "\t" + neAnnotations + "\t" + dependent + "\t" + type + "\t_\t_\n",
-                            aOs, aEncoding);
+                            + "\t" + neAnnotations + "\tO" + "\t" + dependent + "\t" + type
+                            + "\t_\t_\n", aOs, aEncoding);
                 }
                 j++;
             }

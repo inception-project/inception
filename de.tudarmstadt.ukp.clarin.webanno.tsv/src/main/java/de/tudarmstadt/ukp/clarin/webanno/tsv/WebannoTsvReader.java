@@ -236,10 +236,13 @@ public class WebannoTsvReader
         int base = 0;
 
         LineIterator lineIterator = IOUtils.lineIterator(aIs, aEncoding);
+        boolean textFound = false;
+        StringBuffer tmpText = new StringBuffer();
         while (lineIterator.hasNext()) {
             String line = lineIterator.next().trim();
             if (line.startsWith("#text=")) {
                 text.append(line.substring(6) + "\n");
+                textFound = true;
                 continue;
             }
             if (line.startsWith("#")) {
@@ -249,7 +252,7 @@ public class WebannoTsvReader
             if (line.isEmpty()) {
                 continue;
             }
-            if (count != 8) {// not a proper TSV file
+            if (count != 9) {// not a proper TSV file
                 getUimaContext().getLogger().log(Level.INFO, "This is not a valid TSV File");
                 throw new IOException("This is not a valid TSV File");
             }
@@ -272,11 +275,15 @@ public class WebannoTsvReader
             while (lineTk.hasMoreElements()) {
                 lineTk.nextToken();
                 String token = lineTk.nextToken();
-                // text.append(token + " ");
+
+                // for backward compatibility
+                tmpText.append(token + " ");
+
                 tokens.put(tokenNumber, token);
                 lemma.put(tokenNumber, lineTk.nextToken());
                 pos.put(tokenNumber, lineTk.nextToken());
                 String ne = lineTk.nextToken();
+                lineTk.nextToken();// make it compatible with prev WebAnno TSV reader
                 namedEntity.put(tokenNumber, ne.equals("_") ? "O" : ne);
                 ;
                 String dependentValue = lineTk.nextToken();
@@ -291,6 +298,9 @@ public class WebannoTsvReader
                 lineTk.nextToken();
                 lineTk.nextToken();
             }
+        }
+        if(!textFound) {
+            text.append(tmpText);
         }
     }
 
