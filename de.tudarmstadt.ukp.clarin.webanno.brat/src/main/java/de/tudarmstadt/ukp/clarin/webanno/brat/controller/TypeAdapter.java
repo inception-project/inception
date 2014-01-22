@@ -47,7 +47,7 @@ public interface TypeAdapter
      * @param aLabelValue
      * @throws BratAnnotationException
      */
-    void addForPredict(JCas aJcas, int aBegin, int aEnd, List<String> labelValues)
+    void addForPredict(JCas aJcas, List<String> labelValues)
         throws BratAnnotationException;
 
     /**

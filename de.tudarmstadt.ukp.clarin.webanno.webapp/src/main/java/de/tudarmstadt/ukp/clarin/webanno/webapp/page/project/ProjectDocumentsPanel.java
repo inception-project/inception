@@ -72,7 +72,7 @@ public class ProjectDocumentsPanel
     private DropDownChoice<String> readableFormatsChoice;
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public ProjectDocumentsPanel(String id, Model<Project> aProjectModel)
+    public ProjectDocumentsPanel(String id, Model<Project> aProjectModel, final boolean aIsTraining)
     {
         super(id);
         this.selectedProjectModel = aProjectModel;
@@ -130,6 +130,11 @@ public class ProjectDocumentsPanel
                         SourceDocument document = new SourceDocument();
                         document.setName(fileName);
                         document.setProject(project);
+
+                        if (aIsTraining) {
+                            document.setTrainingDocument(true);
+                        }
+
                         String reader = projectRepository.getReadableFormatId(readableFormatsChoice
                                 .getModelObject());
                         document.setFormat(reader);
@@ -168,7 +173,16 @@ public class ProjectDocumentsPanel
                         if (project.getId() != 0) {
                             for (SourceDocument document : projectRepository
                                     .listSourceDocuments(project)) {
-                                documents.add(document.getName());
+                                if (aIsTraining) {// in the Automation tab
+                                    if (document.isTrainingDocument()) {
+                                        documents.add(document.getName());
+                                    }
+                                }
+                                else {// in the Documents tab
+                                    if (!document.isTrainingDocument()) {
+                                        documents.add(document.getName());
+                                    }
+                                }
                             }
                         }
                         return documents;

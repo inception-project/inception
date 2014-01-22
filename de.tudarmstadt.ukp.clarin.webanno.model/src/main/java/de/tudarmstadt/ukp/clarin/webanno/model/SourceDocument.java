@@ -70,6 +70,8 @@ public class SourceDocument
 
     private int sentenceAccessed = 0;
 
+    private boolean isTrainingDocument = false;
+
     public long getId()
     {
         return id;
@@ -174,6 +176,16 @@ public class SourceDocument
             return false;
         }
         return true;
+    }
+
+    public boolean isTrainingDocument()
+    {
+        return isTrainingDocument;
+    }
+
+    public void setTrainingDocument(boolean isTrainingDocument)
+    {
+        this.isTrainingDocument = isTrainingDocument;
     }
 
 }

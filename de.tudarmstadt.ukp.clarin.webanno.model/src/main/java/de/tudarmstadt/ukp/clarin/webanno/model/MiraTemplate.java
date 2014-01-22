@@ -82,6 +82,10 @@ public class MiraTemplate
      */
     @ManyToMany
     private Set<TagSet> featureTagSets = new HashSet<TagSet>();
+    /**
+     * Annotate the Automate view while annotating
+     */
+    private boolean annotateAndPredict = true;
 
     public boolean isCapitalized()
     {
@@ -261,6 +265,16 @@ public class MiraTemplate
     public void setId(long id)
     {
         this.id = id;
+    }
+
+    public boolean isAnnotateAndPredict()
+    {
+        return annotateAndPredict;
+    }
+
+    public void setAnnotateAndPredict(boolean annotateAndPredict)
+    {
+        this.annotateAndPredict = annotateAndPredict;
     }
 
 }

@@ -20,7 +20,9 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.dialog;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
@@ -29,10 +31,12 @@ import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.WebPage;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.link.DownloadLink;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
+import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -40,6 +44,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 
 /**
  * Modal window to Export annotated document
@@ -56,21 +61,21 @@ public class ExportModalWindowPage
     private RepositoryService repository;
 
     private class ExportDetailsForm
-        extends Form<Void>
+        extends Form<DefaultModel>
     {
         private static final long serialVersionUID = -4104665452144589457L;
-
 
         private ArrayList<String> writeableFormats;
 
         private String selectedFormat;
+        private DropDownChoice<String> documentChoice;
 
         private DropDownChoice<String> writeableFormatsChoice;
 
         @SuppressWarnings({ "unchecked", "rawtypes" })
         public ExportDetailsForm(String id, final ModalWindow modalWindow)
         {
-            super(id);
+            super(id, new CompoundPropertyModel<DefaultModel>(new DefaultModel()));
             try {
                 writeableFormats = (ArrayList<String>) repository.getWritableFormatLabels();
                 selectedFormat = writeableFormats.get(0);
@@ -97,53 +102,87 @@ public class ExportModalWindowPage
                 }
             });
 
-            add(new DownloadLink("export",
-                    new LoadableDetachableModel<File>()
-                    {
-                        private static final long serialVersionUID = 840863954694163375L;
+            add(documentChoice = new DropDownChoice<String>("documentChoice",
+                    Arrays.asList(new String[] { SELECTEXPORT.ANNOTATED.toString(),
+                            SELECTEXPORT.AUTOMATED.toString() }))
+            {
+                private static final long serialVersionUID = -5565754860069220199L;
 
-                        @Override
-                        protected File load()
-                        {
-                            File downloadFile = null;
+                @Override
+                public boolean isVisible()
+                {
+                    return bratAnnotatorModel.getMode().equals(Mode.AUTOMATION);
+                }
+            });
+            documentChoice.add(new AjaxFormComponentUpdatingBehavior("onchange")
+            {
+                private static final long serialVersionUID = -3853194405966729661L;
 
-                            String username = SecurityContextHolder.getContext()
-                                    .getAuthentication().getName();
-                            if (bratAnnotatorModel.getDocument() == null) {
-                                error("NO Document is opened yet !");
-                            }
-                            else {
+                @Override
+                protected void onUpdate(AjaxRequestTarget target)
+                {
+                    documentChoice.setModelObject(getModelObject().documentChoice);
+                }
+            });
 
-                                try {
-                                    downloadFile = repository.exportAnnotationDocument(
-                                            bratAnnotatorModel.getDocument(),
-                                            username,
-                                            repository.getWritableFormats().get(
-                                                    repository.getWritableFormatId(selectedFormat)),
-                                            bratAnnotatorModel.getDocument().getName(),
-                                            bratAnnotatorModel.getMode());
-                                }
-                                catch (FileNotFoundException e) {
-                                    error("Ubable to find annotation document " + ":"
-                                            + ExceptionUtils.getRootCauseMessage(e));
-                                }
-                                catch (UIMAException e) {
-                                    error("There is a proble while processing the CAS object "
-                                            + ":" + ExceptionUtils.getRootCauseMessage(e));
-                                }
-                                catch (IOException e) {
-                                    error("Ubable to find annotation document " + ":"
-                                            + ExceptionUtils.getRootCauseMessage(e));
-                                }
-                                catch (ClassNotFoundException e) {
-                                    error("The Class name in the properties is not found " + ":"
-                                            + ExceptionUtils.getRootCauseMessage(e));
-                                }
+            add(new Label("automated", "Export Annotated or Automated document :")
+            {
+                private static final long serialVersionUID = -6192738448954722290L;
 
-                            }
-                            return downloadFile;
+                @Override
+                public boolean isVisible()
+                {
+                    return bratAnnotatorModel.getMode().equals(Mode.AUTOMATION);
+                }
+            });
+
+            add(new DownloadLink("export", new LoadableDetachableModel<File>()
+            {
+                private static final long serialVersionUID = 840863954694163375L;
+
+                @Override
+                protected File load()
+                {
+                    File downloadFile = null;
+                    String username = bratAnnotatorModel.getMode().equals(Mode.AUTOMATION)
+                            && getModelObject().documentChoice.equals(SELECTEXPORT.AUTOMATED
+                                    .toString()) ? "CORRECTION_USER" : SecurityContextHolder
+                            .getContext().getAuthentication().getName();
+                    if (bratAnnotatorModel.getDocument() == null) {
+                        error("NO Document is opened yet !");
+                    }
+                    else {
+
+                        try {
+                            downloadFile = repository.exportAnnotationDocument(
+                                    bratAnnotatorModel.getDocument(),
+                                    username,
+                                    repository.getWritableFormats().get(
+                                            repository.getWritableFormatId(selectedFormat)),
+                                    bratAnnotatorModel.getDocument().getName(), bratAnnotatorModel
+                                            .getMode());
                         }
-                    }).setDeleteAfterDownload(true).setOutputMarkupId(true));
+                        catch (FileNotFoundException e) {
+                            error("Ubable to find annotation document " + ":"
+                                    + ExceptionUtils.getRootCauseMessage(e));
+                        }
+                        catch (UIMAException e) {
+                            error("There is a proble while processing the CAS object " + ":"
+                                    + ExceptionUtils.getRootCauseMessage(e));
+                        }
+                        catch (IOException e) {
+                            error("Ubable to find annotation document " + ":"
+                                    + ExceptionUtils.getRootCauseMessage(e));
+                        }
+                        catch (ClassNotFoundException e) {
+                            error("The Class name in the properties is not found " + ":"
+                                    + ExceptionUtils.getRootCauseMessage(e));
+                        }
+
+                    }
+                    return downloadFile;
+                }
+            }).setDeleteAfterDownload(true).setOutputMarkupId(true));
 
             add(new AjaxLink<Void>("close")
             {
@@ -158,6 +197,14 @@ public class ExportModalWindowPage
         }
     }
 
+    public class DefaultModel
+        implements Serializable
+    {
+        private static final long serialVersionUID = -4905538356691404575L;
+        public String documentChoice;
+
+    }
+
     private ExportDetailsForm exportForm;
     private BratAnnotatorModel bratAnnotatorModel;
 
@@ -167,6 +214,11 @@ public class ExportModalWindowPage
         this.bratAnnotatorModel = aBratAnnotatorModel;
         exportForm = new ExportDetailsForm("exportForm", modalWindow);
         add(exportForm);
+    }
+
+    enum SELECTEXPORT
+    {
+        AUTOMATED, ANNOTATED;
     }
 
 }

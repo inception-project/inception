@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
+import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
 import java.util.ArrayList;
@@ -385,7 +386,7 @@ public class SpanAdapter
     }
 
     @Override
-    public void addForPredict(JCas aJcas, int aBegin, int aEnd, List<String> aLabelValues)
+    public void addForPredict(JCas aJcas, List<String> aLabelValues)
         throws BratAnnotationException
     {
         Type type = CasUtil.getType(aJcas.getCas(), annotationTypeName);
@@ -396,7 +397,7 @@ public class SpanAdapter
         int begin = 0;
         int end = 0;
         if (type.getName().equals(NamedEntity.class.getName())) {
-            for (Token token : selectCovered(aJcas, Token.class, aBegin, aEnd)) {
+            for (Token token : select(aJcas, Token.class)) {
                 String value = aLabelValues.get(i);
                 AnnotationFS newAnnotation;
                 if (value.equals("O") && prevNe.equals("O")) {
@@ -452,7 +453,7 @@ public class SpanAdapter
             }
         }
         else {
-            for (Token token : selectCovered(aJcas, Token.class, aBegin, aEnd)) {
+            for (Token token : select(aJcas, Token.class)) {
 
                 AnnotationFS newAnnotation = aJcas.getCas().createAnnotation(type,
                         token.getBegin(), token.getEnd());

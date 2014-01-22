@@ -17,11 +17,14 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.webapp.page.project;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.uima.UIMAException;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.CheckBoxMultipleChoice;
@@ -39,6 +42,8 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.brat.util.AutomationUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -67,6 +72,8 @@ public class ProjectMiraTemplatePanel
 
     private final MiraTemplateSelectionForm miraTemplateSelectionForm;
     private final MiraTemplateDetailForm miraTemplateDetailForm;
+    private final ProjectDocumentsPanel documentsPanel;
+    private final ApplyForm applyForm;
 
     private final Model<Project> selectedProjectModel;
 
@@ -81,11 +88,21 @@ public class ProjectMiraTemplatePanel
         miraTemplateDetailForm.setVisible(false);
         add(miraTemplateDetailForm);
 
+        documentsPanel = new ProjectDocumentsPanel("documentsPanel", aProjectModel, true);
+        documentsPanel.setVisible(false);
+        add(documentsPanel);
+
+        applyForm = new ApplyForm("applyForm");
+        applyForm.setVisible(false);
+        add(applyForm);
+
     }
 
     private class MiraTemplateSelectionForm
         extends Form<SelectionModel>
     {
+        private static final long serialVersionUID = -1528847861284911270L;
+
         public MiraTemplateSelectionForm(String id)
         {
             super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
@@ -108,15 +125,6 @@ public class ProjectMiraTemplatePanel
                             else {
                                 return new ArrayList<MiraTemplate>();
                             }
-
-                            /*
-                             * if (project.getId() != 0) { List<TagSet> allTagSets =
-                             * annotationService.listTagSets(project); List<TagSet> spanTagSets =
-                             * new ArrayList<TagSet>(); for (TagSet tagSet : allTagSets) { if
-                             * (tagSet.getType().getType().equals("span")) {
-                             * spanTagSets.add(tagSet); } } return spanTagSets; } else { return new
-                             * ArrayList<de.tudarmstadt.ukp.clarin.webanno.model.TagSet>(); }
-                             */
                         }
                     });
                     setChoiceRenderer(new ChoiceRenderer<MiraTemplate>()
@@ -139,6 +147,8 @@ public class ProjectMiraTemplatePanel
                     miraTemplateDetailForm.clearInput();
                     miraTemplateDetailForm.setModelObject(aNewSelection);
                     miraTemplateDetailForm.setVisible(true);
+                    documentsPanel.setVisible(true);
+                    applyForm.setVisible(true);
                 }
 
                 @Override
@@ -198,7 +208,6 @@ public class ProjectMiraTemplatePanel
             add(new CheckBox("suffix4"));
             add(new CheckBox("suffix5"));
 
-
             add(new DropDownChoice<Integer>("ngram", Arrays.asList(new Integer[] { 1, 2, 3 })));
 
             add(new DropDownChoice<Integer>("bigram", Arrays.asList(new Integer[] { 1, 2, 3 })));
@@ -221,6 +230,7 @@ public class ProjectMiraTemplatePanel
             add(new CheckBoxMultipleChoice<TagSet>("featureTagSets", spanTagSets,
                     new ChoiceRenderer<TagSet>("name")));
 
+            add(new CheckBox("annotateAndPredict"));
             add(new Button("save", new ResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;
@@ -229,7 +239,7 @@ public class ProjectMiraTemplatePanel
                 public void onSubmit()
                 {
                     MiraTemplate template = MiraTemplateDetailForm.this.getModelObject();
-                    if(template.getFeatureTagSets().contains(template.getTrainTagSet())){
+                    if (template.getFeatureTagSets().contains(template.getTrainTagSet())) {
                         error("A feature train layers should not contain the train layer as a feature");
                         template.getFeatureTagSets().remove(template.getTrainTagSet());
                     }
@@ -239,10 +249,53 @@ public class ProjectMiraTemplatePanel
                         }
                         else {
                             repository.createTemplate(template);
+                            documentsPanel.setVisible(true);
+                            applyForm.setVisible(true);
                         }
                     }
                 }
             });
+        }
+    }
+
+    private class ApplyForm
+        extends Form
+    {
+        private static final long serialVersionUID = -683824912741426241L;
+
+        public ApplyForm(String id)
+        {
+            super(id);
+            add(new Button("apply", new ResourceModel("label"))
+            {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public void onSubmit()
+                {
+                    try {
+                        AutomationUtil.casToMiraTrainData(miraTemplateDetailForm.getModelObject(),
+                                repository);
+                        AutomationUtil.train(selectedProjectModel.getObject(),
+                                miraTemplateDetailForm.getModelObject(), repository);
+                        AutomationUtil.predict(miraTemplateDetailForm.getModelObject(), repository,
+                                annotationService);
+                    }
+                    catch (UIMAException e) {
+                        error(ExceptionUtils.getRootCause(e));
+                    }
+                    catch (ClassNotFoundException e) {
+                        error(e.getMessage());
+                    }
+                    catch (IOException e) {
+                        error(e.getMessage());
+                    }
+                    catch (BratAnnotationException e) {
+                        error(e.getMessage());
+                    }
+                }
+            });
+
         }
     }
 

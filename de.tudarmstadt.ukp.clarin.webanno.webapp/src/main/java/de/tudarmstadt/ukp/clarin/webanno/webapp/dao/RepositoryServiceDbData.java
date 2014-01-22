@@ -494,9 +494,10 @@ public class RepositoryServiceDbData
 
         File annotationFolder = getAnnotationFolder(aDocument);
         String serializedCaseFileName;
-        // for Correction, it will export the corrected result (of the logged in user)
+        // for Correction, it will export the corrected document (of the logged in user)
         // (CORRECTION_USER.ser is
         // the automated result displayed for the user to correct it, not the final result)
+        // for automation, it will export either the corrected cocument (Annotated) or the automated document
         if (aMode.equals(Mode.ANNOTATION) || aMode.equals(Mode.AUTOMATION)
                 || aMode.equals(Mode.CORRECTION)) {
             serializedCaseFileName = aUser + ".ser";

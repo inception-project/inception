@@ -299,7 +299,8 @@ public class OpenModalWindowPanel
                                             user)) {
                                         AnnotationDocument anno = projectRepository
                                                 .getAnnotationDocument(sourceDocument, user);
-                                        if (anno.getState().equals(AnnotationDocumentState.IGNORE)) {
+                                        if (anno.getState().equals(AnnotationDocumentState.IGNORE)
+                                                || sourceDocument.isTrainingDocument()) {
                                             excludeDocuments.add(sourceDocument);
                                         }
                                         else if (anno.getState().equals(
@@ -318,11 +319,11 @@ public class OpenModalWindowPanel
                                         excludeDocuments.add(sourceDocument);
                                     }
                                     else if (sourceDocument.getState().equals(
-                                                    SourceDocumentState.CURATION_FINISHED)) {
+                                            SourceDocumentState.CURATION_FINISHED)) {
                                         states.put(sourceDocument, "red");
                                     }
                                     else if (sourceDocument.getState().equals(
-                                                    SourceDocumentState.CURATION_IN_PROGRESS)) {
+                                            SourceDocumentState.CURATION_IN_PROGRESS)) {
                                         states.put(sourceDocument, "blue");
                                     }
 

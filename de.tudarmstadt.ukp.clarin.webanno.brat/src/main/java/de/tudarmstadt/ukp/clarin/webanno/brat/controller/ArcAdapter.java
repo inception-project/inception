@@ -408,7 +408,7 @@ public class ArcAdapter
     }
 
     @Override
-    public void addForPredict(JCas aJcas, int aBegin, int aEnd, List<String> labelValues)
+    public void addForPredict(JCas aJcas, List<String> labelValues)
         throws BratAnnotationException
     {
         // TODO Auto-generated method stub
