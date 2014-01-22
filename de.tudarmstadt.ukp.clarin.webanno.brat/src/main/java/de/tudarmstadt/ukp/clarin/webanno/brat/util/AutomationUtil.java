@@ -547,7 +547,9 @@ public class AutomationUtil
         User user = aRepository.getUser(username);
         for (SourceDocument sourceDocument : aRepository.listSourceDocuments(layer.getProject())) {
 
-            if (!sourceDocument.isTrainingDocument()) {
+            if (!sourceDocument.isTrainingDocument()
+                    || !sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
+
                 JCas jCas = aRepository.readJCas(sourceDocument, sourceDocument.getProject(), user);
                 File predFile = casToMiraFile(jCas, sourceDocument.getProject(), username, layer,
                         fLayer, -1, -1, aTemplate, aRepository);
