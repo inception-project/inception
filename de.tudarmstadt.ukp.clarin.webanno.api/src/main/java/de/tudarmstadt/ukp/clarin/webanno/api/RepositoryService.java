@@ -836,12 +836,33 @@ public interface RepositoryService
      */
     int isCrowdSourceEnabled();
 
-    File getMiraModel(Project project);
+    /**
+     * Get the a model for a given annotation Layer. model will be genereated per layer
+     */
+    File getMiraModel(TagSet tagSet);
 
-    File getMiraDir(Project project);
+    /**
+     * Get the MIRA director where models, templates and tarining data will be stored
+     */
+    File getMiraDir(TagSet TagSet);
 
-    void createTemplate (MiraTemplate template);
-    MiraTemplate getMiraTemplate(Project project, TagSet tagSet);
+    /**
+     * Create a MIRA template and save the configurations in a database
+     */
+    void createTemplate(MiraTemplate template);
+
+    /**
+     * Get the MIRA template (and hence the template configuration) for a given layer
+     */
+    MiraTemplate getMiraTemplate(TagSet tagSet);
+
+    /**
+     * Check if a MIRA template is already created for this layer
+     */
     boolean existsMiraTemplate(TagSet tagSet);
+
+    /**
+     * List all the MIRA templates created, hence know which layer do have a training conf already!
+     */
     List<MiraTemplate> listMiraTemplates(Project project);
 }

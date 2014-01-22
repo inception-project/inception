@@ -497,7 +497,8 @@ public class RepositoryServiceDbData
         // for Correction, it will export the corrected document (of the logged in user)
         // (CORRECTION_USER.ser is
         // the automated result displayed for the user to correct it, not the final result)
-        // for automation, it will export either the corrected cocument (Annotated) or the automated document
+        // for automation, it will export either the corrected cocument (Annotated) or the automated
+        // document
         if (aMode.equals(Mode.ANNOTATION) || aMode.equals(Mode.AUTOMATION)
                 || aMode.equals(Mode.CORRECTION)) {
             serializedCaseFileName = aUser + ".ser";
@@ -1913,15 +1914,15 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public File getMiraModel(Project aProject)
+    public File getMiraModel(TagSet aTagset)
     {
-        return new File(getMiraDir(aProject), aProject.getName() + "-model");
+        return new File(getMiraDir(aTagset), aTagset.getName() + "-model");
     }
 
     @Override
-    public File getMiraDir(Project aProject)
+    public File getMiraDir(TagSet aTagset)
     {
-        return new File(dir, PROJECT + aProject.getId() + MIRA);
+        return new File(dir, PROJECT + aTagset.getId() + MIRA);
     }
 
     @Override
@@ -1937,13 +1938,13 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public MiraTemplate getMiraTemplate(Project aProject, TagSet aTagSet)
+    public MiraTemplate getMiraTemplate(TagSet aTagSet)
     {
 
         return entityManager
-                .createQuery("FROM MiraTemplate WHERE tagSet =:tagSet AND project =:project",
-                        MiraTemplate.class).setParameter("tagSet", aTagSet)
-                .setParameter("project", aProject).getSingleResult();
+                .createQuery(
+                        "FROM MiraTemplate WHERE trainTagSet =:trainTagSet AND project =:project",
+                        MiraTemplate.class).setParameter("trainTagSet", aTagSet).getSingleResult();
     }
 
     @Override
@@ -1951,8 +1952,9 @@ public class RepositoryServiceDbData
     {
         try {
             entityManager
-                    .createQuery("FROM MiraTemplate WHERE trainTagSet =:trainTagSet", MiraTemplate.class)
-                    .setParameter("trainTagSet", tagSet).getSingleResult();
+                    .createQuery("FROM MiraTemplate WHERE trainTagSet =:trainTagSet",
+                            MiraTemplate.class).setParameter("trainTagSet", tagSet)
+                    .getSingleResult();
             return true;
         }
         catch (NoResultException ex) {

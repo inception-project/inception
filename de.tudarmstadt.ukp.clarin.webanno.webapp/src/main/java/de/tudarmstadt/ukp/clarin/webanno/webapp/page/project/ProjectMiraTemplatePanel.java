@@ -48,10 +48,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.support.EntityModel;
-import edu.lium.mira.Mira;
 
 /**
- * A Panel used to define automation properties for the {@link Mira} machine learning algorithm
+ * A Panel used to define automation properties for the {@link MIRA} machine learning algorithm
  *
  * @author Seid Muhie Yimam
  *
@@ -276,8 +275,9 @@ public class ProjectMiraTemplatePanel
                     try {
                         AutomationUtil.casToMiraTrainData(miraTemplateDetailForm.getModelObject(),
                                 repository);
-                        AutomationUtil.train(selectedProjectModel.getObject(),
-                                miraTemplateDetailForm.getModelObject(), repository);
+                        miraTemplateDetailForm.getModelObject().setResult(
+                                AutomationUtil.train(miraTemplateDetailForm.getModelObject(),
+                                        repository));
                         AutomationUtil.predict(miraTemplateDetailForm.getModelObject(), repository,
                                 annotationService);
                     }

@@ -815,7 +815,7 @@ public class ChainAdapter
     }
 
     @Override
-    public void addForPredict(JCas aJcas,List<String> labelValues)
+    public void automate(JCas aJcas,List<String> labelValues)
         throws BratAnnotationException
     {
         // TODO Auto-generated method stub

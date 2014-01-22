@@ -23,6 +23,7 @@ import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,6 +40,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
@@ -386,8 +388,8 @@ public class SpanAdapter
     }
 
     @Override
-    public void addForPredict(JCas aJcas, List<String> aLabelValues)
-        throws BratAnnotationException
+    public void automate(JCas aJcas, List<String> aLabelValues)
+        throws BratAnnotationException, IOException
     {
         Type type = CasUtil.getType(aJcas.getCas(), annotationTypeName);
         Feature feature = type.getFeatureByBaseName(labelFeatureName);
@@ -396,6 +398,9 @@ public class SpanAdapter
         String prevNe = "O";
         int begin = 0;
         int end = 0;
+        // remove existing annotations of this type, after all it is an automation, no care
+        BratAnnotatorUtility.clearAnnotations(aJcas, type);
+
         if (type.getName().equals(NamedEntity.class.getName())) {
             for (Token token : select(aJcas, Token.class)) {
                 String value = aLabelValues.get(i);

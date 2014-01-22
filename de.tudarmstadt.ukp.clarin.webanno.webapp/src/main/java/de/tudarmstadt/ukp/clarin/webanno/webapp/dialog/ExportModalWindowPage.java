@@ -107,12 +107,18 @@ public class ExportModalWindowPage
                             SELECTEXPORT.AUTOMATED.toString() }))
             {
                 private static final long serialVersionUID = -5565754860069220199L;
-
                 @Override
                 public boolean isVisible()
                 {
                     return bratAnnotatorModel.getMode().equals(Mode.AUTOMATION);
                 }
+
+                @Override
+                protected CharSequence getDefaultChoice(String aSelectedValue)
+                {
+                    return "";
+                }
+
             });
             documentChoice.add(new AjaxFormComponentUpdatingBehavior("onchange")
             {
@@ -124,6 +130,7 @@ public class ExportModalWindowPage
                     documentChoice.setModelObject(getModelObject().documentChoice);
                 }
             });
+
 
             add(new Label("automated", "Export Annotated or Automated document :")
             {

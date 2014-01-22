@@ -17,6 +17,7 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
@@ -46,9 +47,10 @@ public interface TypeAdapter
      * @param aEnd
      * @param aLabelValue
      * @throws BratAnnotationException
+     * @throws IOException
      */
-    void addForPredict(JCas aJcas, List<String> labelValues)
-        throws BratAnnotationException;
+    void automate(JCas aJcas, List<String> labelValues)
+        throws BratAnnotationException, IOException;
 
     /**
      * Add annotations from the CAS, which is controlled by the window size, to the brat response

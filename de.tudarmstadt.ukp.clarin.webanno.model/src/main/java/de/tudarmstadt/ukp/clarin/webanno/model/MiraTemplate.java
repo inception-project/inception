@@ -87,6 +87,11 @@ public class MiraTemplate
      */
     private boolean annotateAndPredict = true;
 
+    /**
+     * Results comprising of the tarining accuracy and number of examples used
+     */
+    private String result = "";
+
     public boolean isCapitalized()
     {
         return capitalized;
@@ -275,6 +280,16 @@ public class MiraTemplate
     public void setAnnotateAndPredict(boolean annotateAndPredict)
     {
         this.annotateAndPredict = annotateAndPredict;
+    }
+
+    public String getResult()
+    {
+        return result;
+    }
+
+    public void setResult(String result)
+    {
+        this.result = result;
     }
 
 }

@@ -73,6 +73,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
+import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -125,6 +127,8 @@ public class MonitoringPage
     private final Image annotatorsProgressImage;
     private final Image annotatorsProgressPercentageImage;
     private final Image overallProjectProgressImage;
+    private final TrainingResultForm trainingResultForm;
+
     private Label overview;
     private DefaultDataTable<?> annotationDocumentStatusTable;
     private DefaultDataTable<?> agreementTable;
@@ -133,6 +137,8 @@ public class MonitoringPage
     private final AnnotationTypeSelectionForm annotationTypeSelectionForm;
     private ListChoice<AnnotationType> annotationTypes;
     private transient Map<SourceDocument, Map<User, JCas>> documentJCases;
+
+    private String result;
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public MonitoringPage()
@@ -146,6 +152,10 @@ public class MonitoringPage
                 new Model<Project>());
         agreementForm.setVisible(false);
         add(agreementForm);
+
+        trainingResultForm = new TrainingResultForm("trainingResultForm");
+        trainingResultForm.setVisible(false);
+        add(trainingResultForm);
 
         annotationTypeSelectionForm = new AnnotationTypeSelectionForm("annotationTypeSelectionForm");
         annotationTypeSelectionForm.setVisible(false);
@@ -273,6 +283,14 @@ public class MonitoringPage
                     monitoringDetailForm.setVisible(true);
                     annotationTypeSelectionForm.setVisible(true);
                     monitoringDetailForm.setVisible(true);
+
+                    if (aNewSelection.getMode().equals(Mode.AUTOMATION)) {
+                        trainingResultForm.setVisible(true);
+                    }
+                    else {
+                        trainingResultForm.setVisible(false);
+                    }
+                    result = "";
 
                     annotationTypeSelectionForm.setModelObject(new SelectionModel());
                     updateAgreementForm();
@@ -604,7 +622,6 @@ public class MonitoringPage
         agreementForm.remove();
         agreementForm = new AgreementForm("agreementForm", new Model<AnnotationType>(),
                 new Model<Project>());
-        agreementForm.setVisible(false);
         add(agreementForm);
         agreementForm.setVisible(true);
     }
@@ -688,6 +705,90 @@ public class MonitoringPage
             agreementForm.add(agreementTable);
             aTarget.add(agreementForm);
         }
+    }
+
+    private class TrainingResultForm
+        extends Form<ResultMOdel>
+    {
+        private static final long serialVersionUID = 1037668483966897381L;
+
+        ListChoice<MiraTemplate> resultChoice;
+        Label resultLabel;
+        public TrainingResultForm(String id)
+        {
+            super(id, new CompoundPropertyModel<ResultMOdel>(new ResultMOdel()));
+
+            add(resultLabel = (Label) new Label("resultLabel", new LoadableDetachableModel<String>()
+            {
+                private static final long serialVersionUID = 891566759811286173L;
+
+                @Override
+                protected String load()
+                {
+                    return result;
+
+                }
+            }).setOutputMarkupId(true));
+
+            add(resultChoice = new ListChoice<MiraTemplate>("layerResult")
+            {
+                private static final long serialVersionUID = 1L;
+
+                {
+                    setChoices(new LoadableDetachableModel<List<MiraTemplate>>()
+                    {
+                        private static final long serialVersionUID = 1L;
+
+                        @Override
+                        protected List<MiraTemplate> load()
+                        {
+
+                            return repository.listMiraTemplates(projectSelectionForm
+                                    .getModelObject().project);
+
+                        }
+                    });
+                    setChoiceRenderer(new ChoiceRenderer<MiraTemplate>()
+                    {
+                        private static final long serialVersionUID = -2000622431037285685L;
+
+                        @Override
+                        public Object getDisplayValue(MiraTemplate aObject)
+                        {
+                            return "[" + aObject.getTrainTagSet().getType().getName() + "] "
+                                    + aObject.getTrainTagSet().getName();
+                        }
+                    });
+                    setNullValid(false);
+                }
+
+                @Override
+                protected CharSequence getDefaultChoice(String aSelectedValue)
+                {
+                    return "";
+                }
+            });
+            resultChoice.add(new OnChangeAjaxBehavior()
+            {
+                private static final long serialVersionUID = 7492425689121761943L;
+
+                @Override
+                protected void onUpdate(AjaxRequestTarget aTarget)
+                {
+                    result = getModelObject().layerResult.getResult();
+                    aTarget.add(resultLabel);
+                }
+            }).setOutputMarkupId(true).setOutputMarkupId(true);
+        }
+
+    }
+
+    public class ResultMOdel
+        implements Serializable
+    {
+        private static final long serialVersionUID = 3611186385198494181L;
+        public MiraTemplate layerResult;
+
     }
 
     /**

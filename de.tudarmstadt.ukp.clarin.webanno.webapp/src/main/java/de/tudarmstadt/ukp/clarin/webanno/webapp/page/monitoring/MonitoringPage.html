@@ -27,12 +27,13 @@
 							<legend>Projects</legend>
 							<select class="hfill" wicket:id="project" size="29"></select>
 						</fieldset>
-					</form>					
+					</form>
 				</td>
 				<td width="80%">
 					<fieldset class="ui-widget-content ui-corner-all">
-					  <legend wicket:id=overview></legend>
-							<img wicket:id="overallProjectProgressImage" alt="Overall Project Progress"></img>
+						<legend wicket:id=overview></legend>
+						<img wicket:id="overallProjectProgressImage"
+							alt="Overall Project Progress"></img>
 					</fieldset>
 					<form wicket:id="monitoringDetailForm" class="hfill">
 						<fieldset class="ui-widget-content ui-corner-all">
@@ -41,21 +42,22 @@
 								<span wicket:id="projectName"></span>
 							</div>
 						</fieldset>
-						<table  class="hfill" >
-						 <tr>
-						   <td>
-							<fieldset class="ui-widget-content ui-corner-all">
-								<legend>Documents finished</legend>
-								<img wicket:id="annotator" alt="Annotation Progress"></img>
-							</fieldset>
-							</td>
-							<td>
-							<fieldset class="ui-widget-content ui-corner-all">
-								<legend>Progress</legend>
-								<img wicket:id="annotatorPercentage" alt="Annotation Progress percentage"></img>
-							</fieldset>
-							</td>
-						 </tr>
+						<table class="hfill">
+							<tr>
+								<td>
+									<fieldset class="ui-widget-content ui-corner-all">
+										<legend>Documents finished</legend>
+										<img wicket:id="annotator" alt="Annotation Progress"></img>
+									</fieldset>
+								</td>
+								<td>
+									<fieldset class="ui-widget-content ui-corner-all">
+										<legend>Progress</legend>
+										<img wicket:id="annotatorPercentage"
+											alt="Annotation Progress percentage"></img>
+									</fieldset>
+								</td>
+							</tr>
 						</table>
 						<fieldset class="ui-widget-content ui-corner-all">
 							<legend>Document status</legend>
@@ -84,6 +86,25 @@
 							</td>
 						</tr>
 					</table>
+
+
+				</td>
+			</tr>
+			<tr>
+			<td></td>
+				<td>
+					<form wicket:id="trainingResultForm" class="hfill">
+						<fieldset class="ui-widget-content ui-corner-all">
+							<legend>Training results</legend>
+							<table class="hfill">
+								<tr style="vertical-align: top;">
+									<td><select class="hfill" wicket:id="layerResult"></select>
+									</td>
+									<td><span wicket:id="resultLabel"></span></td>
+								</tr>
+							</table>
+						</fieldset>
+					</form>
 				</td>
 			</tr>
 		</table>
