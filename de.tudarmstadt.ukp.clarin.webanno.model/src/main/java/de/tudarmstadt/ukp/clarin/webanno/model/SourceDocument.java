@@ -70,7 +70,8 @@ public class SourceDocument
 
     private int sentenceAccessed = 0;
 
-    private boolean isTrainingDocument = false;
+    private boolean trainingDocument = false;
+    private boolean processed = false;
 
     public long getId()
     {
@@ -180,12 +181,23 @@ public class SourceDocument
 
     public boolean isTrainingDocument()
     {
-        return isTrainingDocument;
+        return trainingDocument;
     }
 
-    public void setTrainingDocument(boolean isTrainingDocument)
+    public void setTrainingDocument(boolean trainingDocument)
     {
-        this.isTrainingDocument = isTrainingDocument;
+        this.trainingDocument = trainingDocument;
     }
+
+    public boolean isProcessed()
+    {
+        return processed;
+    }
+
+    public void setProcessed(boolean processed)
+    {
+        this.processed = processed;
+    }
+
 
 }

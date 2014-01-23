@@ -36,7 +36,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
-import java.util.Vector;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -134,7 +133,7 @@ public class AutomationUtil
 
     }
 
-    public static void casToMiraTrainData(MiraTemplate aTemplate, RepositoryService aRepository)
+    public static boolean casToMiraTrainData(MiraTemplate aTemplate, RepositoryService aRepository)
         throws IOException, UIMAException, ClassNotFoundException
     {
 
@@ -143,14 +142,37 @@ public class AutomationUtil
                 .iterator().next() : null;
 
         File miraDir = aRepository.getMiraDir(layer);
-        FileUtils.forceMkdir(miraDir);
+        if (!miraDir.exists()) {
+            FileUtils.forceMkdir(miraDir);
+        }
         File trainFile = new File(miraDir, "train");
-        File testFile = new File(miraDir, "test");
 
         BufferedWriter trainOut = new BufferedWriter(new FileWriter(trainFile));
-        BufferedWriter testOut = new BufferedWriter(new FileWriter(testFile));
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = aRepository.getUser(username);
+
+        boolean existsTemplate = getMiraTemplateFile(layer, aRepository).exists();
+        boolean templateChanged = false;
+        if (existsTemplate) {
+            templateChanged = isTemplateChanged(aTemplate, aRepository, layer, fLayer);
+        }
+
+        // We have a problem merging MIRA models currently
+        // the option is, if at least one new training file is added, it will re-create the model
+        // using all documents
+        boolean processed = true;
+        for (SourceDocument sourceDocument : aRepository.listSourceDocuments(layer.getProject())) {
+            if ((sourceDocument.isTrainingDocument() || sourceDocument.getState().equals(
+                    SourceDocumentState.CURATION_FINISHED))
+                    && (!sourceDocument.isProcessed() || templateChanged)) {
+                processed = false;
+                break;
+            }
+        }
+        if (processed) {
+            trainOut.close();
+            return processed;
+        }
         for (SourceDocument sourceDocument : aRepository.listSourceDocuments(layer.getProject())) {
 
             if (sourceDocument.isTrainingDocument()
@@ -161,12 +183,29 @@ public class AutomationUtil
                     trainOut.append(getMiraLines(sentence, false, layer, fLayer, aTemplate)
                             .toString() + "\n");
                 }
+                sourceDocument.setProcessed(true);
             }
 
         }
         trainOut.close();
-        testOut.close();
+        return processed;
 
+    }
+
+    private static boolean isTemplateChanged(MiraTemplate aTemplate, RepositoryService aRepository,
+            TagSet aLayer, TagSet aFLayer)
+        throws IOException
+    {
+        boolean templateChanged = false;
+        File existingTemplateFile = AutomationUtil.getMiraTemplateFile(aLayer, aRepository);
+        File thisTemplateFile = new File(existingTemplateFile.getAbsolutePath() + "bkp");
+        if (!FileUtils.contentEquals(
+                existingTemplateFile,
+                new File(AutomationUtil.createMiraTemplate(aLayer, aRepository, aTemplate, aLayer,
+                        aFLayer, thisTemplateFile)))) {
+            templateChanged = true;
+        }
+        return templateChanged;
     }
 
     private static StringBuffer getMiraLines(Sentence sentence, boolean aPredict, TagSet aTagSet,
@@ -288,10 +327,9 @@ public class AutomationUtil
     }
 
     public static String train(MiraTemplate aTemplate, RepositoryService aRepository)
-        throws IOException
+        throws IOException, ClassNotFoundException
     {
         String trainResult = "";
-        String testResult = "";
         Mira mira = new Mira();
         int frequency = 2;
         double sigma = 1;
@@ -306,13 +344,14 @@ public class AutomationUtil
 
         templateName = createMiraTemplate(layer, aRepository, aTemplate, layer, fLayer,
                 getMiraTemplateFile(layer, aRepository));
+
         File miraDir = aRepository.getMiraDir(layer);
         File trainFile = new File(miraDir, "train");
-        // File testFile = new File(miraDir, "test");
+        String initalModelName = "";
         String trainName = trainFile.getAbsolutePath();
+
         String modelName = aRepository.getMiraModel(layer).getAbsolutePath();
-        // String testName = testFile.getAbsolutePath();
-        new Vector<String>();
+
         boolean randomInit = false;
         TypeAdapter adapter = TypeUtil.getAdapter(layer);
         if (adapter.getLabelPrefix().equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)) {
@@ -324,6 +363,9 @@ public class AutomationUtil
         mira.beamSize = beamSize;
         int numExamples = mira.count(trainName, frequency);
         mira.initModel(randomInit);
+        if (!initalModelName.equals("")) {
+            mira.loadModel(initalModelName);
+        }
         for (int i = 0; i < iterations; i++) {
             trainResult = mira.train(trainName, iterations, numExamples, i);
             mira.averageWeights(iterations * numExamples);
@@ -554,10 +596,11 @@ public class AutomationUtil
 
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = aRepository.getUser(username);
+
         for (SourceDocument sourceDocument : aRepository.listSourceDocuments(layer.getProject())) {
 
-            if (!sourceDocument.isTrainingDocument()
-                    || !sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
+            if ((!sourceDocument.isTrainingDocument() || !sourceDocument.getState().equals(
+                    SourceDocumentState.CURATION_FINISHED))) {
 
                 JCas jCas = aRepository.readJCas(sourceDocument, sourceDocument.getProject(), user);
                 File predFile = casToMiraFile(jCas, username, layer, fLayer, -1, -1, aTemplate,
@@ -601,6 +644,7 @@ public class AutomationUtil
                 TypeAdapter adapter = TypeUtil.getAdapter(layer);
                 adapter.automate(jCas, tags);
                 aRepository.createCorrectionDocumentContent(jCas, sourceDocument, user);
+                sourceDocument.setProcessed(true);
             }
         }
     }

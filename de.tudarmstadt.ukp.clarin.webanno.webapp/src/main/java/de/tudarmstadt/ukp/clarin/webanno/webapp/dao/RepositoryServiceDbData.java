@@ -1922,7 +1922,7 @@ public class RepositoryServiceDbData
     @Override
     public File getMiraDir(TagSet aTagset)
     {
-        return new File(dir, PROJECT + aTagset.getId() + MIRA);
+        return new File(dir, PROJECT + aTagset.getProject().getId() + MIRA);
     }
 
     @Override
@@ -1943,7 +1943,7 @@ public class RepositoryServiceDbData
 
         return entityManager
                 .createQuery(
-                        "FROM MiraTemplate WHERE trainTagSet =:trainTagSet AND project =:project",
+                        "FROM MiraTemplate WHERE trainTagSet =:trainTagSet",
                         MiraTemplate.class).setParameter("trainTagSet", aTagSet).getSingleResult();
     }
 

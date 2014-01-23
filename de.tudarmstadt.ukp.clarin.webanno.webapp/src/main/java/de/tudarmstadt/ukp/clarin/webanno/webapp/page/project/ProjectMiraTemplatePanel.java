@@ -273,11 +273,14 @@ public class ProjectMiraTemplatePanel
                 public void onSubmit()
                 {
                     try {
-                        AutomationUtil.casToMiraTrainData(miraTemplateDetailForm.getModelObject(),
+
+                      boolean trained =   AutomationUtil.casToMiraTrainData(miraTemplateDetailForm.getModelObject(),
                                 repository);
+                      if(!trained){
                         miraTemplateDetailForm.getModelObject().setResult(
                                 AutomationUtil.train(miraTemplateDetailForm.getModelObject(),
                                         repository));
+                      }
                         AutomationUtil.predict(miraTemplateDetailForm.getModelObject(), repository,
                                 annotationService);
                     }
