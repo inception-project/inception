@@ -61,6 +61,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
+import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
@@ -376,7 +377,7 @@ public class ProjectPage
                 @Override
                 public Panel getPanel(String panelId)
                 {
-                    return new ProjectDocumentsPanel(panelId, project, false);
+                    return new ProjectDocumentsPanel(panelId, project, new Model<MiraTemplate>());
                 }
 
                 @Override

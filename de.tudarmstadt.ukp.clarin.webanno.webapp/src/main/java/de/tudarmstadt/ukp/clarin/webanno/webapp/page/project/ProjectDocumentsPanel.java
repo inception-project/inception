@@ -40,6 +40,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -69,13 +70,16 @@ public class ProjectDocumentsPanel
     private ArrayList<String> readableFormats;
     private String selectedFormat;
     private Model<Project> selectedProjectModel;
+    private MiraTemplate miraTemplate;
     private DropDownChoice<String> readableFormatsChoice;
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public ProjectDocumentsPanel(String id, Model<Project> aProjectModel, final boolean aIsTraining)
+    public ProjectDocumentsPanel(String id, Model<Project> aProjectModel,
+            Model<MiraTemplate> aTemplateModel)
     {
         super(id);
         this.selectedProjectModel = aProjectModel;
+        miraTemplate = aTemplateModel.getObject();
         try {
             readableFormats = new ArrayList<String>(projectRepository.getReadableFormatLabels());
             selectedFormat = readableFormats.get(0);
@@ -131,8 +135,9 @@ public class ProjectDocumentsPanel
                         document.setName(fileName);
                         document.setProject(project);
 
-                        if (aIsTraining) {
+                        if (miraTemplate != null) {
                             document.setTrainingDocument(true);
+                            document.setTemplate(miraTemplate.getId());
                         }
 
                         String reader = projectRepository.getReadableFormatId(readableFormatsChoice
@@ -173,8 +178,9 @@ public class ProjectDocumentsPanel
                         if (project.getId() != 0) {
                             for (SourceDocument document : projectRepository
                                     .listSourceDocuments(project)) {
-                                if (aIsTraining) {// in the Automation tab
-                                    if (document.isTrainingDocument()) {
+                                if (miraTemplate != null) {// in the Automation tab
+                                    if (document.getTemplate() != 0
+                                            && document.getTemplate() == miraTemplate.getId()) {
                                         documents.add(document.getName());
                                     }
                                 }

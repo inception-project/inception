@@ -55,7 +55,6 @@ import wicket.contrib.input.events.InputBehavior;
 import wicket.contrib.input.events.key.KeyType;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AutomationModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
@@ -71,6 +70,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.util.AutomationUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.CuratorUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -110,11 +110,7 @@ public class AutomationPage
     private CurationContainer curationContainer;
     private BratAnnotatorModel bratAnnotatorModel;
 
-    private AutomationModel automationModel;
-
     private Label numberOfPages;
-    private Label trainResult;
-    private String result = "";
     private DocumentNamePanel documentNamePanel;
 
     private int sentenceNumber = 1;
@@ -150,7 +146,6 @@ public class AutomationPage
         bratAnnotatorModel = new BratAnnotatorModel();
         bratAnnotatorModel.setMode(Mode.AUTOMATION);
 
-        automationModel = new AutomationModel();
         LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<CurationUserSegmentForAnnotationDocument>();
         CurationUserSegmentForAnnotationDocument curationUserSegmentForAnnotationDocument = new CurationUserSegmentForAnnotationDocument();
         if (bratAnnotatorModel.getDocument() != null) {
@@ -235,19 +230,20 @@ public class AutomationPage
                 catch (BratAnnotationException e) {
                     error(e.getMessage());
                 }
-
-                result = "";
-                aTarget.add(trainResult.setOutputMarkupId(true));
             }
 
             @Override
             protected void onChange(BratAnnotatorModel aBratAnnotatorModel, int aStart, int aEnd)
             {
+                MiraTemplate template;
                 try {
-
-                    AutomationUtil.predict(bratAnnotatorModel, automationModel, repository,
-                            annotationService, aStart, aEnd,
-                            bratAnnotatorModel.getRememberedSpanTag());
+                    template = repository.getMiraTemplate(bratAnnotatorModel.getRememberedSpanTag()
+                            .getTagSet());
+                    if (!template.isAnnotateAndPredict()) {
+                        return;
+                    }
+                    AutomationUtil.predict(bratAnnotatorModel, repository, annotationService,
+                            aStart, aEnd, bratAnnotatorModel.getRememberedSpanTag());
                 }
                 catch (UIMAException e) {
                     error(ExceptionUtils.getRootCause(e));
@@ -260,6 +256,10 @@ public class AutomationPage
                 }
                 catch (BratAnnotationException e) {
                     error(e.getMessage());
+                }
+                catch (NoResultException e) {// no automation layer is configured yet.
+                    template = null;
+                    return;
                 }
             }
         };
@@ -415,8 +415,7 @@ public class AutomationPage
         });
 
         add(new AnnotationLayersModalPanel("annotationLayersModalPanel",
-                new Model<BratAnnotatorModel>(bratAnnotatorModel), new Model<AutomationModel>(
-                        automationModel))
+                new Model<BratAnnotatorModel>(bratAnnotatorModel))
         {
             private static final long serialVersionUID = -4657965743173979437L;
 
@@ -1040,7 +1039,7 @@ public class AutomationPage
                 bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
                 ProjectUtil.setAnnotationPreference(username, repository, annotationService,
-                        bratAnnotatorModel, automationModel, Mode.AUTOMATION);
+                        bratAnnotatorModel, Mode.AUTOMATION);
             }
             catch (DataRetrievalFailureException ex) {
                 throw ex;

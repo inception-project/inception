@@ -41,7 +41,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AutomationModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -73,7 +72,6 @@ public class AnnotationPreferenceModalPanel
     private NumberTextField<Integer> windowSizeField;
 
     private final BratAnnotatorModel bModel;
-    private final AutomationModel aModel;
 
     private class AnnotationLayerDetailForm
         extends Form<AnnotationLayerDetailFormModel>
@@ -151,7 +149,7 @@ public class AnnotationPreferenceModalPanel
                     bModel.setAnnotationLayers(getModelObject().annotationLayers);
                     bModel.setWindowSize(getModelObject().numberOfSentences);
                     try {
-                        ProjectUtil.savePreference(bModel, aModel, repository);
+                        ProjectUtil.savePreference(bModel, repository);
                     }
                     catch (FileNotFoundException e) {
                       error("Preference file not found");
@@ -200,10 +198,9 @@ public class AnnotationPreferenceModalPanel
     }
 
     public AnnotationPreferenceModalPanel(String aId, final ModalWindow modalWindow,
-            BratAnnotatorModel aBModel, AutomationModel aAModel)
+            BratAnnotatorModel aBModel)
     {
         super(aId);
-        this.aModel = aAModel;
         this.bModel = aBModel;
         tagSelectionForm = new AnnotationLayerDetailForm("tagSelectionForm", modalWindow);
         add(tagSelectionForm);

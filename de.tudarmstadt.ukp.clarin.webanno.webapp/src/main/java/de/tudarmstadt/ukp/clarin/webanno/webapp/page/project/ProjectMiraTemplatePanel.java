@@ -71,7 +71,7 @@ public class ProjectMiraTemplatePanel
 
     private final MiraTemplateSelectionForm miraTemplateSelectionForm;
     private final MiraTemplateDetailForm miraTemplateDetailForm;
-    private final ProjectDocumentsPanel documentsPanel;
+    private ProjectDocumentsPanel documentsPanel;
     private final ApplyForm applyForm;
 
     private final Model<Project> selectedProjectModel;
@@ -87,7 +87,7 @@ public class ProjectMiraTemplatePanel
         miraTemplateDetailForm.setVisible(false);
         add(miraTemplateDetailForm);
 
-        documentsPanel = new ProjectDocumentsPanel("documentsPanel", aProjectModel, true);
+        documentsPanel = new ProjectDocumentsPanel("documentsPanel", aProjectModel, miraTemplate);
         documentsPanel.setVisible(false);
         add(documentsPanel);
 
@@ -95,6 +95,25 @@ public class ProjectMiraTemplatePanel
         applyForm.setVisible(false);
         add(applyForm);
 
+    }
+
+    Model<MiraTemplate> miraTemplate = new Model<MiraTemplate>()
+    {
+        private static final long serialVersionUID = -6394439155356911110L;
+
+        @Override
+        public MiraTemplate getObject()
+        {
+            return miraTemplateDetailForm.getModelObject();
+        }
+    };
+
+    void update(ProjectDocumentsPanel aDcumentsPanel)
+    {
+        documentsPanel.remove();
+        documentsPanel = new ProjectDocumentsPanel("documentsPanel", selectedProjectModel,
+                miraTemplate);
+        add(documentsPanel);
     }
 
     private class MiraTemplateSelectionForm
@@ -148,6 +167,8 @@ public class ProjectMiraTemplatePanel
                     miraTemplateDetailForm.setVisible(true);
                     documentsPanel.setVisible(true);
                     applyForm.setVisible(true);
+                    miraTemplate.setObject(aNewSelection);
+                    update(documentsPanel);
                 }
 
                 @Override
@@ -250,6 +271,8 @@ public class ProjectMiraTemplatePanel
                             repository.createTemplate(template);
                             documentsPanel.setVisible(true);
                             applyForm.setVisible(true);
+                            miraTemplate.setObject(MiraTemplateDetailForm.this.getModelObject());
+                            update(documentsPanel);
                         }
                     }
                 }
@@ -257,6 +280,7 @@ public class ProjectMiraTemplatePanel
         }
     }
 
+    @SuppressWarnings("rawtypes")
     private class ApplyForm
         extends Form
     {
@@ -274,13 +298,13 @@ public class ProjectMiraTemplatePanel
                 {
                     try {
 
-                      boolean trained =   AutomationUtil.casToMiraTrainData(miraTemplateDetailForm.getModelObject(),
-                                repository);
-                      if(!trained){
-                        miraTemplateDetailForm.getModelObject().setResult(
-                                AutomationUtil.train(miraTemplateDetailForm.getModelObject(),
-                                        repository));
-                      }
+                        boolean trained = AutomationUtil.casToMiraTrainData(
+                                miraTemplateDetailForm.getModelObject(), repository);
+                        if (!trained) {
+                            miraTemplateDetailForm.getModelObject().setResult(
+                                    AutomationUtil.train(miraTemplateDetailForm.getModelObject(),
+                                            repository));
+                        }
                         AutomationUtil.predict(miraTemplateDetailForm.getModelObject(), repository,
                                 annotationService);
                     }

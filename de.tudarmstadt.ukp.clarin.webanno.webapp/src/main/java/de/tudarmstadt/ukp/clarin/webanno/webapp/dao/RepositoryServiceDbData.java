@@ -1058,9 +1058,14 @@ public class RepositoryServiceDbData
             removeSourceDocument(document, aUser);
         }
 
+        for(MiraTemplate template: listMiraTemplates(aProject)){
+            removeMiraTemplate(template);
+        }
+
         for (TagSet tagset : annotationService.listTagSets(aProject)) {
             annotationService.removeTagSet(tagset);
         }
+
 
         // remove the project directory from the file system
         String path = dir.getAbsolutePath() + PROJECT + aProject.getId();
@@ -1926,6 +1931,7 @@ public class RepositoryServiceDbData
     }
 
     @Override
+    @Transactional
     public void createTemplate(MiraTemplate aTemplate)
     {
         if (aTemplate.getId() == 0) {
@@ -1938,6 +1944,7 @@ public class RepositoryServiceDbData
     }
 
     @Override
+    @Transactional(noRollbackFor = NoResultException.class)
     public MiraTemplate getMiraTemplate(TagSet aTagSet)
     {
 
@@ -1975,5 +1982,11 @@ public class RepositoryServiceDbData
             }
         }
         return templatesInThisProject;
+    }
+
+    @Override
+    @Transactional
+    public void removeMiraTemplate(MiraTemplate aTemplate){
+        entityManager.remove(aTemplate);
     }
 }

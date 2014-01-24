@@ -54,7 +54,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AutomationModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.SourceDocument;
@@ -289,7 +288,7 @@ public class ProjectUtil
      */
     public static void setAnnotationPreference(String aUsername,
             RepositoryService aRepositoryService, AnnotationService aAnnotationService,
-            BratAnnotatorModel aBModel, AutomationModel aAModel, Mode aMode)
+            BratAnnotatorModel aBModel, Mode aMode)
         throws BeansException, FileNotFoundException, IOException
     {
         AnnotationPreference preference = new AnnotationPreference();
@@ -319,31 +318,6 @@ public class ProjectUtil
             aBModel.setWindowSize(preference.getWindowSize());
             aBModel.setScrollPage(preference.isScrollPage());
 
-            if (aAModel != null) {
-                aAModel.setPredictInThisPage(preference.isPredictInThisPage());
-                aAModel.setCapitalized(preference.isCapitalized());
-                aAModel.setContainsNumber(preference.isContainsNumber());
-                aAModel.setNgram(preference.getNgram());
-                aAModel.setBigram(preference.getBigram());
-                aAModel.setPrefix1(preference.isPrefix1());
-                aAModel.setPrefix2(preference.isPrefix2());
-                aAModel.setPrefix3(preference.isPrefix3());
-                aAModel.setPrefix4(preference.isPrefix4());
-                aAModel.setPrefix5(preference.isPrefix5());
-                aAModel.setSuffix1(preference.isSuffix1());
-                aAModel.setSuffix2(preference.isSuffix2());
-                aAModel.setSuffix3(preference.isSuffix3());
-                aAModel.setSuffix4(preference.isSuffix4());
-                aAModel.setSuffix5(preference.isSuffix5());
-                aAModel.setPredictAnnotator(preference.isPredictAnnotator());
-                aAModel.setPredictAutomator(preference.isPredictAutomator());
-                if (preference.getTrainLayer() != -1) {
-                    aAModel.setTrainTagSet(aAnnotationService.getTagSet(preference.getTrainLayer()));
-                }
-                if (preference.getTrainLayer() != -1) {
-                    aAModel.setFeatureTagSet(aAnnotationService.getTagSet(preference.getFeatureTagSet()));
-                }
-            }
             // Get tagset using the id, from the properties file
             aBModel.getAnnotationLayers().clear();
             if (preference.getAnnotationLayers() != null) {
@@ -758,38 +732,12 @@ public class ProjectUtil
 
     }
 
-    public static void savePreference(BratAnnotatorModel aBModel, AutomationModel aAModel,
-            RepositoryService aRepository) throws FileNotFoundException, IOException
+    public static void savePreference(BratAnnotatorModel aBModel, RepositoryService aRepository)
+        throws FileNotFoundException, IOException
     {
         AnnotationPreference preference = new AnnotationPreference();
         preference.setScrollPage(aBModel.isScrollPage());
         preference.setWindowSize(aBModel.getWindowSize());
-
-        if (aAModel != null ) {
-            preference.setPredictInThisPage(aAModel.isPredictInThisPage());
-            preference.setCapitalized(aAModel.isCapitalized());
-            preference.setContainsNumber(aAModel.isContainsNumber());
-            preference.setNgram(aAModel.getNgram());
-            preference.setBigram(aAModel.getBigram());
-            preference.setPrefix1(aAModel.isPrefix1());
-            preference.setPrefix2(aAModel.isPrefix2());
-            preference.setPrefix3(aAModel.isPrefix3());
-            preference.setPrefix4(aAModel.isPrefix4());
-            preference.setPrefix5(aAModel.isPrefix5());
-            preference.setSuffix1(aAModel.isSuffix1());
-            preference.setSuffix2(aAModel.isSuffix2());
-            preference.setSuffix3(aAModel.isSuffix3());
-            preference.setSuffix4(aAModel.isSuffix4());
-            preference.setSuffix5(aAModel.isSuffix5());
-            preference.setPredictAnnotator(aAModel.isPredictAnnotator());
-            preference.setPredictAutomator(aAModel.isPredictAutomator());
-            if(aAModel.getTrainTagSet()!=null) {
-                preference.setTrainLayer(aAModel.getTrainTagSet().getId());
-            }
-            if(aAModel.getFeatureTagSet()!=null) {
-                preference.setFeatureTagSet(aAModel.getFeatureTagSet().getId());
-            }
-        }
         ArrayList<Long> layers = new ArrayList<Long>();
 
         for (TagSet tagset : aBModel.getAnnotationLayers()) {
@@ -798,7 +746,6 @@ public class ProjectUtil
         preference.setAnnotationLayers(layers);
 
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-            aRepository.saveUserSettings(username, aBModel.getProject(),
-                    aBModel.getMode(), preference);
+        aRepository.saveUserSettings(username, aBModel.getProject(), aBModel.getMode(), preference);
     }
 }

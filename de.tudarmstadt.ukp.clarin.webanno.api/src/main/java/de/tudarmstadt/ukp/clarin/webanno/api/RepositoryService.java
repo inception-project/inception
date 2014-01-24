@@ -865,4 +865,5 @@ public interface RepositoryService
      * List all the MIRA templates created, hence know which layer do have a training conf already!
      */
     List<MiraTemplate> listMiraTemplates(Project project);
+    void removeMiraTemplate (MiraTemplate template);
 }

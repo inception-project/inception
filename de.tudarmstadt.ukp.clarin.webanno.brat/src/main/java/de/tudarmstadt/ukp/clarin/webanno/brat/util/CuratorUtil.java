@@ -139,7 +139,7 @@ public class CuratorUtil
 
         bratAnnotatorModel.setMode(Mode.CURATION);
         ProjectUtil.setAnnotationPreference(userLoggedIn.getUsername(), aRepository,
-                aAnnotationService, bratAnnotatorModel, null, Mode.CURATION);
+                aAnnotationService, bratAnnotatorModel, Mode.CURATION);
         return bratAnnotatorModel;
     }
 

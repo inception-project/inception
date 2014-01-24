@@ -292,4 +292,41 @@ public class MiraTemplate
         this.result = result;
     }
 
+    @Override
+    public int hashCode()
+    {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + (int) (id ^ (id >>> 32));
+        result = prime * result + ((trainTagSet == null) ? 0 : trainTagSet.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        MiraTemplate other = (MiraTemplate) obj;
+        if (id != other.id) {
+            return false;
+        }
+        if (trainTagSet == null) {
+            if (other.trainTagSet != null) {
+                return false;
+            }
+        }
+        else if (!trainTagSet.equals(other.trainTagSet)) {
+            return false;
+        }
+        return true;
+    }
+
 }

@@ -37,6 +37,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
+import javax.persistence.NoResultException;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
@@ -47,7 +49,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AutomationModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
@@ -75,9 +76,8 @@ import edu.lium.mira.Mira;
 public class AutomationUtil
 {
 
-    public static void predict(BratAnnotatorModel aModel, AutomationModel aAutomationModel,
-            RepositoryService aRepository, AnnotationService aAnnotationService, int aStart,
-            int aEnd, Tag aTag)
+    public static void predict(BratAnnotatorModel aModel, RepositoryService aRepository,
+            AnnotationService aAnnotationService, int aStart, int aEnd, Tag aTag)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
 
@@ -96,10 +96,18 @@ public class AutomationUtil
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = aRepository.getUser(username);
 
+        MiraTemplate template;
+        try {
+            template = aRepository.getMiraTemplate(aTag.getTagSet());
+        }
+        catch (NoResultException e) {
+            template = null;
+        }
+
         int beginOffset = aModel.getSentenceBeginOffset();
 
         int endOffset;
-        if (aAutomationModel.isPredictInThisPage()) {
+        if (template != null && template.isPredictInThisPage()) {
             endOffset = BratAjaxCasUtil.getLastSentenceEndOffsetInDisplayWindow(jCas,
                     aModel.getSentenceAddress(), aModel.getWindowSize());
         }
@@ -110,27 +118,16 @@ public class AutomationUtil
         }
         for (Sentence sentence : selectCovered(jCas, Sentence.class, beginOffset, endOffset)) {
             String sentenceText = sentence.getCoveredText().toLowerCase();
-            for (int i = -1; (i = sentenceText.indexOf(selectedText.toLowerCase(), i + 1)) != -1
-                    && selectCovered(jCas, Token.class, sentence.getBegin() + i,
-                            sentence.getBegin() + i + selectedText.length()).size() > 0;) {
-                bratAjaxCasController.createSpanAnnotation(jCas, sentence.getBegin() + i,
-                        sentence.getBegin() + i + selectedText.length(), getQualifiedLabel(aTag),
-                        null, null);
+            for (int i = -1; (i = sentenceText.indexOf(selectedText.toLowerCase(), i)) != -1; i++) {
+                if (selectCovered(jCas, Token.class, sentence.getBegin() + i,
+                        sentence.getBegin() + i + selectedText.length()).size() > 0) {
+                    bratAjaxCasController.createSpanAnnotation(jCas, sentence.getBegin() + i,
+                            sentence.getBegin() + i + selectedText.length(),
+                            getQualifiedLabel(aTag), null, null);
+                }
             }
         }
         aRepository.createCorrectionDocumentContent(jCas, aModel.getDocument(), user);
-    }
-
-    public static boolean isTemplateConfigured(AutomationModel aModel)
-    {
-        if (aModel.isCapitalized() || aModel.isContainsNumber() || aModel.isPrefix1()
-                || aModel.isPrefix2() || aModel.isPrefix3() || aModel.isPrefix4()
-                || aModel.isPrefix5() || aModel.isSuffix1() || aModel.isSuffix2()
-                || aModel.isSuffix3() || aModel.isSuffix4() || aModel.isSuffix5()) {
-            return true;
-        }
-        return false;
-
     }
 
     public static boolean casToMiraTrainData(MiraTemplate aTemplate, RepositoryService aRepository)
@@ -174,9 +171,10 @@ public class AutomationUtil
             return processed;
         }
         for (SourceDocument sourceDocument : aRepository.listSourceDocuments(layer.getProject())) {
-
-            if (sourceDocument.isTrainingDocument()
-                    || sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
+            // train documents per layer (those for different layer should be ignored
+            if (sourceDocument.getTemplate() == aTemplate.getId()
+                    && (sourceDocument.isTrainingDocument() || sourceDocument.getState().equals(
+                            SourceDocumentState.CURATION_FINISHED))) {
                 JCas jCas = aRepository.readJCas(sourceDocument, sourceDocument.getProject(), user);
                 for (Sentence sentence : select(jCas, Sentence.class)) {
 
