@@ -45,6 +45,7 @@ import org.apache.commons.io.LineIterator;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.jcas.JCas;
+import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
@@ -605,7 +606,7 @@ public class AutomationUtil
                 try {
                     jCas = aRepository.getCorrectionDocumentContent(sourceDocument);
                 }
-                catch (UIMAException e) {// this was first time automation is done, read from source!
+                catch (DataRetrievalFailureException e) {// this was first time automation is done, read from source!
                     jCas = aRepository.readJCas(sourceDocument, sourceDocument.getProject(), user);
 
                 }
