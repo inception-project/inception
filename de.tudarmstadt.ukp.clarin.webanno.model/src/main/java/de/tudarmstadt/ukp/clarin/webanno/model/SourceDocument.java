@@ -72,7 +72,8 @@ public class SourceDocument
 
     private boolean trainingDocument = false;
     private boolean processed = false;
-    private long template; // if it is a training document, for which Template (layer)
+    @ManyToOne
+    MiraTemplate template; // if it is a training document, for which Template (layer)
 
     public long getId()
     {
@@ -200,12 +201,12 @@ public class SourceDocument
         this.processed = processed;
     }
 
-    public long getTemplate()
+    public MiraTemplate getTemplate()
     {
         return template;
     }
 
-    public void setTemplate(long template)
+    public void setTemplate(MiraTemplate template)
     {
         this.template = template;
     }

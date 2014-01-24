@@ -172,7 +172,8 @@ public class AutomationUtil
         }
         for (SourceDocument sourceDocument : aRepository.listSourceDocuments(layer.getProject())) {
             // train documents per layer (those for different layer should be ignored
-            if (sourceDocument.getTemplate() == aTemplate.getId()
+            if (sourceDocument.getTemplate() != null
+                    && sourceDocument.getTemplate().equals(aTemplate)
                     && (sourceDocument.isTrainingDocument() || sourceDocument.getState().equals(
                             SourceDocumentState.CURATION_FINISHED))) {
                 JCas jCas = aRepository.readJCas(sourceDocument, sourceDocument.getProject(), user);
@@ -597,10 +598,17 @@ public class AutomationUtil
 
         for (SourceDocument sourceDocument : aRepository.listSourceDocuments(layer.getProject())) {
 
-            if ((!sourceDocument.isTrainingDocument() || !sourceDocument.getState().equals(
+            if ((!sourceDocument.isTrainingDocument() && !sourceDocument.getState().equals(
                     SourceDocumentState.CURATION_FINISHED))) {
 
-                JCas jCas = aRepository.readJCas(sourceDocument, sourceDocument.getProject(), user);
+                JCas jCas;
+                try {
+                    jCas = aRepository.getCorrectionDocumentContent(sourceDocument);
+                }
+                catch (UIMAException e) {// this was first time automation is done, read from source!
+                    jCas = aRepository.readJCas(sourceDocument, sourceDocument.getProject(), user);
+
+                }
                 File predFile = casToMiraFile(jCas, username, layer, fLayer, -1, -1, aTemplate,
                         aRepository);
                 Mira mira = new Mira();

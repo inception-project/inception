@@ -137,7 +137,7 @@ public class ProjectDocumentsPanel
 
                         if (miraTemplate != null) {
                             document.setTrainingDocument(true);
-                            document.setTemplate(miraTemplate.getId());
+                            document.setTemplate(miraTemplate);
                         }
 
                         String reader = projectRepository.getReadableFormatId(readableFormatsChoice
@@ -179,8 +179,8 @@ public class ProjectDocumentsPanel
                             for (SourceDocument document : projectRepository
                                     .listSourceDocuments(project)) {
                                 if (miraTemplate != null) {// in the Automation tab
-                                    if (document.getTemplate() != 0
-                                            && document.getTemplate() == miraTemplate.getId()) {
+                                    if (document.getTemplate() != null
+                                            && document.getTemplate().equals(miraTemplate)) {
                                         documents.add(document.getName());
                                     }
                                 }

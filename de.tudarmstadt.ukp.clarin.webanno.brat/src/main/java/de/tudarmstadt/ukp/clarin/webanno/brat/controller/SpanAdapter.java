@@ -391,6 +391,7 @@ public class SpanAdapter
     public void automate(JCas aJcas, List<String> aLabelValues)
         throws BratAnnotationException, IOException
     {
+
         Type type = CasUtil.getType(aJcas.getCas(), annotationTypeName);
         Feature feature = type.getFeatureByBaseName(labelFeatureName);
 
