@@ -70,9 +70,9 @@ import edu.lium.mira.Mira;
 
 /**
  * A utility class for the automation modules
- *
+ * 
  * @author Seid Muhie Yimam
- *
+ * 
  */
 public class AutomationUtil
 {
@@ -172,11 +172,20 @@ public class AutomationUtil
             return processed;
         }
         for (SourceDocument sourceDocument : aRepository.listSourceDocuments(layer.getProject())) {
-            // train documents per layer (those for different layer should be ignored
-            if (sourceDocument.getTemplate() != null
-                    && sourceDocument.getTemplate().equals(aTemplate)
-                    && (sourceDocument.isTrainingDocument() || sourceDocument.getState().equals(
-                            SourceDocumentState.CURATION_FINISHED))) {
+            // train documents per layer (those for different layer should be ignored, except it is
+            // a curated documen
+            if (sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
+
+                JCas jCas = aRepository.getCurationDocumentContent(sourceDocument);
+                for (Sentence sentence : select(jCas, Sentence.class)) {
+
+                    trainOut.append(getMiraLines(sentence, false, layer, fLayer, aTemplate)
+                            .toString() + "\n");
+                }
+                sourceDocument.setProcessed(true);
+            }
+            else if ((sourceDocument.isTrainingDocument() && sourceDocument.getTemplate() != null && sourceDocument
+                    .getTemplate().equals(aTemplate))) {
                 JCas jCas = aRepository.readJCas(sourceDocument, sourceDocument.getProject(), user);
                 for (Sentence sentence : select(jCas, Sentence.class)) {
 
@@ -600,13 +609,14 @@ public class AutomationUtil
         for (SourceDocument sourceDocument : aRepository.listSourceDocuments(layer.getProject())) {
 
             if ((!sourceDocument.isTrainingDocument() && !sourceDocument.getState().equals(
-                    SourceDocumentState.CURATION_FINISHED))) {
+                    SourceDocumentState.CURATION_FINISHED) )) {
 
                 JCas jCas;
                 try {
                     jCas = aRepository.getCorrectionDocumentContent(sourceDocument);
                 }
-                catch (DataRetrievalFailureException e) {// this was first time automation is done, read from source!
+                catch (DataRetrievalFailureException e) {// this was first time automation is done,
+                                                         // read from source!
                     jCas = aRepository.readJCas(sourceDocument, sourceDocument.getProject(), user);
 
                 }

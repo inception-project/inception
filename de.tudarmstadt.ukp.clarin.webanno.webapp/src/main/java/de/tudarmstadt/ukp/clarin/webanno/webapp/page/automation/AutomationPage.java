@@ -91,7 +91,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
  * This is the main class for the Automation page. Displays in the lower panel the Automatically
  * annotated document and in the upper panel the annotation pane to trigger automation on the lower
  * pane.
- *
+ * 
  * @author Seid Muhie Yimam
  */
 public class AutomationPage
@@ -995,9 +995,12 @@ public class AutomationPage
 
             jCas = repository.readJCas(bratAnnotatorModel.getDocument(), bratAnnotatorModel
                     .getDocument().getProject(), logedInUser);
-            // This is the auto annotation, save it under CURATION_USER
-            repository.createCorrectionDocumentContent(jCas, bratAnnotatorModel.getDocument(),
-                    logedInUser);
+            // This is the auto annotation, save it under CURATION_USER, Only if it is not created
+            // by another annotater
+            if (!repository.existsAutomatedDocument(bratAnnotatorModel.getDocument())) {
+                repository.createCorrectionDocumentContent(jCas, bratAnnotatorModel.getDocument(),
+                        logedInUser);
+            }
             // remove all annotation so that the user can correct from the auto annotation
             /*
              * BratAnnotatorUtility.clearJcasAnnotations(jCas, bratAnnotatorModel.getDocument(),

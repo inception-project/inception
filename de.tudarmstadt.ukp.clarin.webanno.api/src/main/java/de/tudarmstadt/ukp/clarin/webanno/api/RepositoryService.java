@@ -304,6 +304,12 @@ public interface RepositoryService
      */
     boolean existsAnnotationDocumentContent(SourceDocument sourceDocument, String username)
         throws IOException;
+    
+    /**
+     * check if there is an already automated document. This is important as automated document 
+     * should apear the same among users
+     */
+    boolean existsAutomatedDocument(SourceDocument sourceDocument);
 
     /**
      * Exports an {@link AnnotationDocument } CAS Object as TCF/TXT/XMI... file formats.

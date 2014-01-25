@@ -63,9 +63,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 /**
  * A panel used as Open dialog. It Lists all projects a user is member of for annotation/curation
  * and associated documents
- *
+ * 
  * @author Seid Muhie Yimam
- *
+ * 
  */
 public class OpenModalWindowPanel
     extends Panel
@@ -176,7 +176,7 @@ public class OpenModalWindowPanel
              * Model("static/img/Fugue-shadowless-folder-horizontal-open.png"))); RepeatingView
              * projectIconRepeator = new RepeatingView("projectIconRepeator");
              * add(projectIconRepeator);
-             *
+             * 
              * for (final Project project : getAllowedProjects(allowedProject)) { AbstractItem item
              * = new AbstractItem(projectIconRepeator.newChildId()); projectIconRepeator.add(item);
              * item. add(new StaticImage("icon", new
@@ -279,61 +279,7 @@ public class OpenModalWindowPanel
                         @Override
                         protected List<SourceDocument> load()
                         {
-                            if (selectedProject == null) {
-                                return new ArrayList<SourceDocument>();
-                            }
-                            List<SourceDocument> allDocuments = projectRepository
-                                    .listSourceDocuments(selectedProject);
-
-                            // Remove from the list source documents that are in IGNORE state OR
-                            // that do not have at least one annotation document marked as
-                            // finished for curation dialog
-
-                            List<SourceDocument> excludeDocuments = new ArrayList<SourceDocument>();
-                            for (SourceDocument sourceDocument : allDocuments) {
-                                switch (mode) {
-                                case ANNOTATION:
-                                case AUTOMATION:
-                                case CORRECTION:
-                                    if (projectRepository.existsAnnotationDocument(sourceDocument,
-                                            user)) {
-                                        AnnotationDocument anno = projectRepository
-                                                .getAnnotationDocument(sourceDocument, user);
-                                        if (anno.getState().equals(AnnotationDocumentState.IGNORE)
-                                                || sourceDocument.isTrainingDocument()) {
-                                            excludeDocuments.add(sourceDocument);
-                                        }
-                                        else if (anno.getState().equals(
-                                                AnnotationDocumentState.FINISHED)) {
-                                            states.put(sourceDocument, "red");
-                                        }
-                                        else if (anno.getState().equals(
-                                                AnnotationDocumentState.IN_PROGRESS)) {
-                                            states.put(sourceDocument, "blue");
-                                        }
-                                    }
-                                    break;
-                                case CURATION:
-                                    if (!ProjectUtil.existFinishedDocument(sourceDocument, user,
-                                            projectRepository, selectedProject)) {
-                                        excludeDocuments.add(sourceDocument);
-                                    }
-                                    else if (sourceDocument.getState().equals(
-                                            SourceDocumentState.CURATION_FINISHED)) {
-                                        states.put(sourceDocument, "red");
-                                    }
-                                    else if (sourceDocument.getState().equals(
-                                            SourceDocumentState.CURATION_IN_PROGRESS)) {
-                                        states.put(sourceDocument, "blue");
-                                    }
-
-                                    break;
-                                default:
-                                    break;
-                                }
-
-                            }
-                            allDocuments.removeAll(excludeDocuments);
+                            List<SourceDocument> allDocuments = listDOcuments(states);
                             return allDocuments;
                         }
                     })
@@ -385,6 +331,63 @@ public class OpenModalWindowPanel
                 }
             }).add(new ResizableBehavior());
         }
+    }
+
+    private List<SourceDocument> listDOcuments(final Map<SourceDocument, String> states)
+    {
+        if (selectedProject == null) {
+            return new ArrayList<SourceDocument>();
+        }
+        List<SourceDocument> allDocuments = projectRepository.listSourceDocuments(selectedProject);
+
+        // Remove from the list source documents that are in IGNORE state OR
+        // that do not have at least one annotation document marked as
+        // finished for curation dialog
+
+        List<SourceDocument> excludeDocuments = new ArrayList<SourceDocument>();
+        for (SourceDocument sourceDocument : allDocuments) {
+            switch (mode) {
+            case ANNOTATION:
+            case AUTOMATION:
+            case CORRECTION:
+                if (sourceDocument.isTrainingDocument()) {
+                    excludeDocuments.add(sourceDocument);
+                    continue;
+                }
+                if (projectRepository.existsAnnotationDocument(sourceDocument, user)) {
+                    AnnotationDocument anno = projectRepository.getAnnotationDocument(
+                            sourceDocument, user);
+                    if (anno.getState().equals(AnnotationDocumentState.IGNORE)) {
+                        excludeDocuments.add(sourceDocument);
+                    }
+                    else if (anno.getState().equals(AnnotationDocumentState.FINISHED)) {
+                        states.put(sourceDocument, "red");
+                    }
+                    else if (anno.getState().equals(AnnotationDocumentState.IN_PROGRESS)) {
+                        states.put(sourceDocument, "blue");
+                    }
+                }
+                break;
+            case CURATION:
+                if (!ProjectUtil.existFinishedDocument(sourceDocument, user, projectRepository,
+                        selectedProject)) {
+                    excludeDocuments.add(sourceDocument);
+                }
+                else if (sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
+                    states.put(sourceDocument, "red");
+                }
+                else if (sourceDocument.getState().equals(SourceDocumentState.CURATION_IN_PROGRESS)) {
+                    states.put(sourceDocument, "blue");
+                }
+
+                break;
+            default:
+                break;
+            }
+
+        }
+        allDocuments.removeAll(excludeDocuments);
+        return allDocuments;
     }
 
     private class ButtonsForm

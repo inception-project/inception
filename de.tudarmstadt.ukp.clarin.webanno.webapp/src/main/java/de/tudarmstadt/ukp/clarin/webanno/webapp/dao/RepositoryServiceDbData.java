@@ -360,7 +360,29 @@ public class RepositoryServiceDbData
             return false;
         }
     }
+    
+    @Override
+    @Transactional
+    public boolean existsAutomatedDocument(SourceDocument aSourceDocument)
+    {
 
+           try {
+            getCorrectionDocumentContent(aSourceDocument);
+            return true;
+        }
+        catch (UIMAException e) {
+            return false;
+        }
+        catch (ClassNotFoundException e) {
+            return false;
+        }
+        catch (IOException e) {
+            return false;
+        }
+           
+    }
+
+    
     @Override
     @Transactional
     public boolean existsCrowdJob(String aName)
