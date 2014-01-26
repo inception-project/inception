@@ -1092,7 +1092,7 @@ public class RepositoryServiceDbData
         // remove the project directory from the file system
         String path = dir.getAbsolutePath() + PROJECT + aProject.getId();
         try {
-            FileUtils.forceDelete(new File(path));
+            FileUtils.deleteDirectory(new File(path));
         }
         catch (FileNotFoundException e) {
             createLog(aProject, aUser.getUsername()).warn(
