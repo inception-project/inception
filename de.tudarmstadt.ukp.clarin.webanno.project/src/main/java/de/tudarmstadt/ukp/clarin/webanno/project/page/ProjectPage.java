@@ -68,7 +68,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
-import de.tudarmstadt.ukp.clarin.webanno.support.page.ProjectDocumentsPanel;
 
 /**
  * This is the main page for Project Settings. The Page has Four Panels. The
@@ -379,7 +378,7 @@ public class ProjectPage
                 @Override
                 public Panel getPanel(String panelId)
                 {
-                    return new ProjectDocumentsPanel(panelId, project, new Model<MiraTemplate>());
+                    return new ProjectDocumentsPanel(panelId, project);
                 }
 
                 @Override

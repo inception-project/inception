@@ -48,7 +48,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
-import de.tudarmstadt.ukp.clarin.webanno.support.page.ProjectDocumentsPanel;
 
 /**
  * A Panel used to define automation properties for the {@link MIRA} machine learning algorithm
@@ -72,7 +71,7 @@ public class ProjectMiraTemplatePanel
 
     private final MiraTemplateSelectionForm miraTemplateSelectionForm;
     private final MiraTemplateDetailForm miraTemplateDetailForm;
-    private ProjectDocumentsPanel documentsPanel;
+    private ProjectTrainingDocumentsPanel documentsPanel;
     private final ApplyForm applyForm;
 
     private final Model<Project> selectedProjectModel;
@@ -88,7 +87,7 @@ public class ProjectMiraTemplatePanel
         miraTemplateDetailForm.setVisible(false);
         add(miraTemplateDetailForm);
 
-        documentsPanel = new ProjectDocumentsPanel("documentsPanel", aProjectModel, miraTemplate);
+        documentsPanel = new ProjectTrainingDocumentsPanel("documentsPanel", aProjectModel, miraTemplate);
         documentsPanel.setVisible(false);
         add(documentsPanel);
 
@@ -109,10 +108,10 @@ public class ProjectMiraTemplatePanel
         }
     };
 
-    void update(ProjectDocumentsPanel aDcumentsPanel)
+    void update(ProjectTrainingDocumentsPanel aDcumentsPanel)
     {
         documentsPanel.remove();
-        documentsPanel = new ProjectDocumentsPanel("documentsPanel", selectedProjectModel,
+        documentsPanel = new ProjectTrainingDocumentsPanel("documentsPanel", selectedProjectModel,
                 miraTemplate);
         add(documentsPanel);
     }
