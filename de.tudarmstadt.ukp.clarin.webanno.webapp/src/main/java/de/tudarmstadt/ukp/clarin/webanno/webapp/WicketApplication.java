@@ -31,6 +31,7 @@ import org.odlabs.wiquery.ui.themes.IThemableApplication;
 import org.odlabs.wiquery.ui.themes.WiQueryCoreThemeResourceReference;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.WebAnnoResources;
+import de.tudarmstadt.ukp.clarin.webanno.project.page.ProjectPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.automation.AutomationPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.correction.CorrectionPage;
@@ -38,7 +39,6 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.crowdsource.CrowdSourcePage
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.CurationPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.login.LoginPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.monitoring.MonitoringPage;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.project.ProjectPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome.WelcomePage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.security.SpringAuthenticatedWebSession;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.security.page.ManageUsersPage;

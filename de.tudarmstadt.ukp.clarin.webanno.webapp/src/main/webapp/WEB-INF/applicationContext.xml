@@ -62,11 +62,11 @@
 	</bean>
 
 	<bean id="annotationService"
-		class="de.tudarmstadt.ukp.clarin.webanno.webapp.dao.AnnotationServiceImpl">
+		class="de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationServiceImpl">
 	</bean>
 
 	<bean id="documentRepository"
-		class="de.tudarmstadt.ukp.clarin.webanno.webapp.dao.RepositoryServiceDbData">
+		class="de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryServiceDbData">
 		<property name="dir" value="${webanno.home}/repository/" />
 		<property name="annotationPreferencePropertiesFileName" value="annotation.properties" />
 	</bean>

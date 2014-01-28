@@ -6,7 +6,8 @@
 	under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
 	OR CONDITIONS OF ANY KIND, either express or implied. See the License for
 	the specific language governing permissions and limitations under the License. -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<parent>
 		<artifactId>dkpro-parent-pom</artifactId>
 		<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
@@ -205,6 +206,11 @@
 				<version>${spring.version}</version>
 			</dependency>
 
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-aspects</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
 			<!-- SPRING SECURITY -->
 			<dependency>
 				<groupId>org.springframework.security</groupId>
@@ -240,6 +246,11 @@
 		<module>de.tudarmstadt.ukp.clarin.webanno.uima</module>
 		<module>de.tudarmstadt.ukp.clarin.webanno.webapp</module>
 		<module>de.tudarmstadt.ukp.clarin.webanno.crowdflower</module>
+		<module>de.tudarmstadt.ukp.clarin.webanno.automation</module>
+		<module>de.tudarmstadt.ukp.clarin.webanno.project</module>
+		<module>de.tudarmstadt.ukp.clarin.webanno.api.dao</module>
+		<module>de.tudarmstadt.ukp.clarin.webanno.support</module>
+		<module>de.tudarmstadt.ukp.clarin.webanno.webapp.home</module>
 	</modules>
 	<scm>
 		<developerConnection>scm:svn:https://webanno.googlecode.com/svn/trunk</developerConnection>

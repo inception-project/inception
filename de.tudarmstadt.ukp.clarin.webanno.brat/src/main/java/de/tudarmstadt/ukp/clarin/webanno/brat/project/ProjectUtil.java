@@ -55,8 +55,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.export.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
@@ -64,9 +62,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationDocument;
 
 /**
  * This class contains Utility methods that can be used in Project settings
@@ -433,7 +433,7 @@ public class ProjectUtil
      * Create a {@link TagSet} for the imported project,
      */
     public static void createTagset(Project aProjecct,
-            de.tudarmstadt.ukp.clarin.webanno.export.model.TagSet importedTagSet,
+            de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet importedTagSet,
             RepositoryService aRepository, AnnotationService aAnnotationService)
         throws IOException
     {
@@ -461,7 +461,7 @@ public class ProjectUtil
             newTagSet.setProject(aProjecct);
             newTagSet.setType(type);
             aAnnotationService.createTagSet(newTagSet, user);
-            for (de.tudarmstadt.ukp.clarin.webanno.export.model.Tag tag : importedTagSet.getTags()) {
+            for (  de.tudarmstadt.ukp.clarin.webanno.model.export.Tag tag : importedTagSet.getTags()) {
                 Tag newTag = new Tag();
                 newTag.setDescription(tag.getDescription());
                 newTag.setName(tag.getName());
@@ -473,12 +473,12 @@ public class ProjectUtil
 
     /**
      * create new {@link Project} from the
-     * {@link de.tudarmstadt.ukp.clarin.webanno.export.model.Project} model
+     * {@link   de.tudarmstadt.ukp.clarin.webanno.model.export.Project} model
      *
      * @throws IOException
      */
     public static Project createProject(
-            de.tudarmstadt.ukp.clarin.webanno.export.model.Project aProject,
+              de.tudarmstadt.ukp.clarin.webanno.model.export.Project aProject,
             RepositoryService aRepository)
         throws IOException
     {
@@ -522,13 +522,13 @@ public class ProjectUtil
      * Create s {@link SourceDocument} from the exported {@link SourceDocument}
      */
     public static void createSourceDocument(
-            de.tudarmstadt.ukp.clarin.webanno.export.model.Project aImportedProjectSetting,
+              de.tudarmstadt.ukp.clarin.webanno.model.export.Project aImportedProjectSetting,
             Project aImportedProject, RepositoryService aRepository)
         throws IOException
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = aRepository.getUser(username);
-        for (SourceDocument importedSourceDocument : aImportedProjectSetting.getSourceDocuments()) {
+        for (de.tudarmstadt.ukp.clarin.webanno.model.export.SourceDocument importedSourceDocument : aImportedProjectSetting.getSourceDocuments()) {
             de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument = new de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument();
             sourceDocument.setFormat(importedSourceDocument.getFormat());
             sourceDocument.setName(importedSourceDocument.getName());
@@ -544,7 +544,7 @@ public class ProjectUtil
      * {@link AnnotationDocument}
      */
     public static void createAnnotationDocument(
-            de.tudarmstadt.ukp.clarin.webanno.export.model.Project aImportedProjectSetting,
+              de.tudarmstadt.ukp.clarin.webanno.model.export.Project aImportedProjectSetting,
             Project aImportedProject, RepositoryService aRepository)
         throws IOException
     {
@@ -564,14 +564,14 @@ public class ProjectUtil
 
     /**
      * Create {@link ProjectPermission} from the exported
-     * {@link de.tudarmstadt.ukp.clarin.webanno.export.model.ProjectPermission}
+     * {@link   de.tudarmstadt.ukp.clarin.webanno.model.export.ProjectPermission}
      */
     public static void createProjectPermission(
-            de.tudarmstadt.ukp.clarin.webanno.export.model.Project aImportedProjectSetting,
+              de.tudarmstadt.ukp.clarin.webanno.model.export.Project aImportedProjectSetting,
             Project aImportedProject, RepositoryService aRepository)
         throws IOException
     {
-        for (de.tudarmstadt.ukp.clarin.webanno.export.model.ProjectPermission importedPermission : aImportedProjectSetting
+        for (  de.tudarmstadt.ukp.clarin.webanno.model.export.ProjectPermission importedPermission : aImportedProjectSetting
                 .getProjectPermissions()) {
             de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission permission = new de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission();
             permission.setLevel(importedPermission.getLevel());

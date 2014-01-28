@@ -40,7 +40,7 @@ import org.springframework.core.io.support.PropertiesLoaderUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.security.LogoutPanel;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.home.security.LogoutPanel;
 
 /**
  *  The @WiQueryUIPlugin annotation and that the class implements IWiQueryPlugin makes sure that the
@@ -61,7 +61,7 @@ public abstract class ApplicationPageBase
     private FeedbackPanel feedbackPanel;
     private Label versionLabel;
     private Label embeddedDbWarning;
-    
+
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
 
@@ -115,7 +115,7 @@ public abstract class ApplicationPageBase
                 + ")";
         versionLabel = new Label("version", versionString);
 
-        embeddedDbWarning = new Label("embeddedDbWarning", 
+        embeddedDbWarning = new Label("embeddedDbWarning",
                 "USE THIS INSTALLATION FOR TESTING ONLY -- "
                 + "AN EMBEDDED DATABASE IS NOT SUPPORTED FOR PRODUCTION USE");
         embeddedDbWarning.setVisible(false);
@@ -127,7 +127,7 @@ public abstract class ApplicationPageBase
         catch (Throwable e) {
             LOG.warn("Unable to determine which database is being used", e);
         }
-        
+
         add(logoutPanel);
         add(feedbackPanel);
         add(versionLabel);

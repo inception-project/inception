@@ -73,9 +73,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.project.SettingsPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.support.EmbeddableImage;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.support.TableDataProvider;
+import de.tudarmstadt.ukp.clarin.webanno.project.page.SettingsPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.support.EmbeddableImage;
+import de.tudarmstadt.ukp.clarin.webanno.support.TableDataProvider;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**

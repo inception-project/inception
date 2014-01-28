@@ -69,6 +69,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.statistics.TwoPairedKappa;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
@@ -80,12 +81,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.project.SettingsPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.statistics.TwoPairedKappa;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.support.ChartImageResource;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.support.DynamicColumnMetaData;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.support.EntityModel;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.support.TableDataProvider;
+import de.tudarmstadt.ukp.clarin.webanno.project.page.SettingsPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.support.ChartImageResource;
+import de.tudarmstadt.ukp.clarin.webanno.support.DynamicColumnMetaData;
+import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
+import de.tudarmstadt.ukp.clarin.webanno.support.TableDataProvider;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.TwoRaterKappaAgreement;
 
 /**

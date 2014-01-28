@@ -26,8 +26,8 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.export.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.export.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.export.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.export.SourceDocument;
 
 /**
  * A {@link Panel} which contains a {@link Label} to display document name as concatenations of
