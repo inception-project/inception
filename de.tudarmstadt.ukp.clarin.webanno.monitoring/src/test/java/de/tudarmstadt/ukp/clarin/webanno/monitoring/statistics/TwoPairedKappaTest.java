@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package de.tudarmstadt.ukp.clarin.webanno.webapp.statistics;
+package de.tudarmstadt.ukp.clarin.webanno.monitoring.statistics;
 
-import static org.junit.Assert.assertEquals;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createCollectionReader;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.util.Arrays;
@@ -28,18 +28,18 @@ import java.util.Map;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
+import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 import org.junit.Test;
-import org.apache.uima.fit.factory.JCasFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.monitoring.page.MonitoringPage;
 import de.tudarmstadt.ukp.clarin.webanno.tcf.TcfReader;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsvReader;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.monitoring.MonitoringPage;
 
 /**
  * Unit Test for Kappa Agreement. The example reads two TSV files with POS and DEP annotations for

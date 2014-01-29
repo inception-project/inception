@@ -21,4 +21,4 @@
  * @author Seid Muhie Yimam
  *
  */
-package de.tudarmstadt.ukp.clarin.webanno.webapp.page.monitoring;
+package de.tudarmstadt.ukp.clarin.webanno.monitoring.page;

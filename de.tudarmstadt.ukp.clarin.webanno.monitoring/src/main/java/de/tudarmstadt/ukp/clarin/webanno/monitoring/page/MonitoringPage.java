@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package de.tudarmstadt.ukp.clarin.webanno.webapp.page.monitoring;
+package de.tudarmstadt.ukp.clarin.webanno.monitoring.page;
 
 import java.awt.Color;
 import java.io.IOException;
@@ -81,11 +81,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.monitoring.support.ChartImageResource;
+import de.tudarmstadt.ukp.clarin.webanno.monitoring.support.DynamicColumnMetaData;
+import de.tudarmstadt.ukp.clarin.webanno.monitoring.support.TableDataProvider;
 import de.tudarmstadt.ukp.clarin.webanno.project.page.SettingsPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.support.ChartImageResource;
-import de.tudarmstadt.ukp.clarin.webanno.support.DynamicColumnMetaData;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
-import de.tudarmstadt.ukp.clarin.webanno.support.TableDataProvider;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.TwoRaterKappaAgreement;
 
 /**
@@ -714,21 +714,23 @@ public class MonitoringPage
 
         ListChoice<MiraTemplate> resultChoice;
         Label resultLabel;
+
         public TrainingResultForm(String id)
         {
             super(id, new CompoundPropertyModel<ResultMOdel>(new ResultMOdel()));
 
-            add(resultLabel = (Label) new Label("resultLabel", new LoadableDetachableModel<String>()
-            {
-                private static final long serialVersionUID = 891566759811286173L;
+            add(resultLabel = (Label) new Label("resultLabel",
+                    new LoadableDetachableModel<String>()
+                    {
+                        private static final long serialVersionUID = 891566759811286173L;
 
-                @Override
-                protected String load()
-                {
-                    return result;
+                        @Override
+                        protected String load()
+                        {
+                            return result;
 
-                }
-            }).setOutputMarkupId(true));
+                        }
+                    }).setOutputMarkupId(true));
 
             add(resultChoice = new ListChoice<MiraTemplate>("layerResult")
             {

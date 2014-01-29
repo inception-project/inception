@@ -250,6 +250,7 @@
 		<module>de.tudarmstadt.ukp.clarin.webanno.api.dao</module>
 		<module>de.tudarmstadt.ukp.clarin.webanno.support</module>
 		<module>de.tudarmstadt.ukp.clarin.webanno.webapp.home</module>
+		<module>de.tudarmstadt.ukp.clarin.webanno.monitoring</module>
 	</modules>
 	<scm>
 		<developerConnection>scm:svn:https://webanno.googlecode.com/svn/trunk</developerConnection>

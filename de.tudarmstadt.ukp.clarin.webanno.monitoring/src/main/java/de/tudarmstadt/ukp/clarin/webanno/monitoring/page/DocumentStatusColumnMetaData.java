@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package de.tudarmstadt.ukp.clarin.webanno.webapp.page.monitoring;
+package de.tudarmstadt.ukp.clarin.webanno.monitoring.page;
 
 import java.io.IOException;
 import java.util.List;
@@ -49,8 +49,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.EmbeddableImage;
-import de.tudarmstadt.ukp.clarin.webanno.support.TableDataProvider;
+import de.tudarmstadt.ukp.clarin.webanno.monitoring.support.EmbeddableImage;
+import de.tudarmstadt.ukp.clarin.webanno.monitoring.support.TableDataProvider;
 
 /**
  * Build dynamic columns for the user's annotation documents status {@link DataGridView}
