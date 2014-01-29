@@ -13,8 +13,8 @@
 		<version>6</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-	<artifactId>de.tudarmstadt.ukp.clarin.webanno</artifactId>
+	<groupId>webanno</groupId>
+	<artifactId>webanno</artifactId>
 	<version>1.1.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>WebAnno</name>
@@ -236,21 +236,21 @@
 		</dependencies>
 	</dependencyManagement>
 	<modules>
-		<module>de.tudarmstadt.ukp.clarin.webanno.brat</module>
-		<module>de.tudarmstadt.ukp.clarin.webanno.api</module>
-		<module>de.tudarmstadt.ukp.clarin.webanno.tcf</module>
-		<module>de.tudarmstadt.ukp.clarin.webanno.tei</module>
-		<module>de.tudarmstadt.ukp.clarin.webanno.tsv</module>
-		<module>de.tudarmstadt.ukp.clarin.webanno.model</module>
-		<module>de.tudarmstadt.ukp.clarin.webanno.uima</module>
-		<module>de.tudarmstadt.ukp.clarin.webanno.webapp</module>
-		<module>de.tudarmstadt.ukp.clarin.webanno.crowdflower</module>
-		<module>de.tudarmstadt.ukp.clarin.webanno.automation</module>
-		<module>de.tudarmstadt.ukp.clarin.webanno.project</module>
-		<module>de.tudarmstadt.ukp.clarin.webanno.api.dao</module>
-		<module>de.tudarmstadt.ukp.clarin.webanno.support</module>
-		<module>de.tudarmstadt.ukp.clarin.webanno.webapp.home</module>
-		<module>de.tudarmstadt.ukp.clarin.webanno.monitoring</module>
+		<module>webanno.brat</module>
+		<module>webanno.api</module>
+		<module>webanno.tcf</module>
+		<module>webanno.tei</module>
+		<module>webanno.tsv</module>
+		<module>webanno.model</module>
+		<module>webanno.uima</module>
+		<module>webanno.webapp</module>
+		<module>webanno.crowdflower</module>
+		<module>webanno.automation</module>
+		<module>webanno.project</module>
+		<module>webanno.api.dao</module>
+		<module>webanno.support</module>
+		<module>webanno.webapp.home</module>
+		<module>webanno.monitoring</module>
 	</modules>
 	<scm>
 		<developerConnection>scm:svn:https://webanno.googlecode.com/svn/trunk</developerConnection>
