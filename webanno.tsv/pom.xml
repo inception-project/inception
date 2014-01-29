@@ -22,7 +22,7 @@
 		<artifactId>de.tudarmstadt.ukp.clarin.webanno</artifactId>
 		<version>1.1.0-SNAPSHOT</version>
 	</parent>
-	<artifactId>webanno.tsv</artifactId>
+	<artifactId>de.tudarmstadt.ukp.clarin.webanno.tsv</artifactId>
 	<dependencies>
 		<dependency>
 			<groupId>org.apache.uima</groupId>
