@@ -158,9 +158,9 @@ public class TeiReader
     private static final String TAG_WORD = "w";
 
     /**
-     * (p-unit) contains a sentence-like division of a text.
+     * (s-unit) contains a sentence-like division of a text.
      */
-    private static final String TAG_PUNIT = "p";
+    private static final String TAG_SUNIT = "s";
 
     /**
      * A tag for a group of annotations such as lemm, pos and sense (Named Enity layer used here)
@@ -398,7 +398,7 @@ public class TeiReader
                 captureText = true;
                 tokenStart = getBuffer().length();
             }
-            else if (TAG_PUNIT.equals(aName)) {
+            else if (TAG_SUNIT.equals(aName)) {
                 captureText = false;
                 sentenceStart = getBuffer().length();
             }
@@ -437,7 +437,7 @@ public class TeiReader
         public void endElement(String aUri, String aLocalName, String aName)
             throws SAXException
         {
-            if (TAG_PUNIT.equals(aName)) {
+            if (TAG_SUNIT.equals(aName)) {
                 if (writeSentences) {
                     new Sentence(getJCas(), sentenceStart, getBuffer().length()).addToIndexes();
                 }

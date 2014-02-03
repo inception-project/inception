@@ -38,22 +38,15 @@ public class TeiReaderTest
 {
 
     @Test
-    @Ignore("No TEI yet to opensource ")
+     @Ignore("No TEI yet to opensource ")
     public void testTeiReader()
         throws Exception
     {
         CollectionReaderDescription reader = createReaderDescription(TeiReader.class,
-                TeiReader.PARAM_LANGUAGE, "en", TeiReader.PARAM_SOURCE_LOCATION, "classpath:/tei/",
-                TeiReader.PARAM_PATTERNS, new String[] { "[+]*.xml" });
+                TeiReader.PARAM_LANGUAGE, "en", TeiReader.PARAM_SOURCE_LOCATION,
+                "classpath:/local/", TeiReader.PARAM_PATTERNS, new String[] { "[+]*.xml" });
 
-        String firstSentence = "\"På Facebook handler det egentlig bare om at blive set. "
-                + "I informationssamfundet er den største knaphedsressource andres opmærksomhed."
-                + " Vi ser det også på den måde, vi bruger sms og e-mail. Vældig mange af"
-                + " beskederne handler sådan set bare om at sige: Hallo hallo, glem ikke, "
-                + "at jeg findes. Det samme med Facebook. Og det at have 2.000 såkaldte "
-                + "Facebookvenner giver indtryk af, at  man er en person, der sidder "
-                + "som en edderkop i et stort netværk. Og i et netværkssamfund er det en stor "
-                + "ressource for vældig mange mennesker\", siger Thomas Hylland Eriksen.";
+        String firstSentence = "70 I DAG.";
 
         for (JCas jcas : new JCasIterable(reader)) {
             DocumentMetaData meta = DocumentMetaData.get(jcas);
@@ -61,11 +54,11 @@ public class TeiReaderTest
             System.out.printf("%s - %d%n", meta.getDocumentId(), text.length());
             System.out.println(jcas.getDocumentLanguage());
 
-            assertEquals(876, JCasUtil.select(jcas, Token.class).size());
-            assertEquals(292, JCasUtil.select(jcas, POS.class).size());
-            assertEquals(292, JCasUtil.select(jcas, Lemma.class).size());
-            assertEquals(220, JCasUtil.select(jcas, NamedEntity.class).size());
-            assertEquals(5, JCasUtil.select(jcas, Sentence.class).size());
+            assertEquals(2235, JCasUtil.select(jcas, Token.class).size());
+            assertEquals(745, JCasUtil.select(jcas, POS.class).size());
+            assertEquals(745, JCasUtil.select(jcas, Lemma.class).size());
+            assertEquals(0, JCasUtil.select(jcas, NamedEntity.class).size());
+            assertEquals(30, JCasUtil.select(jcas, Sentence.class).size());
 
             assertEquals(firstSentence, JCasUtil.select(jcas, Sentence.class).iterator().next()
                     .getCoveredText());
