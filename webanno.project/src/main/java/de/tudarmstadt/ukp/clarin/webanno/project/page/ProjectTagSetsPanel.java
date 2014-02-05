@@ -98,26 +98,57 @@ public class ProjectTagSetsPanel
 
     private final TagSetSelectionForm tagSetSelectionForm;
     private final TagSelectionForm tagSelectionForm;
-    private final TagSetDetailForm tagSetDetailForm;
+    private TagSetDetailForm tagSetDetailForm;
     private final TagDetailForm tagDetailForm;
     private final ImportTagSetForm importTagSetForm;
 
     private final Model<Project> selectedProjectModel;
 
-    public ProjectTagSetsPanel(String id, Model<Project> aProjectModel)
+    public ProjectTagSetsPanel(String id, final Model<Project> aProjectModel)
     {
         super(id);
         this.selectedProjectModel = aProjectModel;
         tagSetSelectionForm = new TagSetSelectionForm("tagSetSelectionForm");
 
-        tagSelectionForm = new TagSelectionForm("tagSelectionForm");
-        tagSelectionForm.setVisible(false);
+        tagSelectionForm = new TagSelectionForm("tagSelectionForm")
+        {
 
-        tagSetDetailForm = new TagSetDetailForm("tagSetDetailForm");
-        tagSetDetailForm.setVisible(false);
+            private static final long serialVersionUID = -4772415754052553741L;
 
-        tagDetailForm = new TagDetailForm("tagDetailForm");
-        tagDetailForm.setVisible(false);
+            @Override
+            public boolean isVisible()
+            {
+                return tagSetSelectionForm.getModelObject().tagSet != null
+                        && tagSetSelectionForm.getModelObject().tagSet.getProject().equals(
+                                aProjectModel.getObject());
+            }
+        };
+
+        tagSetDetailForm = new TagSetDetailForm("tagSetDetailForm")
+        {
+            private static final long serialVersionUID = -920681378763978112L;
+
+            @Override
+            public boolean isVisible()
+            {
+                return tagSetSelectionForm.getModelObject().tagSet != null
+                        && tagSetSelectionForm.getModelObject().tagSet.getProject().equals(
+                                aProjectModel.getObject());
+            }
+        };
+
+        tagDetailForm = new TagDetailForm("tagDetailForm")
+        {
+            private static final long serialVersionUID = 2338721044859355652L;
+
+            @Override
+            public boolean isVisible()
+            {
+                return tagSetSelectionForm.getModelObject().tagSet != null
+                        && tagSetSelectionForm.getModelObject().tagSet.getProject().equals(
+                                aProjectModel.getObject());
+            }
+        };
 
         importTagSetForm = new ImportTagSetForm("importTagSetForm");
 
@@ -225,13 +256,12 @@ public class ProjectTagSetsPanel
                 @Override
                 protected CharSequence getDefaultChoice(String aSelectedValue)
                 {
-                    return aSelectedValue;
+                    return "";
                 }
             }).setOutputMarkupId(true);
 
         }
     }
-
     private class ImportTagSetForm
         extends Form<String>
     {
@@ -515,8 +545,8 @@ public class ProjectTagSetsPanel
                 }
             });
 
-            add(exportTagsetFormat = new DropDownChoice<String>(
-                    "exportTagsetFormat", new Model<String>(selectedExporTagsetFormat),
+            add(exportTagsetFormat = new DropDownChoice<String>("exportTagsetFormat",
+                    new Model<String>(selectedExporTagsetFormat),
                     Arrays.asList(new String[] { ExportedTagSetConstant.JSON_FORMAT,
                             ExportedTagSetConstant.TAB_FORMAT }))
             {
