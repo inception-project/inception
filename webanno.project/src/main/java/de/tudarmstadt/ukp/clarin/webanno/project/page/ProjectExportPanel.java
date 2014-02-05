@@ -493,7 +493,7 @@ public class ProjectExportPanel
 
             // If this project is a correction project, add the auto-annotated CAS to same folder as
             // CURATION
-            if (aProject.getMode().equals(Mode.CORRECTION)) {
+            if (aProject.getMode().equals(Mode.AUTOMATION) ||  aProject.getMode().equals(Mode.CORRECTION)) {
                 File CorrectionFileAsSerialisedCas = repository.exportserializedCas(sourceDocument,
                         CORRECTION_USER);
                 File correctionFile = null;
@@ -591,9 +591,9 @@ public class ProjectExportPanel
                             sourceDocument, annotationDocument.getUser());
 
                     File annotationFile = null;
-                    if (annotationFileAsSerialisedCas.exists()) {
-                        Class<?> writer = repository.getWritableFormats().get(
-                                sourceDocument.getFormat());
+                    Class<?> writer = repository.getWritableFormats().get(
+                            sourceDocument.getFormat());
+                    if (annotationFileAsSerialisedCas.exists() && writer!=null) {
                         annotationFile = repository.exportAnnotationDocument(sourceDocument,
                                 annotationDocument.getUser(), writer, sourceDocument.getName(),
                                 Mode.ANNOTATION);
@@ -601,8 +601,11 @@ public class ProjectExportPanel
                     if (annotationFileAsSerialisedCas.exists()) {
                         FileUtils.copyFileToDirectory(annotationFileAsSerialisedCas,
                                 annotationDocumentAsSerialisedCasDir);
-                        FileUtils.copyFileToDirectory(annotationFile, annotationDocumentDir);
-                        FileUtils.forceDelete(annotationFile);
+                        if(writer != null) {
+                            FileUtils.copyFileToDirectory(annotationFile, annotationDocumentDir);
+                            FileUtils.forceDelete(annotationFile);
+                        }
+
 
                     }
                 }
