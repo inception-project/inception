@@ -117,6 +117,9 @@ public class BratAnnotatorModel
 
     private boolean annotationCleared = false;
 
+    // determine if static color for annotations will be used or we shall dynamically generate one
+    private boolean staticColor = true;
+
     public Project getProject()
     {
         return project;
@@ -307,6 +310,15 @@ public class BratAnnotatorModel
         this.annotationCleared = annotationCleared;
     }
 
+    public boolean isStaticColor()
+    {
+        return staticColor;
+    }
+
+    public void setStaticColor(boolean staticColor)
+    {
+        this.staticColor = staticColor;
+    }
 
 
 

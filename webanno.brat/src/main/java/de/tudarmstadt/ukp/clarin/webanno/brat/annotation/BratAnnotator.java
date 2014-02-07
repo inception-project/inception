@@ -278,7 +278,8 @@ public class BratAnnotator
                             .equals("getCollectionInformation")
                             && getModelObject().getProject() != null) {
                         result = controller.getCollectionInformation(getModelObject().getProject()
-                                .getName(), getModelObject().getAnnotationLayers());
+                                .getName(), getModelObject().getAnnotationLayers(),
+                                getModelObject().isStaticColor());
 
                     }
 

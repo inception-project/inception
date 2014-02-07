@@ -15,49 +15,37 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 -->
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-  <wicket:panel>
-    <form wicket:id="tagSelectionForm">
-      <table style="border-collapse:separate; empty-cells:hide;">
-        <tr>
-          <td>
-            <label>
-              Annotation Layers:
-            </label>
-          </td>
-          <td>
-            <span wicket:id="annotationLayers">
-            </span>
-          </td>
-        </tr>
-         <tr class="border_bottom">
-          <td>
-            <label>
-              Number of Sentences:
-            </label>
-          </td>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<wicket:panel>
+	<form wicket:id="tagSelectionForm">
+		<table style="border-collapse: separate; empty-cells: hide;">
+			<tr>
+				<td><label> Annotation Layers: </label></td>
+				<td><span wicket:id="annotationLayers"> </span></td>
+			</tr>
+			<tr class="border_bottom">
+				<td><label> Number of Sentences: </label></td>
 
-          <td>
-            <input type="number" wicket:id="numberOfSentences" style="width: 100px;" />
-          </td>
-        </tr>
-         <tr class="border_bottom">
-          <td> <label wicket:id="scrollPageLabel"> </label>
-          </td>
-          <td>
-            <input type="checkbox" wicket:id="scrollPage" />
-          </td>
-        </tr>
-             
-      </table>
-      <div class="buttons">
-        <button wicket:id="saveButton">
-          Save
-        </button>
-        <button wicket:id="cancelButton">
-          Cancel
-        </button>
-      </div>
-    </form>
-  </wicket:panel>
+				<td><input type="number" wicket:id="numberOfSentences"
+					style="width: 100px;" /></td>
+			</tr>
+			<tr class="border_bottom">
+				<td><label wicket:id="scrollPageLabel"> </label></td>
+				<td><input type="checkbox" wicket:id="scrollPage" /></td>
+			</tr>
+
+			<tr class="border_bottom">
+				<td><label> Use the same color for all tags in a layer </label></td>
+				<td><input type="checkbox" wicket:id="staticColor" /></td>
+			</tr>
+
+			
+		</table>
+		<div class="buttons">
+			<button wicket:id="saveButton">Save</button>
+			<button wicket:id="cancelButton">Cancel</button>
+		</div>
+	</form>
+</wicket:panel>
 </html>

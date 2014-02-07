@@ -317,6 +317,7 @@ public class ProjectUtil
             }
             aBModel.setWindowSize(preference.getWindowSize());
             aBModel.setScrollPage(preference.isScrollPage());
+            aBModel.setStaticColor(preference.isStaticColor());
 
             // Get tagset using the id, from the properties file
             aBModel.getAnnotationLayers().clear();
@@ -738,6 +739,7 @@ public class ProjectUtil
         AnnotationPreference preference = new AnnotationPreference();
         preference.setScrollPage(aBModel.isScrollPage());
         preference.setWindowSize(aBModel.getWindowSize());
+        preference.setStaticColor(aBModel.isStaticColor());
         ArrayList<Long> layers = new ArrayList<Long>();
 
         for (TagSet tagset : aBModel.getAnnotationLayers()) {

@@ -33,11 +33,11 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
+import org.apache.uima.fit.factory.CollectionReaderFactory;
+import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 import org.junit.Test;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
-import org.apache.uima.fit.factory.CollectionReaderFactory;
-import org.apache.uima.fit.factory.JCasFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter;
@@ -113,7 +113,7 @@ public class CasToBratJsonTest extends TestCase {
 		tagList.add(tag);
 
 		collectionInformation.setEntityTypes(configuration
-				.configureVisualizationAndAnnotation(tagList));
+				.configureVisualizationAndAnnotation(tagList, true));
 
 		collectionInformation.addCollection("/Collection1/");
 		collectionInformation.addCollection("/Collection2/");

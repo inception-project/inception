@@ -2,13 +2,13 @@
  * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,6 +17,8 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.display.model;
 
+import java.awt.Color;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -48,10 +50,28 @@ public class RelationType
         // Nothing to do
     }
 
+    public static HashMap<String, Color> typeToColor = new HashMap<String, Color>();
+
     public RelationType(String aColor, String aArrowHead, List<String> aLabels, String aType,
-            List<String> aTargets, String aDashArray)
+            List<String> aTargets, String aDashArray/*, boolean aStaticColor*/)
     {
         super();
+
+      /*  if(!aStaticColor){
+        Color goodBgColor;
+        if (typeToColor.containsKey(aType)) {
+            goodBgColor = typeToColor.get(aType);
+        }
+        else {
+            goodBgColor = TagColor.generateDifferingPastelColor(typeToColor.values());
+            typeToColor.put(aType, goodBgColor);
+        }
+
+        color =  TagColor.encodeRGB(goodBgColor);
+        }
+        else{
+            color = aColor;
+        }*/
         color = aColor;
         arrowHead = aArrowHead;
         labels = aLabels;

@@ -33,6 +33,8 @@ public class AnnotationPreference
     private int windowSize = 10;
     private boolean scrollPage;
 
+    private boolean staticColor;
+
     public ArrayList<Long> getAnnotationLayers()
     {
         return annotationLayers;
@@ -61,6 +63,16 @@ public class AnnotationPreference
     public void setScrollPage(boolean aScrollPage)
     {
         scrollPage = aScrollPage;
+    }
+
+    public boolean isStaticColor()
+    {
+        return staticColor;
+    }
+
+    public void setStaticColor(boolean staticColor)
+    {
+        this.staticColor = staticColor;
     }
 
 }

@@ -87,6 +87,7 @@ public class AnnotationPreferenceModalPanel
             // Import current settings from the annotator
             getModelObject().numberOfSentences = bModel.getWindowSize();
             getModelObject().scrollPage = bModel.isScrollPage();
+            getModelObject().staticColor = bModel.isStaticColor();
             for (TagSet tagSet : bModel.getAnnotationLayers()) {
                 getModelObject().annotationLayers.add(tagSet);
             }
@@ -136,6 +137,8 @@ public class AnnotationPreferenceModalPanel
             // Add a Checkbox to enable/disable automatic page navigations while annotating
             add(new CheckBox("scrollPage"));
 
+            add(new CheckBox("staticColor"));
+
             add(new Label("scrollPageLabel", "Auto-scroll document while annotating :"));
 
             add(new AjaxSubmitLink("saveButton")
@@ -148,6 +151,7 @@ public class AnnotationPreferenceModalPanel
                     bModel.setScrollPage(getModelObject().scrollPage);
                     bModel.setAnnotationLayers(getModelObject().annotationLayers);
                     bModel.setWindowSize(getModelObject().numberOfSentences);
+                    bModel.setStaticColor(getModelObject().staticColor);
                     try {
                         ProjectUtil.savePreference(bModel, repository);
                     }
@@ -194,6 +198,7 @@ public class AnnotationPreferenceModalPanel
         public SourceDocument document;
         public int numberOfSentences;
         public boolean scrollPage;
+        public boolean staticColor;
         public HashSet<TagSet> annotationLayers = new HashSet<TagSet>();
     }
 

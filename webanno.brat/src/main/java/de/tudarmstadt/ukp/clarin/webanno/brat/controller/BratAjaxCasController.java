@@ -198,7 +198,7 @@ public class BratAjaxCasController
      */
 
     public GetCollectionInformationResponse getCollectionInformation(String aCollection,
-            HashSet<TagSet> aAnnotationLayers)
+            HashSet<TagSet> aAnnotationLayers, boolean aStaticColor)
 
     {
         LOG.info("AJAX-RPC: getCollectionInformation");
@@ -224,7 +224,7 @@ public class BratAjaxCasController
 
         GetCollectionInformationResponse info = new GetCollectionInformationResponse();
         BratAjaxConfiguration configuration = new BratAjaxConfiguration();
-        info.setEntityTypes(configuration.configureVisualizationAndAnnotation(tagLists));
+        info.setEntityTypes(configuration.configureVisualizationAndAnnotation(tagLists, aStaticColor));
 
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = repository.getUser(username);

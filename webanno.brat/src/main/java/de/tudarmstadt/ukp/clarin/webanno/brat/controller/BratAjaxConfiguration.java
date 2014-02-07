@@ -53,7 +53,7 @@ public class BratAjaxConfiguration
      *
      * @return {@link Set<{@link EntityType }>}
      */
-    public Set<EntityType> configureVisualizationAndAnnotation(List<Tag> aTags)
+    public Set<EntityType> configureVisualizationAndAnnotation(List<Tag> aTags, boolean aStaticColor)
     {
         Set<EntityType> entityTypes = new HashSet<EntityType>();
 
@@ -95,11 +95,11 @@ public class BratAjaxConfiguration
 
         List<EntityType> posChildren = getChildren(AnnotationTypeConstant.POS_PREFIX,
                 AnnotationTypeConstant.DEP_PREFIX, poses, dependency, "red", "yellow", "blue",
-                "green");
+                "green", aStaticColor);
         EntityType posType = new EntityType(AnnotationTypeConstant.POS_PARENT,
                 AnnotationTypeConstant.POS_PARENT, true, "", "red", "blue", "blue",
                 new ArrayList<String>(), posChildren, new ArrayList<String>(),
-                new ArrayList<RelationType>());
+                new ArrayList<RelationType>(), aStaticColor);
 
         if (poses.size() > 0) {
             entityTypes.add(posType);
@@ -107,21 +107,21 @@ public class BratAjaxConfiguration
 
         List<EntityType> corefChildren = getChildren(AnnotationTypeConstant.COREFRELTYPE_PREFIX,
                 AnnotationTypeConstant.COREFERENCE_PREFIX, corefRelType, coreference, "red",
-                "blue", "blue", "");
+                "blue", "blue", "", aStaticColor);
         EntityType corefType = new EntityType(AnnotationTypeConstant.COREFERENCE_PARENT,
                 AnnotationTypeConstant.COREFERENCE_PARENT, true, "", "red", "blue", "blue",
                 new ArrayList<String>(), corefChildren, new ArrayList<String>(),
-                new ArrayList<RelationType>());
+                new ArrayList<RelationType>(), aStaticColor);
         if (corefRelType.size() > 0) {
             entityTypes.add(corefType);
         }
 
         List<EntityType> neChildren = getChildren(AnnotationTypeConstant.NAMEDENTITY_PREFIX, "",
-                namedEntity, new ArrayList<String>(), "black", "cyan", "green", "");
+                namedEntity, new ArrayList<String>(), "black", "cyan", "green", "", aStaticColor);
         EntityType neEntityType = new EntityType(AnnotationTypeConstant.NAMEDENTITY_PARENT,
                 AnnotationTypeConstant.NAMEDENTITY_PARENT, true, "", "black", "cyan", "green",
                 new ArrayList<String>(), neChildren, new ArrayList<String>(),
-                new ArrayList<RelationType>());
+                new ArrayList<RelationType>(), aStaticColor);
 
         if (namedEntity.size() > 0) {
             entityTypes.add(neEntityType);
@@ -148,7 +148,7 @@ public class BratAjaxConfiguration
      */
     private List<EntityType> getChildren(String aParentPrefix, String aChildPrefix,
             List<String> spansList, List<String> aArcList, String aFgColor, String aBgcolor,
-            String aBorderColoer, String aArcColor)
+            String aBorderColoer, String aArcColor, boolean aStaticColor)
     {
         List<EntityType> children = new ArrayList<EntityType>();
 
@@ -186,7 +186,7 @@ public class BratAjaxConfiguration
 
             EntityType entityTpe = new EntityType(span, aParentPrefix + span, false, "", aFgColor,
                     aBgcolor, aBorderColoer, Arrays.asList(span), new ArrayList<EntityType>(),
-                    new ArrayList<String>(), arcs);
+                    new ArrayList<String>(), arcs, aStaticColor);
             children.add(entityTpe);
         }
         return children;
