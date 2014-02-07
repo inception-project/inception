@@ -20,6 +20,9 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.display.model;
 import java.awt.Color;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
 
 /**
  * Different attributes of an Entity used for its visualisation formats. It looks like
@@ -57,7 +60,8 @@ public class EntityType
         // Nothing to do
     }
 
-    public static HashMap<String, Color> typeToColor = new HashMap<String, Color>();
+    // allow similar colors per layer
+    public static Map<String, Map<String, Color>> typeToColor =new HashMap<String, Map<String,Color>>();
 
     public EntityType(String aName, String aType, boolean aUnused, String aHotkey, String aFgColor,
             String aBgColor, String aBorderColor, List<String> aLabels, List<EntityType> aChildren,
@@ -65,14 +69,23 @@ public class EntityType
     {
         super();
         if (!aStaticColor) {
-            String colorType = aName + aType;
+            System.out.println(aType);
+            System.out.println(aName);
+            String prefix = aType.contains("_")?aType.substring(0,aType.indexOf("_")):aType;
+            String colorType = aName;
             Color goodBgColor;
-            if (typeToColor.containsKey(colorType)) {
-                goodBgColor = typeToColor.get(colorType);
+            Map<String,Color> nameToColor = typeToColor.get(prefix);
+            if(nameToColor == null){
+                nameToColor = new HashMap<String, Color>();
+                typeToColor.put(prefix,nameToColor);
+            }
+            
+            if (nameToColor.containsKey(colorType)) {
+                goodBgColor = nameToColor.get(colorType);
             }
             else {
-                goodBgColor = TagColor.generateDifferingPastelColor(typeToColor.values());
-                typeToColor.put(colorType, goodBgColor);
+                goodBgColor = TagColor.generateDifferingPastelColor(nameToColor.values());
+                nameToColor.put(colorType, goodBgColor);                
             }
 
             aBgColor = TagColor.encodeRGB(goodBgColor);

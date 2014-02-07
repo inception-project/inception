@@ -49,8 +49,10 @@ public class TagColor
     {
         Color seedColor = new Color(255, 255, 255);
         Random rand = new Random(0);
-
+        
+        int i = 0;
         while (true) {
+            i++;
             Color c = generatePastelColor(seedColor, rand);
             boolean canAdd = true;
             for (Color d : taken) {
@@ -60,6 +62,9 @@ public class TagColor
                 }
             }
             if (canAdd) {
+                return c;
+            }
+            else if(i==1000){// no home of getting new color not similar to this
                 return c;
             }
         }
