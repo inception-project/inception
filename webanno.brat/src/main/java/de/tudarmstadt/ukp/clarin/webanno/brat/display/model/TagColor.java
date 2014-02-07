@@ -45,7 +45,7 @@ public class TagColor
         }
     }
 
-    public static Color generateDifferingPastelColor(Collection<Color> taken)
+    public  static synchronized Color generateDifferingPastelColor(Collection<Color> taken)
     {
         Color seedColor = new Color(255, 255, 255);
         Random rand = new Random(0);
@@ -82,7 +82,7 @@ public class TagColor
         return color;
     }
 
-    public static String encodeRGB(Color color)
+    public static synchronized String encodeRGB(Color color)
     {
         if (null == color) {
             throw new IllegalArgumentException("NULL_COLOR_PARAMETER_ERROR_2");
