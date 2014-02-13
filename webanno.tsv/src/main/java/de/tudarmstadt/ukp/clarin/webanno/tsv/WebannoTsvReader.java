@@ -299,7 +299,7 @@ public class WebannoTsvReader
                 lineTk.nextToken();
             }
         }
-        if(!textFound) {
+        if (!textFound) {
             text.append(tmpText);
         }
     }
@@ -352,10 +352,19 @@ public class WebannoTsvReader
                     indexedNeAnnos.put(index, outNamedEntity);
                     index++;
                 }
-                else {
+                else if (ne.startsWith("I_")) {
                     NamedEntity outNamedEntity = indexedNeAnnos.get(index);
                     outNamedEntity.setEnd(aJcasTokens.get("t_" + i).getEnd());
                     outNamedEntity.addToIndexes();
+                    index++;
+                }
+                else {// NE is not in IOB format. store one NE per token. No way to detect multiple
+                      // token NE
+                    NamedEntity outNamedEntity = new NamedEntity(aJCas, aJcasTokens.get("t_" + i)
+                            .getBegin(), aJcasTokens.get("t_" + i).getEnd());
+                    outNamedEntity.setValue(ne);
+                    outNamedEntity.addToIndexes();
+                    indexedNeAnnos.put(index, outNamedEntity);
                     index++;
                 }
             }
