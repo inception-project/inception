@@ -371,7 +371,7 @@ public class ArcAdapter
     }
 
     @Override
-    public String getLabelPrefix()
+    public String getTypeId()
     {
         return labelPrefix;
     }

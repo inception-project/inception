@@ -446,7 +446,7 @@ public class ProjectUtil
             type.setDescription(importedTagSet.getTypeDescription());
             type.setName(importedTagSet.getTypeName());
             type.setType(importedTagSet.getType());
-            aAnnotationService.createType(type);
+            aAnnotationService.createType(type, user);
         }
         else {
             type = aAnnotationService.getType(importedTagSet.getTypeName(),

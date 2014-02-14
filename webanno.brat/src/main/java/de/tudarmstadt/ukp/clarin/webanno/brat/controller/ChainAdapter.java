@@ -766,7 +766,7 @@ public class ChainAdapter
     }
 
     @Override
-    public String getLabelPrefix()
+    public String getTypeId()
     {
         return labelPrefix;
     }

@@ -309,7 +309,7 @@ public class ProjectTagSetsPanel
                                         type.setDescription(importedTagSet.getTypeDescription());
                                         type.setName(importedTagSet.getTypeName());
                                         type.setType(importedTagSet.getType());
-                                        annotationService.createType(type);
+                                        annotationService.createType(type, user);
                                     }
                                     else {
                                         type = annotationService.getType(
@@ -320,7 +320,7 @@ public class ProjectTagSetsPanel
                                     if (importedTagSet != null) {
 
                                         // Override existing tagset
-                                        if (annotationService.existTagSet(type, project)) {
+                                        if (annotationService.existsTagSet(type, project)) {
                                             annotationService.removeTagSet(annotationService
                                                     .getTagSet(type, project));
                                         }
@@ -395,7 +395,7 @@ public class ProjectTagSetsPanel
                                                         "\\n", "\n"));
                                                 type.setName(tagsetTypeName);
                                                 type.setType(tagsetType);
-                                                annotationService.createType(type);
+                                                annotationService.createType(type, user);
                                             }
                                             // type exist, get it
                                             else {
@@ -403,7 +403,7 @@ public class ProjectTagSetsPanel
                                                         tagsetType);
                                             }
                                             // remove and replace the tagset if it exist
-                                            if (annotationService.existTagSet(type, project)) {
+                                            if (annotationService.existsTagSet(type, project)) {
                                                 annotationService.removeTagSet(annotationService
                                                         .getTagSet(type, project));
                                             }
@@ -492,7 +492,7 @@ public class ProjectTagSetsPanel
                             .getModelObject();
 
                     if (tagSet.getId() == 0) {
-                        if (annotationService.existTagSet(tagSet.getType(),
+                        if (annotationService.existsTagSet(tagSet.getType(),
                                 selectedProjectModel.getObject())) {
                             error("Only one tagset per type per project is allowed!");
                         }

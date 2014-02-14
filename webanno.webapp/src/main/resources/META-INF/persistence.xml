@@ -13,6 +13,7 @@
 		<class>de.tudarmstadt.ukp.clarin.webanno.model.Authority</class>
 		<class>de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission</class>	
 		<class>de.tudarmstadt.ukp.clarin.webanno.model.CrowdJob</class>
-		<class>de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate</class>					
+		<class>de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate</class>
+		<class>de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature</class>					
 	</persistence-unit>
 </persistence>

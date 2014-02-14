@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
@@ -31,17 +32,17 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 /**
  * This interface contains methods which are related to TagSet, Tag and Type for the annotation
  * project .
- * 
+ *
  * @author Seid Muhie Yimam
  * @author Richard Eckart de Castilho
- * 
+ *
  */
 public interface AnnotationService
 {
     /**
      * creates a {@link Tag} for a given {@link TagSet}. Combination of {@code tag name} and
      * {@code tagset name} should be unique
-     * 
+     *
      * @param tag
      * @param user
      *            The User who perform this operation
@@ -53,7 +54,7 @@ public interface AnnotationService
 
     /**
      * creates a {@link TagSet} object in the database
-     * 
+     *
      * @param tagset
      * @param user
      *            The User who perform this operation
@@ -64,41 +65,44 @@ public interface AnnotationService
         throws IOException;
 
     /**
-     * creates a type which will be a span or arc(relation) type. Currently the annotation types are
+     * creates a type which will be a span, chain, or arc(relation) type. Currently the annotation types are
      * highly highly tied with the tagsets, one tagset per type. POS, Names Entity, and coreference
      * links are span types while coreference chains and dependency parsings are arc(relation)
      * types.
-     * 
+     *
      * @param type
+     * @throws IOException
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void createType(AnnotationType type);
+    void createType(AnnotationType type,  User user) throws IOException;
 
     /**
      * gets a {@link Tag} using its name and a {@link TagSet}
-     * 
+     *
      * @param aTagName
      * @param tagSet
      * @return
      */
     Tag getTag(String tagName, TagSet tagSet);
-    
+
     /**
      * Check if a tag with this name in the given tagset exists
      */
     boolean existsTag(String tagName, TagSet tagSet);
 
     /**
-     * Get a a {@link TagSet} for a given {@link AnnotationType}. One Tagset per annotation type
-     * 
-     * @param aType
-     * @return
+     * Check is a {@link TagSet} exists
      */
-    boolean existTagSet(AnnotationType type, Project project);
+    boolean existsTagSet(AnnotationType type, Project project);
+
+    /**
+     * check if an {@link AnnotationType} exists with this name and type in this {@link Project}
+     */
+    boolean existsLayer(String name , String type, Project project);
 
     /**
      * get a {@link TagSet} by its type and its project
-     * 
+     *
      * @param tagName
      * @return {@link TagSet}
      */
@@ -122,7 +126,7 @@ public interface AnnotationService
     /**
      * Initialize the project with default {@link AnnotationType}, {@link TagSet}s, and {@link Tag}
      * s. This is done per Project
-     * 
+     *
      * @param aProject
      * @throws IOException
      */
@@ -131,7 +135,7 @@ public interface AnnotationService
 
     /**
      * list all {@link AnnotationType} in the system
-     * 
+     *
      * @return {@link List<AnnotationType>}
      */
     List<AnnotationType> listAnnotationType();
@@ -140,17 +144,21 @@ public interface AnnotationService
      * List all annotation types in a project
      */
     List<AnnotationType> listAnnotationType(Project project);
+    /**
+     * List all the features in a {@link AnnotationType}
+     */
+    List<AnnotationFeature> listAnnotationFeature(Project project);
 
     /**
      * list all {@link Tag} in the system
-     * 
+     *
      * @return
      */
     List<Tag> listTags();
 
     /**
      * list all {@link Tag} in a {@link TagSet}
-     * 
+     *
      * @param tag
      * @return
      */
@@ -158,14 +166,14 @@ public interface AnnotationService
 
     /**
      * list all {@link TagSet} in the system
-     * 
+     *
      * @return
      */
     List<TagSet> listTagSets();
 
     /**
      * List all {@link TagSet }s in a project
-     * 
+     *
      * @param project
      * @return
      */
@@ -173,7 +181,7 @@ public interface AnnotationService
 
     /**
      * Removes a {@link Tag} from the database
-     * 
+     *
      * @param tag
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
@@ -181,7 +189,7 @@ public interface AnnotationService
 
     /**
      * removes a {@link TagSet } from the database
-     * 
+     *
      * @param tagset
      */
     void removeTagSet(TagSet tagset);

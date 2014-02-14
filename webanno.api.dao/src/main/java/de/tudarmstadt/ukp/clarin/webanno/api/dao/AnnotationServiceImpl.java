@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -30,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
@@ -87,13 +87,18 @@ public class AnnotationServiceImpl
 
     @Override
     @Transactional
-    public void createType(AnnotationType aType)
+    public void createType(AnnotationType aType, User aUser)
+        throws IOException
     {
         if (aType.getId() != 0) {
             throw new IllegalArgumentException("Type already exists");
         }
 
         entityManager.persist(aType);
+        RepositoryServiceDbData.createLog(aType.getProject(), aUser.getUsername()).info(
+                " Added tagset  [" + aType.getName() + "] with ID [" + aType.getId() + "]");
+        RepositoryServiceDbData.createLog(aType.getProject(), aUser.getUsername())
+                .removeAllAppenders();
     }
 
     @Override
@@ -105,26 +110,47 @@ public class AnnotationServiceImpl
                 .setParameter("name", aTagName).setParameter("tagSet", aTagSet).getSingleResult();
     }
 
-    
-  public  boolean existsTag(String aTagName, TagSet aTagSet){
-        
-        try{
-        getTag(aTagName, aTagSet);
-        return true;           
+    @Override
+    public boolean existsTag(String aTagName, TagSet aTagSet)
+    {
+
+        try {
+            getTag(aTagName, aTagSet);
+            return true;
         }
         catch (NoResultException e) {
             return false;
         }
     }
+
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public boolean existTagSet(AnnotationType aType, Project aProject)
+    public boolean existsTagSet(AnnotationType aType, Project aProject)
     {
         try {
             entityManager
                     .createQuery("FROM TagSet WHERE type = :type AND project = :project",
                             TagSet.class).setParameter("type", aType)
                     .setParameter("project", aProject).getSingleResult();
+            return true;
+        }
+        catch (NoResultException e) {
+            return false;
+
+        }
+    }
+
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public boolean existsLayer(String aName, String aType, Project aProject)
+    {
+        try {
+            entityManager
+                    .createQuery(
+                            "FROM AnnotationType WHERE name = :name AND type = :type AND project = :project",
+                            AnnotationType.class).setParameter("name", aName)
+                    .setParameter("type", aType).setParameter("project", aProject)
+                    .getSingleResult();
             return true;
         }
         catch (NoResultException e) {
@@ -188,7 +214,7 @@ public class AnnotationServiceImpl
             type.setDescription(aDescription);
             type.setName(aName);
             type.setType(aType);
-            createType(type);
+            createType(type, aUser);
         }
         else {
             type = getType(aName, aType);
@@ -337,12 +363,18 @@ public class AnnotationServiceImpl
     @Transactional
     public List<AnnotationType> listAnnotationType(Project aProject)
     {
-        List<TagSet> tagSets = listTagSets(aProject);
-        List<AnnotationType> annotationTypes = new ArrayList<AnnotationType>();
-        for (TagSet tagSet : tagSets) {
-            annotationTypes.add(tagSet.getType());
-        }
-        return annotationTypes;
+        return entityManager
+                .createQuery("FROM AnnotationType WHERE project =:project ORDER BY uiName",
+                        AnnotationType.class).setParameter("project", aProject).getResultList();
+    }
+
+    @Override
+    @Transactional
+    public List<AnnotationFeature> listAnnotationFeature(Project aProject)
+    {
+        return entityManager
+                .createQuery("FROM AnnotationFeature  WHERE project =:project ORDER BY uiName",
+                        AnnotationFeature.class).setParameter("project", aProject).getResultList();
     }
 
     @Override

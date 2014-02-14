@@ -278,7 +278,7 @@ public class AutomationUtil
             String featureTagSet = "";
             // TODO: when free annotation layers defined, check if tagset is on multiple token or
             // not
-            if (adapter.getLabelPrefix().equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)
+            if (adapter.getTypeId().equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)
                     && aFeatureTagSet != null && aFeatureTagSet.getId() > 0) {
                 TypeAdapter featureAdapter = TypeUtil.getAdapter(aFeatureTagSet);
                 List<String> featureAnnotations = featureAdapter.getAnnotation(sentence.getCAS()
@@ -295,7 +295,7 @@ public class AutomationUtil
             List<String> annotations = adapter.getAnnotation(sentence.getCAS().getJCas(),
                     token.getBegin(), token.getEnd());
             String tag = "";
-            if (adapter.getLabelPrefix().equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)
+            if (adapter.getTypeId().equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)
                     && !aPredict) {
                 tag = neTags.get(token.getAddress()) == null ? "O" : neTags.get(token.getAddress());
             }
@@ -363,7 +363,7 @@ public class AutomationUtil
 
         boolean randomInit = false;
         TypeAdapter adapter = TypeUtil.getAdapter(layer);
-        if (adapter.getLabelPrefix().equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)) {
+        if (adapter.getTypeId().equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)) {
             mira.setIobScorer();
         }
         mira.loadTemplates(templateName);
@@ -396,7 +396,7 @@ public class AutomationUtil
         StringBuffer sb = new StringBuffer();
         TypeAdapter adapter = TypeUtil.getAdapter(aTagSet);
         int i = 1;
-        if (adapter.getLabelPrefix().equals(AnnotationTypeConstant.POS_PREFIX)) {
+        if (adapter.getTypeId().equals(AnnotationTypeConstant.POS_PREFIX)) {
             i = setMorphoTemplate(aTemplate, sb, i);
             setNgramForLable(aTemplate, sb, i);
         }

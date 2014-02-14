@@ -74,9 +74,12 @@ public interface TypeAdapter
      * Prefix of the label value for Brat to make sure that different annotation types can use the
      * same label, e.g. a POS tag "N" and a named entity type "N".
      *
-     * This is used to differentiate the different types in the brat annotation/visualization.
+     * This is used to differentiate the different types in the brat annotation/visualization. It is
+     * a short unique numeric identifier for the type (primary key in the DB). This identifier is
+     * only transiently used when communicating with the UI. It is not persisted long term other
+     * than in the type registry (e.g. in the database).
      */
-    String getLabelPrefix();
+    String getTypeId();
 
     /**
      * Get the CAS type of the this {@link TypeAdapter}

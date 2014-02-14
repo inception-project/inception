@@ -120,7 +120,7 @@ public final class TypeUtil
 
         Map<String, TypeAdapter> adapters = new HashMap<String, TypeAdapter>();
         for (TypeAdapter adapter : adapterList) {
-            adapters.put(adapter.getLabelPrefix(), adapter);
+            adapters.put(adapter.getTypeId(), adapter);
         }
 
         TypeAdapter result = adapters.get(aPrefix);

@@ -63,8 +63,12 @@ public class SpanAdapter
      *
      * This is used to differentiate the different types in the brat annotation/visualization. The
      * prefix will not stored in the CAS (striped away at {@link BratAjaxCasController#getType} )
+     *
+     * It is a short unique numeric identifier for the type (primary key in the DB). This identifier
+     * is only transiently used when communicating with the UI. It is not persisted long term other
+     * than in the type registry (e.g. in the database).
      */
-    private final String labelPrefix;
+    private final String typeId;
 
     /**
      * A field that takes the name of the feature which should be set, e.e. "pos" or "lemma".
@@ -95,7 +99,7 @@ public class SpanAdapter
             String aAttachFeature, String aAttachType)
     {
 
-        labelPrefix = aLabelPrefix;
+        typeId = aLabelPrefix;
         labelFeatureName = aLabelFeatureName;
         annotationTypeName = aTypeName;
         attachFeature = aAttachFeature;
@@ -160,7 +164,7 @@ public class SpanAdapter
         for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, firstSentence.getBegin(),
                 lastSentenceInPage.getEnd())) {
             Feature labelFeature = fs.getType().getFeatureByBaseName(labelFeatureName);
-            aResponse.addEntity(new Entity(((FeatureStructureImpl) fs).getAddress(), labelPrefix
+            aResponse.addEntity(new Entity(((FeatureStructureImpl) fs).getAddress(), typeId
                     + fs.getStringValue(labelFeature), asList(new Offsets(fs.getBegin()
                     - aFirstSentenceOffset, fs.getEnd() - aFirstSentenceOffset))));
         }
@@ -257,7 +261,6 @@ public class SpanAdapter
         Feature feature = type.getFeatureByBaseName(labelFeatureName);
         for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
 
-
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
                 if (!fs.getStringValue(feature).equals(aValue)) {
                     fs.setStringValue(feature, aValue);
@@ -335,9 +338,9 @@ public class SpanAdapter
     }
 
     @Override
-    public String getLabelPrefix()
+    public String getTypeId()
     {
-        return labelPrefix;
+        return typeId;
     }
 
     @Override

@@ -46,7 +46,6 @@ import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.form.upload.FileUploadField;
-import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.LoadableDetachableModel;
@@ -61,7 +60,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.automation.project.ProjectMiraTemplatePanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
-import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
@@ -388,7 +386,6 @@ public class ProjectPage
                 }
             });
 
-            // not used in 1.0.0 release
             tabs.add(tagSets = new AbstractTab(new Model<String>("Layers"))
             {
                 private static final long serialVersionUID = 3274065112505097898L;
@@ -396,13 +393,13 @@ public class ProjectPage
                 @Override
                 public Panel getPanel(String panelId)
                 {
-                    return new EmptyPanel(panelId);
+                    return new ProjectLayersPanel(panelId, project);
                 }
 
                 @Override
                 public boolean isVisible()
                 {
-                    return false;
+                    return project.getObject().getId() != 0 && visible;
                 }
             });
 
