@@ -38,9 +38,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
  * Implementation of methods defined in the {@link AnnotationService} interface
- *
+ * 
  * @author Seid Muhie Yimam
- *
+ * 
  */
 public class AnnotationServiceImpl
     implements AnnotationService
@@ -91,7 +91,7 @@ public class AnnotationServiceImpl
         throws IOException
     {
         if (aType.getId() != 0) {
-            throw new IllegalArgumentException("Type already exists");
+            throw new IllegalArgumentException("Layer already exists");
         }
 
         entityManager.persist(aType);
@@ -100,6 +100,18 @@ public class AnnotationServiceImpl
         RepositoryServiceDbData.createLog(aType.getProject(), aUser.getUsername())
                 .removeAllAppenders();
     }
+    
+    @Override
+    @Transactional
+    public void createFeature(AnnotationFeature aFeature)
+    {
+        if (aFeature.getId() != 0) {
+            throw new IllegalArgumentException("Feature already exists");
+        }
+        entityManager.persist(aFeature);
+    }
+    
+    
 
     @Override
     @Transactional
@@ -151,6 +163,24 @@ public class AnnotationServiceImpl
                             AnnotationType.class).setParameter("name", aName)
                     .setParameter("type", aType).setParameter("project", aProject)
                     .getSingleResult();
+            return true;
+        }
+        catch (NoResultException e) {
+            return false;
+
+        }
+    }
+
+    public boolean existsFeature(String aName, AnnotationType aLayer, TagSet aTagSet, Project aProject)
+    {
+
+        try {
+            entityManager
+                    .createQuery(
+                            "FROM AnnotationFeature WHERE name = :name AND layer = :layer AND tagset = :tagset AND project = :project",
+                            AnnotationFeature.class).setParameter("name", aName)
+                    .setParameter("layer", aLayer).setParameter("project", aProject)
+                    .setParameter("tagset", aTagSet).getSingleResult();
             return true;
         }
         catch (NoResultException e) {

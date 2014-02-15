@@ -83,6 +83,15 @@ public class AnnotationType
     @ManyToOne
     @JoinColumn(name = "project")
     private Project project;
+    
+
+    private boolean lockToTokenOffset = true;
+    
+    private boolean allowSTacking;
+    
+    private boolean crossSentence;
+    
+    private boolean multipleTokens;
 
     /**
      *
@@ -376,6 +385,46 @@ public class AnnotationType
             return false;
         }
         return true;
+    }
+
+    public boolean isLockToTokenOffset()
+    {
+        return lockToTokenOffset;
+    }
+
+    public void setLockToTokenOffset(boolean lockToTokenOffset)
+    {
+        this.lockToTokenOffset = lockToTokenOffset;
+    }
+
+    public boolean isAllowSTacking()
+    {
+        return allowSTacking;
+    }
+
+    public void setAllowSTacking(boolean allowSTacking)
+    {
+        this.allowSTacking = allowSTacking;
+    }
+
+    public boolean isCrossSentence()
+    {
+        return crossSentence;
+    }
+
+    public void setCrossSentence(boolean crossSentence)
+    {
+        this.crossSentence = crossSentence;
+    }
+
+    public boolean isMultipleTokens()
+    {
+        return multipleTokens;
+    }
+
+    public void setMultipleTokens(boolean multipleTokens)
+    {
+        this.multipleTokens = multipleTokens;
     }
 
 }

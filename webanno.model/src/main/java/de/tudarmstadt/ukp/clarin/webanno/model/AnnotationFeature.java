@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2012
+ * Copyright 2014
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.model;
 
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -25,6 +27,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
@@ -36,14 +39,14 @@ import javax.persistence.UniqueConstraint;
  * float, or boolean. To control the values that a String feature assumes, it can be associated with
  * a tagset. If the feature is defined on a span type, it is also possible to add a feature of
  * another span type which then serves as a label type for the first one
- *
+ * 
  * @author Seid Muhie Yimam
  * @author Richard Eckart de Castilho
- *
+ * 
  */
 @Entity
-@Table(name = "annotation_feature", uniqueConstraints = { @UniqueConstraint(columnNames = { "type",
-        "name", "tagset" }) })
+@Table(name = "annotation_feature", uniqueConstraints = { @UniqueConstraint(columnNames = {
+        "annotation_type", "name", "tagset", "project" }) })
 public class AnnotationFeature
     implements Serializable
 {
@@ -54,9 +57,10 @@ public class AnnotationFeature
     @Column(name = "id")
     private long id;
 
+    private String type;
     @ManyToOne
-    @JoinColumn(name = "type")
-    private AnnotationType type;
+    @JoinColumn(name = "annotation_type")
+    private AnnotationType layer;
     @ManyToOne
     @JoinColumn(name = "tagset")
     private TagSet tagSet;
@@ -78,30 +82,41 @@ public class AnnotationFeature
 
     private String featureType;
 
-    /**
-     * the type with which the feature is associated.
-     */
     public long getId()
     {
         return id;
     }
 
-    /**
-     * the type with which the feature is associated.
-     */
+
     public void setId(long id)
     {
         this.id = id;
     }
 
-    public AnnotationType getType()
+    public String getType()
     {
         return type;
     }
 
-    public void setType(AnnotationType type)
+    public void setType(String type)
     {
         this.type = type;
+    }
+
+    /**
+     * the type with which the feature is associated.
+     */
+    public AnnotationType getLayer()
+    {
+        return layer;
+    }
+
+    /**
+     * the type with which the feature is associated.
+     */
+    public void setLayer(AnnotationType layer)
+    {
+        this.layer = layer;
     }
 
     public TagSet getTagSet()
@@ -141,7 +156,7 @@ public class AnnotationFeature
     }
 
     /**
-     *
+     * 
      * a description of the feature.
      */
 
@@ -151,7 +166,7 @@ public class AnnotationFeature
     }
 
     /**
-     *
+     * 
      * a description of the feature.
      */
     public void setDescription(String description)
@@ -160,7 +175,7 @@ public class AnnotationFeature
     }
 
     /**
-     *
+     * 
      * whether the type is available in the UI (outside of the project settings)
      */
     public boolean isEnabled()
@@ -169,7 +184,7 @@ public class AnnotationFeature
     }
 
     /**
-     *
+     * 
      * whether the type is available in the UI (outside of the project settings)
      */
     public void setEnabled(boolean enabled)
@@ -179,7 +194,7 @@ public class AnnotationFeature
 
     /**
      * the name of the feature in the UIMA type system.
-     *
+     * 
      */
 
     public String getName()
@@ -189,7 +204,7 @@ public class AnnotationFeature
 
     /**
      * the name of the feature in the UIMA type system.
-     *
+     * 
      */
     public void setName(String name)
     {
@@ -197,7 +212,7 @@ public class AnnotationFeature
     }
 
     /**
-     *
+     * 
      * the type of feature (string, integer, float, boolean, or a span type used as a label)
      */
     public String getFeatureType()
@@ -206,7 +221,7 @@ public class AnnotationFeature
     }
 
     /**
-     *
+     * 
      * the type of feature (string, integer, float, boolean, or a span type used as a label)
      */
     public void setFeatureType(String featureType)

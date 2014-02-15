@@ -20,12 +20,12 @@
 <wicket:panel>
 	<table class="hfill">
 		<tr>
-			<td style="vertical-align: top">
+			<td style="vertical-align: top" width="20%">
 				<form wicket:id="layerSelectionForm">
 					<fieldset class="ui-widget-content ui-corner-all">
 						<legend>Layers</legend>
 						<div>
-							<select class="hfill" wicket:id="layer" size="6"></select>
+							<select class="hfill" wicket:id="layer" size="10"></select>
 						</div>
 						<div class="buttons">
 							<input type="submit" wicket:id="create" />
@@ -34,7 +34,7 @@
 				</form>
 			</td>
 
-			<td class="hfill" style="vertical-align: top">
+			<td class="hfill" style="vertical-align: top" width="40%">
 				<form wicket:id="layerDetailForm">
 					<fieldset class="ui-widget-content ui-corner-all labels-left">
 						<legend>Properties</legend>
@@ -57,9 +57,9 @@
 								<td class="hfill"><input type="text"
 									wicket:id="labelFeatureName" /></td>
 							</tr>
-							</table>
-						</fieldset>
-						<fieldset class="ui-widget-content ui-corner-all labels-left">
+						</table>
+					</fieldset>
+					<fieldset class="ui-widget-content ui-corner-all labels-left">
 						<legend>Technical Properties</legend>
 						<table>
 							<tr>
@@ -79,54 +79,89 @@
 								<td class="hfill"><select wicket:id="type"></select></td>
 							</tr>
 						</table>
-						</fieldset>
-						<div class="buttons">
-							<input type="submit" wicket:id="save" />
-						</div>
-					
-				</form>
-			</td>
-		</tr>
-	</table>
-
-	<!-- 
-	<table class="hfill">
-		<tr>
-			<td style="vertical-align: top">
-				<form wicket:id="tagSelectionForm">
-					<fieldset class="ui-widget-content ui-corner-all">
-						<legend>Tags</legend>
-						<select wicket:id="tag" size="8"></select>
-						<input type="submit" wicket:id="new" />
 					</fieldset>
-				</form>
-			</td>
-
-			<td class="hfill" style="vertical-align: top">
-				<form wicket:id="tagDetailForm">
 					<fieldset class="ui-widget-content ui-corner-all labels-left">
-						<legend>Tag details</legend>
+						<legend>Behaviors</legend>
 						<table class="hfill">
 							<tr>
-								<td><label>Name:</label></td>
-								<td class="hfill"><input type="text" class="hfill"
-									wicket:id="name" /></td>
+								<td style="vertical-align: top;"><label>Lock to
+										token offsets:</label></td>
+								<td><input type="checkbox" wicket:id="lockToTokenOffset" /></td>
+							</tr>
+							<tr>
+								<td style="vertical-align: top;"><label>Allow
+										stacking:</label></td>
+								<td><input type="checkbox" wicket:id="allowSTacking" /></td>
+							</tr>
+							<tr>
+								<td style="vertical-align: top;"><label>Allow
+										crossing sentence boundary:</label></td>
+								<td><input type="checkbox" wicket:id="crossSentence" /></td>
+							</tr>
+							<tr>
+								<td style="vertical-align: top;"><label>Allow
+										multiple tokens:</label></td>
+								<td><input type="checkbox" wicket:id="multipleTokens" /></td>
+							</tr>
+						</table>
+					</fieldset>
+
+					<div class="buttons">
+						<input type="submit" wicket:id="save" />
+					</div>
+
+				</form>
+			</td>
+			<td style="vertical-align: top" width="40%">
+				<form wicket:id="featureSelectionForm">
+					<fieldset class="ui-widget-content ui-corner-all">
+						<legend>Feature overview</legend>
+						<div>
+							<select class="hfill" wicket:id="feature" size="10"></select>
+						</div>
+						<div class="buttons">
+							<input type="submit" wicket:id="new" />
+						</div>
+					</fieldset>
+				</form>
+				<form wicket:id="featureDetailForm">
+					<fieldset class="ui-widget-content ui-corner-all labels-left">
+						<legend>Feature details</legend>
+						<table class="hfill">
+							<tr>
+								<td><label>Short Description:</label></td>
+								<td class="hfill"><input type="text" wicket:id="uiName" /></td>
 							</tr>
 							<tr>
 								<td style="vertical-align: top;"><label>Description:</label></td>
 								<td class="hfill"><textarea class="hfill"
-										wicket:id="description" rows="4"></textarea></td>
+										wicket:id="description" rows="7"></textarea></td>
+							</tr>
+							<tr>
+								<td style="vertical-align: top;"><label>Enabled:</label></td>
+								<td><input type="checkbox" wicket:id="enabled" /></td>
+							</tr>
+							<tr>
+								<td><label>Tagset:</label></td>
+								<td class="hfill"><select wicket:id="tagSet"></select></td>
+							</tr>
+							<tr>
+								<td><label>Name:</label></td>
+								<td class="hfill"><input type="text" wicket:id="name" /></td>
+							</tr>
+							<tr>
+								<td><label>Type:</label></td>
+								<td class="hfill"><select wicket:id="type"></select></td>
 							</tr>
 						</table>
-						<div class="buttons">
-							<input type="submit" wicket:id="save" />
-							<input type="submit" wicket:id="remove" />
-						</div>
 					</fieldset>
+					<div class="buttons">
+						<input type="submit" wicket:id="save" />
+					</div>
+
 				</form>
 			</td>
 		</tr>
 	</table>
-	 -->
 </wicket:panel>
 </html>
