@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -38,9 +39,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
  * Implementation of methods defined in the {@link AnnotationService} interface
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 public class AnnotationServiceImpl
     implements AnnotationService
@@ -100,7 +101,7 @@ public class AnnotationServiceImpl
         RepositoryServiceDbData.createLog(aType.getProject(), aUser.getUsername())
                 .removeAllAppenders();
     }
-    
+
     @Override
     @Transactional
     public void createFeature(AnnotationFeature aFeature)
@@ -110,8 +111,6 @@ public class AnnotationServiceImpl
         }
         entityManager.persist(aFeature);
     }
-    
-    
 
     @Override
     @Transactional
@@ -171,7 +170,9 @@ public class AnnotationServiceImpl
         }
     }
 
-    public boolean existsFeature(String aName, AnnotationType aLayer, TagSet aTagSet, Project aProject)
+    @Override
+    public boolean existsFeature(String aName, AnnotationType aLayer, TagSet aTagSet,
+            Project aProject)
     {
 
         try {
@@ -400,11 +401,17 @@ public class AnnotationServiceImpl
 
     @Override
     @Transactional
-    public List<AnnotationFeature> listAnnotationFeature(Project aProject)
+    public List<AnnotationFeature> listAnnotationFeature(Project aProject, AnnotationType aLayer)
     {
+        if (aLayer.getId() == 0) {
+            return new ArrayList<AnnotationFeature>();
+        }
+
         return entityManager
-                .createQuery("FROM AnnotationFeature  WHERE project =:project ORDER BY uiName",
-                        AnnotationFeature.class).setParameter("project", aProject).getResultList();
+                .createQuery(
+                        "FROM AnnotationFeature  WHERE project =:project AND layer =:layer ORDER BY uiName",
+                        AnnotationFeature.class).setParameter("project", aProject)
+                .setParameter("layer", aLayer).getResultList();
     }
 
     @Override

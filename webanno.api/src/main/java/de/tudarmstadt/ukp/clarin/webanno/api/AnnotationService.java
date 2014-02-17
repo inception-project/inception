@@ -75,7 +75,7 @@ public interface AnnotationService
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     void createType(AnnotationType type,  User user) throws IOException;
-    
+
     void createFeature(AnnotationFeature feature) ;
 
     /**
@@ -101,9 +101,9 @@ public interface AnnotationService
      * check if an {@link AnnotationType} exists with this name and type in this {@link Project}
      */
     boolean existsLayer(String name , String type, Project project);
-    
+
     /**
-     * 
+     *
      * Check if this {@link AnnotationFeature} already exists
      */
     boolean existsFeature(String name , AnnotationType type, TagSet tagSet, Project project);
@@ -153,9 +153,9 @@ public interface AnnotationService
      */
     List<AnnotationType> listAnnotationType(Project project);
     /**
-     * List all the features in a {@link AnnotationType}
+     * List all the features in a {@link AnnotationType} for this {@link Project}
      */
-    List<AnnotationFeature> listAnnotationFeature(Project project);
+    List<AnnotationFeature> listAnnotationFeature(Project project, AnnotationType type);
 
     /**
      * list all {@link Tag} in the system

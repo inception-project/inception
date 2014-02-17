@@ -24,11 +24,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.CheckBox;
-import org.apache.wicket.markup.html.form.CheckBoxMultipleChoice;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
@@ -47,7 +44,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -55,9 +51,9 @@ import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 
 /**
  * A Panel Used to add Layers to a selected {@link Project} in the project settings page
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 
 public class ProjectLayersPanel
@@ -100,22 +96,13 @@ public class ProjectLayersPanel
 
         layerDetailForm = new LayerDetailForm("layerDetailForm");
 
-        featureDetailForm = new FeatureDetailForm("featureDetailForm")
-        {
-            private static final long serialVersionUID = -1102816692217422945L;
-
-            @Override
-            public boolean isVisible()
-            {
-                return layerSelectionForm.getModelObject().layer != null
-                        && layerSelectionForm.getModelObject().layer.getProject().equals(
-                                aProjectModel.getObject());
-            }
-        };
+        featureDetailForm = new FeatureDetailForm("featureDetailForm");
 
         add(layerSelectionForm);
         add(featureSelectionForm);
         add(layerDetailForm);
+
+        featureDetailForm.setVisible(false);
         add(featureDetailForm);
     }
 
@@ -186,12 +173,15 @@ public class ProjectLayersPanel
                 protected void onSelectionChanged(AnnotationType aNewSelection)
                 {
                     if (aNewSelection != null) {
-                        layerDetailForm.clearInput();
+
                         layerDetailForm.setModelObject(aNewSelection);
                         layerDetailForm.setVisible(true);
+
                         LayerSelectionForm.this.setVisible(true);
+
+                        featureSelectionForm.clearInput();
                         featureSelectionForm.setVisible(true);
-                        featureDetailForm.setVisible(true);
+                        featureDetailForm.setVisible(false);
 
                     }
                 }
@@ -218,13 +208,15 @@ public class ProjectLayersPanel
         private static final long serialVersionUID = -1L;
 
         private AnnotationType layer;
-        private AnnotationFeature feature;
+        public AnnotationFeature feature;
     }
 
     private class LayerDetailForm
         extends Form<AnnotationType>
     {
         private static final long serialVersionUID = -1L;
+
+        DropDownChoice<AnnotationType> attachType;
 
         public LayerDetailForm(String id)
         {
@@ -259,29 +251,79 @@ public class ProjectLayersPanel
                 }
             }.setRequired(true));
 
-            add(new DropDownChoice<AnnotationType>("attachType",
-                    annotationService.listAnnotationType(selectedProjectModel.getObject()),
-                    new ChoiceRenderer<AnnotationType>("uiName"))
+            add(attachType = new DropDownChoice<AnnotationType>("attachType")
             {
-                private static final long serialVersionUID = -8406819052101930966L;
+                private static final long serialVersionUID = -6705445053442011120L;
+
+                {
+                    setChoices(new LoadableDetachableModel<List<AnnotationType>>()
+                    {
+                        private static final long serialVersionUID = 1784646746122513331L;
+
+                        @Override
+                        protected List<AnnotationType> load()
+                        {
+                            return annotationService.listAnnotationType(selectedProjectModel
+                                    .getObject());
+
+                        }
+                    });
+                    setChoiceRenderer(new ChoiceRenderer<AnnotationType>()
+                    {
+                        private static final long serialVersionUID = 8639013729422537472L;
+
+                        @Override
+                        public Object getDisplayValue(AnnotationType aObject)
+                        {
+                            return aObject.getUiName();
+                        }
+                    });
+                }
 
                 @Override
                 public boolean isEnabled()
                 {
-                    return   LayerDetailForm.this.getModelObject().getId() == 0;
+                    return LayerDetailForm.this.getModelObject().getAttachType() == null;
                 }
             });
 
-            add(new DropDownChoice<AnnotationFeature>("attachFeature",
-                    annotationService.listAnnotationFeature(selectedProjectModel.getObject()),
-                    new ChoiceRenderer<AnnotationFeature>("uiName"))
+            add(new DropDownChoice<AnnotationFeature>("attachFeature")
             {
-                private static final long serialVersionUID = -8479274244248682199L;
+                private static final long serialVersionUID = -6705445053442011120L;
+
+                {
+                    setChoices(new LoadableDetachableModel<List<AnnotationFeature>>()
+                    {
+                        private static final long serialVersionUID = 1784646746122513331L;
+
+                        @Override
+                        protected List<AnnotationFeature> load()
+                        {
+                            if (attachType.getModelObject() == null) {
+                                return new ArrayList<AnnotationFeature>();
+
+                            }
+                            return annotationService.listAnnotationFeature(
+                                    selectedProjectModel.getObject(), attachType.getModelObject());
+
+                        }
+                    });
+                    setChoiceRenderer(new ChoiceRenderer<AnnotationFeature>()
+                    {
+                        private static final long serialVersionUID = 8639013729422537472L;
+
+                        @Override
+                        public Object getDisplayValue(AnnotationFeature aObject)
+                        {
+                            return aObject.getUiName();
+                        }
+                    });
+                }
 
                 @Override
                 public boolean isEnabled()
                 {
-                    return  LayerDetailForm.this.getModelObject().getId() == 0;
+                    return LayerDetailForm.this.getModelObject().getAttachFeature() == null;
                 }
             });
 
@@ -306,7 +348,6 @@ public class ProjectLayersPanel
                             error("Only one Layer per project is allowed!");
                         }
                         else {
-
                             String username = SecurityContextHolder.getContext()
                                     .getAuthentication().getName();
                             User user = projectRepository.getUser(username);
@@ -346,7 +387,7 @@ public class ProjectLayersPanel
 
             add(new DropDownChoice<TagSet>("tagSet",
                     annotationService.listTagSets(selectedProjectModel.getObject()),
-                    new ChoiceRenderer<TagSet>("name")).setRequired(true));
+                    new ChoiceRenderer<TagSet>("name")));
 
             add(new TextField<String>("name")
             {
@@ -389,6 +430,7 @@ public class ProjectLayersPanel
                             return;
                         }
                         annotationService.createFeature(feature);
+                        featureDetailForm.setVisible(false);
                     }
                 }
             });
@@ -401,13 +443,11 @@ public class ProjectLayersPanel
     {
         private static final long serialVersionUID = -1L;
 
-        private ListChoice<AnnotationFeature> feature;
-
         public FeatureSelectionForm(String id)
         {
             super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
 
-            add(feature = new ListChoice<AnnotationFeature>("feature")
+            add(new ListChoice<AnnotationFeature>("feature")
             {
                 private static final long serialVersionUID = 1L;
 
@@ -419,8 +459,9 @@ public class ProjectLayersPanel
                         @Override
                         protected List<AnnotationFeature> load()
                         {
-                            return annotationService.listAnnotationFeature(selectedProjectModel
-                                    .getObject());
+                            return annotationService.listAnnotationFeature(
+                                    selectedProjectModel.getObject(),
+                                    layerDetailForm.getModelObject());
                         }
                     });
                     setChoiceRenderer(new ChoiceRenderer<AnnotationFeature>()
@@ -430,11 +471,30 @@ public class ProjectLayersPanel
                         @Override
                         public Object getDisplayValue(AnnotationFeature aObject)
                         {
-                            return aObject.getUiName();
+                            String tagSetName = aObject.getTagSet() == null ? "-None-" : aObject
+                                    .getTagSet().getName();
+                            return "[ "+aObject.getUiName() + "] [ " + aObject.getType() + " ] [ "
+                                    + tagSetName +" ]";
                         }
                     });
                     setNullValid(false);
 
+                }
+
+                @Override
+                protected void onSelectionChanged(AnnotationFeature aNewSelection)
+                {
+                    if (aNewSelection != null) {
+                        featureDetailForm.setModelObject(aNewSelection);
+                        featureDetailForm.setVisible(true);
+
+                    }
+                }
+
+                @Override
+                protected boolean wantOnSelectionChangedNotifications()
+                {
+                    return true;
                 }
 
                 @Override
@@ -443,19 +503,6 @@ public class ProjectLayersPanel
                     return "";
                 }
             });
-            feature.add(new OnChangeAjaxBehavior()
-            {
-                private static final long serialVersionUID = 3617746295701595177L;
-
-                @Override
-                protected void onUpdate(AjaxRequestTarget aTarget)
-                {
-                    if (getModelObject().feature != null) {
-                        featureDetailForm.setModelObject(getModelObject().feature);
-                        aTarget.add(featureDetailForm.setOutputMarkupId(true));
-                    }
-                }
-            }).setOutputMarkupId(true);
 
             add(new Button("new", new ResourceModel("label"))
             {
@@ -465,6 +512,7 @@ public class ProjectLayersPanel
                 public void onSubmit()
                 {
                     featureDetailForm.setDefaultModelObject(new AnnotationFeature());
+                    featureDetailForm.setVisible(true);
                 }
             });
         }

@@ -76,21 +76,25 @@ public class AnnotationType
     @Column(name = "name", nullable = false)
     private String name;
 
+    @ManyToOne
+    @JoinColumn(name = "annotation_type")
     private AnnotationType attachType;
 
+    @ManyToOne
+    @JoinColumn(name = "annotation_feature")
     private AnnotationFeature attachFeature;
 
     @ManyToOne
     @JoinColumn(name = "project")
     private Project project;
-    
+
 
     private boolean lockToTokenOffset = true;
-    
+
     private boolean allowSTacking;
-    
+
     private boolean crossSentence;
-    
+
     private boolean multipleTokens;
 
     /**
