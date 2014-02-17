@@ -24,6 +24,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
@@ -217,6 +219,7 @@ public class ProjectLayersPanel
         private static final long serialVersionUID = -1L;
 
         DropDownChoice<AnnotationType> attachType;
+        DropDownChoice<AnnotationFeature>  attachFeature;
 
         public LayerDetailForm(String id)
         {
@@ -287,7 +290,18 @@ public class ProjectLayersPanel
                 }
             });
 
-            add(new DropDownChoice<AnnotationFeature>("attachFeature")
+            attachType.add(new OnChangeAjaxBehavior()
+            {
+                private static final long serialVersionUID = 3617746295701595177L;
+
+                @Override
+                protected void onUpdate(AjaxRequestTarget aTarget)
+                {
+                    aTarget.add(attachFeature.setOutputMarkupId(true));
+                }
+            }).setOutputMarkupId(true);
+
+            add(attachFeature = new DropDownChoice<AnnotationFeature>("attachFeature")
             {
                 private static final long serialVersionUID = -6705445053442011120L;
 
