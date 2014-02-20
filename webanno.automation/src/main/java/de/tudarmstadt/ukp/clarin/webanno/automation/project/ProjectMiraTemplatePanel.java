@@ -298,13 +298,19 @@ public class ProjectMiraTemplatePanel
                 {
                     try {
 
+                        long start = System.nanoTime();
                         boolean trained = AutomationUtil.casToMiraTrainData(
                                 miraTemplateDetailForm.getModelObject(), repository);
+                        long time = System.nanoTime() - start;
+                        System.out.println("conversion took:" +time/1000+" seconds" );
+                        start = System.nanoTime();
                         if (!trained) {
                             miraTemplateDetailForm.getModelObject().setResult(
                                     AutomationUtil.train(miraTemplateDetailForm.getModelObject(),
                                             repository));
                         }
+                        time = System.nanoTime() - start;
+                        System.out.println("tarining took:" +time/1000+" seconds" );
                         AutomationUtil.predict(miraTemplateDetailForm.getModelObject(), repository,
                                 annotationService);
                     }

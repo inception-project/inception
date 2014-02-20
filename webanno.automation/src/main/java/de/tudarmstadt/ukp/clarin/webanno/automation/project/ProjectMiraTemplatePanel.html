@@ -20,12 +20,12 @@
 <wicket:panel>
 	<table class="hfill">
 		<tr>
-			<td style="vertical-align: top" width="20%">
+			<td style="vertical-align: top" width="30%">
 				<form wicket:id="miraTemplateSelectionForm">
 					<fieldset class="ui-widget-content ui-corner-all">
-						<legend>Layers</legend>
+						<legend>Templates</legend>
 						<div>
-							<select class="hfill" wicket:id="template" size="6"></select>
+							<select class="hfill" wicket:id="template" size="19"></select>
 						</div>
 						<div class="buttons">
 							<input type="submit" wicket:id="create" />
@@ -33,11 +33,19 @@
 						</div>
 					</fieldset>
 				</form>
+				<form wicket:id="applyForm">
+					<fieldset class="ui-widget-content ui-corner-all">
+						<legend>Automation/Prediction</legend>
+						<div class="buttons">
+							<input type="submit" wicket:id="apply" />
+						</div>
+					</fieldset>
+				</form>
 			</td>
 
-			<td style="vertical-align: top" width="30%">
+			<td style="vertical-align: top" width="50%">
 				<fieldset>
-					<legend style="text-align: center">Template generation and feature selection</legend>
+					<legend style="text-align: center">Feature selection</legend>
 					<form wicket:id="miraTemplateDetailForm">
 						<fieldset>
 							<legend>Morphological features</legend>
@@ -106,6 +114,7 @@
 									<td><input type="checkbox" wicket:id="annotateAndPredict" /></td>
 								</tr>
 								<tr>
+									<td></td>
 									<td>
 										<div class="buttons">
 											<input type="submit" wicket:id="save" />
@@ -124,16 +133,6 @@
 					<legend style="text-align: center">Training documents</legend>
 					<span wicket:id="documentsPanel"></span>
 				</fieldset>
-			</td>
-			<td style="vertical-align: top" width="30%">
-				<form wicket:id="applyForm">
-					<fieldset class="ui-widget-content ui-corner-all">
-						<legend>Apply the changes and initiate training/prediction</legend>
-						<div class="buttons">
-							<input type="submit" wicket:id="apply" />
-						</div>
-					</fieldset>
-				</form>
 			</td>
 		</tr>
 	</table>
