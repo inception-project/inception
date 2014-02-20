@@ -86,11 +86,7 @@ public class AutomationUtil
         JCas jCas = aRepository.getCorrectionDocumentContent(sourceDocument);
 
         // get selected text, concatenations of tokens
-        String selectedText = "";
-        for (Token coveredToken : selectCovered(jCas, Token.class, aStart, aEnd)) {
-            selectedText = selectedText + " " + coveredToken.getCoveredText();
-        }
-        selectedText = selectedText.trim();
+        String selectedText =  BratAjaxCasUtil.getSelectedText(jCas, aStart, aEnd);
 
         BratAjaxCasController bratAjaxCasController = new BratAjaxCasController(aRepository,
                 aAnnotationService);

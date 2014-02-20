@@ -31,15 +31,16 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
-import org.apache.uima.fit.util.CasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.TagsetDescription;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * Contain Methods for updating CAS Objects directed from brat UI, different utility methods to
@@ -543,5 +544,23 @@ public class BratAjaxCasUtil
             fs.setStringValue(nameFeature, aTagSetName);
             aCas.addFsToIndexes(fs);
         }
+    }
+
+    /**
+     * For a span annotation, if a sub-token is selected, display the whole text so that the user is
+     * aware of what is being annotated, based on
+     * {@link BratAjaxCasUtil#selectOverlapping(JCas, Class, int, int)} ISSUE - Affected text not
+     * correctly displayed in annotation dialog (Bug #272)
+     *
+     */
+    public static String getSelectedText(JCas aJcas, int aBeginOffset, int aEndOffset)
+    {
+        List<Token> tokens = BratAjaxCasUtil.selectOverlapping(aJcas, Token.class, aBeginOffset,
+                aEndOffset);
+        StringBuilder seletedTextSb = new StringBuilder();
+        for (Token token : tokens) {
+            seletedTextSb.append(token.getCoveredText() + " ");
+        }
+        return seletedTextSb.toString();
     }
 }

@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.List;
 
 import javax.servlet.http.HttpSession;
 
@@ -61,7 +60,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * Base class for displaying a BRAT visualization. Override methods {@link #getCollectionData()} and
@@ -233,7 +231,7 @@ public class BratAnnotator
                             endOffset = fs.getEnd();
                         }
 
-                        selectedSpan = getSelectedText(jCas, beginOffset, endOffset);
+                        selectedSpan = BratAjaxCasUtil.getSelectedText(jCas, beginOffset, endOffset);
 
                         if (BratAnnotatorUtility.isDocumentFinished(repository, getModelObject())) {
                             error("This document is already closed. Please ask admin to re-open");
@@ -561,24 +559,6 @@ public class BratAnnotator
     public String getCollection()
     {
         return collection;
-    }
-
-    /**
-     * For a span annotation, if a sub-token is selected, display the whole text so that the user is
-     * aware of what is being annotated, based on
-     * {@link BratAjaxCasUtil#selectOverlapping(JCas, Class, int, int)} ISSUE - Affected text not
-     * correctly displayed in annotation dialog (Bug #272)
-     *
-     */
-    private String getSelectedText(JCas aJcas, int aBeginOffset, int aEndOffset)
-    {
-        List<Token> tokens = BratAjaxCasUtil.selectOverlapping(aJcas, Token.class, aBeginOffset,
-                aEndOffset);
-        StringBuilder seletedTextSb = new StringBuilder();
-        for (Token token : tokens) {
-            seletedTextSb.append(token.getCoveredText() + " ");
-        }
-        return seletedTextSb.toString();
     }
 
     public void setCollection(String collection)
