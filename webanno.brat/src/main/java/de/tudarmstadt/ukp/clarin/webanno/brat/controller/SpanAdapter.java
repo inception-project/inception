@@ -262,10 +262,11 @@ public class SpanAdapter
         for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
 
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
-                if (!fs.getStringValue(feature).equals(aValue)) {
-                    fs.setStringValue(feature, aValue);
+                if (fs.getStringValue(feature).equals(aValue)) {
+                    duplicate = true;
+                  //if (!fs.getStringValue(feature).equals(aValue)) {
+                  //  fs.setStringValue(feature, aValue);
                 }
-                duplicate = true;
             }
         }
         if (!duplicate) {
@@ -287,6 +288,20 @@ public class SpanAdapter
     {
         FeatureStructure fs = BratAjaxCasUtil.selectByAddr(aJCas, FeatureStructure.class, aAddress);
         aJCas.removeFsFromIndexes(fs);
+    }
+
+    @Override
+    public void delete(JCas aJCas, int aBegin, int aEnd, String aValue){
+        Type type = CasUtil.getType(aJCas.getCas(), annotationTypeName);
+        Feature feature = type.getFeatureByBaseName(labelFeatureName);
+        for (AnnotationFS fs : CasUtil.selectCovered(aJCas.getCas(), type, aBegin, aEnd)) {
+
+            if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
+                if (fs.getStringValue(feature).equals(aValue)) {
+                    delete(aJCas, ((FeatureStructureImpl)fs).getAddress());
+                }
+            }
+        }
     }
 
     /**

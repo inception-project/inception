@@ -415,4 +415,11 @@ public class ArcAdapter
 
     }
 
+    @Override
+    public void delete(JCas aJCas, int aBegin, int aEnd, String aValue)
+    {
+        // TODO Auto-generated method stub
+
+    }
+
 }

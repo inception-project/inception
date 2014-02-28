@@ -122,6 +122,9 @@ public interface TypeAdapter
 
     public void delete(JCas aJCas, int aAddress);
 
+    //delete based on the begin,end, and type of annotation
+    void delete(JCas aJCas, int aBegin, int aEnd, String aValue);
+
     void deleteBySpan(JCas aJCas, AnnotationFS fs, int aBegin, int aEnd);
 
     List<String> getAnnotation(JCas aJcas, int begin, int end);

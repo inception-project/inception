@@ -233,7 +233,7 @@ public class AutomationPage
             }
 
             @Override
-            protected void onChange(BratAnnotatorModel aBratAnnotatorModel, int aStart, int aEnd)
+            protected void onAnnotate(BratAnnotatorModel aBratAnnotatorModel, int aStart, int aEnd)
             {
                 MiraTemplate template;
                 try {
@@ -242,7 +242,38 @@ public class AutomationPage
                     if (!template.isAnnotateAndPredict()) {
                         return;
                     }
-                    AutomationUtil.predict(bratAnnotatorModel, repository, annotationService,
+                    AutomationUtil.repeateAnnotation(bratAnnotatorModel, repository, annotationService,
+                            aStart, aEnd, bratAnnotatorModel.getRememberedSpanTag());
+                }
+                catch (UIMAException e) {
+                    error(ExceptionUtils.getRootCause(e));
+                }
+                catch (ClassNotFoundException e) {
+                    error(e.getMessage());
+                }
+                catch (IOException e) {
+                    error(e.getMessage());
+                }
+                catch (BratAnnotationException e) {
+                    error(e.getMessage());
+                }
+                catch (NoResultException e) {// no automation layer is configured yet.
+                    template = null;
+                    return;
+                }
+            }
+
+            @Override
+            protected void onDelete(BratAnnotatorModel aBratAnnotatorModel, int aStart, int aEnd)
+            {
+                MiraTemplate template;
+                try {
+                    template = repository.getMiraTemplate(bratAnnotatorModel.getRememberedSpanTag()
+                            .getTagSet());
+                    if (!template.isAnnotateAndPredict()) {
+                        return;
+                    }
+                    AutomationUtil.deleteAnnotation(bratAnnotatorModel, repository, annotationService,
                             aStart, aEnd, bratAnnotatorModel.getRememberedSpanTag());
                 }
                 catch (UIMAException e) {

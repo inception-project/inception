@@ -77,7 +77,7 @@ import edu.lium.mira.Mira;
 public class AutomationUtil
 {
 
-    public static void predict(BratAnnotatorModel aModel, RepositoryService aRepository,
+    public static void repeateAnnotation(BratAnnotatorModel aModel, RepositoryService aRepository,
             AnnotationService aAnnotationService, int aStart, int aEnd, Tag aTag)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
@@ -86,7 +86,7 @@ public class AutomationUtil
         JCas jCas = aRepository.getCorrectionDocumentContent(sourceDocument);
 
         // get selected text, concatenations of tokens
-        String selectedText =  BratAjaxCasUtil.getSelectedText(jCas, aStart, aEnd);
+        String selectedText = BratAjaxCasUtil.getSelectedText(jCas, aStart, aEnd);
 
         BratAjaxCasController bratAjaxCasController = new BratAjaxCasController(aRepository,
                 aAnnotationService);
@@ -115,12 +115,64 @@ public class AutomationUtil
         }
         for (Sentence sentence : selectCovered(jCas, Sentence.class, beginOffset, endOffset)) {
             String sentenceText = sentence.getCoveredText().toLowerCase();
-            for (int i = -1; (i = sentenceText.indexOf(selectedText.toLowerCase(), i)) != -1; i++) {
+            for (int i = -1; (i = sentenceText.indexOf(selectedText.toLowerCase(), i)) != -1; i = i
+                    + selectedText.length()) {
                 if (selectCovered(jCas, Token.class, sentence.getBegin() + i,
                         sentence.getBegin() + i + selectedText.length()).size() > 0) {
                     bratAjaxCasController.createSpanAnnotation(jCas, sentence.getBegin() + i,
-                            sentence.getBegin() + i + selectedText.length(),
+                            sentence.getBegin() + i + selectedText.length()-1,
                             getQualifiedLabel(aTag), null, null);
+                }
+            }
+        }
+        aRepository.createCorrectionDocumentContent(jCas, aModel.getDocument(), user);
+    }
+
+    public static void deleteAnnotation(BratAnnotatorModel aModel, RepositoryService aRepository,
+            AnnotationService aAnnotationService, int aStart, int aEnd, Tag aTag)
+        throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
+    {
+
+        SourceDocument sourceDocument = aModel.getDocument();
+        JCas jCas = aRepository.getCorrectionDocumentContent(sourceDocument);
+
+        // get selected text, concatenations of tokens
+        String selectedText = BratAjaxCasUtil.getSelectedText(jCas, aStart, aEnd);
+
+        BratAjaxCasController bratAjaxCasController = new BratAjaxCasController(aRepository,
+                aAnnotationService);
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = aRepository.getUser(username);
+
+        MiraTemplate template;
+        try {
+            template = aRepository.getMiraTemplate(aTag.getTagSet());
+        }
+        catch (NoResultException e) {
+            template = null;
+        }
+
+        int beginOffset = aModel.getSentenceBeginOffset();
+
+        int endOffset;
+        if (template != null && template.isPredictInThisPage()) {
+            endOffset = BratAjaxCasUtil.getLastSentenceEndOffsetInDisplayWindow(jCas,
+                    aModel.getSentenceAddress(), aModel.getWindowSize());
+        }
+        else {
+
+            endOffset = BratAjaxCasUtil.selectByAddr(jCas, aModel.getLastSentenceAddress())
+                    .getEnd();
+        }
+        for (Sentence sentence : selectCovered(jCas, Sentence.class, beginOffset, endOffset)) {
+            String sentenceText = sentence.getCoveredText().toLowerCase();
+            for (int i = -1; (i = sentenceText.indexOf(selectedText.toLowerCase(), i)) != -1; i = i
+                    + selectedText.length()) {
+                if (selectCovered(jCas, Token.class, sentence.getBegin() + i,
+                        sentence.getBegin() + i + selectedText.length()).size() > 0) {
+                    bratAjaxCasController.deleteSpanAnnotation(jCas, sentence.getBegin() + i,
+                            sentence.getBegin() + i + selectedText.length()-1,
+                            getQualifiedLabel(aTag));
                 }
             }
         }
@@ -291,8 +343,7 @@ public class AutomationUtil
             List<String> annotations = adapter.getAnnotation(sentence.getCAS().getJCas(),
                     token.getBegin(), token.getEnd());
             String tag = "";
-            if (adapter.getTypeId().equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)
-                    && !aPredict) {
+            if (adapter.getTypeId().equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX) && !aPredict) {
                 tag = neTags.get(token.getAddress()) == null ? "O" : neTags.get(token.getAddress());
             }
             else {
@@ -605,7 +656,7 @@ public class AutomationUtil
         for (SourceDocument sourceDocument : aRepository.listSourceDocuments(layer.getProject())) {
 
             if ((!sourceDocument.isTrainingDocument() && !sourceDocument.getState().equals(
-                    SourceDocumentState.CURATION_FINISHED) )) {
+                    SourceDocumentState.CURATION_FINISHED))) {
 
                 JCas jCas;
                 try {

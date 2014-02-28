@@ -231,7 +231,8 @@ public class BratAnnotator
                             endOffset = fs.getEnd();
                         }
 
-                        selectedSpan = BratAjaxCasUtil.getSelectedText(jCas, beginOffset, endOffset);
+                        selectedSpan = BratAjaxCasUtil
+                                .getSelectedText(jCas, beginOffset, endOffset);
 
                         if (BratAnnotatorUtility.isDocumentFinished(repository, getModelObject())) {
                             error("This document is already closed. Please ask admin to re-open");
@@ -382,13 +383,18 @@ public class BratAnnotator
                     getModelObject().setRememberedSpanTagSet(model.getRememberedSpanTagSet());
                     getModelObject().setRememberedSpanTag(model.getRememberedSpanTag());
 
+                    getModelObject().setAnnotate(model.isAnnotate());
                     getModelObject().setMessage(model.getMessage());
 
                 }
 
                 if (!closeButtonClicked) {
                     if (selectedSpanID == -1) {
-                        onChange(getModelObject(), beginOffset, endOffset);
+                        onAnnotate(getModelObject(), beginOffset, endOffset);
+                    }
+                    if (!getModelObject().isAnnotate()
+                            && getModelObject().getProject().getMode().equals(Mode.AUTOMATION)) {
+                        onDelete(getModelObject(), beginOffset, endOffset);
                     }
                     onChange(aTarget, getModelObject());
                     reloadContent(aTarget);
@@ -571,9 +577,13 @@ public class BratAnnotator
 
     }
 
-    protected void onChange(BratAnnotatorModel aModel, int aStart, int aEnd)
+    protected void onAnnotate(BratAnnotatorModel aModel, int aStart, int aEnd)
     {
         // Overriden in AutomationPage
     }
 
+    protected void onDelete(BratAnnotatorModel aModel, int aStart, int aEnd)
+    {
+        // Overriden in AutomationPage
+    }
 }

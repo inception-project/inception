@@ -268,13 +268,15 @@ public class SpanAnnotationModalWindowPage
 
                             bratAnnotatorModel.setRememberedSpanTagSet(selectedtTagSet);
                             bratAnnotatorModel.setRememberedSpanTag(selectedTag);
+                            bratAnnotatorModel.setAnnotate(true);
                             bratAnnotatorModel.setMessage("The span annotation ["
                                     + TypeUtil.getLabel(annotationType) + "] is added");
 
                             // A hack to rememeber the Visural DropDown display value
-                            HttpSession session = ((ServletWebRequest) RequestCycle.get()
-                                    .getRequest()).getContainerRequest().getSession();
+                            HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())
+                                    .getContainerRequest().getSession();
                             session.setAttribute("model", bratAnnotatorModel);
+
                             aModalWindow.close(aTarget);
                         }
                     }
@@ -351,8 +353,22 @@ public class SpanAnnotationModalWindowPage
                             updateSentenceAddressAndOffsets(jCas, beginOffset);
                         }
 
+
+                        Tag selectedTag;
+                        if (isLemma(selectedtTagSet)) {
+                            selectedTag = new Tag();
+                        }
+                        else {
+                            selectedTag = annotationService.getTag(tags.getModelObject(),
+                                    selectedtTagSet);
+                        }
+
+                        bratAnnotatorModel.setRememberedSpanTagSet(selectedtTagSet);
+                        bratAnnotatorModel.setRememberedSpanTag(selectedTag);
+                        bratAnnotatorModel.setAnnotate(false);
                         bratAnnotatorModel.setMessage("The span annotation [" + selectedSpanType
                                 + "] is deleted");
+
 
                         // A hack to rememeber the Visural DropDown display value
                         HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())

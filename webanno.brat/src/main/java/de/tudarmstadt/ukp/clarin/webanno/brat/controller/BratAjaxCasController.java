@@ -314,6 +314,32 @@ public class BratAjaxCasController
         }
     }
 
+
+    public void deleteSpanAnnotation(JCas aJCas, int aAnnotationOffsetStart,
+            int aAnnotationOffsetEnd, String aQualifiedLabel)
+        throws BratAnnotationException
+    {
+        String labelPrefix = TypeUtil.getLabelPrefix(aQualifiedLabel);
+        String label = TypeUtil.getLabel(aQualifiedLabel);
+
+        if (labelPrefix.equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)) {
+            SpanAdapter.getNamedEntityAdapter().delete(aJCas, aAnnotationOffsetStart,
+                    aAnnotationOffsetEnd, label);
+        }
+        else if (labelPrefix.equals(AnnotationTypeConstant.POS_PREFIX)) {
+            SpanAdapter.getPosAdapter().delete(aJCas, aAnnotationOffsetStart, aAnnotationOffsetEnd,
+                    label);
+        }
+/*        else if (labelPrefix.equals(AnnotationTypeConstant.COREFRELTYPE_PREFIX)) {
+            ChainAdapter.getCoreferenceLinkAdapter().delete(label, aJCas, aAnnotationOffsetStart,
+                    aAnnotationOffsetEnd);
+        }*/
+        // else it should be lemma annotation. we don't have lemma tags and no prefixing !
+        else {
+            SpanAdapter.getLemmaAdapter().delete(aJCas, aAnnotationOffsetStart, aAnnotationOffsetEnd,
+                    label);
+        }
+    }
     /**
      * Add an arc annotation to CAS
      *
