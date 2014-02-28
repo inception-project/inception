@@ -343,6 +343,7 @@ public class TeiReader
         extends Handler
     {
         private boolean isSpaceChar = false;
+        private boolean isSentStart = false;
         private boolean addLemma = false;
         private boolean addPos = false;
         private boolean addNe = false;
@@ -400,6 +401,7 @@ public class TeiReader
             }
             else if (TAG_SUNIT.equals(aName)) {
                 captureText = false;
+                isSentStart = true;
                 sentenceStart = getBuffer().length();
             }
             else if (TAG_SPAN_GRP.equals(aName)) {
@@ -528,7 +530,10 @@ public class TeiReader
             StringBuffer sb = new StringBuffer();
             sb.append(aCh, aStart, aLength);
             if (captureText) {
-                if (isSpaceChar) {
+                if (isSpaceChar && isSentStart) {
+                    isSentStart = false;
+                }
+                else if(isSpaceChar){
                     buffer.append(" ");
                 }
                 else if (addLemma) {
