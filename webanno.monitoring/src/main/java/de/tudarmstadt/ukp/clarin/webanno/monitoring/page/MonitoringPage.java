@@ -80,6 +80,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.monitoring.support.ChartImageResource;
 import de.tudarmstadt.ukp.clarin.webanno.monitoring.support.DynamicColumnMetaData;
@@ -135,7 +136,7 @@ public class MonitoringPage
     private final Label projectName;
     private AgreementForm agreementForm;
     private final AnnotationTypeSelectionForm annotationTypeSelectionForm;
-    private ListChoice<AnnotationType> annotationTypes;
+    private ListChoice<TagSet> tagSets;
     private transient Map<SourceDocument, Map<User, JCas>> documentJCases;
 
     private String result;
@@ -445,23 +446,23 @@ public class MonitoringPage
         public AnnotationTypeSelectionForm(String id)
         {
             super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
-            add(annotationTypes = new ListChoice<AnnotationType>("annotationTypes")
+            add(tagSets = new ListChoice<TagSet>("tagSets")
             {
                 private static final long serialVersionUID = 1L;
 
                 {
-                    setChoices(new LoadableDetachableModel<List<AnnotationType>>()
+                    setChoices(new LoadableDetachableModel<List<TagSet>>()
                     {
                         private static final long serialVersionUID = 1L;
 
                         @Override
-                        protected List<AnnotationType> load()
+                        protected List<TagSet> load()
                         {
-                            return annotationService.listAnnotationType(projectSelectionForm
+                            return annotationService.listTagSets(projectSelectionForm
                                     .getModelObject().project);
                         }
                     });
-                    setChoiceRenderer(new ChoiceRenderer<AnnotationType>("name", "id"));
+                    setChoiceRenderer(new ChoiceRenderer<TagSet>("name", "id"));
                     setNullValid(false);
 
                 }
@@ -472,7 +473,7 @@ public class MonitoringPage
                     return "";
                 }
             });
-            annotationTypes.add(new OnChangeAjaxBehavior()
+            tagSets.add(new OnChangeAjaxBehavior()
             {
                 private static final long serialVersionUID = 7492425689121761943L;
 
@@ -565,14 +566,13 @@ public class MonitoringPage
         return overallProjectProgress;
     }
 
-    static private class SelectionModel
+    static public class SelectionModel
         implements Serializable
     {
         private static final long serialVersionUID = -1L;
 
-        private Project project;
-        @SuppressWarnings("unused")
-        private AnnotationType annotationTypes;
+        public Project project;
+        public TagSet tagSets;
     }
 
     private class MonitoringDetailForm
@@ -634,11 +634,11 @@ public class MonitoringPage
         List<User> users = repository
                 .listProjectUsersWithPermissions(project, PermissionLevel.USER);
         double[][] results = new double[users.size()][users.size()];
-        if (annotationTypes.getModelObject() != null
-                && !annotationTypes.getModelObject().getName()
+        if (tagSets.getModelObject() != null
+                && !tagSets.getModelObject().getType().getName()
                         .equals(AnnotationTypeConstant.COREFERENCE)) {
 
-            TypeAdapter adapter = TypeUtil.getAdapter(annotationTypes.getModelObject());
+            TypeAdapter adapter = TypeUtil.getAdapter(tagSets.getModelObject().getType());
 
             // assume all users finished only one document
             double[][] multipleDocumentsFinished = new double[users.size()][users.size()];
