@@ -78,8 +78,12 @@ public class AnnotationServiceImpl
         throws IOException
     {
 
-        entityManager.persist(aTagSet);
-
+        if (aTagSet.getId() == 0) {
+            entityManager.persist(aTagSet);
+        }
+        else {
+            entityManager.merge(aTagSet);
+        }
         RepositoryServiceDbData.createLog(aTagSet.getProject(), aUser.getUsername()).info(
                 " Added tagset  [" + aTagSet.getName() + "] with ID [" + aTagSet.getId() + "]");
         RepositoryServiceDbData.createLog(aTagSet.getProject(), aUser.getUsername())

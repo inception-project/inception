@@ -17,6 +17,9 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome;
 
+import java.io.IOException;
+import java.util.List;
+
 import javax.persistence.NoResultException;
 
 import org.apache.wicket.Component;
@@ -26,9 +29,13 @@ import org.apache.wicket.authroles.authorization.strategies.role.metadata.MetaDa
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.monitoring.page.MonitoringPage;
 import de.tudarmstadt.ukp.clarin.webanno.project.page.ProjectPage;
@@ -40,6 +47,12 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.crowdsource.CrowdSourcePage
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.CurationPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.login.LoginPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.security.page.ManageUsersPage;
+import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
+import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
+import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
+import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
  * A home page for WebAnno: <br>
@@ -55,6 +68,10 @@ public class WelcomePage
 {
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
+
+    @SpringBean(name = "annotationService")
+    private AnnotationService annotationService;
+
 
     AjaxLink<Void> projectSettings;
     AjaxLink<Void> curation;
@@ -75,6 +92,70 @@ public class WelcomePage
         User user = null;
         try{
          user = repository.getUser(username);
+
+         // Update old annotation layers
+
+         List<TagSet> tagSets = annotationService.listTagSets();
+         for (TagSet tagSet : tagSets) {
+             AnnotationType type = tagSet.getType();
+             if (type.getProject() == null) {
+                 type.setProject(tagSet.getProject());
+                 type.setBuiltIn(true);
+                 if (type.getName().equals(AnnotationTypeConstant.POS)) {
+                     type.setUiName(type.getName());
+                     type.setName(POS.class.getName());
+                 }
+                 else if (type.getName().equals(AnnotationTypeConstant.NAMEDENTITY)) {
+                     type.setUiName(type.getName());
+                     type.setName(NamedEntity.class.getName());
+                 }
+                 else if (type.getName().equals(AnnotationTypeConstant.LEMMA)) {
+                     type.setUiName(type.getName());
+                     type.setName(Lemma.class.getName());
+                 }
+                 else if (type.getName().equals(AnnotationTypeConstant.DEPENDENCY)) {
+                     type.setUiName(type.getName());
+                     type.setName(Dependency.class.getName());
+                 }
+             }
+             else if (type.getProject() != tagSet.getProject()) {
+
+                 AnnotationType newType = new AnnotationType();
+                 newType.setType(type.getType());
+                 newType.setUiName(type.getUiName());
+                 newType.setProject(tagSet.getProject());
+                 newType.setBuiltIn(true);
+                 if (type.getName().equals(AnnotationTypeConstant.POS)) {
+                     newType.setName(POS.class.getName());
+                 }
+                 else if (type.getName().equals(AnnotationTypeConstant.NAMEDENTITY)) {
+                     newType.setName(NamedEntity.class.getName());
+                 }
+                 else if (type.getName().equals(AnnotationTypeConstant.LEMMA)) {
+                     newType.setName(Lemma.class.getName());
+                 }
+                 else if (type.getName().equals(AnnotationTypeConstant.DEPENDENCY)) {
+                     newType.setName(Dependency.class.getName());
+                 }
+                 else if (type.getName().equals(AnnotationTypeConstant.COREFERENCE)) {
+                     newType.setName(CoreferenceChain.class.getName());
+                 }
+                 else if (type.getName().equals(AnnotationTypeConstant.COREFRELTYPE)) {
+                     newType.setName(CoreferenceLink.class.getName());
+                 }
+                 else{// name already standardized as de.....Lemma,...
+                     newType.setName(type.getName());
+                 }
+                 try {
+                     annotationService.createType(newType, user);
+                     tagSet.setType(newType);
+                     annotationService.createTagSet(tagSet, user);
+                 }
+                 catch (IOException e) {
+                     error("unable to write log files");
+                 }
+             }
+         }
         }
         // redirect to login page (if no usr is found, admin/admin will be created)
         catch (NoResultException e){
