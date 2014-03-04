@@ -18,8 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.model;
 
 import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -27,10 +25,11 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+
+import org.hibernate.annotations.ForeignKey;
 
 /**
  * A persistence object for an annotation feature. One or more features can be defined per
@@ -39,10 +38,10 @@ import javax.persistence.UniqueConstraint;
  * float, or boolean. To control the values that a String feature assumes, it can be associated with
  * a tagset. If the feature is defined on a span type, it is also possible to add a feature of
  * another span type which then serves as a label type for the first one
- * 
+ *
  * @author Seid Muhie Yimam
  * @author Richard Eckart de Castilho
- * 
+ *
  */
 @Entity
 @Table(name = "annotation_feature", uniqueConstraints = { @UniqueConstraint(columnNames = {
@@ -58,10 +57,13 @@ public class AnnotationFeature
     private long id;
 
     private String type;
+
     @ManyToOne
+    @ForeignKey(name = "none")
     @JoinColumn(name = "annotation_type")
     private AnnotationType layer;
     @ManyToOne
+    @ForeignKey(name = "none")
     @JoinColumn(name = "tagset")
     private TagSet tagSet;
 
@@ -156,7 +158,7 @@ public class AnnotationFeature
     }
 
     /**
-     * 
+     *
      * a description of the feature.
      */
 
@@ -166,7 +168,7 @@ public class AnnotationFeature
     }
 
     /**
-     * 
+     *
      * a description of the feature.
      */
     public void setDescription(String description)
@@ -175,7 +177,7 @@ public class AnnotationFeature
     }
 
     /**
-     * 
+     *
      * whether the type is available in the UI (outside of the project settings)
      */
     public boolean isEnabled()
@@ -184,7 +186,7 @@ public class AnnotationFeature
     }
 
     /**
-     * 
+     *
      * whether the type is available in the UI (outside of the project settings)
      */
     public void setEnabled(boolean enabled)
@@ -194,7 +196,7 @@ public class AnnotationFeature
 
     /**
      * the name of the feature in the UIMA type system.
-     * 
+     *
      */
 
     public String getName()
@@ -204,7 +206,7 @@ public class AnnotationFeature
 
     /**
      * the name of the feature in the UIMA type system.
-     * 
+     *
      */
     public void setName(String name)
     {
@@ -212,7 +214,7 @@ public class AnnotationFeature
     }
 
     /**
-     * 
+     *
      * the type of feature (string, integer, float, boolean, or a span type used as a label)
      */
     public String getFeatureType()
@@ -221,7 +223,7 @@ public class AnnotationFeature
     }
 
     /**
-     * 
+     *
      * the type of feature (string, integer, float, boolean, or a span type used as a label)
      */
     public void setFeatureType(String featureType)

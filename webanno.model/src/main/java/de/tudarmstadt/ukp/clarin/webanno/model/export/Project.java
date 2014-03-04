@@ -38,8 +38,7 @@ public class Project
     String name;
     @JsonProperty("description")
     String description;
-    @JsonProperty("reverse")
-    boolean reverse;
+
     @JsonProperty("mode")
     private Mode mode = Mode.ANNOTATION;
 
@@ -74,16 +73,6 @@ public class Project
     public void setDescription(String description)
     {
         this.description = description;
-    }
-
-    public boolean isReverse()
-    {
-        return reverse;
-    }
-
-    public void setReverse(boolean reverse)
-    {
-        this.reverse = reverse;
     }
 
     public List<SourceDocument> getSourceDocuments()

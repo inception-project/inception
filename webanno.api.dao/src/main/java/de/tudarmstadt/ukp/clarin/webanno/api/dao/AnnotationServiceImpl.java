@@ -36,6 +36,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
+import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
+import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
  * Implementation of methods defined in the {@link AnnotationService} interface
@@ -95,11 +102,12 @@ public class AnnotationServiceImpl
     public void createType(AnnotationType aType, User aUser)
         throws IOException
     {
-        if (aType.getId() != 0) {
-            throw new IllegalArgumentException("Layer already exists");
+        if (aType.getId() == 0) {
+            entityManager.persist(aType);
         }
-
-        entityManager.persist(aType);
+        else {
+            entityManager.merge(aType);
+        }
         RepositoryServiceDbData.createLog(aType.getProject(), aUser.getUsername()).info(
                 " Added tagset  [" + aType.getName() + "] with ID [" + aType.getId() + "]");
         RepositoryServiceDbData.createLog(aType.getProject(), aUser.getUsername())
@@ -110,10 +118,12 @@ public class AnnotationServiceImpl
     @Transactional
     public void createFeature(AnnotationFeature aFeature)
     {
-        if (aFeature.getId() != 0) {
-            throw new IllegalArgumentException("Feature already exists");
+        if (aFeature.getId() == 0) {
+            entityManager.persist(aFeature);
         }
-        entityManager.persist(aFeature);
+        else {
+            entityManager.merge(aFeature);
+        }
     }
 
     @Override
@@ -237,29 +247,28 @@ public class AnnotationServiceImpl
         }
     }
 
-    private void initializeType(String aName, String aDescription, String aType,
+    private TagSet initializeType(String aName, String aUiName, String aDescription, String aType,
             String aTagSetName, String aLanguage, String[] aTags, String[] aTagDescription,
             Project aProject, User aUser)
         throws IOException
     {
-        AnnotationType type = null;
+        AnnotationType type = new AnnotationType();
+        type.setDescription(aDescription);
+        type.setName(aName);
+        type.setType(aType);
+        type.setProject(aProject);
+        type.setUiName(aUiName);
+        type.setBuiltIn(true);
 
-        if (!existsType(aName, aType)) {
-            type = new AnnotationType();
-            type.setDescription(aDescription);
-            type.setName(aName);
-            type.setType(aType);
-            createType(type, aUser);
-        }
-        else {
-            type = getType(aName, aType);
-        }
+        createType(type, aUser);
+
         TagSet tagSet = new TagSet();
         tagSet.setDescription(aDescription);
         tagSet.setLanguage(aLanguage);
         tagSet.setName(aTagSetName);
         tagSet.setType(type);
         tagSet.setProject(aProject);
+
         createTagSet(tagSet, aUser);
 
         int i = 0;
@@ -271,6 +280,7 @@ public class AnnotationServiceImpl
             createTag(tag, aUser);
             i++;
         }
+        return tagSet;
     }
 
     @Override
@@ -339,12 +349,30 @@ public class AnnotationServiceImpl
                 "Partizip Perfekt, voll \nBsp:gegangen, angekommen ",
                 "Nichtwort, Sonderzeichen enthaltend \nBsp:3:7, H2O, D2XW3", "--" };
 
-        initializeType(
-                de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.POS,
+        TagSet PosTagSet = initializeType(
+                POS.class.getName(),
+                "pos",
                 "Stuttgart-Tübingen-Tag-Set \nGerman Part of Speech tagset "
                         + "STTS Tag Table (1995/1999): "
                         + "http://www.ims.uni-stuttgart.de/projekte/corplex/TagSets/stts-table.html",
                 "span", "STTS", "de", posTags, posTagDescriptions, aProject, aUser);
+        AnnotationType tokenLayer = new AnnotationType();
+        tokenLayer.setName(Token.class.getName());
+        tokenLayer.setUiName("Token");
+        tokenLayer.setProject(aProject);
+        tokenLayer.setBuiltIn(true);
+        tokenLayer.setType("span");
+
+        createType(tokenLayer, aUser);
+
+        AnnotationFeature tokenPosFeature = setFeature("pos", "pos", aProject, PosTagSet,
+                tokenLayer);
+        AnnotationType posLayer = PosTagSet.getType();
+        posLayer.setAttachType(tokenLayer);
+        posLayer.setAttachFeature(tokenPosFeature);
+        posLayer.setType("span");
+        setFeature("PosValue", "PosValue", aProject, PosTagSet, posLayer);
+        createType(posLayer, aUser);
 
         String[] depTags = new String[] { "ADV", "APP", "ATTR", "AUX", "AVZ", "CJ", "DET", "ETH",
                 "EXPL", "GMOD", "GRAD", "KOM", "KON", "KONJ", "NEB", "OBJA", "OBJA2", "OBJA3",
@@ -354,13 +382,23 @@ public class AnnotationServiceImpl
                 "SUBJC3", "SUBJI", "SUBJI2", "CP", "PD", "RE", "CD", "DA", "SVP", "OP", "MO", "JU",
                 "CVC", "NG", "SB", "SBP", "AG", "PM", "OCRC", "OG", "SUBJI3", "VOK", "ZEIT", "$",
                 "--", "OC", "OA", "MNR", "NK", "RC", "EP", "CC", "CM", "UC", "AC", "PNC" };
-        initializeType(
-                de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.DEPENDENCY,
+        TagSet depTagSet = initializeType(Dependency.class.getName(), "dependency",
                 "Dependency annotation", "relation", "Tiger", "de", depTags, depTags, aProject,
                 aUser);
+        AnnotationType depLayer = depTagSet.getType();
+        depLayer.setAttachType(tokenLayer);
+        depLayer.setAttachFeature(tokenPosFeature);
+        depLayer.setType("relation");
 
-        initializeType(
-                de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.NAMEDENTITY,
+        setFeature("DependencyType", "Dependency Type", aProject, depTagSet, depLayer);
+
+        setFeature("Dependent", "Dependent", aProject, PosTagSet, depLayer);
+
+        setFeature("Governor", "Governor", aProject, PosTagSet, depLayer);
+
+        createType(depLayer, aUser);
+
+        TagSet neTagSet = initializeType(NamedEntity.class.getName(), "named entity",
                 "Named Entity annotation", "span", "NER_WebAnno", "de", new String[] { "PER",
                         "PERderiv", "PERpart", "LOC", "LOCderiv", "LOCpart", "ORG", "ORGderiv",
                         "ORGpart", "OTH", "OTHderiv", "OTHpart" }, new String[] { "Person",
@@ -370,20 +408,55 @@ public class AnnotationServiceImpl
                         "Other: Every name that is not a location, person or organisation",
                         "Other derivative", "Hyphenated part  is Other" }, aProject, aUser);
 
-        initializeType(
-                de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.COREFRELTYPE,
+        AnnotationType nepLayer = neTagSet.getType();
+        nepLayer.setType("span");
+
+        setFeature("value", "Type", aProject, neTagSet, nepLayer);
+        createType(nepLayer, aUser);
+
+        TagSet corefTypeTagSet = initializeType(CoreferenceLink.class.getName(), "coref markable",
                 "coreference type annotation", "span", "BART", "de", new String[] { "nam" },
                 new String[] { "nam" }, aProject, aUser);
+        AnnotationType corefTypeLayer = corefTypeTagSet.getType();
+        nepLayer.setType("chain");
+        createType(corefTypeLayer, aUser);
 
-        initializeType(
-                de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.COREFERENCE,
+        TagSet corefTagSet = initializeType(CoreferenceChain.class.getName(), "corefchain",
                 "coreference annotation", "relation", "TuebaDZ", "de",
                 new String[] { "anaphoric" }, new String[] { "anaphoric" }, aProject, aUser);
+        AnnotationType corefLayer = corefTagSet.getType();
+        corefLayer.setAttachType(corefTypeLayer);
+        corefLayer.setType("chain");
 
-        initializeType(
-                de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.LEMMA,
-                "lemma annotation", "span", "Lemma", "de", new String[] {}, new String[] {},
-                aProject, aUser);
+        setFeature("referenceType", "coreference markable", aProject, corefTypeTagSet, corefLayer);
+        setFeature("referenceRelation", "reference Relations", aProject, corefTagSet, corefLayer);
+
+        createType(corefLayer, aUser);
+
+        TagSet lemmaTagSet = initializeType(Lemma.class.getName(), "lemmata", "lemma annotation",
+                "span", "Lemma", "de", new String[] {}, new String[] {}, aProject, aUser);
+        AnnotationType lemmaLayer = lemmaTagSet.getType();
+        lemmaLayer.setAttachType(tokenLayer);
+        lemmaLayer.setAttachFeature(tokenPosFeature);
+        lemmaLayer.setType("span");
+        setFeature("value", "value", aProject, lemmaTagSet, lemmaLayer);
+        createType(lemmaLayer, aUser);
+    }
+
+    private AnnotationFeature setFeature(String aName, String aUiname, Project aProject,
+            TagSet aTagSet, AnnotationType aLayer)
+    {
+        AnnotationFeature feature = new AnnotationFeature();
+        feature.setName(aName);
+        feature.setEnabled(true);
+        feature.setType("String");
+        feature.setUiName(aUiname);
+        feature.setLayer(aLayer);
+        feature.setTagSet(aTagSet);
+        feature.setProject(aProject);
+
+        createFeature(feature);
+        return feature;
     }
 
     @Override
