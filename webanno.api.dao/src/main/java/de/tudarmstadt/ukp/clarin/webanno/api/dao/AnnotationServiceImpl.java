@@ -365,8 +365,13 @@ public class AnnotationServiceImpl
 
         createType(tokenLayer, aUser);
 
-        AnnotationFeature tokenPosFeature = setFeature("pos", "pos", aProject, PosTagSet,
+        AnnotationFeature tokenPosFeature = setFeature("pos", "Pos", aProject, PosTagSet,
                 tokenLayer);
+        AnnotationFeature tokenLemmaFeature = setFeature("lemma", "Lemma", aProject, PosTagSet,
+                tokenLayer);
+        AnnotationFeature tokenStemFeature = setFeature("stem", "Stem", aProject, PosTagSet,
+                tokenLayer);
+
         AnnotationType posLayer = PosTagSet.getType();
         posLayer.setAttachType(tokenLayer);
         posLayer.setAttachFeature(tokenPosFeature);
@@ -437,7 +442,7 @@ public class AnnotationServiceImpl
                 "span", "Lemma", "de", new String[] {}, new String[] {}, aProject, aUser);
         AnnotationType lemmaLayer = lemmaTagSet.getType();
         lemmaLayer.setAttachType(tokenLayer);
-        lemmaLayer.setAttachFeature(tokenPosFeature);
+        lemmaLayer.setAttachFeature(tokenLemmaFeature);
         lemmaLayer.setType("span");
         setFeature("value", "value", aProject, lemmaTagSet, lemmaLayer);
         createType(lemmaLayer, aUser);
