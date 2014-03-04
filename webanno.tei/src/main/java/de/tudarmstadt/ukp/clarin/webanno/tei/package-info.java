@@ -19,4 +19,4 @@
 /**
  * Support for <a href="http://www.tei-c.org/">TEI XML, with sense annotation</a>.
  */
-package de.tudarmstadt.ukp.dkpro.core.io.tei;
+package de.tudarmstadt.ukp.clarin.webanno.tei;
