@@ -117,6 +117,14 @@ public class WelcomePage
                      type.setUiName(type.getName());
                      type.setName(Dependency.class.getName());
                  }
+                 else if (type.getName().equals(AnnotationTypeConstant.COREFERENCE)) {
+                     type.setUiName(type.getName());
+                     type.setName(CoreferenceChain.class.getName());
+                 }
+                 else if (type.getName().equals(AnnotationTypeConstant.COREFRELTYPE)) {
+                     type.setUiName(type.getName());
+                     type.setName(CoreferenceLink.class.getName());
+                 }
              }
              else if (type.getProject() != tagSet.getProject()) {
 

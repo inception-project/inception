@@ -65,18 +65,19 @@ public interface AnnotationService
         throws IOException;
 
     /**
-     * creates a type which will be a span, chain, or arc(relation) type. Currently the annotation types are
-     * highly highly tied with the tagsets, one tagset per type. POS, Names Entity, and coreference
-     * links are span types while coreference chains and dependency parsings are arc(relation)
-     * types.
+     * creates a type which will be a span, chain, or arc(relation) type. Currently the annotation
+     * types are highly highly tied with the tagsets, one tagset per type. POS, Names Entity, and
+     * coreference links are span types while coreference chains and dependency parsings are
+     * arc(relation) types.
      *
      * @param type
      * @throws IOException
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void createType(AnnotationType type,  User user) throws IOException;
+    void createType(AnnotationType type, User user)
+        throws IOException;
 
-    void createFeature(AnnotationFeature feature) ;
+    void createFeature(AnnotationFeature feature);
 
     /**
      * gets a {@link Tag} using its name and a {@link TagSet}
@@ -100,13 +101,13 @@ public interface AnnotationService
     /**
      * check if an {@link AnnotationType} exists with this name and type in this {@link Project}
      */
-    boolean existsLayer(String name , String type, Project project);
+    boolean existsLayer(String name, String type, Project project);
 
     /**
      *
      * Check if this {@link AnnotationFeature} already exists
      */
-    boolean existsFeature(String name , AnnotationType type, TagSet tagSet, Project project);
+    boolean existsFeature(String name, AnnotationType type, TagSet tagSet, Project project);
 
     /**
      * get a {@link TagSet} by its type and its project
@@ -152,10 +153,16 @@ public interface AnnotationService
      * List all annotation types in a project
      */
     List<AnnotationType> listAnnotationType(Project project);
+
     /**
      * List all the features in a {@link AnnotationType} for this {@link Project}
      */
     List<AnnotationFeature> listAnnotationFeature(Project project, AnnotationType type);
+
+    /**
+     * List all features in the project
+     */
+    List<AnnotationFeature> listAnnotationFeature(Project project);
 
     /**
      * list all {@link Tag} in the system
@@ -201,4 +208,16 @@ public interface AnnotationService
      * @param tagset
      */
     void removeTagSet(TagSet tagset);
+
+    /**
+     *
+     * Should be called with care. Only when a project hosting this feature is removed
+     */
+    void removeAnnotationFeature(AnnotationFeature feature);
+
+    /**
+     *
+     * Should be called with care. Only when a project hosting this layer is removed
+     */
+    void removeAnnotationLayer(AnnotationType type);
 }

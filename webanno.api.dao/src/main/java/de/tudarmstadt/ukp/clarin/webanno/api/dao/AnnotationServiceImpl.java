@@ -420,6 +420,15 @@ public class AnnotationServiceImpl
 
     @Override
     @Transactional
+    public List<AnnotationFeature> listAnnotationFeature(Project aProject)
+    {
+        return entityManager
+                .createQuery("FROM AnnotationFeature  WHERE project =:project",
+                        AnnotationFeature.class).setParameter("project", aProject).getResultList();
+    }
+
+    @Override
+    @Transactional
     public List<Tag> listTags()
     {
         return entityManager.createQuery("From Tag ORDER BY name", Tag.class).getResultList();
@@ -469,8 +478,23 @@ public class AnnotationServiceImpl
         for (Tag tag : listTags(aTagSet)) {
             entityManager.remove(tag);
         }
+
         entityManager.remove(aTagSet);
+    }
+
+    @Override
+    @Transactional
+    public void removeAnnotationFeature(AnnotationFeature aFeature)
+    {
+        entityManager.remove(aFeature);
 
     }
 
+    @Override
+    @Transactional
+    public void removeAnnotationLayer(AnnotationType aLayer)
+    {
+        entityManager.remove(aLayer);
+
+    }
 }
