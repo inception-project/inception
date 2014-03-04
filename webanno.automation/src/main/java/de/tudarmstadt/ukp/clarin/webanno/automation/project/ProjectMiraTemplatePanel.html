@@ -85,11 +85,11 @@
 							</table>
 						</fieldset>
 						<fieldset>
-							<legend>ngram and bigram features</legend>
+							<legend>unigram and bigram features</legend>
 							<table>
 								<tr>
-									<td>no. ngrams <select wicket:id="ngram"></select></td>
-									<td>no. bigrams <select wicket:id="bigram"></select></td>
+									<td>token unigram <select wicket:id="ngram"></select></td>
+									<td>label bi-gram <select wicket:id="bigram"></select></td>
 								</tr>
 							</table>
 						</fieldset>
@@ -101,12 +101,12 @@
 									<td><input type="checkbox" wicket:id="predictInThisPage" /></td>
 								</tr>
 								<tr>
-									<td>Select a layer for training :</td>
+									<td>Layer to classify :</td>
 									<td><select valign="top" wicket:id="trainTagSet">
 									</select></td>
 								</tr>
 								<tr>
-									<td>Select layers to be used as a feature:</td>
+									<td>Layers to train on:</td>
 									<td><span class="hfill" wicket:id=featureTagSets></span></td>
 								</tr>
 								<tr>
