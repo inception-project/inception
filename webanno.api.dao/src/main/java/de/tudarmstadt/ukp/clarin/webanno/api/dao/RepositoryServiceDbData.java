@@ -95,6 +95,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.model.CrowdJob;
@@ -1086,8 +1087,16 @@ public class RepositoryServiceDbData
             removeMiraTemplate(template);
         }
 
+        for (AnnotationFeature feature : annotationService.listAnnotationFeature(aProject)) {
+               annotationService.removeAnnotationFeature(feature);
+        }
+
         for (TagSet tagset : annotationService.listTagSets(aProject)) {
             annotationService.removeTagSet(tagset);
+        }
+        // remove the layers too
+        for(AnnotationType layer: annotationService.listAnnotationType(aProject)){
+           annotationService.removeAnnotationLayer(layer);
         }
 
         // remove the project directory from the file system
