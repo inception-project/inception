@@ -229,7 +229,14 @@ public class ProjectLayersPanel
             add(new TextField<String>("uiName").setRequired(true));
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
             add(new CheckBox("enabled"));
-            add(new TextField<String>("labelFeatureName"));
+            add(new TextField<String>("labelFeatureName"){
+                private static final long serialVersionUID = 4635897231616551669L;
+
+                @Override
+                public boolean isEnabled(){
+                    return !LayerDetailForm.this.getModelObject().isBuiltIn();
+                }
+            });
 
             // Technical Properties of layers
             add(new TextField<String>("name")

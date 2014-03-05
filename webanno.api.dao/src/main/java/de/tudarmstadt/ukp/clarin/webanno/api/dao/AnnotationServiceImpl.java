@@ -289,6 +289,7 @@ public class AnnotationServiceImpl
         throws IOException
     {
 
+        // POS layer
         String[] posTags = new String[] { "$(", "$,", "$.", "ADJA", "ADJD", "ADV", "APPO", "APPR",
                 "APPRART", "APZR", "ART", "CARD", "FM", "ITJ", "KOKOM", "KON", "KOUI", "KOUS",
                 "NE", "NN", "PAV", "PDAT", "PDS", "PIAT", "PIDAT", "PIS", "PPER", "PPOSAT",
@@ -376,9 +377,12 @@ public class AnnotationServiceImpl
         posLayer.setAttachType(tokenLayer);
         posLayer.setAttachFeature(tokenPosFeature);
         posLayer.setType("span");
-        setFeature("PosValue", "PosValue", aProject, PosTagSet, posLayer);
+        AnnotationFeature posFeature = setFeature("PosValue", "PosValue", aProject, PosTagSet,
+                posLayer);
+        posLayer.setLabelFeatureName(posFeature.getName());
         createType(posLayer, aUser);
 
+        // Dependency Layer
         String[] depTags = new String[] { "ADV", "APP", "ATTR", "AUX", "AVZ", "CJ", "DET", "ETH",
                 "EXPL", "GMOD", "GRAD", "KOM", "KON", "KONJ", "NEB", "OBJA", "OBJA2", "OBJA3",
                 "OBJC", "OBJC2", "OBJC3", "OBJD", "OBJD2", "OBJD3", "OBJG", "OBJG2", "OBJG3",
@@ -395,7 +399,9 @@ public class AnnotationServiceImpl
         depLayer.setAttachFeature(tokenPosFeature);
         depLayer.setType("relation");
 
-        setFeature("DependencyType", "Dependency Type", aProject, depTagSet, depLayer);
+        AnnotationFeature deFeature = setFeature("DependencyType", "Dependency Type", aProject,
+                depTagSet, depLayer);
+        depLayer.setLabelFeatureName(deFeature.getName());
 
         setFeature("Dependent", "Dependent", aProject, PosTagSet, depLayer);
 
@@ -403,6 +409,7 @@ public class AnnotationServiceImpl
 
         createType(depLayer, aUser);
 
+        // NE layer
         TagSet neTagSet = initializeType(NamedEntity.class.getName(), "named entity",
                 "Named Entity annotation", "span", "NER_WebAnno", "de", new String[] { "PER",
                         "PERderiv", "PERpart", "LOC", "LOCderiv", "LOCpart", "ORG", "ORGderiv",
@@ -416,14 +423,16 @@ public class AnnotationServiceImpl
         AnnotationType nepLayer = neTagSet.getType();
         nepLayer.setType("span");
 
-        setFeature("value", "Type", aProject, neTagSet, nepLayer);
+        AnnotationFeature neFeature = setFeature("value", "Type", aProject, neTagSet, nepLayer);
+        nepLayer.setLabelFeatureName(neFeature.getName());
         createType(nepLayer, aUser);
 
+        // Coref Layer
         TagSet corefTypeTagSet = initializeType(CoreferenceLink.class.getName(), "coref markable",
                 "coreference type annotation", "span", "BART", "de", new String[] { "nam" },
                 new String[] { "nam" }, aProject, aUser);
         AnnotationType corefTypeLayer = corefTypeTagSet.getType();
-        nepLayer.setType("chain");
+        corefTypeLayer.setType("chain");
         createType(corefTypeLayer, aUser);
 
         TagSet corefTagSet = initializeType(CoreferenceChain.class.getName(), "corefchain",
@@ -433,18 +442,25 @@ public class AnnotationServiceImpl
         corefLayer.setAttachType(corefTypeLayer);
         corefLayer.setType("chain");
 
-        setFeature("referenceType", "coreference markable", aProject, corefTypeTagSet, corefLayer);
-        setFeature("referenceRelation", "reference Relations", aProject, corefTagSet, corefLayer);
+        AnnotationFeature corefTypeFeature = setFeature("referenceType", "coreference markable",
+                aProject, corefTypeTagSet, corefTypeLayer);
+        corefTypeLayer.setLabelFeatureName(corefTypeFeature.getName());
 
+        AnnotationFeature corefFeature = setFeature("referenceRelation", "reference Relations",
+                aProject, corefTagSet, corefLayer);
+        corefLayer.setLabelFeatureName(corefFeature.getName());
         createType(corefLayer, aUser);
 
+        // Lemmata Layer
         TagSet lemmaTagSet = initializeType(Lemma.class.getName(), "lemmata", "lemma annotation",
                 "span", "Lemma", "de", new String[] {}, new String[] {}, aProject, aUser);
         AnnotationType lemmaLayer = lemmaTagSet.getType();
         lemmaLayer.setAttachType(tokenLayer);
         lemmaLayer.setAttachFeature(tokenLemmaFeature);
         lemmaLayer.setType("span");
-        setFeature("value", "value", aProject, lemmaTagSet, lemmaLayer);
+        AnnotationFeature lemmaFeature = setFeature("value", "value", aProject, lemmaTagSet,
+                lemmaLayer);
+        lemmaLayer.setLabelFeatureName(lemmaFeature.getName());
         createType(lemmaLayer, aUser);
     }
 
