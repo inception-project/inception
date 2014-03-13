@@ -638,7 +638,7 @@ public class MonitoringPage
                 && !tagSets.getModelObject().getType().getName()
                         .equals(AnnotationTypeConstant.COREFERENCE)) {
 
-            TypeAdapter adapter = TypeUtil.getAdapter(tagSets.getModelObject().getType());
+            TypeAdapter adapter = TypeUtil.getAdapter(tagSets.getModelObject(), annotationService);
 
             // assume all users finished only one document
             double[][] multipleDocumentsFinished = new double[users.size()][users.size()];

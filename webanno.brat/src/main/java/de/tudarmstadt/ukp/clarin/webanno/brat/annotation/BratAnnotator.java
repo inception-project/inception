@@ -231,8 +231,9 @@ public class BratAnnotator
                             endOffset = fs.getEnd();
                         }
 
-                        selectedSpan = BratAjaxCasUtil
-                                .getSelectedText(jCas, beginOffset, endOffset);
+                        selectedSpan =  request.getParameterValue("spanText").toString();
+                       /* selectedSpan = BratAjaxCasUtil
+                                .getSelectedText(jCas, beginOffset, endOffset);*/
 
                         if (BratAnnotatorUtility.isDocumentFinished(repository, getModelObject())) {
                             error("This document is already closed. Please ask admin to re-open");

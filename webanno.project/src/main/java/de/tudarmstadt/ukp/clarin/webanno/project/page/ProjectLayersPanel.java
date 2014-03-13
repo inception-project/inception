@@ -47,9 +47,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * A Panel Used to add Layers to a selected {@link Project} in the project settings page
@@ -219,21 +219,24 @@ public class ProjectLayersPanel
         private static final long serialVersionUID = -1L;
 
         DropDownChoice<AnnotationType> attachType;
-        DropDownChoice<AnnotationFeature>  attachFeature;
+        DropDownChoice<AnnotationFeature> attachFeature;
 
         public LayerDetailForm(String id)
         {
             super(id, new CompoundPropertyModel<AnnotationType>(new EntityModel<AnnotationType>(
                     new AnnotationType())));
 
+            final Project project = selectedProjectModel.getObject();
             add(new TextField<String>("uiName").setRequired(true));
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
             add(new CheckBox("enabled"));
-            add(new TextField<String>("labelFeatureName"){
+            add(new TextField<String>("labelFeatureName")
+            {
                 private static final long serialVersionUID = 4635897231616551669L;
 
                 @Override
-                public boolean isEnabled(){
+                public boolean isEnabled()
+                {
                     return !LayerDetailForm.this.getModelObject().isBuiltIn();
                 }
             });
@@ -273,8 +276,18 @@ public class ProjectLayersPanel
                         @Override
                         protected List<AnnotationType> load()
                         {
-                            return annotationService.listAnnotationType(selectedProjectModel
-                                    .getObject());
+                            List<AnnotationType> allLayers = annotationService
+                                    .listAnnotationType(project);
+                            List<AnnotationType> attachTeypes = new ArrayList<AnnotationType>();
+                            for (AnnotationType layer : allLayers) {
+                                if (!layer.getType().equals("span")) {
+                                    continue;
+                                }
+                                attachTeypes.add(layer);
+
+                            }
+
+                            return attachTeypes;
 
                         }
                     });
@@ -324,8 +337,8 @@ public class ProjectLayersPanel
                                 return new ArrayList<AnnotationFeature>();
 
                             }
-                            return annotationService.listAnnotationFeature(
-                                    selectedProjectModel.getObject(), attachType.getModelObject());
+                            return annotationService.listAnnotationFeature(attachType
+                                    .getModelObject());
 
                         }
                     });
@@ -364,27 +377,35 @@ public class ProjectLayersPanel
                     AnnotationType layer = LayerDetailForm.this.getModelObject();
 
                     if (layer.getId() == 0) {
-                        if (annotationService.existsLayer(layer.getName(), layer.getType(),
-                                selectedProjectModel.getObject())) {
+                        if (annotationService
+                                .existsLayer(layer.getName(), layer.getType(), project)) {
                             error("Only one Layer per project is allowed!");
+                            return;
                         }
-                        else {
-                            String username = SecurityContextHolder.getContext()
-                                    .getAuthentication().getName();
-                            User user = projectRepository.getUser(username);
-
-                            layer.setProject(selectedProjectModel.getObject());
-                            try {
-                                annotationService.createType(layer, user);
-                            }
-                            catch (IOException e) {
-                                error("unable to create Log file while creating the TagSet" + ":"
-                                        + ExceptionUtils.getRootCauseMessage(e));
-                            }
-                            featureSelectionForm.setVisible(true);
-                            featureDetailForm.setVisible(true);
-
+                        if (layer.getType().equals("relation") && layer.getAttachType() == null) {
+                            error("a relation layer need an attach type!");
+                            return;
                         }
+
+                        if (layer.getName().endsWith(".")) {
+                            error("please give a proper layer name!");
+                            return;
+                        }
+                        String username = SecurityContextHolder.getContext().getAuthentication()
+                                .getName();
+                        User user = projectRepository.getUser(username);
+
+                        layer.setProject(project);
+                        try {
+                            annotationService.createType(layer, user);
+                        }
+                        catch (IOException e) {
+                            error("unable to create Log file while creating the TagSet" + ":"
+                                    + ExceptionUtils.getRootCauseMessage(e));
+                        }
+                        featureSelectionForm.setVisible(true);
+                        // featureDetailForm.setVisible(true);
+
                     }
                 }
             });
@@ -405,10 +426,6 @@ public class ProjectLayersPanel
             add(new TextField<String>("uiName").setRequired(true));
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
             add(new CheckBox("enabled"));
-
-            add(new DropDownChoice<TagSet>("tagSet",
-                    annotationService.listTagSets(selectedProjectModel.getObject()),
-                    new ChoiceRenderer<TagSet>("name")));
 
             add(new TextField<String>("name")
             {
@@ -446,7 +463,7 @@ public class ProjectLayersPanel
                         feature.setProject(selectedProjectModel.getObject());
 
                         if (annotationService.existsFeature(feature.getName(), feature.getLayer(),
-                                feature.getTagSet(), feature.getProject())) {
+                                feature.getProject())) {
                             error("This feature is already added for this layer!");
                             return;
                         }
@@ -480,9 +497,8 @@ public class ProjectLayersPanel
                         @Override
                         protected List<AnnotationFeature> load()
                         {
-                            return annotationService.listAnnotationFeature(
-                                    selectedProjectModel.getObject(),
-                                    layerDetailForm.getModelObject());
+                            return annotationService.listAnnotationFeature(layerDetailForm
+                                    .getModelObject());
                         }
                     });
                     setChoiceRenderer(new ChoiceRenderer<AnnotationFeature>()
@@ -492,10 +508,7 @@ public class ProjectLayersPanel
                         @Override
                         public Object getDisplayValue(AnnotationFeature aObject)
                         {
-                            String tagSetName = aObject.getTagSet() == null ? "-None-" : aObject
-                                    .getTagSet().getName();
-                            return "[ "+aObject.getUiName() + "] [ " + aObject.getType() + " ] [ "
-                                    + tagSetName +" ]";
+                            return "[ " + aObject.getUiName() + "] [ " + aObject.getType() + " ]";
                         }
                     });
                     setNullValid(false);
@@ -534,6 +547,17 @@ public class ProjectLayersPanel
                 {
                     featureDetailForm.setDefaultModelObject(new AnnotationFeature());
                     featureDetailForm.setVisible(true);
+                }
+
+                @Override
+                public boolean isEnabled()
+                {
+                    // for 2.0, we allow one editable feature per type, add new feature on token
+                    List<AnnotationFeature> features = annotationService
+                            .listAnnotationFeature(layerDetailForm.getModelObject());
+                    return features.size() == 0
+                            || layerDetailForm.getModelObject().getName()
+                                    .equals(Token.class.getName());
                 }
             });
         }

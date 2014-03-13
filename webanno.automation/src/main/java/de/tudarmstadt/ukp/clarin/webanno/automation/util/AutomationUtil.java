@@ -17,6 +17,7 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.automation.util;
 
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getQualifiedLabel;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
@@ -37,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
+import javax.annotation.Resource;
 import javax.persistence.NoResultException;
 
 import org.apache.commons.io.FileUtils;
@@ -51,10 +53,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
@@ -77,6 +78,12 @@ import edu.lium.mira.Mira;
 public class AutomationUtil
 {
 
+    @Resource(name = "documentRepository")
+    private RepositoryService repository;
+
+    @Resource(name = "annotationService")
+    private static AnnotationService annotationService;
+
     public static void repeateAnnotation(BratAnnotatorModel aModel, RepositoryService aRepository,
             AnnotationService aAnnotationService, int aStart, int aEnd, Tag aTag)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
@@ -88,8 +95,6 @@ public class AutomationUtil
         // get selected text, concatenations of tokens
         String selectedText = BratAjaxCasUtil.getSelectedText(jCas, aStart, aEnd);
 
-        BratAjaxCasController bratAjaxCasController = new BratAjaxCasController(aRepository,
-                aAnnotationService);
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = aRepository.getUser(username);
 
@@ -119,9 +124,12 @@ public class AutomationUtil
                     + selectedText.length()) {
                 if (selectCovered(jCas, Token.class, sentence.getBegin() + i,
                         sentence.getBegin() + i + selectedText.length()).size() > 0) {
-                    bratAjaxCasController.createSpanAnnotation(jCas, sentence.getBegin() + i,
-                            sentence.getBegin() + i + selectedText.length()-1,
-                            getQualifiedLabel(aTag), null, null);
+
+                    SpanAdapter adapter = (SpanAdapter) getAdapter(aTag.getTagSet(),
+                            aAnnotationService);
+                    adapter.add(jCas, sentence.getBegin() + i, sentence.getBegin() + i
+                            + selectedText.length() - 1, aTag.getName());
+
                 }
             }
         }
@@ -139,8 +147,7 @@ public class AutomationUtil
         // get selected text, concatenations of tokens
         String selectedText = BratAjaxCasUtil.getSelectedText(jCas, aStart, aEnd);
 
-        BratAjaxCasController bratAjaxCasController = new BratAjaxCasController(aRepository,
-                aAnnotationService);
+        TypeAdapter adapter = getAdapter(aTag.getTagSet(), annotationService);
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = aRepository.getUser(username);
 
@@ -170,9 +177,8 @@ public class AutomationUtil
                     + selectedText.length()) {
                 if (selectCovered(jCas, Token.class, sentence.getBegin() + i,
                         sentence.getBegin() + i + selectedText.length()).size() > 0) {
-                    bratAjaxCasController.deleteSpanAnnotation(jCas, sentence.getBegin() + i,
-                            sentence.getBegin() + i + selectedText.length()-1,
-                            getQualifiedLabel(aTag));
+                    adapter.delete(jCas, sentence.getBegin() + i, sentence.getBegin() + i
+                            + selectedText.length() - 1, getQualifiedLabel(aTag));
                 }
             }
         }
@@ -271,7 +277,7 @@ public class AutomationUtil
     {
         StringBuffer sb = new StringBuffer();
 
-        TypeAdapter adapter = TypeUtil.getAdapter(aTagSet);
+        TypeAdapter adapter = TypeUtil.getAdapter(aTagSet, annotationService);
         Map<Integer, String> neTags = new HashMap<Integer, String>();
         getNeTags(sentence, adapter, neTags);
 
@@ -326,9 +332,8 @@ public class AutomationUtil
             String featureTagSet = "";
             // TODO: when free annotation layers defined, check if tagset is on multiple token or
             // not
-            if (adapter.getTypeId().equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)
-                    && aFeatureTagSet != null && aFeatureTagSet.getId() > 0) {
-                TypeAdapter featureAdapter = TypeUtil.getAdapter(aFeatureTagSet);
+            if (aFeatureTagSet != null && aFeatureTagSet.getId() > 0) {
+                TypeAdapter featureAdapter = TypeUtil.getAdapter(aFeatureTagSet, annotationService);
                 List<String> featureAnnotations = featureAdapter.getAnnotation(sentence.getCAS()
                         .getJCas(), token.getBegin(), token.getEnd());
                 featureTagSet = featureAnnotations.size() == 0 ? "" : featureAnnotations.get(0)
@@ -343,7 +348,7 @@ public class AutomationUtil
             List<String> annotations = adapter.getAnnotation(sentence.getCAS().getJCas(),
                     token.getBegin(), token.getEnd());
             String tag = "";
-            if (adapter.getTypeId().equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX) && !aPredict) {
+            if (aFeatureTagSet != null && aFeatureTagSet.getId() > 0) {
                 tag = neTags.get(token.getAddress()) == null ? "O" : neTags.get(token.getAddress());
             }
             else {
@@ -409,8 +414,8 @@ public class AutomationUtil
         String modelName = aRepository.getMiraModel(layer).getAbsolutePath();
 
         boolean randomInit = false;
-        TypeAdapter adapter = TypeUtil.getAdapter(layer);
-        if (adapter.getTypeId().equals(AnnotationTypeConstant.NAMEDENTITY_PREFIX)) {
+
+        if (fLayer != null && fLayer.getId() > 0) {
             mira.setIobScorer();
         }
         mira.loadTemplates(templateName);
@@ -441,15 +446,15 @@ public class AutomationUtil
     {
 
         StringBuffer sb = new StringBuffer();
-        TypeAdapter adapter = TypeUtil.getAdapter(aTagSet);
         int i = 1;
-        if (adapter.getTypeId().equals(AnnotationTypeConstant.POS_PREFIX)) {
+        if (aFeatureTagSet != null && aFeatureTagSet.getId() > 0) {
             i = setMorphoTemplate(aTemplate, sb, i);
-            setNgramForLable(aTemplate, sb, i);
+            setNgramTemplate(aTemplate, sb, i, aFeatureTagSet);
+
         }
         else {
             i = setMorphoTemplate(aTemplate, sb, i);
-            setNgramTemplate(aTemplate, sb, i, aFeatureTagSet);
+            setNgramForLable(aTemplate, sb, i);
         }
 
         sb.append("\n");
@@ -708,7 +713,7 @@ public class AutomationUtil
                     tags.add(tag);
                 }
 
-                TypeAdapter adapter = TypeUtil.getAdapter(layer);
+                TypeAdapter adapter = TypeUtil.getAdapter(fLayer, annotationService);
                 adapter.automate(jCas, tags);
                 aRepository.createCorrectionDocumentContent(jCas, sourceDocument, user);
                 sourceDocument.setProcessed(true);

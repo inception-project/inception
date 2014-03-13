@@ -22,8 +22,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
-
 /**
  * Different attributes of an Entity used for its visualisation formats. It looks like
  *
@@ -69,8 +67,6 @@ public class EntityType
     {
         super();
         if (!aStaticColor) {
-            System.out.println(aType);
-            System.out.println(aName);
             String prefix = aType.contains("_")?aType.substring(0,aType.indexOf("_")):aType;
             String colorType = aName;
             Color goodBgColor;
@@ -79,13 +75,13 @@ public class EntityType
                 nameToColor = new HashMap<String, Color>();
                 typeToColor.put(prefix,nameToColor);
             }
-            
+
             if (nameToColor.containsKey(colorType)) {
                 goodBgColor = nameToColor.get(colorType);
             }
             else {
                 goodBgColor = TagColor.generateDifferingPastelColor(nameToColor.values());
-                nameToColor.put(colorType, goodBgColor);                
+                nameToColor.put(colorType, goodBgColor);
             }
 
             aBgColor = TagColor.encodeRGB(goodBgColor);

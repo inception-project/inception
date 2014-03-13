@@ -823,7 +823,7 @@ public interface RepositoryService
      * Get CAS object for the first time, from the source document using the provided reader
      */
     @SuppressWarnings("rawtypes")
-    JCas getJCasFromFile(File file, Class reader)
+    JCas getJCasFromFile(File file, Class reader,  SourceDocument aDocument)
         throws UIMAException, IOException;
 
     void updateTimeStamp(SourceDocument document, User user, Mode mode)

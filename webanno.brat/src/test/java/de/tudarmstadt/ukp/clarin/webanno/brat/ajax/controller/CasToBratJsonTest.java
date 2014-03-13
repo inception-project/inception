@@ -17,6 +17,8 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.ajax.controller;
 
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -24,6 +26,8 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+
+import javax.annotation.Resource;
 
 import junit.framework.TestCase;
 
@@ -39,11 +43,10 @@ import org.apache.uima.jcas.JCas;
 import org.junit.Test;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
@@ -75,6 +78,10 @@ public class CasToBratJsonTest extends TestCase {
 	 * MappingJacksonHttpMessageConverter jsonConverter;
 	 */
 
+    @Resource(name = "annotationService")
+    private static AnnotationService annotationService;
+
+
 	private Log LOG = LogFactory.getLog(getClass());
 
 	/**
@@ -93,7 +100,7 @@ public class CasToBratJsonTest extends TestCase {
 
 		BratAjaxConfiguration configuration = new BratAjaxConfiguration();
 
-		List<Tag> tagList = new ArrayList<Tag>();
+		List<TagSet> tagList = new ArrayList<TagSet>();
 
 		AnnotationType type = new AnnotationType();
 		type.setDescription("span annoattion");
@@ -110,10 +117,10 @@ public class CasToBratJsonTest extends TestCase {
 		tag.setDescription("noun");
 		tag.setName("NN");
 		tag.setTagSet(tagset);
-		tagList.add(tag);
+		tagList.add(tagset);
 
 		collectionInformation.setEntityTypes(configuration
-				.configureVisualizationAndAnnotation(tagList, true));
+				.configureVisualizationAndAnnotation(tagList, null, true));
 
 		collectionInformation.addCollection("/Collection1/");
 		collectionInformation.addCollection("/Collection2/");
@@ -238,18 +245,10 @@ public class CasToBratJsonTest extends TestCase {
 
 		  SpanAdapter.renderTokenAndSentence(jCas, response, bratannotatorModel);
 
-		SpanAdapter.getPosAdapter().render(jCas, response, bratannotatorModel);
-		ChainAdapter.getCoreferenceLinkAdapter().render(jCas, response,
-				bratannotatorModel);
-
-		SpanAdapter.getLemmaAdapter()
-				.render(jCas, response, bratannotatorModel);
-		SpanAdapter.getNamedEntityAdapter().render(jCas, response,
-				bratannotatorModel);
-		ArcAdapter.getDependencyAdapter().render(jCas, response,
-				bratannotatorModel);
-		ChainAdapter.getCoreferenceChainAdapter().render(jCas, response,
-				bratannotatorModel);
+	        for (TagSet tagSet : bratannotatorModel.getAnnotationLayers()) {
+	            getAdapter(tagSet, annotationService).render(jCas, response,
+	                    bratannotatorModel);
+	        }
 
 		ProjectUtil.generateJson(response, new File(jsonFilePath));
 

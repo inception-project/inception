@@ -1054,7 +1054,7 @@ public class CrowdSourcePage
 
                 jCas = repository.getJCasFromFile(repository
                         .getSourceDocumentContent(sourceDocument), repository.getReadableFormats()
-                        .get(sourceDocument.getFormat()));
+                        .get(sourceDocument.getFormat()), sourceDocument);
                 repository.createAnnotationDocumentContent(jCas, sourceDocument, user);
                 jCases.add(jCas);
             }

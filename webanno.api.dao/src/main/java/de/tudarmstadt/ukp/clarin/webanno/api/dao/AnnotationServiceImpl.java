@@ -36,8 +36,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
-import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
-import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
@@ -150,12 +148,29 @@ public class AnnotationServiceImpl
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public boolean existsTagSet(AnnotationType aType, Project aProject)
+    public boolean existsTagSet(String aName, Project aProject)
     {
         try {
             entityManager
-                    .createQuery("FROM TagSet WHERE type = :type AND project = :project",
-                            TagSet.class).setParameter("type", aType)
+                    .createQuery("FROM TagSet WHERE name = :name AND project = :project",
+                            TagSet.class).setParameter("name", aName)
+                    .setParameter("project", aProject).getSingleResult();
+            return true;
+        }
+        catch (NoResultException e) {
+            return false;
+
+        }
+    }
+
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public boolean existsTagSet(AnnotationFeature aFeature, Project aProject)
+    {
+        try {
+            entityManager
+                    .createQuery("FROM TagSet WHERE feature = :feature AND project = :project",
+                            TagSet.class).setParameter("feature", aFeature)
                     .setParameter("project", aProject).getSingleResult();
             return true;
         }
@@ -185,17 +200,16 @@ public class AnnotationServiceImpl
     }
 
     @Override
-    public boolean existsFeature(String aName, AnnotationType aLayer, TagSet aTagSet,
-            Project aProject)
+    public boolean existsFeature(String aName, AnnotationType aLayer, Project aProject)
     {
 
         try {
             entityManager
                     .createQuery(
-                            "FROM AnnotationFeature WHERE name = :name AND layer = :layer AND tagset = :tagset AND project = :project",
+                            "FROM AnnotationFeature WHERE name = :name AND layer = :layer AND project = :project",
                             AnnotationFeature.class).setParameter("name", aName)
                     .setParameter("layer", aLayer).setParameter("project", aProject)
-                    .setParameter("tagset", aTagSet).getSingleResult();
+                    .getSingleResult();
             return true;
         }
         catch (NoResultException e) {
@@ -206,11 +220,12 @@ public class AnnotationServiceImpl
 
     @Override
     @Transactional
-    public TagSet getTagSet(AnnotationType aType, Project aProject)
+    public TagSet getTagSet(AnnotationFeature aFeature, Project aProject)
     {
         return entityManager
-                .createQuery("FROM TagSet WHERE type = :type AND project =:project", TagSet.class)
-                .setParameter("type", aType).setParameter("project", aProject).getSingleResult();
+                .createQuery("FROM TagSet WHERE feature = :feature AND project =:project",
+                        TagSet.class).setParameter("feature", aFeature)
+                .setParameter("project", aProject).getSingleResult();
     }
 
     @Override
@@ -229,6 +244,15 @@ public class AnnotationServiceImpl
                 .createQuery("From AnnotationType where name = :name AND type = :type",
                         AnnotationType.class).setParameter("name", aName)
                 .setParameter("type", aType).getSingleResult();
+    }
+
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public AnnotationFeature getFeature(long aId)
+    {
+        return entityManager
+                .createQuery("From AnnotationFeature where id = :id", AnnotationFeature.class)
+                .setParameter("id", aId).getSingleResult();
     }
 
     @Override
@@ -252,21 +276,20 @@ public class AnnotationServiceImpl
             Project aProject, User aUser)
         throws IOException
     {
-        AnnotationType type = new AnnotationType();
-        type.setDescription(aDescription);
-        type.setName(aName);
-        type.setType(aType);
-        type.setProject(aProject);
-        type.setUiName(aUiName);
-        type.setBuiltIn(true);
+        AnnotationFeature feature = new AnnotationFeature();
+        feature.setDescription(aDescription);
+        feature.setName(aName);
+        feature.setType(aType);
+        feature.setProject(aProject);
+        feature.setUiName(aUiName);
 
-        createType(type, aUser);
+        createFeature(feature);
 
         TagSet tagSet = new TagSet();
         tagSet.setDescription(aDescription);
         tagSet.setLanguage(aLanguage);
         tagSet.setName(aTagSetName);
-        tagSet.setType(type);
+        tagSet.setFeature(feature);
         tagSet.setProject(aProject);
 
         createTagSet(tagSet, aUser);
@@ -351,36 +374,30 @@ public class AnnotationServiceImpl
                 "Nichtwort, Sonderzeichen enthaltend \nBsp:3:7, H2O, D2XW3", "--" };
 
         TagSet PosTagSet = initializeType(
-                POS.class.getName(),
-                "pos",
+                "PosValue",
+                "PosValue",
                 "Stuttgart-Tübingen-Tag-Set \nGerman Part of Speech tagset "
                         + "STTS Tag Table (1995/1999): "
                         + "http://www.ims.uni-stuttgart.de/projekte/corplex/TagSets/stts-table.html",
-                "span", "STTS", "de", posTags, posTagDescriptions, aProject, aUser);
-        AnnotationType tokenLayer = new AnnotationType();
-        tokenLayer.setName(Token.class.getName());
-        tokenLayer.setUiName("Token");
-        tokenLayer.setProject(aProject);
-        tokenLayer.setBuiltIn(true);
-        tokenLayer.setType("span");
+                "String", "STTS", "de", posTags, posTagDescriptions, aProject, aUser);
+
+        AnnotationType tokenLayer = setLayer(Token.class.getName(), "", "Token", "span", aProject);
 
         createType(tokenLayer, aUser);
 
-        AnnotationFeature tokenPosFeature = setFeature("pos", "Pos", aProject, PosTagSet,
-                tokenLayer);
-        AnnotationFeature tokenLemmaFeature = setFeature("lemma", "Lemma", aProject, PosTagSet,
-                tokenLayer);
-        AnnotationFeature tokenStemFeature = setFeature("stem", "Stem", aProject, PosTagSet,
-                tokenLayer);
+        AnnotationFeature posFeature = PosTagSet.getFeature();
 
-        AnnotationType posLayer = PosTagSet.getType();
+        AnnotationType posLayer = setLayer(POS.class.getName(), "PosValue", "POS", "span", aProject);
+        AnnotationFeature tokenPosFeature = setFeature("pos", "pos", aProject, tokenLayer, "String");
+        tokenPosFeature.setVisible(false);
         posLayer.setAttachType(tokenLayer);
         posLayer.setAttachFeature(tokenPosFeature);
-        posLayer.setType("span");
-        AnnotationFeature posFeature = setFeature("PosValue", "PosValue", aProject, PosTagSet,
-                posLayer);
-        posLayer.setLabelFeatureName(posFeature.getName());
+        posLayer.setLabelFeatureName("PosValue");
+
         createType(posLayer, aUser);
+
+        posFeature.setLayer(posLayer);
+        PosTagSet.setType(posLayer);
 
         // Dependency Layer
         String[] depTags = new String[] { "ADV", "APP", "ATTR", "AUX", "AVZ", "CJ", "DET", "ETH",
@@ -391,89 +408,111 @@ public class AnnotationServiceImpl
                 "SUBJC3", "SUBJI", "SUBJI2", "CP", "PD", "RE", "CD", "DA", "SVP", "OP", "MO", "JU",
                 "CVC", "NG", "SB", "SBP", "AG", "PM", "OCRC", "OG", "SUBJI3", "VOK", "ZEIT", "$",
                 "--", "OC", "OA", "MNR", "NK", "RC", "EP", "CC", "CM", "UC", "AC", "PNC" };
-        TagSet depTagSet = initializeType(Dependency.class.getName(), "dependency",
-                "Dependency annotation", "relation", "Tiger", "de", depTags, depTags, aProject,
-                aUser);
-        AnnotationType depLayer = depTagSet.getType();
+        TagSet depTagSet = initializeType("DependencyType", "DependencyType",
+                "Dependency annotation", "String", "Tiger", "de", depTags, depTags, aProject, aUser);
+        AnnotationFeature deFeature = depTagSet.getFeature();
+
+        AnnotationType depLayer = setLayer(Dependency.class.getName(), "DependencyType",
+                "dependency", "relation", aProject);
         depLayer.setAttachType(tokenLayer);
         depLayer.setAttachFeature(tokenPosFeature);
-        depLayer.setType("relation");
-
-        AnnotationFeature deFeature = setFeature("DependencyType", "Dependency Type", aProject,
-                depTagSet, depLayer);
-        depLayer.setLabelFeatureName(deFeature.getName());
-
-        setFeature("Dependent", "Dependent", aProject, PosTagSet, depLayer);
-
-        setFeature("Governor", "Governor", aProject, PosTagSet, depLayer);
 
         createType(depLayer, aUser);
 
+        deFeature.setLayer(depLayer);
+        depTagSet.setType(depLayer);
+
         // NE layer
-        TagSet neTagSet = initializeType(NamedEntity.class.getName(), "named entity",
-                "Named Entity annotation", "span", "NER_WebAnno", "de", new String[] { "PER",
-                        "PERderiv", "PERpart", "LOC", "LOCderiv", "LOCpart", "ORG", "ORGderiv",
-                        "ORGpart", "OTH", "OTHderiv", "OTHpart" }, new String[] { "Person",
-                        "Person derivative", "Hyphenated part  is person", "Location derivatives",
+        TagSet neTagSet = initializeType("value", "value", "Named Entity annotation", "String",
+                "NER_WebAnno", "de", new String[] { "PER", "PERderiv", "PERpart", "LOC",
+                        "LOCderiv", "LOCpart", "ORG", "ORGderiv", "ORGpart", "OTH", "OTHderiv",
+                        "OTHpart" }, new String[] { "Person", "Person derivative",
+                        "Hyphenated part  is person", "Location derivatives",
                         "Location derivative", "Hyphenated part  is location", "Organization",
                         "Organization derivative", "Hyphenated part  is organization",
                         "Other: Every name that is not a location, person or organisation",
                         "Other derivative", "Hyphenated part  is Other" }, aProject, aUser);
 
-        AnnotationType nepLayer = neTagSet.getType();
-        nepLayer.setType("span");
+        AnnotationFeature neFeature = neTagSet.getFeature();
+        AnnotationType neLayer = setLayer(NamedEntity.class.getName(), "value", "Named Entity",
+                "span", aProject);
+        neLayer.setLabelFeatureName("value");
 
-        AnnotationFeature neFeature = setFeature("value", "Type", aProject, neTagSet, nepLayer);
-        nepLayer.setLabelFeatureName(neFeature.getName());
-        createType(nepLayer, aUser);
+        createType(neLayer, aUser);
+
+        neFeature.setLayer(neLayer);
+        neTagSet.setType(neLayer);
 
         // Coref Layer
-        TagSet corefTypeTagSet = initializeType(CoreferenceLink.class.getName(), "coref markable",
-                "coreference type annotation", "span", "BART", "de", new String[] { "nam" },
-                new String[] { "nam" }, aProject, aUser);
-        AnnotationType corefTypeLayer = corefTypeTagSet.getType();
-        corefTypeLayer.setType("chain");
-        createType(corefTypeLayer, aUser);
+        TagSet corefTypeTagSet = initializeType("referenceType", "referenceType",
+                "coreference type annotation",
+                "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference", "BART", "de",
+                new String[] { "nam" }, new String[] { "nam" }, aProject, aUser);
+        AnnotationFeature corefTypeFeature = corefTypeTagSet.getFeature();
 
-        TagSet corefTagSet = initializeType(CoreferenceChain.class.getName(), "corefchain",
-                "coreference annotation", "relation", "TuebaDZ", "de",
+        TagSet corefRelTagSet = initializeType("referenceRelation", "referenceRelation",
+                "coreference relation annotation",
+                "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference", "TuebaDZ", "de",
                 new String[] { "anaphoric" }, new String[] { "anaphoric" }, aProject, aUser);
-        AnnotationType corefLayer = corefTagSet.getType();
-        corefLayer.setAttachType(corefTypeLayer);
-        corefLayer.setType("chain");
+        AnnotationFeature corefRelFeature = corefRelTagSet.getFeature();
+        AnnotationType base = setLayer("de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference",
+                "coreference", "Coreference", "chain", aProject);
 
-        AnnotationFeature corefTypeFeature = setFeature("referenceType", "coreference markable",
-                aProject, corefTypeTagSet, corefTypeLayer);
-        corefTypeLayer.setLabelFeatureName(corefTypeFeature.getName());
+        createType(base, aUser);
 
-        AnnotationFeature corefFeature = setFeature("referenceRelation", "reference Relations",
-                aProject, corefTagSet, corefLayer);
-        corefLayer.setLabelFeatureName(corefFeature.getName());
-        createType(corefLayer, aUser);
+        corefTypeFeature.setLayer(base);
+        corefTypeFeature.setVisible(false);
+        corefTypeTagSet.setType(base);
+
+        corefRelFeature.setLayer(base);
+        corefRelFeature.setVisible(false);
+        corefRelTagSet.setType(base);
 
         // Lemmata Layer
-        TagSet lemmaTagSet = initializeType(Lemma.class.getName(), "lemmata", "lemma annotation",
-                "span", "Lemma", "de", new String[] {}, new String[] {}, aProject, aUser);
-        AnnotationType lemmaLayer = lemmaTagSet.getType();
+        TagSet lemmaTagSet = initializeType("value", "value", "lemma annotation", "String",
+                "Lemma", "de", new String[] {}, new String[] {}, aProject, aUser);
+
+
+        AnnotationType lemmaLayer = setLayer(Lemma.class.getName(), "value", "Lemma", "span",
+                aProject);
+        AnnotationFeature tokenLemmaFeature = setFeature("lemma", "lemma", aProject, tokenLayer,
+                "String");
+        tokenLemmaFeature.setVisible(false);
         lemmaLayer.setAttachType(tokenLayer);
         lemmaLayer.setAttachFeature(tokenLemmaFeature);
-        lemmaLayer.setType("span");
-        AnnotationFeature lemmaFeature = setFeature("value", "value", aProject, lemmaTagSet,
-                lemmaLayer);
-        lemmaLayer.setLabelFeatureName(lemmaFeature.getName());
+        lemmaLayer.setLabelFeatureName("value");
+
         createType(lemmaLayer, aUser);
+        
+        AnnotationFeature lemmaFeature  = lemmaTagSet.getFeature();
+        lemmaFeature.setLayer(lemmaLayer);
+
+        lemmaTagSet.setType(lemmaLayer);
+
+    }
+
+    private AnnotationType setLayer(String aName, String aFeatureName, String aUiName,
+            String aType, Project aProject)
+    {
+        AnnotationType layer = new AnnotationType();
+        layer.setName(aName);
+        layer.setLabelFeatureName(aFeatureName);
+        layer.setUiName(aUiName);
+        layer.setProject(aProject);
+        layer.setBuiltIn(true);
+        layer.setType(aType);
+        return layer;
     }
 
     private AnnotationFeature setFeature(String aName, String aUiname, Project aProject,
-            TagSet aTagSet, AnnotationType aLayer)
+            AnnotationType aLayer, String aType)
     {
         AnnotationFeature feature = new AnnotationFeature();
         feature.setName(aName);
         feature.setEnabled(true);
-        feature.setType("String");
+        feature.setType(aType);
         feature.setUiName(aUiname);
         feature.setLayer(aLayer);
-        feature.setTagSet(aTagSet);
         feature.setProject(aProject);
 
         createFeature(feature);
@@ -499,17 +538,15 @@ public class AnnotationServiceImpl
 
     @Override
     @Transactional
-    public List<AnnotationFeature> listAnnotationFeature(Project aProject, AnnotationType aLayer)
+    public List<AnnotationFeature> listAnnotationFeature(AnnotationType aLayer)
     {
         if (aLayer.getId() == 0) {
             return new ArrayList<AnnotationFeature>();
         }
 
         return entityManager
-                .createQuery(
-                        "FROM AnnotationFeature  WHERE project =:project AND layer =:layer ORDER BY uiName",
-                        AnnotationFeature.class).setParameter("project", aProject)
-                .setParameter("layer", aLayer).getResultList();
+                .createQuery("FROM AnnotationFeature  WHERE layer =:layer ORDER BY uiName",
+                        AnnotationFeature.class).setParameter("layer", aLayer).getResultList();
     }
 
     @Override

@@ -42,9 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
-import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
@@ -68,12 +66,12 @@ public class SpanAdapter
      * is only transiently used when communicating with the UI. It is not persisted long term other
      * than in the type registry (e.g. in the database).
      */
-    private final String typeId;
+    private final long typeId;
 
     /**
      * A field that takes the name of the feature which should be set, e.e. "pos" or "lemma".
      */
-    private final String attachFeature;
+    private final String attachFeatureName;
 
     /**
      * A field that takes the name of the annotation to attach to, e.g.
@@ -91,18 +89,33 @@ public class SpanAdapter
      */
     private final String labelFeatureName;
 
-    private boolean singleTokenBehavior = false;
+    /**
+     * The minimum offset of the annotation is on token, and the annotation can't span multiple
+     * tokens too
+     */
+    private boolean lockeToTokenOffsets;
+
+    /**
+     * The minimum offset of the annotation is on token, and the annotation can span multiple token
+     * too
+     */
+    private boolean allowMultipleToken;
+
+    /**
+     * Allow multiple annotations of the same layer (only when the type value is different)
+     */
+    private boolean allowStacking;
 
     boolean deletable;
 
-    public SpanAdapter(String aLabelPrefix, String aTypeName, String aLabelFeatureName,
+    public SpanAdapter(long aTypeId, String aTypeName, String aLabelFeatureName,
             String aAttachFeature, String aAttachType)
     {
 
-        typeId = aLabelPrefix;
+        typeId = aTypeId;
         labelFeatureName = aLabelFeatureName;
         annotationTypeName = aTypeName;
-        attachFeature = aAttachFeature;
+        attachFeatureName = aAttachFeature;
         attachType = aAttachType;
     }
 
@@ -112,17 +125,37 @@ public class SpanAdapter
      * the specified type will be created for each token. If this is not set, a single annotation
      * covering all tokens is created.
      */
-    public void setSingleTokenBehavior(boolean aSingleTokenBehavior)
+    public void setLockToTokenOffsets(boolean aSingleTokenBehavior)
     {
-        singleTokenBehavior = aSingleTokenBehavior;
+        lockeToTokenOffsets = aSingleTokenBehavior;
     }
 
     /**
-     * @see #setSingleTokenBehavior(boolean)
+     * @see #setLockToTokenOffsets(boolean)
      */
-    public boolean isSingleTokenBehavior()
+    public boolean isLockToTokenOffsets()
     {
-        return singleTokenBehavior;
+        return lockeToTokenOffsets;
+    }
+
+    public boolean isAllowMultipleToken()
+    {
+        return allowMultipleToken;
+    }
+
+    public void setAllowMultipleToken(boolean allowMultipleToken)
+    {
+        this.allowMultipleToken = allowMultipleToken;
+    }
+
+    public boolean isAllowStacking()
+    {
+        return allowStacking;
+    }
+
+    public void setAllowStacking(boolean allowStacking)
+    {
+        this.allowStacking = allowStacking;
     }
 
     /**
@@ -164,7 +197,7 @@ public class SpanAdapter
         for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, firstSentence.getBegin(),
                 lastSentenceInPage.getEnd())) {
             Feature labelFeature = fs.getType().getFeatureByBaseName(labelFeatureName);
-            aResponse.addEntity(new Entity(((FeatureStructureImpl) fs).getAddress(), typeId
+            aResponse.addEntity(new Entity(((FeatureStructureImpl) fs).getAddress(), typeId + "_"
                     + fs.getStringValue(labelFeature), asList(new Offsets(fs.getBegin()
                     - aFirstSentenceOffset, fs.getEnd() - aFirstSentenceOffset))));
         }
@@ -228,7 +261,7 @@ public class SpanAdapter
         throws BratAnnotationException
     {
         if (BratAjaxCasUtil.isSameSentence(aJcas, aBegin, aEnd)) {
-            if (singleTokenBehavior) {
+            if (lockeToTokenOffsets) {
                 List<Token> tokens = BratAjaxCasUtil.selectOverlapping(aJcas, Token.class, aBegin,
                         aEnd);
 
@@ -236,12 +269,15 @@ public class SpanAdapter
                     updateCas(aJcas.getCas(), token.getBegin(), token.getEnd(), aLabelValue);
                 }
             }
-            else {
+            else if(allowMultipleToken){
                 List<Token> tokens = BratAjaxCasUtil.selectOverlapping(aJcas, Token.class, aBegin,
                         aEnd);
                 // update the begin and ends (no sub token selection
                 aBegin = tokens.get(0).getBegin();
                 aEnd = tokens.get(tokens.size() - 1).getEnd();
+                updateCas(aJcas.getCas(), aBegin, aEnd, aLabelValue);
+            }
+            else{
                 updateCas(aJcas.getCas(), aBegin, aEnd, aLabelValue);
             }
         }
@@ -262,10 +298,16 @@ public class SpanAdapter
         for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
 
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
+                if(!allowStacking){
+                    fs.setStringValue(feature, aValue);
+                    duplicate = true;
+                    break;
+                }
                 if (fs.getStringValue(feature).equals(aValue)) {
                     duplicate = true;
-                  //if (!fs.getStringValue(feature).equals(aValue)) {
-                  //  fs.setStringValue(feature, aValue);
+                    break;
+                    // if (!fs.getStringValue(feature).equals(aValue)) {
+                    // fs.setStringValue(feature, aValue);
                 }
             }
         }
@@ -273,11 +315,11 @@ public class SpanAdapter
             AnnotationFS newAnnotation = aCas.createAnnotation(type, aBegin, aEnd);
             newAnnotation.setStringValue(feature, aValue);
 
-            if (attachFeature != null) {
+            if (attachFeatureName != null) {
                 Type theType = CasUtil.getType(aCas, attachType);
-                Feature posFeature = theType.getFeatureByBaseName(attachFeature);
+                Feature attachFeature = theType.getFeatureByBaseName(attachFeatureName);
                 CasUtil.selectCovered(aCas, theType, aBegin, aEnd).get(0)
-                        .setFeatureValue(posFeature, newAnnotation);
+                        .setFeatureValue(attachFeature, newAnnotation);
             }
             aCas.addFsToIndexes(newAnnotation);
         }
@@ -288,64 +330,67 @@ public class SpanAdapter
     {
         FeatureStructure fs = BratAjaxCasUtil.selectByAddr(aJCas, FeatureStructure.class, aAddress);
         aJCas.removeFsFromIndexes(fs);
+
+        // delete associated attachFeature
+        if (attachType == null) {
+            return;
+        }
+        Type theType = CasUtil.getType(aJCas.getCas(), attachType);
+        Feature attachFeature = theType.getFeatureByBaseName(attachFeatureName);
+        if (attachFeature == null) {
+            return;
+        }
+        CasUtil.selectCovered(aJCas.getCas(), theType, ((AnnotationFS) fs).getBegin(),
+                ((AnnotationFS) fs).getEnd()).get(0).setFeatureValue(attachFeature, null);
+
     }
 
     @Override
-    public void delete(JCas aJCas, int aBegin, int aEnd, String aValue){
+    public void delete(JCas aJCas, int aBegin, int aEnd, String aValue)
+    {
         Type type = CasUtil.getType(aJCas.getCas(), annotationTypeName);
         Feature feature = type.getFeatureByBaseName(labelFeatureName);
         for (AnnotationFS fs : CasUtil.selectCovered(aJCas.getCas(), type, aBegin, aEnd)) {
 
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
                 if (fs.getStringValue(feature).equals(aValue)) {
-                    delete(aJCas, ((FeatureStructureImpl)fs).getAddress());
+                    delete(aJCas, ((FeatureStructureImpl) fs).getAddress());
+
                 }
             }
         }
     }
 
-    /**
+    /*    *//**
      * Convenience method to get an adapter for part-of-speech.
      *
      * NOTE: This is not meant to stay. It's just a convenience during refactoring!
      */
-    public static final SpanAdapter getPosAdapter()
-    {
-        SpanAdapter adapter = new SpanAdapter(AnnotationTypeConstant.POS_PREFIX,
-                POS.class.getName(), "PosValue", "pos", Token.class.getName());
-        adapter.setSingleTokenBehavior(true);
-        adapter.setDeletable(true);
-        return adapter;
-    }
-
-    /**
+    /*
+     * public static final SpanAdapter getPosAdapter() { SpanAdapter adapter = new
+     * SpanAdapter(AnnotationTypeConstant.POS_PREFIX, POS.class.getName(), "PosValue", "pos",
+     * Token.class.getName()); adapter.setSingleTokenBehavior(true); adapter.setDeletable(true);
+     * return adapter; }
+     *//**
      * Convenience method to get an adapter for lemma.
      *
      * NOTE: This is not meant to stay. It's just a convenience during refactoring!
      */
-    public static final SpanAdapter getLemmaAdapter()
-    {
-        SpanAdapter adapter = new SpanAdapter("", Lemma.class.getName(), "value", "lemma",
-                Token.class.getName());
-        adapter.setSingleTokenBehavior(true);
-        adapter.setDeletable(true);
-        return adapter;
-    }
-
-    /**
+    /*
+     * public static final SpanAdapter getLemmaAdapter() { SpanAdapter adapter = new SpanAdapter("",
+     * Lemma.class.getName(), "value", "lemma", Token.class.getName());
+     * adapter.setSingleTokenBehavior(true); adapter.setDeletable(true); return adapter; }
+     *//**
      * Convenience method to get an adapter for named entity.
      *
      * NOTE: This is not meant to stay. It's just a convenience during refactoring!
      */
-    public static final SpanAdapter getNamedEntityAdapter()
-    {
-        SpanAdapter adapter = new SpanAdapter(AnnotationTypeConstant.NAMEDENTITY_PREFIX,
-                NamedEntity.class.getName(), "value", null, null);
-        adapter.setSingleTokenBehavior(false);
-        adapter.setDeletable(true);
-        return adapter;
-    }
-
+    /*
+     * public static final SpanAdapter getNamedEntityAdapter() { SpanAdapter adapter = new
+     * SpanAdapter(AnnotationTypeConstant.NAMEDENTITY_PREFIX, NamedEntity.class.getName(), "value",
+     * null, null); adapter.setSingleTokenBehavior(false); adapter.setDeletable(true); return
+     * adapter; }
+     */
     @Override
     public String getLabelFeatureName()
     {
@@ -353,7 +398,7 @@ public class SpanAdapter
     }
 
     @Override
-    public String getTypeId()
+    public long getTypeId()
     {
         return typeId;
     }
@@ -382,9 +427,9 @@ public class SpanAdapter
     }
 
     @Override
-    public String getArcSpanTypeFeatureName()
+    public String getAttachFeatureName()
     {
-        return attachFeature;
+        return attachFeatureName;
     }
 
     @Override
@@ -417,7 +462,8 @@ public class SpanAdapter
         String prevNe = "O";
         int begin = 0;
         int end = 0;
-        // remove existing annotations of this type, after all it is an automation, no care
+        // remove existing annotations of this type, after all it is an
+        // automation, no care
         BratAnnotatorUtility.clearAnnotations(aJcas, type);
 
         if (type.getName().equals(NamedEntity.class.getName())) {
@@ -483,9 +529,9 @@ public class SpanAdapter
                         token.getBegin(), token.getEnd());
                 newAnnotation.setStringValue(feature, aLabelValues.get(i));
                 i++;
-                if (attachFeature != null) {
+                if (attachFeatureName != null) {
                     Type theType = CasUtil.getType(aJcas.getCas(), attachType);
-                    Feature posFeature = theType.getFeatureByBaseName(attachFeature);
+                    Feature posFeature = theType.getFeatureByBaseName(attachFeatureName);
                     CasUtil.selectCovered(aJcas.getCas(), theType, token.getBegin(), token.getEnd())
                             .get(0).setFeatureValue(posFeature, newAnnotation);
                 }

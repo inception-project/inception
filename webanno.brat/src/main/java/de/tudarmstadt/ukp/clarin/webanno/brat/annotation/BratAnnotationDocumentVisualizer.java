@@ -17,10 +17,12 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
+
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.List;
+
+import javax.annotation.Resource;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
@@ -31,13 +33,12 @@ import org.codehaus.jackson.JsonGenerator;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 
 /**
  * Displays a BRAT visualisation and fills it with data from an {@link AnnotationDocument}. We do
@@ -61,6 +62,9 @@ public class BratAnnotationDocumentVisualizer
 
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
+
+    @Resource(name = "annotationService")
+    private static AnnotationService annotationService;
 
     public BratAnnotationDocumentVisualizer(String id, IModel<AnnotationDocument> aModel)
     {
@@ -136,12 +140,6 @@ public class BratAnnotationDocumentVisualizer
         GetDocumentResponse response = new GetDocumentResponse();
         response.setText(jCas.getDocumentText());
 
-        List<String> tagSetNames = new ArrayList<String>();
-        tagSetNames.add(AnnotationTypeConstant.POS);
-        tagSetNames.add(AnnotationTypeConstant.DEPENDENCY);
-        tagSetNames.add(AnnotationTypeConstant.NAMEDENTITY);
-        tagSetNames.add(AnnotationTypeConstant.COREFERENCE);
-        tagSetNames.add(AnnotationTypeConstant.COREFRELTYPE);
         // THE BratSession is deleted. modify BratViualizer to include windowSize in its state.
         // HttpSession session = BratSession.session();
         // Project project = (Project) session.getAttribute("project");
@@ -150,16 +148,14 @@ public class BratAnnotationDocumentVisualizer
         // +"-"+document.getName());
         // If this Classe is used somewhere, get BratAnnotatorModel populated somewhere
         BratAnnotatorModel bratAnnotatorDataModel = new BratAnnotatorModel();
+
+
         SpanAdapter.renderTokenAndSentence(jCas, response, bratAnnotatorDataModel);
-        // If POS annotation exist in CAS
-        SpanAdapter.getPosAdapter().render(jCas, response, bratAnnotatorDataModel);
-        ChainAdapter.getCoreferenceLinkAdapter().render(jCas, response, bratAnnotatorDataModel);
-        // If Lemma Layer Exist in CAS
-        SpanAdapter.getLemmaAdapter().render(jCas, response, bratAnnotatorDataModel);
-        // IF Named Entity layer exist in CAS
-        SpanAdapter.getNamedEntityAdapter().render(jCas, response, bratAnnotatorDataModel);
-        ArcAdapter.getDependencyAdapter().render(jCas, response, bratAnnotatorDataModel);
-        ChainAdapter.getCoreferenceChainAdapter().render(jCas, response, bratAnnotatorDataModel);
+
+        for (TagSet tagSet : bratAnnotatorDataModel.getAnnotationLayers()) {
+            getAdapter(tagSet, annotationService).render(jCas, response,
+                    bratAnnotatorDataModel);
+        }
 
         // Serialize BRAT object model to JSON
         try {

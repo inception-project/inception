@@ -79,7 +79,7 @@ public interface TypeAdapter
      * only transiently used when communicating with the UI. It is not persisted long term other
      * than in the type registry (e.g. in the database).
      */
-    String getTypeId();
+    long getTypeId();
 
     /**
      * Get the CAS type of the this {@link TypeAdapter}
@@ -96,7 +96,7 @@ public interface TypeAdapter
      * target)
      *
      */
-    String getArcSpanTypeFeatureName();
+    String getAttachFeatureName();
 
     // /**
     // * Update the CAS with new/modification of span annotations from brat

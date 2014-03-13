@@ -41,8 +41,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Relation;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
-import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
-import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
@@ -64,7 +62,7 @@ public class ChainAdapter
      * This is used to differentiate the different types in the brat annotation/visualization. The
      * prefix will not stored in the CAS(striped away at {@link BratAjaxCasController#getType} )
      */
-    private final String labelPrefix;
+    private final long labelPrefix;
 
     /**
      * The UIMA type name.
@@ -92,7 +90,7 @@ public class ChainAdapter
 
     private boolean deletable;
 
-    public ChainAdapter(String aLabelPrefix, String aTypeName, String aLabelFeatureName,
+    public ChainAdapter(long aLabelPrefix, String aTypeName, String aLabelFeatureName,
             String aFirstFeatureName, String aNextFeatureName)
     {
         labelPrefix = aLabelPrefix;
@@ -698,14 +696,14 @@ public class ChainAdapter
             removeInvalidChain(aJCas.getCas());
         }
         else {
-            ChainAdapter.getCoreferenceChainAdapter().updateCasBeforeDelete(aJCas, aAddress);
+      /*      ChainAdapter.getCoreferenceChainAdapter().updateCasBeforeDelete(aJCas, aAddress);
 
             FeatureStructure fsToRemove = BratAjaxCasUtil.selectByAddr(aJCas,
                     FeatureStructure.class, aAddress);
 
             aJCas.removeFsFromIndexes(fsToRemove);
 
-            ChainAdapter.getCoreferenceChainAdapter().removeInvalidChain(aJCas.getCas());
+            ChainAdapter.getCoreferenceChainAdapter().removeInvalidChain(aJCas.getCas());*/
         }
     }
 
@@ -738,7 +736,7 @@ public class ChainAdapter
      *
      * NOTE: This is not meant to stay. It's just a convenience during refactoring!
      */
-    public static final ChainAdapter getCoreferenceLinkAdapter()
+/*    public static final ChainAdapter getCoreferenceLinkAdapter()
     {
         ChainAdapter adapter = new ChainAdapter(AnnotationTypeConstant.COREFRELTYPE_PREFIX,
                 CoreferenceLink.class.getName(), "referenceType", "first", "next");
@@ -746,18 +744,18 @@ public class ChainAdapter
         return adapter;
     }
 
-    /**
+    *//**
      * Convenience method to get an adapter for coreference chain.
      *
      * NOTE: This is not meant to stay. It's just a convenience during refactoring!
-     */
+     *//*
     public static final ChainAdapter getCoreferenceChainAdapter()
     {
         ChainAdapter adapter = new ChainAdapter(AnnotationTypeConstant.COREFERENCE_PREFIX,
                 CoreferenceChain.class.getName(), "referenceRelation", "first", "next");
         adapter.setChain(true);
         return adapter;
-    }
+    }*/
 
     @Override
     public String getLabelFeatureName()
@@ -766,7 +764,7 @@ public class ChainAdapter
     }
 
     @Override
-    public String getTypeId()
+    public long getTypeId()
     {
         return labelPrefix;
     }
@@ -796,7 +794,7 @@ public class ChainAdapter
     }
 
     @Override
-    public String getArcSpanTypeFeatureName()
+    public String getAttachFeatureName()
     {
         return null;
     }

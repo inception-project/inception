@@ -32,18 +32,19 @@ import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 import org.junit.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.monitoring.page.MonitoringPage;
 import de.tudarmstadt.ukp.clarin.webanno.tcf.TcfReader;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsvReader;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 
 /**
  * Unit Test for Kappa Agreement. The example reads two TSV files with POS and DEP annotations for
  * two users and check the disagreement
+ *
  * @author yimam
  *
  */
@@ -53,7 +54,9 @@ public class TwoPairedKappaTest
     private SourceDocument document;
     private CAS cas1, cas2, cas3, cas4, cas5;
 
-    private void init()  throws Exception{
+    private void init()
+        throws Exception
+    {
 
         user1 = new User();
         user1.setUsername("user1");
@@ -90,7 +93,6 @@ public class TwoPairedKappaTest
                 TcfReader.PARAM_PATTERNS, new String[] { "[+]kappaspanarcdiff.tsv" });
         reader4.getNext(cas4);
 
-
     }
 
     @Test
@@ -99,20 +101,19 @@ public class TwoPairedKappaTest
     {
         init();
         double[][] results = new double[2][2];
-        TypeAdapter adapter = TypeUtil.getAdapter(AnnotationTypeConstant.POS_PREFIX);
-        Map<User,List<SourceDocument>> userDocs = new HashMap<User, List<SourceDocument>>();
-        userDocs.put(user1, Arrays.asList(new SourceDocument[]{document}));
-        userDocs.put(user2, Arrays.asList(new SourceDocument[]{document}));
-        Map<SourceDocument, Map<User, JCas>> documentJCases = new HashMap<SourceDocument, Map<User,JCas>>();
+        TypeAdapter adapter = new SpanAdapter(0, POS.class.getName(), "PosValue", null, null);
+        Map<User, List<SourceDocument>> userDocs = new HashMap<User, List<SourceDocument>>();
+        userDocs.put(user1, Arrays.asList(new SourceDocument[] { document }));
+        userDocs.put(user2, Arrays.asList(new SourceDocument[] { document }));
+        Map<SourceDocument, Map<User, JCas>> documentJCases = new HashMap<SourceDocument, Map<User, JCas>>();
         Map<User, JCas> userCases = new HashMap<User, JCas>();
         userCases.put(user1, cas1.getJCas());
         userCases.put(user2, cas1.getJCas());
         documentJCases.put(document, userCases);
-        results = MonitoringPage.computeKappa(Arrays.asList(new User[]{user1, user2}), adapter,
+        results = MonitoringPage.computeKappa(Arrays.asList(new User[] { user1, user2 }), adapter,
                 userDocs, documentJCases);
-        assertEquals(results[0][1], 1.0,0.0005);
+        assertEquals(results[0][1], 1.0, 0.0005);
     }
-
 
     @Test
     public void testTwoUserDiffArcAnnotation()
@@ -120,18 +121,18 @@ public class TwoPairedKappaTest
     {
         init();
         double[][] results = new double[2][2];
-        TypeAdapter adapter = TypeUtil.getAdapter(AnnotationTypeConstant.DEP_PREFIX);
-        Map<User,List<SourceDocument>> userDocs = new HashMap<User, List<SourceDocument>>();
-        userDocs.put(user1, Arrays.asList(new SourceDocument[]{document}));
-        userDocs.put(user2, Arrays.asList(new SourceDocument[]{document}));
-        Map<SourceDocument, Map<User, JCas>> documentJCases = new HashMap<SourceDocument, Map<User,JCas>>();
+        TypeAdapter adapter = new SpanAdapter(0, POS.class.getName(), "PosValue", null, null);
+        Map<User, List<SourceDocument>> userDocs = new HashMap<User, List<SourceDocument>>();
+        userDocs.put(user1, Arrays.asList(new SourceDocument[] { document }));
+        userDocs.put(user2, Arrays.asList(new SourceDocument[] { document }));
+        Map<SourceDocument, Map<User, JCas>> documentJCases = new HashMap<SourceDocument, Map<User, JCas>>();
         Map<User, JCas> userCases = new HashMap<User, JCas>();
         userCases.put(user1, cas1.getJCas());
         userCases.put(user2, cas3.getJCas());
         documentJCases.put(document, userCases);
-        results = MonitoringPage.computeKappa(Arrays.asList(new User[]{user1, user2}), adapter,
+        results = MonitoringPage.computeKappa(Arrays.asList(new User[] { user1, user2 }), adapter,
                 userDocs, documentJCases);
-        assertEquals(results[0][1], 0.87,0.0005);
+        assertEquals(results[0][1], 0.87, 0.0005);
     }
 
     @Test
@@ -140,18 +141,18 @@ public class TwoPairedKappaTest
     {
         init();
         double[][] results = new double[2][2];
-        TypeAdapter adapter = TypeUtil.getAdapter(AnnotationTypeConstant.POS_PREFIX);
-        Map<User,List<SourceDocument>> userDocs = new HashMap<User, List<SourceDocument>>();
-        userDocs.put(user1, Arrays.asList(new SourceDocument[]{document}));
-        userDocs.put(user2, Arrays.asList(new SourceDocument[]{document}));
-        Map<SourceDocument, Map<User, JCas>> documentJCases = new HashMap<SourceDocument, Map<User,JCas>>();
+        TypeAdapter adapter = new SpanAdapter(0, POS.class.getName(), "PosValue", null, null);
+        Map<User, List<SourceDocument>> userDocs = new HashMap<User, List<SourceDocument>>();
+        userDocs.put(user1, Arrays.asList(new SourceDocument[] { document }));
+        userDocs.put(user2, Arrays.asList(new SourceDocument[] { document }));
+        Map<SourceDocument, Map<User, JCas>> documentJCases = new HashMap<SourceDocument, Map<User, JCas>>();
         Map<User, JCas> userCases = new HashMap<User, JCas>();
         userCases.put(user1, cas1.getJCas());
         userCases.put(user2, cas2.getJCas());
         documentJCases.put(document, userCases);
-        results = MonitoringPage.computeKappa(Arrays.asList(new User[]{user1, user2}), adapter,
+        results = MonitoringPage.computeKappa(Arrays.asList(new User[] { user1, user2 }), adapter,
                 userDocs, documentJCases);
-        assertEquals(results[0][1], 0.86,0.0005);
+        assertEquals(results[0][1], 0.86, 0.0005);
     }
 
     @Test
@@ -160,40 +161,41 @@ public class TwoPairedKappaTest
     {
         init();
         double[][] results = new double[2][2];
-        TypeAdapter adapter = TypeUtil.getAdapter(AnnotationTypeConstant.DEP_PREFIX);
-        Map<User,List<SourceDocument>> userDocs = new HashMap<User, List<SourceDocument>>();
-        userDocs.put(user1, Arrays.asList(new SourceDocument[]{document}));
-        userDocs.put(user2, Arrays.asList(new SourceDocument[]{document}));
-        Map<SourceDocument, Map<User, JCas>> documentJCases = new HashMap<SourceDocument, Map<User,JCas>>();
+        TypeAdapter adapter = new SpanAdapter(0, POS.class.getName(), "PosValue", null, null);
+        Map<User, List<SourceDocument>> userDocs = new HashMap<User, List<SourceDocument>>();
+        userDocs.put(user1, Arrays.asList(new SourceDocument[] { document }));
+        userDocs.put(user2, Arrays.asList(new SourceDocument[] { document }));
+        Map<SourceDocument, Map<User, JCas>> documentJCases = new HashMap<SourceDocument, Map<User, JCas>>();
         Map<User, JCas> userCases = new HashMap<User, JCas>();
         userCases.put(user1, cas1.getJCas());
         userCases.put(user2, cas4.getJCas());
         documentJCases.put(document, userCases);
-        results = MonitoringPage.computeKappa(Arrays.asList(new User[]{user1, user2}), adapter,
+        results = MonitoringPage.computeKappa(Arrays.asList(new User[] { user1, user2 }), adapter,
                 userDocs, documentJCases);
-        assertEquals(results[0][1], 0.69,0.0005);
+        assertEquals(results[0][1], 0.69, 0.0005);
     }
+
     @Test
     public void testThreeUserDiffArcAndSpanAnnotation()
         throws Exception
     {
         init();
         double[][] results = new double[2][2];
-        TypeAdapter adapter = TypeUtil.getAdapter(AnnotationTypeConstant.DEP_PREFIX);
-        Map<User,List<SourceDocument>> userDocs = new HashMap<User, List<SourceDocument>>();
-        userDocs.put(user1, Arrays.asList(new SourceDocument[]{document}));
-        userDocs.put(user2, Arrays.asList(new SourceDocument[]{document}));
-        userDocs.put(user3, Arrays.asList(new SourceDocument[]{document}));
-        Map<SourceDocument, Map<User, JCas>> documentJCases = new HashMap<SourceDocument, Map<User,JCas>>();
+        TypeAdapter adapter = new SpanAdapter(0, POS.class.getName(), "PosValue", null, null);
+        Map<User, List<SourceDocument>> userDocs = new HashMap<User, List<SourceDocument>>();
+        userDocs.put(user1, Arrays.asList(new SourceDocument[] { document }));
+        userDocs.put(user2, Arrays.asList(new SourceDocument[] { document }));
+        userDocs.put(user3, Arrays.asList(new SourceDocument[] { document }));
+        Map<SourceDocument, Map<User, JCas>> documentJCases = new HashMap<SourceDocument, Map<User, JCas>>();
         Map<User, JCas> userCases = new HashMap<User, JCas>();
         userCases.put(user1, cas1.getJCas());
         userCases.put(user2, cas2.getJCas());
         userCases.put(user3, cas4.getJCas());
         documentJCases.put(document, userCases);
-        results = MonitoringPage.computeKappa(Arrays.asList(new User[]{user1, user2, user3}), adapter,
-                userDocs, documentJCases);
-        assertEquals(results[0][1], 0.94,0.0005); //user1 V user2
-        assertEquals(results[0][2], 0.69,0.0005);// user1 V user3
-        assertEquals(results[1][2], 0.63,0.0005);// user2 V user3
+        results = MonitoringPage.computeKappa(Arrays.asList(new User[] { user1, user2, user3 }),
+                adapter, userDocs, documentJCases);
+        assertEquals(results[0][1], 0.94, 0.0005); // user1 V user2
+        assertEquals(results[0][2], 0.69, 0.0005);// user1 V user3
+        assertEquals(results[1][2], 0.63, 0.0005);// user2 V user3
     }
 }

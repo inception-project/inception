@@ -94,9 +94,15 @@ public interface AnnotationService
     boolean existsTag(String tagName, TagSet tagSet);
 
     /**
-     * Check is a {@link TagSet} exists
+     * Check if a {@link TagSet} with this name exists
      */
-    boolean existsTagSet(AnnotationType type, Project project);
+    boolean existsTagSet(String name, Project project);
+
+    /**
+     * check is a {@link TagSet} for this {@link AnnotationFeature} in this {@link Project} exists
+     */
+    boolean existsTagSet(AnnotationFeature feature, Project project);
+
 
     /**
      * check if an {@link AnnotationType} exists with this name and type in this {@link Project}
@@ -107,15 +113,15 @@ public interface AnnotationService
      *
      * Check if this {@link AnnotationFeature} already exists
      */
-    boolean existsFeature(String name, AnnotationType type, TagSet tagSet, Project project);
+    boolean existsFeature(String name, AnnotationType type, Project project);
 
     /**
-     * get a {@link TagSet} by its type and its project
+     * get a {@link TagSet} of a given {@link AnnotationFeature} in a {@link Project}
      *
      * @param tagName
      * @return {@link TagSet}
      */
-    TagSet getTagSet(AnnotationType type, Project project);
+    TagSet getTagSet(AnnotationFeature feature, Project project);
 
     /**
      * Get Tagset by its ID
@@ -126,6 +132,12 @@ public interface AnnotationService
      * Get an {@link AnnotationType}
      */
     AnnotationType getType(String name, String type);
+    /**
+     * Get a {@link AnnotationFeature} name using its ID. Used for updating annotations as it is represented <id><type>
+     * @param id
+     * @return
+     */
+    AnnotationFeature getFeature(long id);
 
     /**
      * Check if an {@link AnnotationType} already exists.
@@ -157,7 +169,7 @@ public interface AnnotationService
     /**
      * List all the features in a {@link AnnotationType} for this {@link Project}
      */
-    List<AnnotationFeature> listAnnotationFeature(Project project, AnnotationType type);
+    List<AnnotationFeature> listAnnotationFeature( AnnotationType type);
 
     /**
      * List all features in the project

@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.curation.component;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
 
 import java.io.IOException;
 import java.util.LinkedList;
@@ -46,10 +47,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcCrossedMultipleSentenceException;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.AnnotationState;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.BratCurationVisualizer;
@@ -57,8 +59,10 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationU
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.NoOriginOrTargetAnnotationSelectedException;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
@@ -270,12 +274,14 @@ public class CurationViewPanel
 
         AnnotationFS fsClicked = selectByAddr(clickedJCas, aAddress);
 
-        BratAjaxCasController controller = new BratAjaxCasController(aRepository,
-                aAnnotationService);
-        // When curation and correction for coref chain are implemented, null should be replaced by
-        // the correct origin and target AnnotationFS
-        controller.createSpanAnnotation(aMergeJCas, fsClicked.getBegin(), fsClicked.getEnd(),
-                spanType, null, null);
+        long featureId = Integer.parseInt(spanType.substring(0, spanType.indexOf("_")));
+        String type = spanType.substring(spanType.indexOf("_") + 1);
+
+        AnnotationFeature feature = this.annotationService.getFeature(featureId);
+        TagSet tagSet = annotationService.getTagSet(feature, aBratAnnotatorModel.getProject());
+        SpanAdapter adapter = (SpanAdapter) getAdapter(tagSet, annotationService);
+        adapter.add(aMergeJCas, fsClicked.getBegin(), fsClicked.getEnd(), type);
+
         repository.updateJCas(aBratAnnotatorModel.getMode(), aBratAnnotatorModel.getDocument(),
                 aBratAnnotatorModel.getUser(), aMergeJCas);
 
@@ -355,14 +361,23 @@ public class CurationViewPanel
 
         AnnotationFS targetFs = BratAjaxCasUtil.selectSingleFsAt(aJcas, targetFsClicked.getType(),
                 targetFsClicked.getBegin(), targetFsClicked.getEnd());
-        BratAjaxCasController controller = new BratAjaxCasController(repository, annotationService);
         try {
             if (originFs == null | targetFs == null) {
                 throw new NoOriginOrTargetAnnotationSelectedException(
                         "Either origin or target annotations not selected");
             }
-            controller.createArcAnnotation(aCurationUserSegment.getBratAnnotatorModel(), arcType,
-                    0, 0, originFs, targetFs, aJcas);
+
+            long featureId = Integer.parseInt(arcType.substring(0, arcType.indexOf("_")));
+
+            AnnotationFeature feature = annotationService.getFeature(featureId);
+
+            TagSet tagSet = annotationService.getTagSet(feature, aCurationUserSegment
+                    .getBratAnnotatorModel().getProject());
+
+            ArcAdapter adapter = (ArcAdapter) getAdapter(tagSet, annotationService);
+            adapter.add(arcType.substring(arcType.indexOf("_") + 1), originFs, targetFs, aJcas,
+                    aCurationUserSegment.getBratAnnotatorModel());
+
             repository.updateJCas(aCurationUserSegment.getBratAnnotatorModel().getMode(),
                     aCurationUserSegment.getBratAnnotatorModel().getDocument(),
                     aCurationUserSegment.getBratAnnotatorModel().getUser(), aJcas);

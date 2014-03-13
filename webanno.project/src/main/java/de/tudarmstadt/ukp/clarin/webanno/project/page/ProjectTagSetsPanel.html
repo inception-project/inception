@@ -31,8 +31,8 @@
 							<input type="submit" wicket:id="create" />
 						</div>
 					</fieldset>
-					</form>
-					<form wicket:id="importTagSetForm">
+				</form>
+				<form wicket:id="importTagSetForm">
 					<fieldset class="ui-widget-content ui-corner-all labels-left">
 						<legend>Import tagsets</legend>
 						<table class="hfill">
@@ -71,15 +71,23 @@
 								<td class="hfill"><select wicket:id="type"></select></td>
 							</tr>
 							<tr>
+								<td><label>Feature:</label></td>
+								<td class="hfill"><select wicket:id="feature"></select></td>
+							</tr>
+							<tr>
 								<td style="vertical-align: top;"><label>Description:</label></td>
-								<td class="hfill"><textarea class="hfill"
+								<td><textarea class="hfill"
 										wicket:id="description" rows="7"></textarea></td>
+							</tr>
+							<tr>
+								<td style="vertical-align: top;"><label>Create Tag?:</label></td>
+								<td><input type="checkbox" wicket:id="createTag" /></td>
 							</tr>
 						</table>
 						<div class="buttons">
 							<label class="inline">Export as:</label> <select
 								wicket:id="exportTagsetFormat"></select> <input type="submit"
-								wicket:id="export" value="Export tagset"/>
+								wicket:id="export" value="Export tagset" />
 							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 							<input type="submit" wicket:id="save" /> <input type="submit"
 								wicket:id="remove" />
@@ -97,8 +105,8 @@
 				<form wicket:id="tagSelectionForm">
 					<fieldset class="ui-widget-content ui-corner-all">
 						<legend>Tags</legend>
-						<select wicket:id="tag" size="8"></select>
-						<input type="submit" wicket:id="new" />
+						<select wicket:id="tag" size="8"></select> <input type="submit"
+							wicket:id="new" />
 					</fieldset>
 				</form>
 			</td>
@@ -120,8 +128,8 @@
 							</tr>
 						</table>
 						<div class="buttons">
-							<input type="submit" wicket:id="save" />
-							<input type="submit" wicket:id="remove" />
+							<input type="submit" wicket:id="save" /> <input type="submit"
+								wicket:id="remove" />
 						</div>
 					</fieldset>
 				</form>

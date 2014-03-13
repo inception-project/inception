@@ -103,6 +103,7 @@ public class AnnotationType
 
     private boolean multipleTokens;
 
+
     /**
      *
      * a short unique numeric identifier for the type (primary key in the DB). This identifier is
@@ -436,5 +437,4 @@ public class AnnotationType
     {
         this.multipleTokens = multipleTokens;
     }
-
 }

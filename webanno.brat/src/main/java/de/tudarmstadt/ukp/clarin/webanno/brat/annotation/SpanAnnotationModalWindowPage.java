@@ -19,11 +19,11 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.listTypeAdapters;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -60,12 +60,12 @@ import com.googlecode.wicket.jquery.ui.kendo.combobox.ComboBoxRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -77,434 +77,435 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
  * @author Seid Muhie Yimam
  *
  */
-public class SpanAnnotationModalWindowPage
-    extends WebPage
-{
-    private static final long serialVersionUID = -2102136855109258306L;
-
-    @SpringBean(name = "documentRepository")
-    private RepositoryService repository;
-
-    @SpringBean(name = "annotationService")
-    private AnnotationService annotationService;
-
-    @SpringBean(name = "jsonConverter")
-    private MappingJacksonHttpMessageConverter jsonConverter;
-
-    ComboBox<Tag> tags;
-    boolean isModify = false;
-    TagSet selectedtTagSet;
-
-    Model<TagSet> tagSetsModel;
-    Model<String> tagsModel;
-    private final AnnotationDialogForm annotationDialogForm;
-    private final BratAnnotatorModel bratAnnotatorModel;
-    private final int beginOffset;
-    private final int endOffset;
-    private String selectedText = null;
-    int selectedSpanId = -1;
-    String selectedSpanType;
-
-    private class AnnotationDialogForm
-        extends Form<SelectionModel>
-    {
-        private static final long serialVersionUID = -4104665452144589457L;
-
-        public AnnotationDialogForm(String id, final ModalWindow aModalWindow)
-        {
-            super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
-
-            final FeedbackPanel feedbackPanel = new FeedbackPanel("feedbackPanel");
-            add(feedbackPanel);
-            feedbackPanel.setOutputMarkupId(true);
-            feedbackPanel.add(new AttributeModifier("class", "info"));
-            feedbackPanel.add(new AttributeModifier("class", "error"));
-
-            List<TagSet> spanLayers = new ArrayList<TagSet>();
-
-            for (TagSet tagset : bratAnnotatorModel.getAnnotationLayers()) {
-                if (tagset.getType().getType().equals("span")) {
-                    spanLayers.add(tagset);
-                }
-
-            }
-
-            if (selectedSpanId != -1) {
-                tagSetsModel = new Model<TagSet>(selectedtTagSet);
-                tagSetsModel = new Model<TagSet>(selectedtTagSet);
-                Tag tag;
-                try {
-                    tag = annotationService.getTag(TypeUtil.getLabel(selectedSpanType),
-                            selectedtTagSet);
-                    tagsModel = new Model<String>(tag.getName());
-                }
-                catch (Exception e) {// It is a tag which is not in the tag list.
-                    tagsModel = new Model<String>("");
-                }
-            }
-            else if (bratAnnotatorModel.getRememberedSpanTagSet() != null
-                    && conatinsTagSet(bratAnnotatorModel.getAnnotationLayers(),
-                            bratAnnotatorModel.getRememberedSpanTagSet())) {
-                selectedtTagSet = bratAnnotatorModel.getRememberedSpanTagSet();
-                tagSetsModel = new Model<TagSet>(selectedtTagSet);
-                tagsModel = new Model<String>(bratAnnotatorModel.getRememberedSpanTag().getName());
-                // for lemma,
-                if (tagsModel.getObject() == null) {
-                    tagsModel.setObject(selectedText);
-                }
-            }
-            else {
-                selectedtTagSet = (spanLayers.get(0));
-                tagSetsModel = new Model<TagSet>(selectedtTagSet);
-                tagsModel = new Model<String>("");
-
-                if (selectedtTagSet.getType().getName().equals(AnnotationTypeConstant.LEMMA)) {
-                    tagsModel.setObject(selectedText);
-                }
-            }
-
-            add(new Label("selectedText", selectedText));
-
-            tags = new ComboBox<Tag>("tags", tagsModel,
-                    annotationService.listTags(selectedtTagSet), new ComboBoxRenderer<Tag>("name",
-                            "name"));
-            add(tags);
-
-            add(new DropDownChoice<TagSet>("tagSets", tagSetsModel, spanLayers)
-            {
-                private static final long serialVersionUID = -508831184292402704L;
-
-                @Override
-                protected void onSelectionChanged(TagSet aNewSelection)
-                {
-                    selectedtTagSet = aNewSelection;
-                    if (isLemma(aNewSelection)) {
-                        tagsModel.setObject(selectedText);
-                    }
-                    else {
-                        tagsModel.setObject("");
-                    }
-
-                    updateTagsComboBox();
-
-                }
-
-                @Override
-                protected boolean wantOnSelectionChangedNotifications()
-                {
-                    return true;
-                }
-
-                @Override
-                protected CharSequence getDefaultChoice(String aSelectedValue)
-                {
-                    return "";
-                }
-
-            }.setChoiceRenderer(new ChoiceRenderer<TagSet>()
-            {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                public Object getDisplayValue(TagSet aObject)
-                {
-                    return aObject.getName();
-                }
-            }).setOutputMarkupId(true));
-
-            add(new AjaxButton("annotate")
-            {
-                private static final long serialVersionUID = 980971048279862290L;
-
-                @Override
-                protected void onSubmit(AjaxRequestTarget aTarget, Form<?> form)
-                {
-                    BratAjaxCasController controller = new BratAjaxCasController(repository,
-                            annotationService);
-                    try {
-                        JCas jCas = getCas(bratAnnotatorModel);
-
-                        String annotationType = "";
-
-                        if (tags.getModelObject() == null) {
-                            aTarget.add(feedbackPanel);
-                            error("No Tag is selected!");
-                        }
-                        else if (!annotationService.existsTag(tags.getModelObject(),
-                                selectedtTagSet) && !isLemma(selectedtTagSet)) {
-                            aTarget.add(feedbackPanel);
-                            error(tags.getModelObject()
-                                    + " is not in the tag list. Please choose form the existing tags");
-                        }
-                        else {
-
-                            Tag selectedTag;
-                            if (isLemma(selectedtTagSet)) {
-                                selectedTag = new Tag();
-                                annotationType = tags.getModelObject();
-                            }
-                            else {
-                                selectedTag = annotationService.getTag(tags.getModelObject(),
-                                        selectedtTagSet);
-                                annotationType = TypeUtil.getQualifiedLabel(selectedTag);
-                            }
-
-                            controller.createSpanAnnotation(jCas, beginOffset, endOffset,
-                                    annotationType, null, null);
-                            repository.updateJCas(bratAnnotatorModel.getMode(),
-                                    bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
-                                    jCas);
-
-                            // update timestamp now
-                            int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas,
-                                    beginOffset);
-                            bratAnnotatorModel.getDocument().setSentenceAccessed(sentenceNumber);
-                            repository.updateTimeStamp(bratAnnotatorModel.getDocument(),
-                                    bratAnnotatorModel.getUser(), bratAnnotatorModel.getMode());
-
-                            if (bratAnnotatorModel.isScrollPage()) {
-                                updateSentenceAddressAndOffsets(jCas, beginOffset);
-                            }
-
-                            bratAnnotatorModel.setRememberedSpanTagSet(selectedtTagSet);
-                            bratAnnotatorModel.setRememberedSpanTag(selectedTag);
-                            bratAnnotatorModel.setAnnotate(true);
-                            bratAnnotatorModel.setMessage("The span annotation ["
-                                    + TypeUtil.getLabel(annotationType) + "] is added");
-
-                            // A hack to rememeber the Visural DropDown display value
-                            HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())
-                                    .getContainerRequest().getSession();
-                            session.setAttribute("model", bratAnnotatorModel);
-
-                            aModalWindow.close(aTarget);
-                        }
-                    }
-                    catch (UIMAException e) {
-                        aTarget.add(feedbackPanel);
-                        error(ExceptionUtils.getRootCauseMessage(e));
-                    }
-                    catch (ClassNotFoundException e) {
-                        aTarget.add(feedbackPanel);
-                        error(e.getMessage());
-                    }
-                    catch (IOException e) {
-                        aTarget.add(feedbackPanel);
-                        error(e.getMessage());
-                    }
-                    catch (BratAnnotationException e) {
-                        aTarget.add(feedbackPanel);
-                        error(e.getMessage());
-                    }
-                }
-
-            }.add(new Behavior()
-            {
-                private static final long serialVersionUID = -3612493911620740735L;
-
-                @Override
-                public void renderHead(Component component, IHeaderResponse response)
-                {
-                    super.renderHead(component, response);
-                    response.renderOnLoadJavaScript("$('#" + component.getMarkupId()
-                            + "').focus();");
-                }
-            }));
-
-            add(new AjaxSubmitLink("delete")
-            {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                public void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
-                {
-                    try {
-                        JCas jCas = getCas(bratAnnotatorModel);
-                        AnnotationFS fs = selectByAddr(jCas, selectedSpanId);
-                        TypeAdapter adapter = getAdapter(selectedtTagSet.getType());
-                        String spanFeatureName = adapter.getArcSpanTypeFeatureName();
-                        for (TypeAdapter ad : listTypeAdapters()) {
-                            if (adapter.getAnnotationTypeName().equals(ad.getAnnotationTypeName())) {
-                                continue;
-                            }
-                            String fn = ad.getArcSpanTypeFeatureName();
-                            if (fn == null) {
-                                continue;
-                            }
-                            if (fn.equals(spanFeatureName)) {
-                                Sentence thisSentence = BratAjaxCasUtil.getCurrentSentence(jCas,
-                                        beginOffset, endOffset);
-                                ad.deleteBySpan(jCas, fs, thisSentence.getBegin(),
-                                        thisSentence.getEnd());
-                                break;
-                            }
-                        }
-                        adapter.delete(jCas, selectedSpanId);
-                        repository.updateJCas(bratAnnotatorModel.getMode(),
-                                bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
-                                jCas);
-                        // update timestamp now
-                        int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas, beginOffset);
-                        bratAnnotatorModel.getDocument().setSentenceAccessed(sentenceNumber);
-                        repository.updateTimeStamp(bratAnnotatorModel.getDocument(),
-                                bratAnnotatorModel.getUser(), bratAnnotatorModel.getMode());
-
-                        if (bratAnnotatorModel.isScrollPage()) {
-                            updateSentenceAddressAndOffsets(jCas, beginOffset);
-                        }
-
-
-                        Tag selectedTag;
-                        if (isLemma(selectedtTagSet)) {
-                            selectedTag = new Tag();
-                        }
-                        else {
-                            selectedTag = annotationService.getTag(tags.getModelObject(),
-                                    selectedtTagSet);
-                        }
-
-                        bratAnnotatorModel.setRememberedSpanTagSet(selectedtTagSet);
-                        bratAnnotatorModel.setRememberedSpanTag(selectedTag);
-                        bratAnnotatorModel.setAnnotate(false);
-                        bratAnnotatorModel.setMessage("The span annotation [" + selectedSpanType
-                                + "] is deleted");
-
-
-                        // A hack to rememeber the Visural DropDown display value
-                        HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())
-                                .getContainerRequest().getSession();
-                        session.setAttribute("model", bratAnnotatorModel);
-                        aModalWindow.close(aTarget);
-                    }
-                    catch (UIMAException e) {
-                        aTarget.add(feedbackPanel);
-                        error(ExceptionUtils.getRootCauseMessage(e));
-                    }
-                    catch (ClassNotFoundException e) {
-                        aTarget.add(feedbackPanel);
-                        error(e.getMessage());
-                    }
-                    catch (IOException e) {
-                        aTarget.add(feedbackPanel);
-                        error(e.getMessage());
-                    }
-                }
-
-                @Override
-                public boolean isVisible()
-                {
-                    return isModify;
-                }
-            });
-        }
-
-        private void updateTagsComboBox()
-        {
-            tags.remove();
-            tags = new ComboBox<Tag>("tags", tagsModel,
-                    annotationService.listTags(selectedtTagSet), new ComboBoxRenderer<Tag>("name",
-                            "name"));
-            add(tags);
-        }
-    }
-
-    private void updateSentenceAddressAndOffsets(JCas jCas, int start)
-    {
-        int address = BratAjaxCasUtil.selectSentenceAt(jCas,
-                bratAnnotatorModel.getSentenceBeginOffset(),
-                bratAnnotatorModel.getSentenceEndOffset()).getAddress();
-        bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(jCas,
-                address, start, bratAnnotatorModel.getProject(), bratAnnotatorModel.getDocument(),
-                bratAnnotatorModel.getWindowSize()));
-
-        Sentence sentence = selectByAddr(jCas, Sentence.class,
-                bratAnnotatorModel.getSentenceAddress());
-        bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
-        bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
-    }
-
-    private JCas getCas(BratAnnotatorModel aBratAnnotatorModel)
-        throws UIMAException, IOException, ClassNotFoundException
-    {
-
-        if (aBratAnnotatorModel.getMode().equals(Mode.ANNOTATION)
-                || aBratAnnotatorModel.getMode().equals(Mode.AUTOMATION)
-                || aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)
-                || aBratAnnotatorModel.getMode().equals(Mode.CORRECTION_MERGE)) {
-
-            return repository.readJCas(aBratAnnotatorModel.getDocument(),
-                    aBratAnnotatorModel.getProject(), aBratAnnotatorModel.getUser());
-        }
-        else {
-            return repository.getCurationDocumentContent(bratAnnotatorModel.getDocument());
-        }
-    }
-
-    public class SelectionModel
-        implements Serializable
-    {
-        private static final long serialVersionUID = -4178958678920895292L;
-        public TagSet tagSets;
-        public Tag tags;
-        public String selectedText;
-    }
-
-    public SpanAnnotationModalWindowPage(ModalWindow modalWindow,
-            BratAnnotatorModel aBratAnnotatorModel, String aSelectedText, int aBeginOffset,
-            int aEndOffset)
-    {
-        this.beginOffset = aBeginOffset;
-        this.endOffset = aEndOffset;
-
-        this.selectedText = aSelectedText;
-
-        this.bratAnnotatorModel = aBratAnnotatorModel;
-        this.annotationDialogForm = new AnnotationDialogForm("annotationDialogForm", modalWindow);
-        add(annotationDialogForm);
-    }
-
-    public SpanAnnotationModalWindowPage(ModalWindow modalWindow,
-            BratAnnotatorModel aBratAnnotatorModel, String aSelectedText, int aBeginOffset,
-            int aEndOffset, String aType, int selectedSpanId)
-    {
-        this.selectedSpanId = selectedSpanId;
-        this.selectedSpanType = TypeUtil.getLabel(aType);
-
-        String layerName = TypeUtil.getSpanLayerName(TypeUtil.getLabelPrefix(aType));
-
-        AnnotationType layer = this.annotationService.getType(layerName, "span");
-
-        this.selectedtTagSet = this.annotationService.getTagSet(layer,
-                aBratAnnotatorModel.getProject());
-
-        this.beginOffset = aBeginOffset;
-        this.endOffset = aEndOffset;
-
-        this.selectedText = aSelectedText;
-
-        this.bratAnnotatorModel = aBratAnnotatorModel;
-        this.annotationDialogForm = new AnnotationDialogForm("annotationDialogForm", modalWindow);
-        add(annotationDialogForm);
-        this.isModify = true;
-    }
-
-    private boolean conatinsTagSet(Set<TagSet> aTagSets, TagSet aTagSet)
-    {
-        for (TagSet tagSet : aTagSets) {
-            if (tagSet.getId() == aTagSet.getId()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean isLemma(TagSet aTagSet)
-    {
-        if (aTagSet.getType().getName().equals(AnnotationTypeConstant.LEMMA)) {
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
+public class SpanAnnotationModalWindowPage extends WebPage {
+	private static final long serialVersionUID = -2102136855109258306L;
+
+	@SpringBean(name = "documentRepository")
+	private RepositoryService repository;
+
+	@SpringBean(name = "annotationService")
+	private AnnotationService annotationService;
+
+	@SpringBean(name = "jsonConverter")
+	private MappingJacksonHttpMessageConverter jsonConverter;
+
+	ComboBox<Tag> tags;
+	boolean isModify = false;
+	TagSet selectedtTagSet;
+
+	Model<TagSet> tagSetsModel;
+	Model<String> tagsModel;
+	private final AnnotationDialogForm annotationDialogForm;
+	private final BratAnnotatorModel bratAnnotatorModel;
+	private final int beginOffset;
+	private final int endOffset;
+	private String selectedText = null;
+	int selectedSpanId = -1;
+	String selectedSpanType;
+
+	private class AnnotationDialogForm extends Form<SelectionModel> {
+		private static final long serialVersionUID = -4104665452144589457L;
+
+		public AnnotationDialogForm(String id, final ModalWindow aModalWindow) {
+			super(id, new CompoundPropertyModel<SelectionModel>(
+					new SelectionModel()));
+
+			final FeedbackPanel feedbackPanel = new FeedbackPanel(
+					"feedbackPanel");
+			add(feedbackPanel);
+			feedbackPanel.setOutputMarkupId(true);
+			feedbackPanel.add(new AttributeModifier("class", "info"));
+			feedbackPanel.add(new AttributeModifier("class", "error"));
+
+			List<TagSet> spanLayers = new ArrayList<TagSet>();
+
+			for (TagSet tagset : bratAnnotatorModel.getAnnotationLayers()) {
+				if (tagset.getType().getType().equals("span")) {
+					spanLayers.add(tagset);
+				}
+
+			}
+
+			if (selectedSpanId != -1) {
+				tagSetsModel = new Model<TagSet>(selectedtTagSet);
+				tagSetsModel = new Model<TagSet>(selectedtTagSet);
+				Tag tag;
+				try {
+					tag = annotationService.getTag(selectedSpanType,
+							selectedtTagSet);
+					tagsModel = new Model<String>(tag.getName());
+				} catch (Exception e) {// It is a tag which is not in the tag
+										// list.
+					tagsModel = new Model<String>("");
+				}
+			} else if (bratAnnotatorModel.getRememberedSpanTagSet() != null
+					&& conatinsTagSet(bratAnnotatorModel.getAnnotationLayers(),
+							bratAnnotatorModel.getRememberedSpanTagSet())) {
+				selectedtTagSet = bratAnnotatorModel.getRememberedSpanTagSet();
+				tagSetsModel = new Model<TagSet>(selectedtTagSet);
+				tagsModel = new Model<String>(bratAnnotatorModel
+						.getRememberedSpanTag().getName());
+				// for lemma,stem,comment...
+				if (!selectedtTagSet.isShowTag()) {
+					tagsModel.setObject(selectedText);
+				}
+			} else {
+				selectedtTagSet = (spanLayers.get(0));
+				tagSetsModel = new Model<TagSet>(selectedtTagSet);
+				tagsModel = new Model<String>("");
+
+				if (selectedtTagSet.getType().getName()
+						.equals(AnnotationTypeConstant.LEMMA)) {
+					tagsModel.setObject(selectedText);
+				}
+			}
+
+			add(new Label("selectedText", selectedText));
+
+			tags = new ComboBox<Tag>("tags", tagsModel,
+					selectedtTagSet.isShowTag() ? annotationService
+							.listTags(selectedtTagSet) : new ArrayList<Tag>(),
+					new ComboBoxRenderer<Tag>("name", "name"));
+			add(tags);
+
+			add(new DropDownChoice<TagSet>("tagSets", tagSetsModel, spanLayers) {
+				private static final long serialVersionUID = -508831184292402704L;
+
+				@Override
+				protected void onSelectionChanged(TagSet aNewSelection) {
+					selectedtTagSet = aNewSelection;
+					if (!aNewSelection.isShowTag()) {
+						tagsModel.setObject(selectedText);
+					} else {
+						tagsModel.setObject("");
+					}
+
+					updateTagsComboBox();
+
+				}
+
+				@Override
+				protected boolean wantOnSelectionChangedNotifications() {
+					return true;
+				}
+
+				@Override
+				protected CharSequence getDefaultChoice(String aSelectedValue) {
+					return "";
+				}
+
+			}.setChoiceRenderer(new ChoiceRenderer<TagSet>() {
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				public Object getDisplayValue(TagSet aObject) {
+					return aObject.getName();
+				}
+			}).setOutputMarkupId(true));
+
+			add(new AjaxButton("annotate") {
+				private static final long serialVersionUID = 980971048279862290L;
+
+				@Override
+				protected void onSubmit(AjaxRequestTarget aTarget, Form<?> form) {
+					try {
+						JCas jCas = getCas(bratAnnotatorModel);
+
+						Tag selectedTag;
+						if (tags.getModelObject() == null) {
+							aTarget.add(feedbackPanel);
+							error("No Tag is selected!");
+							return;
+						}
+						// Lemma/stem... do not have tagsets. use free layer.
+						if (!selectedtTagSet.isShowTag()
+								&& !annotationService.existsTag(
+										tags.getModelObject(), selectedtTagSet)) {
+							selectedTag = new Tag();
+							selectedTag.setName(tags.getModelObject());
+							selectedTag.setTagSet(selectedtTagSet);
+							annotationService.createTag(selectedTag,
+									bratAnnotatorModel.getUser());
+						} else if (!annotationService.existsTag(
+								tags.getModelObject(), selectedtTagSet)) {
+							aTarget.add(feedbackPanel);
+							error(tags.getModelObject()
+									+ " is not in the tag list. Please choose form the existing tags");
+							return;
+						} else {
+							selectedTag = annotationService.getTag(
+									tags.getModelObject(), selectedtTagSet);
+						}
+
+						SpanAdapter adapter = (SpanAdapter) getAdapter(
+								selectedtTagSet, annotationService);
+
+						adapter.setLockToTokenOffsets(selectedtTagSet.getType()
+								.isLockToTokenOffset());
+						adapter.setAllowStacking(selectedtTagSet.getType()
+								.isAllowSTacking());
+						adapter.setAllowMultipleToken(selectedtTagSet.getType()
+								.isMultipleTokens());
+
+						adapter.add(jCas, beginOffset, endOffset,
+								selectedTag.getName());
+
+						repository.updateJCas(bratAnnotatorModel.getMode(),
+								bratAnnotatorModel.getDocument(),
+								bratAnnotatorModel.getUser(), jCas);
+
+						// update timestamp now
+						int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(
+								jCas, beginOffset);
+						bratAnnotatorModel.getDocument().setSentenceAccessed(
+								sentenceNumber);
+						repository.updateTimeStamp(
+								bratAnnotatorModel.getDocument(),
+								bratAnnotatorModel.getUser(),
+								bratAnnotatorModel.getMode());
+
+						if (bratAnnotatorModel.isScrollPage()) {
+							updateSentenceAddressAndOffsets(jCas, beginOffset);
+						}
+
+						bratAnnotatorModel
+								.setRememberedSpanTagSet(selectedtTagSet);
+						bratAnnotatorModel.setRememberedSpanTag(selectedTag);
+						bratAnnotatorModel.setAnnotate(true);
+						bratAnnotatorModel.setMessage("The span annotation ["
+								+ selectedTag.getName() + "] is added");
+
+						// A hack to rememeber the Visural DropDown display
+						// value
+						HttpSession session = ((ServletWebRequest) RequestCycle
+								.get().getRequest()).getContainerRequest()
+								.getSession();
+						session.setAttribute("model", bratAnnotatorModel);
+
+						aModalWindow.close(aTarget);
+
+					} catch (UIMAException e) {
+						aTarget.add(feedbackPanel);
+						error(ExceptionUtils.getRootCauseMessage(e));
+					} catch (ClassNotFoundException e) {
+						aTarget.add(feedbackPanel);
+						error(e.getMessage());
+					} catch (IOException e) {
+						aTarget.add(feedbackPanel);
+						error(e.getMessage());
+					} catch (BratAnnotationException e) {
+						aTarget.add(feedbackPanel);
+						error(e.getMessage());
+					}
+				}
+
+			}.add(new Behavior() {
+				private static final long serialVersionUID = -3612493911620740735L;
+
+				@Override
+				public void renderHead(Component component,
+						IHeaderResponse response) {
+					super.renderHead(component, response);
+					response.renderOnLoadJavaScript("$('#"
+							+ component.getMarkupId() + "').focus();");
+				}
+			}));
+
+			add(new AjaxSubmitLink("delete") {
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				public void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm) {
+					try {
+						JCas jCas = getCas(bratAnnotatorModel);
+						AnnotationFS fs = selectByAddr(jCas, selectedSpanId);
+						TypeAdapter adapter = getAdapter(selectedtTagSet,
+								annotationService);
+						String attachFeatureName = adapter
+								.getAttachFeatureName();
+
+						Set<TypeAdapter> typeAdapters = new HashSet<TypeAdapter>();
+
+						for (TagSet tagSet : annotationService
+								.listTagSets(bratAnnotatorModel.getProject())) {
+							typeAdapters.add(TypeUtil.getAdapter(tagSet,
+									annotationService));
+						}
+						// delete associated relation annotation
+						for (TypeAdapter ad : typeAdapters) {
+							if (adapter.getAnnotationTypeName().equals(
+									ad.getAnnotationTypeName())) {
+								continue;
+							}
+							String fn = ad.getAttachFeatureName();
+							if (fn == null) {
+								continue;
+							}
+							if (fn.equals(attachFeatureName)) {
+								Sentence thisSentence = BratAjaxCasUtil
+										.getCurrentSentence(jCas, beginOffset,
+												endOffset);
+								ad.deleteBySpan(jCas, fs,
+										thisSentence.getBegin(),
+										thisSentence.getEnd());
+								break;
+							}
+						}
+						adapter.delete(jCas, selectedSpanId);
+						repository.updateJCas(bratAnnotatorModel.getMode(),
+								bratAnnotatorModel.getDocument(),
+								bratAnnotatorModel.getUser(), jCas);
+						// update timestamp now
+						int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(
+								jCas, beginOffset);
+						bratAnnotatorModel.getDocument().setSentenceAccessed(
+								sentenceNumber);
+						repository.updateTimeStamp(
+								bratAnnotatorModel.getDocument(),
+								bratAnnotatorModel.getUser(),
+								bratAnnotatorModel.getMode());
+
+						if (bratAnnotatorModel.isScrollPage()) {
+							updateSentenceAddressAndOffsets(jCas, beginOffset);
+						}
+
+						Tag selectedTag;
+						if (!selectedtTagSet.isShowTag()) {
+							selectedTag = new Tag();
+						} else {
+							selectedTag = annotationService.getTag(
+									tags.getModelObject(), selectedtTagSet);
+						}
+
+						bratAnnotatorModel
+								.setRememberedSpanTagSet(selectedtTagSet);
+						bratAnnotatorModel.setRememberedSpanTag(selectedTag);
+						bratAnnotatorModel.setAnnotate(false);
+						bratAnnotatorModel.setMessage("The span annotation ["
+								+ selectedSpanType + "] is deleted");
+
+						// A hack to rememeber the Visural DropDown display
+						// value
+						HttpSession session = ((ServletWebRequest) RequestCycle
+								.get().getRequest()).getContainerRequest()
+								.getSession();
+						session.setAttribute("model", bratAnnotatorModel);
+						aModalWindow.close(aTarget);
+					} catch (UIMAException e) {
+						aTarget.add(feedbackPanel);
+						error(ExceptionUtils.getRootCauseMessage(e));
+					} catch (ClassNotFoundException e) {
+						aTarget.add(feedbackPanel);
+						error(e.getMessage());
+					} catch (IOException e) {
+						aTarget.add(feedbackPanel);
+						error(e.getMessage());
+					}
+				}
+
+				@Override
+				public boolean isVisible() {
+					return isModify;
+				}
+			});
+		}
+
+		private void updateTagsComboBox() {
+			tags.remove();
+			tags = new ComboBox<Tag>("tags", tagsModel,
+					annotationService.listTags(selectedtTagSet),
+					new ComboBoxRenderer<Tag>("name", "name"));
+			add(tags);
+		}
+	}
+
+	private void updateSentenceAddressAndOffsets(JCas jCas, int start) {
+		int address = BratAjaxCasUtil.selectSentenceAt(jCas,
+				bratAnnotatorModel.getSentenceBeginOffset(),
+				bratAnnotatorModel.getSentenceEndOffset()).getAddress();
+		bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil
+				.getSentenceBeginAddress(jCas, address, start,
+						bratAnnotatorModel.getProject(),
+						bratAnnotatorModel.getDocument(),
+						bratAnnotatorModel.getWindowSize()));
+
+		Sentence sentence = selectByAddr(jCas, Sentence.class,
+				bratAnnotatorModel.getSentenceAddress());
+		bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
+		bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
+	}
+
+	private JCas getCas(BratAnnotatorModel aBratAnnotatorModel)
+			throws UIMAException, IOException, ClassNotFoundException {
+
+		if (aBratAnnotatorModel.getMode().equals(Mode.ANNOTATION)
+				|| aBratAnnotatorModel.getMode().equals(Mode.AUTOMATION)
+				|| aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)
+				|| aBratAnnotatorModel.getMode().equals(Mode.CORRECTION_MERGE)) {
+
+			return repository.readJCas(aBratAnnotatorModel.getDocument(),
+					aBratAnnotatorModel.getProject(),
+					aBratAnnotatorModel.getUser());
+		} else {
+			return repository.getCurationDocumentContent(bratAnnotatorModel
+					.getDocument());
+		}
+	}
+
+	public class SelectionModel implements Serializable {
+		private static final long serialVersionUID = -4178958678920895292L;
+		public TagSet tagSets;
+		public Tag tags;
+		public String selectedText;
+	}
+
+	public SpanAnnotationModalWindowPage(ModalWindow modalWindow,
+			BratAnnotatorModel aBratAnnotatorModel, String aSelectedText,
+			int aBeginOffset, int aEndOffset) {
+		this.beginOffset = aBeginOffset;
+		this.endOffset = aEndOffset;
+
+		this.selectedText = aSelectedText;
+
+		this.bratAnnotatorModel = aBratAnnotatorModel;
+		this.annotationDialogForm = new AnnotationDialogForm(
+				"annotationDialogForm", modalWindow);
+		add(annotationDialogForm);
+	}
+
+	public SpanAnnotationModalWindowPage(ModalWindow modalWindow,
+			BratAnnotatorModel aBratAnnotatorModel, String aSelectedText,
+			int aBeginOffset, int aEndOffset, String aType, int selectedSpanId) {
+		this.selectedSpanId = selectedSpanId;
+		this.selectedSpanType = aType.substring(aType.indexOf("_") + 1);
+
+		long featureId = Integer
+				.parseInt(aType.substring(0, aType.indexOf("_")));
+
+		AnnotationFeature feature = this.annotationService
+				.getFeature(featureId);
+
+		this.selectedtTagSet = this.annotationService.getTagSet(feature,
+				aBratAnnotatorModel.getProject());
+
+		this.beginOffset = aBeginOffset;
+		this.endOffset = aEndOffset;
+
+		this.selectedText = aSelectedText;
+
+		this.bratAnnotatorModel = aBratAnnotatorModel;
+		this.annotationDialogForm = new AnnotationDialogForm(
+				"annotationDialogForm", modalWindow);
+		add(annotationDialogForm);
+		this.isModify = true;
+	}
+
+	private boolean conatinsTagSet(Set<TagSet> aTagSets, TagSet aTagSet) {
+		for (TagSet tagSet : aTagSets) {
+			if (tagSet.getId() == aTagSet.getId()) {
+				return true;
+			}
+		}
+		return false;
+	}
 }
