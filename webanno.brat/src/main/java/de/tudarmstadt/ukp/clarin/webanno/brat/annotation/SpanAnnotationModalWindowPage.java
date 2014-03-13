@@ -246,9 +246,11 @@ public class SpanAnnotationModalWindowPage extends WebPage {
 								.isAllowSTacking());
 						adapter.setAllowMultipleToken(selectedtTagSet.getType()
 								.isMultipleTokens());
+	                      adapter.setCrossMultipleSentence(selectedtTagSet.getType().isCrossSentence());
 
 						adapter.add(jCas, beginOffset, endOffset,
 								selectedTag.getName());
+
 
 						repository.updateJCas(bratAnnotatorModel.getMode(),
 								bratAnnotatorModel.getDocument(),

@@ -44,9 +44,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
  * A class that is used to create Brat Arc to CAS relations and vice-versa
- *
+ * 
  * @author Seid Muhie Yimam
- *
+ * 
  */
 public class ArcAdapter
     implements TypeAdapter
@@ -54,7 +54,7 @@ public class ArcAdapter
     /**
      * Prefix of the label value for Brat to make sure that different annotation types can use the
      * same label, e.g. a POS tag "N" and a named entity type "N".
-     *
+     * 
      */
     private final long typeId;
 
@@ -100,6 +100,8 @@ public class ArcAdapter
 
     private boolean deletable;
 
+    private boolean crossMultipleSentence;
+
     public ArcAdapter(long aTypeId, String aTypeName, String aLabelFeatureName,
             String aTargetFeatureName, String aSourceFeatureName, /* String aArcSpanType, */
             String aAttacheFeatureName, String aAttachType)
@@ -118,7 +120,7 @@ public class ArcAdapter
     /**
      * Add arc annotations from the CAS, which is controlled by the window size, to the brat
      * response {@link GetDocumentResponse}
-     *
+     * 
      * @param aJcas
      *            The JCAS object containing annotations
      * @param aResponse
@@ -174,7 +176,7 @@ public class ArcAdapter
 
     /**
      * Update the CAS with new/modification of arc annotations from brat
-     *
+     * 
      * @param aLabelValue
      *            the value of the annotation for the arc
      * @param aReverse
@@ -195,7 +197,8 @@ public class ArcAdapter
                 Sentence.class,
                 BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(aJCas, sentence.getAddress(),
                         aBratAnnotatorModel.getWindowSize())).getEnd();
-        if (BratAjaxCasUtil.isSameSentence(aJCas, aOriginFs.getBegin(), aTargetFs.getEnd())) {
+        if (crossMultipleSentence
+                || BratAjaxCasUtil.isSameSentence(aJCas, aOriginFs.getBegin(), aTargetFs.getEnd())) {
             updateCas(aJCas, beginOffset, endOffset, aOriginFs, aTargetFs, aLabelValue);
         }
         else {
@@ -221,7 +224,7 @@ public class ArcAdapter
         Feature arcSpanFeature = spanType.getFeatureByBaseName(attacheFeatureName);
 
         Type tokenType = getType(aJCas.getCas(), attachType);
-        
+
         FeatureStructure dependentFs;
         FeatureStructure governorFs;
         // List all sentence in this display window
@@ -231,17 +234,17 @@ public class ArcAdapter
             for (AnnotationFS fs : selectCovered(aJCas.getCas(), type, sentence.getBegin(),
                     sentence.getEnd())) {
 
-            	
-            	
-            	 if (attacheFeatureName != null) {
-                     dependentFs = fs.getFeatureValue(dependentFeature).getFeatureValue(arcSpanFeature);
-                     governorFs = fs.getFeatureValue(governorFeature).getFeatureValue(arcSpanFeature);
-                 }
-                 else {
-                     dependentFs = fs.getFeatureValue(dependentFeature);
-                     governorFs = fs.getFeatureValue(governorFeature);
-                 }
-            	 
+                if (attacheFeatureName != null) {
+                    dependentFs = fs.getFeatureValue(dependentFeature).getFeatureValue(
+                            arcSpanFeature);
+                    governorFs = fs.getFeatureValue(governorFeature)
+                            .getFeatureValue(arcSpanFeature);
+                }
+                else {
+                    dependentFs = fs.getFeatureValue(dependentFeature);
+                    governorFs = fs.getFeatureValue(governorFeature);
+                }
+
                 if (isDuplicate((AnnotationFS) governorFs, aOriginFs, (AnnotationFS) dependentFs,
                         aTargetFs, fs.getStringValue(feature), aValue)
                         && !aValue.equals(AnnotationTypeConstant.ROOT)) {
@@ -340,7 +343,7 @@ public class ArcAdapter
 
     /**
      * Convenience method to get an adapter for Dependency Parsing.
-     *
+     * 
      * NOTE: This is not meant to stay. It's just a convenience during refactoring!
      */
     /*
@@ -351,7 +354,7 @@ public class ArcAdapter
      */
     /**
      * Argument lists for the arc annotation
-     *
+     * 
      * @return
      */
     private List<Argument> getArgument(FeatureStructure aGovernorFs, FeatureStructure aDependentFs)
@@ -430,6 +433,16 @@ public class ArcAdapter
     {
         // TODO Auto-generated method stub
 
+    }
+
+    public boolean isCrossMultipleSentence()
+    {
+        return crossMultipleSentence;
+    }
+
+    public void setCrossMultipleSentence(boolean crossMultipleSentence)
+    {
+        this.crossMultipleSentence = crossMultipleSentence;
     }
 
 }

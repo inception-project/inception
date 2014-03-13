@@ -2076,7 +2076,8 @@ public class RepositoryServiceDbData
             if (type.getType().equals("span") && !type.isBuiltIn()) {
                 TypeSystemDescription tsd = new TypeSystemDescription_impl();
                 TypeDescription td = tsd.addType(type.getName(), "", CAS.TYPE_NAME_ANNOTATION);
-                td.addFeature(type.getLabelFeatureName(), "", CAS.TYPE_NAME_STRING);//TODO
+                List<AnnotationFeature> features = annotationService.listAnnotationFeature(type);
+                td.addFeature(features.get(0).getName(), "", CAS.TYPE_NAME_STRING);//TODO
                 types.add(tsd);
             }
             else if (type.getType().equals("relation") && !type.isBuiltIn()) {
@@ -2087,7 +2088,8 @@ public class RepositoryServiceDbData
                 td.addFeature("Dependent", "", attachType.getName());
                 td.addFeature("Governor", "", attachType.getName());
 
-                td.addFeature(type.getLabelFeatureName(), "", CAS.TYPE_NAME_STRING);//TODO
+                List<AnnotationFeature> features = annotationService.listAnnotationFeature(type);
+                td.addFeature(features.get(0).getName(), "", CAS.TYPE_NAME_STRING);//TODO
                 types.add(tsd);
             }
         }
