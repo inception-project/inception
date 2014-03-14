@@ -23,8 +23,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.uima.UIMAException;
+import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -40,10 +44,12 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -53,9 +59,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * A Panel Used to add Layers to a selected {@link Project} in the project settings page
- *
+ * 
  * @author Seid Muhie Yimam
- *
+ * 
  */
 
 public class ProjectLayersPanel
@@ -220,6 +226,9 @@ public class ProjectLayersPanel
 
         DropDownChoice<AnnotationType> attachType;
         DropDownChoice<AnnotationFeature> attachFeature;
+        TextField<String> uiName;
+        TextField<String> name;
+        String layerName = "de.tudarmstadt.cs.";
 
         public LayerDetailForm(String id)
         {
@@ -227,7 +236,21 @@ public class ProjectLayersPanel
                     new AnnotationType())));
 
             final Project project = selectedProjectModel.getObject();
-            add(new TextField<String>("uiName").setRequired(true));
+            add(uiName = (TextField<String>) new TextField<String>("uiName").setRequired(true));
+            uiName.add(new AjaxFormComponentUpdatingBehavior("onkeyup")
+            {
+                private static final long serialVersionUID = -1756244972577094229L;
+
+                @Override
+                protected void onUpdate(AjaxRequestTarget target)
+                {
+                    String modelValue = StringUtils.capitalise(getModelObject().getUiName().trim()
+                            .replace(" ", "").replace("-", ""));
+                    name.setModelObject(layerName + modelValue);
+                    target.add(name);
+
+                }
+            });
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
             add(new CheckBox("enabled"));
             add(new TextField<String>("labelFeatureName")
@@ -242,7 +265,7 @@ public class ProjectLayersPanel
             });
 
             // Technical Properties of layers
-            add(new TextField<String>("name")
+            add(name = (TextField<String>) new TextField<String>("name")
             {
                 private static final long serialVersionUID = 4635897231616551669L;
 
@@ -252,6 +275,8 @@ public class ProjectLayersPanel
                     return LayerDetailForm.this.getModelObject().getId() == 0;
                 }
             }.setRequired(true));
+            name.setOutputMarkupId(true);
+
             add(new DropDownChoice<String>("type", Arrays.asList(new String[] { "span", "relation",
                     "chain" }))
             {
