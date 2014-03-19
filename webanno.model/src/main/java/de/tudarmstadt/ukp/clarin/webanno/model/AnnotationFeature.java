@@ -66,6 +66,11 @@ public class AnnotationFeature
     @ManyToOne
     @JoinColumn(name = "project")
     private Project project;
+    
+    @ManyToOne
+    @ForeignKey(name = "none")
+    @JoinColumn(name = "tag_set")
+    TagSet tagset;
 
     @Column(nullable = false)
     private String uiName;
@@ -228,6 +233,18 @@ public class AnnotationFeature
     public void setVisible(boolean visible)
     {
         this.visible = visible;
+    }
+
+
+    public TagSet getTagset()
+    {
+        return tagset;
+    }
+
+
+    public void setTagset(TagSet tagset)
+    {
+        this.tagset = tagset;
     }
 
 

@@ -25,8 +25,6 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.uima.UIMAException;
-import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
@@ -44,15 +42,14 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -442,6 +439,7 @@ public class ProjectLayersPanel
         extends Form<AnnotationFeature>
     {
         private static final long serialVersionUID = -1L;
+        DropDownChoice<TagSet> tagSet;
 
         public FeatureDetailForm(String id)
         {
@@ -462,6 +460,54 @@ public class ProjectLayersPanel
                     return FeatureDetailForm.this.getModelObject().getId() == 0;
                 }
             }.setRequired(true));
+            
+            add(tagSet = new DropDownChoice<TagSet>("tagset")
+            {
+                private static final long serialVersionUID = -6705445053442011120L;
+
+                {
+                    setChoices(new LoadableDetachableModel<List<TagSet>>()
+                    {
+                        private static final long serialVersionUID = 1784646746122513331L;
+
+                        @Override
+                        protected List<TagSet> load()
+                        {
+                           if( FeatureDetailForm.this.getModelObject().getTagset() !=null){
+                               return Arrays.asList(FeatureDetailForm.this.getModelObject().getTagset());
+                           }
+                            List<TagSet> allTagSets = annotationService
+                                    .listTagSets(selectedProjectModel.getObject());
+                            List<TagSet> avalableTagSets = new ArrayList<TagSet>();
+                            for(TagSet tagSet:allTagSets){
+                                if(tagSet.getFeature()==null){
+                                    avalableTagSets.add(tagSet);
+                                }
+                            }
+                            
+
+                            return avalableTagSets;
+
+                        }
+                    });
+                    setChoiceRenderer(new ChoiceRenderer<TagSet>()
+                    {
+                        private static final long serialVersionUID = 8639013729422537472L;
+
+                        @Override
+                        public Object getDisplayValue(TagSet aObject)
+                        {
+                            return aObject.getName();
+                        }
+                    });
+                }
+
+                @Override
+                public boolean isEnabled()
+                {
+                    return FeatureDetailForm.this.getModelObject().getTagset() == null;
+                }
+            });
 
             add(new DropDownChoice<String>("type", Arrays.asList(new String[] { "string",
                     "integer", "float", "boolean", }))
@@ -494,6 +540,11 @@ public class ProjectLayersPanel
                         }
                         annotationService.createFeature(feature);
                         featureDetailForm.setVisible(false);
+                    }
+                    else if (tagSet.getModelObject()!=null){
+                        FeatureDetailForm.this.getModelObject().setTagset(tagSet.getModelObject());
+                        tagSet.getModelObject().setFeature( FeatureDetailForm.this.getModelObject());
+                        tagSet.getModelObject().setType(layerDetailForm.getModelObject());
                     }
                 }
             });

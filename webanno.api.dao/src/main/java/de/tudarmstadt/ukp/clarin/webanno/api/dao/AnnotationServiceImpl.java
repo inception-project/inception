@@ -293,6 +293,7 @@ public class AnnotationServiceImpl
         tagSet.setProject(aProject);
 
         createTagSet(tagSet, aUser);
+        feature.setTagset(tagSet);
 
         int i = 0;
         for (String tagName : aTags) {
