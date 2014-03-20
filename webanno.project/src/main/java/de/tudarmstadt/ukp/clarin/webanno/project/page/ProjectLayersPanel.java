@@ -80,6 +80,7 @@ public class ProjectLayersPanel
     private final FeatureDetailForm featureDetailForm;
 
     private final Model<Project> selectedProjectModel;
+    List<String> types = new ArrayList<String>();
 
     public ProjectLayersPanel(String id, final Model<Project> aProjectModel)
     {
@@ -361,8 +362,8 @@ public class ProjectLayersPanel
 
                             }
                             if (LayerDetailForm.this.getModelObject().getAttachFeature() != null) {
-                                return Arrays
-                                        .asList(LayerDetailForm.this.getModelObject().getAttachFeature());
+                                return Arrays.asList(LayerDetailForm.this.getModelObject()
+                                        .getAttachFeature());
 
                             }
                             if (attachType.getModelObject().isBuiltIn()) {
@@ -429,6 +430,28 @@ public class ProjectLayersPanel
                         layer.setProject(project);
                         try {
                             annotationService.createType(layer, user);
+                            if (layer.getType().equals("chain")) {
+                                AnnotationFeature relationFeature = new AnnotationFeature();
+                                relationFeature.setType(layer.getName());
+                                relationFeature.setName("referenceRelation");
+                                relationFeature.setLayer(layer);
+                                relationFeature.setEnabled(true);
+                                relationFeature.setUiName("Reference Relation");
+                                relationFeature.setProject(project);
+
+                                annotationService.createFeature(relationFeature);
+
+                                AnnotationFeature typeFeature = new AnnotationFeature();
+                                typeFeature.setType(layer.getName());
+                                typeFeature.setName("referenceType");
+                                typeFeature.setLayer(layer);
+                                typeFeature.setEnabled(true);
+                                typeFeature.setUiName("Reference Type");
+                                typeFeature.setProject(project);
+
+                                annotationService.createFeature(typeFeature);
+                            }
+                            types.add(layer.getName());
                         }
                         catch (IOException e) {
                             error("unable to create Log file while creating the TagSet" + ":"
@@ -518,10 +541,9 @@ public class ProjectLayersPanel
                 }
             });
 
-            List<String> types = new ArrayList<String>();
             for (AnnotationType layer : annotationService.listAnnotationType(selectedProjectModel
                     .getObject())) {
-                if (layer.getType().equals("span")) {
+                if (!layer.getType().equals("relation")) {
                     types.add(layer.getName());
                 }
             }
@@ -531,9 +553,23 @@ public class ProjectLayersPanel
             types.add(CAS.TYPE_NAME_FLOAT);
             types.add(CAS.TYPE_NAME_BOOLEAN);
 
-            add(new DropDownChoice<String>("type", types)
+            add(new DropDownChoice<String>("type")
             {
-                private static final long serialVersionUID = 6461017582101369158L;
+                private static final long serialVersionUID = 9029205407108101183L;
+
+                {
+                    setChoices(new LoadableDetachableModel<List<String>>()
+                    {
+                        private static final long serialVersionUID = -5732558926576750673L;
+
+                        @Override
+                        protected List<String> load()
+                        {
+                            return types;
+
+                        }
+                    });
+                }
 
                 @Override
                 public boolean isEnabled()

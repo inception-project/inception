@@ -380,7 +380,7 @@ public class AnnotationServiceImpl
                 "Stuttgart-Tübingen-Tag-Set \nGerman Part of Speech tagset "
                         + "STTS Tag Table (1995/1999): "
                         + "http://www.ims.uni-stuttgart.de/projekte/corplex/TagSets/stts-table.html",
-                "String", "STTS", "de", posTags, posTagDescriptions, aProject, aUser);
+                "uima.cas.String", "STTS", "de", posTags, posTagDescriptions, aProject, aUser);
 
         AnnotationType tokenLayer = setLayer(Token.class.getName(), "", "Token", "span", aProject);
 
@@ -389,7 +389,7 @@ public class AnnotationServiceImpl
         AnnotationFeature posFeature = PosTagSet.getFeature();
 
         AnnotationType posLayer = setLayer(POS.class.getName(), "PosValue", "POS", "span", aProject);
-        AnnotationFeature tokenPosFeature = setFeature("pos", "pos", aProject, tokenLayer, "String");
+        AnnotationFeature tokenPosFeature = setFeature("pos", "pos", aProject, tokenLayer, POS.class.getName());
         tokenPosFeature.setVisible(false);
         posLayer.setAttachType(tokenLayer);
         posLayer.setAttachFeature(tokenPosFeature);
@@ -410,7 +410,7 @@ public class AnnotationServiceImpl
                 "CVC", "NG", "SB", "SBP", "AG", "PM", "OCRC", "OG", "SUBJI3", "VOK", "ZEIT", "$",
                 "--", "OC", "OA", "MNR", "NK", "RC", "EP", "CC", "CM", "UC", "AC", "PNC" };
         TagSet depTagSet = initializeType("DependencyType", "DependencyType",
-                "Dependency annotation", "String", "Tiger", "de", depTags, depTags, aProject, aUser);
+                "Dependency annotation", "uima.cas.String", "Tiger", "de", depTags, depTags, aProject, aUser);
         AnnotationFeature deFeature = depTagSet.getFeature();
 
         AnnotationType depLayer = setLayer(Dependency.class.getName(), "DependencyType",
@@ -424,7 +424,7 @@ public class AnnotationServiceImpl
         depTagSet.setLayer(depLayer);
 
         // NE layer
-        TagSet neTagSet = initializeType("value", "value", "Named Entity annotation", "String",
+        TagSet neTagSet = initializeType("value", "value", "Named Entity annotation", "uima.cas.String",
                 "NER_WebAnno", "de", new String[] { "PER", "PERderiv", "PERpart", "LOC",
                         "LOCderiv", "LOCpart", "ORG", "ORGderiv", "ORGpart", "OTH", "OTHderiv",
                         "OTHpart" }, new String[] { "Person", "Person derivative",
@@ -470,14 +470,14 @@ public class AnnotationServiceImpl
         corefRelTagSet.setLayer(base);
 
         // Lemmata Layer
-        TagSet lemmaTagSet = initializeType("value", "value", "lemma annotation", "String",
+        TagSet lemmaTagSet = initializeType("value", "value", "lemma annotation", "uima.cas.String",
                 "Lemma", "de", new String[] {}, new String[] {}, aProject, aUser);
 
 
         AnnotationType lemmaLayer = setLayer(Lemma.class.getName(), "value", "Lemma", "span",
                 aProject);
         AnnotationFeature tokenLemmaFeature = setFeature("lemma", "lemma", aProject, tokenLayer,
-                "String");
+                Lemma.class.getName());
         tokenLemmaFeature.setVisible(false);
         lemmaLayer.setAttachType(tokenLayer);
         lemmaLayer.setAttachFeature(tokenLemmaFeature);
@@ -609,6 +609,10 @@ public class AnnotationServiceImpl
     {
         for (Tag tag : listTags(aTagSet)) {
             entityManager.remove(tag);
+        }
+        if(aTagSet.getFeature() == null){
+            entityManager.remove(aTagSet);
+            return;
         }
         for(AnnotationFeature feature: listAnnotationFeature(aTagSet.getLayer())){
             feature.setTagset(null);

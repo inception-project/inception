@@ -66,7 +66,7 @@ public class AnnotationFeature
     @ManyToOne
     @JoinColumn(name = "project")
     private Project project;
-    
+
     @ManyToOne
     @ForeignKey(name = "none")
     @JoinColumn(name = "tag_set")
@@ -92,17 +92,24 @@ public class AnnotationFeature
         return id;
     }
 
-
     public void setId(long id)
     {
         this.id = id;
     }
 
+    /**
+     *
+     * the type of feature (string, integer, float, boolean, or a span type used as a label)
+     */
     public String getType()
     {
         return type;
     }
 
+    /**
+     *
+     * the type of feature (string, integer, float, boolean, or a span type used as a label)
+     */
     public void setType(String type)
     {
         this.type = type;
@@ -206,47 +213,25 @@ public class AnnotationFeature
         this.name = name;
     }
 
-    /**
-     *
-     * the type of feature (string, integer, float, boolean, or a span type used as a label)
-     */
-    public String getFeatureType()
-    {
-        return featureType;
-    }
-
-    /**
-     *
-     * the type of feature (string, integer, float, boolean, or a span type used as a label)
-     */
-    public void setFeatureType(String featureType)
-    {
-        this.featureType = featureType;
-    }
-
     public boolean isVisible()
     {
         return visible;
     }
-
 
     public void setVisible(boolean visible)
     {
         this.visible = visible;
     }
 
-
     public TagSet getTagset()
     {
         return tagset;
     }
 
-
     public void setTagset(TagSet tagset)
     {
         this.tagset = tagset;
     }
-
 
     @Override
     public int hashCode()
@@ -258,7 +243,6 @@ public class AnnotationFeature
         result = prime * result + ((type == null) ? 0 : type.hashCode());
         return result;
     }
-
 
     @Override
     public boolean equals(Object obj)
@@ -299,6 +283,5 @@ public class AnnotationFeature
         }
         return true;
     }
-
 
 }
