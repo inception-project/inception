@@ -360,6 +360,11 @@ public class ProjectLayersPanel
                                 return new ArrayList<AnnotationFeature>();
 
                             }
+                            if (LayerDetailForm.this.getModelObject().getAttachFeature() != null) {
+                                return Arrays
+                                        .asList(LayerDetailForm.this.getModelObject().getAttachFeature());
+
+                            }
                             if (attachType.getModelObject().isBuiltIn()) {
                                 return new ArrayList<AnnotationFeature>();
                             }
