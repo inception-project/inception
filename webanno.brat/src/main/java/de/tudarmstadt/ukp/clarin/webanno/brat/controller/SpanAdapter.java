@@ -48,7 +48,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * A class that is used to create Brat Span to CAS and vice-versa
- * 
+ *
  * @author Seid Muhie Yimam
  * @author Richard Eckart de Castilho
  */
@@ -58,10 +58,10 @@ public class SpanAdapter
     /**
      * Prefix of the label value for Brat to make sure that different annotation types can use the
      * same label, e.g. a POS tag "N" and a named entity type "N".
-     * 
+     *
      * This is used to differentiate the different types in the brat annotation/visualization. The
      * prefix will not stored in the CAS (striped away at {@link BratAjaxCasController#getType} )
-     * 
+     *
      * It is a short unique numeric identifier for the type (primary key in the DB). This identifier
      * is only transiently used when communicating with the UI. It is not persisted long term other
      * than in the type registry (e.g. in the database).
@@ -173,7 +173,7 @@ public class SpanAdapter
     /**
      * Add annotations from the CAS, which is controlled by the window size, to the brat response
      * {@link GetDocumentResponse}
-     * 
+     *
      * @param aJcas
      *            The JCAS object containing annotations
      * @param aResponse
@@ -263,7 +263,7 @@ public class SpanAdapter
 
     /**
      * Update the CAS with new/modification of span annotations from brat
-     * 
+     *
      * @param aLabelValue
      *            the value of the annotation for the span
      * @throws BratAnnotationException
@@ -330,6 +330,13 @@ public class SpanAdapter
             if (attachFeatureName != null) {
                 Type theType = CasUtil.getType(aCas, attachType);
                 Feature attachFeature = theType.getFeatureByBaseName(attachFeatureName);
+                // if the attache type feature structure is not in place (for custom annotation),
+                // create it
+                if(CasUtil.selectCovered(aCas, theType, aBegin, aEnd).size() == 0){
+                    AnnotationFS attachTypeAnnotation = aCas.createAnnotation(theType, aBegin, aEnd);
+                    aCas.addFsToIndexes(attachTypeAnnotation);
+
+                }
                 CasUtil.selectCovered(aCas, theType, aBegin, aEnd).get(0)
                         .setFeatureValue(attachFeature, newAnnotation);
             }
@@ -375,7 +382,7 @@ public class SpanAdapter
 
     /*    *//**
      * Convenience method to get an adapter for part-of-speech.
-     * 
+     *
      * NOTE: This is not meant to stay. It's just a convenience during refactoring!
      */
     /*
@@ -385,7 +392,7 @@ public class SpanAdapter
      * return adapter; }
      *//**
      * Convenience method to get an adapter for lemma.
-     * 
+     *
      * NOTE: This is not meant to stay. It's just a convenience during refactoring!
      */
     /*
@@ -394,7 +401,7 @@ public class SpanAdapter
      * adapter.setSingleTokenBehavior(true); adapter.setDeletable(true); return adapter; }
      *//**
      * Convenience method to get an adapter for named entity.
-     * 
+     *
      * NOTE: This is not meant to stay. It's just a convenience during refactoring!
      */
     /*

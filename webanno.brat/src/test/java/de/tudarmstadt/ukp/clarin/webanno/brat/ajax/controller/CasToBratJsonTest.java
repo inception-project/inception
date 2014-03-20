@@ -111,7 +111,7 @@ public class CasToBratJsonTest extends TestCase {
 		tagset.setDescription("pos");
 		tagset.setLanguage("de");
 		tagset.setName("STTS");
-		tagset.setType(type);
+		tagset.setLayer(type);
 
 		Tag tag = new Tag();
 		tag.setDescription("noun");

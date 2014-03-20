@@ -87,6 +87,7 @@ public class AnnotationType
     private AnnotationType attachType;
 
     @ManyToOne
+    @ForeignKey(name = "none")
     @JoinColumn(name = "annotation_feature")
     private AnnotationFeature attachFeature;
 

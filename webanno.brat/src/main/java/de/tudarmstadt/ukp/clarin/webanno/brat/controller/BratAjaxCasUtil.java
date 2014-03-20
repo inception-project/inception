@@ -172,7 +172,7 @@ public class BratAjaxCasUtil
      *            the JCas type.
      * @param jCas
      *            a JCas containing the annotation.
-     * @param type
+     * @param layer
      *            a UIMA type.
      * @param begin
      *            begin offset.

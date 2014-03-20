@@ -2077,7 +2077,7 @@ public class RepositoryServiceDbData
                 TypeSystemDescription tsd = new TypeSystemDescription_impl();
                 TypeDescription td = tsd.addType(type.getName(), "", CAS.TYPE_NAME_ANNOTATION);
                 List<AnnotationFeature> features = annotationService.listAnnotationFeature(type);
-                td.addFeature(features.get(0).getName(), "", CAS.TYPE_NAME_STRING);//TODO
+                td.addFeature(features.get(0).getName(), "", features.get(0).getType());
                 types.add(tsd);
             }
             else if (type.getType().equals("relation") && !type.isBuiltIn()) {

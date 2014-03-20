@@ -635,7 +635,7 @@ public class MonitoringPage
                 .listProjectUsersWithPermissions(project, PermissionLevel.USER);
         double[][] results = new double[users.size()][users.size()];
         if (tagSets.getModelObject() != null
-                && !tagSets.getModelObject().getType().getName()
+                && !tagSets.getModelObject().getLayer().getName()
                         .equals(AnnotationTypeConstant.COREFERENCE)) {
 
             TypeAdapter adapter = TypeUtil.getAdapter(tagSets.getModelObject(), annotationService);
@@ -757,7 +757,7 @@ public class MonitoringPage
                         @Override
                         public Object getDisplayValue(MiraTemplate aObject)
                         {
-                            return "[" + aObject.getTrainTagSet().getType().getName() + "] "
+                            return "[" + aObject.getTrainTagSet().getLayer().getName() + "] "
                                     + aObject.getTrainTagSet().getName();
                         }
                     });

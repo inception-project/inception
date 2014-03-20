@@ -334,8 +334,8 @@ public class ProjectUtil
             List<TagSet> tagSets = aAnnotationService.listTagSets(aBModel.getProject());
             List<TagSet> corefTagSets = new ArrayList<TagSet>();
             for (TagSet tagSet : tagSets) {
-                if (tagSet.getType().getName().equals("coreference type")
-                        || tagSet.getType().getName().equals("coreference")) {
+                if (tagSet.getLayer().getName().equals("coreference type")
+                        || tagSet.getLayer().getName().equals("coreference")) {
                     corefTagSets.add(tagSet);
                 }
             }
@@ -460,7 +460,7 @@ public class ProjectUtil
             newTagSet.setName(importedTagSet.getName());
             newTagSet.setLanguage(importedTagSet.getLanguage());
             newTagSet.setProject(aProjecct);
-            newTagSet.setType(type);
+            newTagSet.setLayer(type);
             aAnnotationService.createTagSet(newTagSet, user);
             for (  de.tudarmstadt.ukp.clarin.webanno.model.export.Tag tag : importedTagSet.getTags()) {
                 Tag newTag = new Tag();

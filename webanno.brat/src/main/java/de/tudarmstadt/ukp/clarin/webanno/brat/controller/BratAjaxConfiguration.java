@@ -41,11 +41,11 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
- * 
+ *
  * Configuring The brat JSON collection information responses getting tags from DB
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 public class BratAjaxConfiguration
 {
@@ -57,7 +57,7 @@ public class BratAjaxConfiguration
      * where {@link Dependency} is a child {@link EntityType} ({@code arc}). {@link NamedEntity} is
      * an {@link EntityType} without a child (no {@code arc}). {@link CoreferenceChain} is
      * {@link EntityType} with a child {@link CoreferenceLink}s.
-     * 
+     *
      * @return {@link Set<{@link EntityType }>}
      */
     public Set<EntityType> configureVisualizationAndAnnotation(List<TagSet> aTagSets,
@@ -67,15 +67,15 @@ public class BratAjaxConfiguration
 
         /*
          * List<String> poses = new ArrayList<String>();
-         * 
+         *
          * List<String> dependency = new ArrayList<String>();
-         * 
+         *
          * List<String> namedEntity = new ArrayList<String>();
-         * 
+         *
          * List<String> corefRelType = new ArrayList<String>();
-         * 
+         *
          * List<String> coreference = new ArrayList<String>();
-         * 
+         *
          * for (Tag tag : aTags) { if (tag.getTagSet().getType().getName().equals
          * (AnnotationTypeConstant.POS)) { poses.add(tag.getName()); } else if (tag
          * .getTagSet().getType().getName().equals(AnnotationTypeConstant.DEPENDENCY )) {
@@ -85,9 +85,9 @@ public class BratAjaxConfiguration
          * .equals(AnnotationTypeConstant.COREFRELTYPE)) { corefRelType.add(tag.getName()); } else
          * if (tag.getTagSet().getType(). getName().equals(AnnotationTypeConstant.COREFERENCE)) {
          * coreference.add(tag.getName()); }
-         * 
+         *
          * }
-         * 
+         *
          * Collections.sort(poses); Collections.sort(dependency); Collections.sort(namedEntity);
          * Collections.sort(coreference); Collections.sort(corefRelType);
          */
@@ -149,9 +149,9 @@ public class BratAjaxConfiguration
          * EntityType(AnnotationTypeConstant.POS_PARENT, AnnotationTypeConstant.POS_PARENT, true,
          * "", "red", "blue", "blue", new ArrayList<String>(), posChildren, new ArrayList<String>(),
          * new ArrayList<RelationType>(), aStaticColor);
-         * 
+         *
          * if (poses.size() > 0) { entityTypes.add(posType); }
-         * 
+         *
          * List<EntityType> corefChildren = getChildren(AnnotationTypeConstant.COREFRELTYPE_PREFIX,
          * AnnotationTypeConstant.COREFERENCE_PREFIX, corefRelType, coreference, "red", "blue",
          * "blue", "", aStaticColor); EntityType corefType = new
@@ -160,15 +160,15 @@ public class BratAjaxConfiguration
          * ArrayList<String>(), corefChildren, new ArrayList<String>(), new
          * ArrayList<RelationType>(), aStaticColor); if (corefRelType.size() > 0) {
          * entityTypes.add(corefType); }
-         * 
+         *
          * List<EntityType> neChildren = getChildren(AnnotationTypeConstant.NAMEDENTITY_PREFIX, "",
          * namedEntity, new ArrayList<String>(), "black", "cyan", "green", "", aStaticColor);
-         * 
+         *
          * EntityType neEntityType = new EntityType(AnnotationTypeConstant.NAMEDENTITY_PARENT,
          * AnnotationTypeConstant.NAMEDENTITY_PARENT, true, "", "black", "cyan", "green", new
          * ArrayList<String>(), neChildren, new ArrayList<String>(), new ArrayList<RelationType>(),
          * aStaticColor);
-         * 
+         *
          * if (namedEntity.size() > 0) { entityTypes.add(neEntityType); }
          */
 
@@ -180,7 +180,7 @@ public class BratAjaxConfiguration
             TagSet aSpanTagSet, TagSet aRelationTagSet)
     {
 
-        List<String> fGColors = new ArrayList<String>(Arrays.asList(new String[] { "crimson",
+        List<String> fGColors = new ArrayList<String>(Arrays.asList(new String[] { "yellow",
                 "red", "pink", "black", "coral", "darkorange", "deepskyblue", "fuchsia",
                 "navy", "maroon" }));
         List<String> bGColors = new ArrayList<String>(Arrays.asList(new String[] { "magenta", "lightgreen",
@@ -208,8 +208,8 @@ public class BratAjaxConfiguration
 
         EntityType entityType;
         List<EntityType> tagLists;
-        if (aSpanTagSet.getType().isBuiltIn()
-                && aSpanTagSet.getType().getName().equals(POS.class.getName())) {
+        if (aSpanTagSet.getLayer().isBuiltIn()
+                && aSpanTagSet.getLayer().getName().equals(POS.class.getName())) {
 
             tagLists = getChildren(aSpanTagSet.getFeature().getId() + "_",
                     aRelationTagSet.getId() == 0 ? "" : aRelationTagSet.getFeature().getId() + "_",
@@ -221,8 +221,8 @@ public class BratAjaxConfiguration
                     new ArrayList<RelationType>(), aStaticColor);
 
         }
-        else if (aSpanTagSet.getType().isBuiltIn()
-                && aSpanTagSet.getType().getName().equals(NamedEntity.class.getName())) {
+        else if (aSpanTagSet.getLayer().isBuiltIn()
+                && aSpanTagSet.getLayer().getName().equals(NamedEntity.class.getName())) {
 
             tagLists = getChildren(aSpanTagSet.getFeature().getId() + "_",
                     aRelationTagSet.getId() == 0 ? "" : aRelationTagSet.getFeature().getId() + "_",
@@ -234,8 +234,8 @@ public class BratAjaxConfiguration
                     new ArrayList<RelationType>(), aStaticColor);
 
         }
-        else if (aSpanTagSet.getType().isBuiltIn()
-                && aSpanTagSet.getType().getName().equals(Lemma.class.getName())) {
+        else if (aSpanTagSet.getLayer().isBuiltIn()
+                && aSpanTagSet.getLayer().getName().equals(Lemma.class.getName())) {
 
             tagLists = getChildren(aSpanTagSet.getFeature().getId() + "_",
                     aRelationTagSet.getId() == 0 ? "" : aRelationTagSet.getFeature().getId() + "_",
@@ -270,7 +270,7 @@ public class BratAjaxConfiguration
     /**
      * returns {@link EntityType} which will be used as a child {@link EntityType} which are
      * properties/labels of an arc
-     * 
+     *
      * @param spansList
      *            list of possible {@code spans } to be used as {@code targets}.
      * @param aArcList

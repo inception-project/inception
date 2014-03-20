@@ -46,20 +46,19 @@ public class TagSet
     @GeneratedValue
     private long id;
 
-
-    @ManyToOne
-    @ForeignKey(name = "none")
-    @JoinColumn(name = "type")
-    AnnotationType type;
-
-    @ManyToOne
-    @ForeignKey(name = "none")
-    @JoinColumn(name = "feature")
-    AnnotationFeature feature;
-
     @ManyToOne
     @JoinColumn(name = "project")
     Project project;
+
+    @ManyToOne
+    @ForeignKey(name = "none")
+    @JoinColumn(name = "annotation_type")
+    AnnotationType layer;
+
+    @ManyToOne
+    @ForeignKey(name = "none")
+    @JoinColumn(name = "annotation_feature")
+    AnnotationFeature feature;
 
     @Column(nullable = false)
     private String name;
@@ -134,14 +133,15 @@ public class TagSet
     }
 
 
-    public AnnotationType getType()
+
+    public AnnotationType getLayer()
     {
-        return type;
+        return layer;
     }
 
-    public void setType(AnnotationType type)
+    public void setLayer(AnnotationType layer)
     {
-        this.type = type;
+        this.layer = layer;
     }
 
     @Override

@@ -25,6 +25,7 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
@@ -56,9 +57,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * A Panel Used to add Layers to a selected {@link Project} in the project settings page
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 
 public class ProjectLayersPanel
@@ -359,6 +360,9 @@ public class ProjectLayersPanel
                                 return new ArrayList<AnnotationFeature>();
 
                             }
+                            if (attachType.getModelObject().isBuiltIn()) {
+                                return new ArrayList<AnnotationFeature>();
+                            }
                             return annotationService.listAnnotationFeature(attachType
                                     .getModelObject());
 
@@ -460,7 +464,7 @@ public class ProjectLayersPanel
                     return FeatureDetailForm.this.getModelObject().getId() == 0;
                 }
             }.setRequired(true));
-            
+
             add(tagSet = new DropDownChoice<TagSet>("tagset")
             {
                 private static final long serialVersionUID = -6705445053442011120L;
@@ -473,18 +477,18 @@ public class ProjectLayersPanel
                         @Override
                         protected List<TagSet> load()
                         {
-                           if( FeatureDetailForm.this.getModelObject().getTagset() !=null){
-                               return Arrays.asList(FeatureDetailForm.this.getModelObject().getTagset());
-                           }
+                            if (FeatureDetailForm.this.getModelObject().getTagset() != null) {
+                                return Arrays.asList(FeatureDetailForm.this.getModelObject()
+                                        .getTagset());
+                            }
                             List<TagSet> allTagSets = annotationService
                                     .listTagSets(selectedProjectModel.getObject());
                             List<TagSet> avalableTagSets = new ArrayList<TagSet>();
-                            for(TagSet tagSet:allTagSets){
-                                if(tagSet.getFeature()==null){
+                            for (TagSet tagSet : allTagSets) {
+                                if (tagSet.getFeature() == null) {
                                     avalableTagSets.add(tagSet);
                                 }
                             }
-                            
 
                             return avalableTagSets;
 
@@ -509,8 +513,20 @@ public class ProjectLayersPanel
                 }
             });
 
-            add(new DropDownChoice<String>("type", Arrays.asList(new String[] { "string",
-                    "integer", "float", "boolean", }))
+            List<String> types = new ArrayList<String>();
+            for (AnnotationType layer : annotationService.listAnnotationType(selectedProjectModel
+                    .getObject())) {
+                if (layer.getType().equals("span")) {
+                    types.add(layer.getName());
+                }
+            }
+
+            types.add(CAS.TYPE_NAME_STRING);
+            types.add(CAS.TYPE_NAME_INTEGER);
+            types.add(CAS.TYPE_NAME_FLOAT);
+            types.add(CAS.TYPE_NAME_BOOLEAN);
+
+            add(new DropDownChoice<String>("type", types)
             {
                 private static final long serialVersionUID = 6461017582101369158L;
 
@@ -541,10 +557,10 @@ public class ProjectLayersPanel
                         annotationService.createFeature(feature);
                         featureDetailForm.setVisible(false);
                     }
-                    else if (tagSet.getModelObject()!=null){
+                    else if (tagSet.getModelObject() != null) {
                         FeatureDetailForm.this.getModelObject().setTagset(tagSet.getModelObject());
-                        tagSet.getModelObject().setFeature( FeatureDetailForm.this.getModelObject());
-                        tagSet.getModelObject().setType(layerDetailForm.getModelObject());
+                        tagSet.getModelObject().setFeature(FeatureDetailForm.this.getModelObject());
+                        tagSet.getModelObject().setLayer(layerDetailForm.getModelObject());
                     }
                 }
             });

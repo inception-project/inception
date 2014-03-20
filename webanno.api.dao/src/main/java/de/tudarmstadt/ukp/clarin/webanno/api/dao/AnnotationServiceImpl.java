@@ -398,7 +398,7 @@ public class AnnotationServiceImpl
         createType(posLayer, aUser);
 
         posFeature.setLayer(posLayer);
-        PosTagSet.setType(posLayer);
+        PosTagSet.setLayer(posLayer);
 
         // Dependency Layer
         String[] depTags = new String[] { "ADV", "APP", "ATTR", "AUX", "AVZ", "CJ", "DET", "ETH",
@@ -421,7 +421,7 @@ public class AnnotationServiceImpl
         createType(depLayer, aUser);
 
         deFeature.setLayer(depLayer);
-        depTagSet.setType(depLayer);
+        depTagSet.setLayer(depLayer);
 
         // NE layer
         TagSet neTagSet = initializeType("value", "value", "Named Entity annotation", "String",
@@ -442,7 +442,7 @@ public class AnnotationServiceImpl
         createType(neLayer, aUser);
 
         neFeature.setLayer(neLayer);
-        neTagSet.setType(neLayer);
+        neTagSet.setLayer(neLayer);
 
         // Coref Layer
         TagSet corefTypeTagSet = initializeType("referenceType", "referenceType",
@@ -463,11 +463,11 @@ public class AnnotationServiceImpl
 
         corefTypeFeature.setLayer(base);
         corefTypeFeature.setVisible(false);
-        corefTypeTagSet.setType(base);
+        corefTypeTagSet.setLayer(base);
 
         corefRelFeature.setLayer(base);
         corefRelFeature.setVisible(false);
-        corefRelTagSet.setType(base);
+        corefRelTagSet.setLayer(base);
 
         // Lemmata Layer
         TagSet lemmaTagSet = initializeType("value", "value", "lemma annotation", "String",
@@ -484,11 +484,11 @@ public class AnnotationServiceImpl
         lemmaLayer.setLabelFeatureName("value");
 
         createType(lemmaLayer, aUser);
-        
+
         AnnotationFeature lemmaFeature  = lemmaTagSet.getFeature();
         lemmaFeature.setLayer(lemmaLayer);
 
-        lemmaTagSet.setType(lemmaLayer);
+        lemmaTagSet.setLayer(lemmaLayer);
 
     }
 
@@ -609,6 +609,9 @@ public class AnnotationServiceImpl
     {
         for (Tag tag : listTags(aTagSet)) {
             entityManager.remove(tag);
+        }
+        for(AnnotationFeature feature: listAnnotationFeature(aTagSet.getLayer())){
+            feature.setTagset(null);
         }
 
         entityManager.remove(aTagSet);

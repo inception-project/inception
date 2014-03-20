@@ -114,8 +114,8 @@ public class AnnotationPreferenceModalPanel
                                     .getProject());
                             List<TagSet> corefTagSets = new ArrayList<TagSet>();
                             for (TagSet tagSet : tagSets) {
-                                if (tagSet.getType().getName().equals("coreference type")
-                                        || tagSet.getType().getName().equals("coreference")) {
+                                if (tagSet.getLayer().getName().equals("coreference type")
+                                        || tagSet.getLayer().getName().equals("coreference")) {
                                     corefTagSets.add(tagSet);
                                 }
                             }

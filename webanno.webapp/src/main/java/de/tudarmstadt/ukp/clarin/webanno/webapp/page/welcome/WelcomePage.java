@@ -17,9 +17,6 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome;
 
-import java.io.IOException;
-import java.util.List;
-
 import javax.persistence.NoResultException;
 
 import org.apache.wicket.Component;
@@ -31,11 +28,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.monitoring.page.MonitoringPage;
 import de.tudarmstadt.ukp.clarin.webanno.project.page.ProjectPage;
@@ -47,12 +41,6 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.crowdsource.CrowdSourcePage
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.CurationPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.login.LoginPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.security.page.ManageUsersPage;
-import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
-import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
-import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
-import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
-import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
  * A home page for WebAnno: <br>
@@ -95,9 +83,9 @@ public class WelcomePage
 
          // Update old annotation layers
 
-         List<TagSet> tagSets = annotationService.listTagSets();
+       /*  List<TagSet> tagSets = annotationService.listTagSets();
          for (TagSet tagSet : tagSets) {
-             AnnotationType type = tagSet.getType();
+             AnnotationType type = tagSet.getLayer();
              if (type.getProject() == null) {
                  type.setProject(tagSet.getProject());
                  type.setBuiltIn(true);
@@ -156,14 +144,14 @@ public class WelcomePage
                  }
                  try {
                      annotationService.createType(newType, user);
-                     tagSet.setType(newType);
+                     tagSet.setLayer(newType);
                      annotationService.createTagSet(tagSet, user);
                  }
                  catch (IOException e) {
                      error("unable to write log files");
                  }
              }
-         }
+         }*/
         }
         // redirect to login page (if no usr is found, admin/admin will be created)
         catch (NoResultException e){

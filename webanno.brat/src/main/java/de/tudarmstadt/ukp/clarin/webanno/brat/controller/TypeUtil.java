@@ -107,22 +107,22 @@ public final class TypeUtil
     public static String getQualifiedLabel(Tag aSelectedTag)
     {
         String annotationType = "";
-        if (aSelectedTag.getTagSet().getType().getName().equals(AnnotationTypeConstant.POS)) {
+        if (aSelectedTag.getTagSet().getLayer().getName().equals(AnnotationTypeConstant.POS)) {
             annotationType = AnnotationTypeConstant.POS_PREFIX + aSelectedTag.getName();
         }
-        else if (aSelectedTag.getTagSet().getType().getName()
+        else if (aSelectedTag.getTagSet().getLayer().getName()
                 .equals(AnnotationTypeConstant.DEPENDENCY)) {
             annotationType = AnnotationTypeConstant.DEP_PREFIX + aSelectedTag.getName();
         }
-        else if (aSelectedTag.getTagSet().getType().getName()
+        else if (aSelectedTag.getTagSet().getLayer().getName()
                 .equals(AnnotationTypeConstant.NAMEDENTITY)) {
             annotationType = AnnotationTypeConstant.NAMEDENTITY_PREFIX + aSelectedTag.getName();
         }
-        else if (aSelectedTag.getTagSet().getType().getName()
+        else if (aSelectedTag.getTagSet().getLayer().getName()
                 .equals(AnnotationTypeConstant.COREFRELTYPE)) {
             annotationType = AnnotationTypeConstant.COREFRELTYPE_PREFIX + aSelectedTag.getName();
         }
-        else if (aSelectedTag.getTagSet().getType().getName()
+        else if (aSelectedTag.getTagSet().getLayer().getName()
                 .equals(AnnotationTypeConstant.COREFERENCE)) {
             annotationType = AnnotationTypeConstant.COREFERENCE_PREFIX + aSelectedTag.getName();
         }

@@ -302,8 +302,8 @@ public class CurationBuilder
         List<Type> entryTypes = new LinkedList<Type>();
 
         for (TagSet tagSet : aTagSets) {
-            if (tagSet.getType().getName().equals(AnnotationTypeConstant.COREFERENCE)
-                    || tagSet.getType().getName().equals(AnnotationTypeConstant.COREFRELTYPE)) {
+            if (tagSet.getLayer().getName().equals(AnnotationTypeConstant.COREFERENCE)
+                    || tagSet.getLayer().getName().equals(AnnotationTypeConstant.COREFRELTYPE)) {
                 continue;
             }
             entryTypes.add(getAdapter(tagSet, annotationService).getAnnotationType(

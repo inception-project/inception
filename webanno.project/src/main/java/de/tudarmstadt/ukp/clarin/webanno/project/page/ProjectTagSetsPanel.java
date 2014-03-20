@@ -39,11 +39,8 @@ import javax.persistence.NoResultException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.uima.UIMAException;
-import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
@@ -61,13 +58,11 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
@@ -77,13 +72,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.model.export.ExportedTagSetConstant;
 import de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * A Panel Used to add Tagsets to a selected {@link Project}
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 
 public class ProjectTagSetsPanel
@@ -352,7 +346,7 @@ public class ProjectTagSetsPanel
                                     newTagSet.setName(importedTagSet.getName());
                                     newTagSet.setLanguage(importedTagSet.getLanguage());
                                     newTagSet.setProject(project);
-                                    newTagSet.setType(type);
+                                    newTagSet.setLayer(type);
                                     annotationService.createTagSet(newTagSet, user);
                                     for (de.tudarmstadt.ukp.clarin.webanno.model.export.Tag tag : importedTagSet
                                             .getTags()) {
@@ -509,7 +503,7 @@ public class ProjectTagSetsPanel
                 @Override
                 protected String load()
                 {
-                    return getModelObject().getType() == null ? "" : getModelObject().getType()
+                    return getModelObject().getLayer() == null ? "" : getModelObject().getLayer()
                             .getUiName();
                 }
             }).setOutputMarkupId(true).setEnabled(false));
@@ -525,82 +519,6 @@ public class ProjectTagSetsPanel
                             .getFeature().getUiName();
                 }
             }).setOutputMarkupId(true).setEnabled(false));
-            /*
-             * add(type = new DropDownChoice<AnnotationType>("type") { private static final long
-             * serialVersionUID = -6705445053442011120L;
-             * 
-             * { setChoices(new LoadableDetachableModel<List<AnnotationType>>() { private static
-             * final long serialVersionUID = 1784646746122513331L;
-             * 
-             * @Override protected List<AnnotationType> load() { List<AnnotationType> allLayers =
-             * annotationService .listAnnotationType(project); List<AnnotationType> layersToCreate =
-             * new ArrayList<AnnotationType>(); for (AnnotationType annotationType : allLayers) { //
-             * no tagset for token if (annotationType.getName().equals(Token.class.getName())) {
-             * continue; }
-             * 
-             * if (TagSetDetailForm.this.getModelObject().getId() != 0) { return
-             * Arrays.asList(TagSetDetailForm.this.getModelObject() .getType()); }
-             * 
-             * // can we create a new tagSet? for (AnnotationFeature feature : annotationService
-             * .listAnnotationFeature(annotationType)) { if
-             * (!annotationService.existsTagSet(feature, project)) {
-             * layersToCreate.add(annotationType); break; } } }
-             * 
-             * return layersToCreate;
-             * 
-             * } }); setChoiceRenderer(new ChoiceRenderer<AnnotationType>() { private static final
-             * long serialVersionUID = 8639013729422537472L;
-             * 
-             * @Override public Object getDisplayValue(AnnotationType aObject) { return
-             * aObject.getUiName(); } }); }
-             * 
-             * @Override protected void onSelectionChanged(AnnotationType aNewSelection) {
-             * List<AnnotationFeature> visibleFeatures = new ArrayList<AnnotationFeature>(); for
-             * (AnnotationFeature feature : annotationService .listAnnotationFeature(aNewSelection))
-             * {
-             * 
-             * if (annotationService.existsTagSet(feature, project) &&
-             * annotationService.getTagSet(feature, project).equals(
-             * TagSetDetailForm.this.getModelObject())) { continue; }
-             * 
-             * if (annotationService.existsTagSet(feature, project)) { continue; } if
-             * (feature.isVisible()) { visibleFeatures.add(feature); } }
-             * feature.setChoices(visibleFeatures); }
-             * 
-             * @Override protected boolean wantOnSelectionChangedNotifications() { return true; }
-             * 
-             * @Override public boolean isEnabled() { return getModelObject() == null; } });
-             */
-
-            /*
-             * add(feature = new DropDownChoice<AnnotationFeature>("feature") { private static final
-             * long serialVersionUID = -4022550007780116526L;
-             * 
-             * { setChoices(new LoadableDetachableModel<List<AnnotationFeature>>() { private static
-             * final long serialVersionUID = 8841646650105582960L;
-             * 
-             * @Override protected List<AnnotationFeature> load() { List<AnnotationFeature>
-             * visibleFeatures = new ArrayList<AnnotationFeature>(); if (type.getModelObject() ==
-             * null) { return new ArrayList<AnnotationFeature>(); } for (AnnotationFeature feature :
-             * annotationService .listAnnotationFeature(type.getModelObject())) {
-             * 
-             * if (TagSetDetailForm.this.getModelObject().getId() != 0) { return
-             * Arrays.asList(TagSetDetailForm.this.getModelObject() .getFeature()); }
-             * 
-             * if (annotationService.existsTagSet(feature, project)) { continue; } if
-             * (feature.isVisible()) { visibleFeatures.add(feature); } } return visibleFeatures; }
-             * }); setChoiceRenderer(new ChoiceRenderer<AnnotationFeature>() { private static final
-             * long serialVersionUID = 7171080841793361387L;
-             * 
-             * @Override public Object getDisplayValue(AnnotationFeature aObject) { if
-             * (TagSetDetailForm.this.getModelObject().getFeature() != null) { return "[ " +
-             * TagSetDetailForm.this.getModelObject().getFeature() .getUiName() + " ]"; } return
-             * aObject == null ? " [ ]" : "[ " + aObject.getUiName() + " ] "; } });
-             * 
-             * }
-             * 
-             * @Override public boolean isEnabled() { return getModelObject() == null; } });
-             */
 
             add(new Button("save", new ResourceModel("label"))
             {
@@ -638,7 +556,7 @@ public class ProjectTagSetsPanel
                     }
                     else if (tagSet.getFeature() != null) {
                         tagSet.getFeature().getLayer().setProject(project);
-                        tagSet.setType(tagSet.getFeature().getLayer());
+                        tagSet.setLayer(tagSet.getFeature().getLayer());
                     }
                 }
             });
@@ -712,9 +630,9 @@ public class ProjectTagSetsPanel
                             exportedTagSetContent.setLanguage(tagSet.getLanguage());
                             exportedTagSetContent.setName(tagSet.getName());
 
-                            exportedTagSetContent.setType(tagSet.getType().getType());
-                            exportedTagSetContent.setTypeName(tagSet.getType().getName());
-                            exportedTagSetContent.setTypeDescription(tagSet.getType()
+                            exportedTagSetContent.setType(tagSet.getLayer().getType());
+                            exportedTagSetContent.setTypeName(tagSet.getLayer().getName());
+                            exportedTagSetContent.setTypeDescription(tagSet.getLayer()
                                     .getDescription());
 
                             List<de.tudarmstadt.ukp.clarin.webanno.model.export.Tag> exportedTags = new ArrayList<de.tudarmstadt.ukp.clarin.webanno.model.export.Tag>();
@@ -753,8 +671,8 @@ public class ProjectTagSetsPanel
                         OutputStreamWriter osw;
                         BufferedWriter bw;
                         try {
-                            String typeDescription = tagSet.getType().getDescription() == null ? ""
-                                    : tagSet.getType().getDescription();
+                            String typeDescription = tagSet.getLayer().getDescription() == null ? ""
+                                    : tagSet.getLayer().getDescription();
                             String tagSetDescription = tagSet.getDescription() == null ? ""
                                     : tagSet.getDescription();
                             os = new FileOutputStream(exportFile);
@@ -762,8 +680,8 @@ public class ProjectTagSetsPanel
                             bw = new BufferedWriter(osw);
                             bw.write(tagSet.getName() + "\t"
                                     + tagSetDescription.replace("\n", "\\n") + "\n");
-                            bw.write(tagSet.getType().getType() + "\t" + " \n");
-                            bw.write(tagSet.getType().getName() + "\t"
+                            bw.write(tagSet.getLayer().getType() + "\t" + " \n");
+                            bw.write(tagSet.getLayer().getName() + "\t"
                                     + typeDescription.replace("\n", "\\n") + "\n");
                             bw.write(tagSet.getLanguage() + "\t" + " \n");
                             for (Tag tag : annotationService.listTags(tagSet)) {

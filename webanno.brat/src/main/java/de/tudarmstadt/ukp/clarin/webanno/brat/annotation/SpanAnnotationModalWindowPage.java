@@ -120,7 +120,7 @@ public class SpanAnnotationModalWindowPage extends WebPage {
 			List<TagSet> spanLayers = new ArrayList<TagSet>();
 
 			for (TagSet tagset : bratAnnotatorModel.getAnnotationLayers()) {
-				if (tagset.getType().getType().equals("span")) {
+				if (tagset.getLayer().getType().equals("span")) {
 					spanLayers.add(tagset);
 				}
 
@@ -154,7 +154,7 @@ public class SpanAnnotationModalWindowPage extends WebPage {
 				tagSetsModel = new Model<TagSet>(selectedtTagSet);
 				tagsModel = new Model<String>("");
 
-				if (selectedtTagSet.getType().getName()
+				if (selectedtTagSet.getLayer().getName()
 						.equals(AnnotationTypeConstant.LEMMA)) {
 					tagsModel.setObject(selectedText);
 				}
@@ -240,13 +240,13 @@ public class SpanAnnotationModalWindowPage extends WebPage {
 						SpanAdapter adapter = (SpanAdapter) getAdapter(
 								selectedtTagSet, annotationService);
 
-						adapter.setLockToTokenOffsets(selectedtTagSet.getType()
+						adapter.setLockToTokenOffsets(selectedtTagSet.getLayer()
 								.isLockToTokenOffset());
-						adapter.setAllowStacking(selectedtTagSet.getType()
+						adapter.setAllowStacking(selectedtTagSet.getLayer()
 								.isAllowSTacking());
-						adapter.setAllowMultipleToken(selectedtTagSet.getType()
+						adapter.setAllowMultipleToken(selectedtTagSet.getLayer()
 								.isMultipleTokens());
-	                      adapter.setCrossMultipleSentence(selectedtTagSet.getType().isCrossSentence());
+	                      adapter.setCrossMultipleSentence(selectedtTagSet.getLayer().isCrossSentence());
 
 						adapter.add(jCas, beginOffset, endOffset,
 								selectedTag.getName());
