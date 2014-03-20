@@ -97,6 +97,9 @@ public class BratAjaxConfiguration
 
         int i = 0;
         for (TagSet relationTagSet : aTagSets) {
+            if(relationTagSet.getFeature() == null || relationTagSet.getLayer() == null){
+                continue;
+            }
             if (relationTagSet.getFeature().getLayer().getType().equals("relation")) {
                 // get the attach feature/or TODO attache type
                 // if attachefature is null, get the tagset from attache type

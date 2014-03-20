@@ -231,9 +231,11 @@ public class BratAnnotator
                             endOffset = fs.getEnd();
                         }
 
-                        selectedSpan =  request.getParameterValue("spanText").toString();
-                       /* selectedSpan = BratAjaxCasUtil
-                                .getSelectedText(jCas, beginOffset, endOffset);*/
+                        selectedSpan = request.getParameterValue("spanText").toString();
+                        /*
+                         * selectedSpan = BratAjaxCasUtil .getSelectedText(jCas, beginOffset,
+                         * endOffset);
+                         */
 
                         if (BratAnnotatorUtility.isDocumentFinished(repository, getModelObject())) {
                             error("This document is already closed. Please ask admin to re-open");
@@ -406,6 +408,9 @@ public class BratAnnotator
         // open the annotation dialog if only there is
         // span annotation layer (from the settings button) selected
         for (TagSet tagSet : getModelObject().getAnnotationLayers()) {
+            if (tagSet.getFeature() == null || tagSet.getLayer() == null) {
+                continue;
+            }
             if (tagSet.getLayer().getType().equals(AnnotationTypeConstant.SPAN_TYPE)) {
                 openAnnotationDialog.show(aTarget);
                 break;
@@ -451,6 +456,9 @@ public class BratAnnotator
         // open the annotation dialog if only there is
         // span annotation layer (from the settings button) selected
         for (TagSet tagSet : getModelObject().getAnnotationLayers()) {
+            if(tagSet.getFeature() == null){
+                continue;
+            }
             if (tagSet.getLayer().getType().equals(AnnotationTypeConstant.SPAN_TYPE)) {
                 openAnnotationDialog.show(aTarget);
                 break;

@@ -333,9 +333,12 @@ public class ProjectUtil
             // disable corefernce annotation for correction/curation pages for 0.4.0 release
             List<TagSet> tagSets = aAnnotationService.listTagSets(aBModel.getProject());
             List<TagSet> corefTagSets = new ArrayList<TagSet>();
+            List<TagSet> noFeatureTagSet = new ArrayList<TagSet>();
             for (TagSet tagSet : tagSets) {
-                if (tagSet.getLayer().getName().equals("coreference type")
-                        || tagSet.getLayer().getName().equals("coreference")) {
+                if (tagSet.getLayer() == null || tagSet.getFeature() == null){
+                    noFeatureTagSet.add(tagSet);
+                }
+                else if (tagSet.getLayer().getType().equals("chain")) {
                     corefTagSets.add(tagSet);
                 }
             }
@@ -344,6 +347,7 @@ public class ProjectUtil
                     || aMode.equals(Mode.CURATION)) {
                 tagSets.removeAll(corefTagSets);
             }
+            tagSets.remove(noFeatureTagSet);
             aBModel.setAnnotationLayers(new HashSet<TagSet>(tagSets));
             /*
              * abAnnotatorModel.setAnnotationLayers(new HashSet<TagSet>(aAnnotationService

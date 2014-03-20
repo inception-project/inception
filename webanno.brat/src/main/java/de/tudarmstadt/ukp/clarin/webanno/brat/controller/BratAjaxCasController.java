@@ -297,8 +297,10 @@ public class BratAjaxCasController
         SpanAdapter.renderTokenAndSentence(aJCas, aResponse, aBratAnnotatorModel);
 
         for (TagSet tagSet : aBratAnnotatorModel.getAnnotationLayers()) {
-            getAdapter(tagSet, annotationService).render(aJCas, aResponse,
-                    aBratAnnotatorModel);
+            if (tagSet.getLayer() == null || tagSet.getFeature() == null) {
+                continue;
+            }
+            getAdapter(tagSet, annotationService).render(aJCas, aResponse, aBratAnnotatorModel);
         }
     }
 }
