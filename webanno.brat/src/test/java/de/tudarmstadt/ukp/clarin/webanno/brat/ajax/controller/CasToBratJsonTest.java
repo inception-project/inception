@@ -137,15 +137,15 @@ public class CasToBratJsonTest extends TestCase {
 
 		List<String> tagSetNames = new ArrayList<String>();
 		tagSetNames
-				.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.POS);
+				.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.POS);
 		tagSetNames
-				.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.DEPENDENCY);
+				.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.DEPENDENCY);
 		tagSetNames
-				.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.NAMEDENTITY);
+				.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.NAMEDENTITY);
 		tagSetNames
-				.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.COREFERENCE);
+				.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.COREFERENCE);
 		tagSetNames
-				.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.COREFRELTYPE);
+				.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.COREFRELTYPE);
 
 		ProjectUtil.setJsonConverter(jsonConverter);
 		ProjectUtil.generateJson(collectionInformation, new File(
@@ -211,15 +211,15 @@ public class CasToBratJsonTest extends TestCase {
 
 		List<String> tagSetNames = new ArrayList<String>();
 		tagSetNames
-				.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.POS);
+				.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.POS);
 		tagSetNames
-				.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.DEPENDENCY);
+				.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.DEPENDENCY);
 		tagSetNames
-				.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.NAMEDENTITY);
+				.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.NAMEDENTITY);
 		tagSetNames
-				.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.COREFERENCE);
+				.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.COREFERENCE);
 		tagSetNames
-				.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant.COREFRELTYPE);
+				.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.COREFRELTYPE);
 
 		BratAnnotatorModel bratannotatorModel = new BratAnnotatorModel();
 		bratannotatorModel.setWindowSize(10);

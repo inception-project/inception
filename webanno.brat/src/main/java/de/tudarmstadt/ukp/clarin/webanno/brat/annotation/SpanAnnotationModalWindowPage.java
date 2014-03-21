@@ -59,9 +59,9 @@ import com.googlecode.wicket.jquery.ui.kendo.combobox.ComboBoxRenderer;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
@@ -126,7 +126,8 @@ public class SpanAnnotationModalWindowPage
                 if (tagset.getFeature() == null) {
                     continue;
                 }
-                if (tagset.getLayer().getType().equals("span")) {
+                if (tagset.getLayer().getType().equals("span")
+                        || tagset.getFeature().getName().equals("referenceType")) {
                     spanLayers.add(tagset);
                 }
 
@@ -160,10 +161,6 @@ public class SpanAnnotationModalWindowPage
                 selectedtTagSet = (spanLayers.get(0));
                 tagSetsModel = new Model<TagSet>(selectedtTagSet);
                 tagsModel = new Model<String>("");
-
-                if (selectedtTagSet.getLayer().getName().equals(AnnotationTypeConstant.LEMMA)) {
-                    tagsModel.setObject(selectedText);
-                }
             }
 
             add(new Label("selectedText", selectedText));
@@ -252,18 +249,25 @@ public class SpanAnnotationModalWindowPage
                                     selectedtTagSet);
                         }
 
-                        SpanAdapter adapter = (SpanAdapter) getAdapter(selectedtTagSet,
-                                annotationService);
+                        TypeAdapter adapter = getAdapter(selectedtTagSet, annotationService);
+                        if (adapter instanceof SpanAdapter) {
+                            ((SpanAdapter) adapter).setLockToTokenOffsets(selectedtTagSet
+                                    .getLayer().isLockToTokenOffset());
+                            ((SpanAdapter) adapter).setAllowStacking(selectedtTagSet.getLayer()
+                                    .isAllowSTacking());
+                            ((SpanAdapter) adapter).setAllowMultipleToken(selectedtTagSet
+                                    .getLayer().isMultipleTokens());
+                            ((SpanAdapter) adapter).setCrossMultipleSentence(selectedtTagSet
+                                    .getLayer().isCrossSentence());
 
-                        adapter.setLockToTokenOffsets(selectedtTagSet.getLayer()
-                                .isLockToTokenOffset());
-                        adapter.setAllowStacking(selectedtTagSet.getLayer().isAllowSTacking());
-                        adapter.setAllowMultipleToken(selectedtTagSet.getLayer().isMultipleTokens());
-                        adapter.setCrossMultipleSentence(selectedtTagSet.getLayer()
-                                .isCrossSentence());
+                            ((SpanAdapter) adapter).add(jCas, beginOffset, endOffset,
+                                    selectedTag.getName());
 
-                        adapter.add(jCas, beginOffset, endOffset, selectedTag.getName());
-
+                        }
+                        else {
+                            ((ChainAdapter) adapter).add(selectedTag.getName(), jCas, beginOffset,
+                                    endOffset, null, null);
+                        }
                         repository.updateJCas(bratAnnotatorModel.getMode(),
                                 bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
                                 jCas);
@@ -363,7 +367,29 @@ public class SpanAnnotationModalWindowPage
                                 break;
                             }
                         }
-                        adapter.delete(jCas, selectedSpanId);
+                        if (adapter instanceof ChainAdapter) {
+                            List<AnnotationFeature> chainFeatures = annotationService
+                                    .listAnnotationFeature(selectedtTagSet.getLayer());
+                            AnnotationFeature chainFeature = null;
+                            for (AnnotationFeature feature : chainFeatures) {
+                                if (feature.getName().equals("referenceRelation")) {
+                                    chainFeature = feature;
+                                    break;
+                                }
+                            }
+                            TagSet chainTagset = annotationService.getTagSet(chainFeature,
+                                    selectedtTagSet.getProject());
+                            TypeAdapter chainAdapter = TypeUtil.getAdapter(chainTagset,
+                                    annotationService);
+                            ((ChainAdapter) chainAdapter).updateCasBeforeDelete(jCas,
+                                    selectedSpanId);
+                            adapter.delete(jCas, selectedSpanId);
+                            ((ChainAdapter) chainAdapter).removeInvalidChain(jCas.getCas());
+                        }
+                        else {
+                            adapter.delete(jCas, selectedSpanId);
+                        }
+
                         repository.updateJCas(bratAnnotatorModel.getMode(),
                                 bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
                                 jCas);
@@ -377,17 +403,7 @@ public class SpanAnnotationModalWindowPage
                             updateSentenceAddressAndOffsets(jCas, beginOffset);
                         }
 
-                        Tag selectedTag;
-                        if (!selectedtTagSet.isShowTag()) {
-                            selectedTag = new Tag();
-                        }
-                        else {
-                            selectedTag = annotationService.getTag(tags.getModelObject(),
-                                    selectedtTagSet);
-                        }
-
                         bratAnnotatorModel.setRememberedSpanTagSet(selectedtTagSet);
-                        bratAnnotatorModel.setRememberedSpanTag(selectedTag);
                         bratAnnotatorModel.setAnnotate(false);
                         bratAnnotatorModel.setMessage("The span annotation [" + selectedSpanType
                                 + "] is deleted");

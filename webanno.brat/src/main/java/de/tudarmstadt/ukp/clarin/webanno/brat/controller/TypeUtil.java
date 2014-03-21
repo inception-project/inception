@@ -63,6 +63,21 @@ public final class TypeUtil
                     type.getAttachType().getName());
             return adapter;
         }
+        else if (type.getType().equals("chain")) {
+            if (feature.getName().equals("referenceType")) {
+                ChainAdapter adapter = new ChainAdapter(feature.getId(), type.getName() + "Link",
+                        feature.getName(), "first", "next");
+                adapter.setChain(false);
+                return adapter;
+            }
+            else {
+                ChainAdapter adapter = new ChainAdapter(feature.getId(), type.getName() + "Chain",
+                        feature.getName(), "first", "next");
+                adapter.setChain(true);
+                return adapter;
+            }
+
+        }
         /*
          * if (name.equals(AnnotationTypeConstant.POS)) { return SpanAdapter.getPosAdapter(); } else
          * if (name.equals(AnnotationTypeConstant.LEMMA)) { return SpanAdapter.getLemmaAdapter(); }
@@ -107,42 +122,42 @@ public final class TypeUtil
     public static String getQualifiedLabel(Tag aSelectedTag)
     {
         String annotationType = "";
-        if (aSelectedTag.getTagSet().getLayer().getName().equals(AnnotationTypeConstant.POS)) {
-            annotationType = AnnotationTypeConstant.POS_PREFIX + aSelectedTag.getName();
+        if (aSelectedTag.getTagSet().getLayer().getName().equals(WebAnnoConst.POS)) {
+            annotationType = WebAnnoConst.POS_PREFIX + aSelectedTag.getName();
         }
         else if (aSelectedTag.getTagSet().getLayer().getName()
-                .equals(AnnotationTypeConstant.DEPENDENCY)) {
-            annotationType = AnnotationTypeConstant.DEP_PREFIX + aSelectedTag.getName();
+                .equals(WebAnnoConst.DEPENDENCY)) {
+            annotationType = WebAnnoConst.DEP_PREFIX + aSelectedTag.getName();
         }
         else if (aSelectedTag.getTagSet().getLayer().getName()
-                .equals(AnnotationTypeConstant.NAMEDENTITY)) {
-            annotationType = AnnotationTypeConstant.NAMEDENTITY_PREFIX + aSelectedTag.getName();
+                .equals(WebAnnoConst.NAMEDENTITY)) {
+            annotationType = WebAnnoConst.NAMEDENTITY_PREFIX + aSelectedTag.getName();
         }
         else if (aSelectedTag.getTagSet().getLayer().getName()
-                .equals(AnnotationTypeConstant.COREFRELTYPE)) {
-            annotationType = AnnotationTypeConstant.COREFRELTYPE_PREFIX + aSelectedTag.getName();
+                .equals(WebAnnoConst.COREFRELTYPE)) {
+            annotationType = WebAnnoConst.COREFRELTYPE_PREFIX + aSelectedTag.getName();
         }
         else if (aSelectedTag.getTagSet().getLayer().getName()
-                .equals(AnnotationTypeConstant.COREFERENCE)) {
-            annotationType = AnnotationTypeConstant.COREFERENCE_PREFIX + aSelectedTag.getName();
+                .equals(WebAnnoConst.COREFERENCE)) {
+            annotationType = WebAnnoConst.COREFERENCE_PREFIX + aSelectedTag.getName();
         }
         return annotationType;
     }
 
     /**
      * Get the annotation layer name for arc {@link AnnotationType} such as
-     * {@link AnnotationTypeConstant#DEPENDENCY} or {@link AnnotationTypeConstant#COREFERENCE} based
+     * {@link WebAnnoConst#DEPENDENCY} or {@link WebAnnoConst#COREFERENCE} based
      * on the origin span type. This is assumed that an arc is drawn only from single span type such
      * as from {@link POS}. For Free Annotation type, the method should be changed.
      */
     public static String getArcLayerName(String aPrefix)
     {
         String layer = "";
-        if (aPrefix.equals(AnnotationTypeConstant.POS_PREFIX)) {
-            layer = AnnotationTypeConstant.DEPENDENCY;
+        if (aPrefix.equals(WebAnnoConst.POS_PREFIX)) {
+            layer = WebAnnoConst.DEPENDENCY;
         }
-        else if (aPrefix.equals(AnnotationTypeConstant.COREFRELTYPE_PREFIX)) {
-            layer = AnnotationTypeConstant.COREFERENCE;
+        else if (aPrefix.equals(WebAnnoConst.COREFRELTYPE_PREFIX)) {
+            layer = WebAnnoConst.COREFERENCE;
         }
         return layer;
     }

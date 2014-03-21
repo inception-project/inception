@@ -97,13 +97,32 @@ public class BratAjaxConfiguration
 
         int i = 0;
         for (TagSet relationTagSet : aTagSets) {
-            if(relationTagSet.getFeature() == null || relationTagSet.getLayer() == null){
+            if (relationTagSet.getFeature() == null || relationTagSet.getLayer() == null) {
                 continue;
             }
-            if (relationTagSet.getFeature().getLayer().getType().equals("relation")) {
+
+            if (relationTagSet.getLayer().getType().equals("chain")) {
+                if (relationTagSet.getFeature().getName().equals("referenceRelation")) {
+                    AnnotationType chainLayer = relationTagSet.getFeature().getLayer();
+                    List<AnnotationFeature> chainFeatures = aAnnotationService
+                            .listAnnotationFeature(chainLayer);
+                    AnnotationFeature linkFeature = null;
+                    for (AnnotationFeature feature : chainFeatures) {
+                        if (!feature.getName().equals("referenceRelation")) {
+                            linkFeature = feature;
+                            break;
+                        }
+                    }
+                    TagSet typeTagSet = aAnnotationService.getTagSet(linkFeature,
+                            chainLayer.getProject());
+
+                    relationLayers.put(typeTagSet, relationTagSet);
+                    checkRelation.put(typeTagSet, true);
+                }
+            }
+            else if (relationTagSet.getFeature().getLayer().getType().equals("relation")) {
                 // get the attach feature/or TODO attache type
                 // if attachefature is null, get the tagset from attache type
-                // TODO:
                 AnnotationFeature attachFeature = relationTagSet.getFeature().getLayer()
                         .getAttachFeature();
                 TagSet attachTagSet = null;
@@ -119,7 +138,7 @@ public class BratAjaxConfiguration
                 if (attachFeature == null) {
                     attachLayer = relationTagSet.getFeature().getLayer().getAttachType();
                 }
-                // TODO assume a span annotation type a single feature
+                // assume a span annotation type a single feature
                 List<AnnotationFeature> spanFeatures = aAnnotationService
                         .listAnnotationFeature(attachLayer);
                 attachTagSet = aAnnotationService.getTagSet(spanFeatures.get(0),
@@ -183,12 +202,12 @@ public class BratAjaxConfiguration
             TagSet aSpanTagSet, TagSet aRelationTagSet)
     {
 
-        List<String> fGColors = new ArrayList<String>(Arrays.asList(new String[] { "yellow",
-                "red", "pink", "black", "coral", "darkorange", "deepskyblue", "fuchsia",
-                "navy", "maroon" }));
-        List<String> bGColors = new ArrayList<String>(Arrays.asList(new String[] { "magenta", "lightgreen",
-                "brown", "Sienna ", "darkgreen", "darkorchid", "deeppink", "gold", "green",
-                "orange" }));
+        List<String> fGColors = new ArrayList<String>(
+                Arrays.asList(new String[] { "yellow", "red", "pink", "black", "coral",
+                        "darkorange", "deepskyblue", "fuchsia", "navy", "maroon" }));
+        List<String> bGColors = new ArrayList<String>(Arrays.asList(new String[] { "magenta",
+                "lightgreen", "brown", "Sienna ", "darkgreen", "darkorchid", "deeppink", "gold",
+                "green", "orange" }));
         List<String> bDColors = new ArrayList<String>(Arrays.asList(new String[] { "aqua",
                 "blueviolet", "chocolate", "cyan", "darkgreen", "darkorchid", "deeppink", "gold",
                 "magenta", "orange" }));
@@ -214,9 +233,9 @@ public class BratAjaxConfiguration
         if (aSpanTagSet.getLayer().isBuiltIn()
                 && aSpanTagSet.getLayer().getName().equals(POS.class.getName())) {
 
-            tagLists = getChildren(aSpanTagSet.getFeature().getId() + "_",
-                    aRelationTagSet.getId() == 0 ? "" : aRelationTagSet.getFeature().getId() + "_",
-                    spanTags, relationTags, "red", "yellow", "blue", "green", aStaticColor);
+            tagLists = getChildren(aSpanTagSet, aRelationTagSet.getId() == 0 ? "" : aRelationTagSet
+                    .getFeature().getId() + "$_", spanTags, relationTags, "red", "yellow", "blue",
+                    "green", aStaticColor);
 
             entityType = new EntityType(aSpanTagSet.getFeature().getId() + "", aSpanTagSet
                     .getFeature().getId() + "", true, "", "red", "blue", "blue",
@@ -227,9 +246,9 @@ public class BratAjaxConfiguration
         else if (aSpanTagSet.getLayer().isBuiltIn()
                 && aSpanTagSet.getLayer().getName().equals(NamedEntity.class.getName())) {
 
-            tagLists = getChildren(aSpanTagSet.getFeature().getId() + "_",
-                    aRelationTagSet.getId() == 0 ? "" : aRelationTagSet.getFeature().getId() + "_",
-                    spanTags, relationTags, "black", "cyan", "green", "", aStaticColor);
+            tagLists = getChildren(aSpanTagSet, aRelationTagSet.getId() == 0 ? "" : aRelationTagSet
+                    .getFeature().getId() + "$_", spanTags, relationTags, "black", "cyan", "green",
+                    "", aStaticColor);
 
             entityType = new EntityType(aSpanTagSet.getFeature().getId() + "", aSpanTagSet
                     .getFeature().getId() + "", true, "", "black", "cyan", "green",
@@ -240,23 +259,21 @@ public class BratAjaxConfiguration
         else if (aSpanTagSet.getLayer().isBuiltIn()
                 && aSpanTagSet.getLayer().getName().equals(Lemma.class.getName())) {
 
-            tagLists = getChildren(aSpanTagSet.getFeature().getId() + "_",
-                    aRelationTagSet.getId() == 0 ? "" : aRelationTagSet.getFeature().getId() + "_",
-                    spanTags, relationTags, "", "", "", "", aStaticColor);
+            tagLists = getChildren(aSpanTagSet, aRelationTagSet.getId() == 0 ? "" : aRelationTagSet
+                    .getFeature().getId() + "$_", spanTags, relationTags, "", "", "", "",
+                    aStaticColor);
 
             entityType = new EntityType(aSpanTagSet.getFeature().getId() + "", aSpanTagSet
-                    .getFeature().getId() + "", true, "", "", "", "",
-                    new ArrayList<String>(), tagLists, new ArrayList<String>(),
-                    new ArrayList<RelationType>(), aStaticColor);
+                    .getFeature().getId() + "", true, "", "", "", "", new ArrayList<String>(),
+                    tagLists, new ArrayList<String>(), new ArrayList<RelationType>(), aStaticColor);
 
         }
 
         // custom layers
         else {
-            tagLists = getChildren(aSpanTagSet.getFeature().getId() + "_",
-                    aRelationTagSet.getId() == 0 ? "" : aRelationTagSet.getFeature().getId() + "_",
-                    spanTags, relationTags, fGColors.get(i), bGColors.get(i), bDColors.get(i),
-                    bDColors.get(i), aStaticColor);
+            tagLists = getChildren(aSpanTagSet, aRelationTagSet.getId() == 0 ? "" : aRelationTagSet
+                    .getFeature().getId() + "$_", spanTags, relationTags, fGColors.get(i),
+                    bGColors.get(i), bDColors.get(i), bDColors.get(i), aStaticColor);
 
             entityType = new EntityType(aSpanTagSet.getFeature().getId() + "", aSpanTagSet
                     .getFeature().getId() + "", true, "", fGColors.get(i), bGColors.get(i),
@@ -286,15 +303,16 @@ public class BratAjaxConfiguration
      *            border color of the arc
      * @return {@link List< {@link EntityType }>}
      */
-    private List<EntityType> getChildren(String aParentPrefix, String aChildPrefix,
+    private List<EntityType> getChildren(TagSet aSpanTagSet, String aChildPrefix,
             List<String> spansList, List<String> aArcList, String aFgColor, String aBgcolor,
             String aBorderColoer, String aArcColor, boolean aStaticColor)
     {
         List<EntityType> children = new ArrayList<EntityType>();
 
+        String prefix = aSpanTagSet.getFeature().getId() + "_";
         List<String> arcTargets = new ArrayList<String>();
         for (String span : spansList) {
-            arcTargets.add(aParentPrefix + span);
+            arcTargets.add(prefix + span);
         }
         for (String span : spansList) {
             List<RelationType> arcs = new ArrayList<RelationType>();
@@ -303,7 +321,7 @@ public class BratAjaxConfiguration
                 String arcLabels = arcTypesResultIterator.next();
 
                 // 12 classes of colors to differentiate Co-reference chains
-                if (aParentPrefix.equals(AnnotationTypeConstant.COREFRELTYPE_PREFIX)) {
+                if (aSpanTagSet.getLayer().getType().equals("chain")) {
 
                     String[] colors = new String[] { "#00FF00", "#0000A0", "#FF0000", "#800080 ",
                             "#F000FF", "#00FFFF ", "#FF00FF ", "#8D38C9", "#8D38C9", "#736AFF",
@@ -311,7 +329,7 @@ public class BratAjaxConfiguration
                     int i = 1;
                     for (String color : colors) {
                         RelationType arc = new RelationType(color, "triangle,5",
-                                Arrays.asList(arcLabels), i + aChildPrefix + arcLabels, arcTargets,
+                                Arrays.asList(arcLabels), i+"_" + aChildPrefix + arcLabels, arcTargets,
                                 "");
                         arcs.add(arc);
                         i++;
@@ -324,7 +342,7 @@ public class BratAjaxConfiguration
                 }
             }
 
-            EntityType entityTpe = new EntityType(span, aParentPrefix + span, false, "", aFgColor,
+            EntityType entityTpe = new EntityType(span, prefix + span, false, "", aFgColor,
                     aBgcolor, aBorderColoer, Arrays.asList(span), new ArrayList<EntityType>(),
                     new ArrayList<String>(), arcs, aStaticColor);
             children.add(entityTpe);

@@ -200,7 +200,7 @@ public class ChainAdapter
         Type type = CasUtil.getType(aSentence.getCAS(), annotationTypeName);
         Feature labelFeature = type.getFeatureByBaseName(labelFeatureName);
         for (AnnotationFS fs : CasUtil.selectCovered(type, aSentence)) {
-            aResponse.addEntity(new Entity(((FeatureStructureImpl) fs).getAddress(), labelPrefix
+            aResponse.addEntity(new Entity(((FeatureStructureImpl) fs).getAddress(), labelPrefix+"_"
                     + fs.getStringValue(labelFeature), asList(new Offsets(fs.getBegin()
                     - aFirstSentenceOffset, fs.getEnd() - aFirstSentenceOffset))));
         }
@@ -267,7 +267,7 @@ public class ChainAdapter
     {
         Feature labelFeature = aFrom.getType().getFeatureByBaseName(labelFeatureName);
         List<Argument> argumentList = getArgument(aFrom, aTo);
-        return new Relation(((FeatureStructureImpl) aFrom).getAddress(), aColorIndex + labelPrefix
+        return new Relation(((FeatureStructureImpl) aFrom).getAddress(), aColorIndex +"_"+ labelPrefix+"$_"
                 + aFrom.getStringValue(labelFeature), argumentList);
     }
 
@@ -696,14 +696,15 @@ public class ChainAdapter
             removeInvalidChain(aJCas.getCas());
         }
         else {
-      /*      ChainAdapter.getCoreferenceChainAdapter().updateCasBeforeDelete(aJCas, aAddress);
+
+/*            updateCasBeforeDelete(aJCas, aAddress);*/
 
             FeatureStructure fsToRemove = BratAjaxCasUtil.selectByAddr(aJCas,
                     FeatureStructure.class, aAddress);
 
             aJCas.removeFsFromIndexes(fsToRemove);
 
-            ChainAdapter.getCoreferenceChainAdapter().removeInvalidChain(aJCas.getCas());*/
+ /*           removeInvalidChain(aJCas.getCas());*/
         }
     }
 

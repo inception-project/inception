@@ -40,7 +40,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationOption;
@@ -302,8 +302,8 @@ public class CurationBuilder
         List<Type> entryTypes = new LinkedList<Type>();
 
         for (TagSet tagSet : aTagSets) {
-            if (tagSet.getLayer().getName().equals(AnnotationTypeConstant.COREFERENCE)
-                    || tagSet.getLayer().getName().equals(AnnotationTypeConstant.COREFRELTYPE)) {
+            if (tagSet.getLayer().getName().equals(WebAnnoConst.COREFERENCE)
+                    || tagSet.getLayer().getName().equals(WebAnnoConst.COREFRELTYPE)) {
                 continue;
             }
             entryTypes.add(getAdapter(tagSet, annotationService).getAnnotationType(

@@ -49,7 +49,7 @@ import org.springframework.http.converter.json.MappingJacksonHttpMessageConverte
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.OffsetsList;
@@ -372,7 +372,7 @@ public class BratAnnotator
             @Override
             public void onClose(AjaxRequestTarget aTarget)
             {
-                // A hack to rememeber the wicket combobox DropDown display value
+                // A hack to remember the wicket combobox DropDown display value
                 HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())
                         .getContainerRequest().getSession();
                 BratAnnotatorModel model = (BratAnnotatorModel) session.getAttribute("model");
@@ -411,7 +411,8 @@ public class BratAnnotator
             if (tagSet.getFeature() == null || tagSet.getLayer() == null) {
                 continue;
             }
-            if (tagSet.getLayer().getType().equals(AnnotationTypeConstant.SPAN_TYPE)) {
+            if (tagSet.getLayer().getType().equals(WebAnnoConst.SPAN_TYPE)
+                    || tagSet.getLayer().getType().equals(WebAnnoConst.CHAIN_TYPE)) {
                 openAnnotationDialog.show(aTarget);
                 break;
             }
@@ -456,10 +457,11 @@ public class BratAnnotator
         // open the annotation dialog if only there is
         // span annotation layer (from the settings button) selected
         for (TagSet tagSet : getModelObject().getAnnotationLayers()) {
-            if(tagSet.getFeature() == null){
+            if (tagSet.getFeature() == null) {
                 continue;
             }
-            if (tagSet.getLayer().getType().equals(AnnotationTypeConstant.SPAN_TYPE)) {
+            if (tagSet.getLayer().getType().equals(WebAnnoConst.SPAN_TYPE)
+                    || tagSet.getLayer().getType().equals(WebAnnoConst.CHAIN_TYPE)) {
                 openAnnotationDialog.show(aTarget);
                 break;
             }

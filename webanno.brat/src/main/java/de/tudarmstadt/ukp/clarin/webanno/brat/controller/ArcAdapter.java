@@ -44,9 +44,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
  * A class that is used to create Brat Arc to CAS relations and vice-versa
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 public class ArcAdapter
     implements TypeAdapter
@@ -54,7 +54,7 @@ public class ArcAdapter
     /**
      * Prefix of the label value for Brat to make sure that different annotation types can use the
      * same label, e.g. a POS tag "N" and a named entity type "N".
-     * 
+     *
      */
     private final long typeId;
 
@@ -120,7 +120,7 @@ public class ArcAdapter
     /**
      * Add arc annotations from the CAS, which is controlled by the window size, to the brat
      * response {@link GetDocumentResponse}
-     * 
+     *
      * @param aJcas
      *            The JCAS object containing annotations
      * @param aResponse
@@ -170,13 +170,13 @@ public class ArcAdapter
             Feature labelFeature = fs.getType().getFeatureByBaseName(labelFeatureName);
 
             aResponse.addRelation(new Relation(((FeatureStructureImpl) fs).getAddress(), typeId
-                    + "_" + fs.getStringValue(labelFeature), argumentList));
+                    + "$_" + fs.getStringValue(labelFeature), argumentList));
         }
     }
 
     /**
      * Update the CAS with new/modification of arc annotations from brat
-     * 
+     *
      * @param aLabelValue
      *            the value of the annotation for the arc
      * @param aReverse
@@ -247,7 +247,7 @@ public class ArcAdapter
 
                 if (isDuplicate((AnnotationFS) governorFs, aOriginFs, (AnnotationFS) dependentFs,
                         aTargetFs, fs.getStringValue(feature), aValue)
-                        && !aValue.equals(AnnotationTypeConstant.ROOT)) {
+                        && !aValue.equals(WebAnnoConst.ROOT)) {
 
                     // It is update of arc value, update it
                     if (!fs.getStringValue(feature).equals(aValue)) {
@@ -343,7 +343,7 @@ public class ArcAdapter
 
     /**
      * Convenience method to get an adapter for Dependency Parsing.
-     * 
+     *
      * NOTE: This is not meant to stay. It's just a convenience during refactoring!
      */
     /*
@@ -354,7 +354,7 @@ public class ArcAdapter
      */
     /**
      * Argument lists for the arc annotation
-     * 
+     *
      * @return
      */
     private List<Argument> getArgument(FeatureStructure aGovernorFs, FeatureStructure aDependentFs)

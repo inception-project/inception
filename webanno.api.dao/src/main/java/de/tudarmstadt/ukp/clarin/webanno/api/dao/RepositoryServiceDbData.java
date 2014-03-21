@@ -96,7 +96,7 @@ import org.springframework.transaction.annotation.Transactional;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -582,14 +582,14 @@ public class RepositoryServiceDbData
         List<AnnotationFeature> features = annotationService.listAnnotationFeature(project);
         for (AnnotationFeature feature : features) {
             TagSet tagSet = annotationService.getTagSet(feature, project);
-            if (feature.getName().equals(AnnotationTypeConstant.NAMEDENTITY)) {
+            if (feature.getName().equals(WebAnnoConst.NAMEDENTITY)) {
                 BratAjaxCasUtil.updateCasWithTagSet(cas, NamedEntity.class.getName(),
                         tagSet.getName());
             }
-            else if (feature.getName().equals(AnnotationTypeConstant.POS)) {
+            else if (feature.getName().equals(WebAnnoConst.POS)) {
                 BratAjaxCasUtil.updateCasWithTagSet(cas, POS.class.getName(), tagSet.getName());
             }
-            else if (feature.getName().equals(AnnotationTypeConstant.DEPENDENCY)) {
+            else if (feature.getName().equals(WebAnnoConst.DEPENDENCY)) {
                 BratAjaxCasUtil.updateCasWithTagSet(cas, Dependency.class.getName(),
                         tagSet.getName());
             }
@@ -2089,8 +2089,23 @@ public class RepositoryServiceDbData
                 td.addFeature("Governor", "", attachType.getName());
 
                 List<AnnotationFeature> features = annotationService.listAnnotationFeature(type);
-                td.addFeature(features.get(0).getName(), "", CAS.TYPE_NAME_STRING);//TODO
+                td.addFeature(features.get(0).getName(), "", CAS.TYPE_NAME_STRING);
                 types.add(tsd);
+            }
+            else if (type.getType().equals("chain") && !type.isBuiltIn()) {
+                TypeSystemDescription tsdchains = new TypeSystemDescription_impl();
+                TypeDescription tdChains = tsdchains.addType(type.getName() + "Chain", "",
+                        CAS.TYPE_NAME_ANNOTATION);
+                tdChains.addFeature("first", "", type.getName() + "Link");
+                types.add(tsdchains);
+
+                TypeSystemDescription tsdLink = new TypeSystemDescription_impl();
+                TypeDescription tdLink = tsdLink.addType(type.getName() + "Link", "",
+                        CAS.TYPE_NAME_ANNOTATION);
+                tdLink.addFeature("next", "", type.getName() + "Link");
+                tdLink.addFeature("referenceType", "", CAS.TYPE_NAME_STRING);
+                tdLink.addFeature("referenceRelation", "", CAS.TYPE_NAME_STRING);
+                types.add(tsdLink);
             }
         }
 

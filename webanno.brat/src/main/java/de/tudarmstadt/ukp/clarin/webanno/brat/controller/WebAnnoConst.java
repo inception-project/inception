@@ -23,7 +23,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
  * @author Seid Muhie Yimam
  *
  */
-public class AnnotationTypeConstant
+public class WebAnnoConst
 {
     // Annotation types, for span or arc annotations.
     public static final String POS = "pos";
@@ -51,6 +51,8 @@ public class AnnotationTypeConstant
 
     public static final String SPAN_TYPE = "span";
     public static final String RELATION_TYPE = "relation";
+    public static final String CHAIN_TYPE = "chain";
+
 
 
 }

@@ -64,7 +64,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AnnotationTypeConstant;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.CurationPanel;
@@ -636,7 +636,7 @@ public class MonitoringPage
         double[][] results = new double[users.size()][users.size()];
         if (tagSets.getModelObject() != null
                 && !tagSets.getModelObject().getLayer().getName()
-                        .equals(AnnotationTypeConstant.COREFERENCE)) {
+                        .equals(WebAnnoConst.COREFERENCE)) {
 
             TypeAdapter adapter = TypeUtil.getAdapter(tagSets.getModelObject(), annotationService);
 

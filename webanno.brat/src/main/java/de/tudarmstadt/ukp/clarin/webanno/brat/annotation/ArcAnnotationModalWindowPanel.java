@@ -54,6 +54,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -211,13 +212,18 @@ public class ArcAnnotationModalWindowPanel
                             AnnotationFS originFs = selectByAddr(jCas, originSpanId);
                             AnnotationFS targetFs = selectByAddr(jCas, targetSpanId);
 
-                            ArcAdapter adapter = (ArcAdapter) getAdapter(selectedtTagSet,
-                                    annotationService);
-                            adapter.setCrossMultipleSentence(selectedtTagSet.getLayer()
-                                    .isCrossSentence());
+                            TypeAdapter adapter = getAdapter(selectedtTagSet, annotationService);
+                            if (adapter instanceof ArcAdapter) {
+                                ((ArcAdapter) adapter).setCrossMultipleSentence(selectedtTagSet
+                                        .getLayer().isCrossSentence());
 
-                            adapter.add(selectedTag.getName(), originFs, targetFs, jCas,
-                                    bratAnnotatorModel);
+                                ((ArcAdapter) adapter).add(selectedTag.getName(), originFs,
+                                        targetFs, jCas, bratAnnotatorModel);
+                            }
+                            else {
+                                ((ChainAdapter) adapter).add(selectedTag.getName(), jCas,
+                                        originFs.getBegin(), targetFs.getEnd(), originFs, targetFs);
+                            }
 
                             // update timestamp now
                             int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas,
@@ -333,6 +339,7 @@ public class ArcAnnotationModalWindowPanel
                 @Override
                 public void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
                 {
+                    aTarget.add(feedbackPanel);
                     JCas jCas;
                     try {
                         jCas = getCas(bratAnnotatorModel);
@@ -346,10 +353,15 @@ public class ArcAnnotationModalWindowPanel
                         AnnotationFS originFs = selectByAddr(jCas, originSpanId);
                         AnnotationFS targetFs = selectByAddr(jCas, targetSpanId);
 
-                        ArcAdapter adapter = (ArcAdapter) getAdapter(selectedtTagSet,
-                                annotationService);
-                        adapter.add(selectedTag.getName(), targetFs, originFs, jCas,
-                                bratAnnotatorModel);
+                        TypeAdapter adapter = getAdapter(selectedtTagSet, annotationService);
+                        if (adapter instanceof ArcAdapter) {
+                            ((ArcAdapter) adapter).add(selectedTag.getName(), targetFs, originFs,
+                                    jCas, bratAnnotatorModel);
+                        }
+                        else {
+                            error("chains cannot be reversed");
+                            return;
+                        }
 
                         repository.updateJCas(bratAnnotatorModel.getMode(),
                                 bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
@@ -469,6 +481,13 @@ public class ArcAnnotationModalWindowPanel
                     break;
                 }
             }
+            else if (feature.getLayer().getType().equals("chain")) {
+                if (feature.getLayer().equals(spanFeature.getLayer())
+                        && !feature.getName().equals(spanFeature.getName())) {
+                    selectedtTagSet = annotationService.getTagSet(feature,
+                            aBratAnnotatorModel.getProject());
+                }
+            }
         }
 
         this.originSpanId = aOriginSpanId;
@@ -485,12 +504,19 @@ public class ArcAnnotationModalWindowPanel
     {
         super(aId);
         this.selectedArcId = selectedArcId;
-        selectedArcType = aType.substring(aType.indexOf("_") + 1);
+        selectedArcType = aType.substring(aType.indexOf("$_") + 2);
 
         this.originSpanType = aOriginSpanType.substring(aOriginSpanType.indexOf("_") + 1);
 
-        long featureId = Integer.parseInt(aType.substring(0, aType.indexOf("_")));
-
+        String id = aType.substring(0, aType.lastIndexOf("$_"));
+        long featureId;
+        if (id.contains("_")) {
+            // for chain arcs, strip the first prefix, that is used for chain coloring
+            featureId = Integer.parseInt(id.substring(id.indexOf("_") + 1));
+        }
+        else {
+            featureId = Integer.parseInt(id);
+        }
         AnnotationFeature feature = annotationService.getFeature(featureId);
 
         this.selectedtTagSet = annotationService.getTagSet(feature,
