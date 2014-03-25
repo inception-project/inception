@@ -238,12 +238,13 @@ public class AnnotationServiceImpl
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public AnnotationType getType(String aName, String aType)
+    public AnnotationType getType(String aName, String aType, Project aProject)
     {
         return entityManager
-                .createQuery("From AnnotationType where name = :name AND type = :type",
+                .createQuery(
+                        "From AnnotationType where name = :name AND type = :type AND project =:project",
                         AnnotationType.class).setParameter("name", aName)
-                .setParameter("type", aType).getSingleResult();
+                .setParameter("type", aType).setParameter("project", aProject).getSingleResult();
     }
 
     @Override
@@ -309,153 +310,73 @@ public class AnnotationServiceImpl
 
     @Override
     @Transactional
-    public void initializeTypesForProject(Project aProject, User aUser)
+    public void initializeTypesForProject(Project aProject, User aUser, String[] aPostags,
+            String[] aPosTagDescriptions, String[] aDepTags, String[] aDepTagDescriptions,
+            String[] aNeTags, String[] aNeTagDescriptions, String[] aCorefTypeTags,
+            String[] aCorefRelTags)
         throws IOException
     {
 
-        // POS layer
-        String[] posTags = new String[] { "$(", "$,", "$.", "ADJA", "ADJD", "ADV", "APPO", "APPR",
-                "APPRART", "APZR", "ART", "CARD", "FM", "ITJ", "KOKOM", "KON", "KOUI", "KOUS",
-                "NE", "NN", "PAV", "PDAT", "PDS", "PIAT", "PIDAT", "PIS", "PPER", "PPOSAT",
-                "PPOSS", "PRELAT", "PRELS", "PRF", "PROAV", "PTKA", "PTKANT", "PTKNEG", "PTKVZ",
-                "PTKZU", "PWAT", "PWAV", "PWS", "TRUNC", "VAFIN", "VAIMP", "VAINF", "VAPP",
-                "VMFIN", "VMINF", "VMPP", "VVFIN", "VVIMP", "VVINF", "VVIZU", "VVPP", "XY", "--" };
-        String[] posTagDescriptions = new String[] {
-                "sonstige Satzzeichen; satzintern \nBsp: - [,]()",
-                "Komma \nBsp: ,",
-                "Satzbeendende Interpunktion \nBsp: . ? ! ; :   ",
-                "attributives Adjektiv \nBsp: [das] große [Haus]",
-                "adverbiales oder prädikatives Adjektiv \nBsp: [er fährt] schnell, [er ist] schnell",
-                "Adverb \nBsp: schon, bald, doch ",
-                "Postposition \nBsp: [ihm] zufolge, [der Sache] wegen",
-                "Präposition; Zirkumposition links \nBsp: in [der Stadt], ohne [mich]",
-                "Präposition mit Artikel \nBsp: im [Haus], zur [Sache]",
-                "Zirkumposition rechts \nBsp: [von jetzt] an",
-                "bestimmter oder unbestimmter Artikel \nBsp: der, die, das, ein, eine",
-                "Kardinalzahl \nBsp: zwei [Männer], [im Jahre] 1994",
-                "Fremdsprachliches Material \nBsp: [Er hat das mit ``] A big fish ['' übersetzt]",
-                "Interjektion \nBsp: mhm, ach, tja",
-                "Vergleichskonjunktion \nBsp: als, wie",
-                "nebenordnende Konjunktion \nBsp: und, oder, aber",
-                "unterordnende Konjunktion mit ``zu'' und Infinitiv \nBsp: um [zu leben], anstatt [zu fragen]",
-                "unterordnende Konjunktion mit Satz \nBsp: weil, daß, damit, wenn, ob ",
-                "Eigennamen \nBsp: Hans, Hamburg, HSV ",
-                "normales Nomen \nBsp: Tisch, Herr, [das] Reisen",
-                "Pronominaladverb \nBsp: dafür, dabei, deswegen, trotzdem ",
-                "attribuierendes Demonstrativpronomen \nBsp: jener [Mensch]",
-                "substituierendes Demonstrativpronomen \nBsp: dieser, jener",
-                "attribuierendes Indefinitpronomen ohne Determiner \nBsp: kein [Mensch], irgendein [Glas]   ",
-                "attribuierendes Indefinitpronomen mit Determiner \nBsp: [ein] wenig [Wasser], [die] beiden [Brüder] ",
-                "substituierendes Indefinitpronomen \nBsp: keiner, viele, man, niemand ",
-                "irreflexives Personalpronomen \nBsp: ich, er, ihm, mich, dir",
-                "attribuierendes Possessivpronome \nBsp: mein [Buch], deine [Mutter] ",
-                "substituierendes Possessivpronome \nBsp: meins, deiner",
-                "attribuierendes Relativpronomen \nBsp: [der Mann ,] dessen [Hund]   ",
-                "substituierendes Relativpronomen \nBsp: [der Hund ,] der  ",
-                "reflexives Personalpronomen \nBsp: sich, einander, dich, mir",
-                "PROAV",
-                "Partikel bei Adjektiv oder Adverb \nBsp: am [schönsten], zu [schnell]",
-                "Antwortpartikel \nBsp: ja, nein, danke, bitte  ",
-                "Negationspartikel \nBsp: nicht",
-                "abgetrennter Verbzusatz \nBsp: [er kommt] an, [er fährt] rad   ",
-                "``zu'' vor Infinitiv \nBsp: zu [gehen]",
-                "attribuierendes Interrogativpronomen \nBsp: welche [Farbe], wessen [Hut]  ",
-                "adverbiales Interrogativ- oder Relativpronomen \nBsp: warum, wo, wann, worüber, wobei",
-                "substituierendes Interrogativpronomen \nBsp: wer, was",
-                "Kompositions-Erstglied \nBsp: An- [und Abreise]",
-                "finites Verb, aux \nBsp: [du] bist, [wir] werden  ",
-                "Imperativ, aux \nBsp: sei [ruhig !]  ", "Infinitiv, aux \nBsp:werden, sein  ",
-                "Partizip Perfekt, aux \nBsp: gewesen ", "finites Verb, modal \nBsp: dürfen  ",
-                "Infinitiv, modal \nBsp: wollen ",
-                "Partizip Perfekt, modal \nBsp: gekonnt, [er hat gehen] können ",
-                "finites Verb, voll \nBsp: [du] gehst, [wir] kommen [an]   ",
-                "Imperativ, voll \nBsp: komm [!] ", "Infinitiv, voll \nBsp: gehen, ankommen",
-                "Infinitiv mit ``zu'', voll \nBsp: anzukommen, loszulassen ",
-                "Partizip Perfekt, voll \nBsp:gegangen, angekommen ",
-                "Nichtwort, Sonderzeichen enthaltend \nBsp:3:7, H2O, D2XW3", "--" };
+        createTokenLayer(aProject, aUser);
 
-        TagSet PosTagSet = initializeType(
-                "PosValue",
-                "PosValue",
-                "Stuttgart-Tübingen-Tag-Set \nGerman Part of Speech tagset "
-                        + "STTS Tag Table (1995/1999): "
-                        + "http://www.ims.uni-stuttgart.de/projekte/corplex/TagSets/stts-table.html",
-                "uima.cas.String", "STTS", "de", posTags, posTagDescriptions, aProject, aUser);
+        createPOSLayer(aProject, aUser, aPostags, aPosTagDescriptions);
 
-        AnnotationType tokenLayer = setLayer(Token.class.getName(), "", "Token", "span", aProject);
+        createDepLayer(aProject, aUser, aDepTags, aDepTagDescriptions);
 
-        createType(tokenLayer, aUser);
+        createNeLayer(aProject, aUser, aNeTags, aNeTagDescriptions);
 
-        AnnotationFeature posFeature = PosTagSet.getFeature();
+        createCorefLayer(aProject, aUser, aCorefTypeTags, aCorefRelTags);
 
-        AnnotationType posLayer = setLayer(POS.class.getName(), "PosValue", "POS", "span", aProject);
-        AnnotationFeature tokenPosFeature = setFeature("pos", "pos", aProject, tokenLayer, POS.class.getName());
-        tokenPosFeature.setVisible(false);
-        posLayer.setAttachType(tokenLayer);
-        posLayer.setAttachFeature(tokenPosFeature);
-        posLayer.setLabelFeatureName("PosValue");
+        createLemmaLayer(aProject, aUser);
 
-        createType(posLayer, aUser);
+    }
 
-        posFeature.setLayer(posLayer);
-        PosTagSet.setLayer(posLayer);
+    @Override
+    public void createLemmaLayer(Project aProject, User aUser)
+        throws IOException
+    {
+        // Lemmata Layer
+        TagSet lemmaTagSet = initializeType("value", "value", "lemma annotation",
+                "uima.cas.String", "Lemma", "de", new String[] {}, new String[] {}, aProject, aUser);
 
-        // Dependency Layer
-        String[] depTags = new String[] { "ADV", "APP", "ATTR", "AUX", "AVZ", "CJ", "DET", "ETH",
-                "EXPL", "GMOD", "GRAD", "KOM", "KON", "KONJ", "NEB", "OBJA", "OBJA2", "OBJA3",
-                "OBJC", "OBJC2", "OBJC3", "OBJD", "OBJD2", "OBJD3", "OBJG", "OBJG2", "OBJG3",
-                "OBJI", "OBJI2", "OBJI3", "OBJP", "OBJP2", "OBJP3", "PAR", "PART", "PN", "PP",
-                "PRED", "-PUNCT-", "REL", "ROOT", "S", "SUBJ", "SUBJ2", "SUBJ3", "SUBJC", "SUBJC2",
-                "SUBJC3", "SUBJI", "SUBJI2", "CP", "PD", "RE", "CD", "DA", "SVP", "OP", "MO", "JU",
-                "CVC", "NG", "SB", "SBP", "AG", "PM", "OCRC", "OG", "SUBJI3", "VOK", "ZEIT", "$",
-                "--", "OC", "OA", "MNR", "NK", "RC", "EP", "CC", "CM", "UC", "AC", "PNC" };
-        TagSet depTagSet = initializeType("DependencyType", "DependencyType",
-                "Dependency annotation", "uima.cas.String", "Tiger", "de", depTags, depTags, aProject, aUser);
-        AnnotationFeature deFeature = depTagSet.getFeature();
+        AnnotationType lemmaLayer = setLayer(Lemma.class.getName(), "value", "Lemma", "span",
+                aProject);
+        AnnotationType tokenLayer = getType(Token.class.getName(), "span", aProject);
+        AnnotationFeature tokenLemmaFeature = setFeature("lemma", "lemma", aProject, tokenLayer,
+                Lemma.class.getName());
+        tokenLemmaFeature.setVisible(false);
+        lemmaLayer.setAttachType(tokenLayer);
+        lemmaLayer.setAttachFeature(tokenLemmaFeature);
+        lemmaLayer.setLabelFeatureName("value");
 
-        AnnotationType depLayer = setLayer(Dependency.class.getName(), "DependencyType",
-                "dependency", "relation", aProject);
-        depLayer.setAttachType(tokenLayer);
-        depLayer.setAttachFeature(tokenPosFeature);
+        createType(lemmaLayer, aUser);
 
-        createType(depLayer, aUser);
+        AnnotationFeature lemmaFeature = lemmaTagSet.getFeature();
+        lemmaFeature.setLayer(lemmaLayer);
 
-        deFeature.setLayer(depLayer);
-        depTagSet.setLayer(depLayer);
+        lemmaTagSet.setLayer(lemmaLayer);
+    }
 
-        // NE layer
-        TagSet neTagSet = initializeType("value", "value", "Named Entity annotation", "uima.cas.String",
-                "NER_WebAnno", "de", new String[] { "PER", "PERderiv", "PERpart", "LOC",
-                        "LOCderiv", "LOCpart", "ORG", "ORGderiv", "ORGpart", "OTH", "OTHderiv",
-                        "OTHpart" }, new String[] { "Person", "Person derivative",
-                        "Hyphenated part  is person", "Location derivatives",
-                        "Location derivative", "Hyphenated part  is location", "Organization",
-                        "Organization derivative", "Hyphenated part  is organization",
-                        "Other: Every name that is not a location, person or organisation",
-                        "Other derivative", "Hyphenated part  is Other" }, aProject, aUser);
-
-        AnnotationFeature neFeature = neTagSet.getFeature();
-        AnnotationType neLayer = setLayer(NamedEntity.class.getName(), "value", "Named Entity",
-                "span", aProject);
-        neLayer.setLabelFeatureName("value");
-
-        createType(neLayer, aUser);
-
-        neFeature.setLayer(neLayer);
-        neTagSet.setLayer(neLayer);
-
+    @Override
+    public void createCorefLayer(Project aProject, User aUser, String[] aCorefTypeTags,
+            String[] aCorefRelTags)
+        throws IOException
+    {
         // Coref Layer
         TagSet corefTypeTagSet = initializeType("referenceType", "referenceType",
                 "coreference type annotation",
                 "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference", "BART", "de",
-                new String[] { "nam" }, new String[] { "nam" }, aProject, aUser);
+                aCorefTypeTags.length > 0 ? aCorefTypeTags : new String[] { "nam" },
+                new String[] { "nam" }, aProject, aUser);
         AnnotationFeature corefTypeFeature = corefTypeTagSet.getFeature();
 
         TagSet corefRelTagSet = initializeType("referenceRelation", "referenceRelation",
                 "coreference relation annotation",
                 "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference", "TuebaDZ", "de",
-                new String[] { "anaphoric" }, new String[] { "anaphoric" }, aProject, aUser);
+                aCorefRelTags.length > 0 ? aCorefRelTags : new String[] { "anaphoric" },
+                new String[] { "anaphoric" }, aProject, aUser);
         AnnotationFeature corefRelFeature = corefRelTagSet.getFeature();
+
         AnnotationType base = setLayer("de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference",
                 "coreference", "Coreference", "chain", aProject);
 
@@ -468,28 +389,183 @@ public class AnnotationServiceImpl
         corefRelFeature.setLayer(base);
         corefRelFeature.setVisible(false);
         corefRelTagSet.setLayer(base);
+    }
 
-        // Lemmata Layer
-        TagSet lemmaTagSet = initializeType("value", "value", "lemma annotation", "uima.cas.String",
-                "Lemma", "de", new String[] {}, new String[] {}, aProject, aUser);
+    @Override
+    public void createNeLayer(Project aProject, User aUser, String[] aNeTags,
+            String[] aNeTagDescriptions)
+        throws IOException
+    {
+        // NE layer
 
+        String[] neTags = aNeTags.length > 0 ? aNeTags : new String[] { "PER", "PERderiv",
+                "PERpart", "LOC", "LOCderiv", "LOCpart", "ORG", "ORGderiv", "ORGpart", "OTH",
+                "OTHderiv", "OTHpart" };
+        String[] neTagDescriptions = aNeTagDescriptions.length == neTags.length ? aNeTagDescriptions
+                : new String[] { "Person", "Person derivative", "Hyphenated part  is person",
+                        "Location derivatives", "Location derivative",
+                        "Hyphenated part  is location", "Organization", "Organization derivative",
+                        "Hyphenated part  is organization",
+                        "Other: Every name that is not a location, person or organisation",
+                        "Other derivative", "Hyphenated part  is Other" };
+        TagSet neTagSet = initializeType("value", "value", "Named Entity annotation",
+                "uima.cas.String", "NER_WebAnno", "de", neTags, neTagDescriptions, aProject, aUser);
 
-        AnnotationType lemmaLayer = setLayer(Lemma.class.getName(), "value", "Lemma", "span",
-                aProject);
-        AnnotationFeature tokenLemmaFeature = setFeature("lemma", "lemma", aProject, tokenLayer,
-                Lemma.class.getName());
-        tokenLemmaFeature.setVisible(false);
-        lemmaLayer.setAttachType(tokenLayer);
-        lemmaLayer.setAttachFeature(tokenLemmaFeature);
-        lemmaLayer.setLabelFeatureName("value");
+        AnnotationFeature neFeature = neTagSet.getFeature();
+        AnnotationType neLayer = setLayer(NamedEntity.class.getName(), "value", "Named Entity",
+                "span", aProject);
+        neLayer.setLabelFeatureName("value");
 
-        createType(lemmaLayer, aUser);
+        createType(neLayer, aUser);
 
-        AnnotationFeature lemmaFeature  = lemmaTagSet.getFeature();
-        lemmaFeature.setLayer(lemmaLayer);
+        neFeature.setLayer(neLayer);
+        neTagSet.setLayer(neLayer);
+    }
 
-        lemmaTagSet.setLayer(lemmaLayer);
+    @Override
+    public void createDepLayer(Project aProject, User aUser, String[] aDepTags,
+            String[] aDepTagDescriptions)
+        throws IOException
+    {
+        // Dependency Layer
+        String[] depTags = aDepTags.length > 0 ? aDepTags : new String[] { "ADV", "APP", "ATTR",
+                "AUX", "AVZ", "CJ", "DET", "ETH", "EXPL", "GMOD", "GRAD", "KOM", "KON", "KONJ",
+                "NEB", "OBJA", "OBJA2", "OBJA3", "OBJC", "OBJC2", "OBJC3", "OBJD", "OBJD2",
+                "OBJD3", "OBJG", "OBJG2", "OBJG3", "OBJI", "OBJI2", "OBJI3", "OBJP", "OBJP2",
+                "OBJP3", "PAR", "PART", "PN", "PP", "PRED", "-PUNCT-", "REL", "ROOT", "S", "SUBJ",
+                "SUBJ2", "SUBJ3", "SUBJC", "SUBJC2", "SUBJC3", "SUBJI", "SUBJI2", "CP", "PD", "RE",
+                "CD", "DA", "SVP", "OP", "MO", "JU", "CVC", "NG", "SB", "SBP", "AG", "PM", "OCRC",
+                "OG", "SUBJI3", "VOK", "ZEIT", "$", "--", "OC", "OA", "MNR", "NK", "RC", "EP",
+                "CC", "CM", "UC", "AC", "PNC" };
+        String[] depTagsDescription = aDepTagDescriptions.length == depTags.length ? aDepTagDescriptions
+                : depTags;
+        TagSet depTagSet = initializeType("DependencyType", "DependencyType",
+                "Dependency annotation", "uima.cas.String", "Tiger", "de", depTags,
+                depTagsDescription, aProject, aUser);
+        AnnotationFeature deFeature = depTagSet.getFeature();
 
+        AnnotationType depLayer = setLayer(Dependency.class.getName(), "DependencyType",
+                "dependency", "relation", aProject);
+        AnnotationType tokenLayer = getType(Token.class.getName(), "span", aProject);
+        List<AnnotationFeature> tokenFeatures = listAnnotationFeature(tokenLayer);
+        AnnotationFeature tokenPosFeature = null;
+        for (AnnotationFeature feature : tokenFeatures) {
+            if (feature.getName().equals("pos")) {
+                tokenPosFeature = feature;
+                break;
+            }
+        }
+        depLayer.setAttachType(tokenLayer);
+        depLayer.setAttachFeature(tokenPosFeature);
+
+        createType(depLayer, aUser);
+
+        deFeature.setLayer(depLayer);
+        depTagSet.setLayer(depLayer);
+    }
+
+    @Override
+    public void createPOSLayer(Project aProject, User aUser, String[] aPostags,
+            String[] aPosTagDescriptions)
+        throws IOException
+    {
+        // POS layer
+        String[] posTags = aPostags.length > 0 ? aPostags : new String[] { "$(", "$,", "$.",
+                "ADJA", "ADJD", "ADV", "APPO", "APPR", "APPRART", "APZR", "ART", "CARD", "FM",
+                "ITJ", "KOKOM", "KON", "KOUI", "KOUS", "NE", "NN", "PAV", "PDAT", "PDS", "PIAT",
+                "PIDAT", "PIS", "PPER", "PPOSAT", "PPOSS", "PRELAT", "PRELS", "PRF", "PROAV",
+                "PTKA", "PTKANT", "PTKNEG", "PTKVZ", "PTKZU", "PWAT", "PWAV", "PWS", "TRUNC",
+                "VAFIN", "VAIMP", "VAINF", "VAPP", "VMFIN", "VMINF", "VMPP", "VVFIN", "VVIMP",
+                "VVINF", "VVIZU", "VVPP", "XY", "--" };
+        String[] posTagDescriptions = aPosTagDescriptions.length == posTags.length ? aPosTagDescriptions
+                : new String[] {
+                        "sonstige Satzzeichen; satzintern \nBsp: - [,]()",
+                        "Komma \nBsp: ,",
+                        "Satzbeendende Interpunktion \nBsp: . ? ! ; :   ",
+                        "attributives Adjektiv \nBsp: [das] große [Haus]",
+                        "adverbiales oder prädikatives Adjektiv \nBsp: [er fährt] schnell, [er ist] schnell",
+                        "Adverb \nBsp: schon, bald, doch ",
+                        "Postposition \nBsp: [ihm] zufolge, [der Sache] wegen",
+                        "Präposition; Zirkumposition links \nBsp: in [der Stadt], ohne [mich]",
+                        "Präposition mit Artikel \nBsp: im [Haus], zur [Sache]",
+                        "Zirkumposition rechts \nBsp: [von jetzt] an",
+                        "bestimmter oder unbestimmter Artikel \nBsp: der, die, das, ein, eine",
+                        "Kardinalzahl \nBsp: zwei [Männer], [im Jahre] 1994",
+                        "Fremdsprachliches Material \nBsp: [Er hat das mit ``] A big fish ['' übersetzt]",
+                        "Interjektion \nBsp: mhm, ach, tja",
+                        "Vergleichskonjunktion \nBsp: als, wie",
+                        "nebenordnende Konjunktion \nBsp: und, oder, aber",
+                        "unterordnende Konjunktion mit ``zu'' und Infinitiv \nBsp: um [zu leben], anstatt [zu fragen]",
+                        "unterordnende Konjunktion mit Satz \nBsp: weil, daß, damit, wenn, ob ",
+                        "Eigennamen \nBsp: Hans, Hamburg, HSV ",
+                        "normales Nomen \nBsp: Tisch, Herr, [das] Reisen",
+                        "Pronominaladverb \nBsp: dafür, dabei, deswegen, trotzdem ",
+                        "attribuierendes Demonstrativpronomen \nBsp: jener [Mensch]",
+                        "substituierendes Demonstrativpronomen \nBsp: dieser, jener",
+                        "attribuierendes Indefinitpronomen ohne Determiner \nBsp: kein [Mensch], irgendein [Glas]   ",
+                        "attribuierendes Indefinitpronomen mit Determiner \nBsp: [ein] wenig [Wasser], [die] beiden [Brüder] ",
+                        "substituierendes Indefinitpronomen \nBsp: keiner, viele, man, niemand ",
+                        "irreflexives Personalpronomen \nBsp: ich, er, ihm, mich, dir",
+                        "attribuierendes Possessivpronome \nBsp: mein [Buch], deine [Mutter] ",
+                        "substituierendes Possessivpronome \nBsp: meins, deiner",
+                        "attribuierendes Relativpronomen \nBsp: [der Mann ,] dessen [Hund]   ",
+                        "substituierendes Relativpronomen \nBsp: [der Hund ,] der  ",
+                        "reflexives Personalpronomen \nBsp: sich, einander, dich, mir",
+                        "PROAV",
+                        "Partikel bei Adjektiv oder Adverb \nBsp: am [schönsten], zu [schnell]",
+                        "Antwortpartikel \nBsp: ja, nein, danke, bitte  ",
+                        "Negationspartikel \nBsp: nicht",
+                        "abgetrennter Verbzusatz \nBsp: [er kommt] an, [er fährt] rad   ",
+                        "``zu'' vor Infinitiv \nBsp: zu [gehen]",
+                        "attribuierendes Interrogativpronomen \nBsp: welche [Farbe], wessen [Hut]  ",
+                        "adverbiales Interrogativ- oder Relativpronomen \nBsp: warum, wo, wann, worüber, wobei",
+                        "substituierendes Interrogativpronomen \nBsp: wer, was",
+                        "Kompositions-Erstglied \nBsp: An- [und Abreise]",
+                        "finites Verb, aux \nBsp: [du] bist, [wir] werden  ",
+                        "Imperativ, aux \nBsp: sei [ruhig !]  ",
+                        "Infinitiv, aux \nBsp:werden, sein  ",
+                        "Partizip Perfekt, aux \nBsp: gewesen ",
+                        "finites Verb, modal \nBsp: dürfen  ", "Infinitiv, modal \nBsp: wollen ",
+                        "Partizip Perfekt, modal \nBsp: gekonnt, [er hat gehen] können ",
+                        "finites Verb, voll \nBsp: [du] gehst, [wir] kommen [an]   ",
+                        "Imperativ, voll \nBsp: komm [!] ",
+                        "Infinitiv, voll \nBsp: gehen, ankommen",
+                        "Infinitiv mit ``zu'', voll \nBsp: anzukommen, loszulassen ",
+                        "Partizip Perfekt, voll \nBsp:gegangen, angekommen ",
+                        "Nichtwort, Sonderzeichen enthaltend \nBsp:3:7, H2O, D2XW3", "--" };
+
+        TagSet PosTagSet = initializeType(
+                "PosValue",
+                "PosValue",
+                "Stuttgart-Tübingen-Tag-Set \nGerman Part of Speech tagset "
+                        + "STTS Tag Table (1995/1999): "
+                        + "http://www.ims.uni-stuttgart.de/projekte/corplex/TagSets/stts-table.html",
+                "uima.cas.String", "STTS", "de", posTags, posTagDescriptions, aProject, aUser);
+
+        AnnotationFeature posFeature = PosTagSet.getFeature();
+
+        AnnotationType tokenLayer = getType(Token.class.getName(), "span", aProject);
+        AnnotationType posLayer = setLayer(POS.class.getName(), "PosValue", "POS", "span", aProject);
+        AnnotationFeature tokenPosFeature = setFeature("pos", "pos", aProject, tokenLayer,
+                POS.class.getName());
+        tokenPosFeature.setVisible(false);
+        posLayer.setAttachType(tokenLayer);
+        posLayer.setAttachFeature(tokenPosFeature);
+        posLayer.setLabelFeatureName("PosValue");
+
+        createType(posLayer, aUser);
+
+        posFeature.setLayer(posLayer);
+        PosTagSet.setLayer(posLayer);
+    }
+
+    private AnnotationType createTokenLayer(Project aProject, User aUser)
+        throws IOException
+    {
+        AnnotationType tokenLayer = setLayer(Token.class.getName(), "", "Token", "span", aProject);
+
+        createType(tokenLayer, aUser);
+        return tokenLayer;
     }
 
     private AnnotationType setLayer(String aName, String aFeatureName, String aUiName,
@@ -610,11 +686,11 @@ public class AnnotationServiceImpl
         for (Tag tag : listTags(aTagSet)) {
             entityManager.remove(tag);
         }
-        if(aTagSet.getFeature() == null){
+        if (aTagSet.getFeature() == null) {
             entityManager.remove(aTagSet);
             return;
         }
-        for(AnnotationFeature feature: listAnnotationFeature(aTagSet.getLayer())){
+        for (AnnotationFeature feature : listAnnotationFeature(aTagSet.getLayer())) {
             feature.setTagset(null);
         }
 

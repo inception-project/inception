@@ -289,10 +289,15 @@ public class ProjectPage
                                 importedProject, projectRepository);
                         ProjectUtil.createProjectPermission(importedProjectSetting,
                                 importedProject, projectRepository);
-                        for (TagSet tagset : importedProjectSetting.getTagSets()) {
-                            ProjectUtil.createTagset(importedProject, tagset, projectRepository,
-                                    annotationService);
-                        }
+
+                        ProjectUtil.createTagset(importedProject,importedProjectSetting.getVersion(),
+                                importedProjectSetting.getTagSets(), projectRepository,
+                                annotationService);
+                        /*
+                         * for (TagSet tagset : importedProjectSetting.getTagSets()) {
+                         * ProjectUtil.createTagset(importedProject, tagset, projectRepository,
+                         * annotationService); }
+                         */
                         // add source document content
                         ProjectUtil.createSourceDocumentContent(zip, importedProject,
                                 projectRepository);
@@ -456,7 +461,6 @@ public class ProjectPage
                 }
             });
 
-
             tabs.add(new AbstractTab(new Model<String>("Automation"))
             {
 
@@ -471,7 +475,8 @@ public class ProjectPage
                 @Override
                 public boolean isVisible()
                 {
-                    return project.getObject().getId() != 0 && project.getObject().getMode().equals(Mode.AUTOMATION);
+                    return project.getObject().getId() != 0
+                            && project.getObject().getMode().equals(Mode.AUTOMATION);
 
                 }
             });
@@ -546,7 +551,10 @@ public class ProjectPage
                                 .getName();
                         User user = projectRepository.getUser(username);
                         projectRepository.createProject(project, user);
-                        annotationService.initializeTypesForProject(project, user);
+                        annotationService.initializeTypesForProject(project, user, new String[] {},
+                                new String[] {}, new String[] {}, new String[] {}, new String[] {
+                                        "በረ", "ጠረ", "ለመ" }, new String[] {}, new String[] {},
+                                new String[] {});
                         projectDetailForm.setVisible(true);
                     }
                     catch (IOException e) {

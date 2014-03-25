@@ -55,6 +55,9 @@ public class Project
     @Type(type="de.tudarmstadt.ukp.clarin.webanno.model.ModeType")
     private Mode mode = Mode.ANNOTATION;
 
+    // version of the project
+    private int version = 2;
+
     public Project()
     {
         // Nothing to do
@@ -89,6 +92,16 @@ public class Project
     public void setDescription(String description)
     {
         this.description = description;
+    }
+
+    public int getVersion()
+    {
+        return version;
+    }
+
+    public void setVersion(int version)
+    {
+        this.version = version;
     }
 
     @Override

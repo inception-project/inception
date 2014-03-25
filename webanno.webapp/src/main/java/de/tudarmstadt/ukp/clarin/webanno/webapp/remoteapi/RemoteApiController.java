@@ -101,8 +101,8 @@ public class RemoteApiController
     {
         LOG.info("Creating project [" + aName + "]");
 
-        if(!ProjectUtil.isZipStream(aFile.getInputStream())){
-                throw new InvalidFileNameException("", "is an invalid Zip file");
+        if (!ProjectUtil.isZipStream(aFile.getInputStream())) {
+            throw new InvalidFileNameException("", "is an invalid Zip file");
         }
 
         // Get current user
@@ -117,7 +117,9 @@ public class RemoteApiController
 
             // Create the project and initialize tags
             projectRepository.createProject(project, user);
-            annotationService.initializeTypesForProject(project, user);
+            annotationService.initializeTypesForProject(project, user, new String[] {},
+                    new String[] {}, new String[] {}, new String[] {}, new String[] {},
+                    new String[] {}, new String[] {}, new String[] {});
             // Create permission for this user
             ProjectPermission permission = new ProjectPermission();
             permission.setLevel(PermissionLevel.ADMIN);
@@ -132,8 +134,8 @@ public class RemoteApiController
             projectRepository.createProjectPermission(permission);
         }
         // Existing project
-        else{
-            throw new IOException("The project with name ["+ aName+"] exists");
+        else {
+            throw new IOException("The project with name [" + aName + "] exists");
         }
 
         // Iterate through all the files in the ZIP
@@ -158,7 +160,8 @@ public class RemoteApiController
             // IF the current filename is META-INF/webanno/source-meta-data.properties store it
             // as
             // project meta data
-            else if (entry.toString().replace("/", "").equals((META_INF+"webanno/source-meta-data.properties").replace("/", ""))) {
+            else if (entry.toString().replace("/", "")
+                    .equals((META_INF + "webanno/source-meta-data.properties").replace("/", ""))) {
                 InputStream zipStream = zip.getInputStream(entry);
                 projectRepository.savePropertiesFile(project, zipStream, entry.toString());
 
@@ -170,8 +173,8 @@ public class RemoteApiController
             }
             // If the current filename does not start with "." and is in the root folder of the
             // ZIP, import it as a source document
-            else if(!FilenameUtils.getExtension(entry.toString()).equals("") &&
-                    !FilenameUtils.getName(entry.toString()).equals(".")){
+            else if (!FilenameUtils.getExtension(entry.toString()).equals("")
+                    && !FilenameUtils.getName(entry.toString()).equals(".")) {
 
                 uploadSourceDocument(zip, entry, project, user, aFileType);
             }
@@ -183,7 +186,8 @@ public class RemoteApiController
     }
 
     private void uploadSourceDocument(ZipFile zip, ZipEntry entry, Project project, User user,
-            String aFileType) throws IOException, UIMAException, WLFormatException
+            String aFileType)
+        throws IOException, UIMAException, WLFormatException
     {
         String fileName = FilenameUtils.getName(entry.toString());
 

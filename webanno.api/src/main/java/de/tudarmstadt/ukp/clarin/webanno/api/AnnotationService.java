@@ -103,7 +103,6 @@ public interface AnnotationService
      */
     boolean existsTagSet(AnnotationFeature feature, Project project);
 
-
     /**
      * check if an {@link AnnotationType} exists with this name and type in this {@link Project}
      */
@@ -131,9 +130,12 @@ public interface AnnotationService
     /**
      * Get an {@link AnnotationType}
      */
-    AnnotationType getType(String name, String type);
+    AnnotationType getType(String name, String type, Project project);
+
     /**
-     * Get a {@link AnnotationFeature} name using its ID. Used for updating annotations as it is represented <id><type>
+     * Get a {@link AnnotationFeature} name using its ID. Used for updating annotations as it is
+     * represented <id><type>
+     *
      * @param id
      * @return
      */
@@ -146,12 +148,16 @@ public interface AnnotationService
 
     /**
      * Initialize the project with default {@link AnnotationType}, {@link TagSet}s, and {@link Tag}
-     * s. This is done per Project
+     * s. This is done per Project. For older projects, this method is used to import old tagsets
+     * and convert to the new scheme.
      *
      * @param aProject
      * @throws IOException
      */
-    void initializeTypesForProject(Project project, User user)
+    void initializeTypesForProject(Project project, User user, String[] postags,
+            String[] posTagDescriptions, String[] depTags, String[] depTagDescriptions,
+            String[] neTags, String[] neTagDescriptions, String[] corefTypeTags,
+            String[] corefRelTags)
         throws IOException;
 
     /**
@@ -169,7 +175,7 @@ public interface AnnotationService
     /**
      * List all the features in a {@link AnnotationType} for this {@link Project}
      */
-    List<AnnotationFeature> listAnnotationFeature( AnnotationType type);
+    List<AnnotationFeature> listAnnotationFeature(AnnotationType type);
 
     /**
      * List all features in the project
@@ -232,4 +238,19 @@ public interface AnnotationService
      * Should be called with care. Only when a project hosting this layer is removed
      */
     void removeAnnotationLayer(AnnotationType type);
+
+    void createPOSLayer(Project project, User user, String[] postags, String[] posTagDescriptions)
+        throws IOException;
+
+    void createDepLayer(Project project, User user, String[] depTags, String[] depTagDescriptions)
+        throws IOException;
+
+    void createNeLayer(Project project, User user, String[] neTags, String[] neTagDescriptions)
+        throws IOException;
+
+    void createCorefLayer(Project project, User user, String[] corefTypeTags, String[] corefRelTags)
+        throws IOException;
+
+    void createLemmaLayer(Project project, User user)
+        throws IOException;
 }

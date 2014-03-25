@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.model.export;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.annotate.JsonPropertyOrder;
 
@@ -30,8 +31,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
  * @author Seid Muhie Yimam
  *
  */
-@JsonPropertyOrder(value = { "name", "description", "reverse", "type", "typeName",
-        "typeDescription" ,"tags","mode" })
+
+@JsonPropertyOrder(value = { "name", "description","mode","version"})
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Project
 {
     @JsonProperty("name")
@@ -54,6 +56,9 @@ public class Project
 
     @JsonProperty("tag_sets")
     private List<TagSet> tagSets = new ArrayList<TagSet>();
+
+    @JsonProperty("version")
+    private int version;
 
     public String getName()
     {
@@ -123,6 +128,16 @@ public class Project
     public void setMode(Mode mode)
     {
         this.mode = mode;
+    }
+
+    public int getVersion()
+    {
+        return version;
+    }
+
+    public void setVersion(int version)
+    {
+        this.version = version;
     }
 
 }
