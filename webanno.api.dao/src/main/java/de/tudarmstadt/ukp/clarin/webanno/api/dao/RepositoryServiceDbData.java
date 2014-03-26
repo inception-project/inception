@@ -96,8 +96,8 @@ import org.springframework.transaction.annotation.Transactional;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -337,6 +337,20 @@ public class RepositoryServiceDbData
             return true;
         }
         catch (NoResultException ex) {
+            return false;
+        }
+    }
+
+    @Override
+    @Transactional
+    public boolean existsCorrectionDocument(SourceDocument aDocument)
+    {
+
+        try {
+            getCorrectionDocumentContent(aDocument);
+            return true;
+        }
+        catch (Exception ex) {
             return false;
         }
     }

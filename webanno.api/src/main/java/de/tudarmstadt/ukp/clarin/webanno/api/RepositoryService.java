@@ -297,6 +297,14 @@ public interface RepositoryService
     boolean existsAnnotationDocument(SourceDocument document, User user);
 
     /**
+     * A method to check if there exist a correction document already. Base correction document
+     * should be the same for all users
+     *
+     * @return
+     */
+    boolean existsCorrectionDocument(SourceDocument document);
+
+    /**
      * check if the JCAS for the {@link User} and {@link SourceDocument} in this {@link Project}
      * exists It is important as {@link AnnotationDocument} entry can be populated as
      * {@link AnnotationDocumentState#NEW} from the MonitoringPage before the user actually open the
@@ -304,9 +312,9 @@ public interface RepositoryService
      */
     boolean existsAnnotationDocumentContent(SourceDocument sourceDocument, String username)
         throws IOException;
-    
+
     /**
-     * check if there is an already automated document. This is important as automated document 
+     * check if there is an already automated document. This is important as automated document
      * should apear the same among users
      */
     boolean existsAutomatedDocument(SourceDocument sourceDocument);
@@ -823,7 +831,7 @@ public interface RepositoryService
      * Get CAS object for the first time, from the source document using the provided reader
      */
     @SuppressWarnings("rawtypes")
-    JCas getJCasFromFile(File file, Class reader,  SourceDocument aDocument)
+    JCas getJCasFromFile(File file, Class reader, SourceDocument aDocument)
         throws UIMAException, IOException;
 
     void updateTimeStamp(SourceDocument document, User user, Mode mode)
@@ -871,5 +879,6 @@ public interface RepositoryService
      * List all the MIRA templates created, hence know which layer do have a training conf already!
      */
     List<MiraTemplate> listMiraTemplates(Project project);
-    void removeMiraTemplate (MiraTemplate template);
+
+    void removeMiraTemplate(MiraTemplate template);
 }
