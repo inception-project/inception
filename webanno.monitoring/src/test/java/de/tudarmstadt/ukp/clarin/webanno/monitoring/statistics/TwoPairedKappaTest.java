@@ -32,6 +32,7 @@ import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 import org.junit.Test;
 
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -40,6 +41,8 @@ import de.tudarmstadt.ukp.clarin.webanno.monitoring.page.MonitoringPage;
 import de.tudarmstadt.ukp.clarin.webanno.tcf.TcfReader;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsvReader;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
  * Unit Test for Kappa Agreement. The example reads two TSV files with POS and DEP annotations for
@@ -52,7 +55,7 @@ public class TwoPairedKappaTest
 {
     private User user1, user2, user3;
     private SourceDocument document;
-    private CAS cas1, cas2, cas3, cas4, cas5;
+    private CAS cas1, cas2, cas3, cas4;
 
     private void init()
         throws Exception
@@ -121,7 +124,9 @@ public class TwoPairedKappaTest
     {
         init();
         double[][] results = new double[2][2];
-        TypeAdapter adapter = new SpanAdapter(0, POS.class.getName(), "PosValue", null, null);
+        TypeAdapter adapter = new ArcAdapter(0, Dependency.class.getName(),
+                "DependencyType", "Dependent", "Governor","pos",
+                Token.class.getName());
         Map<User, List<SourceDocument>> userDocs = new HashMap<User, List<SourceDocument>>();
         userDocs.put(user1, Arrays.asList(new SourceDocument[] { document }));
         userDocs.put(user2, Arrays.asList(new SourceDocument[] { document }));
@@ -161,7 +166,9 @@ public class TwoPairedKappaTest
     {
         init();
         double[][] results = new double[2][2];
-        TypeAdapter adapter = new SpanAdapter(0, POS.class.getName(), "PosValue", null, null);
+        TypeAdapter adapter = new ArcAdapter(0, Dependency.class.getName(),
+                "DependencyType", "Dependent", "Governor","pos",
+                Token.class.getName());
         Map<User, List<SourceDocument>> userDocs = new HashMap<User, List<SourceDocument>>();
         userDocs.put(user1, Arrays.asList(new SourceDocument[] { document }));
         userDocs.put(user2, Arrays.asList(new SourceDocument[] { document }));
@@ -181,7 +188,9 @@ public class TwoPairedKappaTest
     {
         init();
         double[][] results = new double[2][2];
-        TypeAdapter adapter = new SpanAdapter(0, POS.class.getName(), "PosValue", null, null);
+        TypeAdapter adapter = new ArcAdapter(0, Dependency.class.getName(),
+                "DependencyType", "Dependent", "Governor","pos",
+                Token.class.getName());
         Map<User, List<SourceDocument>> userDocs = new HashMap<User, List<SourceDocument>>();
         userDocs.put(user1, Arrays.asList(new SourceDocument[] { document }));
         userDocs.put(user2, Arrays.asList(new SourceDocument[] { document }));
