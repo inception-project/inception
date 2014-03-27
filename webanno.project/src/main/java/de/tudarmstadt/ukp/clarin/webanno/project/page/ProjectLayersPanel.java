@@ -366,7 +366,9 @@ public class ProjectLayersPanel
                                         .getAttachFeature());
 
                             }
-                            if (attachType.getModelObject().isBuiltIn()) {
+                            if (attachType.getModelObject().isBuiltIn()
+                                    && !attachType.getModelObject().getName()
+                                            .equals(Token.class.getName())) {
                                 return new ArrayList<AnnotationFeature>();
                             }
                             return annotationService.listAnnotationFeature(attachType
@@ -543,7 +545,7 @@ public class ProjectLayersPanel
 
             for (AnnotationType layer : annotationService.listAnnotationType(selectedProjectModel
                     .getObject())) {
-                if (!layer.getType().equals("relation")) {
+                if (!layer.getType().equals("relation") && !layer.isBuiltIn()) {
                     types.add(layer.getName());
                 }
             }
