@@ -580,6 +580,7 @@ public class CorrectionPage
 
                     finish.setModelObject(bratAnnotatorModel);
                     target.add(finish.setOutputMarkupId(true));
+                    target.add(documentNamePanel);
                     mergeVisualizer.reloadContent(target);
                 }
             }
@@ -654,6 +655,7 @@ public class CorrectionPage
 
                 finish.setModelObject(bratAnnotatorModel);
                 target.add(finish.setOutputMarkupId(true));
+                target.add(documentNamePanel);
                 mergeVisualizer.reloadContent(target);
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down }, EventType.click)));
