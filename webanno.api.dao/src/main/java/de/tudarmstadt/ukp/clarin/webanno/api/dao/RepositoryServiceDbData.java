@@ -115,12 +115,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.io.JCasFileWriter_ImplBase;
 import de.tudarmstadt.ukp.dkpro.core.api.io.ResourceCollectionReaderBase;
-import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
-import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.dkpro.core.io.bincas.SerializedCasReader;
 import de.tudarmstadt.ukp.dkpro.core.io.bincas.SerializedCasWriter;
 import de.tudarmstadt.ukp.dkpro.core.tokit.BreakIteratorSegmenter;
@@ -595,8 +592,16 @@ public class RepositoryServiceDbData
         // update with the correct tagset name
         List<AnnotationFeature> features = annotationService.listAnnotationFeature(project);
         for (AnnotationFeature feature : features) {
-            TagSet tagSet = annotationService.getTagSet(feature, project);
-            if (feature.getName().equals(WebAnnoConst.NAMEDENTITY)) {
+
+            TagSet tagSet = feature.getTagset();
+            if (tagSet == null) {
+                continue;
+            }
+            else if (!feature.getLayer().getType().equals(WebAnnoConst.CHAIN_TYPE)) {
+                BratAjaxCasUtil.updateCasWithTagSet(cas, feature.getLayer().getName(),
+                        tagSet.getName());
+            }
+         /*   if (feature.getName().equals(WebAnnoConst.NAMEDENTITY)) {
                 BratAjaxCasUtil.updateCasWithTagSet(cas, NamedEntity.class.getName(),
                         tagSet.getName());
             }
@@ -606,7 +611,7 @@ public class RepositoryServiceDbData
             else if (feature.getName().equals(WebAnnoConst.DEPENDENCY)) {
                 BratAjaxCasUtil.updateCasWithTagSet(cas, Dependency.class.getName(),
                         tagSet.getName());
-            }
+            }*/
             /*
              * else if (annotationType.getName().equals(AnnotationTypeConstant.COREFRELTYPE )) {
              * BratAjaxCasUtil.updateCasWithTagSet(cas, CoreferenceLink.class.getName(),
