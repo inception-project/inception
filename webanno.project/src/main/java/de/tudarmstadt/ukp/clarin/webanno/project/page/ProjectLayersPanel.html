@@ -24,8 +24,14 @@
 				<form wicket:id="layerSelectionForm">
 					<fieldset class="ui-widget-content ui-corner-all">
 						<legend>Layers</legend>
-						<div class="hfill">
-							<select class="hfill" wicket:id="layer" size="10"></select>
+
+						<div>
+							<select wicket:id="layerSelection" size="10"
+								style="font-weight: bold; width: 300px; height: 230px">
+								<span wicket:id="layers">
+									<option wicket:id="layer"></option>
+							</span>
+							</select>
 						</div>
 						<div class="buttons">
 							<input type="submit" wicket:id="create" />
@@ -61,7 +67,7 @@
 								<td><select wicket:id="type"></select></td>
 							</tr>
 							<tr>
-								<td><span wicket:id="attachTypeLabel"></span></td>
+								<td>Attach to layer:</td>
 								<td><select wicket:id="attachType"></select></td>
 							</tr>
 						</table>
@@ -127,13 +133,13 @@
 								<td style="vertical-align: top;">Enabled:</td>
 								<td><input type="checkbox" wicket:id="enabled" /></td>
 							</tr>
+								<tr>
+								<td style="vertical-align: top;">Show:</td>
+								<td><input type="checkbox" wicket:id="visible" /></td>
+							</tr>
 							<tr>
 								<td><label>TagSet:</label></td>
 								<td class="hfill"><select wicket:id="tagset"></select></td>
-							</tr>
-							<tr>
-								<td>Name:</td>
-								<td><input type="text" wicket:id="name" /></td>
 							</tr>
 						</table>
 					</fieldset>

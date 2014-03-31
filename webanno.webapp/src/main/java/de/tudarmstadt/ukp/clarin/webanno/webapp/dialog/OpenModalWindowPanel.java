@@ -63,9 +63,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 /**
  * A panel used as Open dialog. It Lists all projects a user is member of for annotation/curation
  * and associated documents
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 public class OpenModalWindowPanel
     extends Panel
@@ -176,7 +176,7 @@ public class OpenModalWindowPanel
              * Model("static/img/Fugue-shadowless-folder-horizontal-open.png"))); RepeatingView
              * projectIconRepeator = new RepeatingView("projectIconRepeator");
              * add(projectIconRepeator);
-             * 
+             *
              * for (final Project project : getAllowedProjects(allowedProject)) { AbstractItem item
              * = new AbstractItem(projectIconRepeator.newChildId()); projectIconRepeator.add(item);
              * item. add(new StaticImage("icon", new
@@ -266,7 +266,7 @@ public class OpenModalWindowPanel
 
         public DocumentSelectionForm(String id, final ModalWindow modalWindow)
         {
-            // super(id);
+
             super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
             final Map<SourceDocument, String> states = new HashMap<SourceDocument, String>();
 

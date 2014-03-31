@@ -265,8 +265,8 @@ public class ProjectTagSetsPanel
             add(fileUpload = new FileUploadField("content", new Model()));
             add(importTagsetFormat = new DropDownChoice<String>("importTagsetFormat",
                     new Model<String>(selectedExporTagsetFormat),
-                    Arrays.asList(new String[] { ExportedTagSetConstant.JSON_FORMAT/*,
-                            ExportedTagSetConstant.TAB_FORMAT */})));
+                    Arrays.asList(new String[] { ExportedTagSetConstant.JSON_FORMAT,
+                            ExportedTagSetConstant.TAB_FORMAT })));
             add(new Button("import", new ResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;
