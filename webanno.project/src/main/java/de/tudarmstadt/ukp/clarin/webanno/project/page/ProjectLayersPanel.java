@@ -28,7 +28,7 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
-import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
@@ -58,9 +58,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * A Panel Used to add Layers to a selected {@link Project} in the project settings page
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 
 public class ProjectLayersPanel
@@ -225,10 +225,11 @@ public class ProjectLayersPanel
         private static final long serialVersionUID = -1L;
 
         DropDownChoice<AnnotationType> attachType;
+        Label attachTypeLabel;
         DropDownChoice<String> LayerType;
         TextField<String> uiName;
         TextField<String> name;
-        String layerName = "de.tudarmstadt.cs.";
+        String layerName = "webanno.custom.";
 
         public LayerDetailForm(String id)
         {
@@ -266,6 +267,7 @@ public class ProjectLayersPanel
                 }
             }.setRequired(true));
             name.setOutputMarkupId(true);
+            name.setVisible(false);
 
             add(LayerType = (DropDownChoice<String>) new DropDownChoice<String>("type",
                     Arrays.asList(new String[] { "span", "relation", "chain" }))
@@ -273,86 +275,32 @@ public class ProjectLayersPanel
                 private static final long serialVersionUID = 1244555334843130802L;
 
                 @Override
-                protected boolean wantOnSelectionChangedNotifications() {
+                protected boolean wantOnSelectionChangedNotifications()
+                {
                     return true;
                 }
-                protected void onSelectionChanged(final String newSelection) {
-                    attachType.setVisible(true);
+
+                @Override
+                protected void onSelectionChanged(final String newSelection)
+                {
+                    addAttachType(project);
                 }
+
                 @Override
                 public boolean isEnabled()
                 {
                     return LayerDetailForm.this.getModelObject().getId() == 0;
                 }
+
+                @Override
+                protected CharSequence getDefaultChoice(String aSelectedValue)
+                {
+                    return "";
+                }
             }.setRequired(true));
-            
-            LayerType.add(new AjaxFormComponentUpdatingBehavior("onchange") {
-                private static final long serialVersionUID = 3617746295701595177L;
 
-                @Override
-                protected void onUpdate(AjaxRequestTarget aTarget)
-                {
-                    attachType.setVisible(true);
-                    attachType.setOutputMarkupId(true);
-                    LayerDetailForm.this.addOrReplace(attachType);
-                    aTarget.add(attachType.setOutputMarkupId(true));
-                }
-            }).setOutputMarkupId(true);
+            addAttachType(project);
 
-            add(attachType = new DropDownChoice<AnnotationType>("attachType")
-            {
-                private static final long serialVersionUID = -6705445053442011120L;
-
-                {
-                    setChoices(new LoadableDetachableModel<List<AnnotationType>>()
-                    {
-                        private static final long serialVersionUID = 1784646746122513331L;
-
-                        @Override
-                        protected List<AnnotationType> load()
-                        {
-                            List<AnnotationType> allLayers = annotationService
-                                    .listAnnotationType(project);
-                            List<AnnotationType> attachTeypes = new ArrayList<AnnotationType>();
-                            for (AnnotationType layer : allLayers) {
-                                if (!layer.getType().equals("span")) {
-                                    continue;
-                                }
-                                attachTeypes.add(layer);
-
-                            }
-
-                            return attachTeypes;
-
-                        }
-                    });
-                    setChoiceRenderer(new ChoiceRenderer<AnnotationType>()
-                    {
-                        private static final long serialVersionUID = 8639013729422537472L;
-
-                        @Override
-                        public Object getDisplayValue(AnnotationType aObject)
-                        {
-                            return aObject.getUiName();
-                        }
-                    });
-                }
-
-                @Override
-                public boolean isEnabled()
-                {
-                    return  LayerType.getModelObject() != null
-                            && LayerType.getModelObject().equals(WebAnnoConst.RELATION_TYPE) ;
-                }
-
-            /*    @Override
-                public boolean isVisible()
-                {
-                    return LayerType.getModelObject() != null
-                            && LayerType.getModelObject().equals(WebAnnoConst.RELATION_TYPE);
-                }*/
-            });
-            attachType.setVisible(false);
             // behaviors of layers
             add(new CheckBox("lockToTokenOffset"));
             add(new CheckBox("allowSTacking"));
@@ -424,6 +372,90 @@ public class ProjectLayersPanel
                 }
             });
 
+        }
+
+        private void addAttachType(final Project project)
+        {
+            if (attachTypeLabel != null) {
+                attachTypeLabel.remove();
+            }
+            add(attachTypeLabel = new Label("attachTypeLabel", "Attach to type")
+            {
+                private static final long serialVersionUID = -1290883833837327207L;
+
+                @Override
+                public boolean isVisible()
+                {
+                    return LayerType.getModelObject() != null
+                            && LayerType.getModelObject().equals(WebAnnoConst.RELATION_TYPE);
+                }
+            });
+            if (attachType != null) {
+                attachType.remove();
+            }
+            add(attachType = new DropDownChoice<AnnotationType>("attachType")
+            {
+                private static final long serialVersionUID = -6705445053442011120L;
+
+                {
+                    setChoices(new LoadableDetachableModel<List<AnnotationType>>()
+                    {
+                        private static final long serialVersionUID = 1784646746122513331L;
+
+                        @Override
+                        protected List<AnnotationType> load()
+                        {
+                            List<AnnotationType> allLayers = annotationService
+                                    .listAnnotationType(project);
+                            List<AnnotationType> attachTeypes = new ArrayList<AnnotationType>();
+                            for (AnnotationType layer : allLayers) {
+                                if (!layer.getType().equals("span")) {
+                                    continue;
+                                }
+                                attachTeypes.add(layer);
+
+                            }
+
+                            return attachTeypes;
+
+                        }
+                    });
+                    setChoiceRenderer(new ChoiceRenderer<AnnotationType>()
+                    {
+                        private static final long serialVersionUID = 8639013729422537472L;
+
+                        @Override
+                        public Object getDisplayValue(AnnotationType aObject)
+                        {
+                            return aObject.getUiName();
+                        }
+                    });
+                }
+
+                @Override
+                public boolean isEnabled()
+                {
+                    if (getModelObject() != null) {
+                        return false;
+                    }
+                    return LayerType.getModelObject() != null
+                            && LayerType.getModelObject().equals(WebAnnoConst.RELATION_TYPE);
+                }
+
+                @Override
+                protected CharSequence getDefaultChoice(String aSelectedValue)
+                {
+                    return "";
+                }
+
+                @Override
+                public boolean isVisible()
+                {
+                    return LayerType.getModelObject() != null
+                            && LayerType.getModelObject().equals(WebAnnoConst.RELATION_TYPE);
+                }
+            });
+            attachType.setOutputMarkupId(true);
         }
     }
 
