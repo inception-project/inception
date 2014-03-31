@@ -70,8 +70,6 @@ public class AnnotationType
 
     private boolean enabled = true;
 
-    private String labelFeatureName;
-
     private boolean builtIn = false;
 
     private boolean deletable = false;
@@ -189,34 +187,6 @@ public class AnnotationType
     public void setEnabled(boolean enabled)
     {
         this.enabled = enabled;
-    }
-
-    /**
-     *
-     * the name of a feature of the annotation type whose value is used to represent an annotation
-     * in the UI. E.g. for the POS type, this would be „PosValue“. In the future, an annotation type
-     * can have additional features, but these are only shown in the UI after extra interaction,
-     * e.g. when opening the annotation editing dialog or as a tooltip. In the future, this may be
-     * an expression which allows showing multiple feature values, e.g. „${PosValue} ${begin}
-     * ${end}“. See also section on feature definition below.
-     */
-    public String getLabelFeatureName()
-    {
-        return labelFeatureName;
-    }
-
-    /**
-     *
-     * the name of a feature of the annotation type whose value is used to represent an annotation
-     * in the UI. E.g. for the POS type, this would be „PosValue“. In the future, an annotation type
-     * can have additional features, but these are only shown in the UI after extra interaction,
-     * e.g. when opening the annotation editing dialog or as a tooltip. In the future, this may be
-     * an expression which allows showing multiple feature values, e.g. „${PosValue} ${begin}
-     * ${end}“. See also section on feature definition below.
-     */
-    public void setLabelFeatureName(String labelFeatureName)
-    {
-        this.labelFeatureName = labelFeatureName;
     }
 
     /**

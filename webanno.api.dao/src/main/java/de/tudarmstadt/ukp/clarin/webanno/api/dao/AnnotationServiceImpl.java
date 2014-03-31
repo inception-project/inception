@@ -344,10 +344,9 @@ public class AnnotationServiceImpl
         AnnotationType tokenLayer = getType(Token.class.getName(), "span", aProject);
         AnnotationFeature tokenLemmaFeature = setFeature("lemma", "lemma", aProject, tokenLayer,
                 Lemma.class.getName());
-        tokenLemmaFeature.setVisible(false);
+        tokenLemmaFeature.setVisible(true);
         lemmaLayer.setAttachType(tokenLayer);
         lemmaLayer.setAttachFeature(tokenLemmaFeature);
-        lemmaLayer.setLabelFeatureName("value");
 
         createType(lemmaLayer, aUser);
 
@@ -383,11 +382,11 @@ public class AnnotationServiceImpl
         createType(base, aUser);
 
         corefTypeFeature.setLayer(base);
-        corefTypeFeature.setVisible(false);
+        corefTypeFeature.setVisible(true);
         corefTypeTagSet.setLayer(base);
 
         corefRelFeature.setLayer(base);
-        corefRelFeature.setVisible(false);
+        corefRelFeature.setVisible(true);
         corefRelTagSet.setLayer(base);
     }
 
@@ -414,8 +413,7 @@ public class AnnotationServiceImpl
         AnnotationFeature neFeature = neTagSet.getFeature();
         AnnotationType neLayer = setLayer(NamedEntity.class.getName(), "value", "Named Entity",
                 "span", aProject);
-        neLayer.setLabelFeatureName("value");
-
+        
         createType(neLayer, aUser);
 
         neFeature.setLayer(neLayer);
@@ -548,10 +546,9 @@ public class AnnotationServiceImpl
         AnnotationType posLayer = setLayer(POS.class.getName(), "PosValue", "POS", "span", aProject);
         AnnotationFeature tokenPosFeature = setFeature("pos", "pos", aProject, tokenLayer,
                 POS.class.getName());
-        tokenPosFeature.setVisible(false);
+        tokenPosFeature.setVisible(true);
         posLayer.setAttachType(tokenLayer);
         posLayer.setAttachFeature(tokenPosFeature);
-        posLayer.setLabelFeatureName("PosValue");
 
         createType(posLayer, aUser);
 
@@ -573,7 +570,6 @@ public class AnnotationServiceImpl
     {
         AnnotationType layer = new AnnotationType();
         layer.setName(aName);
-        layer.setLabelFeatureName(aFeatureName);
         layer.setUiName(aUiName);
         layer.setProject(aProject);
         layer.setBuiltIn(true);

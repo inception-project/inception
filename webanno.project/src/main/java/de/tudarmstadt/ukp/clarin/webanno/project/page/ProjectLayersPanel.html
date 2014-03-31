@@ -51,15 +51,15 @@
 								<td style="vertical-align: top;">Enabled:</td>
 								<td><input type="checkbox" wicket:id="enabled" /></td>
 							</tr>
-							<tr>
-								<td>Label feature:</td>
-								<td><input type="text" wicket:id="labelFeatureName" /></td>
-							</tr>
 						</table>
 					</fieldset>
 					<fieldset class="ui-widget-content ui-corner-all labels-left">
 						<legend>Technical Properties</legend>
 						<table class="hfill">
+							<tr>
+								<td>Type:</td>
+								<td><select wicket:id="type"></select></td>
+							</tr>
 							<tr>
 								<td>Name:</td>
 								<td><input class="hfill" type="text" wicket:id="name"
@@ -68,14 +68,6 @@
 							<tr>
 								<td>Attach to type:</td>
 								<td><select wicket:id="attachType"></select></td>
-							</tr>
-							<tr>
-								<td>Attach to feature:</td>
-								<td><select wicket:id="attachFeature"></select></td>
-							</tr>
-							<tr>
-								<td>Type:</td>
-								<td><select wicket:id="type"></select></td>
 							</tr>
 						</table>
 					</fieldset>
@@ -125,6 +117,10 @@
 						<legend>Feature details</legend>
 						<table class="hfill">
 							<tr>
+								<td>Type:</td>
+								<td><select wicket:id="type"></select></td>
+							</tr>
+							<tr>
 								<td>Short Description:</td>
 								<td><input class="hfill" type="text" wicket:id="uiName" /></td>
 							</tr>
@@ -143,10 +139,6 @@
 							<tr>
 								<td>Name:</td>
 								<td><input type="text" wicket:id="name" /></td>
-							</tr>
-							<tr>
-								<td>Type:</td>
-								<td><select wicket:id="type"></select></td>
 							</tr>
 						</table>
 					</fieldset>

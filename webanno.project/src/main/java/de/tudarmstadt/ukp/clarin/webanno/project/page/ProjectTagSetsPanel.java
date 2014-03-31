@@ -594,31 +594,6 @@ public class ProjectTagSetsPanel
             add(new TextField<String>("language"));
             add(new CheckBox("createTag"));
 
-            add(new TextField<String>("type", new LoadableDetachableModel<String>()
-            {
-
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                protected String load()
-                {
-                    return getModelObject().getLayer() == null ? "" : getModelObject().getLayer()
-                            .getUiName();
-                }
-            }).setOutputMarkupId(true).setEnabled(false));
-
-            add(new TextField<String>("feature", new LoadableDetachableModel<String>()
-            {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                protected String load()
-                {
-                    return getModelObject().getFeature() == null ? "" : getModelObject()
-                            .getFeature().getUiName();
-                }
-            }).setOutputMarkupId(true).setEnabled(false));
-
             add(new Button("save", new ResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;

@@ -83,8 +83,6 @@ public class AnnotationFeature
     @Column(nullable = false)
     private String name;
 
-    private String featureType;
-
     private boolean visible = true;
 
     public long getId()
