@@ -255,9 +255,10 @@ public class ProjectLayersPanel
         {
             super(id, new CompoundPropertyModel<AnnotationType>(new EntityModel<AnnotationType>(
                     new AnnotationType())));
-
-            attachType.setVisible(false);
-            attachType.setOutputMarkupPlaceholderTag(true);
+            if (attachType != null) {
+                attachType.setVisible(false);
+                attachType.setOutputMarkupPlaceholderTag(true);
+            }
             final Project project = selectedProjectModel.getObject();
             add(uiName = (TextField<String>) new TextField<String>("uiName").setRequired(true));
             uiName.add(new AjaxFormComponentUpdatingBehavior("onkeyup")
@@ -437,6 +438,7 @@ public class ProjectLayersPanel
     {
         private static final long serialVersionUID = -1L;
         DropDownChoice<TagSet> tagSet;
+        DropDownChoice<String> featureType;
         TagSet none;
 
         public FeatureDetailForm(String id)
@@ -448,6 +450,58 @@ public class ProjectLayersPanel
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
             add(new CheckBox("enabled"));
             add(new CheckBox("visible"));
+
+            types.add(CAS.TYPE_NAME_STRING);
+            types.add(CAS.TYPE_NAME_INTEGER);
+            types.add(CAS.TYPE_NAME_FLOAT);
+            types.add(CAS.TYPE_NAME_BOOLEAN);
+
+            add(featureType = (DropDownChoice<String>) new DropDownChoice<String>("type")
+            {
+                private static final long serialVersionUID = 9029205407108101183L;
+
+                {
+                    setChoices(new LoadableDetachableModel<List<String>>()
+                    {
+                        private static final long serialVersionUID = -5732558926576750673L;
+
+                        @Override
+                        protected List<String> load()
+                        {
+                            if (getModelObject() != null) {
+                                return Arrays.asList(getModelObject());
+                            }
+                            return types;
+
+                        }
+                    });
+
+                }
+
+                @Override
+                protected CharSequence getDefaultChoice(String aSelectedValue)
+                {
+                    return "";
+                }
+
+                @Override
+                public boolean isEnabled()
+                {
+                    return FeatureDetailForm.this.getModelObject().getId() == 0;
+                }
+            }.setRequired(true));
+            featureType.add(new AjaxFormComponentUpdatingBehavior("onChange")
+            {
+                private static final long serialVersionUID = -2904306846882446294L;
+
+                @Override
+                protected void onUpdate(AjaxRequestTarget aTarget)
+                {
+                    aTarget.add(tagSet);
+
+                }
+            });
+
             add(tagSet = new DropDownChoice<TagSet>("tagset")
             {
                 private static final long serialVersionUID = -6705445053442011120L;
@@ -503,49 +557,13 @@ public class ProjectLayersPanel
                 @Override
                 public boolean isEnabled()
                 {
-                    return FeatureDetailForm.this.getModelObject().getTagset() == null;
+                    return FeatureDetailForm.this.getModelObject().getTagset() == null
+                            && featureType.getModelObject() == null
+                            || (featureType.getModelObject() != null && featureType
+                                    .getModelObject().equals(CAS.TYPE_NAME_STRING));
                 }
             });
-
-            types.add(CAS.TYPE_NAME_STRING);
-            types.add(CAS.TYPE_NAME_INTEGER);
-            types.add(CAS.TYPE_NAME_FLOAT);
-            types.add(CAS.TYPE_NAME_BOOLEAN);
-
-            add(new DropDownChoice<String>("type")
-            {
-                private static final long serialVersionUID = 9029205407108101183L;
-
-                {
-                    setChoices(new LoadableDetachableModel<List<String>>()
-                    {
-                        private static final long serialVersionUID = -5732558926576750673L;
-
-                        @Override
-                        protected List<String> load()
-                        {
-                            if (getModelObject() != null) {
-                                return Arrays.asList(getModelObject());
-                            }
-                            return types;
-
-                        }
-                    });
-
-                }
-
-                @Override
-                protected CharSequence getDefaultChoice(String aSelectedValue)
-                {
-                    return "";
-                }
-
-                @Override
-                public boolean isEnabled()
-                {
-                    return FeatureDetailForm.this.getModelObject().getId() == 0;
-                }
-            }.setRequired(true));
+            tagSet.setOutputMarkupPlaceholderTag(true);
 
             add(new Button("save", new ResourceModel("label"))
             {
