@@ -82,7 +82,7 @@ public class BratAnnotatorModel
     /**
      * The number of sentences to be dispalyed at atime
      */
-    private int windowSize = 10;
+    private int windowSize = 5;
 
     /**
      * Used to enable/disable auto-scrolling while annotation
