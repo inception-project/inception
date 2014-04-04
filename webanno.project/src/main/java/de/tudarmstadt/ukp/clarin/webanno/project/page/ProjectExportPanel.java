@@ -46,7 +46,6 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.progressbar.ProgressBar;
 import org.wicketstuff.progressbar.Progression;
 import org.wicketstuff.progressbar.ProgressionModel;
@@ -109,7 +108,6 @@ public class ProjectExportPanel
     @SuppressWarnings("unused")
     private AjaxLink<Void> exportProjectLink;
 
-    private String username;
     private String fileName;
     private String downloadedFile;
     @SuppressWarnings("unused")
@@ -130,8 +128,6 @@ public class ProjectExportPanel
         feedbackPanel.setOutputMarkupId(true);
         feedbackPanel.add(new AttributeModifier("class", "info"));
         feedbackPanel.add(new AttributeModifier("class", "error"));
-
-        username = SecurityContextHolder.getContext().getAuthentication().getName();
 
         add(new Button("send", new ResourceModel("label"))
         {
@@ -480,7 +476,7 @@ public class ProjectExportPanel
                         CURATION_USER);
                 File curationFile = null;
                 if (CurationFileAsSerialisedCas.exists()) {
-                    curationFile = repository.exportAnnotationDocument(sourceDocument, username,
+                    curationFile = repository.exportAnnotationDocument(sourceDocument, CURATION_USER,
                             TcfWriter.class, sourceDocument.getName(), Mode.CURATION);
                 }
                 // in Case they didn't exist
@@ -498,7 +494,7 @@ public class ProjectExportPanel
                         CORRECTION_USER);
                 File correctionFile = null;
                 if (CorrectionFileAsSerialisedCas.exists()) {
-                    correctionFile = repository.exportAnnotationDocument(sourceDocument, username,
+                    correctionFile = repository.exportAnnotationDocument(sourceDocument, CORRECTION_USER,
                             TcfWriter.class, sourceDocument.getName(), Mode.CORRECTION);
                 }
                 // in Case they didn't exist
