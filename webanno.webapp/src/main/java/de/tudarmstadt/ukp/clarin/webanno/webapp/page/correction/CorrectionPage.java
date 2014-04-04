@@ -952,12 +952,21 @@ public class CorrectionPage
                 jCas = repository.getCorrectionDocumentContent(bratAnnotatorModel.getDocument());
                 // remove all annotation so that the user can correct from the auto annotation
 
-                AnnotationDocument annotationDocument = new AnnotationDocument();
-                annotationDocument.setDocument(bratAnnotatorModel.getDocument());
-                annotationDocument.setName(bratAnnotatorModel.getDocument().getName());
-                annotationDocument.setUser(logedInUser.getUsername());
-                annotationDocument.setProject(bratAnnotatorModel.getProject());
-                repository.createAnnotationDocument(annotationDocument);
+                AnnotationDocument annotationDocument;
+                // if annotation Document created out side of correction project (such as
+                // Monitoring)
+                if (repository.existsAnnotationDocument(bratAnnotatorModel.getDocument(),
+                        logedInUser)) {
+                    annotationDocument = repository.getAnnotationDocument(
+                            bratAnnotatorModel.getDocument(), logedInUser);
+                }
+                else {
+                    annotationDocument = new AnnotationDocument();
+                    annotationDocument.setDocument(bratAnnotatorModel.getDocument());
+                    annotationDocument.setName(bratAnnotatorModel.getDocument().getName());
+                    annotationDocument.setUser(logedInUser.getUsername());
+                    annotationDocument.setProject(bratAnnotatorModel.getProject());
+                }
 
                 BratAnnotatorUtility.clearJcasAnnotations(jCas, bratAnnotatorModel.getDocument(),
                         logedInUser, repository);
@@ -978,12 +987,21 @@ public class CorrectionPage
                 jCas = repository.getCorrectionDocumentContent(bratAnnotatorModel.getDocument());
                 // remove all annotation so that the user can correct from the auto annotation
 
-                AnnotationDocument annotationDocument = new AnnotationDocument();
-                annotationDocument.setDocument(bratAnnotatorModel.getDocument());
-                annotationDocument.setName(bratAnnotatorModel.getDocument().getName());
-                annotationDocument.setUser(logedInUser.getUsername());
-                annotationDocument.setProject(bratAnnotatorModel.getProject());
-                repository.createAnnotationDocument(annotationDocument);
+                AnnotationDocument annotationDocument;
+                // if annotation Document created out side of correction project (such as
+                // Monitoring)
+                if (repository.existsAnnotationDocument(bratAnnotatorModel.getDocument(),
+                        logedInUser)) {
+                    annotationDocument = repository.getAnnotationDocument(
+                            bratAnnotatorModel.getDocument(), logedInUser);
+                }
+                else {
+                    annotationDocument = new AnnotationDocument();
+                    annotationDocument.setDocument(bratAnnotatorModel.getDocument());
+                    annotationDocument.setName(bratAnnotatorModel.getDocument().getName());
+                    annotationDocument.setUser(logedInUser.getUsername());
+                    annotationDocument.setProject(bratAnnotatorModel.getProject());
+                }
 
                 BratAnnotatorUtility.clearJcasAnnotations(jCas, bratAnnotatorModel.getDocument(),
                         logedInUser, repository);
