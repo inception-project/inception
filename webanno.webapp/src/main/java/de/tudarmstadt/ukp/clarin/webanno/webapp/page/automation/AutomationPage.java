@@ -267,6 +267,9 @@ public class AutomationPage
             protected void onDelete(BratAnnotatorModel aBratAnnotatorModel, int aStart, int aEnd)
             {
                 MiraTemplate template;
+                if(bratAnnotatorModel.getRememberedSpanTag() ==null){
+                    return;
+                }
                 try {
                     template = repository.getMiraTemplate(bratAnnotatorModel.getRememberedSpanTag()
                             .getTagSet());
@@ -1141,22 +1144,5 @@ public class AutomationPage
         }
         target.add(automateView);
         target.add(numberOfPages);
-    }
-
-    private boolean existsFinishedCurationDocument(Project aProject)
-    {
-        boolean existsFinishedCurationDocument = false;
-        List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = repository
-                .listSourceDocuments(aProject);
-
-        for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
-
-            // If the curation document is exist (either finished or in progress
-            if (sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
-                existsFinishedCurationDocument = true;
-                break;
-            }
-        }
-        return existsFinishedCurationDocument;
     }
 }
