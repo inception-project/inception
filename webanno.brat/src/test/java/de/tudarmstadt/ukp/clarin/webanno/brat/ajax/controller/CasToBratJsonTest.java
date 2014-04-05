@@ -51,7 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
@@ -102,7 +102,7 @@ public class CasToBratJsonTest extends TestCase {
 
 		List<TagSet> tagList = new ArrayList<TagSet>();
 
-		AnnotationType type = new AnnotationType();
+		AnnotationLayer type = new AnnotationLayer();
 		type.setDescription("span annoattion");
 		type.setName("pos");
 		type.setType("span");

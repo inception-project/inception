@@ -33,7 +33,7 @@ import org.hibernate.annotations.ForeignKey;
 
 /**
  * A persistence object for an annotation feature. One or more features can be defined per
- * {@link AnnotationType}. At least one feature must be defined which serves as the “label feature”.
+ * {@link AnnotationLayer}. At least one feature must be defined which serves as the “label feature”.
  * Additional features may be defined. Features have a type which can either be String, integer,
  * float, or boolean. To control the values that a String feature assumes, it can be associated with
  * a tagset. If the feature is defined on a span type, it is also possible to add a feature of
@@ -61,7 +61,7 @@ public class AnnotationFeature
     @ManyToOne
     @ForeignKey(name = "none")
     @JoinColumn(name = "annotation_type")
-    private AnnotationType layer;
+    private AnnotationLayer layer;
 
     @ManyToOne
     @JoinColumn(name = "project")
@@ -116,7 +116,7 @@ public class AnnotationFeature
     /**
      * the type with which the feature is associated.
      */
-    public AnnotationType getLayer()
+    public AnnotationLayer getLayer()
     {
         return layer;
     }
@@ -124,7 +124,7 @@ public class AnnotationFeature
     /**
      * the type with which the feature is associated.
      */
-    public void setLayer(AnnotationType layer)
+    public void setLayer(AnnotationLayer layer)
     {
         this.layer = layer;
     }

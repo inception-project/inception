@@ -58,7 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -89,7 +89,7 @@ public class ProjectLayersPanel
     private LayerDetailForm layerDetailForm;
     private final FeatureDetailForm featureDetailForm;
 
-    private Select<AnnotationType> layerSelection;
+    private Select<AnnotationLayer> layerSelection;
 
     private final Model<Project> selectedProjectModel;
     List<String> types = new ArrayList<String>();
@@ -139,7 +139,7 @@ public class ProjectLayersPanel
                     }
                     else {
                         LayerSelectionForm.this.getModelObject().layerSelection = null;
-                        layerDetailForm.setModelObject(new AnnotationType());
+                        layerDetailForm.setModelObject(new AnnotationLayer());
                         layerDetailForm.setVisible(true);
                         featureSelectionForm.setVisible(false);
                         featureDetailForm.setVisible(false);
@@ -147,26 +147,26 @@ public class ProjectLayersPanel
                 }
             });
 
-            final Map<AnnotationType, String> colors = new HashMap<AnnotationType, String>();
+            final Map<AnnotationLayer, String> colors = new HashMap<AnnotationLayer, String>();
 
-            layerSelection = new Select<AnnotationType>("layerSelection");
-            ListView<AnnotationType> layers = new ListView<AnnotationType>("layers",
-                    new LoadableDetachableModel<List<AnnotationType>>()
+            layerSelection = new Select<AnnotationLayer>("layerSelection");
+            ListView<AnnotationLayer> layers = new ListView<AnnotationLayer>("layers",
+                    new LoadableDetachableModel<List<AnnotationLayer>>()
                     {
                         private static final long serialVersionUID = 1L;
 
                         @Override
-                        protected List<AnnotationType> load()
+                        protected List<AnnotationLayer> load()
                         {
                             Project project = selectedProjectModel.getObject();
 
                             if (project.getId() != 0) {
-                                List<AnnotationType> layers = annotationService
+                                List<AnnotationLayer> layers = annotationService
                                         .listAnnotationType(project);
-                                AnnotationType tokenLayer = annotationService.getType(
+                                AnnotationLayer tokenLayer = annotationService.getType(
                                         Token.class.getName(), WebAnnoConst.SPAN_TYPE, project);
                                 layers.remove(tokenLayer);
-                                for (AnnotationType layer : layers) {
+                                for (AnnotationLayer layer : layers) {
                                     if (layer.isBuiltIn() && layer.isEnabled()) {
                                         colors.put(layer, "green");
                                     }
@@ -179,16 +179,16 @@ public class ProjectLayersPanel
                                 }
                                 return layers;
                             }
-                            return new ArrayList<AnnotationType>();
+                            return new ArrayList<AnnotationLayer>();
                         }
                     })
             {
                 private static final long serialVersionUID = 8901519963052692214L;
 
                 @Override
-                protected void populateItem(final ListItem<AnnotationType> item)
+                protected void populateItem(final ListItem<AnnotationLayer> item)
                 {
-                    item.add(new SelectOption<AnnotationType>("layer", new Model<AnnotationType>(
+                    item.add(new SelectOption<AnnotationLayer>("layer", new Model<AnnotationLayer>(
                             item.getModelObject()))
                     {
                         private static final long serialVersionUID = 3095089418860168215L;
@@ -235,26 +235,26 @@ public class ProjectLayersPanel
     {
         private static final long serialVersionUID = -1L;
 
-        private AnnotationType layerSelection;
+        private AnnotationLayer layerSelection;
         public AnnotationFeature feature;
     }
 
     private class LayerDetailForm
-        extends Form<AnnotationType>
+        extends Form<AnnotationLayer>
     {
         private static final long serialVersionUID = -1L;
 
-        DropDownChoice<AnnotationType> attachType;
+        DropDownChoice<AnnotationLayer> attachType;
         DropDownChoice<String> LayerType;
         TextField<String> uiName;
         String prefix = "webanno.custom.";
         String layerName;
-        AnnotationType none;
+        AnnotationLayer none;
 
         public LayerDetailForm(String id)
         {
-            super(id, new CompoundPropertyModel<AnnotationType>(new EntityModel<AnnotationType>(
-                    new AnnotationType())));
+            super(id, new CompoundPropertyModel<AnnotationLayer>(new EntityModel<AnnotationLayer>(
+                    new AnnotationLayer())));
             if (attachType != null) {
                 attachType.setVisible(false);
                 attachType.setOutputMarkupPlaceholderTag(true);
@@ -293,29 +293,29 @@ public class ProjectLayersPanel
                 }
             }.setRequired(true));
 
-            add(attachType = new DropDownChoice<AnnotationType>("attachType")
+            add(attachType = new DropDownChoice<AnnotationLayer>("attachType")
             {
                 private static final long serialVersionUID = -6705445053442011120L;
 
                 {
-                    setChoices(new LoadableDetachableModel<List<AnnotationType>>()
+                    setChoices(new LoadableDetachableModel<List<AnnotationLayer>>()
                     {
                         private static final long serialVersionUID = 1784646746122513331L;
 
                         @Override
-                        protected List<AnnotationType> load()
+                        protected List<AnnotationLayer> load()
                         {
-                            none = new AnnotationType();
+                            none = new AnnotationLayer();
                             none.setUiName("-NONE-");
                             if (LayerDetailForm.this.getModelObject().getId() > 0
                                     && LayerDetailForm.this.getModelObject().getAttachType() == null) {
                                 return Arrays.asList(none);
                             }
-                            List<AnnotationType> allLayers = annotationService
+                            List<AnnotationLayer> allLayers = annotationService
                                     .listAnnotationType(project);
-                            List<AnnotationType> attachTeypes = new ArrayList<AnnotationType>();
+                            List<AnnotationLayer> attachTeypes = new ArrayList<AnnotationLayer>();
                             attachTeypes.add(none);
-                            for (AnnotationType layer : allLayers) {
+                            for (AnnotationLayer layer : allLayers) {
                                 if (!layer.getType().equals("span")) {
                                     continue;
                                 }
@@ -327,12 +327,12 @@ public class ProjectLayersPanel
 
                         }
                     });
-                    setChoiceRenderer(new ChoiceRenderer<AnnotationType>()
+                    setChoiceRenderer(new ChoiceRenderer<AnnotationLayer>()
                     {
                         private static final long serialVersionUID = 8639013729422537472L;
 
                         @Override
-                        public Object getDisplayValue(AnnotationType aObject)
+                        public Object getDisplayValue(AnnotationLayer aObject)
                         {
                             return aObject.getUiName();
                         }
@@ -368,7 +368,7 @@ public class ProjectLayersPanel
                 @Override
                 public void onSubmit()
                 {
-                    AnnotationType layer = LayerDetailForm.this.getModelObject();
+                    AnnotationLayer layer = LayerDetailForm.this.getModelObject();
 
                     if (layer.getId() == 0) {
                         if (annotationService.existsLayer(prefix + layerName, layer.getType(),

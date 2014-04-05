@@ -30,7 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.EntityType;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.RelationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
@@ -103,7 +103,7 @@ public class BratAjaxConfiguration
 
             if (relationTagSet.getLayer().getType().equals("chain")) {
                 if (relationTagSet.getFeature().getName().equals("referenceRelation")) {
-                    AnnotationType chainLayer = relationTagSet.getFeature().getLayer();
+                    AnnotationLayer chainLayer = relationTagSet.getFeature().getLayer();
                     List<AnnotationFeature> chainFeatures = aAnnotationService
                             .listAnnotationFeature(chainLayer);
                     AnnotationFeature linkFeature = null;
@@ -126,8 +126,8 @@ public class BratAjaxConfiguration
                 AnnotationFeature attachFeature = relationTagSet.getFeature().getLayer()
                         .getAttachFeature();
                 TagSet attachTagSet = null;
-                AnnotationType attachLayer = null;
-                for (AnnotationType layer : aAnnotationService.listAnnotationType(relationTagSet
+                AnnotationLayer attachLayer = null;
+                for (AnnotationLayer layer : aAnnotationService.listAnnotationType(relationTagSet
                         .getProject())) {
                     if (layer.getAttachFeature() != null && layer.getType().equals("span")
                             && layer.getAttachFeature().equals(attachFeature)) {

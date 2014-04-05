@@ -31,7 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -97,7 +97,7 @@ public class AnnotationServiceImpl
 
     @Override
     @Transactional
-    public void createType(AnnotationType aType, User aUser)
+    public void createType(AnnotationLayer aType, User aUser)
         throws IOException
     {
         if (aType.getId() == 0) {
@@ -188,7 +188,7 @@ public class AnnotationServiceImpl
             entityManager
                     .createQuery(
                             "FROM AnnotationType WHERE name = :name AND type = :type AND project = :project",
-                            AnnotationType.class).setParameter("name", aName)
+                            AnnotationLayer.class).setParameter("name", aName)
                     .setParameter("type", aType).setParameter("project", aProject)
                     .getSingleResult();
             return true;
@@ -200,7 +200,7 @@ public class AnnotationServiceImpl
     }
 
     @Override
-    public boolean existsFeature(String aName, AnnotationType aLayer, Project aProject)
+    public boolean existsFeature(String aName, AnnotationLayer aLayer, Project aProject)
     {
 
         try {
@@ -238,12 +238,12 @@ public class AnnotationServiceImpl
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public AnnotationType getType(String aName, String aType, Project aProject)
+    public AnnotationLayer getType(String aName, String aType, Project aProject)
     {
         return entityManager
                 .createQuery(
                         "From AnnotationType where name = :name AND type = :type AND project =:project",
-                        AnnotationType.class).setParameter("name", aName)
+                        AnnotationLayer.class).setParameter("name", aName)
                 .setParameter("type", aType).setParameter("project", aProject).getSingleResult();
     }
 
@@ -263,7 +263,7 @@ public class AnnotationServiceImpl
         try {
             entityManager
                     .createQuery("From AnnotationType where name = :name AND type = :type",
-                            AnnotationType.class).setParameter("name", aName)
+                            AnnotationLayer.class).setParameter("name", aName)
                     .setParameter("type", aType).getSingleResult();
             return true;
         }
@@ -339,9 +339,9 @@ public class AnnotationServiceImpl
         TagSet lemmaTagSet = initializeType("value", "value", "lemma annotation",
                 "uima.cas.String", "Lemma", "de", new String[] {}, new String[] {}, aProject, aUser);
 
-        AnnotationType lemmaLayer = setLayer(Lemma.class.getName(), "value", "Lemma", "span",
+        AnnotationLayer lemmaLayer = setLayer(Lemma.class.getName(), "value", "Lemma", "span",
                 aProject);
-        AnnotationType tokenLayer = getType(Token.class.getName(), "span", aProject);
+        AnnotationLayer tokenLayer = getType(Token.class.getName(), "span", aProject);
         AnnotationFeature tokenLemmaFeature = setFeature("lemma", "lemma", aProject, tokenLayer,
                 Lemma.class.getName());
         tokenLemmaFeature.setVisible(true);
@@ -376,7 +376,7 @@ public class AnnotationServiceImpl
                 new String[] { "anaphoric" }, aProject, aUser);
         AnnotationFeature corefRelFeature = corefRelTagSet.getFeature();
 
-        AnnotationType base = setLayer("de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference",
+        AnnotationLayer base = setLayer("de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference",
                 "coreference", "Coreference", "chain", aProject);
 
         createType(base, aUser);
@@ -411,7 +411,7 @@ public class AnnotationServiceImpl
                 "uima.cas.String", "NER_WebAnno", "de", neTags, neTagDescriptions, aProject, aUser);
 
         AnnotationFeature neFeature = neTagSet.getFeature();
-        AnnotationType neLayer = setLayer(NamedEntity.class.getName(), "value", "Named Entity",
+        AnnotationLayer neLayer = setLayer(NamedEntity.class.getName(), "value", "Named Entity",
                 "span", aProject);
         
         createType(neLayer, aUser);
@@ -442,9 +442,9 @@ public class AnnotationServiceImpl
                 depTagsDescription, aProject, aUser);
         AnnotationFeature deFeature = depTagSet.getFeature();
 
-        AnnotationType depLayer = setLayer(Dependency.class.getName(), "DependencyType",
+        AnnotationLayer depLayer = setLayer(Dependency.class.getName(), "DependencyType",
                 "dependency", "relation", aProject);
-        AnnotationType tokenLayer = getType(Token.class.getName(), "span", aProject);
+        AnnotationLayer tokenLayer = getType(Token.class.getName(), "span", aProject);
         List<AnnotationFeature> tokenFeatures = listAnnotationFeature(tokenLayer);
         AnnotationFeature tokenPosFeature = null;
         for (AnnotationFeature feature : tokenFeatures) {
@@ -542,8 +542,8 @@ public class AnnotationServiceImpl
 
         AnnotationFeature posFeature = PosTagSet.getFeature();
 
-        AnnotationType tokenLayer = getType(Token.class.getName(), "span", aProject);
-        AnnotationType posLayer = setLayer(POS.class.getName(), "PosValue", "POS", "span", aProject);
+        AnnotationLayer tokenLayer = getType(Token.class.getName(), "span", aProject);
+        AnnotationLayer posLayer = setLayer(POS.class.getName(), "PosValue", "POS", "span", aProject);
         AnnotationFeature tokenPosFeature = setFeature("pos", "pos", aProject, tokenLayer,
                 POS.class.getName());
         tokenPosFeature.setVisible(true);
@@ -556,19 +556,19 @@ public class AnnotationServiceImpl
         PosTagSet.setLayer(posLayer);
     }
 
-    private AnnotationType createTokenLayer(Project aProject, User aUser)
+    private AnnotationLayer createTokenLayer(Project aProject, User aUser)
         throws IOException
     {
-        AnnotationType tokenLayer = setLayer(Token.class.getName(), "", "Token", "span", aProject);
+        AnnotationLayer tokenLayer = setLayer(Token.class.getName(), "", "Token", "span", aProject);
 
         createType(tokenLayer, aUser);
         return tokenLayer;
     }
 
-    private AnnotationType setLayer(String aName, String aFeatureName, String aUiName,
+    private AnnotationLayer setLayer(String aName, String aFeatureName, String aUiName,
             String aType, Project aProject)
     {
-        AnnotationType layer = new AnnotationType();
+        AnnotationLayer layer = new AnnotationLayer();
         layer.setName(aName);
         layer.setUiName(aUiName);
         layer.setProject(aProject);
@@ -578,7 +578,7 @@ public class AnnotationServiceImpl
     }
 
     private AnnotationFeature setFeature(String aName, String aUiname, Project aProject,
-            AnnotationType aLayer, String aType)
+            AnnotationLayer aLayer, String aType)
     {
         AnnotationFeature feature = new AnnotationFeature();
         feature.setName(aName);
@@ -594,24 +594,24 @@ public class AnnotationServiceImpl
 
     @Override
     @Transactional
-    public List<AnnotationType> listAnnotationType()
+    public List<AnnotationLayer> listAnnotationType()
     {
-        return entityManager.createQuery("FROM AnnotationType ORDER BY name", AnnotationType.class)
+        return entityManager.createQuery("FROM AnnotationType ORDER BY name", AnnotationLayer.class)
                 .getResultList();
     }
 
     @Override
     @Transactional
-    public List<AnnotationType> listAnnotationType(Project aProject)
+    public List<AnnotationLayer> listAnnotationType(Project aProject)
     {
         return entityManager
                 .createQuery("FROM AnnotationType WHERE project =:project ORDER BY uiName",
-                        AnnotationType.class).setParameter("project", aProject).getResultList();
+                        AnnotationLayer.class).setParameter("project", aProject).getResultList();
     }
 
     @Override
     @Transactional
-    public List<AnnotationFeature> listAnnotationFeature(AnnotationType aLayer)
+    public List<AnnotationFeature> listAnnotationFeature(AnnotationLayer aLayer)
     {
         if (aLayer.getId() == 0) {
             return new ArrayList<AnnotationFeature>();
@@ -703,7 +703,7 @@ public class AnnotationServiceImpl
 
     @Override
     @Transactional
-    public void removeAnnotationLayer(AnnotationType aLayer)
+    public void removeAnnotationLayer(AnnotationLayer aLayer)
     {
         entityManager.remove(aLayer);
 

@@ -53,7 +53,7 @@ public class TagSet
     @ManyToOne
     @ForeignKey(name = "none")
     @JoinColumn(name = "annotation_type")
-    AnnotationType layer;
+    AnnotationLayer layer;
 
     @ManyToOne
     @ForeignKey(name = "none")
@@ -134,12 +134,12 @@ public class TagSet
 
 
 
-    public AnnotationType getLayer()
+    public AnnotationLayer getLayer()
     {
         return layer;
     }
 
-    public void setLayer(AnnotationType layer)
+    public void setLayer(AnnotationLayer layer)
     {
         this.layer = layer;
     }

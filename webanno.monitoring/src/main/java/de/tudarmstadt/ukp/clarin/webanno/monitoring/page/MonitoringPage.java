@@ -72,7 +72,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.statistics.TwoPairedKappa;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -149,7 +149,7 @@ public class MonitoringPage
 
         monitoringDetailForm = new MonitoringDetailForm("monitoringDetailForm");
 
-        agreementForm = new AgreementForm("agreementForm", new Model<AnnotationType>(),
+        agreementForm = new AgreementForm("agreementForm", new Model<AnnotationLayer>(),
                 new Model<Project>());
         agreementForm.setVisible(false);
         add(agreementForm);
@@ -594,7 +594,7 @@ public class MonitoringPage
         private static final long serialVersionUID = 344165080600348157L;
 
         @SuppressWarnings({ "unchecked" })
-        public AgreementForm(String id, Model<AnnotationType> aType, Model<Project> aProject)
+        public AgreementForm(String id, Model<AnnotationLayer> aType, Model<Project> aProject)
 
         {
             super(id);
@@ -620,7 +620,7 @@ public class MonitoringPage
     private void updateAgreementForm()
     {
         agreementForm.remove();
-        agreementForm = new AgreementForm("agreementForm", new Model<AnnotationType>(),
+        agreementForm = new AgreementForm("agreementForm", new Model<AnnotationLayer>(),
                 new Model<Project>());
         add(agreementForm);
         agreementForm.setVisible(true);
@@ -797,7 +797,7 @@ public class MonitoringPage
      * Compute kappa using the {@link TwoRaterKappaAgreement}. The matrix of kappa result is
      * computed for a user against every other users if and only if both users have finished the
      * same document <br>
-     * The result is per {@link AnnotationType} for all {@link Tag}s
+     * The result is per {@link AnnotationLayer} for all {@link Tag}s
      */
 
     public static double[][] computeKappa(List<User> users, TypeAdapter adapter,

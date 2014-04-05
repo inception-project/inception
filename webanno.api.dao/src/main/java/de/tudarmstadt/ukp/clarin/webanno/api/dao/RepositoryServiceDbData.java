@@ -101,7 +101,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.model.CrowdJob;
 import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
@@ -1123,7 +1123,7 @@ public class RepositoryServiceDbData
         }
 
         // remove the layers too
-        for (AnnotationType layer : annotationService.listAnnotationType(aProject)) {
+        for (AnnotationLayer layer : annotationService.listAnnotationType(aProject)) {
             annotationService.removeAnnotationLayer(layer);
         }
         // remove tagsets
@@ -2091,7 +2091,7 @@ public class RepositoryServiceDbData
 
         // Create a new type system from scratch
         List<TypeSystemDescription> types = new ArrayList<TypeSystemDescription>();
-        for (AnnotationType type : annotationService.listAnnotationType(aProject)) {
+        for (AnnotationLayer type : annotationService.listAnnotationType(aProject)) {
             if (type.getType().equals("span") && !type.isBuiltIn()) {
                 TypeSystemDescription tsd = new TypeSystemDescription_impl();
                 TypeDescription td = tsd.addType(type.getName(), "", CAS.TYPE_NAME_ANNOTATION);
@@ -2102,7 +2102,7 @@ public class RepositoryServiceDbData
             else if (type.getType().equals("relation") && !type.isBuiltIn()) {
                 TypeSystemDescription tsd = new TypeSystemDescription_impl();
                 TypeDescription td = tsd.addType(type.getName(), "", CAS.TYPE_NAME_ANNOTATION);
-                AnnotationType attachType = type.getAttachType();
+                AnnotationLayer attachType = type.getAttachType();
 
                 td.addFeature("Dependent", "", attachType.getName());
                 td.addFeature("Governor", "", attachType.getName());

@@ -23,7 +23,7 @@ import java.util.List;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -74,7 +74,7 @@ public interface AnnotationService
      * @throws IOException
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void createType(AnnotationType type, User user)
+    void createType(AnnotationLayer type, User user)
         throws IOException;
 
     void createFeature(AnnotationFeature feature);
@@ -104,7 +104,7 @@ public interface AnnotationService
     boolean existsTagSet(AnnotationFeature feature, Project project);
 
     /**
-     * check if an {@link AnnotationType} exists with this name and type in this {@link Project}
+     * check if an {@link AnnotationLayer} exists with this name and type in this {@link Project}
      */
     boolean existsLayer(String name, String type, Project project);
 
@@ -112,7 +112,7 @@ public interface AnnotationService
      *
      * Check if this {@link AnnotationFeature} already exists
      */
-    boolean existsFeature(String name, AnnotationType type, Project project);
+    boolean existsFeature(String name, AnnotationLayer type, Project project);
 
     /**
      * get a {@link TagSet} of a given {@link AnnotationFeature} in a {@link Project}
@@ -128,9 +128,9 @@ public interface AnnotationService
     TagSet getTagSet(long id);
 
     /**
-     * Get an {@link AnnotationType}
+     * Get an {@link AnnotationLayer}
      */
-    AnnotationType getType(String name, String type, Project project);
+    AnnotationLayer getType(String name, String type, Project project);
 
     /**
      * Get a {@link AnnotationFeature} name using its ID. Used for updating annotations as it is
@@ -142,12 +142,12 @@ public interface AnnotationService
     AnnotationFeature getFeature(long id);
 
     /**
-     * Check if an {@link AnnotationType} already exists.
+     * Check if an {@link AnnotationLayer} already exists.
      */
     boolean existsType(String name, String type);
 
     /**
-     * Initialize the project with default {@link AnnotationType}, {@link TagSet}s, and {@link Tag}
+     * Initialize the project with default {@link AnnotationLayer}, {@link TagSet}s, and {@link Tag}
      * s. This is done per Project. For older projects, this method is used to import old tagsets
      * and convert to the new scheme.
      *
@@ -161,21 +161,21 @@ public interface AnnotationService
         throws IOException;
 
     /**
-     * list all {@link AnnotationType} in the system
+     * list all {@link AnnotationLayer} in the system
      *
      * @return {@link List<AnnotationType>}
      */
-    List<AnnotationType> listAnnotationType();
+    List<AnnotationLayer> listAnnotationType();
 
     /**
      * List all annotation types in a project
      */
-    List<AnnotationType> listAnnotationType(Project project);
+    List<AnnotationLayer> listAnnotationType(Project project);
 
     /**
-     * List all the features in a {@link AnnotationType} for this {@link Project}
+     * List all the features in a {@link AnnotationLayer} for this {@link Project}
      */
-    List<AnnotationFeature> listAnnotationFeature(AnnotationType type);
+    List<AnnotationFeature> listAnnotationFeature(AnnotationLayer type);
 
     /**
      * List all features in the project
@@ -237,7 +237,7 @@ public interface AnnotationService
      *
      * Should be called with care. Only when a project hosting this layer is removed
      */
-    void removeAnnotationLayer(AnnotationType type);
+    void removeAnnotationLayer(AnnotationLayer type);
 
     void createPOSLayer(Project project, User user, String[] postags, String[] posTagDescriptions)
         throws IOException;

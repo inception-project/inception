@@ -66,7 +66,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -301,7 +301,7 @@ public class ProjectTagSetsPanel
                                         text, TagSet.class);
                                 if (importedTagSet.getTypeUiName() == null) {// Old TagSets
                                     if (importedTagSet.getTypeName().equals(WebAnnoConst.POS)) {
-                                        AnnotationType layer = annotationService.getType(
+                                        AnnotationLayer layer = annotationService.getType(
                                                 POS.class.getName(), WebAnnoConst.SPAN_TYPE,
                                                 project);
                                         AnnotationFeature posFeature = null;
@@ -318,7 +318,7 @@ public class ProjectTagSetsPanel
                                     }
                                     else if (importedTagSet.getTypeName().equals(
                                             WebAnnoConst.DEPENDENCY)) {
-                                        AnnotationType layer = annotationService.getType(
+                                        AnnotationLayer layer = annotationService.getType(
                                                 Dependency.class.getName(),
                                                 WebAnnoConst.RELATION_TYPE, project);
                                         AnnotationFeature depsFeature = null;
@@ -334,7 +334,7 @@ public class ProjectTagSetsPanel
                                     }
                                     else if (importedTagSet.getTypeName().equals(
                                             WebAnnoConst.NAMEDENTITY)) {
-                                        AnnotationType layer = annotationService.getType(
+                                        AnnotationLayer layer = annotationService.getType(
                                                 NamedEntity.class.getName(),
                                                 WebAnnoConst.SPAN_TYPE, project);
                                         AnnotationFeature neFeature = null;
@@ -350,7 +350,7 @@ public class ProjectTagSetsPanel
                                     }
                                     else if (importedTagSet.getTypeName().equals(
                                             WebAnnoConst.COREFRELTYPE)) {
-                                        AnnotationType layer = annotationService
+                                        AnnotationLayer layer = annotationService
                                                 .getType(
                                                         "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference",
                                                         WebAnnoConst.CHAIN_TYPE, project);
@@ -367,7 +367,7 @@ public class ProjectTagSetsPanel
                                     }
                                     else if (importedTagSet.getTypeName().equals(
                                             WebAnnoConst.COREFERENCE)) {
-                                        AnnotationType layer = annotationService
+                                        AnnotationLayer layer = annotationService
                                                 .getType(
                                                         "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference",
                                                         WebAnnoConst.CHAIN_TYPE, project);
@@ -479,10 +479,10 @@ public class ProjectTagSetsPanel
                                     else if (i == 3) {
                                         tagsetLanguage = key;
                                         // Create the type, if not exist
-                                        AnnotationType type = null;
+                                        AnnotationLayer type = null;
                                         if (!annotationService.existsType(tagsetTypeName,
                                                 tagsetType)) {
-                                            type = new AnnotationType();
+                                            type = new AnnotationLayer();
                                             type.setDescription(tagsetTypeDescription.replace(
                                                     "\\n", "\n"));
                                             type.setName(tagsetTypeName);
@@ -536,7 +536,7 @@ public class ProjectTagSetsPanel
                 }
 
                 private void createTagSet(Project project, User user, TagSet importedTagSet,
-                        AnnotationType layer, AnnotationFeature feature)
+                        AnnotationLayer layer, AnnotationFeature feature)
                     throws IOException
                 {
                     if (annotationService.existsTagSet(feature, project)) {

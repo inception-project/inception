@@ -22,7 +22,7 @@ import org.apache.uima.cas.Type;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
@@ -44,7 +44,7 @@ public final class TypeUtil
 
     public static TypeAdapter getAdapter(TagSet aTagSet, AnnotationService aAnnotationService)
     {
-        AnnotationType type = aTagSet.getFeature().getLayer();
+        AnnotationLayer type = aTagSet.getFeature().getLayer();
         AnnotationFeature feature = aTagSet.getFeature();
         String name = type.getName();
 
@@ -145,7 +145,7 @@ public final class TypeUtil
     }
 
     /**
-     * Get the annotation layer name for arc {@link AnnotationType} such as
+     * Get the annotation layer name for arc {@link AnnotationLayer} such as
      * {@link WebAnnoConst#DEPENDENCY} or {@link WebAnnoConst#COREFERENCE} based
      * on the origin span type. This is assumed that an arc is drawn only from single span type such
      * as from {@link POS}. For Free Annotation type, the method should be changed.
