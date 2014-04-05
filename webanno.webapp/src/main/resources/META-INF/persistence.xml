@@ -4,7 +4,7 @@
 	version="2.0">
 	<persistence-unit name="tcf">
 		<class>de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument</class>
-		<class>de.tudarmstadt.ukp.clarin.webanno.model.AnnotationType</class>
+		<class>de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer</class>
 		<class>de.tudarmstadt.ukp.clarin.webanno.model.User</class>
 		<class>de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument</class>
 		<class>de.tudarmstadt.ukp.clarin.webanno.model.Project</class>
