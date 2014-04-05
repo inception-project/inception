@@ -187,7 +187,7 @@ public class AnnotationServiceImpl
         try {
             entityManager
                     .createQuery(
-                            "FROM AnnotationType WHERE name = :name AND type = :type AND project = :project",
+                            "FROM AnnotationLayer WHERE name = :name AND type = :type AND project = :project",
                             AnnotationLayer.class).setParameter("name", aName)
                     .setParameter("type", aType).setParameter("project", aProject)
                     .getSingleResult();
@@ -242,7 +242,7 @@ public class AnnotationServiceImpl
     {
         return entityManager
                 .createQuery(
-                        "From AnnotationType where name = :name AND type = :type AND project =:project",
+                        "From AnnotationLayer where name = :name AND type = :type AND project =:project",
                         AnnotationLayer.class).setParameter("name", aName)
                 .setParameter("type", aType).setParameter("project", aProject).getSingleResult();
     }
@@ -262,7 +262,7 @@ public class AnnotationServiceImpl
     {
         try {
             entityManager
-                    .createQuery("From AnnotationType where name = :name AND type = :type",
+                    .createQuery("From AnnotationLayer where name = :name AND type = :type",
                             AnnotationLayer.class).setParameter("name", aName)
                     .setParameter("type", aType).getSingleResult();
             return true;
@@ -596,7 +596,7 @@ public class AnnotationServiceImpl
     @Transactional
     public List<AnnotationLayer> listAnnotationType()
     {
-        return entityManager.createQuery("FROM AnnotationType ORDER BY name", AnnotationLayer.class)
+        return entityManager.createQuery("FROM AnnotationLayer ORDER BY name", AnnotationLayer.class)
                 .getResultList();
     }
 
@@ -605,7 +605,7 @@ public class AnnotationServiceImpl
     public List<AnnotationLayer> listAnnotationType(Project aProject)
     {
         return entityManager
-                .createQuery("FROM AnnotationType WHERE project =:project ORDER BY uiName",
+                .createQuery("FROM AnnotationLayer WHERE project =:project ORDER BY uiName",
                         AnnotationLayer.class).setParameter("project", aProject).getResultList();
     }
 
