@@ -78,7 +78,7 @@ public class AnnotationFeature
     @Lob
     private String description;
 
-    private boolean enabled;
+    private boolean enabled = true;
 
     @Column(nullable = false)
     private String name;

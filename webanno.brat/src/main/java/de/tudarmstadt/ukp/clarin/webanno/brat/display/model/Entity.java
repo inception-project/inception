@@ -37,7 +37,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.BeanAsArraySerializer;
 @JsonPropertyOrder(value = { "id", "type", "offsets" })
 public class Entity
 {
-    private int id;
+    private String id;
     private String type;
     List<Offsets> offsets = new ArrayList<Offsets>();
 
@@ -46,7 +46,7 @@ public class Entity
         // Nothing to do
     }
 
-    public Entity(int aId, String aType, List<Offsets> aOffsets)
+    public Entity(String aId, String aType, List<Offsets> aOffsets)
     {
         super();
         id = aId;
@@ -54,12 +54,12 @@ public class Entity
         offsets = aOffsets;
     }
 
-    public int getId()
+    public String getId()
     {
         return id;
     }
 
-    public void setId(int aId)
+    public void setId(String aId)
     {
         id = aId;
     }

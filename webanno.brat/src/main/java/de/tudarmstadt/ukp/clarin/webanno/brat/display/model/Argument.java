@@ -2,13 +2,13 @@
  * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -40,14 +40,14 @@ public class Argument
     /**
      * the intial/target tokens (Span annotations)
      */
-    private int token;
+    private String token;
 
     public Argument()
     {
         // Nothing to do
     }
 
-    public Argument(String aArgument, int aToken)
+    public Argument(String aArgument, String aToken)
     {
         argument = aArgument;
         token = aToken;
@@ -63,12 +63,12 @@ public class Argument
         argument = aArgument;
     }
 
-    public int getToken()
+    public String getToken()
     {
         return token;
     }
 
-    public void setTarget(int aTarget)
+    public void setTarget(String aTarget)
     {
         token = aTarget;
     }

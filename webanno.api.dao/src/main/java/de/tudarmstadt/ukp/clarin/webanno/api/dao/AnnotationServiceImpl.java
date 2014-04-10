@@ -235,10 +235,19 @@ public class AnnotationServiceImpl
         return entityManager.createQuery("FROM TagSet WHERE id = :id", TagSet.class)
                 .setParameter("id", aId).getSingleResult();
     }
+    
+    @Override
+    @Transactional
+    public AnnotationLayer getLayer(long aId)
+    {
+        return entityManager.createQuery("FROM AnnotationLayer WHERE id = :id", AnnotationLayer.class)
+                .setParameter("id", aId).getSingleResult();
+    }
 
+    
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public AnnotationLayer getType(String aName, String aType, Project aProject)
+    public AnnotationLayer getLayer(String aName, String aType, Project aProject)
     {
         return entityManager
                 .createQuery(
@@ -341,7 +350,7 @@ public class AnnotationServiceImpl
 
         AnnotationLayer lemmaLayer = setLayer(Lemma.class.getName(), "value", "Lemma", "span",
                 aProject);
-        AnnotationLayer tokenLayer = getType(Token.class.getName(), "span", aProject);
+        AnnotationLayer tokenLayer = getLayer(Token.class.getName(), "span", aProject);
         AnnotationFeature tokenLemmaFeature = setFeature("lemma", "lemma", aProject, tokenLayer,
                 Lemma.class.getName());
         tokenLemmaFeature.setVisible(true);
@@ -444,7 +453,7 @@ public class AnnotationServiceImpl
 
         AnnotationLayer depLayer = setLayer(Dependency.class.getName(), "DependencyType",
                 "dependency", "relation", aProject);
-        AnnotationLayer tokenLayer = getType(Token.class.getName(), "span", aProject);
+        AnnotationLayer tokenLayer = getLayer(Token.class.getName(), "span", aProject);
         List<AnnotationFeature> tokenFeatures = listAnnotationFeature(tokenLayer);
         AnnotationFeature tokenPosFeature = null;
         for (AnnotationFeature feature : tokenFeatures) {
@@ -542,7 +551,7 @@ public class AnnotationServiceImpl
 
         AnnotationFeature posFeature = PosTagSet.getFeature();
 
-        AnnotationLayer tokenLayer = getType(Token.class.getName(), "span", aProject);
+        AnnotationLayer tokenLayer = getLayer(Token.class.getName(), "span", aProject);
         AnnotationLayer posLayer = setLayer(POS.class.getName(), "PosValue", "POS", "span", aProject);
         AnnotationFeature tokenPosFeature = setFeature("pos", "pos", aProject, tokenLayer,
                 POS.class.getName());
@@ -602,7 +611,7 @@ public class AnnotationServiceImpl
 
     @Override
     @Transactional
-    public List<AnnotationLayer> listAnnotationType(Project aProject)
+    public List<AnnotationLayer> listAnnotationLayer(Project aProject)
     {
         return entityManager
                 .createQuery("FROM AnnotationLayer WHERE project =:project ORDER BY uiName",

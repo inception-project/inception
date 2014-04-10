@@ -32,7 +32,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.RelationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
-import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
@@ -60,146 +59,49 @@ public class BratAjaxConfiguration
      *
      * @return {@link Set<{@link EntityType }>}
      */
-    public Set<EntityType> configureVisualizationAndAnnotation(List<TagSet> aTagSets,
+    public Set<EntityType> configureVisualizationAndAnnotation(List<AnnotationLayer> aLayers,
             AnnotationService aAnnotationService, boolean aStaticColor)
     {
         Set<EntityType> entityTypes = new HashSet<EntityType>();
 
-        /*
-         * List<String> poses = new ArrayList<String>();
-         *
-         * List<String> dependency = new ArrayList<String>();
-         *
-         * List<String> namedEntity = new ArrayList<String>();
-         *
-         * List<String> corefRelType = new ArrayList<String>();
-         *
-         * List<String> coreference = new ArrayList<String>();
-         *
-         * for (Tag tag : aTags) { if (tag.getTagSet().getType().getName().equals
-         * (AnnotationTypeConstant.POS)) { poses.add(tag.getName()); } else if (tag
-         * .getTagSet().getType().getName().equals(AnnotationTypeConstant.DEPENDENCY )) {
-         * dependency.add(tag.getName()); } else if (tag.getTagSet().getType
-         * ().getName().equals(AnnotationTypeConstant.NAMEDENTITY)) {
-         * namedEntity.add(tag.getName()); } else if (tag.getTagSet().getType().getName()
-         * .equals(AnnotationTypeConstant.COREFRELTYPE)) { corefRelType.add(tag.getName()); } else
-         * if (tag.getTagSet().getType(). getName().equals(AnnotationTypeConstant.COREFERENCE)) {
-         * coreference.add(tag.getName()); }
-         *
-         * }
-         *
-         * Collections.sort(poses); Collections.sort(dependency); Collections.sort(namedEntity);
-         * Collections.sort(coreference); Collections.sort(corefRelType);
-         */
-
-        Map<TagSet, Boolean> checkRelation = new HashMap<TagSet, Boolean>();
-        Map<TagSet, TagSet> relationLayers = new HashMap<TagSet, TagSet>();
+        Map<AnnotationLayer, Boolean> checkRelation = new HashMap<AnnotationLayer, Boolean>();
+        Map<AnnotationLayer, AnnotationLayer> relationLayers = new HashMap<AnnotationLayer, AnnotationLayer>();
 
         int i = 0;
-        for (TagSet relationTagSet : aTagSets) {
-            if (relationTagSet.getFeature() == null || relationTagSet.getLayer() == null) {
-                continue;
+        for (AnnotationLayer relationLayer : aLayers) {
+
+            if (relationLayer.getType().equals("chain")) {
+                relationLayers.put(relationLayer, relationLayer);
+                checkRelation.put(relationLayer, true);
             }
-
-            if (relationTagSet.getLayer().getType().equals("chain")) {
-                if (relationTagSet.getFeature().getName().equals("referenceRelation")) {
-                    AnnotationLayer chainLayer = relationTagSet.getFeature().getLayer();
-                    List<AnnotationFeature> chainFeatures = aAnnotationService
-                            .listAnnotationFeature(chainLayer);
-                    AnnotationFeature linkFeature = null;
-                    for (AnnotationFeature feature : chainFeatures) {
-                        if (!feature.getName().equals("referenceRelation")) {
-                            linkFeature = feature;
-                            break;
-                        }
-                    }
-                    TagSet typeTagSet = aAnnotationService.getTagSet(linkFeature,
-                            chainLayer.getProject());
-
-                    relationLayers.put(typeTagSet, relationTagSet);
-                    checkRelation.put(typeTagSet, true);
-                }
-            }
-            else if (relationTagSet.getFeature().getLayer().getType().equals("relation")) {
-                // get the attach feature/or TODO attache type
-                // if attachefature is null, get the tagset from attache type
-                AnnotationFeature attachFeature = relationTagSet.getFeature().getLayer()
-                        .getAttachFeature();
-                TagSet attachTagSet = null;
-                AnnotationLayer attachLayer = null;
-                for (AnnotationLayer layer : aAnnotationService.listAnnotationType(relationTagSet
-                        .getProject())) {
-                    if (layer.getAttachFeature() != null && layer.getType().equals("span")
-                            && layer.getAttachFeature().equals(attachFeature)) {
-                        attachLayer = layer;
-                    }
-                }
-
-                if (attachFeature == null) {
-                    attachLayer = relationTagSet.getFeature().getLayer().getAttachType();
-                }
-                // assume a span annotation type a single feature
-                List<AnnotationFeature> spanFeatures = aAnnotationService
-                        .listAnnotationFeature(attachLayer);
-                attachTagSet = aAnnotationService.getTagSet(spanFeatures.get(0),
-                        attachLayer.getProject());
-
-                relationLayers.put(attachTagSet, relationTagSet);
-                checkRelation.put(attachTagSet, true);
+            else if (relationLayer.getType().equals("relation")) {
+                relationLayers.put(relationLayer.getAttachType(), relationLayer);
+                checkRelation.put(relationLayer.getAttachType(), true);
 
             }
-            else if (checkRelation.get(relationTagSet) == null) {
-                checkRelation.put(relationTagSet, false);
+            else if (checkRelation.get(relationLayer) == null) {
+                checkRelation.put(relationLayer, false);
             }
         }
 
-        for (TagSet tagSet : checkRelation.keySet()) {
-            if (checkRelation.get(tagSet) == false) {
-                i = configCollection(aAnnotationService, aStaticColor, entityTypes, checkRelation,
-                        i, tagSet, new TagSet());
+        for (AnnotationLayer layer : checkRelation.keySet()) {
+            if (checkRelation.get(layer) == false) {
+                i = configCollection(aAnnotationService, aStaticColor, entityTypes, i, layer,
+                        new AnnotationLayer());
             }
             else {
-                i = configCollection(aAnnotationService, aStaticColor, entityTypes, checkRelation,
-                        i, tagSet, relationLayers.get(tagSet));
+                i = configCollection(aAnnotationService, aStaticColor, entityTypes, i, layer,
+                        relationLayers.get(layer));
             }
 
         }
-        /*
-         * List<EntityType> posChildren = getChildren(AnnotationTypeConstant.POS_PREFIX,
-         * AnnotationTypeConstant.DEP_PREFIX, poses, new ArrayList<String>(), "red", "yellow",
-         * "blue", "green", aStaticColor); EntityType posType = new
-         * EntityType(AnnotationTypeConstant.POS_PARENT, AnnotationTypeConstant.POS_PARENT, true,
-         * "", "red", "blue", "blue", new ArrayList<String>(), posChildren, new ArrayList<String>(),
-         * new ArrayList<RelationType>(), aStaticColor);
-         *
-         * if (poses.size() > 0) { entityTypes.add(posType); }
-         *
-         * List<EntityType> corefChildren = getChildren(AnnotationTypeConstant.COREFRELTYPE_PREFIX,
-         * AnnotationTypeConstant.COREFERENCE_PREFIX, corefRelType, coreference, "red", "blue",
-         * "blue", "", aStaticColor); EntityType corefType = new
-         * EntityType(AnnotationTypeConstant.COREFERENCE_PARENT,
-         * AnnotationTypeConstant.COREFERENCE_PARENT, true, "", "red", "blue", "blue", new
-         * ArrayList<String>(), corefChildren, new ArrayList<String>(), new
-         * ArrayList<RelationType>(), aStaticColor); if (corefRelType.size() > 0) {
-         * entityTypes.add(corefType); }
-         *
-         * List<EntityType> neChildren = getChildren(AnnotationTypeConstant.NAMEDENTITY_PREFIX, "",
-         * namedEntity, new ArrayList<String>(), "black", "cyan", "green", "", aStaticColor);
-         *
-         * EntityType neEntityType = new EntityType(AnnotationTypeConstant.NAMEDENTITY_PARENT,
-         * AnnotationTypeConstant.NAMEDENTITY_PARENT, true, "", "black", "cyan", "green", new
-         * ArrayList<String>(), neChildren, new ArrayList<String>(), new ArrayList<RelationType>(),
-         * aStaticColor);
-         *
-         * if (namedEntity.size() > 0) { entityTypes.add(neEntityType); }
-         */
 
         return entityTypes;
     }
 
     private int configCollection(AnnotationService aAnnotationService, boolean aStaticColor,
-            Set<EntityType> entityTypes, Map<TagSet, Boolean> checkRelation, int i,
-            TagSet aSpanTagSet, TagSet aRelationTagSet)
+            Set<EntityType> entityTypes, int i, AnnotationLayer aSpanLayer,
+            AnnotationLayer aRelationLayer)
     {
 
         List<String> fGColors = new ArrayList<String>(
@@ -215,70 +117,99 @@ public class BratAjaxConfiguration
         if (i == bGColors.size()) {
             i = 0;// recycle
         }
-        List<String> spanTags = new ArrayList<String>();
-        List<String> relationTags = new ArrayList<String>();
+        List<List<String>> spanTags = new ArrayList<List<String>>();
+        List<List<String>> relationTags = new ArrayList<List<String>>();
 
-        for (Tag tag : aAnnotationService.listTags(aSpanTagSet)) {
-            spanTags.add(tag.getName());
+        for (AnnotationFeature feature : aAnnotationService.listAnnotationFeature(aSpanLayer)) {
+            List<String> tags = new ArrayList<String>();
+            if (feature.getName().equals(WebAnnoConst.COREFERENCE_TYPE_FEATURE)
+                    && feature.getTagset() != null) {
+                for (Tag tag : aAnnotationService.listTags(feature.getTagset())) {
+                    tags.add(tag.getName());
+                }
+                spanTags.add(tags);
+            }
+            else if (feature.getName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE)
+                    && feature.getTagset() != null) {
+                for (Tag tag : aAnnotationService.listTags(feature.getTagset())) {
+                    tags.add(tag.getName());
+                }
+                relationTags.add(tags);
+            }
+            else if (feature.getTagset() != null) {
+                for (Tag tag : aAnnotationService.listTags(feature.getTagset())) {
+                    tags.add(tag.getName());
+                }
+                spanTags.add(tags);
+            }
         }
-
-        if (aRelationTagSet.getId() != 0) {
-            for (Tag tag : aAnnotationService.listTags(aRelationTagSet)) {
-                relationTags.add(tag.getName());
+        
+        if (aSpanLayer.isBuiltIn() && aSpanLayer.getName().equals(POS.class.getName())) {
+            aRelationLayer = aAnnotationService.getLayer(Dependency.class.getName(), "relation",
+                    aSpanLayer.getProject());
+        }
+        
+        if (aRelationLayer.getId() != 0 && !aRelationLayer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
+            for (AnnotationFeature feature : aAnnotationService
+                    .listAnnotationFeature(aRelationLayer)) {
+                List<String> tags = new ArrayList<String>();
+                if (feature.getTagset() != null) {
+                    for (Tag tag : aAnnotationService.listTags(feature.getTagset())) {
+                        tags.add(tag.getName());
+                    }
+                    relationTags.add(tags);
+                }
             }
         }
 
         EntityType entityType;
         List<EntityType> tagLists;
-        if (aSpanTagSet.getLayer().isBuiltIn()
-                && aSpanTagSet.getLayer().getName().equals(POS.class.getName())) {
+        if (aSpanLayer.isBuiltIn() && aSpanLayer.getName().equals(POS.class.getName())) {
+            tagLists = getChildren(aSpanLayer, aRelationLayer.getId() + "_",
+                    concatTagsPerFeature(spanTags), concatTagsPerFeature(relationTags), "red",
+                    "yellow", "blue", "green", aStaticColor);
 
-            tagLists = getChildren(aSpanTagSet, aRelationTagSet.getId() == 0 ? "" : aRelationTagSet
-                    .getFeature().getId() + "$_", spanTags, relationTags, "red", "yellow", "blue",
-                    "green", aStaticColor);
-
-            entityType = new EntityType(aSpanTagSet.getFeature().getId() + "", aSpanTagSet
-                    .getFeature().getId() + "", true, "", "red", "blue", "blue",
-                    new ArrayList<String>(), tagLists, new ArrayList<String>(),
-                    new ArrayList<RelationType>(), aStaticColor);
+            entityType = new EntityType(aSpanLayer.getId() + "", aSpanLayer.getId() + "", true, "",
+                    "red", "blue", "blue", new ArrayList<String>(), tagLists,
+                    new ArrayList<String>(), new ArrayList<RelationType>(), aStaticColor);
 
         }
-        else if (aSpanTagSet.getLayer().isBuiltIn()
-                && aSpanTagSet.getLayer().getName().equals(NamedEntity.class.getName())) {
+        else if (aSpanLayer.isBuiltIn() && aSpanLayer.getName().equals(NamedEntity.class.getName())) {
 
-            tagLists = getChildren(aSpanTagSet, aRelationTagSet.getId() == 0 ? "" : aRelationTagSet
-                    .getFeature().getId() + "$_", spanTags, relationTags, "black", "cyan", "green",
+            tagLists = getChildren(aSpanLayer,
+                    aRelationLayer.getId() == 0 ? "" : aRelationLayer.getId() + "_",
+                    concatTagsPerFeature(spanTags), concatTagsPerFeature(relationTags), "black",
+                    "cyan", "green", "", aStaticColor);
+
+            entityType = new EntityType(aSpanLayer.getId() + "", aSpanLayer.getId() + "", true, "",
+                    "black", "cyan", "green", new ArrayList<String>(), tagLists,
+                    new ArrayList<String>(), new ArrayList<RelationType>(), aStaticColor);
+
+        }
+        else if (aSpanLayer.isBuiltIn() && aSpanLayer.getName().equals(Lemma.class.getName())) {
+
+            tagLists = getChildren(aSpanLayer,
+                    aRelationLayer.getId() == 0 ? "" : aRelationLayer.getId() + "_",
+                    concatTagsPerFeature(spanTags), concatTagsPerFeature(relationTags), "", "", "",
                     "", aStaticColor);
 
-            entityType = new EntityType(aSpanTagSet.getFeature().getId() + "", aSpanTagSet
-                    .getFeature().getId() + "", true, "", "black", "cyan", "green",
-                    new ArrayList<String>(), tagLists, new ArrayList<String>(),
+            entityType = new EntityType(aSpanLayer.getId() + "", aSpanLayer.getId() + "", true, "",
+                    "", "", "", new ArrayList<String>(), tagLists, new ArrayList<String>(),
                     new ArrayList<RelationType>(), aStaticColor);
-
-        }
-        else if (aSpanTagSet.getLayer().isBuiltIn()
-                && aSpanTagSet.getLayer().getName().equals(Lemma.class.getName())) {
-
-            tagLists = getChildren(aSpanTagSet, aRelationTagSet.getId() == 0 ? "" : aRelationTagSet
-                    .getFeature().getId() + "$_", spanTags, relationTags, "", "", "", "",
-                    aStaticColor);
-
-            entityType = new EntityType(aSpanTagSet.getFeature().getId() + "", aSpanTagSet
-                    .getFeature().getId() + "", true, "", "", "", "", new ArrayList<String>(),
-                    tagLists, new ArrayList<String>(), new ArrayList<RelationType>(), aStaticColor);
 
         }
 
         // custom layers
         else {
-            tagLists = getChildren(aSpanTagSet, aRelationTagSet.getId() == 0 ? "" : aRelationTagSet
-                    .getFeature().getId() + "$_", spanTags, relationTags, fGColors.get(i),
-                    bGColors.get(i), bDColors.get(i), bDColors.get(i), aStaticColor);
+            tagLists = getChildren(aSpanLayer,
+                    aRelationLayer.getId() == 0 ? "" : aRelationLayer.getId() + "_",
+                    concatTagsPerFeature(spanTags), concatTagsPerFeature(relationTags),
+                    fGColors.get(i), bGColors.get(i), bDColors.get(i), bDColors.get(i),
+                    aStaticColor);
 
-            entityType = new EntityType(aSpanTagSet.getFeature().getId() + "", aSpanTagSet
-                    .getFeature().getId() + "", true, "", fGColors.get(i), bGColors.get(i),
-                    bDColors.get(i), new ArrayList<String>(), tagLists, new ArrayList<String>(),
-                    new ArrayList<RelationType>(), aStaticColor);
+            entityType = new EntityType(aSpanLayer.getId() + "", aSpanLayer.getId() + "", true, "",
+                    fGColors.get(i), bGColors.get(i), bDColors.get(i), new ArrayList<String>(),
+                    tagLists, new ArrayList<String>(), new ArrayList<RelationType>(), aStaticColor);
             i++;
         }
         if (tagLists.size() > 0) {
@@ -303,13 +234,13 @@ public class BratAjaxConfiguration
      *            border color of the arc
      * @return {@link List< {@link EntityType }>}
      */
-    private List<EntityType> getChildren(TagSet aSpanTagSet, String aChildPrefix,
+    private List<EntityType> getChildren(AnnotationLayer aLayer, String aChildPrefix,
             List<String> spansList, List<String> aArcList, String aFgColor, String aBgcolor,
             String aBorderColoer, String aArcColor, boolean aStaticColor)
     {
         List<EntityType> children = new ArrayList<EntityType>();
 
-        String prefix = aSpanTagSet.getFeature().getId() + "_";
+        String prefix = aLayer.getId() + "_";
         List<String> arcTargets = new ArrayList<String>();
         for (String span : spansList) {
             arcTargets.add(prefix + span);
@@ -321,7 +252,7 @@ public class BratAjaxConfiguration
                 String arcLabels = arcTypesResultIterator.next();
 
                 // 12 classes of colors to differentiate Co-reference chains
-                if (aSpanTagSet.getLayer().getType().equals("chain")) {
+                if (aLayer.getType().equals("chain")) {
 
                     String[] colors = new String[] { "#00FF00", "#0000A0", "#FF0000", "#800080 ",
                             "#F000FF", "#00FFFF ", "#FF00FF ", "#8D38C9", "#8D38C9", "#736AFF",
@@ -329,8 +260,8 @@ public class BratAjaxConfiguration
                     int i = 1;
                     for (String color : colors) {
                         RelationType arc = new RelationType(color, "triangle,5",
-                                Arrays.asList(arcLabels), i+"_" + aChildPrefix + arcLabels, arcTargets,
-                                "");
+                                Arrays.asList(arcLabels), i + "_" + aChildPrefix + arcLabels,
+                                arcTargets, "");
                         arcs.add(arc);
                         i++;
                     }
@@ -348,6 +279,32 @@ public class BratAjaxConfiguration
             children.add(entityTpe);
         }
         return children;
+    }
+
+    private List<String> concatTagsPerFeature(List<List<String>> list)
+    {
+        ArrayList<String> allTags = new ArrayList<String>();
+        int len = list.size();
+        if (len == 0) {
+            return allTags;
+        }
+        if (len == 1) {
+            allTags.addAll(list.get(0));
+            return allTags;
+        }
+        List<String> thisTags = list.get(0);
+        List<List<String>> tags = new ArrayList<List<String>>();
+        tags.addAll(list.subList(1, len));
+        List<String> retTags = concatTagsPerFeature(tags);
+        for (String tag : thisTags) {
+            for (String thisTag : retTags) {
+                allTags.add(tag + " | " + thisTag);
+                allTags.add(tag + " | " + " ");
+                allTags.add(" " + " | " + thisTag);
+                allTags.add(" " + " | " + " ");
+            }
+        }
+        return allTags;
     }
 
 }

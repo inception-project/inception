@@ -601,17 +601,15 @@ public class RepositoryServiceDbData
                 BratAjaxCasUtil.updateCasWithTagSet(cas, feature.getLayer().getName(),
                         tagSet.getName());
             }
-         /*   if (feature.getName().equals(WebAnnoConst.NAMEDENTITY)) {
-                BratAjaxCasUtil.updateCasWithTagSet(cas, NamedEntity.class.getName(),
-                        tagSet.getName());
-            }
-            else if (feature.getName().equals(WebAnnoConst.POS)) {
-                BratAjaxCasUtil.updateCasWithTagSet(cas, POS.class.getName(), tagSet.getName());
-            }
-            else if (feature.getName().equals(WebAnnoConst.DEPENDENCY)) {
-                BratAjaxCasUtil.updateCasWithTagSet(cas, Dependency.class.getName(),
-                        tagSet.getName());
-            }*/
+            /*
+             * if (feature.getName().equals(WebAnnoConst.NAMEDENTITY)) {
+             * BratAjaxCasUtil.updateCasWithTagSet(cas, NamedEntity.class.getName(),
+             * tagSet.getName()); } else if (feature.getName().equals(WebAnnoConst.POS)) {
+             * BratAjaxCasUtil.updateCasWithTagSet(cas, POS.class.getName(), tagSet.getName()); }
+             * else if (feature.getName().equals(WebAnnoConst.DEPENDENCY)) {
+             * BratAjaxCasUtil.updateCasWithTagSet(cas, Dependency.class.getName(),
+             * tagSet.getName()); }
+             */
             /*
              * else if (annotationType.getName().equals(AnnotationTypeConstant.COREFRELTYPE )) {
              * BratAjaxCasUtil.updateCasWithTagSet(cas, CoreferenceLink.class.getName(),
@@ -1123,7 +1121,7 @@ public class RepositoryServiceDbData
         }
 
         // remove the layers too
-        for (AnnotationLayer layer : annotationService.listAnnotationType(aProject)) {
+        for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
             annotationService.removeAnnotationLayer(layer);
         }
         // remove tagsets
@@ -2091,12 +2089,15 @@ public class RepositoryServiceDbData
 
         // Create a new type system from scratch
         List<TypeSystemDescription> types = new ArrayList<TypeSystemDescription>();
-        for (AnnotationLayer type : annotationService.listAnnotationType(aProject)) {
+        for (AnnotationLayer type : annotationService.listAnnotationLayer(aProject)) {
             if (type.getType().equals("span") && !type.isBuiltIn()) {
                 TypeSystemDescription tsd = new TypeSystemDescription_impl();
                 TypeDescription td = tsd.addType(type.getName(), "", CAS.TYPE_NAME_ANNOTATION);
                 List<AnnotationFeature> features = annotationService.listAnnotationFeature(type);
-                td.addFeature(features.get(0).getName(), "", features.get(0).getType());
+                for (AnnotationFeature feature : features) {
+                    td.addFeature(feature.getName(), "", feature.getType());
+                }
+
                 types.add(tsd);
             }
             else if (type.getType().equals("relation") && !type.isBuiltIn()) {
@@ -2108,7 +2109,10 @@ public class RepositoryServiceDbData
                 td.addFeature("Governor", "", attachType.getName());
 
                 List<AnnotationFeature> features = annotationService.listAnnotationFeature(type);
-                td.addFeature(features.get(0).getName(), "", CAS.TYPE_NAME_STRING);
+                for (AnnotationFeature feature : features) {
+                    td.addFeature(feature.getName(), "", feature.getType());
+                }
+
                 types.add(tsd);
             }
             else if (type.getType().equals("chain") && !type.isBuiltIn()) {

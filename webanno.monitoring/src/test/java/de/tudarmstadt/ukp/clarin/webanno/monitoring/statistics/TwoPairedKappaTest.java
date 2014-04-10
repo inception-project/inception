@@ -104,7 +104,7 @@ public class TwoPairedKappaTest
     {
         init();
         double[][] results = new double[2][2];
-        TypeAdapter adapter = new SpanAdapter(0, POS.class.getName(), "PosValue", null, null);
+        TypeAdapter adapter = new SpanAdapter(0, POS.class.getName(), null, null);
         Map<User, List<SourceDocument>> userDocs = new HashMap<User, List<SourceDocument>>();
         userDocs.put(user1, Arrays.asList(new SourceDocument[] { document }));
         userDocs.put(user2, Arrays.asList(new SourceDocument[] { document }));
@@ -114,7 +114,7 @@ public class TwoPairedKappaTest
         userCases.put(user2, cas1.getJCas());
         documentJCases.put(document, userCases);
         results = MonitoringPage.computeKappa(Arrays.asList(new User[] { user1, user2 }), adapter,
-                userDocs, documentJCases);
+                "PosValue", userDocs, documentJCases);
         assertEquals(results[0][1], 1.0, 0.0005);
     }
 
@@ -124,9 +124,8 @@ public class TwoPairedKappaTest
     {
         init();
         double[][] results = new double[2][2];
-        TypeAdapter adapter = new ArcAdapter(0, Dependency.class.getName(),
-                "DependencyType", "Dependent", "Governor","pos",
-                Token.class.getName());
+        TypeAdapter adapter = new ArcAdapter(0, Dependency.class.getName(), "Dependent",
+                "Governor", "pos", Token.class.getName());
         Map<User, List<SourceDocument>> userDocs = new HashMap<User, List<SourceDocument>>();
         userDocs.put(user1, Arrays.asList(new SourceDocument[] { document }));
         userDocs.put(user2, Arrays.asList(new SourceDocument[] { document }));
@@ -136,7 +135,7 @@ public class TwoPairedKappaTest
         userCases.put(user2, cas3.getJCas());
         documentJCases.put(document, userCases);
         results = MonitoringPage.computeKappa(Arrays.asList(new User[] { user1, user2 }), adapter,
-                userDocs, documentJCases);
+                "DependencyType", userDocs, documentJCases);
         assertEquals(results[0][1], 0.87, 0.0005);
     }
 
@@ -146,7 +145,7 @@ public class TwoPairedKappaTest
     {
         init();
         double[][] results = new double[2][2];
-        TypeAdapter adapter = new SpanAdapter(0, POS.class.getName(), "PosValue", null, null);
+        TypeAdapter adapter = new SpanAdapter(0, POS.class.getName(), null, null);
         Map<User, List<SourceDocument>> userDocs = new HashMap<User, List<SourceDocument>>();
         userDocs.put(user1, Arrays.asList(new SourceDocument[] { document }));
         userDocs.put(user2, Arrays.asList(new SourceDocument[] { document }));
@@ -156,7 +155,7 @@ public class TwoPairedKappaTest
         userCases.put(user2, cas2.getJCas());
         documentJCases.put(document, userCases);
         results = MonitoringPage.computeKappa(Arrays.asList(new User[] { user1, user2 }), adapter,
-                userDocs, documentJCases);
+                "PosValue", userDocs, documentJCases);
         assertEquals(results[0][1], 0.86, 0.0005);
     }
 
@@ -166,9 +165,8 @@ public class TwoPairedKappaTest
     {
         init();
         double[][] results = new double[2][2];
-        TypeAdapter adapter = new ArcAdapter(0, Dependency.class.getName(),
-                "DependencyType", "Dependent", "Governor","pos",
-                Token.class.getName());
+        TypeAdapter adapter = new ArcAdapter(0, Dependency.class.getName(), "Dependent",
+                "Governor", "pos", Token.class.getName());
         Map<User, List<SourceDocument>> userDocs = new HashMap<User, List<SourceDocument>>();
         userDocs.put(user1, Arrays.asList(new SourceDocument[] { document }));
         userDocs.put(user2, Arrays.asList(new SourceDocument[] { document }));
@@ -178,7 +176,7 @@ public class TwoPairedKappaTest
         userCases.put(user2, cas4.getJCas());
         documentJCases.put(document, userCases);
         results = MonitoringPage.computeKappa(Arrays.asList(new User[] { user1, user2 }), adapter,
-                userDocs, documentJCases);
+                "DependencyType", userDocs, documentJCases);
         assertEquals(results[0][1], 0.69, 0.0005);
     }
 
@@ -188,9 +186,8 @@ public class TwoPairedKappaTest
     {
         init();
         double[][] results = new double[2][2];
-        TypeAdapter adapter = new ArcAdapter(0, Dependency.class.getName(),
-                "DependencyType", "Dependent", "Governor","pos",
-                Token.class.getName());
+        TypeAdapter adapter = new ArcAdapter(0, Dependency.class.getName(), "Dependent",
+                "Governor", "pos", Token.class.getName());
         Map<User, List<SourceDocument>> userDocs = new HashMap<User, List<SourceDocument>>();
         userDocs.put(user1, Arrays.asList(new SourceDocument[] { document }));
         userDocs.put(user2, Arrays.asList(new SourceDocument[] { document }));
@@ -202,7 +199,7 @@ public class TwoPairedKappaTest
         userCases.put(user3, cas4.getJCas());
         documentJCases.put(document, userCases);
         results = MonitoringPage.computeKappa(Arrays.asList(new User[] { user1, user2, user3 }),
-                adapter, userDocs, documentJCases);
+                adapter, "DependencyType", userDocs, documentJCases);
         assertEquals(results[0][1], 0.94, 0.0005); // user1 V user2
         assertEquals(results[0][2], 0.69, 0.0005);// user1 V user3
         assertEquals(results[1][2], 0.63, 0.0005);// user2 V user3

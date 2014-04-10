@@ -60,9 +60,9 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.NoOriginOrTargetAnnotationSelectedException;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
@@ -274,13 +274,18 @@ public class CurationViewPanel
 
         AnnotationFS fsClicked = selectByAddr(clickedJCas, aAddress);
 
-        long featureId = Integer.parseInt(spanType.substring(0, spanType.indexOf("_")));
+        long layerId = Integer.parseInt(spanType.substring(0, spanType.indexOf("_")));
         String type = spanType.substring(spanType.indexOf("_") + 1);
-
-        AnnotationFeature feature = this.annotationService.getFeature(featureId);
-        TagSet tagSet = annotationService.getTagSet(feature, aBratAnnotatorModel.getProject());
-        SpanAdapter adapter = (SpanAdapter) getAdapter(tagSet, annotationService);
-        adapter.add(aMergeJCas, fsClicked.getBegin(), fsClicked.getEnd(), type);
+        /**
+         * TODO: for curation, if a layer have multiple feature, we should parse the type using the
+         * | separater and add to cas
+         */
+        AnnotationLayer layer = annotationService.getLayer(layerId);
+        AnnotationFeature feature = annotationService.listAnnotationFeature(layer).get(0);// TODO
+                                                                                          // see
+                                                                                          // above
+        SpanAdapter adapter = (SpanAdapter) getAdapter(layer, annotationService);
+        adapter.add(aMergeJCas, fsClicked.getBegin(), fsClicked.getEnd(), feature, type);
 
         repository.updateJCas(aBratAnnotatorModel.getMode(), aBratAnnotatorModel.getDocument(),
                 aBratAnnotatorModel.getUser(), aMergeJCas);
@@ -367,14 +372,10 @@ public class CurationViewPanel
                         "Either origin or target annotations not selected");
             }
 
-            long featureId = Integer.parseInt(arcType.substring(0, arcType.indexOf("_")));
+            long layerId = Integer.parseInt(arcType.substring(0, arcType.indexOf("_")));
 
-            AnnotationFeature feature = annotationService.getFeature(featureId);
-
-            TagSet tagSet = annotationService.getTagSet(feature, aCurationUserSegment
-                    .getBratAnnotatorModel().getProject());
-
-            ArcAdapter adapter = (ArcAdapter) getAdapter(tagSet, annotationService);
+            AnnotationLayer layer = annotationService.getLayer(layerId);
+            ArcAdapter adapter = (ArcAdapter) getAdapter(layer, annotationService);
             adapter.add(arcType.substring(arcType.indexOf("_") + 1), originFs, targetFs, aJcas,
                     aCurationUserSegment.getBratAnnotatorModel());
 

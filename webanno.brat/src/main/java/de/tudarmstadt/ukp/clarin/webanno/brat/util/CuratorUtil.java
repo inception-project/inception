@@ -44,10 +44,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationOption;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff;
@@ -321,9 +321,9 @@ public class CuratorUtil
             Map<String, Map<String, Object>> entityTypes,
             List<AnnotationOption> aAnnotationOptions, Mode aMode)
     {
-        Map<Integer, String> targetAnnotations = new HashMap<Integer, String>();
+        Map<String, String> targetAnnotations = new HashMap<String, String>();
         for (Entity entity : response.getEntities()) {
-            int address = entity.getId();
+            String address = entity.getId();
             AnnotationSelection annotationSelection = annotationSelectionByAddress.get(address);
             AnnotationState newState = null;
             if (aMode.equals(Mode.AUTOMATION) || aMode.equals(Mode.CORRECTION)) {
@@ -338,7 +338,7 @@ public class CuratorUtil
         for (Entity entity : response.getEntities()) {
             // check if either address of entity has no changes ...
             // ... or if entity has already been clicked on
-            int address = entity.getId();
+            String address = entity.getId();
             AnnotationSelection annotationSelection = annotationSelectionByAddress.get(address);
             AnnotationState newState = null;
             if (aMode.equals(Mode.AUTOMATION) || aMode.equals(Mode.CORRECTION)) {
@@ -356,7 +356,7 @@ public class CuratorUtil
                 boolean hasArc = false;
                 for (Relation relation : response.getRelations()) {
                     Argument argument = relation.getArguments().get(0);
-                    if (argument.getToken() == entity.getId()) {// has outgoing
+                    if (argument.getToken().equals(entity.getId())) {// has outgoing
                                                                 // arc
                         hasArc = true;
                         List<RelationType> relations = getRelationTypes(response,
@@ -433,7 +433,7 @@ public class CuratorUtil
             Relation relation, String arcTarget, List<AnnotationOption> aAnnotationOptions,
             Mode aMode, Entity aEntity)
     {
-        int address = relation.getId();
+        String address = relation.getId();
         AnnotationSelection annotationSelection = annotationSelectionByAddress.get(address);
         AnnotationState newState = null;
         if (aMode.equals(Mode.AUTOMATION) || aMode.equals(Mode.CORRECTION)) {
@@ -480,7 +480,7 @@ public class CuratorUtil
     }
 
     private static AnnotationState getCorrectionState(AnnotationSelection annotationSelection,
-            List<AnnotationOption> aAnnotationOptions, int numUsers, int address)
+            List<AnnotationOption> aAnnotationOptions, int numUsers, String address)
     {
         AnnotationOption annotationOption = null;
 
@@ -488,7 +488,7 @@ public class CuratorUtil
             for (AnnotationSelection annotationSelection2 : annotationOption2
                     .getAnnotationSelections()) {
                 if (annotationSelection2.getAddressByUsername().containsKey(CURATION_USER)
-                        && annotationSelection2.getAddressByUsername().get(CURATION_USER) == address) {
+                        && annotationSelection2.getAddressByUsername().get(CURATION_USER).equals(address)) {
                     annotationOption = annotationOption2;
                     break;
                 }

@@ -40,6 +40,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Argument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Relation;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
@@ -63,10 +64,6 @@ public class ArcAdapter
      */
     private final String annotationTypeName;
 
-    /**
-     * The feature of an UIMA annotation containing the label to be displayed in the UI.
-     */
-    private final String labelFeatureName;
     /**
      * The feature of an UIMA annotation containing the label to be used as a governor for arc
      * annotations
@@ -102,12 +99,11 @@ public class ArcAdapter
 
     private boolean crossMultipleSentence;
 
-    public ArcAdapter(long aTypeId, String aTypeName, String aLabelFeatureName,
-            String aTargetFeatureName, String aSourceFeatureName, /* String aArcSpanType, */
+    public ArcAdapter(long aTypeId, String aTypeName, String aTargetFeatureName,
+            String aSourceFeatureName, /* String aArcSpanType, */
             String aAttacheFeatureName, String aAttachType)
     {
         typeId = aTypeId;
-        labelFeatureName = aLabelFeatureName;
         annotationTypeName = aTypeName;
         sourceFeatureName = aSourceFeatureName;
         targetFeatureName = aTargetFeatureName;
@@ -129,8 +125,8 @@ public class ArcAdapter
      *            Data model for brat annotations
      */
     @Override
-    public void render(JCas aJcas, GetDocumentResponse aResponse,
-            BratAnnotatorModel aBratAnnotatorModel)
+    public void render(JCas aJcas, List<AnnotationFeature> aFeatures,
+            GetDocumentResponse aResponse, BratAnnotatorModel aBratAnnotatorModel)
     {
         // The first sentence address in the display window!
         Sentence firstSentence = BratAjaxCasUtil.selectSentenceAt(aJcas,
@@ -167,10 +163,25 @@ public class ArcAdapter
 
             List<Argument> argumentList = getArgument(governorFs, dependentFs);
 
-            Feature labelFeature = fs.getType().getFeatureByBaseName(labelFeatureName);
+            String annotations = "";
+            for (AnnotationFeature feature : aFeatures) {
+                Feature labelFeature = fs.getType().getFeatureByBaseName(feature.getName());
+                if (annotations.equals("")) {
+                    annotations = typeId
+                            + "_"
+                            + (fs.getStringValue(labelFeature) == null ? " " : fs
+                                    .getStringValue(labelFeature));
+                }
+                else {
+                    annotations = annotations
+                            + " | "
+                            + (fs.getStringValue(labelFeature) == null ? " " : fs
+                                    .getStringValue(labelFeature));
+                }
+            }
 
-            aResponse.addRelation(new Relation(((FeatureStructureImpl) fs).getAddress(), typeId
-                    + "$_" + fs.getStringValue(labelFeature), argumentList));
+            aResponse.addRelation(new Relation(((FeatureStructureImpl) fs).getAddress()+"",
+                    annotations, argumentList));
         }
     }
 
@@ -199,7 +210,8 @@ public class ArcAdapter
                         aBratAnnotatorModel.getWindowSize())).getEnd();
         if (crossMultipleSentence
                 || BratAjaxCasUtil.isSameSentence(aJCas, aOriginFs.getBegin(), aTargetFs.getEnd())) {
-            updateCas(aJCas, beginOffset, endOffset, aOriginFs, aTargetFs, aLabelValue);
+            updateCas(aJCas, beginOffset, endOffset, aOriginFs, aTargetFs, aLabelValue,
+                    aBratAnnotatorModel.getRememberedArcFeature());
         }
         else {
             throw new ArcCrossedMultipleSentenceException(
@@ -211,12 +223,12 @@ public class ArcAdapter
      * A Helper method to {@link #addToCas(String, BratAnnotatorUIData)}
      */
     private void updateCas(JCas aJCas, int aBegin, int aEnd, AnnotationFS aOriginFs,
-            AnnotationFS aTargetFs, String aValue)
+            AnnotationFS aTargetFs, String aValue, AnnotationFeature aFeature)
     {
         boolean duplicate = false;
 
         Type type = getType(aJCas.getCas(), annotationTypeName);
-        Feature feature = type.getFeatureByBaseName(labelFeatureName);
+        Feature feature = type.getFeatureByBaseName(aFeature.getName());
         Feature dependentFeature = type.getFeatureByBaseName(targetFeatureName);
         Feature governorFeature = type.getFeatureByBaseName(sourceFeatureName);
 
@@ -359,8 +371,8 @@ public class ArcAdapter
      */
     private List<Argument> getArgument(FeatureStructure aGovernorFs, FeatureStructure aDependentFs)
     {
-        return asList(new Argument("Arg1", ((FeatureStructureImpl) aGovernorFs).getAddress()),
-                new Argument("Arg2", ((FeatureStructureImpl) aDependentFs).getAddress()));
+        return asList(new Argument("Arg1", ((FeatureStructureImpl) aGovernorFs).getAddress()+""),
+                new Argument("Arg2", ((FeatureStructureImpl) aDependentFs).getAddress()+""));
     }
 
     private boolean isDuplicate(AnnotationFS aAnnotationFSOldOrigin,
@@ -376,12 +388,6 @@ public class ArcAdapter
         else {
             return false;
         }
-    }
-
-    @Override
-    public String getLabelFeatureName()
-    {
-        return labelFeatureName;
     }
 
     @Override
@@ -415,13 +421,13 @@ public class ArcAdapter
     }
 
     @Override
-    public List<String> getAnnotation(JCas aJcas, int begin, int end)
+    public List<String> getAnnotation(JCas aJcas, AnnotationFeature aFeature, int begin, int end)
     {
         return new ArrayList<String>();
     }
 
     @Override
-    public void automate(JCas aJcas, List<String> labelValues)
+    public void automate(JCas aJcas, AnnotationFeature aFeature, List<String> labelValues)
         throws BratAnnotationException
     {
         // TODO Auto-generated method stub
@@ -429,7 +435,7 @@ public class ArcAdapter
     }
 
     @Override
-    public void delete(JCas aJCas, int aBegin, int aEnd, String aValue)
+    public void delete(JCas aJCas, AnnotationFeature aFeature, int aBegin, int aEnd, String aValue)
     {
         // TODO Auto-generated method stub
 

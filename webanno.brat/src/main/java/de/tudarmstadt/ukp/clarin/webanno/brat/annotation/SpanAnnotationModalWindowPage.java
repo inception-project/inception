@@ -64,11 +64,11 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
-import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
@@ -92,11 +92,16 @@ public class SpanAnnotationModalWindowPage
     private MappingJacksonHttpMessageConverter jsonConverter;
 
     ComboBox<Tag> tags;
-    boolean isModify = false;
-    TagSet selectedtTagSet;
+    DropDownChoice<AnnotationFeature> features;
 
-    Model<TagSet> tagSetsModel;
+    boolean isModify = false;
+    AnnotationLayer selectedLayer;
+    AnnotationFeature selectedFeature;
+
+    Model<AnnotationLayer> layersModel;
+    Model<AnnotationFeature> featuresModel;
     Model<String> tagsModel;
+
     private final AnnotationDialogForm annotationDialogForm;
     private final BratAnnotatorModel bratAnnotatorModel;
     private final int beginOffset;
@@ -105,11 +110,15 @@ public class SpanAnnotationModalWindowPage
     int selectedSpanId = -1;
     String selectedSpanType;
 
+    List<AnnotationLayer> spanLayers = new ArrayList<AnnotationLayer>();
+    List<AnnotationFeature> spanFeatures = new ArrayList<AnnotationFeature>();
+
     private class AnnotationDialogForm
         extends Form<SelectionModel>
     {
         private static final long serialVersionUID = -4104665452144589457L;
 
+        @SuppressWarnings("unchecked")
         public AnnotationDialogForm(String id, final ModalWindow aModalWindow)
         {
             super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
@@ -120,65 +129,131 @@ public class SpanAnnotationModalWindowPage
             feedbackPanel.add(new AttributeModifier("class", "info"));
             feedbackPanel.add(new AttributeModifier("class", "error"));
 
-            List<TagSet> spanLayers = new ArrayList<TagSet>();
+           addSpanLayers: for (AnnotationLayer layer : bratAnnotatorModel.getAnnotationLayers()) {
 
-            for (TagSet tagset : bratAnnotatorModel.getAnnotationLayers()) {
-                if (tagset.getFeature() == null) {
-                    continue;
+                if(layer.getType().equals(WebAnnoConst.CHAIN_TYPE)){
+                    for(AnnotationFeature feature: annotationService.listAnnotationFeature(layer)){
+                        if(feature.getTagset() == null){
+                            continue addSpanLayers;
+                        }
+                    }
                 }
-                if (tagset.getLayer().getType().equals("span")
-                        || tagset.getFeature().getName().equals("referenceType")) {
-                    spanLayers.add(tagset);
+
+                if (!layer.getType().equals("relation")) {
+                    spanLayers.add(layer);
                 }
 
             }
 
             if (selectedSpanId != -1) {
-                tagSetsModel = new Model<TagSet>(selectedtTagSet);
-                tagSetsModel = new Model<TagSet>(selectedtTagSet);
-                Tag tag;
+                layersModel = new Model<AnnotationLayer>(selectedLayer);
+                featuresModel = new Model<AnnotationFeature>(selectedFeature);
+
                 try {
-                    tag = annotationService.getTag(selectedSpanType, selectedtTagSet);
-                    tagsModel = new Model<String>(tag.getName());
+                    if (selectedFeature.getTagset() != null) {
+                        tagsModel = new Model<String>(annotationService.getTag(selectedSpanType,
+                                selectedFeature.getTagset()).getName());
+                    }
                 }
                 catch (Exception e) {// It is a tag which is not in the tag
                                      // list.
                     tagsModel = new Model<String>("");
                 }
             }
-            else if (bratAnnotatorModel.getRememberedSpanTagSet() != null
-                    && conatinsTagSet(bratAnnotatorModel.getAnnotationLayers(),
-                            bratAnnotatorModel.getRememberedSpanTagSet())) {
-                selectedtTagSet = bratAnnotatorModel.getRememberedSpanTagSet();
-                tagSetsModel = new Model<TagSet>(selectedtTagSet);
-                tagsModel = new Model<String>(bratAnnotatorModel.getRememberedSpanTag().getName());
+            else if (bratAnnotatorModel.getRememberedSpanLayer() != null
+                    && bratAnnotatorModel.getRememberedSpanTag() != null
+                    && conatinsLayer(bratAnnotatorModel.getAnnotationLayers(),
+                            bratAnnotatorModel.getRememberedSpanLayer())) {
+                selectedLayer = bratAnnotatorModel.getRememberedSpanLayer();
+                if (selectedLayer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
+                    for (AnnotationFeature feature : annotationService
+                            .listAnnotationFeature(selectedLayer)) {
+                        if (feature.getName().equals(WebAnnoConst.COREFERENCE_TYPE_FEATURE)) {
+                            selectedFeature = feature;
+                            if (bratAnnotatorModel.getRememberedSpanTag().getTagSet().getFeature()
+                                    .equals(feature)) {
+                                tagsModel = new Model<String>(bratAnnotatorModel
+                                        .getRememberedSpanTag().getName());
+                            }
+                            break;
+                        }
+                    }
+                }
+                else {
+                    selectedFeature = bratAnnotatorModel.getRememberedSpanFeature();
+                    layersModel = new Model<AnnotationLayer>(selectedLayer);
+                    tagsModel = new Model<String>(bratAnnotatorModel.getRememberedSpanTag()
+                            .getName());
+                }
                 // for lemma,stem,comment...
-                if (!selectedtTagSet.isShowTag()) {
+                if (selectedFeature.getTagset() == null) {
                     tagsModel.setObject(selectedText);
                 }
             }
             else {
-                selectedtTagSet = (spanLayers.get(0));
-                tagSetsModel = new Model<TagSet>(selectedtTagSet);
-                tagsModel = new Model<String>("");
+                selectedLayer = (spanLayers.get(0));
+                layersModel = new Model<AnnotationLayer>(selectedLayer);
+                if (selectedLayer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
+                    for (AnnotationFeature feature : annotationService
+                            .listAnnotationFeature(selectedLayer)) {
+                        if (feature.getName().equals(WebAnnoConst.COREFERENCE_TYPE_FEATURE)) {
+                            selectedFeature = feature;
+                            break;
+                        }
+                    }
+                }
+                else {
+                    selectedFeature = annotationService.listAnnotationFeature(selectedLayer).get(0);
+                }
+                try {
+                    if (selectedFeature.getTagset() != null) {
+                        tagsModel = new Model<String>(annotationService.getTag(selectedSpanType,
+                                selectedFeature.getTagset()).getName());
+                    }
+                    else {
+                        tagsModel = new Model<String>("");
+                    }
+                }
+                catch (Exception e) {// It is a tag which is not in the tag
+                                     // list.
+                    tagsModel = new Model<String>("");
+                }
+            }
+
+            for (AnnotationFeature feature : annotationService.listAnnotationFeature(selectedLayer)) {
+                if (feature.getName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
+                    continue;
+                }
+                spanFeatures.add(feature);
             }
 
             add(new Label("selectedText", selectedText));
 
-            tags = new ComboBox<Tag>("tags", tagsModel,
-                    selectedtTagSet.isShowTag() ? annotationService.listTags(selectedtTagSet)
-                            : new ArrayList<Tag>(), new ComboBoxRenderer<Tag>("name", "name"));
-            add(tags);
+            tags = new ComboBox<Tag>(
+                    "tags",
+                    tagsModel,
+                    selectedFeature != null && selectedFeature.getTagset() != null ? annotationService
+                            .listTags(selectedFeature.getTagset()) : new ArrayList<Tag>(),
+                    new ComboBoxRenderer<Tag>("name", "name"));
+            add(tags.setOutputMarkupId(true));
 
-            add(new DropDownChoice<TagSet>("tagSets", tagSetsModel, spanLayers)
+            add(new DropDownChoice<AnnotationLayer>("layers", layersModel, spanLayers)
             {
                 private static final long serialVersionUID = -508831184292402704L;
 
                 @Override
-                protected void onSelectionChanged(TagSet aNewSelection)
+                protected void onSelectionChanged(AnnotationLayer aNewSelection)
                 {
-                    selectedtTagSet = aNewSelection;
-                    if (!aNewSelection.isShowTag()) {
+                    selectedLayer = aNewSelection;
+                    spanFeatures.clear();
+                    for (AnnotationFeature feature : annotationService
+                            .listAnnotationFeature(aNewSelection)) {
+                        spanFeatures.add(feature);
+                    }
+                    selectedFeature = spanFeatures.get(0);
+                    features.setModelObject(selectedFeature);
+
+                    if (selectedFeature.getTagset() == null) {
                         tagsModel.setObject(selectedText);
                     }
                     else {
@@ -201,14 +276,58 @@ public class SpanAnnotationModalWindowPage
                     return "";
                 }
 
-            }.setChoiceRenderer(new ChoiceRenderer<TagSet>()
+            }.setChoiceRenderer(new ChoiceRenderer<AnnotationLayer>()
             {
                 private static final long serialVersionUID = 1L;
 
                 @Override
-                public Object getDisplayValue(TagSet aObject)
+                public Object getDisplayValue(AnnotationLayer aObject)
                 {
-                    return aObject.getName();
+                    return aObject.getUiName();
+                }
+            }).setOutputMarkupId(true));
+
+            add(features = (DropDownChoice<AnnotationFeature>) new DropDownChoice<AnnotationFeature>(
+                    "features", featuresModel, spanFeatures)
+            {
+                private static final long serialVersionUID = -508831184292402704L;
+
+                @Override
+                protected void onSelectionChanged(AnnotationFeature aNewSelection)
+                {
+                    selectedFeature = aNewSelection;
+                    if (aNewSelection.getTagset() == null) {
+                        tagsModel.setObject(selectedText);
+                    }
+                    else {
+                        tagsModel.setObject("");
+                    }
+
+                    updateTagsComboBox();
+
+                }
+
+                @Override
+                protected boolean wantOnSelectionChangedNotifications()
+                {
+                    return true;
+                }
+
+                @Override
+                protected CharSequence getDefaultChoice(String aSelectedValue)
+                {
+                    return "";
+                }
+
+            }.setChoiceRenderer(new ChoiceRenderer<AnnotationFeature>()
+            {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public Object getDisplayValue(AnnotationFeature aObject)
+                {
+                    return aObject.getTagset() == null ? aObject.getUiName() + "[Free Span]"
+                            : aObject.getUiName();
                 }
             }).setOutputMarkupId(true));
 
@@ -219,6 +338,7 @@ public class SpanAnnotationModalWindowPage
                 @Override
                 protected void onSubmit(AjaxRequestTarget aTarget, Form<?> form)
                 {
+
                     try {
                         JCas jCas = getCas(bratAnnotatorModel);
 
@@ -228,17 +348,21 @@ public class SpanAnnotationModalWindowPage
                             error("No Tag is selected!");
                             return;
                         }
-                        // Lemma/stem... do not have tagsets. use free layer.
-                        if (!selectedtTagSet.isShowTag()
-                                && !annotationService.existsTag(tags.getModelObject(),
-                                        selectedtTagSet)) {
+                        if (selectedFeature.getTagset() == null) {
                             selectedTag = new Tag();
                             selectedTag.setName(tags.getModelObject());
-                            selectedTag.setTagSet(selectedtTagSet);
+                        }
+                        else if (selectedFeature.getTagset() != null
+                                && selectedFeature.getTagset().isCreateTag()
+                                && !annotationService.existsTag(tags.getModelObject(),
+                                        selectedFeature.getTagset())) {
+                            selectedTag = new Tag();
+                            selectedTag.setName(tags.getModelObject());
+                            selectedTag.setTagSet(selectedFeature.getTagset());
                             annotationService.createTag(selectedTag, bratAnnotatorModel.getUser());
                         }
                         else if (!annotationService.existsTag(tags.getModelObject(),
-                                selectedtTagSet)) {
+                                selectedFeature.getTagset())) {
                             aTarget.add(feedbackPanel);
                             error(tags.getModelObject()
                                     + " is not in the tag list. Please choose form the existing tags");
@@ -246,27 +370,27 @@ public class SpanAnnotationModalWindowPage
                         }
                         else {
                             selectedTag = annotationService.getTag(tags.getModelObject(),
-                                    selectedtTagSet);
+                                    selectedFeature.getTagset());
                         }
 
-                        TypeAdapter adapter = getAdapter(selectedtTagSet, annotationService);
+                        TypeAdapter adapter = getAdapter(selectedLayer, annotationService);
                         if (adapter instanceof SpanAdapter) {
-                            ((SpanAdapter) adapter).setLockToTokenOffsets(selectedtTagSet
-                                    .getLayer().isLockToTokenOffset());
-                            ((SpanAdapter) adapter).setAllowStacking(selectedtTagSet.getLayer()
+                            ((SpanAdapter) adapter).setLockToTokenOffsets(selectedLayer
+                                    .isLockToTokenOffset());
+                            ((SpanAdapter) adapter).setAllowStacking(selectedLayer
                                     .isAllowSTacking());
-                            ((SpanAdapter) adapter).setAllowMultipleToken(selectedtTagSet
-                                    .getLayer().isMultipleTokens());
-                            ((SpanAdapter) adapter).setCrossMultipleSentence(selectedtTagSet
-                                    .getLayer().isCrossSentence());
-
+                            ((SpanAdapter) adapter).setAllowMultipleToken(selectedLayer
+                                    .isMultipleTokens());
+                            ((SpanAdapter) adapter).setCrossMultipleSentence(selectedLayer
+                                    .isCrossSentence());
                             ((SpanAdapter) adapter).add(jCas, beginOffset, endOffset,
-                                    selectedTag.getName());
+                                    selectedFeature, selectedTag.getName());
 
                         }
                         else {
+
                             ((ChainAdapter) adapter).add(selectedTag.getName(), jCas, beginOffset,
-                                    endOffset, null, null);
+                                    endOffset, null, null, selectedFeature);
                         }
                         repository.updateJCas(bratAnnotatorModel.getMode(),
                                 bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
@@ -282,7 +406,8 @@ public class SpanAnnotationModalWindowPage
                             updateSentenceAddressAndOffsets(jCas, beginOffset);
                         }
 
-                        bratAnnotatorModel.setRememberedSpanTagSet(selectedtTagSet);
+                        bratAnnotatorModel.setRememberedSpanLayer(selectedLayer);
+                        bratAnnotatorModel.setRememberedSpanFeature(selectedFeature);
                         bratAnnotatorModel.setRememberedSpanTag(selectedTag);
                         bratAnnotatorModel.setAnnotate(true);
                         bratAnnotatorModel.setMessage("The span annotation ["
@@ -313,6 +438,7 @@ public class SpanAnnotationModalWindowPage
                         aTarget.add(feedbackPanel);
                         error(e.getMessage());
                     }
+
                 }
 
             }.add(new Behavior()
@@ -338,17 +464,15 @@ public class SpanAnnotationModalWindowPage
                     try {
                         JCas jCas = getCas(bratAnnotatorModel);
                         AnnotationFS fs = selectByAddr(jCas, selectedSpanId);
-                        TypeAdapter adapter = getAdapter(selectedtTagSet, annotationService);
+                        TypeAdapter adapter = getAdapter(selectedLayer, annotationService);
                         String attachFeatureName = adapter.getAttachFeatureName();
 
                         Set<TypeAdapter> typeAdapters = new HashSet<TypeAdapter>();
 
-                        for (TagSet tagSet : annotationService.listTagSets(bratAnnotatorModel
-                                .getProject())) {
-                            if (tagSet.getFeature() == null) {
-                                continue;
-                            }
-                            typeAdapters.add(TypeUtil.getAdapter(tagSet, annotationService));
+                        for (AnnotationLayer layer : annotationService
+                                .listAnnotationLayer(bratAnnotatorModel.getProject())) {
+
+                            typeAdapters.add(getAdapter(layer, annotationService));
                         }
                         // delete associated relation annotation
                         for (TypeAdapter ad : typeAdapters) {
@@ -368,23 +492,13 @@ public class SpanAnnotationModalWindowPage
                             }
                         }
                         if (adapter instanceof ChainAdapter) {
-                            List<AnnotationFeature> chainFeatures = annotationService
-                                    .listAnnotationFeature(selectedtTagSet.getLayer());
-                            AnnotationFeature chainFeature = null;
-                            for (AnnotationFeature feature : chainFeatures) {
-                                if (feature.getName().equals("referenceRelation")) {
-                                    chainFeature = feature;
-                                    break;
-                                }
-                            }
-                            TagSet chainTagset = annotationService.getTagSet(chainFeature,
-                                    selectedtTagSet.getProject());
-                            TypeAdapter chainAdapter = TypeUtil.getAdapter(chainTagset,
-                                    annotationService);
-                            ((ChainAdapter) chainAdapter).updateCasBeforeDelete(jCas,
-                                    selectedSpanId);
-                            adapter.delete(jCas, selectedSpanId);
-                            ((ChainAdapter) chainAdapter).removeInvalidChain(jCas.getCas());
+
+                            TypeAdapter chainAdapter = new ChainAdapter(selectedLayer.getId(),
+                                    selectedLayer.getName() + "Chain", selectedLayer.getName(),
+                                    "first", "next");
+                            ((ChainAdapter) adapter).updateCasBeforeDelete(jCas, selectedSpanId);
+                            ((ChainAdapter) chainAdapter).delete(jCas, selectedSpanId);
+                            ((ChainAdapter) adapter).removeInvalidChain(jCas.getCas());
                         }
                         else {
                             adapter.delete(jCas, selectedSpanId);
@@ -403,7 +517,7 @@ public class SpanAnnotationModalWindowPage
                             updateSentenceAddressAndOffsets(jCas, beginOffset);
                         }
 
-                        bratAnnotatorModel.setRememberedSpanTagSet(selectedtTagSet);
+                        bratAnnotatorModel.setRememberedSpanLayer(selectedLayer);
                         bratAnnotatorModel.setAnnotate(false);
                         bratAnnotatorModel.setMessage("The span annotation [" + selectedSpanType
                                 + "] is deleted");
@@ -441,8 +555,9 @@ public class SpanAnnotationModalWindowPage
         {
             tags.remove();
             tags = new ComboBox<Tag>("tags", tagsModel,
-                    annotationService.listTags(selectedtTagSet), new ComboBoxRenderer<Tag>("name",
-                            "name"));
+                    selectedFeature.getTagset() == null ? new ArrayList<Tag>() : annotationService
+                            .listTags(selectedFeature.getTagset()),
+                    new ComboBoxRenderer<Tag>("name", "name"));
             add(tags);
         }
     }
@@ -483,7 +598,8 @@ public class SpanAnnotationModalWindowPage
         implements Serializable
     {
         private static final long serialVersionUID = -4178958678920895292L;
-        public TagSet tagSets;
+        public AnnotationLayer layers;
+        public AnnotationFeature features;
         public Tag tags;
         public String selectedText;
     }
@@ -509,12 +625,10 @@ public class SpanAnnotationModalWindowPage
         this.selectedSpanId = selectedSpanId;
         this.selectedSpanType = aType.substring(aType.indexOf("_") + 1);
 
-        long featureId = Integer.parseInt(aType.substring(0, aType.indexOf("_")));
+        long layerId = Integer.parseInt(aType.substring(0, aType.indexOf("_")));
 
-        AnnotationFeature feature = this.annotationService.getFeature(featureId);
-
-        this.selectedtTagSet = this.annotationService.getTagSet(feature,
-                aBratAnnotatorModel.getProject());
+        this.selectedLayer = annotationService.getLayer(layerId);
+        this.selectedFeature = annotationService.listAnnotationFeature(selectedLayer).get(0);
 
         this.beginOffset = aBeginOffset;
         this.endOffset = aEndOffset;
@@ -527,10 +641,10 @@ public class SpanAnnotationModalWindowPage
         this.isModify = true;
     }
 
-    private boolean conatinsTagSet(Set<TagSet> aTagSets, TagSet aTagSet)
+    private boolean conatinsLayer(Set<AnnotationLayer> aLayers, AnnotationLayer aLayer)
     {
-        for (TagSet tagSet : aTagSets) {
-            if (tagSet.getId() == aTagSet.getId()) {
+        for (AnnotationLayer layer : aLayers) {
+            if (layer.getId() == aLayer.getId()) {
                 return true;
             }
         }

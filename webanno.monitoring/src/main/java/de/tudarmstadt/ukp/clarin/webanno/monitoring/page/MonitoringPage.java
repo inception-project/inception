@@ -64,9 +64,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.statistics.TwoPairedKappa;
@@ -635,10 +635,10 @@ public class MonitoringPage
                 .listProjectUsersWithPermissions(project, PermissionLevel.USER);
         double[][] results = new double[users.size()][users.size()];
         if (tagSets.getModelObject() != null
-                && !tagSets.getModelObject().getLayer().getName()
-                        .equals(WebAnnoConst.COREFERENCE)) {
+                && !tagSets.getModelObject().getLayer().getName().equals(WebAnnoConst.COREFERENCE)) {
 
-            TypeAdapter adapter = TypeUtil.getAdapter(tagSets.getModelObject(), annotationService);
+            TypeAdapter adapter = TypeUtil.getAdapter(tagSets.getModelObject().getLayer(),
+                    annotationService);
 
             // assume all users finished only one document
             double[][] multipleDocumentsFinished = new double[users.size()][users.size()];
@@ -664,7 +664,8 @@ public class MonitoringPage
                 finishedDocumentLists.put(user, finishedDocuments);
             }
 
-            results = computeKappa(users, adapter, finishedDocumentLists, documentJCases);
+            results = computeKappa(users, adapter, tagSets.getModelObject().getName(),
+                    finishedDocumentLists, documentJCases);
 
             // Users with some annotations of this type
 
@@ -801,7 +802,7 @@ public class MonitoringPage
      */
 
     public static double[][] computeKappa(List<User> users, TypeAdapter adapter,
-            Map<User, List<SourceDocument>> finishedDocumentLists,
+            String aLabelFeatureName, Map<User, List<SourceDocument>> finishedDocumentLists,
             Map<SourceDocument, Map<User, JCas>> documentJCases)
     {
         double[][] results = new double[users.size()][users.size()];
@@ -840,9 +841,9 @@ public class MonitoringPage
                     // sameDocuments finished (intersection of anno docs)
                     user1Documents.retainAll(user2Documents);
                     for (SourceDocument document : user1Documents) {
-                        twoPairedKappa.getStudy(adapter.getAnnotationTypeName(),
-                                adapter.getLabelFeatureName(), user1, user2, allUserAnnotations,
-                                document, documentJCases.get(document));
+                        twoPairedKappa.getStudy(adapter.getAnnotationTypeName(), aLabelFeatureName,
+                                user1, user2, allUserAnnotations, document,
+                                documentJCases.get(document));
 
                     }
                 }

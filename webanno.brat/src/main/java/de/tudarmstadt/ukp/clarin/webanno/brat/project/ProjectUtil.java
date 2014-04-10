@@ -323,14 +323,14 @@ public class ProjectUtil
             aBModel.getAnnotationLayers().clear();
             if (preference.getAnnotationLayers() != null) {
                 for (Long id : preference.getAnnotationLayers()) {
-                    aBModel.getAnnotationLayers().add(aAnnotationService.getTagSet(id));
+                    aBModel.getAnnotationLayers().add(aAnnotationService.getLayer(id));
                 }
             }
         }
         // no preference found
         catch (Exception e) {
 
-            // disable corefernce annotation for correction/curation pages for 0.4.0 release
+            /*// disable corefernce annotation for correction/curation pages for 0.4.0 release
             List<TagSet> tagSets = aAnnotationService.listTagSets(aBModel.getProject());
             List<TagSet> corefTagSets = new ArrayList<TagSet>();
             List<TagSet> noFeatureTagSet = new ArrayList<TagSet>();
@@ -348,11 +348,14 @@ public class ProjectUtil
                 tagSets.removeAll(corefTagSets);
             }
             tagSets.remove(noFeatureTagSet);
-            aBModel.setAnnotationLayers(new HashSet<TagSet>(tagSets));
+            aBModel.setAnnotationLayers(new HashSet<TagSet>(tagSets));*/
             /*
              * abAnnotatorModel.setAnnotationLayers(new HashSet<TagSet>(aAnnotationService
              * .listTagSets(abAnnotatorModel.getProject())));
              */
+
+        	List<AnnotationLayer> layers = aAnnotationService.listAnnotationLayer(aBModel.getProject());
+        	aBModel.setAnnotationLayers(new HashSet<AnnotationLayer>(layers));
         }
     }
 
@@ -788,8 +791,8 @@ public class ProjectUtil
         preference.setStaticColor(aBModel.isStaticColor());
         ArrayList<Long> layers = new ArrayList<Long>();
 
-        for (TagSet tagset : aBModel.getAnnotationLayers()) {
-            layers.add(tagset.getId());
+        for (AnnotationLayer layer : aBModel.getAnnotationLayers()) {
+            layers.add(layer.getId());
         }
         preference.setAnnotationLayers(layers);
 

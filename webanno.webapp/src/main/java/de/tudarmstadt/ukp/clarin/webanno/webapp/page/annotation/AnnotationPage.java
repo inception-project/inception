@@ -747,7 +747,7 @@ public class AnnotationPage
             bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getFirstSentenceAddress(jCas));
             bratAnnotatorModel.setLastSentenceAddress(BratAjaxCasUtil.getLastSentenceAddress(jCas));
             bratAnnotatorModel.setFirstSentenceAddress(bratAnnotatorModel.getSentenceAddress());
-            bratAnnotatorModel.setWindowSize(10);
+            bratAnnotatorModel.setWindowSize(5);
 
             ProjectUtil.setAnnotationPreference(username, repository, annotationService,
                     bratAnnotatorModel, Mode.ANNOTATION);

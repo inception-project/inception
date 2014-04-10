@@ -54,6 +54,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.OffsetsList;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -146,7 +147,7 @@ public class BratAnnotator
         final ModalWindow openAnnotationDialog;
         add(openAnnotationDialog = new ModalWindow("openAnnotationDialog"));
         openAnnotationDialog.setOutputMarkupId(true);
-        openAnnotationDialog.setInitialWidth(450);
+        openAnnotationDialog.setInitialWidth(550);
         openAnnotationDialog.setInitialHeight(280);
         openAnnotationDialog.setResizable(true);
         openAnnotationDialog.setWidthUnit("px");
@@ -383,7 +384,8 @@ public class BratAnnotator
                     getModelObject().setSentenceBeginOffset(model.getSentenceBeginOffset());
                     getModelObject().setSentenceEndOffset(model.getSentenceEndOffset());
 
-                    getModelObject().setRememberedSpanTagSet(model.getRememberedSpanTagSet());
+                    getModelObject().setRememberedSpanLayer(model.getRememberedSpanLayer());
+                    getModelObject().setRememberedSpanFeature(model.getRememberedSpanFeature());
                     getModelObject().setRememberedSpanTag(model.getRememberedSpanTag());
 
                     getModelObject().setAnnotate(model.isAnnotate());
@@ -407,12 +409,12 @@ public class BratAnnotator
         });
         // open the annotation dialog if only there is
         // span annotation layer (from the settings button) selected
-        for (TagSet tagSet : getModelObject().getAnnotationLayers()) {
-            if (tagSet.getFeature() == null || tagSet.getLayer() == null) {
+        for (AnnotationLayer layer : getModelObject().getAnnotationLayers()) {
+      /*      if (layer.getFeature() == null || layer.getLayer() == null) {
                 continue;
-            }
-            if (tagSet.getLayer().getType().equals(WebAnnoConst.SPAN_TYPE)
-                    || tagSet.getLayer().getType().equals(WebAnnoConst.CHAIN_TYPE)) {
+            }*/
+            if (layer.getType().equals(WebAnnoConst.SPAN_TYPE)
+                    || layer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
                 openAnnotationDialog.show(aTarget);
                 break;
             }
@@ -456,12 +458,12 @@ public class BratAnnotator
         });
         // open the annotation dialog if only there is
         // span annotation layer (from the settings button) selected
-        for (TagSet tagSet : getModelObject().getAnnotationLayers()) {
-            if (tagSet.getFeature() == null) {
+        for (AnnotationLayer layer : getModelObject().getAnnotationLayers()) {
+         /*   if (layer.getFeature() == null) {
                 continue;
-            }
-            if (tagSet.getLayer().getType().equals(WebAnnoConst.SPAN_TYPE)
-                    || tagSet.getLayer().getType().equals(WebAnnoConst.CHAIN_TYPE)) {
+            }*/
+            if (layer.getType().equals(WebAnnoConst.SPAN_TYPE)
+                    || layer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
                 openAnnotationDialog.show(aTarget);
                 break;
             }

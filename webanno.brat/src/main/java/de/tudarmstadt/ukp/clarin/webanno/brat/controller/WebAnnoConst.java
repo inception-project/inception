@@ -53,6 +53,10 @@ public class WebAnnoConst
     public static final String RELATION_TYPE = "relation";
     public static final String CHAIN_TYPE = "chain";
 
+    public static final String COREFERENCE_RELATION_FEATURE = "referenceRelation";
+    public static final String COREFERENCE_TYPE_FEATURE = "referenceType";
+
+
 
 
 }

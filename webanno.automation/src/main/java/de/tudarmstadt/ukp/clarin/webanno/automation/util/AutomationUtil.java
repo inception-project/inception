@@ -125,10 +125,11 @@ public class AutomationUtil
                 if (selectCovered(jCas, Token.class, sentence.getBegin() + i,
                         sentence.getBegin() + i + selectedText.length()).size() > 0) {
 
-                    SpanAdapter adapter = (SpanAdapter) getAdapter(aTag.getTagSet(),
+                    SpanAdapter adapter = (SpanAdapter) getAdapter(aTag.getTagSet().getLayer(),
                             aAnnotationService);
                     adapter.add(jCas, sentence.getBegin() + i, sentence.getBegin() + i
-                            + selectedText.length() - 1, aTag.getName());
+                            + selectedText.length() - 1, aTag.getTagSet().getFeature(),
+                            aTag.getName());
 
                 }
             }
@@ -147,7 +148,7 @@ public class AutomationUtil
         // get selected text, concatenations of tokens
         String selectedText = BratAjaxCasUtil.getSelectedText(jCas, aStart, aEnd);
 
-        TypeAdapter adapter = getAdapter(aTag.getTagSet(), annotationService);
+        TypeAdapter adapter = getAdapter(aTag.getTagSet().getLayer(), annotationService);
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = aRepository.getUser(username);
 
@@ -177,8 +178,9 @@ public class AutomationUtil
                     + selectedText.length()) {
                 if (selectCovered(jCas, Token.class, sentence.getBegin() + i,
                         sentence.getBegin() + i + selectedText.length()).size() > 0) {
-                    adapter.delete(jCas, sentence.getBegin() + i, sentence.getBegin() + i
-                            + selectedText.length() - 1, getQualifiedLabel(aTag));
+                    adapter.delete(jCas, aTag.getTagSet().getFeature(), sentence.getBegin() + i,
+                            sentence.getBegin() + i + selectedText.length() - 1,
+                            getQualifiedLabel(aTag));
                 }
             }
         }
@@ -256,16 +258,16 @@ public class AutomationUtil
     }
 
     private static boolean isTemplateChanged(MiraTemplate aTemplate, RepositoryService aRepository,
-            TagSet aLayer, TagSet aFLayer)
+            TagSet aLayerTagSet, TagSet aFeatureTagSet)
         throws IOException
     {
         boolean templateChanged = false;
-        File existingTemplateFile = AutomationUtil.getMiraTemplateFile(aLayer, aRepository);
+        File existingTemplateFile = AutomationUtil.getMiraTemplateFile(aLayerTagSet, aRepository);
         File thisTemplateFile = new File(existingTemplateFile.getAbsolutePath() + "bkp");
         if (!FileUtils.contentEquals(
                 existingTemplateFile,
-                new File(AutomationUtil.createMiraTemplate(aLayer, aRepository, aTemplate, aLayer,
-                        aFLayer, thisTemplateFile)))) {
+                new File(AutomationUtil.createMiraTemplate(aLayerTagSet, aRepository, aTemplate,
+                        aLayerTagSet, aFeatureTagSet, thisTemplateFile)))) {
             templateChanged = true;
         }
         return templateChanged;
@@ -277,7 +279,7 @@ public class AutomationUtil
     {
         StringBuffer sb = new StringBuffer();
 
-        TypeAdapter adapter = TypeUtil.getAdapter(aTagSet, annotationService);
+        TypeAdapter adapter = TypeUtil.getAdapter(aTagSet.getLayer(), annotationService);
         Map<Integer, String> neTags = new HashMap<Integer, String>();
         getNeTags(sentence, adapter, neTags);
 
@@ -333,9 +335,10 @@ public class AutomationUtil
             // TODO: when free annotation layers defined, check if tagset is on multiple token or
             // not
             if (aFeatureTagSet != null && aFeatureTagSet.getId() > 0) {
-                TypeAdapter featureAdapter = TypeUtil.getAdapter(aFeatureTagSet, annotationService);
+                TypeAdapter featureAdapter = TypeUtil.getAdapter(aTagSet.getLayer(),
+                        annotationService);
                 List<String> featureAnnotations = featureAdapter.getAnnotation(sentence.getCAS()
-                        .getJCas(), token.getBegin(), token.getEnd());
+                        .getJCas(), aTagSet.getFeature(), token.getBegin(), token.getEnd());
                 featureTagSet = featureAnnotations.size() == 0 ? "" : featureAnnotations.get(0)
                         + " ";
 
@@ -346,7 +349,7 @@ public class AutomationUtil
                     : featureTagSet;
 
             List<String> annotations = adapter.getAnnotation(sentence.getCAS().getJCas(),
-                    token.getBegin(), token.getEnd());
+                    aTagSet.getFeature(), token.getBegin(), token.getEnd());
             String tag = "";
             if (aFeatureTagSet != null && aFeatureTagSet.getId() > 0) {
                 tag = neTags.get(token.getAddress()) == null ? "O" : neTags.get(token.getAddress());
@@ -651,14 +654,15 @@ public class AutomationUtil
         throws CASException, UIMAException, ClassNotFoundException, IOException,
         BratAnnotationException
     {
-        TagSet layer = aTemplate.getTrainTagSet();
-        TagSet fLayer = aTemplate.getFeatureTagSets().size() > 0 ? aTemplate.getFeatureTagSets()
-                .iterator().next() : null;
+        TagSet layerTagSet = aTemplate.getTrainTagSet();
+        TagSet featureTagSet = aTemplate.getFeatureTagSets().size() > 0 ? aTemplate
+                .getFeatureTagSets().iterator().next() : null;
 
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = aRepository.getUser(username);
 
-        for (SourceDocument sourceDocument : aRepository.listSourceDocuments(layer.getProject())) {
+        for (SourceDocument sourceDocument : aRepository.listSourceDocuments(layerTagSet
+                .getProject())) {
 
             if ((!sourceDocument.isTrainingDocument() && !sourceDocument.getState().equals(
                     SourceDocumentState.CURATION_FINISHED))) {
@@ -675,14 +679,14 @@ public class AutomationUtil
                     aRepository.createAnnotationDocumentContent(jCas, sourceDocument, user);
 
                 }
-                File predFile = casToMiraFile(jCas, username, layer, fLayer, -1, -1, aTemplate,
-                        aRepository);
+                File predFile = casToMiraFile(jCas, username, layerTagSet, featureTagSet, -1, -1,
+                        aTemplate, aRepository);
                 Mira mira = new Mira();
                 int shiftColumns = 0;
                 int nbest = 1;
                 int beamSize = 0;
                 boolean maxPosteriors = false;
-                String modelName = aRepository.getMiraModel(layer).getAbsolutePath();
+                String modelName = aRepository.getMiraModel(layerTagSet).getAbsolutePath();
                 String testName = predFile.getAbsolutePath();
                 File predcitedFile = new File(predFile.getAbsolutePath() + "-pred");
                 PrintStream stream = new PrintStream(predcitedFile);
@@ -713,8 +717,9 @@ public class AutomationUtil
                     tags.add(tag);
                 }
 
-                TypeAdapter adapter = TypeUtil.getAdapter(fLayer, annotationService);
-                adapter.automate(jCas, tags);
+                TypeAdapter adapter = TypeUtil
+                        .getAdapter(layerTagSet.getLayer(), annotationService);
+                adapter.automate(jCas, layerTagSet.getFeature(), tags);
                 aRepository.createCorrectionDocumentContent(jCas, sourceDocument, user);
                 sourceDocument.setProcessed(true);
             }

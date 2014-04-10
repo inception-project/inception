@@ -24,7 +24,7 @@
 		href="css/kendo/kendo.common.min.css" media="all" />
 	<link rel="stylesheet" type="text/css"
 		href="css/kendo/kendo.default.min.css" media="all" />
-		<link rel="stylesheet" href="css/style.css" type="text/css" />
+	<link rel="stylesheet" href="css/style.css" type="text/css" />
 </wicket:head>
 </head>
 <body>
@@ -33,14 +33,17 @@
 		<table>
 			<tr class="border_bottom">
 				<td>Selected Text:</td>
-				<td><span wicket:id="selectedText" style="color:red"></span></td>
+				<td><span wicket:id="selectedText" style="color: red"></span></td>
 			</tr>
 			<tr class="border_bottom">
-				<td>Layers/TagSets</td>
+				<td>Layers</td>
+				<td>Features</td>
 				<td>Tags</td>
 			</tr>
 			<tr VALIGN=TOP>
-				<td><select name="TagSets" wicket:id="tagSets"
+				<td><select name="Layers" wicket:id="layers"
+					style="width: 150px"></select></td>
+				<td><select name="Features" wicket:id="features"
 					style="width: 150px"></select></td>
 				<td><input type="text" wicket:id="tags" style="width: 150px" />
 				</td>

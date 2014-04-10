@@ -38,7 +38,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 /**
  * Displays a BRAT visualisation and fills it with data from an {@link AnnotationDocument}. We do
@@ -149,11 +149,11 @@ public class BratAnnotationDocumentVisualizer
         // If this Classe is used somewhere, get BratAnnotatorModel populated somewhere
         BratAnnotatorModel bratAnnotatorDataModel = new BratAnnotatorModel();
 
-
         SpanAdapter.renderTokenAndSentence(jCas, response, bratAnnotatorDataModel);
 
-        for (TagSet tagSet : bratAnnotatorDataModel.getAnnotationLayers()) {
-            getAdapter(tagSet, annotationService).render(jCas, response,
+        for (AnnotationLayer layer : bratAnnotatorDataModel.getAnnotationLayers()) {
+            getAdapter(layer, annotationService).render(jCas,
+                    annotationService.listAnnotationFeature(layer), response,
                     bratAnnotatorDataModel);
         }
 

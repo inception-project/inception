@@ -68,7 +68,7 @@ public class TagSet
     @Lob
     private String description;
 
-    boolean createTag = true;
+    private boolean createTag = true;
 
     public long getId()
     {
@@ -144,6 +144,16 @@ public class TagSet
         this.layer = layer;
     }
 
+    public boolean isCreateTag()
+    {
+        return createTag;
+    }
+
+    public void setCreateTag(boolean createTag)
+    {
+        this.createTag = createTag;
+    }
+
     @Override
     public int hashCode()
     {
@@ -184,16 +194,6 @@ public class TagSet
             return false;
         }
         return true;
-    }
-
-    public boolean isShowTag()
-    {
-        return createTag;
-    }
-
-    public void setSHowTag(boolean createTag)
-    {
-        this.createTag = createTag;
     }
 
 }

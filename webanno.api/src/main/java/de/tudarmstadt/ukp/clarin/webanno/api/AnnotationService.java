@@ -126,11 +126,16 @@ public interface AnnotationService
      * Get Tagset by its ID
      */
     TagSet getTagSet(long id);
+    
+    /**
+     * Get an annotation layer using its id
+     */
+    AnnotationLayer getLayer(long id);
 
     /**
      * Get an {@link AnnotationLayer}
      */
-    AnnotationLayer getType(String name, String type, Project project);
+    AnnotationLayer getLayer(String name, String type, Project project);
 
     /**
      * Get a {@link AnnotationFeature} name using its ID. Used for updating annotations as it is
@@ -170,7 +175,7 @@ public interface AnnotationService
     /**
      * List all annotation types in a project
      */
-    List<AnnotationLayer> listAnnotationType(Project project);
+    List<AnnotationLayer> listAnnotationLayer(Project project);
 
     /**
      * List all the features in a {@link AnnotationLayer} for this {@link Project}

@@ -162,8 +162,8 @@ public class ProjectLayersPanel
 
                             if (project.getId() != 0) {
                                 List<AnnotationLayer> layers = annotationService
-                                        .listAnnotationType(project);
-                                AnnotationLayer tokenLayer = annotationService.getType(
+                                        .listAnnotationLayer(project);
+                                AnnotationLayer tokenLayer = annotationService.getLayer(
                                         Token.class.getName(), WebAnnoConst.SPAN_TYPE, project);
                                 layers.remove(tokenLayer);
                                 for (AnnotationLayer layer : layers) {
@@ -244,21 +244,19 @@ public class ProjectLayersPanel
     {
         private static final long serialVersionUID = -1L;
 
-        DropDownChoice<AnnotationLayer> attachType;
-        DropDownChoice<String> LayerType;
         TextField<String> uiName;
         String prefix = "webanno.custom.";
         String layerName;
-        AnnotationLayer none;
+        String layerType = WebAnnoConst.SPAN_TYPE;
+        DropDownChoice<String> layerTypes;
+        DropDownChoice<AnnotationLayer> attachTypes;
 
+        @SuppressWarnings("unchecked")
         public LayerDetailForm(String id)
         {
             super(id, new CompoundPropertyModel<AnnotationLayer>(new EntityModel<AnnotationLayer>(
                     new AnnotationLayer())));
-            if (attachType != null) {
-                attachType.setVisible(false);
-                attachType.setOutputMarkupPlaceholderTag(true);
-            }
+
             final Project project = selectedProjectModel.getObject();
             add(uiName = (TextField<String>) new TextField<String>("uiName").setRequired(true));
             uiName.add(new AjaxFormComponentUpdatingBehavior("onkeyup")
@@ -275,8 +273,8 @@ public class ProjectLayersPanel
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
             add(new CheckBox("enabled"));
 
-            add(LayerType = (DropDownChoice<String>) new DropDownChoice<String>("type",
-                    Arrays.asList(new String[] { "span", "relation", "chain" }))
+            add(layerTypes = (DropDownChoice<String>) new DropDownChoice<String>("type", Arrays.asList(new String[] { "span", "relation",
+                    "chain" }))
             {
                 private static final long serialVersionUID = 1244555334843130802L;
 
@@ -286,18 +284,30 @@ public class ProjectLayersPanel
                     return LayerDetailForm.this.getModelObject().getId() == 0;
                 }
 
-                @Override
-                protected CharSequence getDefaultChoice(String aSelectedValue)
+               /* @Override
+                protected boolean wantOnSelectionChangedNotifications()
                 {
-                    return "";
-                }
+                    return true;
+                }*/
             }.setRequired(true));
+            layerTypes.add(new AjaxFormComponentUpdatingBehavior("onchange")
+            {
+                private static final long serialVersionUID = 6790949494089940303L;
 
-            add(attachType = new DropDownChoice<AnnotationLayer>("attachType")
+                @Override
+                protected void onUpdate(AjaxRequestTarget target)
+                {
+                    layerType = getModelObject().getType();
+                    target.add(attachTypes);
+                }
+            });
+
+            add(attachTypes = (DropDownChoice<AnnotationLayer>) new DropDownChoice<AnnotationLayer>("attachType")
             {
                 private static final long serialVersionUID = -6705445053442011120L;
 
                 {
+
                     setChoices(new LoadableDetachableModel<List<AnnotationLayer>>()
                     {
                         private static final long serialVersionUID = 1784646746122513331L;
@@ -305,39 +315,30 @@ public class ProjectLayersPanel
                         @Override
                         protected List<AnnotationLayer> load()
                         {
-                            none = new AnnotationLayer();
-                            none.setUiName("-NONE-");
-                            if (LayerDetailForm.this.getModelObject().getId() > 0
-                                    && LayerDetailForm.this.getModelObject().getAttachType() == null) {
-                                return Arrays.asList(none);
-                            }
                             List<AnnotationLayer> allLayers = annotationService
-                                    .listAnnotationType(project);
-                            List<AnnotationLayer> attachTeypes = new ArrayList<AnnotationLayer>();
-                            attachTeypes.add(none);
-                            for (AnnotationLayer layer : allLayers) {
-                                if (!layer.getType().equals("span")) {
-                                    continue;
-                                }
-                                attachTeypes.add(layer);
+                                    .listAnnotationLayer(project);
 
+                            if (!layerType.equals(WebAnnoConst.RELATION_TYPE)) {
+                                return new ArrayList<AnnotationLayer>();
+                            }
+                            List<AnnotationLayer> attachTeypes = new ArrayList<AnnotationLayer>();
+                            for (AnnotationLayer layer : allLayers) {
+                                if (layer.getType().equals("span")) {
+                                    attachTeypes.add(layer);
+                                }
                             }
 
                             return attachTeypes;
-
                         }
                     });
-                    setChoiceRenderer(new ChoiceRenderer<AnnotationLayer>()
-                    {
-                        private static final long serialVersionUID = 8639013729422537472L;
-
-                        @Override
-                        public Object getDisplayValue(AnnotationLayer aObject)
-                        {
-                            return aObject.getUiName();
-                        }
-                    });
+                    setChoiceRenderer(new ChoiceRenderer<AnnotationLayer>("uiName"));
                 }
+
+                @Override
+                public boolean isNullValid()
+                {
+                    return isVisible();
+                };
 
                 @Override
                 public boolean isEnabled()
@@ -349,11 +350,12 @@ public class ProjectLayersPanel
                 }
 
                 @Override
-                protected CharSequence getDefaultChoice(String aSelectedValue)
+                protected boolean wantOnSelectionChangedNotifications()
                 {
-                    return "";
+                    return true;
                 }
-            });
+
+            }.setOutputMarkupPlaceholderTag(true));
 
             // behaviors of layers
             add(new CheckBox("lockToTokenOffset"));
@@ -376,8 +378,7 @@ public class ProjectLayersPanel
                             error("Only one Layer per project is allowed!");
                             return;
                         }
-                        if (layer.getType().equals("relation")
-                                && layer.getAttachType().equals(none)) {
+                        if (layer.getType().equals("relation") && layer.getAttachType() == null) {
                             error("a relation layer need an attach type!");
                             return;
                         }
@@ -394,14 +395,11 @@ public class ProjectLayersPanel
                         try {
                             layerName = layerName.replaceAll("\\W", "");
                             layer.setName(prefix + layerName);
-                            if (layer.getAttachType().equals(none)) {
-                                layer.setAttachType(null);
-                            }
                             annotationService.createType(layer, user);
                             if (layer.getType().equals("chain")) {
                                 AnnotationFeature relationFeature = new AnnotationFeature();
                                 relationFeature.setType(layer.getName());
-                                relationFeature.setName("referenceRelation");
+                                relationFeature.setName(WebAnnoConst.COREFERENCE_RELATION_FEATURE);
                                 relationFeature.setLayer(layer);
                                 relationFeature.setEnabled(true);
                                 relationFeature.setUiName("Reference Relation");
@@ -411,7 +409,7 @@ public class ProjectLayersPanel
 
                                 AnnotationFeature typeFeature = new AnnotationFeature();
                                 typeFeature.setType(layer.getName());
-                                typeFeature.setName("referenceType");
+                                typeFeature.setName(WebAnnoConst.COREFERENCE_TYPE_FEATURE);
                                 typeFeature.setLayer(layer);
                                 typeFeature.setEnabled(true);
                                 typeFeature.setUiName("Reference Type");
@@ -679,6 +677,15 @@ public class ProjectLayersPanel
                 {
                     featureDetailForm.setDefaultModelObject(new AnnotationFeature());
                     featureDetailForm.setVisible(true);
+                }
+
+                @Override
+                public boolean isEnabled()
+                {
+                    return layerDetailForm.getModelObject() != null
+                            && !layerDetailForm.getModelObject().isBuiltIn()
+                            && !layerDetailForm.getModelObject().getType()
+                                    .equals(WebAnnoConst.CHAIN_TYPE);
                 }
             });
         }

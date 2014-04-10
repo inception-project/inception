@@ -41,6 +41,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -85,11 +86,6 @@ public class SpanAdapter
     private final String annotationTypeName;
 
     /**
-     * The feature of an UIMA annotation containing the label to be displayed in the UI.
-     */
-    private final String labelFeatureName;
-
-    /**
      * The minimum offset of the annotation is on token, and the annotation can't span multiple
      * tokens too
      */
@@ -110,12 +106,10 @@ public class SpanAdapter
 
     boolean deletable;
 
-    public SpanAdapter(long aTypeId, String aTypeName, String aLabelFeatureName,
-            String aAttachFeature, String aAttachType)
+    public SpanAdapter(long aTypeId, String aTypeName, String aAttachFeature, String aAttachType)
     {
 
         typeId = aTypeId;
-        labelFeatureName = aLabelFeatureName;
         annotationTypeName = aTypeName;
         attachFeatureName = aAttachFeature;
         attachType = aAttachType;
@@ -182,8 +176,8 @@ public class SpanAdapter
      *            Data model for brat annotations
      */
     @Override
-    public void render(JCas aJcas, GetDocumentResponse aResponse,
-            BratAnnotatorModel aBratAnnotatorModel)
+    public void render(JCas aJcas, List<AnnotationFeature> aFeatures,
+            GetDocumentResponse aResponse, BratAnnotatorModel aBratAnnotatorModel)
     {
 
         // The first sentence address in the display window!
@@ -206,12 +200,30 @@ public class SpanAdapter
 
         Type type = getType(aJcas.getCas(), annotationTypeName);
         int aFirstSentenceOffset = firstSentence.getBegin();
+
         for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, firstSentence.getBegin(),
                 lastSentenceInPage.getEnd())) {
-            Feature labelFeature = fs.getType().getFeatureByBaseName(labelFeatureName);
-            aResponse.addEntity(new Entity(((FeatureStructureImpl) fs).getAddress(), typeId + "_"
-                    + fs.getStringValue(labelFeature), asList(new Offsets(fs.getBegin()
-                    - aFirstSentenceOffset, fs.getEnd() - aFirstSentenceOffset))));
+
+            String annotations = "";
+            for (AnnotationFeature feature : aFeatures) {
+                Feature labelFeature = fs.getType().getFeatureByBaseName(feature.getName());
+                if (annotations.equals("")) {
+                    annotations = typeId
+                            + "_"
+                            + (fs.getFeatureValueAsString(labelFeature) == null ? " " : fs
+                                    .getFeatureValueAsString(labelFeature));
+                }
+                else {
+                    annotations = annotations
+                            + " | "
+                            + (fs.getFeatureValueAsString(labelFeature) == null ? " " : fs
+                                    .getFeatureValueAsString(labelFeature));
+                }
+            }
+
+            aResponse.addEntity(new Entity(((FeatureStructureImpl) fs).getAddress() + "",
+                    annotations, asList(new Offsets(fs.getBegin() - aFirstSentenceOffset, fs
+                            .getEnd() - aFirstSentenceOffset))));
         }
     }
 
@@ -269,7 +281,7 @@ public class SpanAdapter
      * @throws BratAnnotationException
      */
 
-    public void add(JCas aJcas, int aBegin, int aEnd, String aLabelValue)
+    public void add(JCas aJcas, int aBegin, int aEnd, AnnotationFeature aFeature, String aValue)
         throws BratAnnotationException
     {
         if (crossMultipleSentence || BratAjaxCasUtil.isSameSentence(aJcas, aBegin, aEnd)) {
@@ -278,7 +290,7 @@ public class SpanAdapter
                         aEnd);
 
                 for (Token token : tokens) {
-                    updateCas(aJcas.getCas(), token.getBegin(), token.getEnd(), aLabelValue);
+                    updateCas(aJcas.getCas(), token.getBegin(), token.getEnd(), aFeature, aValue);
                 }
             }
             else if (allowMultipleToken) {
@@ -287,10 +299,10 @@ public class SpanAdapter
                 // update the begin and ends (no sub token selection
                 aBegin = tokens.get(0).getBegin();
                 aEnd = tokens.get(tokens.size() - 1).getEnd();
-                updateCas(aJcas.getCas(), aBegin, aEnd, aLabelValue);
+                updateCas(aJcas.getCas(), aBegin, aEnd, aFeature, aValue);
             }
             else {
-                updateCas(aJcas.getCas(), aBegin, aEnd, aLabelValue);
+                updateCas(aJcas.getCas(), aBegin, aEnd, aFeature, aValue);
             }
         }
         else {
@@ -300,24 +312,25 @@ public class SpanAdapter
     }
 
     /**
-     * A Helper method to {@link #add(String, BratAnnotatorUIData)}
+     * A Helper method to add annotation to CAS
      */
-    private void updateCas(CAS aCas, int aBegin, int aEnd, String aValue)
+    private void updateCas(CAS aCas, int aBegin, int aEnd, AnnotationFeature aFeature, String aValue)
     {
         boolean duplicate = false;
         Type type = CasUtil.getType(aCas, annotationTypeName);
-        Feature feature = type.getFeatureByBaseName(labelFeatureName);
+
+        Feature feature = type.getFeatureByBaseName(aFeature.getName());
         for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
 
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
                 if (!allowStacking) {
                     fs.setStringValue(feature, aValue);
                     duplicate = true;
-                    break;
+                    continue;
                 }
                 if (fs.getStringValue(feature).equals(aValue)) {
                     duplicate = true;
-                    break;
+                    // break;
                     // if (!fs.getStringValue(feature).equals(aValue)) {
                     // fs.setStringValue(feature, aValue);
                 }
@@ -330,10 +343,13 @@ public class SpanAdapter
             if (attachFeatureName != null) {
                 Type theType = CasUtil.getType(aCas, attachType);
                 Feature attachFeature = theType.getFeatureByBaseName(attachFeatureName);
-                // if the attache type feature structure is not in place (for custom annotation),
+                // if the attache type feature structure is not in place
+                // (for
+                // custom annotation),
                 // create it
-                if(CasUtil.selectCovered(aCas, theType, aBegin, aEnd).size() == 0){
-                    AnnotationFS attachTypeAnnotation = aCas.createAnnotation(theType, aBegin, aEnd);
+                if (CasUtil.selectCovered(aCas, theType, aBegin, aEnd).size() == 0) {
+                    AnnotationFS attachTypeAnnotation = aCas
+                            .createAnnotation(theType, aBegin, aEnd);
                     aCas.addFsToIndexes(attachTypeAnnotation);
 
                 }
@@ -365,10 +381,10 @@ public class SpanAdapter
     }
 
     @Override
-    public void delete(JCas aJCas, int aBegin, int aEnd, String aValue)
+    public void delete(JCas aJCas, AnnotationFeature aFeature, int aBegin, int aEnd, String aValue)
     {
         Type type = CasUtil.getType(aJCas.getCas(), annotationTypeName);
-        Feature feature = type.getFeatureByBaseName(labelFeatureName);
+        Feature feature = type.getFeatureByBaseName(aFeature.getName());
         for (AnnotationFS fs : CasUtil.selectCovered(aJCas.getCas(), type, aBegin, aEnd)) {
 
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
@@ -378,42 +394,6 @@ public class SpanAdapter
                 }
             }
         }
-    }
-
-    /*    *//**
-     * Convenience method to get an adapter for part-of-speech.
-     *
-     * NOTE: This is not meant to stay. It's just a convenience during refactoring!
-     */
-    /*
-     * public static final SpanAdapter getPosAdapter() { SpanAdapter adapter = new
-     * SpanAdapter(AnnotationTypeConstant.POS_PREFIX, POS.class.getName(), "PosValue", "pos",
-     * Token.class.getName()); adapter.setSingleTokenBehavior(true); adapter.setDeletable(true);
-     * return adapter; }
-     *//**
-     * Convenience method to get an adapter for lemma.
-     *
-     * NOTE: This is not meant to stay. It's just a convenience during refactoring!
-     */
-    /*
-     * public static final SpanAdapter getLemmaAdapter() { SpanAdapter adapter = new SpanAdapter("",
-     * Lemma.class.getName(), "value", "lemma", Token.class.getName());
-     * adapter.setSingleTokenBehavior(true); adapter.setDeletable(true); return adapter; }
-     *//**
-     * Convenience method to get an adapter for named entity.
-     *
-     * NOTE: This is not meant to stay. It's just a convenience during refactoring!
-     */
-    /*
-     * public static final SpanAdapter getNamedEntityAdapter() { SpanAdapter adapter = new
-     * SpanAdapter(AnnotationTypeConstant.NAMEDENTITY_PREFIX, NamedEntity.class.getName(), "value",
-     * null, null); adapter.setSingleTokenBehavior(false); adapter.setDeletable(true); return
-     * adapter; }
-     */
-    @Override
-    public String getLabelFeatureName()
-    {
-        return labelFeatureName;
     }
 
     @Override
@@ -458,24 +438,24 @@ public class SpanAdapter
     }
 
     @Override
-    public List<String> getAnnotation(JCas aJcas, int begin, int end)
+    public List<String> getAnnotation(JCas aJcas, AnnotationFeature aFeature, int begin, int end)
     {
         Type type = getType(aJcas.getCas(), annotationTypeName);
         List<String> annotations = new ArrayList<String>();
         for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, begin, end)) {
-            Feature labelFeature = fs.getType().getFeatureByBaseName(labelFeatureName);
+            Feature labelFeature = fs.getType().getFeatureByBaseName(aFeature.getName());
             annotations.add(fs.getStringValue(labelFeature));
         }
         return annotations;
     }
 
     @Override
-    public void automate(JCas aJcas, List<String> aLabelValues)
+    public void automate(JCas aJcas, AnnotationFeature aFeature, List<String> aLabelValues)
         throws BratAnnotationException, IOException
     {
 
         Type type = CasUtil.getType(aJcas.getCas(), annotationTypeName);
-        Feature feature = type.getFeatureByBaseName(labelFeatureName);
+        Feature feature = type.getFeatureByBaseName(aFeature.getName());
 
         int i = 0;
         String prevNe = "O";
@@ -558,4 +538,5 @@ public class SpanAdapter
             }
         }
     }
+
 }

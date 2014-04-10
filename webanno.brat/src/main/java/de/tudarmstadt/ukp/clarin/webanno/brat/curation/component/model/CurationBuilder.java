@@ -40,9 +40,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationOption;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff;
@@ -50,9 +50,9 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.CasDiffException;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -297,16 +297,15 @@ public class CurationBuilder
         }
     }
 
-    public static List<Type> getEntryTypes(JCas mergeJCas, Set<TagSet> aTagSets)
+    public static List<Type> getEntryTypes(JCas mergeJCas, Set<AnnotationLayer> aLayers)
     {
         List<Type> entryTypes = new LinkedList<Type>();
 
-        for (TagSet tagSet : aTagSets) {
-            if (tagSet.getLayer().getName().equals(WebAnnoConst.COREFERENCE)
-                    || tagSet.getLayer().getName().equals(WebAnnoConst.COREFRELTYPE)) {
+        for (AnnotationLayer layer : aLayers) {
+            if (layer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
                 continue;
             }
-            entryTypes.add(getAdapter(tagSet, annotationService).getAnnotationType(
+            entryTypes.add(getAdapter(layer, annotationService).getAnnotationType(
                     mergeJCas.getCas()));
         }
         return entryTypes;
@@ -322,7 +321,7 @@ public class CurationBuilder
      * @throws BratAnnotationException
      */
     public JCas createMergeCas(JCas mergeJCas, AnnotationDocument randomAnnotationDocument,
-            Map<String, JCas> jCases, int aBegin, int aEnd, Set<TagSet> aAnnotationLayers)
+            Map<String, JCas> jCases, int aBegin, int aEnd, Set<AnnotationLayer> aAnnotationLayers)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
         User userLoggedIn = repository.getUser(SecurityContextHolder.getContext()

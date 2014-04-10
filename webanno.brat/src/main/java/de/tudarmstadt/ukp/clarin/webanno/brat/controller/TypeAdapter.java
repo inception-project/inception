@@ -27,6 +27,7 @@ import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 /**
  * Type Adapters for span, arc, and chain annotations
@@ -49,7 +50,7 @@ public interface TypeAdapter
      * @throws BratAnnotationException
      * @throws IOException
      */
-    void automate(JCas aJcas, List<String> labelValues)
+    void automate(JCas aJcas,AnnotationFeature feature, List<String> labelValues)
         throws BratAnnotationException, IOException;
 
     /**
@@ -63,12 +64,7 @@ public interface TypeAdapter
      * @param aBratAnnotatorModel
      *            Data model for brat annotations
      */
-    void render(JCas aJcas, GetDocumentResponse aResponse, BratAnnotatorModel aBratAnnotatorModel);
-
-    /**
-     * @return The feature of an UIMA annotation containing the label to be displayed in the UI.
-     */
-    String getLabelFeatureName();
+    void render(JCas aJcas, List<AnnotationFeature> features, GetDocumentResponse aResponse, BratAnnotatorModel aBratAnnotatorModel);
 
     /**
      * Prefix of the label value for Brat to make sure that different annotation types can use the
@@ -123,9 +119,9 @@ public interface TypeAdapter
     public void delete(JCas aJCas, int aAddress);
 
     //delete based on the begin,end, and type of annotation
-    void delete(JCas aJCas, int aBegin, int aEnd, String aValue);
+    void delete(JCas aJCas, AnnotationFeature feature, int aBegin, int aEnd, String aValue);
 
     void deleteBySpan(JCas aJCas, AnnotationFS fs, int aBegin, int aEnd);
 
-    List<String> getAnnotation(JCas aJcas, int begin, int end);
+    List<String> getAnnotation(JCas aJcas,AnnotationFeature feature, int begin, int end);
 }

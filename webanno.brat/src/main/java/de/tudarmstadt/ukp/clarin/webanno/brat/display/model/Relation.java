@@ -2,13 +2,13 @@
  * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -37,8 +37,8 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.BeanAsArraySerializer;
 @JsonPropertyOrder(value = { "id", "type", "arguments" })
 public class Relation
 {
-    private int id;
-    
+    private String id;
+
     /**
      * The type of the relation between two spans
      */
@@ -54,7 +54,7 @@ public class Relation
         // Nothing to do
     }
 
-    public Relation(int aId, String aType, List<Argument> aArguments)
+    public Relation(String aId, String aType, List<Argument> aArguments)
     {
         super();
         id = aId;
@@ -62,12 +62,12 @@ public class Relation
         arguments = aArguments;
     }
 
-    public int getId()
+    public String getId()
     {
         return id;
     }
 
-    public void setId(int aId)
+    public void setId(String aId)
     {
         id = aId;
     }

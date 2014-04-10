@@ -42,11 +42,14 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * Modal Window to configure {@link BratAnnotator#setAnnotationLayers(ArrayList),
@@ -88,52 +91,61 @@ public class AnnotationPreferenceModalPanel
             getModelObject().numberOfSentences = bModel.getWindowSize();
             getModelObject().scrollPage = bModel.isScrollPage();
             getModelObject().staticColor = bModel.isStaticColor();
-            for (TagSet tagSet : bModel.getAnnotationLayers()) {
-                getModelObject().annotationLayers.add(tagSet);
+            for (AnnotationLayer layer : bModel.getAnnotationLayers()) {
+                getModelObject().annotationLayers.add(layer);
             }
             windowSizeField = new NumberTextField<Integer>("numberOfSentences");
             windowSizeField.setType(Integer.class);
             windowSizeField.setMinimum(1);
             add(windowSizeField);
 
-            add(new CheckBoxMultipleChoice<TagSet>("annotationLayers")
+            add(new CheckBoxMultipleChoice<AnnotationLayer>("annotationLayers")
             {
                 private static final long serialVersionUID = 1L;
 
                 {
-                    setChoices(new LoadableDetachableModel<List<TagSet>>()
+                    setChoices(new LoadableDetachableModel<List<AnnotationLayer>>()
                     {
                         private static final long serialVersionUID = 1L;
 
                         @Override
-                        protected List<TagSet> load()
+                        protected List<AnnotationLayer> load()
                         {
                             // disable corefernce annotation for correction/curation pages for 0.4.0
                             // release
-                            List<TagSet> tagSets = annotationService.listTagSets(bModel
-                                    .getProject());
-                            List<TagSet> corefTagSets = new ArrayList<TagSet>();
-                            List<TagSet> noFeature = new ArrayList<TagSet>();
-                            for (TagSet tagSet : tagSets) {
-                                if (tagSet.getFeature() == null || tagSet.getLayer() == null) {
-                                    noFeature.add(tagSet);
+                            List<AnnotationLayer> layers = annotationService
+                                    .listAnnotationLayer(bModel.getProject());
+                            List<AnnotationLayer> corefTagSets = new ArrayList<AnnotationLayer>();
+                            List<AnnotationLayer> noFeature = new ArrayList<AnnotationLayer>();
+                            for (AnnotationLayer layer : layers) {
+                                if(layer.getType().equals(WebAnnoConst.CHAIN_TYPE)){
+                                    for(AnnotationFeature feature:annotationService.listAnnotationFeature(layer)){
+                                        if(feature.getTagset() == null){
+                                            noFeature.add(layer);
+                                            break;
+                                        }
+                                    }
                                 }
-                                else if (tagSet.getLayer().getType().equals("chain")) {
-                                    corefTagSets.add(tagSet);
+                                if (annotationService.listAnnotationFeature(layer).size() == 0
+                                        || layer.getName().equals(Token.class.getName())) {
+                                    noFeature.add(layer);
+                                }
+                                else if (layer.getType().equals("chain")) {
+                                    corefTagSets.add(layer);
                                 }
                             }
 
                             if (bModel.getMode().equals(Mode.CORRECTION)
                                     || bModel.getMode().equals(Mode.CURATION)) {
-                                tagSets.removeAll(corefTagSets);
+                                layers.removeAll(corefTagSets);
                             }
-                            tagSets.removeAll(noFeature);
-                            return tagSets;
+                            layers.removeAll(noFeature);
+                            return layers;
                             // return
                             // annotationService.listTagSets(bratAnnotatorModel.getProject());
                         }
                     });
-                    setChoiceRenderer(new ChoiceRenderer<TagSet>("name", "id"));
+                    setChoiceRenderer(new ChoiceRenderer<AnnotationLayer>("uiName", "id"));
                 }
             });
 
@@ -202,7 +214,7 @@ public class AnnotationPreferenceModalPanel
         public int numberOfSentences;
         public boolean scrollPage;
         public boolean staticColor;
-        public HashSet<TagSet> annotationLayers = new HashSet<TagSet>();
+        public HashSet<AnnotationLayer> annotationLayers = new HashSet<AnnotationLayer>();
     }
 
     public AnnotationPreferenceModalPanel(String aId, final ModalWindow modalWindow,

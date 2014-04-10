@@ -123,7 +123,7 @@ public class ProjectTagSetsPanel
             public boolean isVisible()
             {
                 return tagSetSelectionForm.getModelObject().tagSet != null
-                        && tagSetSelectionForm.getModelObject().tagSet.isShowTag()
+                        && tagSetSelectionForm.getModelObject().tagSet.isCreateTag()
                         && tagSetSelectionForm.getModelObject().tagSet.getProject().equals(
                                 aProjectModel.getObject());
             }
@@ -140,7 +140,7 @@ public class ProjectTagSetsPanel
             public boolean isVisible()
             {
                 return tagSetSelectionForm.getModelObject().tagSet != null
-                        && tagSetSelectionForm.getModelObject().tagSet.isShowTag()
+                        && tagSetSelectionForm.getModelObject().tagSet.isCreateTag()
                         && tagSetSelectionForm.getModelObject().tagSet.getProject().equals(
                                 aProjectModel.getObject());
             }
@@ -226,8 +226,6 @@ public class ProjectTagSetsPanel
                         de.tudarmstadt.ukp.clarin.webanno.model.TagSet aNewSelection)
                 {
                     if (aNewSelection != null) {
-                        // TagSetSelectionForm.this.getModelObject().tagSet
-                        // = new TagSet();
                         tagSetDetailForm.clearInput();
                         tagSetDetailForm.setModelObject(aNewSelection);
                         tagSetDetailForm.setVisible(true);
@@ -301,7 +299,7 @@ public class ProjectTagSetsPanel
                                         text, TagSet.class);
                                 if (importedTagSet.getTypeUiName() == null) {// Old TagSets
                                     if (importedTagSet.getTypeName().equals(WebAnnoConst.POS)) {
-                                        AnnotationLayer layer = annotationService.getType(
+                                        AnnotationLayer layer = annotationService.getLayer(
                                                 POS.class.getName(), WebAnnoConst.SPAN_TYPE,
                                                 project);
                                         AnnotationFeature posFeature = null;
@@ -318,7 +316,7 @@ public class ProjectTagSetsPanel
                                     }
                                     else if (importedTagSet.getTypeName().equals(
                                             WebAnnoConst.DEPENDENCY)) {
-                                        AnnotationLayer layer = annotationService.getType(
+                                        AnnotationLayer layer = annotationService.getLayer(
                                                 Dependency.class.getName(),
                                                 WebAnnoConst.RELATION_TYPE, project);
                                         AnnotationFeature depsFeature = null;
@@ -334,7 +332,7 @@ public class ProjectTagSetsPanel
                                     }
                                     else if (importedTagSet.getTypeName().equals(
                                             WebAnnoConst.NAMEDENTITY)) {
-                                        AnnotationLayer layer = annotationService.getType(
+                                        AnnotationLayer layer = annotationService.getLayer(
                                                 NamedEntity.class.getName(),
                                                 WebAnnoConst.SPAN_TYPE, project);
                                         AnnotationFeature neFeature = null;
@@ -351,7 +349,7 @@ public class ProjectTagSetsPanel
                                     else if (importedTagSet.getTypeName().equals(
                                             WebAnnoConst.COREFRELTYPE)) {
                                         AnnotationLayer layer = annotationService
-                                                .getType(
+                                                .getLayer(
                                                         "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference",
                                                         WebAnnoConst.CHAIN_TYPE, project);
                                         AnnotationFeature corefeTypeFeature = null;
@@ -368,7 +366,7 @@ public class ProjectTagSetsPanel
                                     else if (importedTagSet.getTypeName().equals(
                                             WebAnnoConst.COREFERENCE)) {
                                         AnnotationLayer layer = annotationService
-                                                .getType(
+                                                .getLayer(
                                                         "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference",
                                                         WebAnnoConst.CHAIN_TYPE, project);
                                         AnnotationFeature corefFeature = null;
@@ -383,53 +381,6 @@ public class ProjectTagSetsPanel
                                                 corefFeature);
                                     }
                                 }
-
-                                /*
-                                 * if (annotationService.existsType(importedTagSet.getTypeName(),
-                                 * importedTagSet.getType())) { type =
-                                 * annotationService.getType(importedTagSet.getTypeName(),
-                                 * importedTagSet.getType()); Project p = type.getProject(); if (p
-                                 * == null) {
-                                 * type.setDescription(importedTagSet.getTypeDescription());
-                                 * type.setName(importedTagSet.getTypeName());
-                                 * type.setUiName(importedTagSet.getTypeName());
-                                 * type.setType(importedTagSet.getType()); type.setProject(project);
-                                 * } // create that old layer, which was per // installation, for
-                                 * this project else if (!p.equals(project)) { type = new
-                                 * AnnotationType();
-                                 * type.setDescription(importedTagSet.getTypeDescription());
-                                 * type.setName(importedTagSet.getTypeName());
-                                 * type.setUiName(importedTagSet.getTypeName());// TODO
-                                 * type.setType(importedTagSet.getType()); type.setProject(project);
-                                 * annotationService.createType(type, user); } } // new layer else {
-                                 * type = new AnnotationType();
-                                 * type.setDescription(importedTagSet.getTypeDescription());
-                                 * type.setName(importedTagSet.getTypeName());
-                                 * type.setUiName(importedTagSet.getTypeName());
-                                 * type.setType(importedTagSet.getType()); type.setProject(project);
-                                 * annotationService.createType(type, user); }
-                                 *
-                                 * if (importedTagSet != null) {
-                                 *
-                                 * // Override existing tagset if (annotationService.existsTagSet(
-                                 * importedTagSet.getTypeName(), project)) {
-                                 *
-                                 * annotationService.removeTagSet(annotationService.getTagSet( type,
-                                 * project));
-                                 *
-                                 * } de.tudarmstadt.ukp.clarin.webanno.model.TagSet newTagSet = new
-                                 * de.tudarmstadt.ukp.clarin.webanno.model.TagSet();
-                                 * newTagSet.setDescription(importedTagSet.getDescription());
-                                 * newTagSet.setName(importedTagSet.getName());
-                                 * newTagSet.setLanguage(importedTagSet.getLanguage());
-                                 * newTagSet.setProject(project); newTagSet.setLayer(type);
-                                 * annotationService.createTagSet(newTagSet, user); for
-                                 * (de.tudarmstadt.ukp.clarin.webanno.model.export.Tag tag :
-                                 * importedTagSet .getTags()) { Tag newTag = new Tag();
-                                 * newTag.setDescription(tag.getDescription());
-                                 * newTag.setName(tag.getName()); newTag.setTagSet(newTagSet);
-                                 * annotationService.createTag(newTag, user); } }
-                                 */
 
                             }
                             catch (IOException e) {
@@ -491,7 +442,7 @@ public class ProjectTagSetsPanel
                                         }
                                         // type exist, get it
                                         else {
-                                            type = annotationService.getType(tagsetTypeName,
+                                            type = annotationService.getLayer(tagsetTypeName,
                                                     tagsetType, project);
                                         }
                                         // remove and replace the tagset if it
@@ -593,7 +544,6 @@ public class ProjectTagSetsPanel
 
             add(new TextField<String>("language"));
             add(new CheckBox("createTag"));
-
             add(new Button("save", new ResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;

@@ -17,8 +17,6 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.ajax.controller;
 
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -62,205 +60,185 @@ import eu.clarin.weblicht.wlfxb.io.WLFormatException;
 import eu.clarin.weblicht.wlfxb.tc.xb.TextCorpusLayerTag;
 
 /**
- * Test case for generating Brat Json data for getcollection and getcollection
- * actions
+ * Test case for generating Brat Json data for getcollection and getcollection actions
  *
  * @author Seid M. Yimam
  *
  */
 
-public class CasToBratJsonTest extends TestCase {
-	/*
-	 * @Resource(name = "annotationService") private AnnotationService
-	 * annotationService;
-	 *
-	 * @Resource(name = "jsonConverter") private
-	 * MappingJacksonHttpMessageConverter jsonConverter;
-	 */
+public class CasToBratJsonTest
+    extends TestCase
+{
+    /*
+     * @Resource(name = "annotationService") private AnnotationService annotationService;
+     *
+     * @Resource(name = "jsonConverter") private MappingJacksonHttpMessageConverter jsonConverter;
+     */
 
     @Resource(name = "annotationService")
     private static AnnotationService annotationService;
 
+    private Log LOG = LogFactory.getLog(getClass());
 
-	private Log LOG = LogFactory.getLog(getClass());
+    /**
+     * generate BRAT JSON for the collection informations
+     *
+     * @throws IOException
+     */
+    @Test
+    public void testGenerateBratJsonGetCollection()
+        throws IOException
 
-	/**
-	 * generate BRAT JSON for the collection informations
-	 *
-	 * @throws IOException
-	 */
-	@Test
-	public void testGenerateBratJsonGetCollection() throws IOException
+    {
+        MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
+        String jsonFilePath = "target/test-output/output_cas_to_json_collection.json";
 
-	{
-		MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
-		String jsonFilePath = "target/test-output/output_cas_to_json_collection.json";
+        GetCollectionInformationResponse collectionInformation = new GetCollectionInformationResponse();
 
-		GetCollectionInformationResponse collectionInformation = new GetCollectionInformationResponse();
+        BratAjaxConfiguration configuration = new BratAjaxConfiguration();
 
-		BratAjaxConfiguration configuration = new BratAjaxConfiguration();
+        List<AnnotationLayer> layerList = new ArrayList<AnnotationLayer>();
 
-		List<TagSet> tagList = new ArrayList<TagSet>();
+        AnnotationLayer layer = new AnnotationLayer();
+        layer.setDescription("span annoattion");
+        layer.setName("pos");
+        layer.setType("span");
 
-		AnnotationLayer type = new AnnotationLayer();
-		type.setDescription("span annoattion");
-		type.setName("pos");
-		type.setType("span");
+        TagSet tagset = new TagSet();
+        tagset.setDescription("pos");
+        tagset.setLanguage("de");
+        tagset.setName("STTS");
+        tagset.setLayer(layer);
 
-		TagSet tagset = new TagSet();
-		tagset.setDescription("pos");
-		tagset.setLanguage("de");
-		tagset.setName("STTS");
-		tagset.setLayer(type);
+        Tag tag = new Tag();
+        tag.setDescription("noun");
+        tag.setName("NN");
+        tag.setTagSet(tagset);
 
-		Tag tag = new Tag();
-		tag.setDescription("noun");
-		tag.setName("NN");
-		tag.setTagSet(tagset);
-		tagList.add(tagset);
+        layerList.add(layer);
 
-		collectionInformation.setEntityTypes(configuration
-				.configureVisualizationAndAnnotation(tagList, null, true));
+    /*    collectionInformation.setEntityTypes(configuration.configureVisualizationAndAnnotation(
+                layerList, null, true));
+*/
+        collectionInformation.addCollection("/Collection1/");
+        collectionInformation.addCollection("/Collection2/");
+        collectionInformation.addCollection("/Collection3/");
 
-		collectionInformation.addCollection("/Collection1/");
-		collectionInformation.addCollection("/Collection2/");
-		collectionInformation.addCollection("/Collection3/");
+        collectionInformation.addDocument("/Collection1/doc1");
+        collectionInformation.addDocument("/Collection2/doc1");
+        collectionInformation.addDocument("/Collection3/doc1");
+        collectionInformation.addDocument("/Collection1/doc2");
+        collectionInformation.addDocument("/Collection2/doc2");
+        collectionInformation.addDocument("/Collection3/doc2");
 
-		collectionInformation.addDocument("/Collection1/doc1");
-		collectionInformation.addDocument("/Collection2/doc1");
-		collectionInformation.addDocument("/Collection3/doc1");
-		collectionInformation.addDocument("/Collection1/doc2");
-		collectionInformation.addDocument("/Collection2/doc2");
-		collectionInformation.addDocument("/Collection3/doc2");
+        collectionInformation.setSearchConfig(new ArrayList<String[]>());
 
-		collectionInformation.setSearchConfig(new ArrayList<String[]>());
+        List<String> tagSetNames = new ArrayList<String>();
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.POS);
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.DEPENDENCY);
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.NAMEDENTITY);
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.COREFERENCE);
+        tagSetNames
+                .add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.COREFRELTYPE);
 
-		List<String> tagSetNames = new ArrayList<String>();
-		tagSetNames
-				.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.POS);
-		tagSetNames
-				.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.DEPENDENCY);
-		tagSetNames
-				.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.NAMEDENTITY);
-		tagSetNames
-				.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.COREFERENCE);
-		tagSetNames
-				.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.COREFRELTYPE);
+        ProjectUtil.setJsonConverter(jsonConverter);
+        ProjectUtil.generateJson(collectionInformation, new File(jsonFilePath));
 
-		ProjectUtil.setJsonConverter(jsonConverter);
-		ProjectUtil.generateJson(collectionInformation, new File(
-				jsonFilePath));
+        String reference = FileUtils.readFileToString(new File(
+                "src/test/resources/output_cas_to_json_collection_expected.json"), "UTF-8");
+        String actual = FileUtils.readFileToString(new File(
+                "target/test-output/output_cas_to_json_collection.json"), "UTF-8");
+        assertEquals(reference, actual);
+    }
 
-		String reference = FileUtils
-				.readFileToString(
-						new File(
-								"src/test/resources/output_cas_to_json_collection_expected.json"),
-						"UTF-8");
-		String actual = FileUtils.readFileToString(new File(
-				"target/test-output/output_cas_to_json_collection.json"),
-				"UTF-8");
-		assertEquals(reference, actual);
-	}
+    /**
+     * generate brat JSON data for the document
+     *
+     * @throws IOException
+     * @throws WLFormatException
+     * @throws UIMAException
+     */
+    @Test
+    public void testGenerateBratJsonGetDocument()
+        throws IOException, WLFormatException, UIMAException
 
-	/**
-	 * generate brat JSON data for the document
-	 *
-	 * @throws IOException
-	 * @throws WLFormatException
-	 * @throws UIMAException
-	 */
-	@Test
-	public void testGenerateBratJsonGetDocument() throws IOException,
-			WLFormatException, UIMAException
+    {
+        MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
+        String jsonFilePath = "target/test-output/output_cas_to_json_document.json";
 
-	{
-		MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
-		String jsonFilePath = "target/test-output/output_cas_to_json_document.json";
+        EnumSet<TextCorpusLayerTag> layersToRead = EnumSet.of(TextCorpusLayerTag.TEXT,
+                TextCorpusLayerTag.TOKENS, TextCorpusLayerTag.PARSING_DEPENDENCY,
+                TextCorpusLayerTag.SENTENCES, TextCorpusLayerTag.POSTAGS,
+                TextCorpusLayerTag.LEMMAS, TextCorpusLayerTag.NAMED_ENTITIES,
+                TextCorpusLayerTag.REFERENCES);
+        InputStream is = null;
+        JCas jCas = null;
+        try {
+            // is = new
+            // FileInputStream("src/test/resources/tcf04-karin-wl.xml");
+            String path = "src/test/resources/";
+            String file = "tcf04-karin-wl.xml";
+            CAS cas = JCasFactory.createJCas().getCas();
+            CollectionReader reader = CollectionReaderFactory.createCollectionReader(
+                    TcfReader.class, TcfReader.PARAM_PATH, path, TcfReader.PARAM_PATTERNS,
+                    new String[] { "[+]" + file });
+            if (!reader.hasNext()) {
+                throw new FileNotFoundException("Annotation file [" + file + "] not found in ["
+                        + path + "]");
+            }
+            reader.getNext(cas);
+            jCas = cas.getJCas();
 
-		EnumSet<TextCorpusLayerTag> layersToRead = EnumSet.of(
-				TextCorpusLayerTag.TEXT, TextCorpusLayerTag.TOKENS,
-				TextCorpusLayerTag.PARSING_DEPENDENCY,
-				TextCorpusLayerTag.SENTENCES, TextCorpusLayerTag.POSTAGS,
-				TextCorpusLayerTag.LEMMAS, TextCorpusLayerTag.NAMED_ENTITIES,
-				TextCorpusLayerTag.REFERENCES);
-		InputStream is = null;
-		JCas jCas = null;
-		try {
-			// is = new
-			// FileInputStream("src/test/resources/tcf04-karin-wl.xml");
-			String path = "src/test/resources/";
-			String file = "tcf04-karin-wl.xml";
-			CAS cas = JCasFactory.createJCas().getCas();
-			CollectionReader reader = CollectionReaderFactory
-					.createCollectionReader(TcfReader.class,
-							TcfReader.PARAM_PATH, path,
-							TcfReader.PARAM_PATTERNS, new String[] { "[+]"
-									+ file });
-			if (!reader.hasNext()) {
-				throw new FileNotFoundException("Annotation file [" + file
-						+ "] not found in [" + path + "]");
-			}
-			reader.getNext(cas);
-			jCas = cas.getJCas();
+        }
+        catch (FileNotFoundException ex) {
+            LOG.info("The file specified not found " + ex.getCause());
+        }
+        catch (Exception ex) {
+            LOG.info(ex);
+        }
 
-		} catch (FileNotFoundException ex) {
-			LOG.info("The file specified not found " + ex.getCause());
-		} catch (Exception ex) {
-			LOG.info(ex);
-		}
+        List<String> tagSetNames = new ArrayList<String>();
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.POS);
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.DEPENDENCY);
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.NAMEDENTITY);
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.COREFERENCE);
+        tagSetNames
+                .add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.COREFRELTYPE);
 
-		List<String> tagSetNames = new ArrayList<String>();
-		tagSetNames
-				.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.POS);
-		tagSetNames
-				.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.DEPENDENCY);
-		tagSetNames
-				.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.NAMEDENTITY);
-		tagSetNames
-				.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.COREFERENCE);
-		tagSetNames
-				.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.COREFRELTYPE);
-
-		BratAnnotatorModel bratannotatorModel = new BratAnnotatorModel();
-		bratannotatorModel.setWindowSize(10);
-		bratannotatorModel.setSentenceAddress(BratAjaxCasUtil
-				.getFirstSentenceAddress(jCas));
-		bratannotatorModel.setLastSentenceAddress(BratAjaxCasUtil
-				.getLastSentenceAddress(jCas));
+        BratAnnotatorModel bratannotatorModel = new BratAnnotatorModel();
+        bratannotatorModel.setWindowSize(10);
+        bratannotatorModel.setSentenceAddress(BratAjaxCasUtil.getFirstSentenceAddress(jCas));
+        bratannotatorModel.setLastSentenceAddress(BratAjaxCasUtil.getLastSentenceAddress(jCas));
 
         Sentence sentence = BratAjaxCasUtil.selectByAddr(jCas, Sentence.class,
                 bratannotatorModel.getSentenceAddress());
 
-		bratannotatorModel.setSentenceBeginOffset(sentence.getBegin());
-		bratannotatorModel.setSentenceEndOffset(sentence.getEnd());
+        bratannotatorModel.setSentenceBeginOffset(sentence.getBegin());
+        bratannotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-		Project project = new Project();
-		bratannotatorModel.setProject(project);
-		bratannotatorModel.setMode(Mode.ANNOTATION);
+        Project project = new Project();
+        bratannotatorModel.setProject(project);
+        bratannotatorModel.setMode(Mode.ANNOTATION);
 
-		ProjectUtil.setJsonConverter(jsonConverter);
+        ProjectUtil.setJsonConverter(jsonConverter);
 
-		GetDocumentResponse response = new GetDocumentResponse();
-		response.setText(jCas.getDocumentText());
+        GetDocumentResponse response = new GetDocumentResponse();
+        response.setText(jCas.getDocumentText());
 
-		  SpanAdapter.renderTokenAndSentence(jCas, response, bratannotatorModel);
+        SpanAdapter.renderTokenAndSentence(jCas, response, bratannotatorModel);
 
-	        for (TagSet tagSet : bratannotatorModel.getAnnotationLayers()) {
-	            getAdapter(tagSet, annotationService).render(jCas, response,
-	                    bratannotatorModel);
-	        }
+  /*      for (AnnotationLayer layer : bratannotatorModel.getAnnotationLayers()) {
+            getAdapter(layer, annotationService).render(jCas,
+                    annotationService.listAnnotationFeature(layer), response,
+                    bratannotatorModel);
+        }*/
 
-		ProjectUtil.generateJson(response, new File(jsonFilePath));
+        ProjectUtil.generateJson(response, new File(jsonFilePath));
 
-		String reference = FileUtils
-				.readFileToString(
-						new File(
-								"src/test/resources/output_cas_to_json_document_expected.json"),
-						"UTF-8");
-		String actual = FileUtils
-				.readFileToString(new File(
-						"target/test-output/output_cas_to_json_document.json"),
-						"UTF-8");
-		assertEquals(reference, actual);
-	}
+        String reference = FileUtils.readFileToString(new File(
+                "src/test/resources/output_cas_to_json_document_expected.json"), "UTF-8");
+        String actual = FileUtils.readFileToString(new File(
+                "target/test-output/output_cas_to_json_document.json"), "UTF-8");
+        assertEquals(reference, actual);
+    }
 }
