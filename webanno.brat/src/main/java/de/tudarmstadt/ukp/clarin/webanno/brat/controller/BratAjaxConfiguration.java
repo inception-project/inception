@@ -121,6 +121,9 @@ public class BratAjaxConfiguration
         List<List<String>> relationTags = new ArrayList<List<String>>();
 
         for (AnnotationFeature feature : aAnnotationService.listAnnotationFeature(aSpanLayer)) {
+            if (!(feature.isEnabled() || feature.isEnabled())) {
+                continue;
+            }
             List<String> tags = new ArrayList<String>();
             if (feature.getName().equals(WebAnnoConst.COREFERENCE_TYPE_FEATURE)
                     && feature.getTagset() != null) {
@@ -143,15 +146,19 @@ public class BratAjaxConfiguration
                 spanTags.add(tags);
             }
         }
-        
+
         if (aSpanLayer.isBuiltIn() && aSpanLayer.getName().equals(POS.class.getName())) {
             aRelationLayer = aAnnotationService.getLayer(Dependency.class.getName(), "relation",
                     aSpanLayer.getProject());
         }
-        
-        if (aRelationLayer.getId() != 0 && !aRelationLayer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
+
+        if (aRelationLayer.getId() != 0
+                && !aRelationLayer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
             for (AnnotationFeature feature : aAnnotationService
                     .listAnnotationFeature(aRelationLayer)) {
+                if (!(feature.isEnabled() || feature.isEnabled())) {
+                    continue;
+                }
                 List<String> tags = new ArrayList<String>();
                 if (feature.getTagset() != null) {
                     for (Tag tag : aAnnotationService.listTags(feature.getTagset())) {

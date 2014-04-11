@@ -165,6 +165,9 @@ public class ArcAdapter
 
             String annotations = "";
             for (AnnotationFeature feature : aFeatures) {
+                if (!(feature.isEnabled() || feature.isEnabled())) {
+                    continue;
+                }
                 Feature labelFeature = fs.getType().getFeatureByBaseName(feature.getName());
                 if (annotations.equals("")) {
                     annotations = typeId

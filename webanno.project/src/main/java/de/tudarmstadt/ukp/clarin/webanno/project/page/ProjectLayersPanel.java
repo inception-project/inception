@@ -94,6 +94,8 @@ public class ProjectLayersPanel
     private final Model<Project> selectedProjectModel;
     List<String> types = new ArrayList<String>();
 
+    String layerType = WebAnnoConst.SPAN_TYPE;
+
     public ProjectLayersPanel(String id, final Model<Project> aProjectModel)
     {
         super(id);
@@ -221,6 +223,9 @@ public class ProjectLayersPanel
                     featureSelectionForm.setVisible(true);
                     layerDetailForm.setVisible(true);
                     featureDetailForm.setVisible(false);
+
+                    layerType = getModelObject().layerSelection.getType();
+
                     aTarget.add(layerDetailForm);
                     aTarget.add(featureSelectionForm);
                     aTarget.add(featureDetailForm);
@@ -247,7 +252,6 @@ public class ProjectLayersPanel
         TextField<String> uiName;
         String prefix = "webanno.custom.";
         String layerName;
-        String layerType = WebAnnoConst.SPAN_TYPE;
         DropDownChoice<String> layerTypes;
         DropDownChoice<AnnotationLayer> attachTypes;
 
@@ -273,8 +277,8 @@ public class ProjectLayersPanel
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
             add(new CheckBox("enabled"));
 
-            add(layerTypes = (DropDownChoice<String>) new DropDownChoice<String>("type", Arrays.asList(new String[] { "span", "relation",
-                    "chain" }))
+            add(layerTypes = (DropDownChoice<String>) new DropDownChoice<String>("type",
+                    Arrays.asList(new String[] { "span", "relation", "chain" }))
             {
                 private static final long serialVersionUID = 1244555334843130802L;
 
@@ -284,11 +288,10 @@ public class ProjectLayersPanel
                     return LayerDetailForm.this.getModelObject().getId() == 0;
                 }
 
-               /* @Override
-                protected boolean wantOnSelectionChangedNotifications()
-                {
-                    return true;
-                }*/
+                /*
+                 * @Override protected boolean wantOnSelectionChangedNotifications() { return true;
+                 * }
+                 */
             }.setRequired(true));
             layerTypes.add(new AjaxFormComponentUpdatingBehavior("onchange")
             {
@@ -302,7 +305,8 @@ public class ProjectLayersPanel
                 }
             });
 
-            add(attachTypes = (DropDownChoice<AnnotationLayer>) new DropDownChoice<AnnotationLayer>("attachType")
+            add(attachTypes = (DropDownChoice<AnnotationLayer>) new DropDownChoice<AnnotationLayer>(
+                    "attachType")
             {
                 private static final long serialVersionUID = -6705445053442011120L;
 
@@ -318,12 +322,31 @@ public class ProjectLayersPanel
                             List<AnnotationLayer> allLayers = annotationService
                                     .listAnnotationLayer(project);
 
+                            if (LayerDetailForm.this.getModelObject().getId() > 0) {
+                                if (LayerDetailForm.this.getModelObject().getAttachType() == null) {
+                                    return new ArrayList<AnnotationLayer>();
+                                }
+
+                                return Arrays.asList(LayerDetailForm.this.getModelObject()
+                                        .getAttachType());
+                            }
                             if (!layerType.equals(WebAnnoConst.RELATION_TYPE)) {
                                 return new ArrayList<AnnotationLayer>();
                             }
+
                             List<AnnotationLayer> attachTeypes = new ArrayList<AnnotationLayer>();
+                            // remove a span layer which is already used as attach type for the
+                            // other
+                            List<AnnotationLayer> usedLayers = new ArrayList<AnnotationLayer>();
                             for (AnnotationLayer layer : allLayers) {
-                                if (layer.getType().equals("span")) {
+                                if (layer.getAttachType() != null) {
+                                    usedLayers.add(layer.getAttachType());
+                                }
+                            }
+                            allLayers.removeAll(usedLayers);
+
+                            for (AnnotationLayer layer : allLayers) {
+                                if (layer.getType().equals("span") && !layer.isBuiltIn()) {
                                     attachTeypes.add(layer);
                                 }
                             }
@@ -338,7 +361,7 @@ public class ProjectLayersPanel
                 public boolean isNullValid()
                 {
                     return isVisible();
-                };
+                }
 
                 @Override
                 public boolean isEnabled()
@@ -437,7 +460,6 @@ public class ProjectLayersPanel
         private static final long serialVersionUID = -1L;
         DropDownChoice<TagSet> tagSet;
         DropDownChoice<String> featureType;
-        TagSet none;
 
         public FeatureDetailForm(String id)
         {
@@ -512,7 +534,6 @@ public class ProjectLayersPanel
                         @Override
                         protected List<TagSet> load()
                         {
-                            none = new TagSet();
                             if (FeatureDetailForm.this.getModelObject().getTagset() != null) {
                                 return Arrays.asList(FeatureDetailForm.this.getModelObject()
                                         .getTagset());
@@ -521,8 +542,6 @@ public class ProjectLayersPanel
                                     .listTagSets(selectedProjectModel.getObject());
                             List<TagSet> avalableTagSets = new ArrayList<TagSet>();
 
-                            none.setName("-NONE-");
-                            avalableTagSets.add(none);
                             for (TagSet tagSet : allTagSets) {
                                 if (tagSet.getFeature() == null) {
                                     avalableTagSets.add(tagSet);
@@ -547,11 +566,10 @@ public class ProjectLayersPanel
                 }
 
                 @Override
-                protected CharSequence getDefaultChoice(String aSelectedValue)
+                public boolean isNullValid()
                 {
-                    return "";
+                    return isVisible();
                 }
-
                 @Override
                 public boolean isEnabled()
                 {
@@ -580,9 +598,6 @@ public class ProjectLayersPanel
                             error("This feature is already added for this layer!");
                             return;
                         }
-                        if (feature.getTagset().equals(none)) {
-                            feature.setTagset(null);
-                        }
 
                         String name = feature.getUiName();
                         name = name.replaceAll("\\W", "");
@@ -595,7 +610,7 @@ public class ProjectLayersPanel
                         annotationService.createFeature(feature);
                         featureDetailForm.setVisible(false);
                     }
-                    if (tagSet.getModelObject() != null && !tagSet.getModelObject().equals(none)) {
+                    if (tagSet.getModelObject() != null) {
                         FeatureDetailForm.this.getModelObject().setTagset(tagSet.getModelObject());
                         tagSet.getModelObject().setFeature(FeatureDetailForm.this.getModelObject());
                         tagSet.getModelObject().setLayer(layerDetailForm.getModelObject());
