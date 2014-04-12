@@ -43,6 +43,8 @@ import org.apache.wicket.util.string.StringValue;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import com.ibm.icu.util.StringTokenizer;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
@@ -69,9 +71,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 /**
  * A {@link MarkupContainer} for either curation users' sentence annotation (for the lower panel) or
  * the automated annotations
- *
+ * 
  * @author Seid Muhie Yimam
- *
+ * 
  */
 public class CurationViewPanel
     extends WebMarkupContainer
@@ -276,17 +278,15 @@ public class CurationViewPanel
 
         long layerId = Integer.parseInt(spanType.substring(0, spanType.indexOf("_")));
         String type = spanType.substring(spanType.indexOf("_") + 1);
-        /**
-         * TODO: for curation, if a layer have multiple feature, we should parse the type using the
-         * | separater and add to cas
-         */
-        AnnotationLayer layer = annotationService.getLayer(layerId);
-        AnnotationFeature feature = annotationService.listAnnotationFeature(layer).get(0);// TODO
-                                                                                          // see
-                                                                                          // above
-        SpanAdapter adapter = (SpanAdapter) getAdapter(layer, annotationService);
-        adapter.add(aMergeJCas, fsClicked.getBegin(), fsClicked.getEnd(), feature, type);
 
+        AnnotationLayer layer = annotationService.getLayer(layerId);
+
+        StringTokenizer st = new StringTokenizer(type, "|");
+        SpanAdapter adapter = (SpanAdapter) getAdapter(layer, annotationService);
+        for (AnnotationFeature feature : annotationService.listAnnotationFeature(layer)) {
+            adapter.add(aMergeJCas, fsClicked.getBegin(), fsClicked.getEnd(), feature, st
+                    .nextToken().trim());
+        }
         repository.updateJCas(aBratAnnotatorModel.getMode(), aBratAnnotatorModel.getDocument(),
                 aBratAnnotatorModel.getUser(), aMergeJCas);
 
@@ -376,8 +376,13 @@ public class CurationViewPanel
 
             AnnotationLayer layer = annotationService.getLayer(layerId);
             ArcAdapter adapter = (ArcAdapter) getAdapter(layer, annotationService);
-            adapter.add(arcType.substring(arcType.indexOf("_") + 1), originFs, targetFs, aJcas,
-                    aCurationUserSegment.getBratAnnotatorModel());
+
+            StringTokenizer st = new StringTokenizer(arcType.substring(arcType.indexOf("_") + 1),
+                    "|");
+            for (AnnotationFeature feature : annotationService.listAnnotationFeature(layer)) {
+                adapter.add(st.nextToken().trim(), originFs, targetFs, aJcas,
+                        aCurationUserSegment.getBratAnnotatorModel(), feature);
+            }
 
             repository.updateJCas(aCurationUserSegment.getBratAnnotatorModel().getMode(),
                     aCurationUserSegment.getBratAnnotatorModel().getDocument(),

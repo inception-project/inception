@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.persistence.NoResultException;
 
@@ -70,11 +71,13 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.CuratorUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.project.page.SettingsPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenModalWindowPanel;
@@ -91,7 +94,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
  * This is the main class for the Automation page. Displays in the lower panel the Automatically
  * annotated document and in the upper panel the annotation pane to trigger automation on the lower
  * pane.
- *
+ * 
  * @author Seid Muhie Yimam
  */
 public class AutomationPage
@@ -236,14 +239,22 @@ public class AutomationPage
             protected void onAnnotate(BratAnnotatorModel aBratAnnotatorModel, int aStart, int aEnd)
             {
                 MiraTemplate template;
+                Set<AnnotationFeature> features = bratAnnotatorModel.getRememberedSpanFeatures()
+                        .keySet();
+                AnnotationFeature autoFeature = null;
+                for (AnnotationFeature feature : features) {
+                    autoFeature = feature;
+                    break;
+                }
                 try {
-                    template = repository.getMiraTemplate(bratAnnotatorModel.getRememberedSpanTag()
-                            .getTagSet());
+                    template = repository.getMiraTemplate(autoFeature.getTagset());
                     if (!template.isAnnotateAndPredict()) {
                         return;
                     }
-                    AutomationUtil.repeateAnnotation(bratAnnotatorModel, repository, annotationService,
-                            aStart, aEnd, bratAnnotatorModel.getRememberedSpanTag());
+                    Tag tag = annotationService.getTag(bratAnnotatorModel
+                            .getRememberedSpanFeatures().get(autoFeature), autoFeature.getTagset());
+                    AutomationUtil.repeateAnnotation(bratAnnotatorModel, repository,
+                            annotationService, aStart, aEnd, tag);
                 }
                 catch (UIMAException e) {
                     error(ExceptionUtils.getRootCause(e));
@@ -267,17 +278,25 @@ public class AutomationPage
             protected void onDelete(BratAnnotatorModel aBratAnnotatorModel, int aStart, int aEnd)
             {
                 MiraTemplate template;
-                if(bratAnnotatorModel.getRememberedSpanTag() ==null){
+                Set<AnnotationFeature> features = bratAnnotatorModel.getRememberedSpanFeatures()
+                        .keySet();
+                AnnotationFeature autoFeature = null;
+                for (AnnotationFeature feature : features) {
+                    autoFeature = feature;
+                    break;
+                }
+                if (autoFeature == null) {
                     return;
                 }
                 try {
-                    template = repository.getMiraTemplate(bratAnnotatorModel.getRememberedSpanTag()
-                            .getTagSet());
+                    template = repository.getMiraTemplate(autoFeature.getTagset());
                     if (!template.isAnnotateAndPredict()) {
                         return;
                     }
-                    AutomationUtil.deleteAnnotation(bratAnnotatorModel, repository, annotationService,
-                            aStart, aEnd, bratAnnotatorModel.getRememberedSpanTag());
+                    Tag tag = annotationService.getTag(bratAnnotatorModel
+                            .getRememberedSpanFeatures().get(autoFeature), autoFeature.getTagset());
+                    AutomationUtil.deleteAnnotation(bratAnnotatorModel, repository,
+                            annotationService, aStart, aEnd, tag);
                 }
                 catch (UIMAException e) {
                     error(ExceptionUtils.getRootCause(e));
@@ -1040,14 +1059,16 @@ public class AutomationPage
              * BratAnnotatorUtility.clearJcasAnnotations(jCas, bratAnnotatorModel.getDocument(),
              * logedInUser, repository);
              */
-          /*  repository.createAnnotationDocumentContent(jCas, bratAnnotatorModel.getDocument(),
-                    logedInUser);*/
+            /*
+             * repository.createAnnotationDocumentContent(jCas, bratAnnotatorModel.getDocument(),
+             * logedInUser);
+             */
         }
         catch (NoResultException e) {
             jCas = repository.readJCas(bratAnnotatorModel.getDocument(), bratAnnotatorModel
                     .getDocument().getProject(), logedInUser);
             // This is the auto annotation, save it under CURATION_USER
-         // This is the auto annotation, save it under CURATION_USER, Only if it is not created
+            // This is the auto annotation, save it under CURATION_USER, Only if it is not created
             // by another annotater
             if (!repository.existsAutomatedDocument(bratAnnotatorModel.getDocument())) {
                 repository.createCorrectionDocumentContent(jCas, bratAnnotatorModel.getDocument(),
@@ -1059,8 +1080,10 @@ public class AutomationPage
              * logedInUser, repository);
              */
 
-           /* repository.createAnnotationDocumentContent(jCas, bratAnnotatorModel.getDocument(),
-                    logedInUser);*/
+            /*
+             * repository.createAnnotationDocumentContent(jCas, bratAnnotatorModel.getDocument(),
+             * logedInUser);
+             */
         }
 
         if (bratAnnotatorModel.getSentenceAddress() == -1

@@ -385,8 +385,7 @@ public class BratAnnotator
                     getModelObject().setSentenceEndOffset(model.getSentenceEndOffset());
 
                     getModelObject().setRememberedSpanLayer(model.getRememberedSpanLayer());
-                    getModelObject().setRememberedSpanFeature(model.getRememberedSpanFeature());
-                    getModelObject().setRememberedSpanTag(model.getRememberedSpanTag());
+                    getModelObject().setRememberedSpanFeatures(model.getRememberedSpanFeatures());
 
                     getModelObject().setAnnotate(model.isAnnotate());
                     getModelObject().setMessage(model.getMessage());

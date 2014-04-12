@@ -18,7 +18,9 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
 
@@ -111,11 +113,10 @@ public class BratAnnotatorModel implements Serializable {
 	private AnnotationLayer rememberedSpanLayer;
 	private AnnotationLayer rememberedArcLayer;
 
-	private AnnotationFeature rememberedSpanFeature;
-    private AnnotationFeature rememberedArcFeature;
+    private Map<AnnotationFeature, String> rememberedSpanFeatures = new HashMap<AnnotationFeature, String>();
+    private  Map<AnnotationFeature, String> rememberedArcFeatures =new  HashMap<AnnotationFeature, String>();
 
-	private Tag rememberedSpanTag;
-	private Tag rememberedArcTag;
+
 	/**
 	 * Specific message to be sent from the annotation dialog to the
 	 * {@link BratAnnotator} so that it can be displayed in the
@@ -241,42 +242,25 @@ public class BratAnnotatorModel implements Serializable {
         this.rememberedArcLayer = rememberedArcLayer;
     }
 
-    public AnnotationFeature getRememberedSpanFeature()
+    public Map<AnnotationFeature, String> getRememberedSpanFeatures()
     {
-        return rememberedSpanFeature;
+        return rememberedSpanFeatures;
     }
 
-    public void setRememberedSpanFeature(AnnotationFeature rememberedSpanFeature)
+    public void setRememberedSpanFeatures(Map<AnnotationFeature, String> rememberedSpanFeature)
     {
-        this.rememberedSpanFeature = rememberedSpanFeature;
+        this.rememberedSpanFeatures = rememberedSpanFeature;
     }
 
-    public AnnotationFeature getRememberedArcFeature()
+    public Map<AnnotationFeature, String> getRememberedArcFeatures()
     {
-        return rememberedArcFeature;
+        return rememberedArcFeatures;
     }
 
-    public void setRememberedArcFeature(AnnotationFeature rememberedArcFeature)
+    public void setRememberedArcFeatures(Map<AnnotationFeature, String> rememberedArcFeature)
     {
-        this.rememberedArcFeature = rememberedArcFeature;
+        this.rememberedArcFeatures = rememberedArcFeature;
     }
-
-    public Tag getRememberedSpanTag() {
-		return rememberedSpanTag;
-	}
-
-	public void setRememberedSpanTag(Tag rememberedTag) {
-		this.rememberedSpanTag = rememberedTag;
-	}
-
-	public Tag getRememberedArcTag() {
-		return rememberedArcTag;
-	}
-
-	public void setRememberedArcTag(Tag rememberedArcTag) {
-		this.rememberedArcTag = rememberedArcTag;
-	}
-
 	public int getSentenceBeginOffset() {
 		return sentenceBeginOffset;
 	}

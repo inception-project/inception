@@ -327,11 +327,11 @@ public class SpanAdapter
 
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
                 if (!allowStacking) {
-                    fs.setStringValue(feature, aValue);
+                    fs.setFeatureValueFromString(feature, aValue);
                     duplicate = true;
                     continue;
                 }
-                if (fs.getStringValue(feature).equals(aValue)) {
+                if (fs.getFeatureValueAsString(feature).equals(aValue)) {
                     duplicate = true;
                     // break;
                     // if (!fs.getStringValue(feature).equals(aValue)) {
@@ -341,7 +341,7 @@ public class SpanAdapter
         }
         if (!duplicate) {
             AnnotationFS newAnnotation = aCas.createAnnotation(type, aBegin, aEnd);
-            newAnnotation.setStringValue(feature, aValue);
+            newAnnotation.setFeatureValueFromString(feature, aValue);
 
             if (attachFeatureName != null) {
                 Type theType = CasUtil.getType(aCas, attachType);
@@ -391,7 +391,7 @@ public class SpanAdapter
         for (AnnotationFS fs : CasUtil.selectCovered(aJCas.getCas(), type, aBegin, aEnd)) {
 
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
-                if (fs.getStringValue(feature).equals(aValue)) {
+                if (fs.getFeatureValueAsString(feature).equals(aValue)) {
                     delete(aJCas, ((FeatureStructureImpl) fs).getAddress());
 
                 }
@@ -447,7 +447,7 @@ public class SpanAdapter
         List<String> annotations = new ArrayList<String>();
         for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, begin, end)) {
             Feature labelFeature = fs.getType().getFeatureByBaseName(aFeature.getName());
-            annotations.add(fs.getStringValue(labelFeature));
+            annotations.add(fs.getFeatureValueAsString(labelFeature));
         }
         return annotations;
     }
@@ -478,7 +478,7 @@ public class SpanAdapter
                 }
                 else if (value.equals("O") && !prevNe.equals("O")) {
                     newAnnotation = aJcas.getCas().createAnnotation(type, begin, end);
-                    newAnnotation.setStringValue(feature, prevNe.replace("B-", ""));
+                    newAnnotation.setFeatureValueFromString(feature, prevNe.replace("B-", ""));
                     prevNe = "O";
                     aJcas.getCas().addFsToIndexes(newAnnotation);
                 }
@@ -493,7 +493,7 @@ public class SpanAdapter
                             .equals(prevNe.replace("B-", "").replace("I-", ""))
                             && value.startsWith("B-")) {
                         newAnnotation = aJcas.getCas().createAnnotation(type, begin, end);
-                        newAnnotation.setStringValue(feature,
+                        newAnnotation.setFeatureValueFromString(feature,
                                 prevNe.replace("B-", "").replace("I-", ""));
                         prevNe = value;
                         begin = token.getBegin();
@@ -510,7 +510,7 @@ public class SpanAdapter
                     }
                     else {
                         newAnnotation = aJcas.getCas().createAnnotation(type, begin, end);
-                        newAnnotation.setStringValue(feature,
+                        newAnnotation.setFeatureValueFromString(feature,
                                 prevNe.replace("B-", "").replace("I-", ""));
                         prevNe = value;
                         begin = token.getBegin();
@@ -529,7 +529,7 @@ public class SpanAdapter
 
                 AnnotationFS newAnnotation = aJcas.getCas().createAnnotation(type,
                         token.getBegin(), token.getEnd());
-                newAnnotation.setStringValue(feature, aLabelValues.get(i));
+                newAnnotation.setFeatureValueFromString(feature, aLabelValues.get(i));
                 i++;
                 if (attachFeatureName != null) {
                     Type theType = CasUtil.getType(aJcas.getCas(), attachType);

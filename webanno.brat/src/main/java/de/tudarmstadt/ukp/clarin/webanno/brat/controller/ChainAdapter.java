@@ -326,16 +326,9 @@ public class ChainAdapter
         boolean duplicate = false;
         Type type = CasUtil.getType(aCas, annotationTypeName);
         Feature feature = type.getFeatureByBaseName(aFeature.getName());
-        /*
-         * for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
-         *
-         * if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) { if
-         * (!fs.getStringValue(feature).equals(aValue)) { fs.setStringValue(feature, aValue); }
-         * duplicate = true; } }
-         */
         if (!duplicate) {
             AnnotationFS newAnnotation = aCas.createAnnotation(type, aBegin, aEnd);
-            newAnnotation.setStringValue(feature, aValue);
+            newAnnotation.setFeatureValueFromString(feature, aValue);
             aCas.addFsToIndexes(newAnnotation);
         }
     }
@@ -394,7 +387,7 @@ public class ChainAdapter
                     fs.setFeatureValue(first, originLink);
 
                     originLink.setFeatureValue(next, targetLink);
-                    originLink.setStringValue(labelFeature, aValue);
+                    originLink.setFeatureValueFromString(labelFeature, aValue);
                     found = true;
                     break;
                 }
@@ -420,7 +413,7 @@ public class ChainAdapter
                             linkFs.setFeatureValue(next, originLink);
                             originLink.setFeatureValue(next, targetLink);
                         }
-                        originLink.setStringValue(labelFeature, aValue);
+                        originLink.setFeatureValueFromString(labelFeature, aValue);
                         chainExist = true;
                         found = true;
                         break;
@@ -435,9 +428,9 @@ public class ChainAdapter
                         AnnotationFS tmpLink = (AnnotationFS) linkFs.getFeatureValue(next);
                         String tmpRel = linkFs.getStringValue(labelFeature);
                         linkFs.setFeatureValue(next, targetLink);
-                        linkFs.setStringValue(labelFeature, aValue);
+                        linkFs.setFeatureValueFromString(labelFeature, aValue);
                         targetLink.setFeatureValue(next, tmpLink);
-                        targetLink.setStringValue(labelFeature, tmpRel);
+                        targetLink.setFeatureValueFromString(labelFeature, tmpRel);
                         chainExist = true;
                         found = true;
                         break;
@@ -453,7 +446,7 @@ public class ChainAdapter
                     else if (BratAjaxCasUtil.isSame((Annotation) linkFs, (Annotation) originLink)
                             && linkFs.getFeatureValue(next) == null) {
                         linkFs.setFeatureValue(next, targetLink);
-                        linkFs.setStringValue(labelFeature, aValue);
+                        linkFs.setFeatureValueFromString(labelFeature, aValue);
                         chainExist = true;
                         found = true;
                         break;
@@ -476,7 +469,7 @@ public class ChainAdapter
                 // CASE 3
                 if (lastLink != null && lastLink.getBegin() == originLink.getBegin()) {
                     lastLink.setFeatureValue(next, targetLink);
-                    lastLink.setStringValue(labelFeature, aValue);
+                    lastLink.setFeatureValueFromString(labelFeature, aValue);
                     chainExist = true;
                     break;
                 }
@@ -489,14 +482,14 @@ public class ChainAdapter
                     FeatureStructure newChainFs = aJcas.getCas().createFS(type);
                     newChainFs.setFeatureValue(first, originLink);
                     originLink.setFeatureValue(next, targetLink);
-                    originLink.setStringValue(labelFeature, aValue);
+                    originLink.setFeatureValueFromString(labelFeature, aValue);
                     aJcas.addFsToIndexes(newChainFs);
                     aJcas.addFsToIndexes(originLink);
                 }
             }
             // CASE 4: only change the relation type, everything same!!!
             else if (modify) {
-                existingChain.setStringValue(labelFeature, aValue);
+                existingChain.setFeatureValueFromString(labelFeature, aValue);
                 aJcas.addFsToIndexes(existingChain);
             }
         }
@@ -583,7 +576,7 @@ public class ChainAdapter
                 linkFs = (AnnotationFS) linkFs.getFeatureValue(next);
             }
 
-            aOrigin.setStringValue(labelFeature, aValue);
+            aOrigin.setFeatureValueFromString(labelFeature, aValue);
             beginRelationMaps.put(aOrigin.getBegin(), aOrigin);// update the relation
 
             Iterator<Integer> it = beginRelationMaps.keySet().iterator();
@@ -596,7 +589,7 @@ public class ChainAdapter
                 AnnotationFS link = beginRelationMaps.get(it.next());
                 link.setFeatureValue(next, null);
                 newLink.setFeatureValue(next, link);
-                newLink.setStringValue(
+                newLink.setFeatureValueFromString(
                         labelFeature,
                         newLink.getStringValue(labelFeature) == null ? aValue : newLink
                                 .getStringValue(labelFeature));

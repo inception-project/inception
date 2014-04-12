@@ -45,9 +45,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
  * A class that is used to create Brat Arc to CAS relations and vice-versa
- *
+ * 
  * @author Seid Muhie Yimam
- *
+ * 
  */
 public class ArcAdapter
     implements TypeAdapter
@@ -55,7 +55,7 @@ public class ArcAdapter
     /**
      * Prefix of the label value for Brat to make sure that different annotation types can use the
      * same label, e.g. a POS tag "N" and a named entity type "N".
-     *
+     * 
      */
     private final long typeId;
 
@@ -116,7 +116,7 @@ public class ArcAdapter
     /**
      * Add arc annotations from the CAS, which is controlled by the window size, to the brat
      * response {@link GetDocumentResponse}
-     *
+     * 
      * @param aJcas
      *            The JCAS object containing annotations
      * @param aResponse
@@ -172,14 +172,14 @@ public class ArcAdapter
                 if (annotations.equals("")) {
                     annotations = typeId
                             + "_"
-                            + (fs.getStringValue(labelFeature) == null ? " " : fs
-                                    .getStringValue(labelFeature));
+                            + (fs.getFeatureValueAsString(labelFeature) == null ? " " : fs
+                                    .getFeatureValueAsString(labelFeature));
                 }
                 else {
                     annotations = annotations
                             + " | "
-                            + (fs.getStringValue(labelFeature) == null ? " " : fs
-                                    .getStringValue(labelFeature));
+                            + (fs.getFeatureValueAsString(labelFeature) == null ? " " : fs
+                                    .getFeatureValueAsString(labelFeature));
                 }
             }
 
@@ -190,7 +190,7 @@ public class ArcAdapter
 
     /**
      * Update the CAS with new/modification of arc annotations from brat
-     *
+     * 
      * @param aLabelValue
      *            the value of the annotation for the arc
      * @param aReverse
@@ -198,7 +198,7 @@ public class ArcAdapter
      * @throws BratAnnotationException
      */
     public void add(String aLabelValue, AnnotationFS aOriginFs, AnnotationFS aTargetFs, JCas aJCas,
-            BratAnnotatorModel aBratAnnotatorModel)
+            BratAnnotatorModel aBratAnnotatorModel, AnnotationFeature aFeature)
         throws BratAnnotationException
     {
         Sentence sentence = BratAjaxCasUtil.selectSentenceAt(aJCas,
@@ -214,7 +214,7 @@ public class ArcAdapter
         if (crossMultipleSentence
                 || BratAjaxCasUtil.isSameSentence(aJCas, aOriginFs.getBegin(), aTargetFs.getEnd())) {
             updateCas(aJCas, beginOffset, endOffset, aOriginFs, aTargetFs, aLabelValue,
-                    aBratAnnotatorModel.getRememberedArcFeature());
+                    aFeature);
         }
         else {
             throw new ArcCrossedMultipleSentenceException(
@@ -261,12 +261,15 @@ public class ArcAdapter
                 }
 
                 if (isDuplicate((AnnotationFS) governorFs, aOriginFs, (AnnotationFS) dependentFs,
-                        aTargetFs, fs.getStringValue(feature), aValue)
+                        aTargetFs, fs.getFeatureValueAsString(feature), aValue)
                         && !aValue.equals(WebAnnoConst.ROOT)) {
 
+                    if (fs.getFeatureValueAsString(feature) == null) {
+                        fs.setFeatureValueFromString(feature, aValue);
+                    }
                     // It is update of arc value, update it
-                    if (!fs.getStringValue(feature).equals(aValue)) {
-                        fs.setStringValue(feature, aValue);
+                    else if (!fs.getFeatureValueAsString(feature).equals(aValue)) {
+                        fs.setFeatureValueFromString(feature, aValue);
                     }
                     duplicate = true;
                     break;
@@ -295,12 +298,12 @@ public class ArcAdapter
             if (dependentFS.getEnd() <= governorFS.getEnd()) {
                 newAnnotation = aJCas.getCas().createAnnotation(type, dependentFS.getBegin(),
                         governorFS.getEnd());
-                newAnnotation.setStringValue(feature, aValue);
+                newAnnotation.setFeatureValueFromString(feature, aValue);
             }
             else {
                 newAnnotation = aJCas.getCas().createAnnotation(type, governorFS.getBegin(),
                         dependentFS.getEnd());
-                newAnnotation.setStringValue(feature, aValue);
+                newAnnotation.setFeatureValueFromString(feature, aValue);
             }
             // If origin and target spans are multiple tokens, dependentFS.getBegin will be the
             // the begin position of the first token and dependentFS.getEnd will be the End
@@ -358,7 +361,7 @@ public class ArcAdapter
 
     /**
      * Convenience method to get an adapter for Dependency Parsing.
-     *
+     * 
      * NOTE: This is not meant to stay. It's just a convenience during refactoring!
      */
     /*
@@ -369,13 +372,13 @@ public class ArcAdapter
      */
     /**
      * Argument lists for the arc annotation
-     *
+     * 
      * @return
      */
     private List<Argument> getArgument(FeatureStructure aGovernorFs, FeatureStructure aDependentFs)
     {
-        return asList(new Argument("Arg1", ((FeatureStructureImpl) aGovernorFs).getAddress()+""),
-                new Argument("Arg2", ((FeatureStructureImpl) aDependentFs).getAddress()+""));
+        return asList(new Argument("Arg1", ((FeatureStructureImpl) aGovernorFs).getAddress() + ""),
+                new Argument("Arg2", ((FeatureStructureImpl) aDependentFs).getAddress() + ""));
     }
 
     private boolean isDuplicate(AnnotationFS aAnnotationFSOldOrigin,
