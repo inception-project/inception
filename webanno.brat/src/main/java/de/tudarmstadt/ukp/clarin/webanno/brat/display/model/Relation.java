@@ -37,7 +37,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.BeanAsArraySerializer;
 @JsonPropertyOrder(value = { "id", "type", "arguments" })
 public class Relation
 {
-    private String id;
+    private int id;
 
     /**
      * The type of the relation between two spans
@@ -54,7 +54,7 @@ public class Relation
         // Nothing to do
     }
 
-    public Relation(String aId, String aType, List<Argument> aArguments)
+    public Relation(int aId, String aType, List<Argument> aArguments)
     {
         super();
         id = aId;
@@ -62,12 +62,12 @@ public class Relation
         arguments = aArguments;
     }
 
-    public String getId()
+    public int getId()
     {
         return id;
     }
 
-    public void setId(String aId)
+    public void setId(int aId)
     {
         id = aId;
     }

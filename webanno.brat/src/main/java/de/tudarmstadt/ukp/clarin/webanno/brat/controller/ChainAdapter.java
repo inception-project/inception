@@ -198,7 +198,7 @@ public class ChainAdapter
         Type type = CasUtil.getType(aSentence.getCAS(), aFeature.getLayer().getName()+"Link");
         Feature labelFeature = type.getFeatureByBaseName(aFeature.getName());
         for (AnnotationFS fs : CasUtil.selectCovered(type, aSentence)) {
-            aResponse.addEntity(new Entity(((FeatureStructureImpl) fs).getAddress() + "",
+            aResponse.addEntity(new Entity(((FeatureStructureImpl) fs).getAddress() ,
                     layerId + "_" + fs.getStringValue(labelFeature),
                     asList(new Offsets(fs.getBegin() - aFirstSentenceOffset, fs.getEnd()
                             - aFirstSentenceOffset))));
@@ -267,7 +267,7 @@ public class ChainAdapter
     {
         Feature labelFeature = aFrom.getType().getFeatureByBaseName(aFeature.getName());
         List<Argument> argumentList = getArgument(aFrom, aTo);
-        return new Relation(((FeatureStructureImpl) aFrom).getAddress() + "", aColorIndex + "_"
+        return new Relation(((FeatureStructureImpl) aFrom).getAddress(), aColorIndex + "_"
                 + layerId + "_" + aFrom.getStringValue(labelFeature), argumentList);
     }
 

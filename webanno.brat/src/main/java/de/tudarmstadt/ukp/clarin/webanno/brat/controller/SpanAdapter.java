@@ -224,7 +224,7 @@ public class SpanAdapter
                 }
             }
 
-            aResponse.addEntity(new Entity(((FeatureStructureImpl) fs).getAddress() + "",
+            aResponse.addEntity(new Entity(((FeatureStructureImpl) fs).getAddress() ,
                     annotations, asList(new Offsets(fs.getBegin() - aFirstSentenceOffset, fs
                             .getEnd() - aFirstSentenceOffset))));
         }

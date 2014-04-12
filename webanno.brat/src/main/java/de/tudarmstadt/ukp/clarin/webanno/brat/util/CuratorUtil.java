@@ -321,9 +321,9 @@ public class CuratorUtil
             Map<String, Map<String, Object>> entityTypes,
             List<AnnotationOption> aAnnotationOptions, Mode aMode)
     {
-        Map<String, String> targetAnnotations = new HashMap<String, String>();
+        Map<Integer, String> targetAnnotations = new HashMap<Integer, String>();
         for (Entity entity : response.getEntities()) {
-            String address = entity.getId();
+            int address = entity.getId();
             AnnotationSelection annotationSelection = annotationSelectionByAddress.get(address);
             AnnotationState newState = null;
             if (aMode.equals(Mode.AUTOMATION) || aMode.equals(Mode.CORRECTION)) {
@@ -338,7 +338,7 @@ public class CuratorUtil
         for (Entity entity : response.getEntities()) {
             // check if either address of entity has no changes ...
             // ... or if entity has already been clicked on
-            String address = entity.getId();
+            int address = entity.getId();
             AnnotationSelection annotationSelection = annotationSelectionByAddress.get(address);
             AnnotationState newState = null;
             if (aMode.equals(Mode.AUTOMATION) || aMode.equals(Mode.CORRECTION)) {
@@ -433,7 +433,7 @@ public class CuratorUtil
             Relation relation, String arcTarget, List<AnnotationOption> aAnnotationOptions,
             Mode aMode, Entity aEntity)
     {
-        String address = relation.getId();
+        int address = relation.getId();
         AnnotationSelection annotationSelection = annotationSelectionByAddress.get(address);
         AnnotationState newState = null;
         if (aMode.equals(Mode.AUTOMATION) || aMode.equals(Mode.CORRECTION)) {
@@ -480,7 +480,7 @@ public class CuratorUtil
     }
 
     private static AnnotationState getCorrectionState(AnnotationSelection annotationSelection,
-            List<AnnotationOption> aAnnotationOptions, int numUsers, String address)
+            List<AnnotationOption> aAnnotationOptions, int numUsers, int address)
     {
         AnnotationOption annotationOption = null;
 

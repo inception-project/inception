@@ -183,7 +183,7 @@ public class ArcAdapter
                 }
             }
 
-            aResponse.addRelation(new Relation(((FeatureStructureImpl) fs).getAddress()+"",
+            aResponse.addRelation(new Relation(((FeatureStructureImpl) fs).getAddress(),
                     annotations, argumentList));
         }
     }
