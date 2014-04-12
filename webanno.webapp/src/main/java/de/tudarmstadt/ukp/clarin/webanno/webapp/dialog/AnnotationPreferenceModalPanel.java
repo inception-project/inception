@@ -130,7 +130,7 @@ public class AnnotationPreferenceModalPanel
                                         || layer.getName().equals(Token.class.getName())) {
                                     noFeature.add(layer);
                                 }
-                                else if (layer.getType().equals("chain")) {
+                                else if (layer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
                                     corefTagSets.add(layer);
                                 }
                             }

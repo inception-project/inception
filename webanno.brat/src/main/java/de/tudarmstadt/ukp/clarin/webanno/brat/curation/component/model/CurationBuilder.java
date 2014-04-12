@@ -302,6 +302,9 @@ public class CurationBuilder
         List<Type> entryTypes = new LinkedList<Type>();
 
         for (AnnotationLayer layer : aLayers) {
+            if(layer.getName().equals(Token.class.getName())){
+                continue;
+            }
             if (layer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
                 continue;
             }
