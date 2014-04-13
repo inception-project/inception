@@ -266,12 +266,14 @@
 			</extension>
 		</extensions>
 	</build>
+	<!-- 
 	<distributionManagement>
 		<repository>
 			<id>ukp-oss</id>
 			<url>dav:https://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-ukp-releases-local</url>
 		</repository>
 	</distributionManagement>
+	 -->
 	<profiles>
 		<profile>
 			<id>rat-check</id>
