@@ -33,7 +33,6 @@ import java.util.Set;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.tools.ant.taskdefs.Sleep;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
@@ -81,9 +80,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
  * A page that is used to display an annotation modal dialog for span annotation
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 public class SpanAnnotationModalWindowPage
     extends WebPage
@@ -150,7 +149,7 @@ public class SpanAnnotationModalWindowPage
                 }
             }
 
-            if (selectedLayer == null)
+            if (selectedLayer == null) {
                 if (bratAnnotatorModel.getRememberedSpanLayer() == null) {
                     selectedLayer = spanLayers.get(0);
                     layersModel = new Model<AnnotationLayer>(selectedLayer);
@@ -159,6 +158,7 @@ public class SpanAnnotationModalWindowPage
                     selectedLayer = bratAnnotatorModel.getRememberedSpanLayer();
                     layersModel = new Model<AnnotationLayer>(selectedLayer);
                 }
+            }
 
             add(new Label("selectedText", selectedText));
             add(new DropDownChoice<AnnotationLayer>("layers", layersModel, spanLayers)
@@ -295,7 +295,7 @@ public class SpanAnnotationModalWindowPage
                     }
                     try {
                         JCas jCas = getCas(bratAnnotatorModel);
-                        String tags = "";
+                        String tag = "";
                         for (IModel<String> model : tagModels) {
 
                             if (model.getObject() == null) {
@@ -355,7 +355,12 @@ public class SpanAnnotationModalWindowPage
                             repository.updateJCas(bratAnnotatorModel.getMode(),
                                     bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
                                     jCas);
-                            tags = tags + "|" + model.getObject();
+                            if (tag.equals("")) {
+                                tag = selectedTag.getName();
+                            }
+                            else {
+                                tag = tag + "|" + selectedTag.getName();
+                            }
                             selectedFeatureValues.put(feature, model.getObject());
 
                         }
@@ -374,7 +379,7 @@ public class SpanAnnotationModalWindowPage
 
                         bratAnnotatorModel.setAnnotate(true);
                         bratAnnotatorModel
-                                .setMessage("The span annotation [" + tags + "] is added");
+                                .setMessage("The span annotation [" + tag + "] is added");
 
                         // A hack to rememeber the Visural DropDown display // value
                         HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())

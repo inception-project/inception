@@ -76,9 +76,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
  * A panel that is used to display an annotation modal dialog for arc annotation.
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 public class ArcAnnotationModalWindowPanel
     extends Panel
@@ -279,13 +279,17 @@ public class ArcAnnotationModalWindowPanel
                                         originFs.getBegin(), targetFs.getEnd(), originFs, targetFs,
                                         selectedTag.getTagSet().getFeature());
                             }
-                            tag = tag + "|" + selectedTag.getName();
+                            if (tag.equals("")) {
+                                tag = selectedTag.getName();
+                            }
+                            else {
+                                tag = tag + "|" + selectedTag.getName();
+                            }
                             selectedFeatureValues.put(feature, model.getObject());
                             beginOffset = originFs.getBegin();
                         }
                         // update timestamp now
-                        int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas,
-                                beginOffset);
+                        int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas, beginOffset);
                         bratAnnotatorModel.setRememberedArcLayer(selectedLayer);
                         bratAnnotatorModel.setRememberedArcFeatures(selectedFeatureValues);
                         bratAnnotatorModel.getDocument().setSentenceAccessed(sentenceNumber);
@@ -296,7 +300,7 @@ public class ArcAnnotationModalWindowPanel
                                 bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
                                 jCas);
 
-                        if (bratAnnotatorModel.isScrollPage()) {                          
+                        if (bratAnnotatorModel.isScrollPage()) {
                             updateSentenceAddressAndOffsets(jCas, beginOffset);
                         }
                         bratAnnotatorModel.setMessage("The arc annotation [" + tag + "] is added");

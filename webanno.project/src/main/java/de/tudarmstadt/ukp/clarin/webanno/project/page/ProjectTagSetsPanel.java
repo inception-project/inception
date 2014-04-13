@@ -756,6 +756,10 @@ public class ProjectTagSetsPanel
                 public void onSubmit()
                 {
                     Tag tag = TagDetailForm.this.getModelObject();
+                    if(tag.getName().equals("|")){
+                        error("[|] is not allowed!");
+                        return;
+                    }
                     if (tag.getId() == 0) {
                         tag.setTagSet(tagSetDetailForm.getModelObject());
                         try {
