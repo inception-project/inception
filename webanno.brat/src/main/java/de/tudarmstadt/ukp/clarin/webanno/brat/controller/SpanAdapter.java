@@ -49,7 +49,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * A class that is used to create Brat Span to CAS and vice-versa
- *
+ * 
  * @author Seid Muhie Yimam
  * @author Richard Eckart de Castilho
  */
@@ -59,10 +59,10 @@ public class SpanAdapter
     /**
      * Prefix of the label value for Brat to make sure that different annotation types can use the
      * same label, e.g. a POS tag "N" and a named entity type "N".
-     *
+     * 
      * This is used to differentiate the different types in the brat annotation/visualization. The
      * prefix will not stored in the CAS (striped away at {@link BratAjaxCasController#getType} )
-     *
+     * 
      * It is a short unique numeric identifier for the type (primary key in the DB). This identifier
      * is only transiently used when communicating with the UI. It is not persisted long term other
      * than in the type registry (e.g. in the database).
@@ -167,7 +167,7 @@ public class SpanAdapter
     /**
      * Add annotations from the CAS, which is controlled by the window size, to the brat response
      * {@link GetDocumentResponse}
-     *
+     * 
      * @param aJcas
      *            The JCAS object containing annotations
      * @param aResponse
@@ -206,7 +206,7 @@ public class SpanAdapter
 
             String annotations = "";
             for (AnnotationFeature feature : aFeatures) {
-                if(!(feature.isEnabled() || feature.isVisible())){
+                if (!(feature.isEnabled() || feature.isVisible())) {
                     continue;
                 }
                 Feature labelFeature = fs.getType().getFeatureByBaseName(feature.getName());
@@ -224,9 +224,9 @@ public class SpanAdapter
                 }
             }
 
-            aResponse.addEntity(new Entity(((FeatureStructureImpl) fs).getAddress() ,
-                    annotations, asList(new Offsets(fs.getBegin() - aFirstSentenceOffset, fs
-                            .getEnd() - aFirstSentenceOffset))));
+            aResponse.addEntity(new Entity(((FeatureStructureImpl) fs).getAddress(), annotations,
+                    asList(new Offsets(fs.getBegin() - aFirstSentenceOffset, fs.getEnd()
+                            - aFirstSentenceOffset))));
         }
     }
 
@@ -278,7 +278,7 @@ public class SpanAdapter
 
     /**
      * Update the CAS with new/modification of span annotations from brat
-     *
+     * 
      * @param aLabelValue
      *            the value of the annotation for the span
      * @throws BratAnnotationException
@@ -326,6 +326,11 @@ public class SpanAdapter
         for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
 
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
+                if (fs.getFeatureValueAsString(feature) == null) {// new feature value
+                    fs.setFeatureValueFromString(feature, aValue);
+                    duplicate = true;
+                    continue;
+                }
                 if (!allowStacking) {
                     fs.setFeatureValueFromString(feature, aValue);
                     duplicate = true;
@@ -493,8 +498,8 @@ public class SpanAdapter
                             .equals(prevNe.replace("B-", "").replace("I-", ""))
                             && value.startsWith("B-")) {
                         newAnnotation = aJcas.getCas().createAnnotation(type, begin, end);
-                        newAnnotation.setFeatureValueFromString(feature,
-                                prevNe.replace("B-", "").replace("I-", ""));
+                        newAnnotation.setFeatureValueFromString(feature, prevNe.replace("B-", "")
+                                .replace("I-", ""));
                         prevNe = value;
                         begin = token.getBegin();
                         end = token.getEnd();
@@ -510,8 +515,8 @@ public class SpanAdapter
                     }
                     else {
                         newAnnotation = aJcas.getCas().createAnnotation(type, begin, end);
-                        newAnnotation.setFeatureValueFromString(feature,
-                                prevNe.replace("B-", "").replace("I-", ""));
+                        newAnnotation.setFeatureValueFromString(feature, prevNe.replace("B-", "")
+                                .replace("I-", ""));
                         prevNe = value;
                         begin = token.getBegin();
                         end = token.getEnd();
