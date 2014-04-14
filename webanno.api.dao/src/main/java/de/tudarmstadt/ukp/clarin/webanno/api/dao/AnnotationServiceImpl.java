@@ -235,7 +235,7 @@ public class AnnotationServiceImpl
         return entityManager.createQuery("FROM TagSet WHERE id = :id", TagSet.class)
                 .setParameter("id", aId).getSingleResult();
     }
-    
+
     @Override
     @Transactional
     public AnnotationLayer getLayer(long aId)
@@ -244,7 +244,7 @@ public class AnnotationServiceImpl
                 .setParameter("id", aId).getSingleResult();
     }
 
-    
+
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public AnnotationLayer getLayer(String aName, String aType, Project aProject)
@@ -422,7 +422,7 @@ public class AnnotationServiceImpl
         AnnotationFeature neFeature = neTagSet.getFeature();
         AnnotationLayer neLayer = setLayer(NamedEntity.class.getName(), "value", "Named Entity",
                 "span", aProject);
-        
+
         createType(neLayer, aUser);
 
         neFeature.setLayer(neLayer);
@@ -452,7 +452,7 @@ public class AnnotationServiceImpl
         AnnotationFeature deFeature = depTagSet.getFeature();
 
         AnnotationLayer depLayer = setLayer(Dependency.class.getName(), "DependencyType",
-                "dependency", "relation", aProject);
+                "Dependency", "relation", aProject);
         AnnotationLayer tokenLayer = getLayer(Token.class.getName(), "span", aProject);
         List<AnnotationFeature> tokenFeatures = listAnnotationFeature(tokenLayer);
         AnnotationFeature tokenPosFeature = null;
