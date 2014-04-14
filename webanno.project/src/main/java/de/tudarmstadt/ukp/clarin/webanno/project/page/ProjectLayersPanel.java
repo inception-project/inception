@@ -381,10 +381,62 @@ public class ProjectLayersPanel
             }.setOutputMarkupPlaceholderTag(true));
 
             // behaviors of layers
-            add(new CheckBox("lockToTokenOffset"));
-            add(new CheckBox("allowSTacking"));
-            add(new CheckBox("crossSentence"));
-            add(new CheckBox("multipleTokens"));
+            add(new CheckBox("lockToTokenOffset")
+            {
+                private static final long serialVersionUID = -4934708834659137207L;
+
+                @Override
+                public boolean isEnabled()
+                {
+                    if (LayerDetailForm.this.getModelObject().getId() != 0
+                            && LayerDetailForm.this.getModelObject().getAttachFeature() != null) {
+                        return false;
+                    }
+                    return true;
+                }
+            });
+            add(new CheckBox("allowSTacking")
+            {
+                private static final long serialVersionUID = 7800627916287273008L;
+
+                @Override
+                public boolean isEnabled()
+                {
+                    if (LayerDetailForm.this.getModelObject().getId() != 0
+                            && LayerDetailForm.this.getModelObject().getAttachFeature() != null) {
+                        return false;
+                    }
+                    return true;
+                }
+            });
+            add(new CheckBox("crossSentence")
+            {
+                private static final long serialVersionUID = -5986386642712152491L;
+
+                @Override
+                public boolean isEnabled()
+                {
+                    if (LayerDetailForm.this.getModelObject().getId() != 0
+                            && LayerDetailForm.this.getModelObject().getAttachFeature() != null) {
+                        return false;
+                    }
+                    return true;
+                }
+            });
+            add(new CheckBox("multipleTokens")
+            {
+                private static final long serialVersionUID = 1319818165277559402L;
+
+                @Override
+                public boolean isEnabled()
+                {
+                    if (LayerDetailForm.this.getModelObject().getId() != 0
+                            && LayerDetailForm.this.getModelObject().getAttachFeature() != null) {
+                        return false;
+                    }
+                    return true;
+                }
+            });
 
             add(new Button("save", new ResourceModel("label"))
             {
@@ -570,6 +622,7 @@ public class ProjectLayersPanel
                 {
                     return isVisible();
                 }
+
                 @Override
                 public boolean isEnabled()
                 {
