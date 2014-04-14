@@ -77,7 +77,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * A page that is used to display an annotation modal dialog for span annotation
@@ -137,11 +136,12 @@ public class SpanAnnotationModalWindowPage
             feedbackPanel.add(new AttributeModifier("class", "error"));
 
             addSpanLayers: for (AnnotationLayer layer : bratAnnotatorModel.getAnnotationLayers()) {
-                if(layer.getName().equals(Token.class.getName())){
+                List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
+                if (features.size() == 0) {
                     continue;
                 }
                 if (layer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
-                    for (AnnotationFeature feature : annotationService.listAnnotationFeature(layer)) {
+                    for (AnnotationFeature feature : features) {
                         if (feature.getTagset() == null) {
                             continue addSpanLayers;
                         }
@@ -381,8 +381,7 @@ public class SpanAnnotationModalWindowPage
                         bratAnnotatorModel.setRememberedSpanFeatures(selectedFeatureValues);
 
                         bratAnnotatorModel.setAnnotate(true);
-                        bratAnnotatorModel
-                                .setMessage("The span annotation [" + tag + "] is added");
+                        bratAnnotatorModel.setMessage("The span annotation [" + tag + "] is added");
 
                         // A hack to rememeber the Visural DropDown display // value
                         HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())
