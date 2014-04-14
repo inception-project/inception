@@ -387,6 +387,10 @@ public class AnnotationServiceImpl
 
         AnnotationLayer base = setLayer("de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference",
                 "coreference", "Coreference", "chain", aProject);
+        base.setCrossSentence(true);
+        base.setAllowSTacking(true);
+        base.setMultipleTokens(true);
+        base.setLockToTokenOffset(false);
 
         createType(base, aUser);
 
@@ -422,7 +426,9 @@ public class AnnotationServiceImpl
         AnnotationFeature neFeature = neTagSet.getFeature();
         AnnotationLayer neLayer = setLayer(NamedEntity.class.getName(), "value", "Named Entity",
                 "span", aProject);
-
+        neLayer.setAllowSTacking(true);
+        neLayer.setMultipleTokens(true);
+        neLayer.setLockToTokenOffset(false);
         createType(neLayer, aUser);
 
         neFeature.setLayer(neLayer);
