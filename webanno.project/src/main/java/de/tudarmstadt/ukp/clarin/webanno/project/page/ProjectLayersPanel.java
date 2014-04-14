@@ -36,6 +36,7 @@ import org.apache.wicket.extensions.markup.html.form.select.Select;
 import org.apache.wicket.extensions.markup.html.form.select.SelectOption;
 import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.MarkupStream;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
@@ -380,19 +381,66 @@ public class ProjectLayersPanel
 
             }.setOutputMarkupPlaceholderTag(true));
 
-            // behaviors of layers
+            // behaviours of layers
+            add(new Label("lockToTokenOffsetLabel", "Lock to token offsets:")
+            {
+                private static final long serialVersionUID = -1290883833837327207L;
+
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    if (LayerDetailForm.this.getModelObject().getId() != 0
+                            && LayerDetailForm.this.getModelObject().getType()
+                                    .equals(WebAnnoConst.RELATION_TYPE)) {
+                        this.setVisible(false);
+                    }
+                    else if (LayerDetailForm.this.getModelObject().getId() != 0
+                            && LayerDetailForm.this.getModelObject().getAttachFeature() != null) {
+                        this.setVisible(false);
+                    }
+                    else {
+                        this.setVisible(true);
+                    }
+                }
+            });
             add(new CheckBox("lockToTokenOffset")
             {
                 private static final long serialVersionUID = -4934708834659137207L;
 
                 @Override
-                public boolean isEnabled()
+                protected void onConfigure()
                 {
+                    super.onConfigure();
                     if (LayerDetailForm.this.getModelObject().getId() != 0
                             && LayerDetailForm.this.getModelObject().getAttachFeature() != null) {
-                        return false;
+                        this.setVisible(false);
                     }
-                    return true;
+                    else if (LayerDetailForm.this.getModelObject().getId() != 0
+                            && LayerDetailForm.this.getModelObject().getType()
+                                    .equals(WebAnnoConst.RELATION_TYPE)) {
+                        this.setVisible(false);
+                    }
+                    else {
+                        this.setVisible(true);
+                    }
+                }
+            });
+            add(new Label("allowSTackingLabel", "Allow stacking:")
+            {
+                private static final long serialVersionUID = -5354062154610496880L;
+
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    if (LayerDetailForm.this.getModelObject().getId() != 0
+                            && LayerDetailForm.this.getModelObject().getAttachFeature() != null) {
+                        this.setVisible(false);
+                    }
+                    else {
+                        this.setVisible(true);
+                    }
                 }
             });
             add(new CheckBox("allowSTacking")
@@ -400,13 +448,33 @@ public class ProjectLayersPanel
                 private static final long serialVersionUID = 7800627916287273008L;
 
                 @Override
-                public boolean isEnabled()
+                protected void onConfigure()
                 {
+                    super.onConfigure();
                     if (LayerDetailForm.this.getModelObject().getId() != 0
                             && LayerDetailForm.this.getModelObject().getAttachFeature() != null) {
-                        return false;
+                        this.setVisible(false);
                     }
-                    return true;
+                    else {
+                        this.setVisible(true);
+                    }
+                }
+            });
+            add(new Label("crossSentenceLabel", "Allow crossing sentence boundary:")
+            {
+                private static final long serialVersionUID = -5354062154610496880L;
+
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    if (LayerDetailForm.this.getModelObject().getId() != 0
+                            && LayerDetailForm.this.getModelObject().getAttachFeature() != null) {
+                        this.setVisible(false);
+                    }
+                    else {
+                        this.setVisible(true);
+                    }
                 }
             });
             add(new CheckBox("crossSentence")
@@ -414,13 +482,38 @@ public class ProjectLayersPanel
                 private static final long serialVersionUID = -5986386642712152491L;
 
                 @Override
-                public boolean isEnabled()
+                protected void onConfigure()
                 {
+                    super.onConfigure();
                     if (LayerDetailForm.this.getModelObject().getId() != 0
                             && LayerDetailForm.this.getModelObject().getAttachFeature() != null) {
-                        return false;
+                        this.setVisible(false);
                     }
-                    return true;
+                    else {
+                        this.setVisible(true);
+                    }
+                }
+            });
+            add(new Label("multipleTokensLabel", "Allow multiple tokens:")
+            {
+                private static final long serialVersionUID = -5354062154610496880L;
+
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    if (LayerDetailForm.this.getModelObject().getId() != 0
+                            && LayerDetailForm.this.getModelObject().getAttachFeature() != null) {
+                        this.setVisible(false);
+                    }
+                    else if (LayerDetailForm.this.getModelObject().getId() != 0
+                            && LayerDetailForm.this.getModelObject().getType()
+                                    .equals(WebAnnoConst.RELATION_TYPE)) {
+                        this.setVisible(false);
+                    }
+                    else {
+                        this.setVisible(true);
+                    }
                 }
             });
             add(new CheckBox("multipleTokens")
@@ -428,13 +521,21 @@ public class ProjectLayersPanel
                 private static final long serialVersionUID = 1319818165277559402L;
 
                 @Override
-                public boolean isEnabled()
+                protected void onConfigure()
                 {
+                    super.onConfigure();
                     if (LayerDetailForm.this.getModelObject().getId() != 0
                             && LayerDetailForm.this.getModelObject().getAttachFeature() != null) {
-                        return false;
+                        this.setVisible(false);
                     }
-                    return true;
+                    else if (LayerDetailForm.this.getModelObject().getId() != 0
+                            && LayerDetailForm.this.getModelObject().getType()
+                                    .equals(WebAnnoConst.RELATION_TYPE)) {
+                        this.setVisible(false);
+                    }
+                    else {
+                        this.setVisible(true);
+                    }
                 }
             });
 
