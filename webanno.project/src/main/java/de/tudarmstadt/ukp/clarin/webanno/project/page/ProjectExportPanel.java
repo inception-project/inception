@@ -204,9 +204,6 @@ public class ProjectExportPanel
                 catch (ClassNotFoundException e) {
                     error(ExceptionUtils.getRootCause(e));
                 }
-                catch (WLFormatException e) {
-                    error(ExceptionUtils.getRootCause(e));
-                }
                 catch (Exception e) {
                     error(ExceptionUtils.getRootCause(e));
                 }
@@ -747,9 +744,6 @@ public class ProjectExportPanel
                 canceled = true;
             }
             catch (IOException e) {
-                canceled = true;
-            }
-            catch (WLFormatException e) {
                 canceled = true;
             }
             catch (ZippingException e) {

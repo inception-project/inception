@@ -39,7 +39,20 @@
 				<value>file:${webanno.home}/formats.properties</value>
 			</list>
 		</property>
-	</bean> 		
+	</bean> 
+	
+	<bean id="helpFile"
+		class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+		<property name="ignoreResourceNotFound">
+			<value>true</value>
+		</property>
+		<property name="locations">
+			<list>
+				<value>classpath:META-INF/help.properties</value>
+				<value>file:${webanno.home}/help.properties</value>
+			</list>
+		</property>
+	</bean>		
 
 	<bean
 		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">

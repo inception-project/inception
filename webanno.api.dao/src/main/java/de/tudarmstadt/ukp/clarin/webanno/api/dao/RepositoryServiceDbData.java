@@ -124,9 +124,9 @@ import de.tudarmstadt.ukp.dkpro.core.tokit.BreakIteratorSegmenter;
 
 /**
  * Implementation of methods defined in the {@link RepositoryService} interface
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 public class RepositoryServiceDbData
     implements RepositoryService
@@ -164,6 +164,9 @@ public class RepositoryServiceDbData
     @Resource(name = "formats")
     private Properties readWriteFileFormats;
 
+    @Resource(name = "helpFile")
+    private Properties helpProperiesFile;
+
     private static final String PROJECT = "/project/";
     private static final String MIRA = "/mira/";
     private static final String MIRA_TEMPLATE = "/template/";
@@ -178,6 +181,8 @@ public class RepositoryServiceDbData
 
     private static final String CURATION_USER = "CURATION_USER";
     private static final String CORRECTION_USER = "CORRECTION_USER";
+
+    private static final String HELP_FILE = "/help.properties";
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -218,7 +223,7 @@ public class RepositoryServiceDbData
 
     /**
      * Renames a file.
-     * 
+     *
      * @throws IOException
      *             if the file cannot be renamed.
      * @return the target file.
@@ -237,7 +242,7 @@ public class RepositoryServiceDbData
 
     /**
      * Get the folder where the annotations are stored. Creates the folder if necessary.
-     * 
+     *
      * @throws IOException
      *             if the folder cannot be created.
      */
@@ -1099,6 +1104,21 @@ public class RepositoryServiceDbData
     }
 
     @Override
+    public Properties loadHelpContents()
+        throws FileNotFoundException, IOException
+    {
+        if(new File(dir.getAbsolutePath() + HELP_FILE).exists()){
+            Properties property = new Properties();
+            property.load(new FileInputStream(new File(dir.getAbsolutePath() + HELP_FILE)));
+            return property;
+        }
+        else{
+            return helpProperiesFile;
+        }
+
+    }
+
+    @Override
     @Transactional
     public void removeProject(Project aProject, User aUser)
         throws IOException
@@ -1314,6 +1334,30 @@ public class RepositoryServiceDbData
                         + "] for project [" + aProject.getName() + "] with ID [" + aProject.getId()
                         + "] to location: [" + propertiesPath + "]");
         createLog(aProject, aUsername).removeAllAppenders();
+
+    }
+
+    @Override
+    public <T> void saveHelpContents(T aConfigurationObject)
+        throws IOException
+    {
+        BeanWrapper wrapper = PropertyAccessorFactory.forBeanPropertyAccess(aConfigurationObject);
+        Properties property = new Properties();
+        for (PropertyDescriptor value : wrapper.getPropertyDescriptors()) {
+            if (wrapper.getPropertyValue(value.getName()) == null) {
+                continue;
+            }
+            property.setProperty(value.getName(), wrapper.getPropertyValue(value.getName())
+                    .toString());
+        }
+        File helpFile = new File(dir.getAbsolutePath() + HELP_FILE);
+        if(helpFile.exists()){
+            FileUtils.forceDeleteOnExit(helpFile);
+        }
+        else{
+            helpFile.createNewFile();
+        }
+        property.store(new FileOutputStream(helpFile), null);
 
     }
 
@@ -1546,7 +1590,7 @@ public class RepositoryServiceDbData
     /**
      * Creates an annotation document (either user's annotation document or CURATION_USER's
      * annotation document)
-     * 
+     *
      * @param aDocument
      *            the {@link SourceDocument}
      * @param aJcas
@@ -1705,7 +1749,7 @@ public class RepositoryServiceDbData
     /**
      * For a given {@link SourceDocument}, return the {@link AnnotationDocument} for the user or for
      * the CURATION_USER
-     * 
+     *
      * @param aDocument
      *            the {@link SourceDocument}
      * @param aUsername

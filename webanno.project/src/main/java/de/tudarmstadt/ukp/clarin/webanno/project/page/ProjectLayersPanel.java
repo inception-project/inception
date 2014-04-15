@@ -19,11 +19,13 @@ package de.tudarmstadt.ukp.clarin.webanno.project.page;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -32,6 +34,8 @@ import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
+import org.apache.wicket.ajax.markup.html.AjaxLink;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.extensions.markup.html.form.select.Select;
 import org.apache.wicket.extensions.markup.html.form.select.SelectOption;
 import org.apache.wicket.markup.ComponentTag;
@@ -49,14 +53,18 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.ArcAnnotationModalWindowPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -80,10 +88,9 @@ public class ProjectLayersPanel
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
     @SpringBean(name = "documentRepository")
-    private RepositoryService projectRepository;
+    private RepositoryService repository;
 
-    DropDownChoice<String> importTagsetFormat;
-    DropDownChoice<String> exportTagsetFormat;
+    ModalWindow openHelpDialog;
 
     private LayerSelectionForm layerSelectionForm;
     private FeatureSelectionForm featureSelectionForm;
@@ -96,6 +103,7 @@ public class ProjectLayersPanel
     List<String> types = new ArrayList<String>();
 
     String layerType = WebAnnoConst.SPAN_TYPE;
+    private IModel<String> helpDataModel = new Model<String>();
 
     public ProjectLayersPanel(String id, final Model<Project> aProjectModel)
     {
@@ -115,10 +123,31 @@ public class ProjectLayersPanel
         featureDetailForm.setVisible(false);
         featureDetailForm.setOutputMarkupPlaceholderTag(true);
 
-        add(layerSelectionForm);
+        openHelpDialog = new ModalWindow("openHelpDialog");
+        openHelpDialog.setOutputMarkupId(true);
+        openHelpDialog.setInitialWidth(550);
+        openHelpDialog.setInitialHeight(280);
+        openHelpDialog.setResizable(true);
+        openHelpDialog.setWidthUnit("px");
+        openHelpDialog.setHeightUnit("px");
+
+        add(layerSelectionForm.add(openHelpDialog));
         add(featureSelectionForm);
         add(layerDetailForm);
         add(featureDetailForm);
+    }
+
+    /**
+     * opens the {@link ArcAnnotationModalWindowPanel} in a {@link ModalWindow}
+     */
+    private void openHelpDialog(final ModalWindow openAnnotationDialog, AjaxRequestTarget aTarget,
+            String helpName)
+    {
+        helpDataModel.setObject(getHelpContent(helpName));
+        openAnnotationDialog.setTitle("....");
+        openAnnotationDialog.setContent(new HelpModalWindowPanel(openAnnotationDialog
+                .getContentId(), openAnnotationDialog, getHelpContent(), helpName, helpDataModel));
+        openAnnotationDialog.show(aTarget);
     }
 
     private class LayerSelectionForm
@@ -275,8 +304,29 @@ public class ProjectLayersPanel
                     layerName = modelValue;
                 }
             });
+            add(new AjaxLink<Void>("showLayerNameHelpModal")
+            {
+                private static final long serialVersionUID = 7496156015186497496L;
+
+                @Override
+                public void onClick(AjaxRequestTarget target)
+                {
+                    openHelpDialog(openHelpDialog, target, "layerName");
+                }
+            });
+
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
             add(new CheckBox("enabled"));
+            add(new AjaxLink<Void>("showLayerEnabledHelpModal")
+            {
+                private static final long serialVersionUID = 7496156015186497496L;
+
+                @Override
+                public void onClick(AjaxRequestTarget target)
+                {
+                    openHelpDialog(openHelpDialog, target, "layerEnabled");
+                }
+            });
 
             add(layerTypes = (DropDownChoice<String>) new DropDownChoice<String>("type",
                     Arrays.asList(new String[] { "span", "relation", "chain" }))
@@ -303,6 +353,16 @@ public class ProjectLayersPanel
                 {
                     layerType = getModelObject().getType();
                     target.add(attachTypes);
+                }
+            });
+            add(new AjaxLink<Void>("showLayerTypesHelpModal")
+            {
+                private static final long serialVersionUID = 7496156015186497496L;
+
+                @Override
+                public void onClick(AjaxRequestTarget target)
+                {
+                    openHelpDialog(openHelpDialog, target, "layerTypes");
                 }
             });
 
@@ -380,6 +440,16 @@ public class ProjectLayersPanel
                 }
 
             }.setOutputMarkupPlaceholderTag(true));
+            add(new AjaxLink<Void>("showAttachTypeHelpModal")
+            {
+                private static final long serialVersionUID = 7496156015186497496L;
+
+                @Override
+                public void onClick(AjaxRequestTarget target)
+                {
+                    openHelpDialog(openHelpDialog, target, "attachType");
+                }
+            });
 
             // behaviours of layers
             add(new Label("lockToTokenOffsetLabel", "Lock to token offsets:")
@@ -426,6 +496,35 @@ public class ProjectLayersPanel
                     }
                 }
             });
+            add(new AjaxLink<Void>("showLockToTokenOffsetHelpModal")
+            {
+                private static final long serialVersionUID = 7496156015186497496L;
+
+                @Override
+                public void onClick(AjaxRequestTarget target)
+                {
+                    openHelpDialog(openHelpDialog, target, "lockToToken");
+                }
+
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    if (LayerDetailForm.this.getModelObject().getId() != 0
+                            && LayerDetailForm.this.getModelObject().getAttachFeature() != null) {
+                        this.setVisible(false);
+                    }
+                    else if (LayerDetailForm.this.getModelObject().getId() != 0
+                            && LayerDetailForm.this.getModelObject().getType()
+                                    .equals(WebAnnoConst.RELATION_TYPE)) {
+                        this.setVisible(false);
+                    }
+                    else {
+                        this.setVisible(true);
+                    }
+                }
+            });
+
             add(new Label("allowSTackingLabel", "Allow stacking:")
             {
                 private static final long serialVersionUID = -5354062154610496880L;
@@ -460,6 +559,30 @@ public class ProjectLayersPanel
                     }
                 }
             });
+            add(new AjaxLink<Void>("showAllowSTackingHelpModal")
+            {
+                private static final long serialVersionUID = 7496156015186497496L;
+
+                @Override
+                public void onClick(AjaxRequestTarget target)
+                {
+                    openHelpDialog(openHelpDialog, target, "allowStacking");
+                }
+
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    if (LayerDetailForm.this.getModelObject().getId() != 0
+                            && LayerDetailForm.this.getModelObject().getAttachFeature() != null) {
+                        this.setVisible(false);
+                    }
+                    else {
+                        this.setVisible(true);
+                    }
+                }
+            });
+
             add(new Label("crossSentenceLabel", "Allow crossing sentence boundary:")
             {
                 private static final long serialVersionUID = -5354062154610496880L;
@@ -494,6 +617,30 @@ public class ProjectLayersPanel
                     }
                 }
             });
+            add(new AjaxLink<Void>("showCrossSentenceHelpModal")
+            {
+                private static final long serialVersionUID = 7496156015186497496L;
+
+                @Override
+                public void onClick(AjaxRequestTarget target)
+                {
+                    openHelpDialog(openHelpDialog, target, "crossSentence");
+                }
+
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    if (LayerDetailForm.this.getModelObject().getId() != 0
+                            && LayerDetailForm.this.getModelObject().getAttachFeature() != null) {
+                        this.setVisible(false);
+                    }
+                    else {
+                        this.setVisible(true);
+                    }
+                }
+            });
+
             add(new Label("multipleTokensLabel", "Allow multiple tokens:")
             {
                 private static final long serialVersionUID = -5354062154610496880L;
@@ -519,6 +666,34 @@ public class ProjectLayersPanel
             add(new CheckBox("multipleTokens")
             {
                 private static final long serialVersionUID = 1319818165277559402L;
+
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    if (LayerDetailForm.this.getModelObject().getId() != 0
+                            && LayerDetailForm.this.getModelObject().getAttachFeature() != null) {
+                        this.setVisible(false);
+                    }
+                    else if (LayerDetailForm.this.getModelObject().getId() != 0
+                            && LayerDetailForm.this.getModelObject().getType()
+                                    .equals(WebAnnoConst.RELATION_TYPE)) {
+                        this.setVisible(false);
+                    }
+                    else {
+                        this.setVisible(true);
+                    }
+                }
+            });
+            add(new AjaxLink<Void>("showMultipleTokensHelpModal")
+            {
+                private static final long serialVersionUID = 7496156015186497496L;
+
+                @Override
+                public void onClick(AjaxRequestTarget target)
+                {
+                    openHelpDialog(openHelpDialog, target, "multipleToken");
+                }
 
                 @Override
                 protected void onConfigure()
@@ -565,7 +740,7 @@ public class ProjectLayersPanel
                         }
                         String username = SecurityContextHolder.getContext().getAuthentication()
                                 .getName();
-                        User user = projectRepository.getUser(username);
+                        User user = repository.getUser(username);
 
                         layer.setProject(project);
                         try {
@@ -620,9 +795,39 @@ public class ProjectLayersPanel
                     new EntityModel<AnnotationFeature>(new AnnotationFeature())));
 
             add(new TextField<String>("uiName").setRequired(true));
+            add(new AjaxLink<Void>("showFeatureNameHelpModal")
+            {
+                private static final long serialVersionUID = 7496156015186497496L;
+
+                @Override
+                public void onClick(AjaxRequestTarget target)
+                {
+                    openHelpDialog(openHelpDialog, target, "featureName");
+                }
+            });
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
             add(new CheckBox("enabled"));
+            add(new AjaxLink<Void>("showFeatureEnabledHelpModal")
+            {
+                private static final long serialVersionUID = 7496156015186497496L;
+
+                @Override
+                public void onClick(AjaxRequestTarget target)
+                {
+                    openHelpDialog(openHelpDialog, target, "featureEnabled");
+                }
+            });
             add(new CheckBox("visible"));
+            add(new AjaxLink<Void>("showFeatureVisibleHelpModal")
+            {
+                private static final long serialVersionUID = 7496156015186497496L;
+
+                @Override
+                public void onClick(AjaxRequestTarget target)
+                {
+                    openHelpDialog(openHelpDialog, target, "featureVisible");
+                }
+            });
 
             types.add(CAS.TYPE_NAME_STRING);
             types.add(CAS.TYPE_NAME_INTEGER);
@@ -672,6 +877,16 @@ public class ProjectLayersPanel
                 {
                     aTarget.add(tagSet);
 
+                }
+            });
+            add(new AjaxLink<Void>("showtFeatureTypeHelpModal")
+            {
+                private static final long serialVersionUID = 7496156015186497496L;
+
+                @Override
+                public void onClick(AjaxRequestTarget target)
+                {
+                    openHelpDialog(openHelpDialog, target, "featureType");
                 }
             });
 
@@ -734,6 +949,17 @@ public class ProjectLayersPanel
                 }
             });
             tagSet.setOutputMarkupPlaceholderTag(true);
+
+            add(new AjaxLink<Void>("showTagSetHelpModal")
+            {
+                private static final long serialVersionUID = 7496156015186497496L;
+
+                @Override
+                public void onClick(AjaxRequestTarget target)
+                {
+                    openHelpDialog(openHelpDialog, target, "tagSet");
+                }
+            });
 
             add(new Button("save", new ResourceModel("label"))
             {
@@ -858,5 +1084,66 @@ public class ProjectLayersPanel
                 }
             });
         }
+    }
+
+    private HelpDataModel getHelpContent()
+    {
+        HelpDataModel helpContent = new HelpDataModel();
+        BeanWrapper wrapper = new BeanWrapperImpl(helpContent);
+        // get annotation preference from file system
+        try {
+            for (Entry<Object, Object> entry : repository.loadHelpContents().entrySet()) {
+                String property = entry.getKey().toString();
+                if (wrapper.isWritableProperty(property)) {
+
+                    if (HelpDataModel.class.getDeclaredField(property).getGenericType() instanceof ParameterizedType) {
+                        List<String> value = Arrays.asList(StringUtils.replaceChars(
+                                entry.getValue().toString(), "[]", "").split(","));
+                        if (!value.get(0).equals("")) {
+                            wrapper.setPropertyValue(property, value);
+                        }
+                    }
+                    else {
+                        wrapper.setPropertyValue(property, entry.getValue());
+                    }
+                }
+            }
+        }
+        // no preference found
+        catch (Exception e) {
+        }
+        return helpContent;
+    }
+
+    private String getHelpContent(String aField)
+    {
+        String helpFieldContent = "";
+        HelpDataModel helpContent = new HelpDataModel();
+        BeanWrapper wrapper = new BeanWrapperImpl(helpContent);
+        // get annotation preference from file system
+        try {
+            for (Entry<Object, Object> entry : repository.loadHelpContents().entrySet()) {
+                String property = entry.getKey().toString();
+                if (wrapper.isWritableProperty(property)) {
+                    if (HelpDataModel.class.getDeclaredField(property).getGenericType() instanceof ParameterizedType) {
+                        List<String> value = Arrays.asList(StringUtils.replaceChars(
+                                entry.getValue().toString(), "[]", "").split(","));
+                        if (!value.get(0).equals("")) {
+                            wrapper.setPropertyValue(property, value);
+                        }
+                    }
+                    else {
+                        if (property.equals(aField)) {
+                            helpFieldContent = entry.getValue().toString();
+                        }
+                        wrapper.setPropertyValue(property, entry.getValue());
+                    }
+                }
+            }
+        }
+        // no preference found
+        catch (Exception e) {
+        }
+        return helpFieldContent;
     }
 }

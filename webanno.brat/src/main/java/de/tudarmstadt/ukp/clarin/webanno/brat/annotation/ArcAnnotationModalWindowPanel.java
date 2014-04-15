@@ -541,15 +541,6 @@ public class ArcAnnotationModalWindowPanel
                 }
             }
         }
-
-        /*
-         * if (spanLayer.getType().equals(WebAnnoConst.CHAIN_TYPE)) { for (AnnotationFeature feature
-         * : annotationService.listAnnotationFeature(spanLayer)) { if
-         * (feature.getName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
-         * this.selectedFeatureValues.put(feature, null); break; } } } else { for (AnnotationFeature
-         * feature : annotationService.listAnnotationFeature(selectedLayer))
-         * this.selectedFeatureValues.put(feature, null); }
-         */
         layersModel = new Model<AnnotationLayer>(selectedLayer);
         this.originSpanId = aOriginSpanId;
         this.targetSpanId = aTargetSpanId;

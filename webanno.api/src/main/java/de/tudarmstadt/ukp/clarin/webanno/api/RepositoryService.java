@@ -790,6 +790,19 @@ public interface RepositoryService
         throws FileNotFoundException, IOException;
 
     // --------------------------------------------------------------------------------------------
+    // Methods related to Help file contents
+    // --------------------------------------------------------------------------------------------
+
+    /**
+     * Load contents that will be displayed as a popup window for help from a property file
+     * @throws IOException
+     * @throws FileNotFoundException
+     */
+    Properties loadHelpContents() throws FileNotFoundException, IOException;
+
+    <T> void saveHelpContents(T configurationObject)
+            throws FileNotFoundException, IOException;
+    // --------------------------------------------------------------------------------------------
     // Methods related to anything else
     // --------------------------------------------------------------------------------------------
 
