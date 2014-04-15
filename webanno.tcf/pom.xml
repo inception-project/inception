@@ -16,7 +16,8 @@
 	limitations under the License.
 -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
@@ -28,7 +29,7 @@
 		<dependency>
 			<groupId>eu.clarin.weblicht</groupId>
 			<artifactId>wlfxb</artifactId>
-			<version>1.2.4</version>
+			<version>1.2.9</version>
 		</dependency>
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
@@ -54,7 +55,7 @@
 			<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
 			<artifactId>de.tudarmstadt.ukp.dkpro.core.api.coref-asl</artifactId>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 			<artifactId>de.tudarmstadt.ukp.clarin.webanno.uima</artifactId>
