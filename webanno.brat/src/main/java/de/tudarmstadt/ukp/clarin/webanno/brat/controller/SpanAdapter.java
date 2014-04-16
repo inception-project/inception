@@ -34,6 +34,7 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.impl.FeatureStructureImpl;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
+import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
@@ -223,10 +224,48 @@ public class SpanAdapter
                                     .getFeatureValueAsString(labelFeature));
                 }
             }
-
-            aResponse.addEntity(new Entity(((FeatureStructureImpl) fs).getAddress(), annotations,
-                    asList(new Offsets(fs.getBegin() - aFirstSentenceOffset, fs.getEnd()
-                            - aFirstSentenceOffset))));
+            Sentence beginSent = null, endSent = null;
+            // check if annotation spans multiple sentence
+            for(Sentence sentence:selectCovered(aJcas, Sentence.class,
+                    firstSentence.getBegin(), lastSentenceInPage.getEnd())){
+                if(sentence.getBegin()<=fs.getBegin() && fs.getBegin()<=sentence.getEnd()){
+                    beginSent = sentence;
+                    break;
+                }
+            }
+            for(Sentence sentence:selectCovered(aJcas, Sentence.class,
+                    firstSentence.getBegin(), lastSentenceInPage.getEnd())){
+                if(sentence.getBegin()<=fs.getEnd() && fs.getEnd()<=sentence.getEnd()){
+                    endSent = sentence;
+                    break;
+                }
+            }
+            List<Sentence> sentences = selectCovered(aJcas, Sentence.class,
+                    beginSent.getBegin(), endSent.getEnd());
+            List<Offsets> offsets = new ArrayList<Offsets>();
+            if (sentences.size() > 1) {
+                for (Sentence sentence : sentences) {
+                    if (sentence.getBegin() <= fs.getBegin() && fs.getBegin() <= sentence.getEnd()) {
+                        offsets.add(new Offsets(fs.getBegin() - aFirstSentenceOffset, sentence
+                                .getEnd() - aFirstSentenceOffset));
+                    }
+                    else if (sentence.getBegin() <= fs.getEnd() && fs.getEnd() <= sentence.getEnd()) {
+                        offsets.add(new Offsets(sentence.getBegin() - aFirstSentenceOffset, fs
+                                .getEnd() - aFirstSentenceOffset));
+                    }
+                    else {
+                        offsets.add(new Offsets(sentence.getBegin() - aFirstSentenceOffset,
+                                sentence.getEnd() - aFirstSentenceOffset));
+                    }
+                }
+                aResponse.addEntity(new Entity(((FeatureStructureImpl) fs).getAddress(),
+                        annotations, offsets));
+            }
+            else {
+                aResponse.addEntity(new Entity(((FeatureStructureImpl) fs).getAddress(),
+                        annotations, asList(new Offsets(fs.getBegin() - aFirstSentenceOffset, fs
+                                .getEnd() - aFirstSentenceOffset))));
+            }
         }
     }
 
