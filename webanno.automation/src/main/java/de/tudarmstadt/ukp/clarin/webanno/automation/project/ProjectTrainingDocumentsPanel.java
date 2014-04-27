@@ -40,6 +40,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -70,16 +71,16 @@ public class ProjectTrainingDocumentsPanel
     private ArrayList<String> readableFormats;
     private String selectedFormat;
     private Model<Project> selectedProjectModel;
-    private MiraTemplate miraTemplate;
+    private AnnotationFeature feature;
     private DropDownChoice<String> readableFormatsChoice;
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public ProjectTrainingDocumentsPanel(String id, Model<Project> aProjectModel,
-            Model<MiraTemplate> aTemplateModel)
+            Model<AnnotationFeature> afeatureModel)
     {
         super(id);
         this.selectedProjectModel = aProjectModel;
-        miraTemplate = aTemplateModel.getObject();
+        feature = afeatureModel.getObject();
         try {
             readableFormats = new ArrayList<String>(projectRepository.getReadableFormatLabels());
             selectedFormat = readableFormats.get(0);
@@ -136,7 +137,7 @@ public class ProjectTrainingDocumentsPanel
                         document.setProject(project);
 
                         document.setTrainingDocument(true);
-                        document.setTemplate(miraTemplate);
+                        document.setFeature(feature);
 
                         String reader = projectRepository.getReadableFormatId(readableFormatsChoice
                                 .getModelObject());
@@ -176,8 +177,8 @@ public class ProjectTrainingDocumentsPanel
                         if (project.getId() != 0) {
                             for (SourceDocument document : projectRepository
                                     .listSourceDocuments(project)) {
-                                if (document.getTemplate() != null
-                                        && document.getTemplate().equals(miraTemplate)) {
+                                if (document.getFeature() != null
+                                        && document.getFeature().equals(feature)) {
                                     documents.add(document.getName());
                                 }
                             }

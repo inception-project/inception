@@ -32,6 +32,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.model.CrowdJob;
 import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
@@ -40,7 +41,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
@@ -864,14 +864,14 @@ public interface RepositoryService
     int isCrowdSourceEnabled();
 
     /**
-     * Get the a model for a given annotation Layer. model will be genereated per layer
+     * Get the a model for a given annotation Layer. model will be generated per layer
      */
-    File getMiraModel(TagSet tagSet);
+    File getMiraModel(AnnotationFeature feature);
 
     /**
-     * Get the MIRA director where models, templates and tarining data will be stored
+     * Get the MIRA director where models, templates and training data will be stored
      */
-    File getMiraDir(TagSet TagSet);
+    File getMiraDir(AnnotationFeature feature);
 
     /**
      * Create a MIRA template and save the configurations in a database
@@ -881,12 +881,12 @@ public interface RepositoryService
     /**
      * Get the MIRA template (and hence the template configuration) for a given layer
      */
-    MiraTemplate getMiraTemplate(TagSet tagSet);
+    MiraTemplate getMiraTemplate(AnnotationFeature feature);
 
     /**
      * Check if a MIRA template is already created for this layer
      */
-    boolean existsMiraTemplate(TagSet tagSet);
+    boolean existsMiraTemplate(AnnotationFeature feature);
 
     /**
      * List all the MIRA templates created, hence know which layer do have a training conf already!

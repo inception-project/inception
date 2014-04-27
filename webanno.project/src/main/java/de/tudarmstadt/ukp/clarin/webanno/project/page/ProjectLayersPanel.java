@@ -138,7 +138,7 @@ public class ProjectLayersPanel
     }
 
     /**
-     * opens the {@link ArcAnnotationModalWindowPanel} in a {@link ModalWindow}
+     * opens the {@link HelpModalWindowPanel} in a {@link ModalWindow}
      */
     private void openHelpDialog(final ModalWindow openAnnotationDialog, AjaxRequestTarget aTarget,
             String helpName)

@@ -247,14 +247,14 @@ public class AutomationPage
                     break;
                 }
                 try {
-                    template = repository.getMiraTemplate(autoFeature.getTagset());
+                    template = repository.getMiraTemplate(autoFeature);
                     if (!template.isAnnotateAndPredict()) {
                         return;
                     }
-                    Tag tag = annotationService.getTag(bratAnnotatorModel
-                            .getRememberedSpanFeatures().get(autoFeature), autoFeature.getTagset());
+                    /*Tag tag = annotationService.getTag(bratAnnotatorModel
+                            .getRememberedSpanFeatures().get(autoFeature), autoFeature.getTagset());*/
                     AutomationUtil.repeateAnnotation(bratAnnotatorModel, repository,
-                            annotationService, aStart, aEnd, tag);
+                            annotationService, aStart, aEnd, autoFeature);
                 }
                 catch (UIMAException e) {
                     error(ExceptionUtils.getRootCause(e));
@@ -289,14 +289,14 @@ public class AutomationPage
                     return;
                 }
                 try {
-                    template = repository.getMiraTemplate(autoFeature.getTagset());
+                    template = repository.getMiraTemplate(autoFeature);
                     if (!template.isAnnotateAndPredict()) {
                         return;
                     }
-                    Tag tag = annotationService.getTag(bratAnnotatorModel
-                            .getRememberedSpanFeatures().get(autoFeature), autoFeature.getTagset());
+                    /*Tag tag = annotationService.getTag(bratAnnotatorModel
+                            .getRememberedSpanFeatures().get(autoFeature), autoFeature.getTagset());*/
                     AutomationUtil.deleteAnnotation(bratAnnotatorModel, repository,
-                            annotationService, aStart, aEnd, tag);
+                            annotationService, aStart, aEnd, autoFeature);
                 }
                 catch (UIMAException e) {
                     error(ExceptionUtils.getRootCause(e));

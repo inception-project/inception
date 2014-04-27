@@ -73,7 +73,7 @@ public class SourceDocument
     private boolean trainingDocument = false;
     private boolean processed = false;
     @ManyToOne
-    MiraTemplate template; // if it is a training document, for which Template (layer)
+    AnnotationFeature feature; // if it is a training document, for which Template (layer)
 
     public long getId()
     {
@@ -201,14 +201,13 @@ public class SourceDocument
         this.processed = processed;
     }
 
-    public MiraTemplate getTemplate()
-    {
-        return template;
-    }
+	public AnnotationFeature getFeature() {
+		return feature;
+	}
 
-    public void setTemplate(MiraTemplate template)
-    {
-        this.template = template;
-    }
+	public void setFeature(AnnotationFeature feature) {
+		this.feature = feature;
+	}
+    
 
 }

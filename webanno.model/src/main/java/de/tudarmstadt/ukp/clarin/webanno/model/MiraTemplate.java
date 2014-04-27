@@ -37,7 +37,7 @@ import javax.persistence.UniqueConstraint;
  *
  */
 @Entity
-@Table(name = "mira_template", uniqueConstraints = { @UniqueConstraint(columnNames = { "trainTagSet" }) })
+@Table(name = "mira_template", uniqueConstraints = { @UniqueConstraint(columnNames = { "trainFeature" }) })
 public class MiraTemplate
     implements Serializable
 {
@@ -46,21 +46,15 @@ public class MiraTemplate
     @Id
     @GeneratedValue
     private long id;
-
-    private boolean capitalized;
-    private boolean containsNumber = true;
-
     private boolean prefix1 = true;
     private boolean prefix2 = true;
     private boolean prefix3 = true;
     private boolean prefix4 = true;
-    private boolean prefix5 = true;
 
     private boolean suffix1 = true;
     private boolean suffix2 = true;
     private boolean suffix3 = true;
     private boolean suffix4 = true;
-    private boolean suffix5 = true;
 
     private int ngram = 3;
     private int bigram;
@@ -75,13 +69,36 @@ public class MiraTemplate
      * Train {@link TagSet} used for MIRA prediction
      */
     @ManyToOne
-    @JoinColumn(name = "trainTagSet")
-    private TagSet trainTagSet;
+    @JoinColumn(name = "trainFeature")
+    private AnnotationFeature trainFeature;
     /**
-     * {@link TagSet} used as a feature for the trainTagSet
+     * {@link TagSet} used as a feature for the trainFeature
      */
     @ManyToMany
-    private Set<TagSet> featureTagSets = new HashSet<TagSet>();
+    private Set<AnnotationFeature> otherFeatures = new HashSet<AnnotationFeature>();
+    
+    private boolean currentLayer = false;// The current training layer for this mira template
+
+    public AnnotationFeature getTrainFeature()
+    {
+        return trainFeature;
+    }
+
+    public void setTrainFeature(AnnotationFeature trainFeature)
+    {
+        this.trainFeature = trainFeature;
+    }
+
+    public Set<AnnotationFeature> getOtherFeatures()
+    {
+        return otherFeatures;
+    }
+
+    public void setOtherFeatures(Set<AnnotationFeature> otherFeatures)
+    {
+        this.otherFeatures = otherFeatures;
+    }
+
     /**
      * Annotate the Automate view while annotating
      */
@@ -91,26 +108,6 @@ public class MiraTemplate
      * Results comprising of the tarining accuracy and number of examples used
      */
     private String result = "";
-
-    public boolean isCapitalized()
-    {
-        return capitalized;
-    }
-
-    public void setCapitalized(boolean capitalized)
-    {
-        this.capitalized = capitalized;
-    }
-
-    public boolean isContainsNumber()
-    {
-        return containsNumber;
-    }
-
-    public void setContainsNumber(boolean containsNumber)
-    {
-        this.containsNumber = containsNumber;
-    }
 
     public boolean isPrefix1()
     {
@@ -150,16 +147,6 @@ public class MiraTemplate
     public void setPrefix4(boolean prefix4)
     {
         this.prefix4 = prefix4;
-    }
-
-    public boolean isPrefix5()
-    {
-        return prefix5;
-    }
-
-    public void setPrefix5(boolean prefix5)
-    {
-        this.prefix5 = prefix5;
     }
 
     public boolean isSuffix1()
@@ -202,16 +189,6 @@ public class MiraTemplate
         this.suffix4 = suffix4;
     }
 
-    public boolean isSuffix5()
-    {
-        return suffix5;
-    }
-
-    public void setSuffix5(boolean suffix5)
-    {
-        this.suffix5 = suffix5;
-    }
-
     public int getNgram()
     {
         return ngram;
@@ -240,26 +217,6 @@ public class MiraTemplate
     public void setPredictInThisPage(boolean predictInThisPage)
     {
         this.predictInThisPage = predictInThisPage;
-    }
-
-    public TagSet getTrainTagSet()
-    {
-        return trainTagSet;
-    }
-
-    public void setTrainTagSet(TagSet trainTagSet)
-    {
-        this.trainTagSet = trainTagSet;
-    }
-
-    public Set<TagSet> getFeatureTagSets()
-    {
-        return featureTagSets;
-    }
-
-    public void setFeatureTagSets(Set<TagSet> featureTagSets)
-    {
-        this.featureTagSets = featureTagSets;
     }
 
     public long getId()
@@ -291,14 +248,24 @@ public class MiraTemplate
     {
         this.result = result;
     }
+    
+    
 
-    @Override
+    public boolean isCurrentLayer() {
+		return currentLayer;
+	}
+
+	public void setCurrentLayer(boolean currentLayer) {
+		this.currentLayer = currentLayer;
+	}
+
+	@Override
     public int hashCode()
     {
         final int prime = 31;
         int result = 1;
         result = prime * result + (int) (id ^ (id >>> 32));
-        result = prime * result + ((trainTagSet == null) ? 0 : trainTagSet.hashCode());
+        result = prime * result + ((trainFeature == null) ? 0 : trainFeature.hashCode());
         return result;
     }
 
@@ -318,12 +285,12 @@ public class MiraTemplate
         if (id != other.id) {
             return false;
         }
-        if (trainTagSet == null) {
-            if (other.trainTagSet != null) {
+        if (trainFeature == null) {
+            if (other.trainFeature != null) {
                 return false;
             }
         }
-        else if (!trainTagSet.equals(other.trainTagSet)) {
+        else if (!trainFeature.equals(other.trainFeature)) {
             return false;
         }
         return true;

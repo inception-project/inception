@@ -2065,15 +2065,15 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public File getMiraModel(TagSet aTagset)
+    public File getMiraModel(AnnotationFeature aFeature)
     {
-        return new File(getMiraDir(aTagset), aTagset.getName() + "-model");
+        return new File(getMiraDir(aFeature), aFeature.getName() + "-model");
     }
 
     @Override
-    public File getMiraDir(TagSet aTagset)
+    public File getMiraDir(AnnotationFeature aFeature)
     {
-        return new File(dir, PROJECT + aTagset.getProject().getId() + MIRA);
+        return new File(dir, PROJECT + aFeature.getProject().getId() + MIRA);
     }
 
     @Override
@@ -2091,21 +2091,21 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public MiraTemplate getMiraTemplate(TagSet aTagSet)
+    public MiraTemplate getMiraTemplate(AnnotationFeature aFeature)
     {
 
         return entityManager
-                .createQuery("FROM MiraTemplate WHERE trainTagSet =:trainTagSet",
-                        MiraTemplate.class).setParameter("trainTagSet", aTagSet).getSingleResult();
+                .createQuery("FROM MiraTemplate WHERE trainFeature =:trainFeature",
+                        MiraTemplate.class).setParameter("trainFeature", aFeature).getSingleResult();
     }
 
     @Override
-    public boolean existsMiraTemplate(TagSet tagSet)
+    public boolean existsMiraTemplate(AnnotationFeature aFeature)
     {
         try {
             entityManager
-                    .createQuery("FROM MiraTemplate WHERE trainTagSet =:trainTagSet",
-                            MiraTemplate.class).setParameter("trainTagSet", tagSet)
+                    .createQuery("FROM MiraTemplate WHERE trainFeature =:trainFeature",
+                            MiraTemplate.class).setParameter("trainFeature", aFeature)
                     .getSingleResult();
             return true;
         }
@@ -2119,10 +2119,10 @@ public class RepositoryServiceDbData
     public List<MiraTemplate> listMiraTemplates(Project aProject)
     {
         List<MiraTemplate> allTenplates = entityManager.createQuery(
-                "FROM MiraTemplate ORDER BY trainTagSet ASC ", MiraTemplate.class).getResultList();
+                "FROM MiraTemplate ORDER BY trainFeature ASC ", MiraTemplate.class).getResultList();
         List<MiraTemplate> templatesInThisProject = new ArrayList<MiraTemplate>();
         for (MiraTemplate miraTemplate : allTenplates) {
-            if (miraTemplate.getTrainTagSet().getProject().getId() == aProject.getId()) {
+            if (miraTemplate.getTrainFeature().getProject().getId() == aProject.getId()) {
                 templatesInThisProject.add(miraTemplate);
             }
         }

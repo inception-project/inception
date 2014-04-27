@@ -21,17 +21,17 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 
 /**
  * Utility Class for {@link TypeAdapter} with static methods such as geting
  * {@link TypeAdapter} based on its {@link CAS} {@link Type}
- * 
+ *
  * @author Richard Eckart de Castilho
  * @author Seid Muhie Yimam
- * 
+ *
  */
 public final class TypeUtil {
 	private TypeUtil() {
@@ -89,7 +89,7 @@ public final class TypeUtil {
 	/**
 	 * Get the annotation type, using the request sent from brat. If the request
 	 * have type POS_NN, the the annotation type is POS
-	 * 
+	 *
 	 * @param aType
 	 *            the type sent from brat annotation as request while annotating
 	 */
@@ -108,23 +108,23 @@ public final class TypeUtil {
 	 * Get the annotation type the way it is used in Brat visualization page
 	 * (PREFIX+Type), such as (POS_+NN)
 	 */
-	public static String getQualifiedLabel(Tag aSelectedTag) {
+	public static String getQualifiedLabel(AnnotationFeature aSelectedTag) {
 		String annotationType = "";
-		if (aSelectedTag.getTagSet().getLayer().getName()
+		if (aSelectedTag.getLayer().getName()
 				.equals(WebAnnoConst.POS)) {
 			annotationType = WebAnnoConst.POS_PREFIX + aSelectedTag.getName();
-		} else if (aSelectedTag.getTagSet().getLayer().getName()
+		} else if (aSelectedTag.getLayer().getName()
 				.equals(WebAnnoConst.DEPENDENCY)) {
 			annotationType = WebAnnoConst.DEP_PREFIX + aSelectedTag.getName();
-		} else if (aSelectedTag.getTagSet().getLayer().getName()
+		} else if (aSelectedTag.getLayer().getName()
 				.equals(WebAnnoConst.NAMEDENTITY)) {
 			annotationType = WebAnnoConst.NAMEDENTITY_PREFIX
 					+ aSelectedTag.getName();
-		} else if (aSelectedTag.getTagSet().getLayer().getName()
+		} else if (aSelectedTag.getLayer().getName()
 				.equals(WebAnnoConst.COREFRELTYPE)) {
 			annotationType = WebAnnoConst.COREFRELTYPE_PREFIX
 					+ aSelectedTag.getName();
-		} else if (aSelectedTag.getTagSet().getLayer().getName()
+		} else if (aSelectedTag.getLayer().getName()
 				.equals(WebAnnoConst.COREFERENCE)) {
 			annotationType = WebAnnoConst.COREFERENCE_PREFIX
 					+ aSelectedTag.getName();

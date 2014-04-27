@@ -758,8 +758,8 @@ public class MonitoringPage
                         @Override
                         public Object getDisplayValue(MiraTemplate aObject)
                         {
-                            return "[" + aObject.getTrainTagSet().getLayer().getName() + "] "
-                                    + aObject.getTrainTagSet().getName();
+                            return "[" + aObject.getTrainFeature().getLayer().getName() + "] "
+                                    + aObject.getTrainFeature().getName();
                         }
                     });
                     setNullValid(false);

@@ -23,116 +23,68 @@
 			<td style="vertical-align: top" width="30%">
 				<form wicket:id="miraTemplateSelectionForm">
 					<fieldset class="ui-widget-content ui-corner-all">
-						<legend>Templates</legend>
-						<div>
-							<select class="hfill" wicket:id="template" size="19"></select>
-						</div>
-						<div class="buttons">
-							<input type="submit" wicket:id="create" />
-
-						</div>
+						<legend>Select automation layer</legend>
+						<select wicket:id="features"></select>
 					</fieldset>
 				</form>
 				<form wicket:id="applyForm">
 					<fieldset class="ui-widget-content ui-corner-all">
-						<legend>Automation/Prediction</legend>
 						<div class="buttons">
-							<input type="submit" wicket:id="apply" />
+							<input type="submit" wicket:id="layerDetails" /> <input
+								type="submit" wicket:id="addOtherLayer" /> <input type="submit"
+								wicket:id="apply" />
 						</div>
 					</fieldset>
 				</form>
 			</td>
-
 			<td style="vertical-align: top" width="50%">
-				<fieldset>
-					<legend style="text-align: center">Feature selection</legend>
-					<form wicket:id="miraTemplateDetailForm">
-						<fieldset>
-							<legend>Morphological features</legend>
-							<table align="left">
-								<tr>
-									<td>is Capitalized:</td>
-									<td><input type="checkbox" wicket:id="capitalized" /></td>
-									<td>Contains Number:</td>
-									<td><input type="checkbox" wicket:id="containsNumber" /></td>
-									<td>prefix1:</td>
-									<td><input type="checkbox" wicket:id="prefix1" /></td>
-								</tr>
-								<tr>
-									<td>prefix2:</td>
-									<td><input type="checkbox" wicket:id="prefix2" /></td>
-									<td>prefix3:</td>
-									<td><input type="checkbox" wicket:id="prefix3" /></td>
-									<td>prefix4:</td>
-									<td><input type="checkbox" wicket:id="prefix4" /></td>
-								</tr>
-								<tr>
-									<td>prefix5:</td>
-									<td><input type="checkbox" wicket:id="prefix5" /></td>
-									<td>suffix1:</td>
-									<td><input type="checkbox" wicket:id="suffix1" /></td>
-									<td>suffix2:</td>
-									<td><input type="checkbox" wicket:id="suffix2" /></td>
-								</tr>
-								<tr>
-									<td>suffix3:</td>
-									<td><input type="checkbox" wicket:id="suffix3" /></td>
-									<td>suffix4:</td>
-									<td><input type="checkbox" wicket:id="suffix4" /></td>
-									<td>suffix5:</td>
-									<td><input type="checkbox" wicket:id="suffix5" /></td>
-								</tr>
-							</table>
-						</fieldset>
-						<fieldset>
-							<legend>unigram and bigram features</legend>
-							<table>
-								<tr>
-									<td>token unigram <select wicket:id="ngram"></select></td>
-									<td>label bi-gram <select wicket:id="bigram"></select></td>
-								</tr>
-							</table>
-						</fieldset>
-						<fieldset>
-							<legend>Automation Preferences</legend>
-							<table>
-								<tr>
-									<td>Limit prediction to this page :</td>
-									<td><input type="checkbox" wicket:id="predictInThisPage" /></td>
-								</tr>
-								<tr>
-									<td>Layer to classify :</td>
-									<td><select valign="top" wicket:id="trainTagSet">
-									</select></td>
-								</tr>
-								<tr>
-									<td>Layers to train on:</td>
-									<td><span class="hfill" wicket:id=featureTagSets></span></td>
-								</tr>
-								<tr>
-									<td>Predict while annotating:</td>
-									<td><input type="checkbox" wicket:id="annotateAndPredict" /></td>
-								</tr>
-								<tr>
-									<td></td>
-									<td>
-										<div class="buttons">
-											<input type="submit" wicket:id="save" />
+				<table>
+					<tr>
+						<td style="vertical-align: top" width="50%">
+							<form wicket:id="miraTemplateDetailForm">
+								<table>
+									<tr>
+										<td>predict this page :</td>
+										<td><input type="checkbox" wicket:id="predictInThisPage" /></td>
+									</tr>
+									<tr>
+										<td>coppy annotation:</td>
+										<td><input type="checkbox" wicket:id="annotateAndPredict" /></td>
+									</tr>
+									<tr>
+										<td>
+											<div class="buttons">
+												<input type="submit" wicket:id="save" />
 
-										</div>
-									</td>
-								</tr>
-							</table>
-						</fieldset>
-					</form>
-				</fieldset>
-			</td>
-
-			<td style="vertical-align: top" width="20">
-				<fieldset>
-					<legend style="text-align: center">Training documents</legend>
-					<span wicket:id="documentsPanel"></span>
-				</fieldset>
+											</div>
+										</td>
+										<td></td>
+									</tr>
+								</table>
+							</form>
+						</td>
+						<td style="vertical-align: top" width="50%"><span
+							wicket:id="trainFeatureDocumentsPanel"></span></td>
+					</tr>
+					<tr>
+						<td style="vertical-align: top" width="50%">
+							<form wicket:id="otherFeatureDeatilForm">
+								<table>
+									<tr>
+										<td>Select layer :</td>
+										<td><select wicket:id="features"></select></td>
+									</tr>
+									<tr>
+										<td>Layers :</td>
+										<td><select wicket:id="selectedFeatures"></select></td>
+									</tr>
+								</table>
+							</form>
+						</td>
+						<td style="vertical-align: top" width="50%"><span
+							wicket:id="otherTrainFeatureDocumentsPanel"></span></td>
+					</tr>
+				</table>
 			</td>
 		</tr>
 	</table>
