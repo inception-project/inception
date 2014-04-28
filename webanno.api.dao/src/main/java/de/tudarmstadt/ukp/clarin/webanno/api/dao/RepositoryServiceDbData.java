@@ -2067,7 +2067,7 @@ public class RepositoryServiceDbData
     @Override
     public File getMiraModel(AnnotationFeature aFeature)
     {
-        return new File(getMiraDir(aFeature), aFeature.getName() + "-model");
+        return new File(getMiraDir(aFeature), aFeature.getId() + "-model");
     }
 
     @Override
