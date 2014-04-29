@@ -443,11 +443,16 @@ public class ProjectMiraTemplatePanel
                 {
                     try {
                         MiraTemplate template = miraTemplateDetailForm.getModelObject();
-                        AutomationUtil.addOtherFeatureDocument(template, repository);
+
+                        AutomationUtil.addOtherFeatureTrainDocument(template, repository);
                         AutomationUtil.otherFeatureClassifiers(template, repository);
 
-                        AutomationUtil.addTrainFeatureDocument(template, repository, true);
-                        AutomationUtil.predictOtherFeature(template, repository);
+                        AutomationUtil.generateTrainDocument(template, repository, true);
+                        AutomationUtil.generatePredictDocument(template, repository);
+
+                        AutomationUtil.addOtherFeatureToTrainDocument(template, repository);
+                        AutomationUtil.addOtherFeatureToPredictDocument(template, repository);
+
 
                         long start = System.nanoTime();
                         boolean trained = AutomationUtil.casToMiraTrainData(template, repository);
