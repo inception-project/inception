@@ -59,7 +59,7 @@ public class BratAnnotatorUtility
     {
         Object result = null;
         BratAjaxCasController controller = new BratAjaxCasController(repository, annotationService);
-        result = controller.getDocumentResponse(bratAnnotatorModel,0, aJcas, true);
+        result = controller.getDocumentResponse(bratAnnotatorModel, 0, aJcas, true);
         return result;
     }
 
@@ -105,7 +105,7 @@ public class BratAnnotatorUtility
         repository.createAnnotationDocumentContent(aJCas, aSourceDocument, aUser);
     }
 
-    public static void clearJcasAutomated(JCas aJCas, SourceDocument aSourceDocument, User aUser,
+    public static void clearJcas(JCas aJCas, SourceDocument aSourceDocument, User aUser,
             RepositoryService repository)
         throws IOException
     {
@@ -118,14 +118,15 @@ public class BratAnnotatorUtility
         for (Annotation annotation : annotationsToRemove) {
             aJCas.removeFsFromIndexes(annotation);
         }
-        repository.createCorrectionDocumentContent(aJCas, aSourceDocument, aUser);
+        repository.createAnnotationDocumentContent(aJCas, aSourceDocument, aUser);
     }
+
     public static void clearAnnotations(JCas aJCas, Type aType)
         throws IOException
     {
         List<AnnotationFS> annotationsToRemove = new ArrayList<AnnotationFS>();
         for (AnnotationFS a : select(aJCas.getCas(), aType)) {
-                annotationsToRemove.add(a);
+            annotationsToRemove.add(a);
 
         }
         for (AnnotationFS annotation : annotationsToRemove) {

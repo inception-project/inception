@@ -21,13 +21,14 @@
 	<table class="hfill">
 		<tr>
 			<td style="vertical-align: top" width="30%">
-				<form wicket:id="miraTemplateSelectionForm">
+				<form wicket:id="miraTrainLayerSelectionForm">
 					<fieldset class="ui-widget-content ui-corner-all">
 						<legend>Select automation layer</legend>
 						<select wicket:id="features"></select>
 					</fieldset>
 				</form>
-				<form wicket:id="applyForm">
+				<p></p>
+				<form wicket:id="applyForm" style="background: olive">
 					<fieldset class="ui-widget-content ui-corner-all">
 						<div class="buttons">
 							<input type="submit" wicket:id="layerDetails" /> <input
@@ -42,25 +43,29 @@
 					<tr>
 						<td style="vertical-align: top" width="50%">
 							<form wicket:id="miraTemplateDetailForm">
-								<table>
-									<tr>
-										<td>predict this page :</td>
-										<td><input type="checkbox" wicket:id="predictInThisPage" /></td>
-									</tr>
-									<tr>
-										<td>coppy annotation:</td>
-										<td><input type="checkbox" wicket:id="annotateAndPredict" /></td>
-									</tr>
-									<tr>
-										<td>
-											<div class="buttons">
-												<input type="submit" wicket:id="save" />
+								<fieldset class="ui-widget-content ui-corner-all">
+									<legend>Automation layer details </legend>
+									<table>
+										<tr>
+											<td>predict this page :</td>
+											<td><input type="checkbox" wicket:id="predictInThisPage" /></td>
+										</tr>
+										<tr>
+											<td>coppy annotation:</td>
+											<td><input type="checkbox"
+												wicket:id="annotateAndPredict" /></td>
+										</tr>
+										<tr>
+											<td>
+												<div class="buttons">
+													<input type="submit" wicket:id="save" />
 
-											</div>
-										</td>
-										<td></td>
-									</tr>
-								</table>
+												</div>
+											</td>
+											<td></td>
+										</tr>
+									</table>
+								</fieldset>
 							</form>
 						</td>
 						<td style="vertical-align: top" width="50%"><span
@@ -69,16 +74,19 @@
 					<tr>
 						<td style="vertical-align: top" width="50%">
 							<form wicket:id="otherFeatureDeatilForm">
+								<fieldset class="ui-widget-content ui-corner-all">
+									<legend>Use other layers as training feature </legend>
 								<table>
 									<tr>
 										<td>Select layer :</td>
-										<td><select wicket:id="features"></select></td>
+										<td><select class="hfill" wicket:id="features"></select></td>
 									</tr>
 									<tr>
-										<td>Layers :</td>
-										<td><select wicket:id="selectedFeatures"></select></td>
+										<td>Selected layers :</td>
+										<td><select class="hfill" wicket:id="selectedFeatures"></select></td>
 									</tr>
 								</table>
+								</fieldset>
 							</form>
 						</td>
 						<td style="vertical-align: top" width="50%"><span

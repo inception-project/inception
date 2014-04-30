@@ -25,16 +25,18 @@ import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.impl.FeatureStructureImpl;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
@@ -44,13 +46,12 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
-import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * A class that is used to create Brat Span to CAS and vice-versa
- * 
+ *
  * @author Seid Muhie Yimam
  * @author Richard Eckart de Castilho
  */
@@ -60,10 +61,10 @@ public class SpanAdapter
     /**
      * Prefix of the label value for Brat to make sure that different annotation types can use the
      * same label, e.g. a POS tag "N" and a named entity type "N".
-     * 
+     *
      * This is used to differentiate the different types in the brat annotation/visualization. The
      * prefix will not stored in the CAS (striped away at {@link BratAjaxCasController#getType} )
-     * 
+     *
      * It is a short unique numeric identifier for the type (primary key in the DB). This identifier
      * is only transiently used when communicating with the UI. It is not persisted long term other
      * than in the type registry (e.g. in the database).
@@ -168,7 +169,7 @@ public class SpanAdapter
     /**
      * Add annotations from the CAS, which is controlled by the window size, to the brat response
      * {@link GetDocumentResponse}
-     * 
+     *
      * @param aJcas
      *            The JCAS object containing annotations
      * @param aResponse
@@ -226,22 +227,22 @@ public class SpanAdapter
             }
             Sentence beginSent = null, endSent = null;
             // check if annotation spans multiple sentence
-            for(Sentence sentence:selectCovered(aJcas, Sentence.class,
-                    firstSentence.getBegin(), lastSentenceInPage.getEnd())){
-                if(sentence.getBegin()<=fs.getBegin() && fs.getBegin()<=sentence.getEnd()){
+            for (Sentence sentence : selectCovered(aJcas, Sentence.class, firstSentence.getBegin(),
+                    lastSentenceInPage.getEnd())) {
+                if (sentence.getBegin() <= fs.getBegin() && fs.getBegin() <= sentence.getEnd()) {
                     beginSent = sentence;
                     break;
                 }
             }
-            for(Sentence sentence:selectCovered(aJcas, Sentence.class,
-                    firstSentence.getBegin(), lastSentenceInPage.getEnd())){
-                if(sentence.getBegin()<=fs.getEnd() && fs.getEnd()<=sentence.getEnd()){
+            for (Sentence sentence : selectCovered(aJcas, Sentence.class, firstSentence.getBegin(),
+                    lastSentenceInPage.getEnd())) {
+                if (sentence.getBegin() <= fs.getEnd() && fs.getEnd() <= sentence.getEnd()) {
                     endSent = sentence;
                     break;
                 }
             }
-            List<Sentence> sentences = selectCovered(aJcas, Sentence.class,
-                    beginSent.getBegin(), endSent.getEnd());
+            List<Sentence> sentences = selectCovered(aJcas, Sentence.class, beginSent.getBegin(),
+                    endSent.getEnd());
             List<Offsets> offsets = new ArrayList<Offsets>();
             if (sentences.size() > 1) {
                 for (Sentence sentence : sentences) {
@@ -317,7 +318,7 @@ public class SpanAdapter
 
     /**
      * Update the CAS with new/modification of span annotations from brat
-     * 
+     *
      * @param aLabelValue
      *            the value of the annotation for the span
      * @throws BratAnnotationException
@@ -494,6 +495,34 @@ public class SpanAdapter
             annotations.add(fs.getFeatureValueAsString(labelFeature));
         }
         return annotations;
+    }
+
+    public Map<Integer, String> getMultipleAnnotation(Sentence sentence,
+            AnnotationFeature aFeature)
+        throws CASException
+    {
+        Map<Integer, String> multAnno = new HashMap<Integer, String>();
+        Type type = getType(sentence.getCAS(), annotationTypeName);
+        for (AnnotationFS fs : selectCovered(sentence.getCAS(), type, sentence.getBegin(),
+                sentence.getEnd())) {
+            boolean isBegin = true;
+            Feature labelFeature = fs.getType().getFeatureByBaseName(aFeature.getName());
+            for (Token token : selectCovered(sentence.getCAS().getJCas(), Token.class,
+                    fs.getBegin(), fs.getEnd())) {
+                if (multAnno.get(token.getAddress()) == null) {
+                    if (isBegin) {
+                        multAnno.put(token.getAddress(),
+                                "B-" + fs.getFeatureValueAsString(labelFeature));
+                        isBegin = false;
+                    }
+                    else {
+                        multAnno.put(token.getAddress(),
+                                "I-" + fs.getFeatureValueAsString(labelFeature));
+                    }
+                }
+            }
+        }
+        return multAnno;
     }
 
     @Override

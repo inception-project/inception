@@ -236,6 +236,7 @@ public class AnnotationFeature
     {
         final int prime = 31;
         int result = 1;
+        result = prime * result + ((layer == null) ? 0 : layer.hashCode());
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         result = prime * result + ((project == null) ? 0 : project.hashCode());
         result = prime * result + ((type == null) ? 0 : type.hashCode());
@@ -255,6 +256,14 @@ public class AnnotationFeature
             return false;
         }
         AnnotationFeature other = (AnnotationFeature) obj;
+        if (layer == null) {
+            if (other.layer != null) {
+                return false;
+            }
+        }
+        else if (!layer.equals(other.layer)) {
+            return false;
+        }
         if (name == null) {
             if (other.name != null) {
                 return false;
@@ -281,5 +290,6 @@ public class AnnotationFeature
         }
         return true;
     }
+
 
 }

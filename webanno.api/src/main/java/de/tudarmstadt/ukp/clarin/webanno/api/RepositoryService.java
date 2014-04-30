@@ -315,7 +315,7 @@ public interface RepositoryService
 
     /**
      * check if there is an already automated document. This is important as automated document
-     * should apear the same among users
+     * should appear the same among users
      */
     boolean existsAutomatedDocument(SourceDocument sourceDocument);
 
@@ -795,13 +795,16 @@ public interface RepositoryService
 
     /**
      * Load contents that will be displayed as a popup window for help from a property file
+     *
      * @throws IOException
      * @throws FileNotFoundException
      */
-    Properties loadHelpContents() throws FileNotFoundException, IOException;
+    Properties loadHelpContents()
+        throws FileNotFoundException, IOException;
 
     <T> void saveHelpContents(T configurationObject)
-            throws FileNotFoundException, IOException;
+        throws FileNotFoundException, IOException;
+
     // --------------------------------------------------------------------------------------------
     // Methods related to anything else
     // --------------------------------------------------------------------------------------------
@@ -864,9 +867,10 @@ public interface RepositoryService
     int isCrowdSourceEnabled();
 
     /**
-     * Get the a model for a given annotation Layer. model will be generated per layer
+     * Get the a model for a given automation layer or other layers used as feature for the
+     * automation layer. model will be generated per layer
      */
-    File getMiraModel(AnnotationFeature feature);
+    File getMiraModel(AnnotationFeature feature, boolean otherLayer);
 
     /**
      * Get the MIRA director where models, templates and training data will be stored

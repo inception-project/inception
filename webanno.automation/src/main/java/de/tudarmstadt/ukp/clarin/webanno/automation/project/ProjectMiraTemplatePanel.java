@@ -46,14 +46,17 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * A Panel used to define automation properties for the {@link MIRA} machine learning algorithm
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 public class ProjectMiraTemplatePanel
     extends Panel
@@ -69,7 +72,7 @@ public class ProjectMiraTemplatePanel
     @SpringBean(name = "userRepository")
     private UserDao userRepository;
 
-    private final MiraTemplateSelectionForm miraTemplateSelectionForm;
+    private final MiraTrainLayerSelectionForm miraTrainLayerSelectionForm;
     private final MiraTemplateDetailForm miraTemplateDetailForm;
     @SuppressWarnings("unused")
     private final OtherFeatureDeatilForm otherFeatureDeatilForm;
@@ -82,12 +85,13 @@ public class ProjectMiraTemplatePanel
     private Model<AnnotationFeature> featureModel = new Model<AnnotationFeature>();
     private Model<AnnotationFeature> otherFeatureModel = new Model<AnnotationFeature>();
 
-    private AnnotationFeature selectedFeature = new AnnotationFeature();
+    private AnnotationFeature selectedFeature;
     private MiraTemplate templaet = new MiraTemplate();
 
     @SuppressWarnings("unused")
     private final ApplyForm applyForm;
     private DropDownChoice<AnnotationFeature> features;
+    private DropDownChoice<AnnotationFeature> otherFeatures;
 
     public ProjectMiraTemplatePanel(String id, final Model<Project> aProjectModel)
     {
@@ -101,8 +105,8 @@ public class ProjectMiraTemplatePanel
             }
         }
         featureModel.setObject(selectedFeature);
-        miraTemplateSelectionForm = new MiraTemplateSelectionForm("miraTemplateSelectionForm");
-        add(miraTemplateSelectionForm);
+        miraTrainLayerSelectionForm = new MiraTrainLayerSelectionForm("miraTrainLayerSelectionForm");
+        add(miraTrainLayerSelectionForm);
 
         add(miraTemplateDetailForm = new MiraTemplateDetailForm("miraTemplateDetailForm")
         {
@@ -111,7 +115,7 @@ public class ProjectMiraTemplatePanel
             @Override
             public boolean isVisible()
             {
-                return selectedFeature.getId() != 0 && isLayerDetail;
+                return selectedFeature != null && isLayerDetail;
             }
         });
         miraTemplateDetailForm.setModelObject(templaet);
@@ -123,7 +127,7 @@ public class ProjectMiraTemplatePanel
             @Override
             public boolean isVisible()
             {
-                return selectedFeature.getId() != 0 && !isLayerDetail;
+                return selectedFeature != null && !isLayerDetail;
             }
         });
 
@@ -136,7 +140,7 @@ public class ProjectMiraTemplatePanel
             @Override
             public boolean isVisible()
             {
-                return selectedFeature.getId() != 0 && isLayerDetail;
+                return selectedFeature != null && isLayerDetail;
             }
         });
         trainFeatureDocumentsPanel.setOutputMarkupPlaceholderTag(true);
@@ -149,7 +153,7 @@ public class ProjectMiraTemplatePanel
             @Override
             public boolean isVisible()
             {
-                return selectedFeature.getId() != 0 && !isLayerDetail;
+                return selectedFeature != null && !isLayerDetail;
             }
         });
         otherTrainFeatureDocumentsPanel.setOutputMarkupPlaceholderTag(true);
@@ -173,12 +177,12 @@ public class ProjectMiraTemplatePanel
 
     }
 
-    private class MiraTemplateSelectionForm
+    private class MiraTrainLayerSelectionForm
         extends Form<SelectionModel>
     {
         private static final long serialVersionUID = -1528847861284911270L;
 
-        public MiraTemplateSelectionForm(String id)
+        public MiraTrainLayerSelectionForm(String id)
         {
             super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
             final Project project = selectedProjectModel.getObject();
@@ -199,7 +203,9 @@ public class ProjectMiraTemplatePanel
                                     .listAnnotationFeature(project);
                             List<AnnotationFeature> spanFeatures = new ArrayList<AnnotationFeature>();
                             for (AnnotationFeature feature : allFeatures) {
-                                if (feature.getLayer().getName().equals(Token.class.getName())) {
+                                if (feature.getLayer().getName().equals(Token.class.getName())
+                                        || feature.getLayer().getName()
+                                                .equals(Lemma.class.getName())) {
                                     continue;
                                 }
                                 if (feature.getLayer().getType().equals(WebAnnoConst.SPAN_TYPE)) {
@@ -239,18 +245,19 @@ public class ProjectMiraTemplatePanel
                     updateTrainFeatureDocumentsPanel(trainFeatureDocumentsPanel);
                     updateTrainFeatureDocumentsPanel(otherTrainFeatureDocumentsPanel);
                     miraTemplateDetailForm.setModelObject(templaet);
+                    // Since the automation layer is changed, all non-training document should be
+                    // re-annotated
+                    for (SourceDocument sd : repository.listSourceDocuments(project)) {
+                        if (!sd.isTrainingDocument()) {
+                            sd.setProcessed(false);
+                        }
+                    }
                 }
 
                 @Override
                 protected boolean wantOnSelectionChangedNotifications()
                 {
                     return true;
-                }
-
-                @Override
-                protected CharSequence getDefaultChoice(String aSelectedValue)
-                {
-                    return aSelectedValue;
                 }
             }).setOutputMarkupId(true);
             features.setModelObject(selectedFeature);
@@ -303,7 +310,7 @@ public class ProjectMiraTemplatePanel
 
     /**
      * {@link AnnotationFeature} used as a feature for the current training layer
-     * 
+     *
      */
     private class OtherFeatureDeatilForm
         extends Form<SelectionModel>
@@ -314,15 +321,15 @@ public class ProjectMiraTemplatePanel
         {
             super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
 
-            add(new DropDownChoice<AnnotationFeature>("features")
+            add(otherFeatures = new DropDownChoice<AnnotationFeature>("features")
             {
-                private static final long serialVersionUID = 1L;
+                private static final long serialVersionUID = -1923453084703805794L;
 
                 {
-                    setNullValid(true);
+                    setNullValid(false);
                     setChoices(new LoadableDetachableModel<List<AnnotationFeature>>()
                     {
-                        private static final long serialVersionUID = 1L;
+                        private static final long serialVersionUID = -6376636005341159307L;
 
                         @Override
                         protected List<AnnotationFeature> load()
@@ -333,14 +340,18 @@ public class ProjectMiraTemplatePanel
                                     .getTrainFeature());
                             features.removeAll(miraTemplateDetailForm.getModelObject()
                                     .getOtherFeatures());
+                            List<AnnotationFeature> remove = new ArrayList<AnnotationFeature>();
                             for (AnnotationFeature feature : annotationService
                                     .listAnnotationFeature(selectedProjectModel.getObject())) {
                                 if (!feature.getLayer().getType().equals(WebAnnoConst.SPAN_TYPE)
                                         || feature.getLayer().getName()
+                                                .equals(Lemma.class.getName())
+                                        || feature.getLayer().getName()
                                                 .equals(Token.class.getName())) {
-                                    features.remove(feature);
+                                    remove.add(feature);
                                 }
                             }
+                            features.removeAll(remove);
                             return features;
                         }
                     });
@@ -369,8 +380,9 @@ public class ProjectMiraTemplatePanel
                 {
                     return true;
                 }
-
             });
+            otherFeatures.setModelObject(null);// always force to choose, even after selection of
+                                               // feature
 
             add(new ListChoice<AnnotationFeature>("selectedFeatures")
             {
@@ -408,6 +420,8 @@ public class ProjectMiraTemplatePanel
                 {
                     otherFeatureModel.setObject(aNewSelection);
                     updateOtherFeatureDocumentsPanel(otherTrainFeatureDocumentsPanel);
+                    otherFeatures.setModelObject(null);// always force to choose, even after
+                                                       // selection of feature
                 }
 
                 @Override
@@ -441,9 +455,27 @@ public class ProjectMiraTemplatePanel
                 @Override
                 public void onSubmit()
                 {
+                    MiraTemplate template = miraTemplateDetailForm.getModelObject();
                     try {
-                        MiraTemplate template = miraTemplateDetailForm.getModelObject();
 
+                        boolean existsTrainDocument = false;
+                        for (SourceDocument document : repository
+                                .listSourceDocuments(selectedProjectModel.getObject())) {
+                            if (document.getState().equals(SourceDocumentState.CURATION_FINISHED)
+                                    || (document.isTrainingDocument() && template.getTrainFeature()
+                                            .equals(document.getFeature()))) {
+                                existsTrainDocument = true;
+                                break;
+                            }
+                        }
+                        if (!existsTrainDocument) {
+                            error("No training document exists to proceed.");
+                            return;
+                        }
+                        if(!template.isCurrentLayer()){
+                            error("Please save automation layer details to proceed.");
+                            return;
+                        }
                         AutomationUtil.addOtherFeatureTrainDocument(template, repository);
                         AutomationUtil.otherFeatureClassifiers(template, repository);
 
@@ -452,7 +484,7 @@ public class ProjectMiraTemplatePanel
 
                         miraTemplateDetailForm.getModelObject()
                                 .setResult(
-                                        AutomationUtil.addOtherFeatureToTrainDocument(template,
+                                        AutomationUtil.generateFinalClassifier(template,
                                                 repository));
                         AutomationUtil.addOtherFeatureToPredictDocument(template, repository);
 
@@ -501,6 +533,8 @@ public class ProjectMiraTemplatePanel
                     isLayerDetail = false;
                     updateTrainFeatureDocumentsPanel(trainFeatureDocumentsPanel);
                     updateTrainFeatureDocumentsPanel(otherTrainFeatureDocumentsPanel);
+                    otherFeatures.setModelObject(null);// always force to choose, even after
+                                                       // selection of feature
                 }
             });
         }
