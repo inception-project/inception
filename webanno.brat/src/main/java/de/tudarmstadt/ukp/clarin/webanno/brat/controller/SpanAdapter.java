@@ -512,7 +512,7 @@ public class SpanAdapter
         // automation, no care
         BratAnnotatorUtility.clearAnnotations(aJcas, type);
 
-        if (type.getName().equals(NamedEntity.class.getName())) {
+        if (!aFeature.getLayer().isLockToTokenOffset() || aFeature.getLayer().isMultipleTokens()) {
             for (Token token : select(aJcas, Token.class)) {
                 String value = aLabelValues.get(i);
                 AnnotationFS newAnnotation;
@@ -577,9 +577,9 @@ public class SpanAdapter
                 i++;
                 if (attachFeatureName != null) {
                     Type theType = CasUtil.getType(aJcas.getCas(), attachType);
-                    Feature posFeature = theType.getFeatureByBaseName(attachFeatureName);
+                    Feature attachFeature = theType.getFeatureByBaseName(attachFeatureName);
                     CasUtil.selectCovered(aJcas.getCas(), theType, token.getBegin(), token.getEnd())
-                            .get(0).setFeatureValue(posFeature, newAnnotation);
+                            .get(0).setFeatureValue(attachFeature, newAnnotation);
                 }
                 aJcas.getCas().addFsToIndexes(newAnnotation);
             }

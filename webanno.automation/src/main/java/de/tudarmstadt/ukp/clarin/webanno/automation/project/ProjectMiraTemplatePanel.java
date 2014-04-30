@@ -51,9 +51,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * A Panel used to define automation properties for the {@link MIRA} machine learning algorithm
- *
+ * 
  * @author Seid Muhie Yimam
- *
+ * 
  */
 public class ProjectMiraTemplatePanel
     extends Panel
@@ -303,7 +303,7 @@ public class ProjectMiraTemplatePanel
 
     /**
      * {@link AnnotationFeature} used as a feature for the current training layer
-     *
+     * 
      */
     private class OtherFeatureDeatilForm
         extends Form<SelectionModel>
@@ -450,23 +450,14 @@ public class ProjectMiraTemplatePanel
                         AutomationUtil.generateTrainDocument(template, repository, true);
                         AutomationUtil.generatePredictDocument(template, repository);
 
-                        AutomationUtil.addOtherFeatureToTrainDocument(template, repository);
+                        miraTemplateDetailForm.getModelObject()
+                                .setResult(
+                                        AutomationUtil.addOtherFeatureToTrainDocument(template,
+                                                repository));
                         AutomationUtil.addOtherFeatureToPredictDocument(template, repository);
 
+                        AutomationUtil.predict(template, repository);
 
-                        long start = System.nanoTime();
-                        boolean trained = AutomationUtil.casToMiraTrainData(template, repository);
-                        long time = System.nanoTime() - start;
-                        System.out.println("conversion took:" + time / 1000 + " seconds");
-                        start = System.nanoTime();
-                        if (!trained) {
-                            miraTemplateDetailForm.getModelObject().setResult(
-                                    AutomationUtil.train(template, repository));
-                        }
-                        time = System.nanoTime() - start;
-                        System.out.println("tarining took:" + time / 1000 + " seconds");
-                        AutomationUtil.predict(miraTemplateDetailForm.getModelObject(), repository,
-                                annotationService);
                     }
                     catch (UIMAException e) {
                         error(ExceptionUtils.getRootCause(e));
