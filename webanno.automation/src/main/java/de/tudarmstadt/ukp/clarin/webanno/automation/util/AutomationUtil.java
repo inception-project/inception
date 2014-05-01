@@ -61,6 +61,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -88,9 +89,12 @@ public class AutomationUtil
 
         SourceDocument sourceDocument = aModel.getDocument();
         JCas jCas = aRepository.getCorrectionDocumentContent(sourceDocument);
+        
+        AnnotationDocument annoDoc = aRepository.getAnnotationDocument(sourceDocument, aModel.getUser());
+        JCas annoCas = aRepository.getAnnotationDocumentContent(annoDoc);
 
         // get selected text, concatenations of tokens
-        String selectedText = BratAjaxCasUtil.getSelectedText(jCas, aStart, aEnd);
+        String selectedText = BratAjaxCasUtil.getSelectedText(annoCas, aStart, aEnd);
 
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = aRepository.getUser(username);
@@ -107,14 +111,15 @@ public class AutomationUtil
 
         int endOffset;
         if (template != null && template.isPredictInThisPage()) {
-            endOffset = BratAjaxCasUtil.getLastSentenceEndOffsetInDisplayWindow(jCas,
+            endOffset = BratAjaxCasUtil.getLastSentenceEndOffsetInDisplayWindow(annoCas,
                     aModel.getSentenceAddress(), aModel.getWindowSize());
         }
         else {
 
-            endOffset = BratAjaxCasUtil.selectByAddr(jCas, aModel.getLastSentenceAddress())
+            endOffset = BratAjaxCasUtil.selectByAddr(annoCas, aModel.getLastSentenceAddress())
                     .getEnd();
         }
+        
         for (Sentence sentence : selectCovered(jCas, Sentence.class, beginOffset, endOffset)) {
             String sentenceText = sentence.getCoveredText().toLowerCase();
             for (int i = -1; (i = sentenceText.indexOf(selectedText.toLowerCase(), i)) != -1; i = i
@@ -124,8 +129,9 @@ public class AutomationUtil
 
                     SpanAdapter adapter = (SpanAdapter) getAdapter(aFeature.getLayer(),
                             aAnnotationService);
+                    String value = aModel.getRememberedSpanFeatures().get(aFeature);
                     adapter.add(jCas, sentence.getBegin() + i, sentence.getBegin() + i
-                            + selectedText.length() - 1, aFeature, aFeature.getName());
+                            + selectedText.length() - 1, aFeature, value);
 
                 }
             }
@@ -141,8 +147,10 @@ public class AutomationUtil
         SourceDocument sourceDocument = aModel.getDocument();
         JCas jCas = aRepository.getCorrectionDocumentContent(sourceDocument);
 
+        AnnotationDocument annoDoc = aRepository.getAnnotationDocument(sourceDocument, aModel.getUser());
+        JCas annoCas = aRepository.getAnnotationDocumentContent(annoDoc);
         // get selected text, concatenations of tokens
-        String selectedText = BratAjaxCasUtil.getSelectedText(jCas, aStart, aEnd);
+        String selectedText = BratAjaxCasUtil.getSelectedText(annoCas, aStart, aEnd);
 
         TypeAdapter adapter = getAdapter(aFeature.getLayer(), annotationService);
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -160,12 +168,12 @@ public class AutomationUtil
 
         int endOffset;
         if (template != null && template.isPredictInThisPage()) {
-            endOffset = BratAjaxCasUtil.getLastSentenceEndOffsetInDisplayWindow(jCas,
+            endOffset = BratAjaxCasUtil.getLastSentenceEndOffsetInDisplayWindow(annoCas,
                     aModel.getSentenceAddress(), aModel.getWindowSize());
         }
         else {
 
-            endOffset = BratAjaxCasUtil.selectByAddr(jCas, aModel.getLastSentenceAddress())
+            endOffset = BratAjaxCasUtil.selectByAddr(annoCas, aModel.getLastSentenceAddress())
                     .getEnd();
         }
         for (Sentence sentence : selectCovered(jCas, Sentence.class, beginOffset, endOffset)) {
@@ -257,6 +265,14 @@ public class AutomationUtil
                 break;
             }
         }
+        // C. New Curation document arrives
+        for (SourceDocument document : aRepository.listSourceDocuments(feature.getProject())) {
+            if (!document.isProcessed()
+                    && document.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
+                documentChanged = true;
+                break;
+            }
+        }
         if (!documentChanged) {
             return;
         }
@@ -274,6 +290,18 @@ public class AutomationUtil
             if ((sourceDocument.isTrainingDocument() && sourceDocument.getFeature() != null && sourceDocument
                     .getFeature().equals(feature))) {
                 JCas jCas = aRepository.readJCas(sourceDocument, sourceDocument.getProject(), user);
+                for (Sentence sentence : select(jCas, Sentence.class)) {
+                    if (aBase) {// base training document
+                        trainOut.append(getMiraLine(sentence, null, aTemplate).toString() + "\n");
+                    }
+                    else {// training document with other features
+                        trainOut.append(getMiraLine(sentence, feature, aTemplate).toString() + "\n");
+                    }
+                }
+                sourceDocument.setProcessed(!aBase);
+            }
+            else if(sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)){
+                JCas jCas = aRepository.getCurationDocumentContent(sourceDocument);
                 for (Sentence sentence : select(jCas, Sentence.class)) {
                     if (aBase) {// base training document
                         trainOut.append(getMiraLine(sentence, null, aTemplate).toString() + "\n");
@@ -313,8 +341,14 @@ public class AutomationUtil
             if (!document.isProcessed() && !document.isTrainingDocument()) {
                 File predFile = new File(miraDir, document.getId() + ".pred.ft");
                 BufferedWriter predOut = new BufferedWriter(new FileWriter(predFile));
-                JCas jCas = aRepository.readJCas(document, document.getProject(), user);
-                BratAnnotatorUtility.clearJcas(jCas, document, user, aRepository);
+                JCas jCas;
+                try{
+                    jCas = aRepository.getCorrectionDocumentContent(document);
+                }
+                catch(Exception e){
+                    jCas = aRepository.readJCas(document, document.getProject(), user);
+                }
+               
                 for (Sentence sentence : select(jCas, Sentence.class)) {
                     predOut.append(getMiraLine(sentence, null, aTemplate).toString() + "\n");
                 }
@@ -591,6 +625,15 @@ public class AutomationUtil
                 break;
             }
         }
+        
+        // C. New Curation document arrives
+        for (SourceDocument document : aRepository.listSourceDocuments(layerFeature.getProject())) {
+            if (!document.isProcessed()
+                    && document.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
+                documentChanged = true;
+                break;
+            }
+        }
         if (!documentChanged) {
             return aTemplate.getResult();
         }
@@ -858,7 +901,13 @@ public class AutomationUtil
                     StringTokenizer st = new StringTokenizer(line, " ");
                     String tag = "";
                     while (st.hasMoreTokens()) {
-                        tag = st.nextToken();
+                        String value = st.nextToken();
+                        if(value.startsWith("B-")||value.startsWith("I-")){
+                            tag = value;
+                            break;
+                        }
+                        tag = value;
+                       
                     }
                     annotations.add(tag);
                 }

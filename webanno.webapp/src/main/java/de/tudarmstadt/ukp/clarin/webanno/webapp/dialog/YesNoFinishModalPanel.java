@@ -110,6 +110,7 @@ public class YesNoFinishModalPanel
 
                         bratAnnotatorModel.getDocument().setState(
                                 SourceDocumentState.CURATION_FINISHED);
+                        bratAnnotatorModel.getDocument().setProcessed(false);
                         try {
                             repository.createSourceDocument(bratAnnotatorModel.getDocument(), user);
                         }

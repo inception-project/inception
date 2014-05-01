@@ -1048,42 +1048,22 @@ public class AutomationPage
 
             jCas = repository.readJCas(bratAnnotatorModel.getDocument(), bratAnnotatorModel
                     .getDocument().getProject(), logedInUser);
-            // This is the auto annotation, save it under CURATION_USER, Only if it is not created
+            // This is the auto annotation, save it under CORRECTION_USER, Only if it is not created
             // by another annotater
             if (!repository.existsAutomatedDocument(bratAnnotatorModel.getDocument())) {
                 repository.createCorrectionDocumentContent(jCas, bratAnnotatorModel.getDocument(),
                         logedInUser);
             }
-            // remove all annotation so that the user can correct from the auto annotation
-            /*
-             * BratAnnotatorUtility.clearJcasAnnotations(jCas, bratAnnotatorModel.getDocument(),
-             * logedInUser, repository);
-             */
-            /*
-             * repository.createAnnotationDocumentContent(jCas, bratAnnotatorModel.getDocument(),
-             * logedInUser);
-             */
         }
         catch (NoResultException e) {
             jCas = repository.readJCas(bratAnnotatorModel.getDocument(), bratAnnotatorModel
                     .getDocument().getProject(), logedInUser);
-            // This is the auto annotation, save it under CURATION_USER
-            // This is the auto annotation, save it under CURATION_USER, Only if it is not created
+            // This is the auto annotation, save it under CORRECTION_USER, Only if it is not created
             // by another annotater
             if (!repository.existsAutomatedDocument(bratAnnotatorModel.getDocument())) {
                 repository.createCorrectionDocumentContent(jCas, bratAnnotatorModel.getDocument(),
                         logedInUser);
             }
-            // remove all annotation so that the user can correct from the auto annotation
-            /*
-             * BratAnnotatorUtility.clearJcasAnnotations(jCas, bratAnnotatorModel.getDocument(),
-             * logedInUser, repository);
-             */
-
-            /*
-             * repository.createAnnotationDocumentContent(jCas, bratAnnotatorModel.getDocument(),
-             * logedInUser);
-             */
         }
 
         if (bratAnnotatorModel.getSentenceAddress() == -1
