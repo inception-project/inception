@@ -54,9 +54,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * A Panel used to define automation properties for the {@link MIRA} machine learning algorithm
- *
+ * 
  * @author Seid Muhie Yimam
- *
+ * 
  */
 public class ProjectMiraTemplatePanel
     extends Panel
@@ -202,8 +202,11 @@ public class ProjectMiraTemplatePanel
                             List<AnnotationFeature> allFeatures = annotationService
                                     .listAnnotationFeature(project);
                             List<AnnotationFeature> spanFeatures = new ArrayList<AnnotationFeature>();
+
                             for (AnnotationFeature feature : allFeatures) {
-                                if (feature.getLayer().getName().equals(Token.class.getName())
+                                if (!feature.getLayer().isEnabled()
+                                        || feature.getLayer().getName()
+                                                .equals(Token.class.getName())
                                         || feature.getLayer().getName()
                                                 .equals(Lemma.class.getName())) {
                                     continue;
@@ -310,7 +313,7 @@ public class ProjectMiraTemplatePanel
 
     /**
      * {@link AnnotationFeature} used as a feature for the current training layer
-     *
+     * 
      */
     private class OtherFeatureDeatilForm
         extends Form<SelectionModel>
@@ -340,18 +343,18 @@ public class ProjectMiraTemplatePanel
                                     .getTrainFeature());
                             features.removeAll(miraTemplateDetailForm.getModelObject()
                                     .getOtherFeatures());
-                            List<AnnotationFeature> remove = new ArrayList<AnnotationFeature>();
                             for (AnnotationFeature feature : annotationService
                                     .listAnnotationFeature(selectedProjectModel.getObject())) {
-                                if (!feature.getLayer().getType().equals(WebAnnoConst.SPAN_TYPE)
+                                if (!feature.getLayer().isEnabled()
+                                        || !feature.getLayer().getType()
+                                                .equals(WebAnnoConst.SPAN_TYPE)
                                         || feature.getLayer().getName()
                                                 .equals(Lemma.class.getName())
                                         || feature.getLayer().getName()
                                                 .equals(Token.class.getName())) {
-                                    remove.add(feature);
+                                    features.remove(feature);
                                 }
                             }
-                            features.removeAll(remove);
                             return features;
                         }
                     });
@@ -472,7 +475,7 @@ public class ProjectMiraTemplatePanel
                             error("No training document exists to proceed.");
                             return;
                         }
-                        if(!template.isCurrentLayer()){
+                        if (!template.isCurrentLayer()) {
                             error("Please save automation layer details to proceed.");
                             return;
                         }
@@ -482,10 +485,8 @@ public class ProjectMiraTemplatePanel
                         AutomationUtil.generateTrainDocument(template, repository, true);
                         AutomationUtil.generatePredictDocument(template, repository);
 
-                        miraTemplateDetailForm.getModelObject()
-                                .setResult(
-                                        AutomationUtil.generateFinalClassifier(template,
-                                                repository));
+                        miraTemplateDetailForm.getModelObject().setResult(
+                                AutomationUtil.generateFinalClassifier(template, repository));
                         AutomationUtil.addOtherFeatureToPredictDocument(template, repository);
 
                         AutomationUtil.predict(template, repository);

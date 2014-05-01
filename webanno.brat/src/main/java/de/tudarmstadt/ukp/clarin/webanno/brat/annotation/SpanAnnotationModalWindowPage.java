@@ -77,12 +77,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * A page that is used to display an annotation modal dialog for span annotation
- *
+ * 
  * @author Seid Muhie Yimam
- *
+ * 
  */
 public class SpanAnnotationModalWindowPage
     extends WebPage
@@ -136,6 +137,9 @@ public class SpanAnnotationModalWindowPage
             feedbackPanel.add(new AttributeModifier("class", "error"));
 
             addSpanLayers: for (AnnotationLayer layer : bratAnnotatorModel.getAnnotationLayers()) {
+                if (!layer.isEnabled() || layer.getName().equals(Token.class.getName())) {
+                    continue;
+                }
                 List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
                 if (features.size() == 0) {
                     continue;

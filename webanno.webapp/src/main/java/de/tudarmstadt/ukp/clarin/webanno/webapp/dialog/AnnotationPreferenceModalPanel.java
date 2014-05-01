@@ -118,6 +118,10 @@ public class AnnotationPreferenceModalPanel
                             List<AnnotationLayer> corefTagSets = new ArrayList<AnnotationLayer>();
                             List<AnnotationLayer> noFeature = new ArrayList<AnnotationLayer>();
                             for (AnnotationLayer layer : layers) {
+                                if(!layer.isEnabled()){
+                                    noFeature.add(layer);
+                                    continue;
+                                }
                                 if(layer.getType().equals(WebAnnoConst.CHAIN_TYPE)){
                                     for(AnnotationFeature feature:annotationService.listAnnotationFeature(layer)){
                                         if(feature.getTagset() == null){
@@ -141,8 +145,6 @@ public class AnnotationPreferenceModalPanel
                             }
                             layers.removeAll(noFeature);
                             return layers;
-                            // return
-                            // annotationService.listTagSets(bratAnnotatorModel.getProject());
                         }
                     });
                     setChoiceRenderer(new ChoiceRenderer<AnnotationLayer>("uiName", "id"));
