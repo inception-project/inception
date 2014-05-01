@@ -68,9 +68,9 @@ import edu.lium.mira.Mira;
 
 /**
  * A utility class for the automation modules
- *
+ * 
  * @author Seid Muhie Yimam
- *
+ * 
  */
 public class AutomationUtil
 {
@@ -194,9 +194,6 @@ public class AutomationUtil
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = aRepository.getUser(username);
         for (AnnotationFeature feature : aTemplate.getOtherFeatures()) {
-            if (feature.equals(aTemplate.getTrainFeature())) {
-                continue;
-            }
             File trainFile = new File(miraDir, feature.getId() + ".train");
             boolean documentChanged = false;
             for (SourceDocument document : aRepository.listSourceDocuments(feature.getProject())) {
@@ -220,8 +217,8 @@ public class AutomationUtil
                     for (Sentence sentence : select(jCas, Sentence.class)) {
                         trainOut.append(getMiraLine(sentence, feature, aTemplate).toString() + "\n");
                     }
+                    sourceDocument.setProcessed(false);
                 }
-                sourceDocument.setProcessed(false);
             }
             trainOut.close();
         }
@@ -241,6 +238,18 @@ public class AutomationUtil
         User user = aRepository.getUser(username);
         AnnotationFeature feature = aTemplate.getTrainFeature();
         boolean documentChanged = false;
+        // A. training document for other train layers were changed
+        for (AnnotationFeature otherrFeature : aTemplate.getOtherFeatures()) {
+            for (SourceDocument document : aRepository.listSourceDocuments(aTemplate
+                    .getTrainFeature().getProject())) {
+                if (!document.isProcessed() && document.getFeature() != null
+                        && document.getFeature().equals(otherrFeature)) {
+                    documentChanged = true;
+                    break;
+                }
+            }
+        }
+        // B. Training document for the main training layer were changed
         for (SourceDocument document : aRepository.listSourceDocuments(feature.getProject())) {
             if (!document.isProcessed()
                     && (document.getFeature() != null && document.getFeature().equals(feature))) {
@@ -562,8 +571,22 @@ public class AutomationUtil
         File predcitedFile = new File(predFile.getAbsolutePath() + "-pred");
 
         boolean documentChanged = false;
+
+        // A. training document for other train layers were changed
+        for (AnnotationFeature feature : aTemplate.getOtherFeatures()) {
+            for (SourceDocument document : aRepository.listSourceDocuments(aTemplate
+                    .getTrainFeature().getProject())) {
+                if (!document.isProcessed() && document.getFeature() != null
+                        && document.getFeature().equals(feature)) {
+                    documentChanged = true;
+                    break;
+                }
+            }
+        }
+        // B. Training document for the main training layer were changed
         for (SourceDocument document : aRepository.listSourceDocuments(layerFeature.getProject())) {
-            if (!document.isProcessed()) {
+            if (!document.isProcessed()
+                    && (document.getFeature() != null && document.getFeature().equals(layerFeature))) {
                 documentChanged = true;
                 break;
             }
@@ -582,10 +605,8 @@ public class AutomationUtil
         // generate final classifier, using all features generated
 
         String trainName = trainFile.getAbsolutePath();
-        String finalClassifierModelName = aRepository.getMiraModel(layerFeature, false).getAbsolutePath();
-        if(new File(finalClassifierModelName).exists()){
-            return aTemplate.getResult();
-        }
+        String finalClassifierModelName = aRepository.getMiraModel(layerFeature, false)
+                .getAbsolutePath();
 
         for (AnnotationFeature feature : aTemplate.getOtherFeatures()) {
             int shiftColumns = 0;
