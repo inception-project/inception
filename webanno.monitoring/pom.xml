@@ -20,7 +20,7 @@
 	<parent>
 		<artifactId>de.tudarmstadt.ukp.clarin.webanno</artifactId>
 		<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-		<version>1.2.0-beta-8</version>
+		<version>1.2.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>de.tudarmstadt.ukp.clarin.webanno.monitoring</artifactId>
 	<packaging>jar</packaging>
@@ -74,14 +74,14 @@
 			<artifactId>
 				de.tudarmstadt.ukp.clarin.webanno.webapp.home
 			</artifactId>
-			<version>1.2.0-beta-8</version>
+			<version>1.2.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 			<artifactId>
 				de.tudarmstadt.ukp.clarin.webanno.automation
 			</artifactId>
-			<version>1.2.0-beta-8</version>
+			<version>1.2.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
@@ -94,7 +94,7 @@
 			<artifactId>
 				de.tudarmstadt.ukp.clarin.webanno.project
 			</artifactId>
-			<version>1.2.0-beta-8</version>
+			<version>1.2.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
