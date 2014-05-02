@@ -53,6 +53,7 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -76,10 +77,10 @@ import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
  * and name of the Project The {@link ProjectTagSetsPanel} is used to add {@link TagSet} and
  * {@link Tag} details to a Project as well as updating them The {@link ProjectUsersPanel} is used
  * to update {@link User} to a Project
- *
+ * 
  * @author Seid Muhie Yimam
  * @author Richard Eckart de Castilho
- *
+ * 
  */
 public class ProjectPage
     extends SettingsPageBase
@@ -106,6 +107,7 @@ public class ProjectPage
         projectSelectionForm = new ProjectSelectionForm("projectSelectionForm");
 
         projectDetailForm = new ProjectDetailForm("projectDetailForm");
+        projectDetailForm.setOutputMarkupPlaceholderTag(true);
         projectDetailForm.setVisible(false);
 
         importProjectForm = new ImportProjectForm("importProjectForm");
@@ -193,6 +195,10 @@ public class ProjectPage
                     if (aNewSelection != null) {
                         projectDetailForm.setModelObject(aNewSelection);
                         projectDetailForm.setVisible(true);
+                       
+                        projectDetailForm.allTabs.setSelectedTab(0);
+                        RequestCycle.get().setResponsePage(getPage());
+
                         ProjectSelectionForm.this.setVisible(true);
                     }
                     if (projectType != null) {
@@ -492,7 +498,7 @@ public class ProjectPage
 
                 }
             });
-            add(allTabs = new AjaxTabbedPanel<ITab>("tabs", tabs));
+            add(allTabs = (AjaxTabbedPanel) new AjaxTabbedPanel<ITab>("tabs", tabs).setOutputMarkupPlaceholderTag(true));
             ProjectDetailForm.this.setMultiPart(true);
         }
 

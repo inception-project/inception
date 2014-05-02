@@ -229,6 +229,7 @@ public class ProjectTagSetsPanel
                         tagSetDetailForm.clearInput();
                         tagSetDetailForm.setModelObject(aNewSelection);
                         tagSetDetailForm.setVisible(true);
+                        tagDetailForm.setModelObject(new Tag());
                         TagSetSelectionForm.this.setVisible(true);
 
                     }
