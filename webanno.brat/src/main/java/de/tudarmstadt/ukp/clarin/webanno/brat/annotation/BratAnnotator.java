@@ -148,7 +148,7 @@ public class BratAnnotator
         add(openAnnotationDialog = new ModalWindow("openAnnotationDialog"));
         openAnnotationDialog.setOutputMarkupId(true);
         openAnnotationDialog.setInitialWidth(550);
-        openAnnotationDialog.setInitialHeight(280);
+        openAnnotationDialog.setInitialHeight(340);
         openAnnotationDialog.setResizable(true);
         openAnnotationDialog.setWidthUnit("px");
         openAnnotationDialog.setHeightUnit("px");
