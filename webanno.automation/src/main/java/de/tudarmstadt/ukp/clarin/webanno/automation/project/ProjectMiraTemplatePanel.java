@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
@@ -36,6 +37,8 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+
+import com.googlecode.wicket.jquery.ui.form.button.IndicatingAjaxButton;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
@@ -54,9 +57,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * A Panel used to define automation properties for the {@link MIRA} machine learning algorithm
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 public class ProjectMiraTemplatePanel
     extends Panel
@@ -80,6 +83,7 @@ public class ProjectMiraTemplatePanel
     private ProjectTrainingDocumentsPanel otherTrainFeatureDocumentsPanel;
 
     private boolean isLayerDetail = true;
+    public static boolean automationStarted = false;
     private final Model<Project> selectedProjectModel;
 
     private Model<AnnotationFeature> featureModel = new Model<AnnotationFeature>();
@@ -313,7 +317,7 @@ public class ProjectMiraTemplatePanel
 
     /**
      * {@link AnnotationFeature} used as a feature for the current training layer
-     * 
+     *
      */
     private class OtherFeatureDeatilForm
         extends Form<SelectionModel>
@@ -451,16 +455,17 @@ public class ProjectMiraTemplatePanel
         public ApplyForm(String id)
         {
             super(id);
-            add(new Button("apply", new ResourceModel("label"))
+
+            add(new IndicatingAjaxButton("apply", new ResourceModel("label"))
             {
+
                 private static final long serialVersionUID = 1L;
 
                 @Override
-                public void onSubmit()
+                protected void onSubmit(AjaxRequestTarget aTarget, Form<?> form)
                 {
                     MiraTemplate template = miraTemplateDetailForm.getModelObject();
                     try {
-
                         boolean existsTrainDocument = false;
                         for (SourceDocument document : repository
                                 .listSourceDocuments(selectedProjectModel.getObject())) {
@@ -479,6 +484,7 @@ public class ProjectMiraTemplatePanel
                             error("Please save automation layer details to proceed.");
                             return;
                         }
+                        automationStarted = true;
                         AutomationUtil.addOtherFeatureTrainDocument(template, repository);
                         AutomationUtil.otherFeatureClassifiers(template, repository);
 
@@ -490,6 +496,7 @@ public class ProjectMiraTemplatePanel
                         AutomationUtil.addOtherFeatureToPredictDocument(template, repository);
 
                         AutomationUtil.predict(template, repository);
+                        automationStarted = false;
 
                     }
                     catch (UIMAException e) {
@@ -504,6 +511,12 @@ public class ProjectMiraTemplatePanel
                     catch (BratAnnotationException e) {
                         error(e.getMessage());
                     }
+                }
+
+                @Override
+                public boolean isEnabled()
+                {
+                    return !automationStarted;
                 }
             });
 
