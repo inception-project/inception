@@ -344,10 +344,6 @@ public class AnnotationServiceImpl
     public void createLemmaLayer(Project aProject, User aUser)
         throws IOException
     {
-        // Lemmata Layer
-        TagSet lemmaTagSet = initializeType("value", "value", "lemma annotation",
-                "uima.cas.String", "Lemma", "de", new String[] {}, new String[] {}, aProject, aUser);
-
         AnnotationLayer lemmaLayer = setLayer(Lemma.class.getName(), "value", "Lemma", "span",
                 aProject);
         AnnotationLayer tokenLayer = getLayer(Token.class.getName(), "span", aProject);
@@ -359,10 +355,15 @@ public class AnnotationServiceImpl
 
         createType(lemmaLayer, aUser);
 
-        AnnotationFeature lemmaFeature = lemmaTagSet.getFeature();
+        AnnotationFeature lemmaFeature = new AnnotationFeature();
+        lemmaFeature.setDescription("lemma Annotation");
+        lemmaFeature.setName("value");
+        lemmaFeature.setType("uima.cas.String");
+        lemmaFeature.setProject(aProject);
+        lemmaFeature.setUiName("Lemma value");
         lemmaFeature.setLayer(lemmaLayer);
+        createFeature(lemmaFeature);
 
-        lemmaTagSet.setLayer(lemmaLayer);
     }
 
     @Override
