@@ -83,7 +83,6 @@ public class ProjectMiraTemplatePanel
     private ProjectTrainingDocumentsPanel otherTrainFeatureDocumentsPanel;
 
     private boolean isLayerDetail = true;
-    public static boolean automationStarted = false;
     private final Model<Project> selectedProjectModel;
 
     private Model<AnnotationFeature> featureModel = new Model<AnnotationFeature>();
@@ -484,7 +483,8 @@ public class ProjectMiraTemplatePanel
                             error("Please save automation layer details to proceed.");
                             return;
                         }
-                        automationStarted = true;
+
+                        template.setAutomationStarted(true);
                         AutomationUtil.addOtherFeatureTrainDocument(template, repository);
                         AutomationUtil.otherFeatureClassifiers(template, repository);
 
@@ -496,7 +496,9 @@ public class ProjectMiraTemplatePanel
                         AutomationUtil.addOtherFeatureToPredictDocument(template, repository);
 
                         AutomationUtil.predict(template, repository);
-                        automationStarted = false;
+                        template.setAutomationStarted(false);
+                        repository.createTemplate(template);
+
 
                     }
                     catch (UIMAException e) {
@@ -516,7 +518,7 @@ public class ProjectMiraTemplatePanel
                 @Override
                 public boolean isEnabled()
                 {
-                    return !automationStarted;
+                    return !miraTemplateDetailForm.getModelObject().isAutomationStarted();
                 }
             });
 

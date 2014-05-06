@@ -59,6 +59,7 @@ public class MiraTemplate
     private int ngram = 3;
     private int bigram;
 
+    private boolean automationStarted = false;
     /**
      * Limit prediction only to this page while automatic annotation
      */
@@ -76,7 +77,7 @@ public class MiraTemplate
      */
     @ManyToMany
     private Set<AnnotationFeature> otherFeatures = new HashSet<AnnotationFeature>();
-    
+
     private boolean currentLayer = false;// The current training layer for this mira template
 
     public AnnotationFeature getTrainFeature()
@@ -248,8 +249,8 @@ public class MiraTemplate
     {
         this.result = result;
     }
-    
-    
+
+
 
     public boolean isCurrentLayer() {
 		return currentLayer;
@@ -259,7 +260,17 @@ public class MiraTemplate
 		this.currentLayer = currentLayer;
 	}
 
-	@Override
+	public boolean isAutomationStarted()
+    {
+        return automationStarted;
+    }
+
+    public void setAutomationStarted(boolean automationStarted)
+    {
+        this.automationStarted = automationStarted;
+    }
+
+    @Override
     public int hashCode()
     {
         final int prime = 31;
