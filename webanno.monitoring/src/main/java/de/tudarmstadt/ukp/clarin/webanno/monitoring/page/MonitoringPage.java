@@ -186,6 +186,13 @@ public class MonitoringPage
 
         List<List<String>> userAnnotationDocumentLists = new ArrayList<List<String>>();
         List<SourceDocument> dc = repository.listSourceDocuments(project);
+        List<SourceDocument> trainingDoc = new ArrayList<SourceDocument>();
+        for (SourceDocument sdc : dc) {
+            if (sdc.isTrainingDocument()) {
+                trainingDoc.add(sdc);
+            }
+        }
+        dc.removeAll(trainingDoc);
         for (int j = 0; j < repository.listProjectUsersWithPermissions(project).size(); j++) {
             List<String> userAnnotationDocument = new ArrayList<String>();
             userAnnotationDocument.add("");
@@ -274,6 +281,15 @@ public class MonitoringPage
                             PermissionLevel.USER);
                     List<SourceDocument> sourceDocuments = repository
                             .listSourceDocuments(aNewSelection);
+
+                    List<SourceDocument> trainingDoc = new ArrayList<SourceDocument>();
+                    for (SourceDocument sdc : sourceDocuments) {
+                        if (sdc.isTrainingDocument()) {
+                            trainingDoc.add(sdc);
+                        }
+                    }
+                    sourceDocuments.removeAll(trainingDoc);
+
                     documentJCases = getJCases(users, sourceDocuments);
 
                     if (aNewSelection == null) {
@@ -301,9 +317,8 @@ public class MonitoringPage
                     final Map<String, Integer> annotatorsProgress = new TreeMap<String, Integer>();
                     final Map<String, Integer> annotatorsProgressInPercent = new TreeMap<String, Integer>();
                     final Project project = aNewSelection;
-                    List<SourceDocument> documents = repository.listSourceDocuments(project);
 
-                    final int totalDocuments = documents.size();
+                    final int totalDocuments = sourceDocuments.size();
 
                     // Annotator's Progress
                     if (project != null) {
@@ -365,7 +380,7 @@ public class MonitoringPage
 
                     userAnnotationDocumentStatusList.add(projectTimeStamp);
 
-                    for (SourceDocument document : documents) {
+                    for (SourceDocument document : sourceDocuments) {
                         List<String> userAnnotationDocuments = new ArrayList<String>();
                         userAnnotationDocuments.add(DOCUMENT + document.getName());
 
@@ -713,27 +728,132 @@ public class MonitoringPage
     {
         private static final long serialVersionUID = 1037668483966897381L;
 
-        ListChoice<MiraTemplate> resultChoice;
-        Label resultLabel;
+        ListChoice<MiraTemplate> selectedTemplate;
 
         public TrainingResultForm(String id)
         {
             super(id, new CompoundPropertyModel<ResultMOdel>(new ResultMOdel()));
 
-            add(resultLabel = (Label) new Label("resultLabel",
-                    new LoadableDetachableModel<String>()
-                    {
-                        private static final long serialVersionUID = 891566759811286173L;
+            add(new Label("resultLabel", new LoadableDetachableModel<String>()
+            {
+                private static final long serialVersionUID = 891566759811286173L;
 
-                        @Override
-                        protected String load()
-                        {
-                            return result;
+                @Override
+                protected String load()
+                {
+                    return result;
 
-                        }
-                    }).setOutputMarkupId(true));
+                }
+            }).setOutputMarkupId(true));
 
-            add(resultChoice = new ListChoice<MiraTemplate>("layerResult")
+            add(new Label("annoDocs", new LoadableDetachableModel<String>()
+            {
+                private static final long serialVersionUID = 891566759811286173L;
+
+                @Override
+                protected String load()
+                {
+                    MiraTemplate template = selectedTemplate.getModelObject();
+                    if (template != null) {
+                        return repository.getAutomationStatus(template).getAnnoDocs() + "";
+                    }
+                    else {
+                        return "";
+                    }
+
+                }
+            }).setOutputMarkupId(true));
+
+            add(new Label("trainDocs", new LoadableDetachableModel<String>()
+            {
+                private static final long serialVersionUID = 891566759811286173L;
+
+                @Override
+                protected String load()
+                {
+                    MiraTemplate template = selectedTemplate.getModelObject();
+                    if (template != null) {
+                        return repository.getAutomationStatus(template).getTrainDocs() + "";
+                    }
+                    else {
+                        return "";
+                    }
+
+                }
+            }).setOutputMarkupId(true));
+
+            add(new Label("totalDocs", new LoadableDetachableModel<String>()
+            {
+                private static final long serialVersionUID = 891566759811286173L;
+
+                @Override
+                protected String load()
+                {
+                    MiraTemplate template = selectedTemplate.getModelObject();
+                    if (template != null) {
+                        return repository.getAutomationStatus(template).getTotalDocs() + "";
+                    }
+                    else {
+                        return "";
+                    }
+
+                }
+            }).setOutputMarkupId(true));
+
+            add(new Label("startTime", new LoadableDetachableModel<String>()
+            {
+                private static final long serialVersionUID = 891566759811286173L;
+
+                @Override
+                protected String load()
+                {
+                    MiraTemplate template = selectedTemplate.getModelObject();
+                    if (template != null) {
+                        return repository.getAutomationStatus(template).getStartime().toString();
+                    }
+                    else {
+                        return "";
+                    }
+
+                }
+            }).setOutputMarkupId(true));
+
+            add(new Label("endTime", new LoadableDetachableModel<String>()
+            {
+                private static final long serialVersionUID = 891566759811286173L;
+
+                @Override
+                protected String load()
+                {
+                    MiraTemplate template = selectedTemplate.getModelObject();
+                    if (template != null) {
+                        return repository.getAutomationStatus(template).getEndTime().toString();
+                    }
+                    else {
+                        return "";
+                    }
+
+                }
+            }).setOutputMarkupId(true));
+
+            add(new Label("status", new LoadableDetachableModel<String>()
+            {
+                private static final long serialVersionUID = 891566759811286173L;
+
+                @Override
+                protected String load()
+                {
+                    MiraTemplate template = selectedTemplate.getModelObject();
+                    if (template != null) {
+                        return repository.getAutomationStatus(template).getStatus().getName();
+                    }
+                    else {
+                        return "";
+                    }
+
+                }
+            }).setOutputMarkupId(true));
+            add(selectedTemplate = new ListChoice<MiraTemplate>("layerResult")
             {
                 private static final long serialVersionUID = 1L;
 
@@ -758,8 +878,8 @@ public class MonitoringPage
                         @Override
                         public Object getDisplayValue(MiraTemplate aObject)
                         {
-                            return "[" + aObject.getTrainFeature().getLayer().getName() + "] "
-                                    + aObject.getTrainFeature().getName();
+                            return "[" + aObject.getTrainFeature().getLayer().getUiName() + "] "
+                                    + aObject.getTrainFeature().getUiName();
                         }
                     });
                     setNullValid(false);
@@ -771,7 +891,7 @@ public class MonitoringPage
                     return "";
                 }
             });
-            resultChoice.add(new OnChangeAjaxBehavior()
+            selectedTemplate.add(new OnChangeAjaxBehavior()
             {
                 private static final long serialVersionUID = 7492425689121761943L;
 
@@ -779,7 +899,7 @@ public class MonitoringPage
                 protected void onUpdate(AjaxRequestTarget aTarget)
                 {
                     result = getModelObject().layerResult.getResult();
-                    aTarget.add(resultLabel);
+                    aTarget.add(TrainingResultForm.this);
                 }
             }).setOutputMarkupId(true).setOutputMarkupId(true);
         }
@@ -791,6 +911,12 @@ public class MonitoringPage
     {
         private static final long serialVersionUID = 3611186385198494181L;
         public MiraTemplate layerResult;
+        public String annoDocs;
+        public String trainDocs;
+        public String totalDocs;
+        public String startTime;
+        public String endTime;
+        public String status;
 
     }
 

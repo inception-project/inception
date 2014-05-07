@@ -34,6 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
+import de.tudarmstadt.ukp.clarin.webanno.model.AutomationStatus;
 import de.tudarmstadt.ukp.clarin.webanno.model.CrowdJob;
 import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -898,4 +899,11 @@ public interface RepositoryService
     List<MiraTemplate> listMiraTemplates(Project project);
 
     void removeMiraTemplate(MiraTemplate template);
+
+    void createAutomationStatus(AutomationStatus status);
+
+    boolean existsAutomationStatus(MiraTemplate template);
+
+    AutomationStatus getAutomationStatus(MiraTemplate template);
+
 }

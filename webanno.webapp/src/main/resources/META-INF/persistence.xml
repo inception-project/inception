@@ -2,7 +2,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
 	version="2.0">
-	<persistence-unit name="tcf">
+	<persistence-unit name="WebAnno">
 		<class>de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument</class>
 		<class>de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer</class>
 		<class>de.tudarmstadt.ukp.clarin.webanno.model.User</class>
@@ -14,6 +14,7 @@
 		<class>de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission</class>	
 		<class>de.tudarmstadt.ukp.clarin.webanno.model.CrowdJob</class>
 		<class>de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate</class>
-		<class>de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature</class>					
+		<class>de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature</class>
+		<class>de.tudarmstadt.ukp.clarin.webanno.model.AutomationStatus</class>					
 	</persistence-unit>
 </persistence>

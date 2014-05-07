@@ -91,16 +91,33 @@
 				</td>
 			</tr>
 			<tr>
-			<td></td>
+				<td></td>
 				<td>
 					<form wicket:id="trainingResultForm" class="hfill">
 						<fieldset class="ui-widget-content ui-corner-all">
-							<legend>Training results</legend>
-							<table class="hfill">
+							<legend>Training results /status</legend>
+							<table class="hfill" style="border-collapse: separate;">
 								<tr style="vertical-align: top;">
 									<td><select class="hfill" wicket:id="layerResult"></select>
 									</td>
 									<td><span wicket:id="resultLabel"></span></td>
+								</tr>
+								
+								<tr class="border_bottom">
+									<td>Train.Doc</td>
+									<td>Anno.Doc</td>
+									<td>Total.Doc</td>
+									<td>Start time</td>
+									<td>End time</td>
+									<td>Status</td>
+								</tr>
+								<tr class="border_bottom">
+									<td><span wicket:id="trainDocs"></span></td>
+									<td><span wicket:id="annoDocs"></span></td>
+									<td><span wicket:id="totalDocs"></span></td>
+									<td><span wicket:id="startTime"></span></td>
+									<td><span wicket:id="endTime"></span></td>
+									<td><span wicket:id="status"></span></td>
 								</tr>
 							</table>
 						</fieldset>

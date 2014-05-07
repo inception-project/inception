@@ -56,9 +56,9 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AutomationStatus;
 import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
@@ -69,9 +69,9 @@ import edu.lium.mira.Mira;
 
 /**
  * A utility class for the automation modules
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 public class AutomationUtil
 {
@@ -89,8 +89,9 @@ public class AutomationUtil
 
         SourceDocument sourceDocument = aModel.getDocument();
         JCas jCas = aRepository.getCorrectionDocumentContent(sourceDocument);
-        
-        AnnotationDocument annoDoc = aRepository.getAnnotationDocument(sourceDocument, aModel.getUser());
+
+        AnnotationDocument annoDoc = aRepository.getAnnotationDocument(sourceDocument,
+                aModel.getUser());
         JCas annoCas = aRepository.getAnnotationDocumentContent(annoDoc);
 
         // get selected text, concatenations of tokens
@@ -119,7 +120,7 @@ public class AutomationUtil
             endOffset = BratAjaxCasUtil.selectByAddr(annoCas, aModel.getLastSentenceAddress())
                     .getEnd();
         }
-        
+
         for (Sentence sentence : selectCovered(jCas, Sentence.class, beginOffset, endOffset)) {
             String sentenceText = sentence.getCoveredText().toLowerCase();
             for (int i = -1; (i = sentenceText.indexOf(selectedText.toLowerCase(), i)) != -1; i = i
@@ -147,7 +148,8 @@ public class AutomationUtil
         SourceDocument sourceDocument = aModel.getDocument();
         JCas jCas = aRepository.getCorrectionDocumentContent(sourceDocument);
 
-        AnnotationDocument annoDoc = aRepository.getAnnotationDocument(sourceDocument, aModel.getUser());
+        AnnotationDocument annoDoc = aRepository.getAnnotationDocument(sourceDocument,
+                aModel.getUser());
         JCas annoCas = aRepository.getAnnotationDocumentContent(annoDoc);
         // get selected text, concatenations of tokens
         String selectedText = BratAjaxCasUtil.getSelectedText(annoCas, aStart, aEnd);
@@ -199,6 +201,7 @@ public class AutomationUtil
             FileUtils.forceMkdir(miraDir);
         }
 
+        AutomationStatus status = aRepository.getAutomationStatus(aTemplate);
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = aRepository.getUser(username);
         for (AnnotationFeature feature : aTemplate.getOtherFeatures()) {
@@ -226,11 +229,12 @@ public class AutomationUtil
                         trainOut.append(getMiraLine(sentence, feature, aTemplate).toString() + "\n");
                     }
                     sourceDocument.setProcessed(false);
+                    status.setTrainDocs(status.getTrainDocs() - 1);
                 }
+
             }
             trainOut.close();
         }
-
     }
 
     public static void generateTrainDocument(MiraTemplate aTemplate, RepositoryService aRepository,
@@ -285,6 +289,9 @@ public class AutomationUtil
             trainFile = new File(miraDir, feature.getLayer().getId() + "-" + feature.getId()
                     + ".train.base");
         }
+
+        AutomationStatus status = aRepository.getAutomationStatus(aTemplate);
+
         BufferedWriter trainOut = new BufferedWriter(new FileWriter(trainFile));
         for (SourceDocument sourceDocument : aRepository.listSourceDocuments(feature.getProject())) {
             if ((sourceDocument.isTrainingDocument() && sourceDocument.getFeature() != null && sourceDocument
@@ -299,8 +306,11 @@ public class AutomationUtil
                     }
                 }
                 sourceDocument.setProcessed(!aBase);
+                if (!aBase) {
+                    status.setTrainDocs(status.getTrainDocs() - 1);
+                }
             }
-            else if(sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)){
+            else if (sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
                 JCas jCas = aRepository.getCurationDocumentContent(sourceDocument);
                 for (Sentence sentence : select(jCas, Sentence.class)) {
                     if (aBase) {// base training document
@@ -311,6 +321,9 @@ public class AutomationUtil
                     }
                 }
                 sourceDocument.setProcessed(!aBase);
+                if (!aBase) {
+                    status.setTrainDocs(status.getTrainDocs() - 1);
+                }
             }
         }
         trainOut.close();
@@ -337,18 +350,19 @@ public class AutomationUtil
         if (!documentChanged) {
             return;
         }
+
         for (SourceDocument document : aRepository.listSourceDocuments(feature.getProject())) {
             if (!document.isProcessed() && !document.isTrainingDocument()) {
                 File predFile = new File(miraDir, document.getId() + ".pred.ft");
                 BufferedWriter predOut = new BufferedWriter(new FileWriter(predFile));
                 JCas jCas;
-                try{
+                try {
                     jCas = aRepository.getCorrectionDocumentContent(document);
                 }
-                catch(Exception e){
+                catch (Exception e) {
                     jCas = aRepository.readJCas(document, document.getProject(), user);
                 }
-               
+
                 for (Sentence sentence : select(jCas, Sentence.class)) {
                     predOut.append(getMiraLine(sentence, null, aTemplate).toString() + "\n");
                 }
@@ -625,7 +639,7 @@ public class AutomationUtil
                 break;
             }
         }
-        
+
         // C. New Curation document arrives
         for (SourceDocument document : aRepository.listSourceDocuments(layerFeature.getProject())) {
             if (!document.isProcessed()
@@ -719,6 +733,14 @@ public class AutomationUtil
             mira.averageWeights(iterations * numExamples);
         }
         mira.saveModel(finalClassifierModelName);
+
+        //all tarining documents are processed by now
+        for (SourceDocument document : aRepository.listSourceDocuments(layerFeature.getProject())) {
+            if (document.isTrainingDocument()){
+                document.setProcessed(true);
+
+            }
+        }
         return trainResult;
     }
 
@@ -867,6 +889,7 @@ public class AutomationUtil
         AnnotationFeature layerFeature = aTemplate.getTrainFeature();
 
         File miraDir = aRepository.getMiraDir(layerFeature);
+        AutomationStatus status = aRepository.getAutomationStatus(aTemplate);
         for (SourceDocument document : aRepository.listSourceDocuments(layerFeature.getProject())) {
             if (!document.isProcessed() && !document.isTrainingDocument()) {
                 File predFile = new File(miraDir, document.getId() + ".pred");
@@ -902,12 +925,12 @@ public class AutomationUtil
                     String tag = "";
                     while (st.hasMoreTokens()) {
                         String value = st.nextToken();
-                        if(value.startsWith("B-")||value.startsWith("I-")){
+                        if (value.startsWith("B-") || value.startsWith("I-")) {
                             tag = value;
                             break;
                         }
                         tag = value;
-                       
+
                     }
                     annotations.add(tag);
                 }
@@ -929,6 +952,7 @@ public class AutomationUtil
                 adapter.automate(jCas, layerFeature, annotations);
                 aRepository.createCorrectionDocumentContent(jCas, document, user);
                 document.setProcessed(true);
+                status.setAnnoDocs(status.getAnnoDocs() - 1);
             }
         }
 

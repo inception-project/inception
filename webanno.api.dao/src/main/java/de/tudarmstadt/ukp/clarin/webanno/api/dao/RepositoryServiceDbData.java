@@ -103,6 +103,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
+import de.tudarmstadt.ukp.clarin.webanno.model.AutomationStatus;
 import de.tudarmstadt.ukp.clarin.webanno.model.CrowdJob;
 import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -2193,5 +2194,39 @@ public class RepositoryServiceDbData
         }
 
         return types;
+    }
+
+    @Override
+    @Transactional
+    public void createAutomationStatus(AutomationStatus aStatus)
+    {
+        entityManager.persist(aStatus);
+
+    }
+
+    @Override
+    public boolean existsAutomationStatus(MiraTemplate aTemplate)
+    {
+        try {
+            entityManager
+                    .createQuery("FROM AutomationStatus WHERE template =:template",
+                            AutomationStatus.class).setParameter("template", aTemplate)
+                    .getSingleResult();
+            return true;
+        }
+        catch (NoResultException ex) {
+            return false;
+
+        }
+    }
+
+    @Override
+    public AutomationStatus getAutomationStatus(MiraTemplate aTemplate)
+    {
+        return entityManager
+                .createQuery("FROM AutomationStatus WHERE template =:template",
+                        AutomationStatus.class).setParameter("template", aTemplate)
+                .getSingleResult();
+
     }
 }

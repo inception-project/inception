@@ -19,7 +19,9 @@ package de.tudarmstadt.ukp.clarin.webanno.automation.project;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -47,10 +49,12 @@ import de.tudarmstadt.ukp.clarin.webanno.automation.util.AutomationUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AutomationStatus;
 import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.Status;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -464,7 +468,10 @@ public class ProjectMiraTemplatePanel
                 protected void onSubmit(AjaxRequestTarget aTarget, Form<?> form)
                 {
                     MiraTemplate template = miraTemplateDetailForm.getModelObject();
+                    AutomationStatus automationStatus = new AutomationStatus();
                     try {
+
+                        // no training document is added / no curation is done yet!
                         boolean existsTrainDocument = false;
                         for (SourceDocument document : repository
                                 .listSourceDocuments(selectedProjectModel.getObject())) {
@@ -484,21 +491,66 @@ public class ProjectMiraTemplatePanel
                             return;
                         }
 
+                        // no need to re-train if no new document is added
+                        boolean existUnprocessedDocument = false;
+                        ;
+                        for (SourceDocument document : repository
+                                .listSourceDocuments(selectedProjectModel.getObject())) {
+                            if (!document.isProcessed()) {
+                                existUnprocessedDocument = true;
+                                break;
+                            }
+                        }
+                        if (!existUnprocessedDocument) {
+                            error("No new training/annotation document added.");
+                            return;
+                        }
+
+                        int annodoc = 0, trainDoc = 0;
+
+                        for (SourceDocument document : repository
+                                .listSourceDocuments(selectedProjectModel.getObject())) {
+                            if ((document.isTrainingDocument() || document.getState().equals(
+                                    SourceDocumentState.CURATION_FINISHED))
+                                    && !document.isProcessed()) {
+                                trainDoc++;
+                            }
+                            else if(!document.isTrainingDocument() && !document.isProcessed()) {
+                                annodoc++;
+                            }
+                        }
+
+                        automationStatus = repository.existsAutomationStatus(template) ? repository
+                                .getAutomationStatus(template) : automationStatus;
+                        automationStatus.setStartime(new Timestamp(new Date().getTime()));
+                        automationStatus.setEndTime(new Timestamp(new Date().getTime()));
+                        automationStatus.setTrainDocs(trainDoc);
+                        automationStatus.setAnnoDocs(annodoc);
+                        automationStatus.setTotalDocs(annodoc + trainDoc);
+                        automationStatus.setTemplate(template);
+
+                        repository.createAutomationStatus(automationStatus);
+
                         template.setAutomationStarted(true);
+
+                        automationStatus.setStatus(Status.GENERATE_TRAIN_DOC);
                         AutomationUtil.addOtherFeatureTrainDocument(template, repository);
                         AutomationUtil.otherFeatureClassifiers(template, repository);
 
                         AutomationUtil.generateTrainDocument(template, repository, true);
                         AutomationUtil.generatePredictDocument(template, repository);
 
+                        automationStatus.setStatus(Status.GENERATE_CLASSIFIER);
                         miraTemplateDetailForm.getModelObject().setResult(
                                 AutomationUtil.generateFinalClassifier(template, repository));
                         AutomationUtil.addOtherFeatureToPredictDocument(template, repository);
 
+                        automationStatus.setStatus(Status.PREDICTION);
                         AutomationUtil.predict(template, repository);
                         template.setAutomationStarted(false);
                         repository.createTemplate(template);
-
+                        automationStatus.setStatus(Status.COMPLETED);
+                        automationStatus.setEndTime(new Timestamp(new Date().getTime()));
 
                     }
                     catch (UIMAException e) {
@@ -512,6 +564,12 @@ public class ProjectMiraTemplatePanel
                     }
                     catch (BratAnnotationException e) {
                         error(e.getMessage());
+                    }
+                    finally {
+                        automationStatus.setStatus(Status.COMPLETED);
+                        automationStatus.setEndTime(new Timestamp(new Date().getTime()));
+                        template.setAutomationStarted(false);
+                        repository.createTemplate(template);
                     }
                 }
 
