@@ -31,68 +31,15 @@
 				<form wicket:id="applyForm" style="background: olive">
 					<fieldset class="ui-widget-content ui-corner-all">
 						<div class="buttons">
-							<input type="submit" wicket:id="layerDetails" /> <input
-								type="submit" wicket:id="addOtherLayer" /> <input type="submit"
-								wicket:id="apply" />
+							<input type="submit" wicket:id="apply" />
 						</div>
 					</fieldset>
 				</form>
 			</td>
 			<td style="vertical-align: top" width="50%">
-				<table>
-					<tr>
-						<td style="vertical-align: top" width="50%">
-							<form wicket:id="miraTemplateDetailForm">
-								<fieldset class="ui-widget-content ui-corner-all">
-									<legend>Automation layer details </legend>
-									<table>
-										<tr>
-											<td>predict this page :</td>
-											<td><input type="checkbox" wicket:id="predictInThisPage" /></td>
-										</tr>
-										<tr>
-											<td>copy annotation:</td>
-											<td><input type="checkbox"
-												wicket:id="annotateAndPredict" /></td>
-										</tr>
-										<tr>
-											<td>
-												<div class="buttons">
-													<input type="submit" wicket:id="save" />
-
-												</div>
-											</td>
-											<td></td>
-										</tr>
-									</table>
-								</fieldset>
-							</form>
-						</td>
-						<td style="vertical-align: top" width="50%"><span
-							wicket:id="trainFeatureDocumentsPanel"></span></td>
-					</tr>
-					<tr>
-						<td style="vertical-align: top" width="50%">
-							<form wicket:id="otherFeatureDeatilForm">
-								<fieldset class="ui-widget-content ui-corner-all">
-									<legend>Use other layers as training feature </legend>
-								<table>
-									<tr>
-										<td>Select layer :</td>
-										<td><select class="hfill" wicket:id="features"></select></td>
-									</tr>
-									<tr>
-										<td>Selected layers :</td>
-										<td><select class="hfill" wicket:id="selectedFeatures"></select></td>
-									</tr>
-								</table>
-								</fieldset>
-							</form>
-						</td>
-						<td style="vertical-align: top" width="50%"><span
-							wicket:id="otherTrainFeatureDocumentsPanel"></span></td>
-					</tr>
-				</table>
+				<form wicket:id="targetLayerDetailForm">
+					<div wicket:id="autoTabs" class="tabpanel"></div>
+				</form>
 			</td>
 		</tr>
 	</table>

@@ -35,15 +35,15 @@ public enum Status
     /**
      * Generating training document adding appropriate features, including from other train layer
      */
-    GENERATE_TRAIN_DOC("generating training documents"),
+    GENERATE_TRAIN_DOC("processing train documents..."),
     /**
      * Generating classifier
      */
-    GENERATE_CLASSIFIER("generate classifier"),
+    GENERATE_CLASSIFIER("generating classifier..."),
     /**
      * predicting annotation documents
      */
-    PREDICTION("suggesting annotations"),
+    PREDICTION("suggesting annotations..."),
     /**
      * Automation completed
      */
