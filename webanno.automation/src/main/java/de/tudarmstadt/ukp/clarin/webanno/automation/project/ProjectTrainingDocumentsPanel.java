@@ -161,9 +161,14 @@ public class ProjectTrainingDocumentsPanel
                         }
                         document.setFeature(feature);
 
+                        if(aFreeDocument){
+                        	 document.setFormat(selectedFormat);
+                        }
+                        else{
                         String reader = repository.getReadableFormatId(readableFormatsChoice
                                 .getModelObject());
                         document.setFormat(reader);
+                        }
                         repository.createSourceDocument(document, user);
                         repository.uploadSourceDocument(uploadFile, document, user);
                         info("File [" + fileName + "] has been imported successfully!");
@@ -198,7 +203,12 @@ public class ProjectTrainingDocumentsPanel
                         documents.clear();
                         if (project.getId() != 0) {
                             for (SourceDocument document : repository.listSourceDocuments(project)) {
-                                if (document.getFeature() != null
+                            	if(aFreeDocument){
+                            		if(document.getFormat().equals(WebAnnoConst.TAB_SEP)){
+                            			documents.add(document.getName());
+                            		}
+                            	}
+                            	else if (document.getFeature() != null
                                         && document.getFeature().equals(feature)) {
                                     documents.add(document.getName());
                                 }

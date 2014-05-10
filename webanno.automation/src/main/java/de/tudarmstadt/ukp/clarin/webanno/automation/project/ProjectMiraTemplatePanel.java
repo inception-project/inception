@@ -262,7 +262,7 @@ public class ProjectMiraTemplatePanel
                 }
             });
 
-            tabs.add(new AbstractTab(new Model<String>("Free document"))
+            tabs.add(new AbstractTab(new Model<String>("TAB-SEP documents"))
             {
                 private static final long serialVersionUID = 6703144434578403272L;
 
@@ -355,7 +355,7 @@ public class ProjectMiraTemplatePanel
         {
             super(id);
             add(freeTrainDocumentsPanel = new ProjectTrainingDocumentsPanel(
-                    "freeTrainDocumentsPanel", selectedProjectModel, true, otherFeatureModel)
+                    "freeTrainDocumentsPanel", selectedProjectModel, true, featureModel)
             {
                 private static final long serialVersionUID = -4663938706290521594L;
 
