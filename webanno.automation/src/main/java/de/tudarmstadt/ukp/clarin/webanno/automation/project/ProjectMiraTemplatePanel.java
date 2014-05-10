@@ -296,7 +296,7 @@ public class ProjectMiraTemplatePanel
             miraTemplateDetailForm.setModelObject(templaet);
 
             add(targetLayerTarinDocumentsPanel = new ProjectTrainingDocumentsPanel(
-                    "targetLayerTarinDocumentsPanel", selectedProjectModel, featureModel)
+                    "targetLayerTarinDocumentsPanel", selectedProjectModel,false, featureModel)
             {
 
                 private static final long serialVersionUID = 7698999083009818310L;
@@ -332,7 +332,7 @@ public class ProjectMiraTemplatePanel
             });
 
             add(otherLayerTarinDocumentsPanel = new ProjectTrainingDocumentsPanel(
-                    "otherLayerTarinDocumentsPanel", selectedProjectModel, otherFeatureModel)
+                    "otherLayerTarinDocumentsPanel", selectedProjectModel, false, otherFeatureModel)
             {
                 private static final long serialVersionUID = -4663938706290521594L;
 
@@ -355,7 +355,7 @@ public class ProjectMiraTemplatePanel
         {
             super(id);
             add(freeTrainDocumentsPanel = new ProjectTrainingDocumentsPanel(
-                    "freeTrainDocumentsPanel", selectedProjectModel, otherFeatureModel)
+                    "freeTrainDocumentsPanel", selectedProjectModel, true, otherFeatureModel)
             {
                 private static final long serialVersionUID = -4663938706290521594L;
 

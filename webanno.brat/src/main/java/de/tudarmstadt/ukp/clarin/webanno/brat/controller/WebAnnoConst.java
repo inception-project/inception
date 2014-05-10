@@ -55,6 +55,8 @@ public class WebAnnoConst
 
     public static final String COREFERENCE_RELATION_FEATURE = "referenceRelation";
     public static final String COREFERENCE_TYPE_FEATURE = "referenceType";
+    
+    public static final String TAB_SEP ="TAB-SEP";
 
 
 

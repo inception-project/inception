@@ -22,6 +22,7 @@ import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -40,6 +41,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -74,15 +76,21 @@ public class ProjectTrainingDocumentsPanel
     private DropDownChoice<String> readableFormatsChoice;
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public ProjectTrainingDocumentsPanel(String id, Model<Project> aProjectModel,
+    public ProjectTrainingDocumentsPanel(String id, Model<Project> aProjectModel, final boolean aFreeDocument,
             Model<AnnotationFeature> afeatureModel)
     {
         super(id);
         this.selectedProjectModel = aProjectModel;
         feature = afeatureModel.getObject();
         try {
+        	if(aFreeDocument){
+        		readableFormats = new ArrayList<String>(Arrays.asList(new String[]{WebAnnoConst.TAB_SEP}));
+                selectedFormat = WebAnnoConst.TAB_SEP;
+        	}
+        	else{
             readableFormats = new ArrayList<String>(repository.getReadableFormatLabels());
             selectedFormat = readableFormats.get(0);
+        	}
         }
         catch (IOException e) {
             error("Properties file not found or key not int the properties file " + ":"
@@ -95,7 +103,15 @@ public class ProjectTrainingDocumentsPanel
         add(fileUpload = new FileUploadField("content", new Model()));
 
         add(readableFormatsChoice = new DropDownChoice<String>("readableFormats", new Model(
-                selectedFormat), readableFormats));
+                selectedFormat), readableFormats){
+
+					private static final long serialVersionUID = 2476274669926250023L;
+
+			@Override
+        	public boolean isEnabled(){
+        		return !aFreeDocument;
+        	}
+        });
 
         add(new Button("import", new ResourceModel("label"))
         {
