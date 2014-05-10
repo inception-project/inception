@@ -190,7 +190,7 @@ public class ProjectMiraTemplatePanel
                         public Object getDisplayValue(AnnotationFeature aObject)
                         {
                             return "[ " + aObject.getLayer().getUiName() + "] "
-                                    + aObject.getUiName();
+                                    + (aObject.getTagset()!=null?aObject.getTagset().getName():aObject.getUiName());
                         }
                     });
                     setNullValid(false);
@@ -285,7 +285,14 @@ public class ProjectMiraTemplatePanel
         public TargetLayerPanel(String id)
         {
             super(id);
-            add(miraTemplateDetailForm = new MiraTemplateDetailForm("miraTemplateDetailForm"));
+            add(miraTemplateDetailForm = new MiraTemplateDetailForm("miraTemplateDetailForm"){
+				private static final long serialVersionUID = 1885112841649058536L;
+
+				@Override
+				public boolean isVisible(){
+            		return selectedFeature != null;
+            	}
+            });
             miraTemplateDetailForm.setModelObject(templaet);
 
             add(targetLayerTarinDocumentsPanel = new ProjectTrainingDocumentsPanel(
@@ -460,7 +467,7 @@ public class ProjectMiraTemplatePanel
                         public Object getDisplayValue(AnnotationFeature aObject)
                         {
                             return "[ " + aObject.getLayer().getUiName() + "] "
-                                    + aObject.getUiName();
+                                    + (aObject.getTagset()!=null?aObject.getTagset().getName():aObject.getUiName());
                         }
                     });
                 }
@@ -505,7 +512,7 @@ public class ProjectMiraTemplatePanel
                         public Object getDisplayValue(AnnotationFeature aObject)
                         {
                             return "[ " + aObject.getLayer().getUiName() + "] "
-                                    + aObject.getUiName();
+                                    + (aObject.getTagset()!=null?aObject.getTagset().getName():aObject.getUiName());
                         }
                     });
                     setNullValid(false);
