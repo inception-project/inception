@@ -58,7 +58,7 @@ public class MiraTemplate
     private boolean suffix4 = true;
 
     private int ngram = 3;
-    private int bigram;
+    private int bigram = 2;
 
     private boolean automationStarted = false;
     /**

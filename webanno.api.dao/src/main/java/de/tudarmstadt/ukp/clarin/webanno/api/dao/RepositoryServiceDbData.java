@@ -255,6 +255,14 @@ public class RepositoryServiceDbData
         FileUtils.forceMkdir(annotationFolder);
         return annotationFolder;
     }
+    @Override
+    public
+    File getDocumentFolder(SourceDocument aDocument) throws IOException{
+    	File sourceDocFolder = new File(dir, PROJECT + aDocument.getProject().getId() + DOCUMENT
+                + aDocument.getId() + SOURCE);
+        FileUtils.forceMkdir(sourceDocFolder);
+        return sourceDocFolder;
+    }
 
     @Override
     @Transactional
@@ -1081,11 +1089,36 @@ public class RepositoryServiceDbData
     @Transactional(noRollbackFor = NoResultException.class)
     public List<SourceDocument> listSourceDocuments(Project aProject)
     {
-        return entityManager
+    	List<SourceDocument> sourceDocuments = entityManager
                 .createQuery("FROM SourceDocument where project =:project", SourceDocument.class)
                 .setParameter("project", aProject).getResultList();
+    	List<SourceDocument> tabSepDocuments = new ArrayList<SourceDocument>();
+    	for (SourceDocument sourceDocument : sourceDocuments) {
+			if(sourceDocument.getFormat().equals(WebAnnoConst.TAB_SEP)){
+				tabSepDocuments.add(sourceDocument);
+			}
+		}
+    	sourceDocuments.removeAll(tabSepDocuments);
+        return sourceDocuments;
     }
 
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public List<SourceDocument> listTabSepDocuments(Project aProject)
+    {
+    	List<SourceDocument> sourceDocuments = entityManager
+                .createQuery("FROM SourceDocument where project =:project", SourceDocument.class)
+                .setParameter("project", aProject).getResultList();
+    	List<SourceDocument> tabSepDocuments = new ArrayList<SourceDocument>();
+    	for (SourceDocument sourceDocument : sourceDocuments) {
+			if(sourceDocument.getFormat().equals(WebAnnoConst.TAB_SEP)){
+				tabSepDocuments.add(sourceDocument);
+			}
+		}
+        return tabSepDocuments;
+    }
+
+    
     @Override
     @Transactional
     public List<User> listUsers()
@@ -2066,9 +2099,12 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public File getMiraModel(AnnotationFeature aFeature, boolean aOtherLayer)
+    public File getMiraModel(AnnotationFeature aFeature, boolean aOtherLayer, SourceDocument aDocument)
     {
-        if (aOtherLayer) {
+    	if(aDocument !=null){
+    	  return new File(getMiraDir(aFeature), aDocument.getId() + "- " +aDocument.getProject().getId()+ "-model");
+    	}
+    	else if (aOtherLayer) {
             return new File(getMiraDir(aFeature), aFeature.getId() + "-model");
         }
         else {

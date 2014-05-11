@@ -80,78 +80,6 @@ public class WelcomePage
         User user = null;
         try{
          user = repository.getUser(username);
-
-         // Update old annotation layers
-
-       /*  List<TagSet> tagSets = annotationService.listTagSets();
-         for (TagSet tagSet : tagSets) {
-             AnnotationType type = tagSet.getLayer();
-             if (type.getProject() == null) {
-                 type.setProject(tagSet.getProject());
-                 type.setBuiltIn(true);
-                 if (type.getName().equals(AnnotationTypeConstant.POS)) {
-                     type.setUiName(type.getName());
-                     type.setName(POS.class.getName());
-                 }
-                 else if (type.getName().equals(AnnotationTypeConstant.NAMEDENTITY)) {
-                     type.setUiName(type.getName());
-                     type.setName(NamedEntity.class.getName());
-                 }
-                 else if (type.getName().equals(AnnotationTypeConstant.LEMMA)) {
-                     type.setUiName(type.getName());
-                     type.setName(Lemma.class.getName());
-                 }
-                 else if (type.getName().equals(AnnotationTypeConstant.DEPENDENCY)) {
-                     type.setUiName(type.getName());
-                     type.setName(Dependency.class.getName());
-                 }
-                 else if (type.getName().equals(AnnotationTypeConstant.COREFERENCE)) {
-                     type.setUiName(type.getName());
-                     type.setName(CoreferenceChain.class.getName());
-                 }
-                 else if (type.getName().equals(AnnotationTypeConstant.COREFRELTYPE)) {
-                     type.setUiName(type.getName());
-                     type.setName(CoreferenceLink.class.getName());
-                 }
-             }
-             else if (type.getProject() != tagSet.getProject()) {
-
-                 AnnotationType newType = new AnnotationType();
-                 newType.setType(type.getType());
-                 newType.setUiName(type.getUiName());
-                 newType.setProject(tagSet.getProject());
-                 newType.setBuiltIn(true);
-                 if (type.getName().equals(AnnotationTypeConstant.POS)) {
-                     newType.setName(POS.class.getName());
-                 }
-                 else if (type.getName().equals(AnnotationTypeConstant.NAMEDENTITY)) {
-                     newType.setName(NamedEntity.class.getName());
-                 }
-                 else if (type.getName().equals(AnnotationTypeConstant.LEMMA)) {
-                     newType.setName(Lemma.class.getName());
-                 }
-                 else if (type.getName().equals(AnnotationTypeConstant.DEPENDENCY)) {
-                     newType.setName(Dependency.class.getName());
-                 }
-                 else if (type.getName().equals(AnnotationTypeConstant.COREFERENCE)) {
-                     newType.setName(CoreferenceChain.class.getName());
-                 }
-                 else if (type.getName().equals(AnnotationTypeConstant.COREFRELTYPE)) {
-                     newType.setName(CoreferenceLink.class.getName());
-                 }
-                 else{// name already standardized as de.....Lemma,...
-                     newType.setName(type.getName());
-                 }
-                 try {
-                     annotationService.createType(newType, user);
-                     tagSet.setLayer(newType);
-                     annotationService.createTagSet(tagSet, user);
-                 }
-                 catch (IOException e) {
-                     error("unable to write log files");
-                 }
-             }
-         }*/
         }
         // redirect to login page (if no usr is found, admin/admin will be created)
         catch (NoResultException e){
@@ -264,6 +192,10 @@ public class WelcomePage
             @Override
             public void onClick(AjaxRequestTarget target)
             {
+            	if(repository.listProjects().size() ==0){
+            		error("No project is created yet.");
+            		return;
+            	}
                 setResponsePage(MonitoringPage.class);
             }
         };

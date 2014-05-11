@@ -48,6 +48,7 @@ import com.googlecode.wicket.jquery.ui.form.button.IndicatingAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.automation.util.AutomationException;
 import de.tudarmstadt.ukp.clarin.webanno.automation.util.AutomationUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
@@ -63,624 +64,626 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
- * A Panel used to define automation properties for the {@link MIRA} machine learning algorithm
- *
+ * A Panel used to define automation properties for the {@link MIRA} machine
+ * learning algorithm
+ * 
  * @author Seid Muhie Yimam
- *
+ * 
  */
-public class ProjectMiraTemplatePanel
-    extends Panel
-{
-    private static final long serialVersionUID = 2116717853865353733L;
+public class ProjectMiraTemplatePanel extends Panel {
+	private static final long serialVersionUID = 2116717853865353733L;
 
-    @SpringBean(name = "annotationService")
-    private AnnotationService annotationService;
+	@SpringBean(name = "annotationService")
+	private AnnotationService annotationService;
 
-    @SpringBean(name = "documentRepository")
-    private RepositoryService repository;
+	@SpringBean(name = "documentRepository")
+	private RepositoryService repository;
 
-    @SpringBean(name = "userRepository")
-    private UserDao userRepository;
+	@SpringBean(name = "userRepository")
+	private UserDao userRepository;
 
-    private MiraTrainLayerSelectionForm miraTrainLayerSelectionForm;
-    private MiraTemplateDetailForm miraTemplateDetailForm;
-    private OtherLayerDeatilForm otherLayerDetailForm;
-    private ProjectTrainingDocumentsPanel targetLayerTarinDocumentsPanel;
-    private ProjectTrainingDocumentsPanel otherLayerTarinDocumentsPanel;
-    private ProjectTrainingDocumentsPanel freeTrainDocumentsPanel;
-    private TargetLaerDetailForm targetLayerDetailForm;
+	private MiraTrainLayerSelectionForm miraTrainLayerSelectionForm;
+	private MiraTemplateDetailForm miraTemplateDetailForm;
+	private OtherLayerDeatilForm otherLayerDetailForm;
+	private ProjectTrainingDocumentsPanel targetLayerTarinDocumentsPanel;
+	private ProjectTrainingDocumentsPanel otherLayerTarinDocumentsPanel;
+	private ProjectTrainingDocumentsPanel freeTrainDocumentsPanel;
+	private TargetLaerDetailForm targetLayerDetailForm;
 
-    private final Model<Project> selectedProjectModel;
+	private final Model<Project> selectedProjectModel;
 
-    private Model<AnnotationFeature> featureModel = new Model<AnnotationFeature>();
-    private Model<AnnotationFeature> otherFeatureModel = new Model<AnnotationFeature>();
+	private Model<AnnotationFeature> featureModel = new Model<AnnotationFeature>();
 
-    private AnnotationFeature selectedFeature;
-    private MiraTemplate templaet = new MiraTemplate();
+	private AnnotationFeature selectedFeature;
+	private AnnotationFeature otherSelectedFeature = new AnnotationFeature();
+	private MiraTemplate template = new MiraTemplate();
 
-    @SuppressWarnings("unused")
-    private final ApplyForm applyForm;
-    private DropDownChoice<AnnotationFeature> features;
-    private DropDownChoice<AnnotationFeature> otherFeatures;
+	@SuppressWarnings("unused")
+	private final ApplyForm applyForm;
+	private DropDownChoice<AnnotationFeature> features;
+	private DropDownChoice<AnnotationFeature> otherFeatures;
 
-    public ProjectMiraTemplatePanel(String id, final Model<Project> aProjectModel)
-    {
-        super(id);
-        this.selectedProjectModel = aProjectModel;
-        for (MiraTemplate template : repository.listMiraTemplates(selectedProjectModel.getObject())) {
-            if (template.isCurrentLayer()) {
-                this.templaet = template;
-                selectedFeature = template.getTrainFeature();
-                break;
-            }
-        }
-        featureModel.setObject(selectedFeature);
-        miraTrainLayerSelectionForm = new MiraTrainLayerSelectionForm("miraTrainLayerSelectionForm");
-        add(miraTrainLayerSelectionForm);
+	public ProjectMiraTemplatePanel(String id,
+			final Model<Project> aProjectModel) {
+		super(id);
+		this.selectedProjectModel = aProjectModel;
+		for (MiraTemplate template : repository
+				.listMiraTemplates(selectedProjectModel.getObject())) {
+			if (template.isCurrentLayer()) {
+				this.template = template;
+				selectedFeature = template.getTrainFeature();
+				break;
+			}
+		}
+		featureModel.setObject(selectedFeature);
+		miraTrainLayerSelectionForm = new MiraTrainLayerSelectionForm(
+				"miraTrainLayerSelectionForm");
+		add(miraTrainLayerSelectionForm);
 
-        targetLayerDetailForm = new TargetLaerDetailForm("targetLayerDetailForm");
-        targetLayerDetailForm.setOutputMarkupPlaceholderTag(true);
-        add(targetLayerDetailForm);
+		updateForm();
 
-        add(applyForm = new ApplyForm("applyForm")
-        {
-            private static final long serialVersionUID = 3866085992209480718L;
+		add(applyForm = new ApplyForm("applyForm") {
+			private static final long serialVersionUID = 3866085992209480718L;
 
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                if (templaet.getId() == 0) {
-                    this.setVisible(false);
-                }
-                else {
-                    this.setVisible(true);
-                }
-            }
-        });
+			@Override
+			protected void onConfigure() {
+				super.onConfigure();
+				if (template.getId() == 0) {
+					this.setVisible(false);
+				} else {
+					this.setVisible(true);
+				}
+			}
+		});
 
-    }
+	}
 
-    private class MiraTrainLayerSelectionForm
-        extends Form<SelectionModel>
-    {
-        private static final long serialVersionUID = -1528847861284911270L;
+	private void updateForm() {
+		if (targetLayerDetailForm != null)
+			targetLayerDetailForm.remove();
+		targetLayerDetailForm = new TargetLaerDetailForm(
+				"targetLayerDetailForm");
+		targetLayerDetailForm.setOutputMarkupPlaceholderTag(true);
+		add(targetLayerDetailForm);
+	}
 
-        public MiraTrainLayerSelectionForm(String id)
-        {
-            super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
-            final Project project = selectedProjectModel.getObject();
+	private class MiraTrainLayerSelectionForm extends Form<SelectionModel> {
+		private static final long serialVersionUID = -1528847861284911270L;
 
-            add(features = new DropDownChoice<AnnotationFeature>("features")
-            {
-                private static final long serialVersionUID = 1L;
+		public MiraTrainLayerSelectionForm(String id) {
+			super(id, new CompoundPropertyModel<SelectionModel>(
+					new SelectionModel()));
+			final Project project = selectedProjectModel.getObject();
 
-                {
-                    setChoices(new LoadableDetachableModel<List<AnnotationFeature>>()
-                    {
-                        private static final long serialVersionUID = 1L;
+			add(features = new DropDownChoice<AnnotationFeature>("features") {
+				private static final long serialVersionUID = 1L;
 
-                        @Override
-                        protected List<AnnotationFeature> load()
-                        {
-                            List<AnnotationFeature> allFeatures = annotationService
-                                    .listAnnotationFeature(project);
-                            List<AnnotationFeature> spanFeatures = new ArrayList<AnnotationFeature>();
+				{
+					setChoices(new LoadableDetachableModel<List<AnnotationFeature>>() {
+						private static final long serialVersionUID = 1L;
 
-                            for (AnnotationFeature feature : allFeatures) {
-                                if (!feature.getLayer().isEnabled()
-                                        || feature.getLayer().getName()
-                                                .equals(Token.class.getName())
-                                        || feature.getLayer().getName()
-                                                .equals(Lemma.class.getName())) {
-                                    continue;
-                                }
-                                if (feature.getLayer().getType().equals(WebAnnoConst.SPAN_TYPE)) {
-                                    spanFeatures.add(feature);
-                                }
-                            }
-                            return spanFeatures;
-                        }
-                    });
-                    setChoiceRenderer(new ChoiceRenderer<AnnotationFeature>()
-                    {
-                        private static final long serialVersionUID = -2000622431037285685L;
+						@Override
+						protected List<AnnotationFeature> load() {
+							List<AnnotationFeature> allFeatures = annotationService
+									.listAnnotationFeature(project);
+							List<AnnotationFeature> spanFeatures = new ArrayList<AnnotationFeature>();
 
-                        @Override
-                        public Object getDisplayValue(AnnotationFeature aObject)
-                        {
-                            return "[ " + aObject.getLayer().getUiName() + "] "
-                                    + (aObject.getTagset()!=null?aObject.getTagset().getName():aObject.getUiName());
-                        }
-                    });
-                    setNullValid(false);
-                }
+							for (AnnotationFeature feature : allFeatures) {
+								if (!feature.getLayer().isEnabled()
+										|| feature.getLayer().getName()
+												.equals(Token.class.getName())
+										|| feature.getLayer().getName()
+												.equals(Lemma.class.getName())) {
+									continue;
+								}
+								if (feature.getLayer().getType()
+										.equals(WebAnnoConst.SPAN_TYPE)) {
+									spanFeatures.add(feature);
+								}
+							}
+							return spanFeatures;
+						}
+					});
+					setChoiceRenderer(new ChoiceRenderer<AnnotationFeature>() {
+						private static final long serialVersionUID = -2000622431037285685L;
 
-                @Override
-                public void onSelectionChanged(AnnotationFeature aNewSelection)
-                {
-                    selectedFeature = (AnnotationFeature) aNewSelection;
-                    if (repository.existsMiraTemplate(selectedFeature)) {
-                        templaet = repository.getMiraTemplate(selectedFeature);
-                    }
-                    else {
-                        templaet = new MiraTemplate();
-                        templaet.setTrainFeature((AnnotationFeature) aNewSelection);
-                    }
-                    featureModel.setObject(selectedFeature);
-                    otherFeatureModel = new Model<AnnotationFeature>();
-                    miraTemplateDetailForm.setModelObject(templaet);
-                    /*
-                     * // Since the automation layer is changed, all non-training document should be
-                     * // re-annotated for (SourceDocument sd :
-                     * repository.listSourceDocuments(project)) { if (!sd.isTrainingDocument()) {
-                     * sd.setProcessed(false); } }
-                     */
-                }
+						@Override
+						public Object getDisplayValue(AnnotationFeature aObject) {
+							return "[ "
+									+ aObject.getLayer().getUiName()
+									+ "] "
+									+ (aObject.getTagset() != null ? aObject
+											.getTagset().getName() : aObject
+											.getUiName());
+						}
+					});
+					setNullValid(false);
+				}
 
-                @Override
-                protected boolean wantOnSelectionChangedNotifications()
-                {
-                    return true;
-                }
-            }).setOutputMarkupId(true);
-            features.setModelObject(selectedFeature);
-        }
+				@Override
+				public void onSelectionChanged(AnnotationFeature aNewSelection) {
+					selectedFeature = (AnnotationFeature) aNewSelection;
+					if (repository.existsMiraTemplate(selectedFeature)) {
+						template = repository.getMiraTemplate(selectedFeature);
+					} else {
+						template = new MiraTemplate();
+						template.setTrainFeature((AnnotationFeature) aNewSelection);
+					}
+					featureModel.setObject(selectedFeature);
+					miraTemplateDetailForm.setModelObject(template);
+				}
 
-    }
+				@Override
+				protected boolean wantOnSelectionChangedNotifications() {
+					return true;
+				}
+			}).setOutputMarkupId(true);
+			features.setModelObject(selectedFeature);
+		}
 
-    public class TargetLaerDetailForm
-        extends Form<MiraTemplate>
-    {
-        private static final long serialVersionUID = -4655869081345550397L;
+	}
 
-        public TargetLaerDetailForm(String id)
-        {
-            super(id, new CompoundPropertyModel<MiraTemplate>(new EntityModel<MiraTemplate>(
-                    new MiraTemplate())));
+	public class TargetLaerDetailForm extends Form<MiraTemplate> {
+		private static final long serialVersionUID = -4655869081345550397L;
+		@SuppressWarnings("rawtypes")
+		private AjaxTabbedPanel autoTabs;
 
-            List<ITab> tabs = new ArrayList<ITab>();
-            tabs.add(new AbstractTab(new Model<String>("Target layer"))
-            {
-                private static final long serialVersionUID = 6703144434578403272L;
+		public TargetLaerDetailForm(String id) {
+			super(id, new CompoundPropertyModel<MiraTemplate>(
+					new EntityModel<MiraTemplate>(new MiraTemplate())));
 
-                @Override
-                public Panel getPanel(String panelId)
-                {
-                    return new TargetLayerPanel(panelId);
-                }
-            });
+			List<ITab> tabs = new ArrayList<ITab>();
+			tabs.add(new AbstractTab(new Model<String>("Target layer")) {
+				private static final long serialVersionUID = 6703144434578403272L;
 
-            tabs.add(new AbstractTab(new Model<String>("Add other"))
-            {
-                private static final long serialVersionUID = 6703144434578403272L;
+				@Override
+				public Panel getPanel(String panelId) {
+					return new TargetLayerPanel(panelId);
+				}
+			});
 
-                @Override
-                public Panel getPanel(String panelId)
-                {
-                    return new OtherLayerPanel(panelId);
-                }
-            });
+			tabs.add(new AbstractTab(new Model<String>("Add other")) {
+				private static final long serialVersionUID = 6703144434578403272L;
 
-            tabs.add(new AbstractTab(new Model<String>("TAB-SEP documents"))
-            {
-                private static final long serialVersionUID = 6703144434578403272L;
+				@Override
+				public Panel getPanel(String panelId) {
+					return new OtherLayerPanel(panelId);
+				}
+			});
 
-                @Override
-                public Panel getPanel(String panelId)
-                {
-                    return new FreeDocumentsPanel(panelId);
-                }
-            });
+			tabs.add(new AbstractTab(new Model<String>("TAB-SEP documents")) {
+				private static final long serialVersionUID = 6703144434578403272L;
 
-            add(new AjaxTabbedPanel<ITab>("autoTabs", tabs).setOutputMarkupPlaceholderTag(true));
-        }
-    }
+				@Override
+				public Panel getPanel(String panelId) {
+					return new FreeDocumentsPanel(panelId);
+				}
+			});
 
-    private class TargetLayerPanel
-        extends Panel
-    {
-        private static final long serialVersionUID = 7336140137139501974L;
+			add(autoTabs = (AjaxTabbedPanel) new AjaxTabbedPanel<ITab>(
+					"autoTabs", tabs).setOutputMarkupPlaceholderTag(true));
+		}
+	}
 
-        public TargetLayerPanel(String id)
-        {
-            super(id);
-            add(miraTemplateDetailForm = new MiraTemplateDetailForm("miraTemplateDetailForm"){
+	private class TargetLayerPanel extends Panel {
+		private static final long serialVersionUID = 7336140137139501974L;
+
+		public TargetLayerPanel(String id) {
+			super(id);
+			add(miraTemplateDetailForm = new MiraTemplateDetailForm(
+					"miraTemplateDetailForm") {
 				private static final long serialVersionUID = 1885112841649058536L;
 
 				@Override
-				public boolean isVisible(){
-            		return selectedFeature != null;
-            	}
-            });
-            miraTemplateDetailForm.setModelObject(templaet);
+				public boolean isVisible() {
+					return selectedFeature != null;
+				}
+			});
+			miraTemplateDetailForm.setModelObject(template);
 
-            add(targetLayerTarinDocumentsPanel = new ProjectTrainingDocumentsPanel(
-                    "targetLayerTarinDocumentsPanel", selectedProjectModel,false, featureModel)
-            {
+			add(targetLayerTarinDocumentsPanel = new ProjectTrainingDocumentsPanel(
+					"targetLayerTarinDocumentsPanel", selectedProjectModel,
+					false, featureModel) {
 
-                private static final long serialVersionUID = 7698999083009818310L;
+				private static final long serialVersionUID = 7698999083009818310L;
 
-                @Override
-                public boolean isVisible()
-                {
-                    return miraTemplateDetailForm.getModelObject().getId() != 0;
-                }
-            });
-            targetLayerTarinDocumentsPanel.setOutputMarkupPlaceholderTag(true);
-        }
-    }
+				@Override
+				public boolean isVisible() {
+					return miraTemplateDetailForm.getModelObject().getId() != 0;
+				}
+			});
+			targetLayerTarinDocumentsPanel.setOutputMarkupPlaceholderTag(true);
+		}
+	}
 
-    private class OtherLayerPanel
-        extends Panel
-    {
-        private static final long serialVersionUID = -3649285837217362203L;
+	private class OtherLayerPanel extends Panel {
+		private static final long serialVersionUID = -3649285837217362203L;
 
-        public OtherLayerPanel(String id)
-        {
-            super(id);
-            add(otherLayerDetailForm = new OtherLayerDeatilForm("otherLayerDetailForm")
-            {
-                private static final long serialVersionUID = 3192960675893574547L;
+		public OtherLayerPanel(String id) {
+			super(id);
+			add(otherLayerDetailForm = new OtherLayerDeatilForm(
+					"otherLayerDetailForm") {
+				private static final long serialVersionUID = 3192960675893574547L;
 
-                @Override
-                public boolean isVisible()
-                {
-                    return miraTemplateDetailForm.getModelObject().getId() != 0
-                            && selectedFeature != null;
-                }
-            });
+				@Override
+				public boolean isVisible() {
+					return miraTemplateDetailForm.getModelObject().getId() != 0
+							&& selectedFeature != null;
+				}
+			});
+			SelectionModel selectedOtherModel = new SelectionModel();
+			selectedOtherModel.selectedFeatures = otherSelectedFeature;
+			selectedOtherModel.features = null;
+			otherLayerDetailForm.setModelObject(selectedOtherModel);
 
-            add(otherLayerTarinDocumentsPanel = new ProjectTrainingDocumentsPanel(
-                    "otherLayerTarinDocumentsPanel", selectedProjectModel, false, otherFeatureModel)
-            {
-                private static final long serialVersionUID = -4663938706290521594L;
+			add(otherLayerTarinDocumentsPanel = new ProjectTrainingDocumentsPanel(
+					"otherLayerTarinDocumentsPanel",
+					selectedProjectModel,
+					false,
+					Model.of(otherLayerDetailForm.getModelObject().selectedFeatures)) {
+				private static final long serialVersionUID = -4663938706290521594L;
 
-                @Override
-                public boolean isVisible()
-                {
-                    return otherFeatureModel.getObject() != null;
-                }
-            });
-            otherLayerTarinDocumentsPanel.setOutputMarkupPlaceholderTag(true);
-        }
-    }
+				@Override
+				public boolean isVisible() {
+					return otherLayerDetailForm.getModelObject().selectedFeatures
+							.getId() != 0;
+				}
+			});
+			otherLayerTarinDocumentsPanel.setOutputMarkupPlaceholderTag(true);
+		}
+	}
 
-    private class FreeDocumentsPanel
-        extends Panel
-    {
-        private static final long serialVersionUID = -9173687919199803381L;
+	private class FreeDocumentsPanel extends Panel {
+		private static final long serialVersionUID = -9173687919199803381L;
 
-        public FreeDocumentsPanel(String id)
-        {
-            super(id);
-            add(freeTrainDocumentsPanel = new ProjectTrainingDocumentsPanel(
-                    "freeTrainDocumentsPanel", selectedProjectModel, true, featureModel)
-            {
-                private static final long serialVersionUID = -4663938706290521594L;
+		public FreeDocumentsPanel(String id) {
+			super(id);
+			add(freeTrainDocumentsPanel = new ProjectTrainingDocumentsPanel(
+					"freeTrainDocumentsPanel", selectedProjectModel, true,
+					featureModel) {
+				private static final long serialVersionUID = -4663938706290521594L;
 
-                @Override
-                public boolean isVisible()
-                {
-                    return miraTemplateDetailForm.getModelObject().getId() != 0
-                            && selectedFeature != null;
-                }
-            });
-            freeTrainDocumentsPanel.setOutputMarkupPlaceholderTag(true);
-        }
-    }
+				@Override
+				public boolean isVisible() {
+					return miraTemplateDetailForm.getModelObject().getId() != 0
+							&& selectedFeature != null;
+				}
+			});
+			freeTrainDocumentsPanel.setOutputMarkupPlaceholderTag(true);
+		}
+	}
 
-    private class MiraTemplateDetailForm
-        extends Form<MiraTemplate>
-    {
-        private static final long serialVersionUID = -683824912741426241L;
+	private class MiraTemplateDetailForm extends Form<MiraTemplate> {
+		private static final long serialVersionUID = -683824912741426241L;
 
-        public MiraTemplateDetailForm(String id)
-        {
-            super(id, new CompoundPropertyModel<MiraTemplate>(new EntityModel<MiraTemplate>(
-                    new MiraTemplate())));
+		public MiraTemplateDetailForm(String id) {
+			super(id, new CompoundPropertyModel<MiraTemplate>(
+					new EntityModel<MiraTemplate>(new MiraTemplate())));
 
-            add(new CheckBox("annotateAndPredict"));
+			add(new CheckBox("annotateAndPredict"));
 
-            add(new Button("save", new ResourceModel("label"))
-            {
-                private static final long serialVersionUID = 1L;
+			add(new Button("save", new ResourceModel("label")) {
+				private static final long serialVersionUID = 1L;
 
-                @Override
-                public void onSubmit()
-                {
-                    templaet = MiraTemplateDetailForm.this.getModelObject();
-                    if (templaet.getId() == 0) {
-                        templaet.setTrainFeature(selectedFeature);
-                        repository.createTemplate(templaet);
-                        featureModel.setObject(MiraTemplateDetailForm.this.getModelObject()
-                                .getTrainFeature());
-                    }
-                    templaet.setCurrentLayer(true);
-                    for (MiraTemplate template : repository.listMiraTemplates(selectedProjectModel
-                            .getObject())) {
-                        if (template.equals(templaet)) {
-                            continue;
-                        }
-                        if (template.isCurrentLayer()) {
-                            template.setCurrentLayer(false);
-                        }
-                    }
-                }
-            });
-        }
-    }
+				@Override
+				public void onSubmit() {
+					template = MiraTemplateDetailForm.this.getModelObject();
+					if (template.getId() == 0) {
 
-    /**
-     * {@link AnnotationFeature} used as a feature for the current training layer
-     *
-     */
-    private class OtherLayerDeatilForm
-        extends Form<SelectionModel>
-    {
-        private static final long serialVersionUID = -683824912741426241L;
+						// Since the layer is changed, new classifier is needed
+						for (SourceDocument sd : repository
+								.listSourceDocuments(selectedProjectModel
+										.getObject())) {
+							sd.setProcessed(false);
+						}
+						template.setTrainFeature(selectedFeature);
+						repository.createTemplate(template);
+						featureModel.setObject(MiraTemplateDetailForm.this
+								.getModelObject().getTrainFeature());
+					}
+					template.setCurrentLayer(true);
+					for (MiraTemplate tmp : repository
+							.listMiraTemplates(selectedProjectModel.getObject())) {
+						if (tmp.equals(template)) {
+							continue;
+						}
+						if (tmp.isCurrentLayer()) {
+							tmp.setCurrentLayer(false);
+						}
+					}
+				}
+			});
+		}
+	}
 
-        public OtherLayerDeatilForm(String id)
-        {
-            super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
+	/**
+	 * {@link AnnotationFeature} used as a feature for the current training
+	 * layer
+	 * 
+	 */
+	private class OtherLayerDeatilForm extends Form<SelectionModel> {
+		private static final long serialVersionUID = -683824912741426241L;
 
-            add(otherFeatures = new DropDownChoice<AnnotationFeature>("features")
-            {
-                private static final long serialVersionUID = -1923453084703805794L;
+		public OtherLayerDeatilForm(String id) {
+			super(id, new CompoundPropertyModel<SelectionModel>(
+					new SelectionModel()));
 
-                {
-                    setNullValid(false);
-                    setChoices(new LoadableDetachableModel<List<AnnotationFeature>>()
-                    {
-                        private static final long serialVersionUID = -6376636005341159307L;
+			add(otherFeatures = new DropDownChoice<AnnotationFeature>(
+					"features") {
+				private static final long serialVersionUID = -1923453084703805794L;
 
-                        @Override
-                        protected List<AnnotationFeature> load()
-                        {
-                            List<AnnotationFeature> features = annotationService
-                                    .listAnnotationFeature(selectedProjectModel.getObject());
-                            features.remove(miraTemplateDetailForm.getModelObject()
-                                    .getTrainFeature());
-                            features.removeAll(miraTemplateDetailForm.getModelObject()
-                                    .getOtherFeatures());
-                            for (AnnotationFeature feature : annotationService
-                                    .listAnnotationFeature(selectedProjectModel.getObject())) {
-                                if (!feature.getLayer().isEnabled()
-                                        || !feature.getLayer().getType()
-                                                .equals(WebAnnoConst.SPAN_TYPE)
-                                        || feature.getLayer().getName()
-                                                .equals(Lemma.class.getName())
-                                        || feature.getLayer().getName()
-                                                .equals(Token.class.getName())) {
-                                    features.remove(feature);
-                                }
-                            }
-                            return features;
-                        }
-                    });
+				{
+					setNullValid(false);
+					setChoices(new LoadableDetachableModel<List<AnnotationFeature>>() {
+						private static final long serialVersionUID = -6376636005341159307L;
 
-                    setChoiceRenderer(new ChoiceRenderer<AnnotationFeature>()
-                    {
-                        private static final long serialVersionUID = 4607720784161484145L;
+						@Override
+						protected List<AnnotationFeature> load() {
+							List<AnnotationFeature> features = annotationService
+									.listAnnotationFeature(selectedProjectModel
+											.getObject());
+							features.remove(miraTemplateDetailForm
+									.getModelObject().getTrainFeature());
+							features.removeAll(miraTemplateDetailForm
+									.getModelObject().getOtherFeatures());
+							for (AnnotationFeature feature : annotationService
+									.listAnnotationFeature(selectedProjectModel
+											.getObject())) {
+								if (!feature.getLayer().isEnabled()
+										|| !feature.getLayer().getType()
+												.equals(WebAnnoConst.SPAN_TYPE)
+										|| feature.getLayer().getName()
+												.equals(Lemma.class.getName())
+										|| feature.getLayer().getName()
+												.equals(Token.class.getName())) {
+									features.remove(feature);
+								}
+							}
+							return features;
+						}
+					});
 
-                        @Override
-                        public Object getDisplayValue(AnnotationFeature aObject)
-                        {
-                            return "[ " + aObject.getLayer().getUiName() + "] "
-                                    + (aObject.getTagset()!=null?aObject.getTagset().getName():aObject.getUiName());
-                        }
-                    });
-                }
+					setChoiceRenderer(new ChoiceRenderer<AnnotationFeature>() {
+						private static final long serialVersionUID = 4607720784161484145L;
 
-                @Override
-                protected void onSelectionChanged(AnnotationFeature aNewSelection)
-                {
-                    miraTemplateDetailForm.getModelObject().getOtherFeatures().add(aNewSelection);
-                }
+						@Override
+						public Object getDisplayValue(AnnotationFeature aObject) {
+							return "[ "
+									+ aObject.getLayer().getUiName()
+									+ "] "
+									+ (aObject.getTagset() != null ? aObject
+											.getTagset().getName() : aObject
+											.getUiName());
+						}
+					});
+				}
 
-                @Override
-                protected boolean wantOnSelectionChangedNotifications()
-                {
-                    return true;
-                }
-            });
-            otherFeatures.setModelObject(null);// always force to choose, even after selection of
-                                               // feature
+				@Override
+				protected void onSelectionChanged(
+						AnnotationFeature aNewSelection) {
+					miraTemplateDetailForm.getModelObject().getOtherFeatures()
+							.add(aNewSelection);
+					repository.createTemplate(miraTemplateDetailForm.getModelObject());
+				}
 
-            add(new ListChoice<AnnotationFeature>("selectedFeatures")
-            {
-                private static final long serialVersionUID = 1L;
+				@Override
+				protected boolean wantOnSelectionChangedNotifications() {
+					return true;
+				}
+			});
+			otherFeatures.setModelObject(null);// always force to choose, even
+												// after selection of
+												// feature
 
-                {
-                    setChoices(new LoadableDetachableModel<List<AnnotationFeature>>()
-                    {
-                        private static final long serialVersionUID = 1L;
+			add(new ListChoice<AnnotationFeature>("selectedFeatures") {
+				private static final long serialVersionUID = 1L;
 
-                        @Override
-                        protected List<AnnotationFeature> load()
-                        {
-                            return new ArrayList<AnnotationFeature>(miraTemplateDetailForm
-                                    .getModelObject().getOtherFeatures());
-                        }
-                    });
+				{
+					setChoices(new LoadableDetachableModel<List<AnnotationFeature>>() {
+						private static final long serialVersionUID = 1L;
 
-                    setChoiceRenderer(new ChoiceRenderer<AnnotationFeature>()
-                    {
-                        private static final long serialVersionUID = 4607720784161484145L;
+						@Override
+						protected List<AnnotationFeature> load() {
+							return new ArrayList<AnnotationFeature>(
+									miraTemplateDetailForm.getModelObject()
+											.getOtherFeatures());
+						}
+					});
 
-                        @Override
-                        public Object getDisplayValue(AnnotationFeature aObject)
-                        {
-                            return "[ " + aObject.getLayer().getUiName() + "] "
-                                    + (aObject.getTagset()!=null?aObject.getTagset().getName():aObject.getUiName());
-                        }
-                    });
-                    setNullValid(false);
-                }
+					setChoiceRenderer(new ChoiceRenderer<AnnotationFeature>() {
+						private static final long serialVersionUID = 4607720784161484145L;
 
-                @Override
-                protected void onSelectionChanged(AnnotationFeature aNewSelection)
-                {
-                    otherFeatureModel.setObject(aNewSelection);
-                    otherFeatures.setModelObject(null);// always force to choose, even after
-                                                       // selection of feature
-                }
+						@Override
+						public Object getDisplayValue(AnnotationFeature aObject) {
+							return "[ "
+									+ aObject.getLayer().getUiName()
+									+ "] "
+									+ (aObject.getTagset() != null ? aObject
+											.getTagset().getName() : aObject
+											.getUiName());
+						}
+					});
+					setNullValid(false);
+				}
 
-                @Override
-                protected boolean wantOnSelectionChangedNotifications()
-                {
-                    return true;
-                }
+				@Override
+				protected void onSelectionChanged(
+						AnnotationFeature aNewSelection) {
+					otherSelectedFeature = aNewSelection;
+					// always force to choose, even after selection of feature
+					otherFeatures.setModelObject(null);
+					updateForm();
+					targetLayerDetailForm.autoTabs.setSelectedTab(1);
+				}
 
-                @Override
-                protected CharSequence getDefaultChoice(String aSelectedValue)
-                {
-                    return "";
-                }
-            });
-        }
-    }
+				@Override
+				protected boolean wantOnSelectionChangedNotifications() {
+					return true;
+				}
 
-    @SuppressWarnings("rawtypes")
-    private class ApplyForm
-        extends Form
-    {
-        private static final long serialVersionUID = -683824912741426241L;
+				@Override
+				protected CharSequence getDefaultChoice(String aSelectedValue) {
+					return "";
+				}
+			});
+		}
+	}
 
-        public ApplyForm(String id)
-        {
-            super(id);
+	@SuppressWarnings("rawtypes")
+	private class ApplyForm extends Form {
+		private static final long serialVersionUID = -683824912741426241L;
 
-            add(new IndicatingAjaxButton("apply", new ResourceModel("label"))
-            {
+		public ApplyForm(String id) {
+			super(id);
 
-                private static final long serialVersionUID = 1L;
+			add(new IndicatingAjaxButton("apply", new ResourceModel("label")) {
 
-                @Override
-                protected void onSubmit(AjaxRequestTarget aTarget, Form<?> form)
-                {
-                    MiraTemplate template = miraTemplateDetailForm.getModelObject();
-                    AutomationStatus automationStatus = new AutomationStatus();
-                    try {
+				private static final long serialVersionUID = 1L;
 
-                        // no training document is added / no curation is done yet!
-                        boolean existsTrainDocument = false;
-                        for (SourceDocument document : repository
-                                .listSourceDocuments(selectedProjectModel.getObject())) {
-                            if (document.getState().equals(SourceDocumentState.CURATION_FINISHED)
-                                    || (document.isTrainingDocument() && template.getTrainFeature()
-                                            .equals(document.getFeature()))) {
-                                existsTrainDocument = true;
-                                break;
-                            }
-                        }
-                        if (!existsTrainDocument) {
-                            error("No training document exists to proceed.");
-                            return;
-                        }
-                        if (!template.isCurrentLayer()) {
-                            error("Please save automation layer details to proceed.");
-                            return;
-                        }
+				@Override
+				protected void onSubmit(AjaxRequestTarget aTarget, Form<?> form) {
+					MiraTemplate template = miraTemplateDetailForm
+							.getModelObject();
+					AutomationStatus automationStatus = new AutomationStatus();
+					try {
 
-                        // no need to re-train if no new document is added
-                        boolean existUnprocessedDocument = false;
-                        ;
-                        for (SourceDocument document : repository
-                                .listSourceDocuments(selectedProjectModel.getObject())) {
-                            if (!document.isProcessed()) {
-                                existUnprocessedDocument = true;
-                                break;
-                            }
-                        }
-                        if (!existUnprocessedDocument) {
-                            error("No new training/annotation document added.");
-                            return;
-                        }
+						// no training document is added / no curation is done
+						// yet!
+						boolean existsTrainDocument = false;
+						for (SourceDocument document : repository
+								.listSourceDocuments(selectedProjectModel
+										.getObject())) {
+							if (document.getState().equals(
+									SourceDocumentState.CURATION_FINISHED)
+									|| (document.isTrainingDocument() && template
+											.getTrainFeature().equals(
+													document.getFeature()))) {
+								existsTrainDocument = true;
+								break;
+							}
+						}
+						if (!existsTrainDocument) {
+							error("No training document exists to proceed.");
+							return;
+						}
+						if (!template.isCurrentLayer()) {
+							error("Please save automation layer details to proceed.");
+							return;
+						}
 
-                        int annodoc = 0, trainDoc = 0;
+						// no need to re-train if no new document is added
+						boolean existUnprocessedDocument = false;
+						;
+						for (SourceDocument document : repository
+								.listSourceDocuments(selectedProjectModel
+										.getObject())) {
+							if (!document.isProcessed()) {
+								existUnprocessedDocument = true;
+								break;
+							}
+						}
+						if (!existUnprocessedDocument) {
+							error("No new training/annotation document added.");
+							return;
+						}
 
-                        for (SourceDocument document : repository
-                                .listSourceDocuments(selectedProjectModel.getObject())) {
-                            if ((document.isTrainingDocument() || document.getState().equals(
-                                    SourceDocumentState.CURATION_FINISHED))
-                                    && !document.isProcessed()) {
-                                trainDoc++;
-                            }
-                            else if (!document.isTrainingDocument() && !document.isProcessed()) {
-                                annodoc++;
-                            }
-                        }
+						int annodoc = 0, trainDoc = 0;
 
-                        automationStatus = repository.existsAutomationStatus(template) ? repository
-                                .getAutomationStatus(template) : automationStatus;
-                        automationStatus.setStartime(new Timestamp(new Date().getTime()));
-                        automationStatus.setEndTime(new Timestamp(new Date().getTime()));
-                        automationStatus.setTrainDocs(trainDoc);
-                        automationStatus.setAnnoDocs(annodoc);
-                        automationStatus.setTotalDocs(annodoc + trainDoc);
-                        automationStatus.setTemplate(template);
+						for (SourceDocument document : repository
+								.listSourceDocuments(selectedProjectModel
+										.getObject())) {
+							if ((document.isTrainingDocument() || document
+									.getState()
+									.equals(SourceDocumentState.CURATION_FINISHED))
+									&& !document.isProcessed()) {
+								trainDoc++;
+							} else if (!document.isTrainingDocument()
+									&& !document.isProcessed()) {
+								annodoc++;
+							}
+						}
 
-                        repository.createAutomationStatus(automationStatus);
+						automationStatus = repository
+								.existsAutomationStatus(template) ? repository
+								.getAutomationStatus(template)
+								: automationStatus;
+						automationStatus.setStartime(new Timestamp(new Date()
+								.getTime()));
+						automationStatus.setEndTime(new Timestamp(new Date()
+								.getTime()));
+						automationStatus.setTrainDocs(trainDoc);
+						automationStatus.setAnnoDocs(annodoc);
+						automationStatus.setTotalDocs(annodoc + trainDoc);
+						automationStatus.setTemplate(template);
 
-                        template.setAutomationStarted(true);
+						repository.createAutomationStatus(automationStatus);
 
-                        automationStatus.setStatus(Status.GENERATE_TRAIN_DOC);
-                        AutomationUtil.addOtherFeatureTrainDocument(template, repository);
-                        AutomationUtil.otherFeatureClassifiers(template, repository);
+						template.setAutomationStarted(true);
 
-                        AutomationUtil.generateTrainDocument(template, repository, true);
-                        AutomationUtil.generatePredictDocument(template, repository);
+						automationStatus.setStatus(Status.GENERATE_TRAIN_DOC);
 
-                        automationStatus.setStatus(Status.GENERATE_CLASSIFIER);
-                        miraTemplateDetailForm.getModelObject().setResult(
-                                AutomationUtil.generateFinalClassifier(template, repository));
-                        AutomationUtil.addOtherFeatureToPredictDocument(template, repository);
+						AutomationUtil.addOtherFeatureTrainDocument(template,
+								repository);
+						AutomationUtil.otherFeatureClassifiers(template,
+								repository);
 
-                        automationStatus.setStatus(Status.PREDICTION);
-                        AutomationUtil.predict(template, repository);
-                        template.setAutomationStarted(false);
-                        repository.createTemplate(template);
-                        automationStatus.setStatus(Status.COMPLETED);
-                        automationStatus.setEndTime(new Timestamp(new Date().getTime()));
+						AutomationUtil.addTabSepTrainDocument(template,
+								repository);
+						AutomationUtil.tabSepClassifiers(template, repository);
 
-                    }
-                    catch (UIMAException e) {
-                        error(ExceptionUtils.getRootCause(e));
-                    }
-                    catch (ClassNotFoundException e) {
-                        error(e.getMessage());
-                    }
-                    catch (IOException e) {
-                        error(e.getMessage());
-                    }
-                    catch (BratAnnotationException e) {
-                        error(e.getMessage());
-                    }
-                    finally {
-                        automationStatus.setStatus(Status.COMPLETED);
-                        automationStatus.setEndTime(new Timestamp(new Date().getTime()));
-                        template.setAutomationStarted(false);
-                        repository.createTemplate(template);
-                    }
-                }
+						AutomationUtil.generateTrainDocument(template,
+								repository, true);
+						AutomationUtil.generatePredictDocument(template,
+								repository);
 
-                @Override
-                public boolean isEnabled()
-                {
-                    return miraTemplateDetailForm != null
-                            && !miraTemplateDetailForm.getModelObject().isAutomationStarted();
-                }
-            });
-        }
-    }
+						automationStatus.setStatus(Status.GENERATE_CLASSIFIER);
+						miraTemplateDetailForm.getModelObject().setResult(
+								AutomationUtil.generateFinalClassifier(
+										template, repository));
+						AutomationUtil.addOtherFeatureToPredictDocument(
+								template, repository);
 
-    public class SelectionModel
-        implements Serializable
-    {
-        private static final long serialVersionUID = -4905538356691404575L;
-        public AnnotationFeature features = new AnnotationFeature();
-        public AnnotationFeature selectedFeatures = new AnnotationFeature();
+						automationStatus.setStatus(Status.PREDICTION);
+						AutomationUtil.predict(template, repository);
+						template.setAutomationStarted(false);
+						repository.createTemplate(template);
+						automationStatus.setStatus(Status.COMPLETED);
+						automationStatus.setEndTime(new Timestamp(new Date()
+								.getTime()));
 
-    }
+					} catch (UIMAException e) {
+						error(ExceptionUtils.getRootCause(e));
+					} catch (ClassNotFoundException e) {
+						error(e.getMessage());
+					} catch (IOException e) {
+						error(e.getMessage());
+					} catch (BratAnnotationException e) {
+						error(e.getMessage());
+					} catch (AutomationException e) {
+						error(e.getMessage());
+					} finally {
+						automationStatus.setStatus(Status.COMPLETED);
+						automationStatus.setEndTime(new Timestamp(new Date()
+								.getTime()));
+						template.setAutomationStarted(false);
+						repository.createTemplate(template);
+					}
+				}
+
+				@Override
+				public boolean isEnabled() {
+					return miraTemplateDetailForm != null
+							&& !miraTemplateDetailForm.getModelObject()
+									.isAutomationStarted();
+				}
+			});
+		}
+	}
+
+	public class SelectionModel implements Serializable {
+		private static final long serialVersionUID = -4905538356691404575L;
+		public AnnotationFeature features = new AnnotationFeature();
+		public AnnotationFeature selectedFeatures = new AnnotationFeature();
+
+	}
 }
