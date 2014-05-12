@@ -1118,7 +1118,7 @@ public class RepositoryServiceDbData
         return tabSepDocuments;
     }
 
-    
+
     @Override
     @Transactional
     public List<User> listUsers()
@@ -1163,6 +1163,10 @@ public class RepositoryServiceDbData
             removeCrowdJob(crowdJob);
         }
         for (SourceDocument document : listSourceDocuments(aProject)) {
+            removeSourceDocument(document, aUser);
+        }
+
+        for (SourceDocument document : listTabSepDocuments(aProject)) {
             removeSourceDocument(document, aUser);
         }
 

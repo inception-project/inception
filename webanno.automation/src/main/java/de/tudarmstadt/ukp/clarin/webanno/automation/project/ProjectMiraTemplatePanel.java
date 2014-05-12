@@ -50,6 +50,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.automation.util.AutomationException;
 import de.tudarmstadt.ukp.clarin.webanno.automation.util.AutomationUtil;
+import de.tudarmstadt.ukp.clarin.webanno.automation.util.TabSepDocModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -258,7 +259,17 @@ public class ProjectMiraTemplatePanel
                 }
             });
 
-            tabs.add(new AbstractTab(new Model<String>("Add other"))
+            tabs.add(new AbstractTab(new Model<String>("TAB-SEP target"))
+            {
+                private static final long serialVersionUID = 6703144434578403272L;
+
+                @Override
+                public Panel getPanel(String panelId)
+                {
+                    return new FreeTabSepAsTargetDocumentsPanel(panelId);
+                }
+            });
+            tabs.add(new AbstractTab(new Model<String>("Other layers"))
             {
                 private static final long serialVersionUID = 6703144434578403272L;
 
@@ -269,14 +280,14 @@ public class ProjectMiraTemplatePanel
                 }
             });
 
-            tabs.add(new AbstractTab(new Model<String>("TAB-SEP documents"))
+            tabs.add(new AbstractTab(new Model<String>("TAB-SEP feature"))
             {
                 private static final long serialVersionUID = 6703144434578403272L;
 
                 @Override
                 public Panel getPanel(String panelId)
                 {
-                    return new FreeDocumentsPanel(panelId);
+                    return new FreeTabSepAsFeatureDocumentsPanel(panelId);
                 }
             });
 
@@ -306,7 +317,8 @@ public class ProjectMiraTemplatePanel
             miraTemplateDetailForm.setModelObject(template);
 
             add(targetLayerTarinDocumentsPanel = new ProjectTrainingDocumentsPanel(
-                    "targetLayerTarinDocumentsPanel", selectedProjectModel, false, featureModel)
+                    "targetLayerTarinDocumentsPanel", selectedProjectModel,
+                    new Model<TabSepDocModel>(new TabSepDocModel(false, false)), featureModel)
             {
 
                 private static final long serialVersionUID = 7698999083009818310L;
@@ -346,7 +358,8 @@ public class ProjectMiraTemplatePanel
             otherLayerDetailForm.setModelObject(selectedOtherModel);
 
             add(otherLayerTarinDocumentsPanel = new ProjectTrainingDocumentsPanel(
-                    "otherLayerTarinDocumentsPanel", selectedProjectModel, false,
+                    "otherLayerTarinDocumentsPanel", selectedProjectModel,
+                    new Model<TabSepDocModel>(new TabSepDocModel(false, false)),
                     Model.of(otherLayerDetailForm.getModelObject().selectedFeatures))
             {
                 private static final long serialVersionUID = -4663938706290521594L;
@@ -361,16 +374,42 @@ public class ProjectMiraTemplatePanel
         }
     }
 
-    private class FreeDocumentsPanel
+    private class FreeTabSepAsFeatureDocumentsPanel
         extends Panel
     {
         private static final long serialVersionUID = -9173687919199803381L;
 
-        public FreeDocumentsPanel(String id)
+        public FreeTabSepAsFeatureDocumentsPanel(String id)
         {
             super(id);
             add(freeTrainDocumentsPanel = new ProjectTrainingDocumentsPanel(
-                    "freeTrainDocumentsPanel", selectedProjectModel, true, featureModel)
+                    "freeTabSepAsFeatureDocumentsPanel", selectedProjectModel,
+                    new Model<TabSepDocModel>(new TabSepDocModel(false, true)), featureModel)
+            {
+                private static final long serialVersionUID = -4663938706290521594L;
+
+                @Override
+                public boolean isVisible()
+                {
+                    return miraTemplateDetailForm.getModelObject().getId() != 0
+                            && selectedFeature != null;
+                }
+            });
+            freeTrainDocumentsPanel.setOutputMarkupPlaceholderTag(true);
+        }
+    }
+
+    private class FreeTabSepAsTargetDocumentsPanel
+        extends Panel
+    {
+        private static final long serialVersionUID = -9173687919199803381L;
+
+        public FreeTabSepAsTargetDocumentsPanel(String id)
+        {
+            super(id);
+            add(freeTrainDocumentsPanel = new ProjectTrainingDocumentsPanel(
+                    "freeTabSepAsTargetDocumentsPanel", selectedProjectModel,
+                    new Model<TabSepDocModel>(new TabSepDocModel(true, true)), featureModel)
             {
                 private static final long serialVersionUID = -4663938706290521594L;
 
@@ -555,7 +594,7 @@ public class ProjectMiraTemplatePanel
                     // always force to choose, even after selection of feature
                     otherFeatures.setModelObject(null);
                     updateForm();
-                    targetLayerDetailForm.autoTabs.setSelectedTab(1);
+                    targetLayerDetailForm.autoTabs.setSelectedTab(2);
                 }
 
                 @Override
@@ -607,6 +646,14 @@ public class ProjectMiraTemplatePanel
                                 break;
                             }
                         }
+
+                        for (SourceDocument document : repository
+                                .listTabSepDocuments(selectedProjectModel.getObject())) {
+                            if (document.isTrainingDocument()) {
+                                existsTrainDocument = true;
+                                break;
+                            }
+                        }
                         if (!existsTrainDocument) {
                             error("No training document exists to proceed.");
                             return;
@@ -618,9 +665,15 @@ public class ProjectMiraTemplatePanel
 
                         // no need to re-train if no new document is added
                         boolean existUnprocessedDocument = false;
-                        ;
                         for (SourceDocument document : repository
                                 .listSourceDocuments(selectedProjectModel.getObject())) {
+                            if (!document.isProcessed()) {
+                                existUnprocessedDocument = true;
+                                break;
+                            }
+                        }
+                        for (SourceDocument document : repository
+                                .listTabSepDocuments(selectedProjectModel.getObject())) {
                             if (!document.isProcessed()) {
                                 existUnprocessedDocument = true;
                                 break;
