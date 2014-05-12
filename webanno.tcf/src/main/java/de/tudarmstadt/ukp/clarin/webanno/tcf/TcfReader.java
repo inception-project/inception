@@ -111,10 +111,7 @@ public class TcfReader
     /**
      * This method builds texts from the {@link eu.clarin.weblicht.wlfxb.tc.api.Token} annotation
      * layer. The getText Method of {@link TextCorpusStreamed} is not used as some tokens, such as
-     * special characters represented differently than in the original Text.
-     *
-     * @param aJCas
-     * @param aCorpusData
+     * special characters represented differently than in the original text.
      */
     private void convertText(JCas aJCas, TextCorpusStored aCorpusData)
     {
@@ -130,9 +127,7 @@ public class TcfReader
 
     /**
      * Convert TCF Tokens Layer to CAS Token Annotation.
-     *
-     * @param aJCas
-     * @param aCorpusData
+     * 
      * @return returns {@code Map} of (token_id, Token), for later references
      */
     private Map<String, Token> convertTokens(JCas aJCas, TextCorpusStored aCorpusData)
@@ -254,7 +249,8 @@ public class TcfReader
 
                 // For dependency annotations in the TCF file without POS, add as a default POS --
                 if (dependentPos == null) {
-                    getUimaContext().getLogger().log(Level.INFO, "There is no pos for this token, added is -- as a pos");
+                    getUimaContext().getLogger().log(Level.INFO,
+                            "There is no pos for this token, added is -- as a pos");
                     dependentPos = new POS(aJCas);
                     dependentPos.setBegin(aTokens.get(dependentTokens[0].getID()).getBegin());
                     dependentPos.setEnd(aTokens.get(dependentTokens[0].getID()).getEnd());
@@ -269,7 +265,8 @@ public class TcfReader
                             // do nothing
                         }
                         else {
-                            getUimaContext().getLogger().log(Level.INFO, "There is no pos for this token, added is -- as a pos");
+                            getUimaContext().getLogger().log(Level.INFO,
+                                    "There is no pos for this token, added is -- as a pos");
                             governerPos = new POS(aJCas);
                             governerPos.setBegin(aTokens.get(governorTokens[0].getID()).getBegin());
                             governerPos.setEnd(aTokens.get(governorTokens[0].getID()).getEnd());
@@ -341,10 +338,6 @@ public class TcfReader
      * <b>targets</b> alongside the <b>type</b> and <b>relations in different maps</b> <br>
      * Second, an iteration is made through all the maps and the {@link CoreferenceChain} and
      * {@link CoreferenceLink} annotations are constructed.
-     *
-     * @param aJCas
-     * @param aCorpusData
-     * @param aTokens
      */
     private void convertCoreference(JCas aJCas, TextCorpusStored aCorpusData,
             Map<String, Token> aTokens)
@@ -370,7 +363,7 @@ public class TcfReader
                 }
                 else {
                     link.setNext(referencesMap.get(address));
-                    if(link.getReferenceRelation()==null) {
+                    if (link.getReferenceRelation() == null) {
                         link.setReferenceRelation(referencesMap.get(address).getReferenceRelation());
                     }
                     link = link.getNext();
@@ -381,8 +374,8 @@ public class TcfReader
     }
 
     private void storeReferencesAndTargetsInMap(Map<Integer, CoreferenceLink> aReferencesMap,
-            eu.clarin.weblicht.wlfxb.tc.api.ReferencedEntity entity,
-            TextCorpusStored aCorpusData, Map<String, Token> aTokens, JCas aJcas)
+            eu.clarin.weblicht.wlfxb.tc.api.ReferencedEntity entity, TextCorpusStored aCorpusData,
+            Map<String, Token> aTokens, JCas aJcas)
     {
         for (Reference reference : entity.getReferences()) {
             StringBuilder sbTokens = new StringBuilder();
@@ -411,33 +404,40 @@ public class TcfReader
 
     /**
      * Get the start and end offsets of a span annotation
-     * @param aSpanTokens list of span {@link eu.clarin.weblicht.wlfxb.tc.api.Token}s
-     * @param aAllTokens all available tokens in the file
+     * 
+     * @param aSpanTokens
+     *            list of span {@link eu.clarin.weblicht.wlfxb.tc.api.Token}s
+     * @param aAllTokens
+     *            all available tokens in the file
      */
-    private int[] getOffsets( eu.clarin.weblicht.wlfxb.tc.api.Token[] aSpanTokens,
-            Map<String, Token> aAllTokens){
-       List<Integer> beginPositions = new ArrayList<Integer>();
-       List<Integer> endPositions = new ArrayList<Integer>();
+    private int[] getOffsets(eu.clarin.weblicht.wlfxb.tc.api.Token[] aSpanTokens,
+            Map<String, Token> aAllTokens)
+    {
+        List<Integer> beginPositions = new ArrayList<Integer>();
+        List<Integer> endPositions = new ArrayList<Integer>();
         for (eu.clarin.weblicht.wlfxb.tc.api.Token token : aSpanTokens) {
             beginPositions.add(aAllTokens.get(token.getID()).getBegin());
             endPositions.add(aAllTokens.get(token.getID()).getEnd());
-    }
-        return new int[] {(Collections.min(beginPositions)), (Collections.max(endPositions))};
+        }
+        return new int[] { (Collections.min(beginPositions)), (Collections.max(endPositions)) };
     }
 
     /**
      * Get the start and end offsets of a span annotation
-     * @param aSpanTokens list of span token ids. [t_3,_t_5, t_1]
-     * @param aAllTokens all available tokens in the file
+     * 
+     * @param aSpanTokens
+     *            list of span token ids. [t_3,_t_5, t_1]
+     * @param aAllTokens
+     *            all available tokens in the file
      */
-    private int[] getOffsets( String[] aSpanTokens,
-            Map<String, Token> aAllTokens){
-       List<Integer> beginPositions = new ArrayList<Integer>();
-       List<Integer> endPositions = new ArrayList<Integer>();
+    private int[] getOffsets(String[] aSpanTokens, Map<String, Token> aAllTokens)
+    {
+        List<Integer> beginPositions = new ArrayList<Integer>();
+        List<Integer> endPositions = new ArrayList<Integer>();
         for (String token : aSpanTokens) {
             beginPositions.add(aAllTokens.get(token).getBegin());
             endPositions.add(aAllTokens.get(token).getEnd());
-    }
-        return new int[] {(Collections.min(beginPositions)), (Collections.max(endPositions))};
+        }
+        return new int[] { (Collections.min(beginPositions)), (Collections.max(endPositions)) };
     }
 }

@@ -30,10 +30,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
-import org.apache.uima.jcas.JCas;
-import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.fit.util.JCasUtil;
+import org.apache.uima.jcas.JCas;
+import org.apache.uima.resource.ResourceInitializationException;
 
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
@@ -117,9 +117,6 @@ public class TcfWriter
 
     /**
      * Create TCF File from scratch
-     *
-     * @param aJcas
-     * @return
      */
     public TextCorpusStored casToTcfWriter(JCas aJcas)
     {
@@ -143,9 +140,6 @@ public class TcfWriter
      * @param aJcas
      *            an annotated CAS object
      * @return the merged annotation layer in the TCF format
-     * @throws ResourceInitializationException
-     * @throws AnalysisEngineProcessException
-     * @throws WLFormatException
      */
     public TextCorpusStored casToTcfWriter(InputStream aIs, JCas aJcas)
         throws ResourceInitializationException, AnalysisEngineProcessException, WLFormatException
@@ -159,9 +153,6 @@ public class TcfWriter
 
     /**
      * Add CAS annotations into TCF annotation layers
-     *
-     * @param aJCas
-     * @param aTextCorpus
      */
     public static void writeToTcf(JCas aJCas, TextCorpusStored aTextCorpus)
     {
@@ -256,17 +247,17 @@ public class TcfWriter
             }
         }
 
-            List<eu.clarin.weblicht.wlfxb.tc.api.Dependency> deps = new ArrayList<eu.clarin.weblicht.wlfxb.tc.api.Dependency>();
-            for (Dependency d : select(aJCas, Dependency.class)) {
-                eu.clarin.weblicht.wlfxb.tc.api.Dependency dependency = dependencyParsingLayer
-                        .createDependency(d.getDependencyType(),
-                                aTokensBeginPositionMap.get(d.getDependent().getBegin()),
-                                aTokensBeginPositionMap.get(d.getGovernor().getBegin()));
+        List<eu.clarin.weblicht.wlfxb.tc.api.Dependency> deps = new ArrayList<eu.clarin.weblicht.wlfxb.tc.api.Dependency>();
+        for (Dependency d : select(aJCas, Dependency.class)) {
+            eu.clarin.weblicht.wlfxb.tc.api.Dependency dependency = dependencyParsingLayer
+                    .createDependency(d.getDependencyType(),
+                            aTokensBeginPositionMap.get(d.getDependent().getBegin()),
+                            aTokensBeginPositionMap.get(d.getGovernor().getBegin()));
 
-                deps.add(dependency);
-            }
-            if (dependencyParsingLayer != null && deps.size() > 0) {
-                dependencyParsingLayer.addParse(deps);
+            deps.add(dependency);
+        }
+        if (dependencyParsingLayer != null && deps.size() > 0) {
+            dependencyParsingLayer.addParse(deps);
         }
     }
 
@@ -366,15 +357,13 @@ public class TcfWriter
      * in CAS, it is stored using the start/end offsets, in TCF, we should store separate tokens
      * with a token id for each one
      *
-     * @param link
+     * @param aLink
      *            the coreference link in CAS annotation
      * @param tokensBeginPositionMap
      *            a Map which store the begin positions of all tokens. This is used to get separate
      *            tokens, the only way to know multiple tokens in a link strat/end offset
      *            annotations.
-     * @return
      */
-
     private static List<eu.clarin.weblicht.wlfxb.tc.api.Token> getListOfTokens(JCas aJcas,
             CoreferenceLink aLink,
             Map<Integer, eu.clarin.weblicht.wlfxb.tc.api.Token> tokensBeginPositionMap)
