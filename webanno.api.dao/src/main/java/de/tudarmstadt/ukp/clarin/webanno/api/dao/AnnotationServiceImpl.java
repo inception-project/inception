@@ -686,6 +686,14 @@ public class AnnotationServiceImpl
                 .createQuery("FROM TagSet where project = :project ORDER BY name ASC", TagSet.class)
                 .setParameter("project", aProject).getResultList();
     }
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public List<TagSet> listTagSets(AnnotationFeature aFeature)
+    {
+        return entityManager
+                .createQuery("FROM TagSet where feature = :feature ORDER BY name ASC", TagSet.class)
+                .setParameter("feature", aFeature).getResultList();
+    }
 
     @Override
     @Transactional

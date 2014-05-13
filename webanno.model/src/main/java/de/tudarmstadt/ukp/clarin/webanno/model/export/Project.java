@@ -45,17 +45,24 @@ public class Project
     private Mode mode = Mode.ANNOTATION;
 
     @JsonProperty("source_documents")
-    private List<SourceDocument> sourceDocuments = new ArrayList<SourceDocument>();
+    private List<SourceDocument> sourceDocuments;
 
     @JsonProperty("annotation_documents")
-    private List<AnnotationDocument> annotationDocuments = new ArrayList<AnnotationDocument>();
+    private List<AnnotationDocument> annotationDocuments;
 
 
     @JsonProperty("project_permissions")
-    private List<ProjectPermission> projectPermissions = new ArrayList<ProjectPermission>();
+    private List<ProjectPermission> projectPermissions ;
 
     @JsonProperty("tag_sets")
     private List<TagSet> tagSets = new ArrayList<TagSet>();
+
+    @JsonProperty("layers")
+    private List<AnnotationLayer> layers;
+
+    @JsonProperty("mira_templates")
+    private List<MiraTemplate> miraTemplates;
+
 
     @JsonProperty("version")
     private int version;
@@ -138,6 +145,26 @@ public class Project
     public void setVersion(int version)
     {
         this.version = version;
+    }
+
+    public List<AnnotationLayer> getLayers()
+    {
+        return layers;
+    }
+
+    public void setLayers(List<AnnotationLayer> layers)
+    {
+        this.layers = layers;
+    }
+
+    public List<MiraTemplate> getMiraTemplates()
+    {
+        return miraTemplates;
+    }
+
+    public void setMiraTemplates(List<MiraTemplate> miraTemplates)
+    {
+        this.miraTemplates = miraTemplates;
     }
 
 }

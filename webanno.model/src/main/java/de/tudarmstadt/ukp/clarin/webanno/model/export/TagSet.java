@@ -37,20 +37,34 @@ public class TagSet
 {
     @JsonProperty("name")
     String name;
+
+    // back compatibility
     @JsonProperty("typeUiName")
     String typeUiName;
+
     @JsonProperty("description")
     String description;
+
     @JsonProperty("language")
     String language;
+
+ // back compatibility
     @JsonProperty("type")
     String type;
+
+ // back compatibility
     @JsonProperty("type_name")
     String typeName;
+
+ // back compatibility
     @JsonProperty("type_description")
     String typeDescription;
+
     @JsonProperty("tags")
     List<Tag> tags = new ArrayList<Tag>();
+
+    @JsonProperty("create_tag")
+    private boolean createTag;
     public String getName()
     {
         return name;
@@ -115,6 +129,13 @@ public class TagSet
     {
         this.typeUiName = typeUiName;
     }
-
+    public boolean isCreateTag()
+    {
+        return createTag;
+    }
+    public void setCreateTag(boolean createTag)
+    {
+        this.createTag = createTag;
+    }
 
 }

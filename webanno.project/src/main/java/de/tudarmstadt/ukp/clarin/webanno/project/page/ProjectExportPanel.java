@@ -21,7 +21,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -56,15 +60,18 @@ import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.DaoUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.export.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.export.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
 import de.tudarmstadt.ukp.clarin.webanno.tcf.TcfWriter;
 import eu.clarin.weblicht.wlfxb.io.WLFormatException;
@@ -375,7 +382,7 @@ public class ProjectExportPanel
 
     public File generateZipFile(final Model<Project> aProjectModel, AjaxRequestTarget target)
         throws IOException, UIMAException, ClassNotFoundException, WLFormatException,
-        ZippingException, InterruptedException
+        ZippingException, InterruptedException, ProjectExportException
     {
         File exportTempDir = null;
         // all metadata and project settings data from the database as JSON file
@@ -385,37 +392,38 @@ public class ProjectExportPanel
         exportTempDir = File.createTempFile("webanno-project", "export");
         exportTempDir.delete();
         exportTempDir.mkdirs();
+
         File projectZipFile = new File(exportTempDir.getAbsolutePath() + ".zip");
         if (aProjectModel.getObject().getId() == 0) {
-            error("Project not yet created. Please save project details first!");
+            throw new ProjectExportException(
+                    "Project not yet created. Please save project details first!");
         }
-        else {
 
-            exportProjectSettings(aProjectModel.getObject(), projectSettings, exportTempDir);
-            exportSourceDocuments(aProjectModel.getObject(), exportTempDir);
-            progress = 10;
-            exportAnnotationDocuments(aProjectModel.getObject(), exportTempDir);
-            progress = progress + 1;
-            exportProjectLog(aProjectModel.getObject(), exportTempDir);
-            progress = progress + 1;
-            exportGuideLine(aProjectModel.getObject(), exportTempDir);
-            progress = progress + 1;
-            exportProjectMetaInf(aProjectModel.getObject(), exportTempDir);
-            progress = 90;
-            exportCuratedDocuments(aProjectModel.getObject(), exportTempDir);
-            try {
-                DaoUtils.zipFolder(exportTempDir, projectZipFile);
-            }
-            catch (Exception e) {
-                throw new ZippingException("Unable to Zipp the file");
-            }
-            finally {
-                FileUtils.forceDelete(projectSettings);
-                System.gc();
-                FileUtils.forceDelete(exportTempDir);
-            }
-            progress = 100;
+        exportProjectSettings(aProjectModel.getObject(), projectSettings, exportTempDir);
+        exportSourceDocuments(aProjectModel.getObject(), exportTempDir);
+        progress = 10;
+        exportAnnotationDocuments(aProjectModel.getObject(), exportTempDir);
+        progress = progress + 1;
+        exportProjectLog(aProjectModel.getObject(), exportTempDir);
+        progress = progress + 1;
+        exportGuideLine(aProjectModel.getObject(), exportTempDir);
+        progress = progress + 1;
+        exportProjectMetaInf(aProjectModel.getObject(), exportTempDir);
+        progress = 90;
+        exportCuratedDocuments(aProjectModel.getObject(), exportTempDir);
+        try {
+            DaoUtils.zipFolder(exportTempDir, projectZipFile);
         }
+        catch (Exception e) {
+            throw new ZippingException("Unable to Zipp the file");
+        }
+        finally {
+            FileUtils.forceDelete(projectSettings);
+            System.gc();
+            FileUtils.forceDelete(exportTempDir);
+        }
+        progress = 100;
+
         return projectZipFile;
     }
 
@@ -473,8 +481,9 @@ public class ProjectExportPanel
                         CURATION_USER);
                 File curationFile = null;
                 if (CurationFileAsSerialisedCas.exists()) {
-                    curationFile = repository.exportAnnotationDocument(sourceDocument, CURATION_USER,
-                            TcfWriter.class, sourceDocument.getName(), Mode.CURATION);
+                    curationFile = repository
+                            .exportAnnotationDocument(sourceDocument, CURATION_USER,
+                                    TcfWriter.class, sourceDocument.getName(), Mode.CURATION);
                 }
                 // in Case they didn't exist
                 if (CurationFileAsSerialisedCas.exists()) {
@@ -486,13 +495,15 @@ public class ProjectExportPanel
 
             // If this project is a correction project, add the auto-annotated CAS to same folder as
             // CURATION
-            if (aProject.getMode().equals(Mode.AUTOMATION) ||  aProject.getMode().equals(Mode.CORRECTION)) {
+            if (aProject.getMode().equals(Mode.AUTOMATION)
+                    || aProject.getMode().equals(Mode.CORRECTION)) {
                 File CorrectionFileAsSerialisedCas = repository.exportserializedCas(sourceDocument,
                         CORRECTION_USER);
                 File correctionFile = null;
                 if (CorrectionFileAsSerialisedCas.exists()) {
-                    correctionFile = repository.exportAnnotationDocument(sourceDocument, CORRECTION_USER,
-                            TcfWriter.class, sourceDocument.getName(), Mode.CORRECTION);
+                    correctionFile = repository.exportAnnotationDocument(sourceDocument,
+                            CORRECTION_USER, TcfWriter.class, sourceDocument.getName(),
+                            Mode.CORRECTION);
                 }
                 // in Case they didn't exist
                 if (CorrectionFileAsSerialisedCas.exists()) {
@@ -586,7 +597,7 @@ public class ProjectExportPanel
                     File annotationFile = null;
                     Class<?> writer = repository.getWritableFormats().get(
                             sourceDocument.getFormat());
-                    if (annotationFileAsSerialisedCas.exists() && writer!=null) {
+                    if (annotationFileAsSerialisedCas.exists() && writer != null) {
                         annotationFile = repository.exportAnnotationDocument(sourceDocument,
                                 annotationDocument.getUser(), writer, sourceDocument.getName(),
                                 Mode.ANNOTATION);
@@ -594,11 +605,10 @@ public class ProjectExportPanel
                     if (annotationFileAsSerialisedCas.exists()) {
                         FileUtils.copyFileToDirectory(annotationFileAsSerialisedCas,
                                 annotationDocumentAsSerialisedCasDir);
-                        if(writer != null) {
+                        if (writer != null) {
                             FileUtils.copyFileToDirectory(annotationFile, annotationDocumentDir);
                             FileUtils.forceDelete(annotationFile);
                         }
-
 
                     }
                 }
@@ -628,36 +638,81 @@ public class ProjectExportPanel
 
     private void exportProjectSettings(Project aProject, File aProjectSettings, File aExportTempDir)
     {
-        de.tudarmstadt.ukp.clarin.webanno.model.export.Project project = new de.tudarmstadt.ukp.clarin.webanno.model.export.Project();
-        project.setDescription(aProject.getDescription());
-        project.setName(aProject.getName());
-        project.setMode(aProject.getMode());
+        de.tudarmstadt.ukp.clarin.webanno.model.export.Project exProjekt = new de.tudarmstadt.ukp.clarin.webanno.model.export.Project();
+        exProjekt.setDescription(aProject.getDescription());
+        exProjekt.setName(aProject.getName());
+        exProjekt.setMode(aProject.getMode());
+        exProjekt.setVersion(aProject.getVersion());
 
-        List<TagSet> tagsets = new ArrayList<TagSet>();
-        // add TagSets to the project
-        for (de.tudarmstadt.ukp.clarin.webanno.model.TagSet tagSet : annotationService
-                .listTagSets(aProject)) {
-            TagSet exportedTagSetContent = new TagSet();
-            exportedTagSetContent.setDescription(tagSet.getDescription());
-            exportedTagSetContent.setLanguage(tagSet.getLanguage());
-            exportedTagSetContent.setName(tagSet.getName());
+        List<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer> exLayers = new ArrayList<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer>();
+        // Store map of layer and its equivalent exLayer so that the attach type is attached later
+        Map<AnnotationLayer, de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer> layerToExLayer = new HashMap<AnnotationLayer, de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer>();
+        // Store map of feature and its equivalent exFeature so that the attach feature is attached
+        // later
+        Map<AnnotationFeature, de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature> featureToExFeature = new HashMap<AnnotationFeature, de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature>();
+        for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
+            de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer exLayer = new de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer();
+            exLayer.setAllowSTacking(layer.isAllowSTacking());
+            exLayer.setBuiltIn(layer.isBuiltIn());
+            exLayer.setCrossSentence(layer.isCrossSentence());
+            exLayer.setDescription(layer.getDescription());
+            exLayer.setEnabled(layer.isEnabled());
+            exLayer.setLockToTokenOffset(layer.isLockToTokenOffset());
+            exLayer.setMultipleTokens(layer.isMultipleTokens());
+            exLayer.setName(layer.getName());
+            exLayer.setType(layer.getType());
+            exLayer.setUiName(layer.getUiName());
 
-            exportedTagSetContent.setType(tagSet.getLayer().getType());
-            exportedTagSetContent.setTypeName(tagSet.getLayer().getName());
-            exportedTagSetContent.setTypeDescription(tagSet.getLayer().getDescription());
+            layerToExLayer.put(layer, exLayer);
 
-            List<de.tudarmstadt.ukp.clarin.webanno.model.export.Tag> exportedTags = new ArrayList<de.tudarmstadt.ukp.clarin.webanno.model.export.Tag>();
-            for (Tag tag : annotationService.listTags(tagSet)) {
-                de.tudarmstadt.ukp.clarin.webanno.model.export.Tag exportedTag = new de.tudarmstadt.ukp.clarin.webanno.model.export.Tag();
-                exportedTag.setDescription(tag.getDescription());
-                exportedTag.setName(tag.getName());
-                exportedTags.add(exportedTag);
+            List<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature> exFeatures = new ArrayList<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature>();
+            for (AnnotationFeature feature : annotationService.listAnnotationFeature(layer)) {
+                de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature exFeature = new de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature();
+                exFeature.setDescription(feature.getDescription());
+                exFeature.setEnabled(feature.isEnabled());
+                exFeature.setName(feature.getName());
+                exFeature.setType(feature.getType());
+                exFeature.setUiName(feature.getUiName());
+                exFeature.setVisible(feature.isVisible());
+                List<de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet> exTagSets = new ArrayList<de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet>();
+                for (TagSet tagSet : annotationService.listTagSets(feature)) {
+                    de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet exTagSet = new de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet();
+                    exTagSet.setDescription(tagSet.getDescription());
+                    exTagSet.setLanguage(tagSet.getLanguage());
+                    exTagSet.setName(tagSet.getName());
+                    exTagSet.setCreateTag(tagSet.isCreateTag());
+
+                    List<de.tudarmstadt.ukp.clarin.webanno.model.export.Tag> exportedTags = new ArrayList<de.tudarmstadt.ukp.clarin.webanno.model.export.Tag>();
+                    for (Tag tag : annotationService.listTags(tagSet)) {
+                        de.tudarmstadt.ukp.clarin.webanno.model.export.Tag exTag = new de.tudarmstadt.ukp.clarin.webanno.model.export.Tag();
+                        exTag.setDescription(tag.getDescription());
+                        exTag.setName(tag.getName());
+                        exportedTags.add(exTag);
+                    }
+                    exTagSet.setTags(exportedTags);
+                    exTagSets.add(exTagSet);
+                }
+                exFeature.setTagSets(exTagSets);
+                exFeatures.add(exFeature);
+
+                featureToExFeature.put(feature, exFeature);
             }
-            exportedTagSetContent.setTags(exportedTags);
-            tagsets.add(exportedTagSetContent);
+            exLayer.setFeatures(exFeatures);
+            exLayers.add(exLayer);
         }
 
-        project.setTagSets(tagsets);
+        // add the attach type and attache featureto the exported layer and exported feature
+        for (AnnotationLayer layer : layerToExLayer.keySet()) {
+            if (layer.getAttachType() != null) {
+                layerToExLayer.get(layer).setAttachType(layerToExLayer.get(layer.getAttachType()));
+            }
+            if (layer.getAttachFeature() != null) {
+                layerToExLayer.get(layer).setAttachFeature(
+                        featureToExFeature.get(layerToExLayer.get(layer.getAttachType())
+                                .getAttachFeature()));
+            }
+        }
+        exProjekt.setLayers(exLayers);
 
         List<SourceDocument> sourceDocuments = new ArrayList<SourceDocument>();
         List<AnnotationDocument> annotationDocuments = new ArrayList<AnnotationDocument>();
@@ -665,10 +720,19 @@ public class ProjectExportPanel
         // add source documents to a project
         for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : repository
                 .listSourceDocuments(aProject)) {
-            SourceDocument sourceDocumentToExport = new SourceDocument();
-            sourceDocumentToExport.setFormat(sourceDocument.getFormat());
-            sourceDocumentToExport.setName(sourceDocument.getName());
-            sourceDocumentToExport.setState(sourceDocument.getState());
+            SourceDocument exDocument = new SourceDocument();
+            exDocument.setFormat(sourceDocument.getFormat());
+            exDocument.setName(sourceDocument.getName());
+            exDocument.setState(sourceDocument.getState());
+            exDocument.setProcessed(sourceDocument.isProcessed());
+            exDocument.setTimestamp(sourceDocument.getTimestamp());
+            exDocument.setTrainingDocument(sourceDocument.isTrainingDocument());
+            exDocument.setSentenceAccessed(sourceDocument.getSentenceAccessed());
+            exDocument.setProcessed(false);
+
+            if (sourceDocument.getFeature() != null) {
+                exDocument.setFeature(featureToExFeature.get(sourceDocument.getFeature()));
+            }
 
             // add annotation document to Project
             for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : repository
@@ -679,10 +743,10 @@ public class ProjectExportPanel
                 annotationDocumentToExport.setUser(annotationDocument.getUser());
                 annotationDocuments.add(annotationDocumentToExport);
             }
-            sourceDocuments.add(sourceDocumentToExport);
+            sourceDocuments.add(exDocument);
         }
-        project.setSourceDocuments(sourceDocuments);
-        project.setAnnotationDocuments(annotationDocuments);
+        exProjekt.setSourceDocuments(sourceDocuments);
+        exProjekt.setAnnotationDocuments(annotationDocuments);
 
         List<ProjectPermission> projectPermissions = new ArrayList<ProjectPermission>();
 
@@ -697,13 +761,34 @@ public class ProjectExportPanel
             }
         }
 
-        project.setProjectPermissions(projectPermissions);
+        exProjekt.setProjectPermissions(projectPermissions);
 
+        // export automation Mira template
+        List<de.tudarmstadt.ukp.clarin.webanno.model.export.MiraTemplate> exTemplates = new ArrayList<de.tudarmstadt.ukp.clarin.webanno.model.export.MiraTemplate>();
+        for (MiraTemplate template : repository.listMiraTemplates(aProject)) {
+            de.tudarmstadt.ukp.clarin.webanno.model.export.MiraTemplate exTemplate = new de.tudarmstadt.ukp.clarin.webanno.model.export.MiraTemplate();
+            exTemplate.setAnnotateAndPredict(template.isAnnotateAndPredict());
+            exTemplate.setAutomationStarted(template.isAutomationStarted());
+            exTemplate.setCurrentLayer(template.isCurrentLayer());
+            exTemplate.setResult(template.getResult());
+            exTemplate.setTrainFeature(featureToExFeature.get(template.getTrainFeature()));
+
+            if (template.getOtherFeatures().size() > 0) {
+                Set<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature> exOtherFeatures = new HashSet<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature>();
+                for (AnnotationFeature feature : template.getOtherFeatures()) {
+                    exOtherFeatures.add(featureToExFeature.get(feature));
+                }
+                exTemplate.setOtherFeatures(exOtherFeatures);
+            }
+            exTemplates.add(exTemplate);
+        }
+
+        exProjekt.setMiraTemplates(exTemplates);
         MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
         ProjectUtil.setJsonConverter(jsonConverter);
 
         try {
-            ProjectUtil.generateJson(project, aProjectSettings);
+            ProjectUtil.generateJson(exProjekt, aProjectSettings);
             FileUtils.copyFileToDirectory(aProjectSettings, aExportTempDir);
         }
         catch (IOException e) {
@@ -750,6 +835,9 @@ public class ProjectExportPanel
                 canceled = true;
             }
             catch (InterruptedException e) {
+                canceled = true;
+            }
+            catch (ProjectExportException e) {
                 canceled = true;
             }
         }

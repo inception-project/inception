@@ -126,7 +126,7 @@ public interface AnnotationService
      * Get Tagset by its ID
      */
     TagSet getTagSet(long id);
-    
+
     /**
      * Get an annotation layer using its id
      */
@@ -209,13 +209,22 @@ public interface AnnotationService
      */
     List<TagSet> listTagSets();
 
+
     /**
-     * List all {@link TagSet }s in a project
+     * List all {@link TagSet }s in a {@link Project}
      *
      * @param project
      * @return
      */
     List<TagSet> listTagSets(Project project);
+
+    /**
+     * List all {@link TagSet }s in a {@link AnnotationFeature}
+     *
+     * @param project
+     * @return
+     */
+    List<TagSet> listTagSets(AnnotationFeature feature);
 
     /**
      * Removes a {@link Tag} from the database

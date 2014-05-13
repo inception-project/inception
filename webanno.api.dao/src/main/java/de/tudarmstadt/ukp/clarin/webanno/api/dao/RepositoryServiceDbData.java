@@ -1176,16 +1176,17 @@ public class RepositoryServiceDbData
 
         for (AnnotationFeature feature : annotationService.listAnnotationFeature(aProject)) {
             annotationService.removeAnnotationFeature(feature);
+            // remove tagsets
+            for (TagSet tagset : annotationService.listTagSets(feature)) {
+                annotationService.removeTagSet(tagset);
+            }
         }
 
         // remove the layers too
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
             annotationService.removeAnnotationLayer(layer);
         }
-        // remove tagsets
-        for (TagSet tagset : annotationService.listTagSets(aProject)) {
-            annotationService.removeTagSet(tagset);
-        }
+
 
         // remove the project directory from the file system
         String path = dir.getAbsolutePath() + PROJECT + aProject.getId();

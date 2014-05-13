@@ -47,18 +47,6 @@ public class MiraTemplate
     @Id
     @GeneratedValue
     private long id;
-    private boolean prefix1 = true;
-    private boolean prefix2 = true;
-    private boolean prefix3 = true;
-    private boolean prefix4 = true;
-
-    private boolean suffix1 = true;
-    private boolean suffix2 = true;
-    private boolean suffix3 = true;
-    private boolean suffix4 = true;
-
-    private int ngram = 3;
-    private int bigram = 2;
 
     private boolean automationStarted = false;
     /**
@@ -81,6 +69,16 @@ public class MiraTemplate
 
     private boolean currentLayer = false;// The current training layer for this mira template
 
+    /**
+     * Annotate the Automate view while annotating
+     */
+    private boolean annotateAndPredict = true;
+
+    /**
+     * Results comprising of the tarining accuracy and number of examples used
+     */
+    private String result = "";
+
     public AnnotationFeature getTrainFeature()
     {
         return trainFeature;
@@ -99,116 +97,6 @@ public class MiraTemplate
     public void setOtherFeatures(Set<AnnotationFeature> otherFeatures)
     {
         this.otherFeatures = otherFeatures;
-    }
-
-    /**
-     * Annotate the Automate view while annotating
-     */
-    private boolean annotateAndPredict = true;
-
-    /**
-     * Results comprising of the tarining accuracy and number of examples used
-     */
-    private String result = "";
-
-    public boolean isPrefix1()
-    {
-        return prefix1;
-    }
-
-    public void setPrefix1(boolean prefix1)
-    {
-        this.prefix1 = prefix1;
-    }
-
-    public boolean isPrefix2()
-    {
-        return prefix2;
-    }
-
-    public void setPrefix2(boolean prefix2)
-    {
-        this.prefix2 = prefix2;
-    }
-
-    public boolean isPrefix3()
-    {
-        return prefix3;
-    }
-
-    public void setPrefix3(boolean prefix3)
-    {
-        this.prefix3 = prefix3;
-    }
-
-    public boolean isPrefix4()
-    {
-        return prefix4;
-    }
-
-    public void setPrefix4(boolean prefix4)
-    {
-        this.prefix4 = prefix4;
-    }
-
-    public boolean isSuffix1()
-    {
-        return suffix1;
-    }
-
-    public void setSuffix1(boolean suffix1)
-    {
-        this.suffix1 = suffix1;
-    }
-
-    public boolean isSuffix2()
-    {
-        return suffix2;
-    }
-
-    public void setSuffix2(boolean suffix2)
-    {
-        this.suffix2 = suffix2;
-    }
-
-    public boolean isSuffix3()
-    {
-        return suffix3;
-    }
-
-    public void setSuffix3(boolean suffix3)
-    {
-        this.suffix3 = suffix3;
-    }
-
-    public boolean isSuffix4()
-    {
-        return suffix4;
-    }
-
-    public void setSuffix4(boolean suffix4)
-    {
-        this.suffix4 = suffix4;
-    }
-
-    public int getNgram()
-    {
-        return ngram;
-    }
-
-    public void setNgram(int ngram)
-    {
-        this.ngram = ngram;
-    }
-
-    public int getBigram()
-    {
-        return bigram;
-    }
-
-    public void setBigram(int bigram)
-    {
-        this.bigram = bigram;
     }
 
     public boolean isPredictInThisPage()

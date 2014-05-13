@@ -72,8 +72,6 @@ public class AnnotationLayer
 
     private boolean builtIn = false;
 
-    private boolean deletable = false;
-
     @Column(name = "name", nullable = false)
     private String name;
 
@@ -209,26 +207,6 @@ public class AnnotationLayer
     public void setBuiltIn(boolean builtIn)
     {
         this.builtIn = builtIn;
-    }
-
-    /**
-     *
-     * whether annotations of this type can be deleted. E.g. WebAnno currently does not support
-     * deleting Lemma annotations. This is always “false” for user-created types.
-     */
-    public boolean isDeletable()
-    {
-        return deletable;
-    }
-
-    /**
-     *
-     * whether annotations of this type can be deleted. E.g. WebAnno currently does not support
-     * deleting Lemma annotations. This is always “false” for user-created types.
-     */
-    public void setDeletable(boolean deletable)
-    {
-        this.deletable = deletable;
     }
 
     /**
