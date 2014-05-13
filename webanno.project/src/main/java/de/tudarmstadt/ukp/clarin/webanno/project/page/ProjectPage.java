@@ -77,10 +77,10 @@ import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
  * and name of the Project The {@link ProjectTagSetsPanel} is used to add {@link TagSet} and
  * {@link Tag} details to a Project as well as updating them The {@link ProjectUsersPanel} is used
  * to update {@link User} to a Project
- * 
+ *
  * @author Seid Muhie Yimam
  * @author Richard Eckart de Castilho
- * 
+ *
  */
 public class ProjectPage
     extends SettingsPageBase
@@ -195,7 +195,7 @@ public class ProjectPage
                     if (aNewSelection != null) {
                         projectDetailForm.setModelObject(aNewSelection);
                         projectDetailForm.setVisible(true);
-                       
+
                         projectDetailForm.allTabs.setSelectedTab(0);
                         RequestCycle.get().setResponsePage(getPage());
 
@@ -304,8 +304,7 @@ public class ProjectPage
                                     importedProject, projectRepository);
 
                             ProjectUtil.createTagset(importedProject,
-                                    importedProjectSetting.getVersion(),
-                                    importedProjectSetting.getTagSets(), projectRepository,
+                                    importedProjectSetting, projectRepository,
                                     annotationService);
                             /*
                              * for (TagSet tagset : importedProjectSetting.getTagSets()) {
@@ -498,7 +497,8 @@ public class ProjectPage
 
                 }
             });
-            add(allTabs = (AjaxTabbedPanel) new AjaxTabbedPanel<ITab>("tabs", tabs).setOutputMarkupPlaceholderTag(true));
+            add(allTabs = (AjaxTabbedPanel) new AjaxTabbedPanel<ITab>("tabs", tabs)
+                    .setOutputMarkupPlaceholderTag(true));
             ProjectDetailForm.this.setMultiPart(true);
         }
 

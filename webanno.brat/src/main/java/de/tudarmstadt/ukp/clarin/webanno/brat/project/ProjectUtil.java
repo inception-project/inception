@@ -330,32 +330,27 @@ public class ProjectUtil
         // no preference found
         catch (Exception e) {
 
-            /*// disable corefernce annotation for correction/curation pages for 0.4.0 release
-            List<TagSet> tagSets = aAnnotationService.listTagSets(aBModel.getProject());
-            List<TagSet> corefTagSets = new ArrayList<TagSet>();
-            List<TagSet> noFeatureTagSet = new ArrayList<TagSet>();
-            for (TagSet tagSet : tagSets) {
-                if (tagSet.getLayer() == null || tagSet.getFeature() == null) {
-                    noFeatureTagSet.add(tagSet);
-                }
-                else if (tagSet.getLayer().getType().equals("chain")) {
-                    corefTagSets.add(tagSet);
-                }
-            }
-
-            if (aMode.equals(Mode.CORRECTION) || aMode.equals(Mode.AUTOMATION)
-                    || aMode.equals(Mode.CURATION)) {
-                tagSets.removeAll(corefTagSets);
-            }
-            tagSets.remove(noFeatureTagSet);
-            aBModel.setAnnotationLayers(new HashSet<TagSet>(tagSets));*/
+            /*
+             * // disable corefernce annotation for correction/curation pages for 0.4.0 release
+             * List<TagSet> tagSets = aAnnotationService.listTagSets(aBModel.getProject());
+             * List<TagSet> corefTagSets = new ArrayList<TagSet>(); List<TagSet> noFeatureTagSet =
+             * new ArrayList<TagSet>(); for (TagSet tagSet : tagSets) { if (tagSet.getLayer() ==
+             * null || tagSet.getFeature() == null) { noFeatureTagSet.add(tagSet); } else if
+             * (tagSet.getLayer().getType().equals("chain")) { corefTagSets.add(tagSet); } }
+             *
+             * if (aMode.equals(Mode.CORRECTION) || aMode.equals(Mode.AUTOMATION) ||
+             * aMode.equals(Mode.CURATION)) { tagSets.removeAll(corefTagSets); }
+             * tagSets.remove(noFeatureTagSet); aBModel.setAnnotationLayers(new
+             * HashSet<TagSet>(tagSets));
+             */
             /*
              * abAnnotatorModel.setAnnotationLayers(new HashSet<TagSet>(aAnnotationService
              * .listTagSets(abAnnotatorModel.getProject())));
              */
 
-        	List<AnnotationLayer> layers = aAnnotationService.listAnnotationLayer(aBModel.getProject());
-        	aBModel.setAnnotationLayers(new HashSet<AnnotationLayer>(layers));
+            List<AnnotationLayer> layers = aAnnotationService.listAnnotationLayer(aBModel
+                    .getProject());
+            aBModel.setAnnotationLayers(new HashSet<AnnotationLayer>(layers));
         }
     }
 
@@ -440,61 +435,18 @@ public class ProjectUtil
     /**
      * Create a {@link TagSet} for the imported project,
      */
-    public static void createTagset(Project aProjecct, int aVersion,
-            List<de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet> importedTagSet,
+    public static void createTagset(Project aProjecct,
+            de.tudarmstadt.ukp.clarin.webanno.model.export.Project aImportedProjectSetting,
             RepositoryService aRepository, AnnotationService aAnnotationService)
         throws IOException
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = aRepository.getUser(username);
         AnnotationLayer type = null;
-
-        if (aVersion < 2) {// this is projects prio to version 2.0
-
-            List<String> posTags = new ArrayList<String>();
-            List<String> depTags = new ArrayList<String>();
-            List<String> neTags = new ArrayList<String>();
-            List<String> posTagDescriptions = new ArrayList<String>();
-            List<String> depTagDescriptions = new ArrayList<String>();
-            List<String> neTagDescriptions = new ArrayList<String>();
-            List<String> corefTypeTags = new ArrayList<String>();
-            List<String> corefRelTags = new ArrayList<String>();
-            for (de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet tagSet : importedTagSet) {
-                if (tagSet.getTypeName().equals(WebAnnoConst.POS)) {
-                    for (de.tudarmstadt.ukp.clarin.webanno.model.export.Tag tag : tagSet.getTags()) {
-                        posTags.add(tag.getName());
-                        posTagDescriptions.add(tag.getDescription());
-                    }
-                }
-                else if (tagSet.getTypeName().equals(WebAnnoConst.DEPENDENCY)) {
-                    for (de.tudarmstadt.ukp.clarin.webanno.model.export.Tag tag : tagSet.getTags()) {
-                        depTags.add(tag.getName());
-                        depTagDescriptions.add(tag.getDescription());
-                    }
-                }
-                else if (tagSet.getTypeName().equals(WebAnnoConst.NAMEDENTITY)) {
-                    for (de.tudarmstadt.ukp.clarin.webanno.model.export.Tag tag : tagSet.getTags()) {
-                        neTags.add(tag.getName());
-                        neTagDescriptions.add(tag.getDescription());
-                    }
-                }
-                else if (tagSet.getTypeName().equals(WebAnnoConst.COREFRELTYPE)) {
-                    for (de.tudarmstadt.ukp.clarin.webanno.model.export.Tag tag : tagSet.getTags()) {
-                        corefTypeTags.add(tag.getName());
-                    }
-                }
-                else if (tagSet.getTypeName().equals(WebAnnoConst.COREFERENCE)) {
-                    for (de.tudarmstadt.ukp.clarin.webanno.model.export.Tag tag : tagSet.getTags()) {
-                        corefRelTags.add(tag.getName());
-                    }
-                }
-            }
-
-            aAnnotationService.initializeTypesForProject(aProjecct, user,
-                    posTags.toArray(new String[0]), posTagDescriptions.toArray(new String[0]),
-                    depTags.toArray(new String[0]), depTagDescriptions.toArray(new String[0]),
-                    neTags.toArray(new String[0]), neTagDescriptions.toArray(new String[0]),
-                    corefTypeTags.toArray(new String[0]), corefRelTags.toArray(new String[0]));
+        List<de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet> importedTagSet = aImportedProjectSetting
+                .getTagSets();
+        if (aImportedProjectSetting.getVersion() == 0) {// this is projects prio to version 2.0
+            createV0TagSet(aProjecct, importedTagSet, aAnnotationService, user);
         }
 
         /*
@@ -518,6 +470,57 @@ public class ProjectUtil
          * newTag.setName(tag.getName()); newTag.setTagSet(newTagSet);
          * aAnnotationService.createTag(newTag, user); } }
          */
+    }
+
+    private static void createV0TagSet(Project aProjecct,
+            List<de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet> importedTagSet,
+            AnnotationService aAnnotationService, User user)
+        throws IOException
+    {
+        List<String> posTags = new ArrayList<String>();
+        List<String> depTags = new ArrayList<String>();
+        List<String> neTags = new ArrayList<String>();
+        List<String> posTagDescriptions = new ArrayList<String>();
+        List<String> depTagDescriptions = new ArrayList<String>();
+        List<String> neTagDescriptions = new ArrayList<String>();
+        List<String> corefTypeTags = new ArrayList<String>();
+        List<String> corefRelTags = new ArrayList<String>();
+        for (de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet tagSet : importedTagSet) {
+            if (tagSet.getTypeName().equals(WebAnnoConst.POS)) {
+                for (de.tudarmstadt.ukp.clarin.webanno.model.export.Tag tag : tagSet.getTags()) {
+                    posTags.add(tag.getName());
+                    posTagDescriptions.add(tag.getDescription());
+                }
+            }
+            else if (tagSet.getTypeName().equals(WebAnnoConst.DEPENDENCY)) {
+                for (de.tudarmstadt.ukp.clarin.webanno.model.export.Tag tag : tagSet.getTags()) {
+                    depTags.add(tag.getName());
+                    depTagDescriptions.add(tag.getDescription());
+                }
+            }
+            else if (tagSet.getTypeName().equals(WebAnnoConst.NAMEDENTITY)) {
+                for (de.tudarmstadt.ukp.clarin.webanno.model.export.Tag tag : tagSet.getTags()) {
+                    neTags.add(tag.getName());
+                    neTagDescriptions.add(tag.getDescription());
+                }
+            }
+            else if (tagSet.getTypeName().equals(WebAnnoConst.COREFRELTYPE)) {
+                for (de.tudarmstadt.ukp.clarin.webanno.model.export.Tag tag : tagSet.getTags()) {
+                    corefTypeTags.add(tag.getName());
+                }
+            }
+            else if (tagSet.getTypeName().equals(WebAnnoConst.COREFERENCE)) {
+                for (de.tudarmstadt.ukp.clarin.webanno.model.export.Tag tag : tagSet.getTags()) {
+                    corefRelTags.add(tag.getName());
+                }
+            }
+        }
+
+        aAnnotationService.initializeTypesForProject(aProjecct, user,
+                posTags.toArray(new String[0]), posTagDescriptions.toArray(new String[0]),
+                depTags.toArray(new String[0]), depTagDescriptions.toArray(new String[0]),
+                neTags.toArray(new String[0]), neTagDescriptions.toArray(new String[0]),
+                corefTypeTags.toArray(new String[0]), corefRelTags.toArray(new String[0]));
     }
 
     /**
@@ -575,11 +578,21 @@ public class ProjectUtil
             Project aImportedProject, RepositoryService aRepository)
         throws IOException
     {
+        if (aImportedProjectSetting.getVersion() == 0) {
+            createV0Document(aImportedProjectSetting, aImportedProject, aRepository);
+        }
+    }
+
+    private static void createV0Document(
+            de.tudarmstadt.ukp.clarin.webanno.model.export.Project aImportedProjectSetting,
+            Project aImportedProject, RepositoryService aRepository)
+        throws IOException
+    {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = aRepository.getUser(username);
         for (de.tudarmstadt.ukp.clarin.webanno.model.export.SourceDocument importedSourceDocument : aImportedProjectSetting
                 .getSourceDocuments()) {
-            de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument = new de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument();
+            SourceDocument sourceDocument = new SourceDocument();
             sourceDocument.setFormat(importedSourceDocument.getFormat());
             sourceDocument.setName(importedSourceDocument.getName());
             sourceDocument.setState(importedSourceDocument.getState());
@@ -594,6 +607,16 @@ public class ProjectUtil
      * {@link AnnotationDocument}
      */
     public static void createAnnotationDocument(
+            de.tudarmstadt.ukp.clarin.webanno.model.export.Project aImportedProjectSetting,
+            Project aImportedProject, RepositoryService aRepository)
+        throws IOException
+    {
+        if (aImportedProjectSetting.getVersion() == 0) {
+            createV0AnnotationDocument(aImportedProjectSetting, aImportedProject, aRepository);
+        }
+    }
+
+    private static void createV0AnnotationDocument(
             de.tudarmstadt.ukp.clarin.webanno.model.export.Project aImportedProjectSetting,
             Project aImportedProject, RepositoryService aRepository)
         throws IOException

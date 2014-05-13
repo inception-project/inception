@@ -240,10 +240,10 @@ public class AnnotationServiceImpl
     @Transactional
     public AnnotationLayer getLayer(long aId)
     {
-        return entityManager.createQuery("FROM AnnotationLayer WHERE id = :id", AnnotationLayer.class)
+        return entityManager
+                .createQuery("FROM AnnotationLayer WHERE id = :id", AnnotationLayer.class)
                 .setParameter("id", aId).getSingleResult();
     }
-
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
@@ -376,14 +376,16 @@ public class AnnotationServiceImpl
                 "coreference type annotation",
                 "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference", "BART", "de",
                 aCorefTypeTags.length > 0 ? aCorefTypeTags : new String[] { "nam" },
-                new String[] { "nam" }, aProject, aUser);
+                aCorefTypeTags.length > 0 ? aCorefTypeTags : new String[] { "nam" }, aProject,
+                aUser);
         AnnotationFeature corefTypeFeature = corefTypeTagSet.getFeature();
 
         TagSet corefRelTagSet = initializeType("referenceRelation", "referenceRelation",
                 "coreference relation annotation",
                 "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference", "TuebaDZ", "de",
                 aCorefRelTags.length > 0 ? aCorefRelTags : new String[] { "anaphoric" },
-                new String[] { "anaphoric" }, aProject, aUser);
+                aCorefRelTags.length > 0 ? aCorefRelTags : new String[] { "anaphoric" }, aProject,
+                aUser);
         AnnotationFeature corefRelFeature = corefRelTagSet.getFeature();
 
         AnnotationLayer base = setLayer("de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference",
@@ -559,7 +561,8 @@ public class AnnotationServiceImpl
         AnnotationFeature posFeature = PosTagSet.getFeature();
 
         AnnotationLayer tokenLayer = getLayer(Token.class.getName(), "span", aProject);
-        AnnotationLayer posLayer = setLayer(POS.class.getName(), "PosValue", "POS", "span", aProject);
+        AnnotationLayer posLayer = setLayer(POS.class.getName(), "PosValue", "POS", "span",
+                aProject);
         AnnotationFeature tokenPosFeature = setFeature("pos", "pos", aProject, tokenLayer,
                 POS.class.getName());
         tokenPosFeature.setVisible(true);
@@ -612,8 +615,8 @@ public class AnnotationServiceImpl
     @Transactional
     public List<AnnotationLayer> listAnnotationType()
     {
-        return entityManager.createQuery("FROM AnnotationLayer ORDER BY name", AnnotationLayer.class)
-                .getResultList();
+        return entityManager.createQuery("FROM AnnotationLayer ORDER BY name",
+                AnnotationLayer.class).getResultList();
     }
 
     @Override

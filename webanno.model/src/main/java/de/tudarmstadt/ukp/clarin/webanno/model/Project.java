@@ -56,7 +56,7 @@ public class Project
     private Mode mode = Mode.ANNOTATION;
 
     // version of the project
-    private int version = 2;
+    private int version = 1;
 
     public Project()
     {
