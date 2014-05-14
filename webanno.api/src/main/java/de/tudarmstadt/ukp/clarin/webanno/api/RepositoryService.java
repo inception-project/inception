@@ -687,6 +687,8 @@ public interface RepositoryService
     List<CrowdJob> listCrowdJobs();
 
     List<CrowdJob> listCrowdJobs(Project project);
+    
+    
 
     /**
      * remove a crowd project

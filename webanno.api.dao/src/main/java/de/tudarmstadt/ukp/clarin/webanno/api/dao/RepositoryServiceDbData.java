@@ -1101,7 +1101,7 @@ public class RepositoryServiceDbData
     	sourceDocuments.removeAll(tabSepDocuments);
         return sourceDocuments;
     }
-
+    
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public List<SourceDocument> listTabSepDocuments(Project aProject)
