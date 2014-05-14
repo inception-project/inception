@@ -221,6 +221,8 @@ public class AutomationUtil
             }
 
             BufferedWriter trainOut = new BufferedWriter(new FileWriter(trainFile));
+            TypeAdapter adapter = TypeUtil.getAdapter(feature.getLayer(),
+                    annotationService);
             for (SourceDocument sourceDocument : aRepository.listSourceDocuments(feature
                     .getProject())) {
                 if ((sourceDocument.isTrainingDocument() && sourceDocument.getFeature() != null && sourceDocument
@@ -228,7 +230,7 @@ public class AutomationUtil
                     JCas jCas = aRepository.readJCas(sourceDocument, sourceDocument.getProject(),
                             user);
                     for (Sentence sentence : select(jCas, Sentence.class)) {
-                        trainOut.append(getMiraLine(sentence, feature).toString() + "\n");
+                        trainOut.append(getMiraLine(sentence, feature, adapter).toString() + "\n");
                     }
                     sourceDocument.setProcessed(false);
                     status.setTrainDocs(status.getTrainDocs() - 1);
@@ -360,6 +362,8 @@ public class AutomationUtil
         AutomationStatus status = aRepository.getAutomationStatus(aTemplate);
 
         BufferedWriter trainOut = new BufferedWriter(new FileWriter(trainFile));
+        TypeAdapter adapter = TypeUtil.getAdapter(feature.getLayer(),
+                annotationService);
         // Training documents (Curated or webanno-compatible imported ones - read using UIMA)
         for (SourceDocument sourceDocument : aRepository.listSourceDocuments(feature.getProject())) {
             if ((sourceDocument.isTrainingDocument() && sourceDocument.getFeature() != null && sourceDocument
@@ -367,10 +371,10 @@ public class AutomationUtil
                 JCas jCas = aRepository.readJCas(sourceDocument, sourceDocument.getProject(), user);
                 for (Sentence sentence : select(jCas, Sentence.class)) {
                     if (aBase) {// base training document
-                        trainOut.append(getMiraLine(sentence, null).toString() + "\n");
+                        trainOut.append(getMiraLine(sentence, null, adapter).toString() + "\n");
                     }
                     else {// training document with other features
-                        trainOut.append(getMiraLine(sentence, feature).toString() + "\n");
+                        trainOut.append(getMiraLine(sentence, feature, adapter).toString() + "\n");
                     }
                 }
                 sourceDocument.setProcessed(!aBase);
@@ -382,10 +386,10 @@ public class AutomationUtil
                 JCas jCas = aRepository.getCurationDocumentContent(sourceDocument);
                 for (Sentence sentence : select(jCas, Sentence.class)) {
                     if (aBase) {// base training document
-                        trainOut.append(getMiraLine(sentence, null).toString() + "\n");
+                        trainOut.append(getMiraLine(sentence, null, adapter).toString() + "\n");
                     }
                     else {// training document with other features
-                        trainOut.append(getMiraLine(sentence, feature).toString() + "\n");
+                        trainOut.append(getMiraLine(sentence, feature,adapter).toString() + "\n");
                     }
                 }
                 sourceDocument.setProcessed(!aBase);
@@ -446,7 +450,8 @@ public class AutomationUtil
         if (!documentChanged) {
             return;
         }
-
+        TypeAdapter adapter = TypeUtil.getAdapter(feature.getLayer(),
+                annotationService);
         for (SourceDocument document : aRepository.listSourceDocuments(feature.getProject())) {
             if (!document.isProcessed() && !document.isTrainingDocument()) {
                 File predFile = new File(miraDir, document.getId() + ".pred.ft");
@@ -460,14 +465,14 @@ public class AutomationUtil
                 }
 
                 for (Sentence sentence : select(jCas, Sentence.class)) {
-                    predOut.append(getMiraLine(sentence, null).toString() + "\n");
+                    predOut.append(getMiraLine(sentence, null, adapter).toString() + "\n");
                 }
                 predOut.close();
             }
         }
     }
 
-    private static StringBuffer getMiraLine(Sentence sentence, AnnotationFeature aLayerFeature)
+    private static StringBuffer getMiraLine(Sentence sentence, AnnotationFeature aLayerFeature,TypeAdapter aAdapter)
         throws CASException
     {
         StringBuffer sb = new StringBuffer();
@@ -475,15 +480,13 @@ public class AutomationUtil
         String tag = "";
         List<String> annotations = new ArrayList<String>();
         Map<Integer, String> multAnno = null;
-        if (aLayerFeature != null) {
-            TypeAdapter adapter = TypeUtil.getAdapter(aLayerFeature.getLayer(),
-                    annotationService);
+        if (aLayerFeature != null) {           
             if (aLayerFeature.getLayer().isMultipleTokens()) {
-                multAnno = ((SpanAdapter) adapter).getMultipleAnnotation(
+                multAnno = ((SpanAdapter) aAdapter).getMultipleAnnotation(
                         sentence, aLayerFeature);
             }
             else {
-                annotations = adapter.getAnnotation(sentence.getCAS().getJCas(), aLayerFeature,
+                annotations = aAdapter.getAnnotation(sentence.getCAS().getJCas(), aLayerFeature,
                 		sentence.getBegin(), sentence.getEnd());
             }
 
