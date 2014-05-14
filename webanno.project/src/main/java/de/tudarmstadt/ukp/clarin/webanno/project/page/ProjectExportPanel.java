@@ -725,7 +725,7 @@ public class ProjectExportPanel
                 .listSourceDocuments(aProject);
         documents.addAll(repository.listTabSepDocuments(aProject));
         for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument :documents) {
-          
+
         	SourceDocument exDocument = new SourceDocument();
             exDocument.setFormat(sourceDocument.getFormat());
             exDocument.setName(sourceDocument.getName());
@@ -752,13 +752,13 @@ public class ProjectExportPanel
             sourceDocuments.add(exDocument);
             exDocuments.put(sourceDocument, exDocument);
         }
-        
+
         exProjekt.setSourceDocuments(sourceDocuments);
         exProjekt.setAnnotationDocuments(annotationDocuments);
-        
+
         List<de.tudarmstadt.ukp.clarin.webanno.model.export.CrowdJob> exCrowdJobs = new ArrayList<de.tudarmstadt.ukp.clarin.webanno.model.export.CrowdJob>();
         for(CrowdJob crowdJob: repository.listCrowdJobs(aProject)){
-        	
+
         	de.tudarmstadt.ukp.clarin.webanno.model.export.CrowdJob exCrowdJob = new de.tudarmstadt.ukp.clarin.webanno.model.export.CrowdJob();
         	exCrowdJob.setApiKey(crowdJob.getApiKey());
         	exCrowdJob.setLink(crowdJob.getLink());
@@ -768,24 +768,24 @@ public class ProjectExportPanel
         	exCrowdJob.setTask2Id(crowdJob.getTask2Id());
         	exCrowdJob.setUseGoldSents(crowdJob.getUseGoldSents());
         	exCrowdJob.setUseSents(crowdJob.getUseSents());
-        	
+
         	Set<SourceDocument> docs = new HashSet<SourceDocument>();
-        	
+
         	System.out.println(crowdJob.getDocuments().size());
         	for(de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument document:crowdJob.getDocuments()){
         		docs.add(exDocuments.get(document));
         	}
-        	
+
         	Set<SourceDocument> goldDocs = new HashSet<SourceDocument>();
         	for(de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument document:crowdJob.getGoldDocuments()){
         		goldDocs.add(exDocuments.get(document));
         	}
         	exCrowdJob.setDocuments(docs);
-        	exCrowdJob.setDocuments(goldDocs);
+        	exCrowdJob.setGoldDocuments(goldDocs);
         	exCrowdJobs.add(exCrowdJob);
         }
         exProjekt.setCrowdJobs(exCrowdJobs);
-        
+
         List<ProjectPermission> projectPermissions = new ArrayList<ProjectPermission>();
 
         // add project permissions to the project

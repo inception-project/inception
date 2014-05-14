@@ -57,11 +57,11 @@ public class CrowdJob
     private String name;
 
 
-    @ManyToMany
+    @ManyToMany(fetch=FetchType.EAGER)
     @JoinTable(name = "crowd_job_source_document")
     private Set<SourceDocument> documents = new HashSet<SourceDocument>();
 
-    @ManyToMany
+    @ManyToMany(fetch=FetchType.EAGER)
     @JoinTable(name = "crowd_job_gold_document")
     private Set<SourceDocument> goldDocuments = new HashSet<SourceDocument>();
 
