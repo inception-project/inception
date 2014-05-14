@@ -803,9 +803,8 @@ public class ProjectLayersPanel
                     }
                     AnnotationLayer layer = layerDetailForm.getModelObject();
 
-                    de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer exLayer = new de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer();
-
-                    ProjectUtil.exportLayerDetails(layer, exLayer, annotationService);
+                    de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer exLayer = ProjectUtil
+                            .exportLayerDetails(null, null, layer, annotationService);
 
                     MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
                     ProjectUtil.setJsonConverter(jsonConverter);

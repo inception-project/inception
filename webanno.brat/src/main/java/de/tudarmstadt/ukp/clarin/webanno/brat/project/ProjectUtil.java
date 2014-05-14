@@ -825,27 +825,30 @@ public class ProjectUtil
         aRepository.saveUserSettings(username, aBModel.getProject(), aBModel.getMode(), preference);
     }
 
-    public static void exportLayerDetails(AnnotationLayer layer,
-            de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer exLayer,
-            AnnotationService aAnnotationService)
+    public static de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer exportLayerDetails(
+            Map<AnnotationLayer, de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer> aLayerToExLayer,
+            Map<AnnotationFeature, de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature> aFeatureToExFeature,
+            AnnotationLayer aLayer, AnnotationService aAnnotationService)
     {
-        exLayer.setAllowSTacking(layer.isAllowSTacking());
-        exLayer.setBuiltIn(layer.isBuiltIn());
-        exLayer.setCrossSentence(layer.isCrossSentence());
-        exLayer.setDescription(layer.getDescription());
-        exLayer.setEnabled(layer.isEnabled());
-        exLayer.setLockToTokenOffset(layer.isLockToTokenOffset());
-        exLayer.setMultipleTokens(layer.isMultipleTokens());
-        exLayer.setName(layer.getName());
-        exLayer.setType(layer.getType());
-        exLayer.setUiName(layer.getUiName());
+        de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer exLayer = new de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer();
+        exLayer.setAllowSTacking(aLayer.isAllowSTacking());
+        exLayer.setBuiltIn(aLayer.isBuiltIn());
+        exLayer.setCrossSentence(aLayer.isCrossSentence());
+        exLayer.setDescription(aLayer.getDescription());
+        exLayer.setEnabled(aLayer.isEnabled());
+        exLayer.setLockToTokenOffset(aLayer.isLockToTokenOffset());
+        exLayer.setMultipleTokens(aLayer.isMultipleTokens());
+        exLayer.setName(aLayer.getName());
+        exLayer.setType(aLayer.getType());
+        exLayer.setUiName(aLayer.getUiName());
+
+        if (aLayerToExLayer != null) {
+            aLayerToExLayer.put(aLayer, exLayer);
+        }
 
         List<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature> exFeatures = new ArrayList<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature>();
-
-        for (AnnotationFeature feature : aAnnotationService.listAnnotationFeature(layer)) {
-
+        for (AnnotationFeature feature : aAnnotationService.listAnnotationFeature(aLayer)) {
             de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature exFeature = new de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature();
-
             exFeature.setDescription(feature.getDescription());
             exFeature.setEnabled(feature.isEnabled());
             exFeature.setName(feature.getName());
@@ -853,29 +856,31 @@ public class ProjectUtil
             exFeature.setUiName(feature.getUiName());
             exFeature.setVisible(feature.isVisible());
 
-            if (feature.getTagset() != null) {
-                TagSet tagSet = feature.getTagset();
+            if(feature.getTagset() !=null){
+            TagSet tagSet = feature.getTagset();
+            de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet exTagSet = new de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet();
+            exTagSet.setDescription(tagSet.getDescription());
+            exTagSet.setLanguage(tagSet.getLanguage());
+            exTagSet.setName(tagSet.getName());
+            exTagSet.setCreateTag(tagSet.isCreateTag());
 
-                de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet exTagSet = new de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet();
-
-                exTagSet.setDescription(tagSet.getDescription());
-                exTagSet.setLanguage(tagSet.getLanguage());
-                exTagSet.setName(tagSet.getName());
-                exTagSet.setCreateTag(tagSet.isCreateTag());
-
-                List<de.tudarmstadt.ukp.clarin.webanno.model.export.Tag> exportedTags = new ArrayList<de.tudarmstadt.ukp.clarin.webanno.model.export.Tag>();
-                for (Tag tag : aAnnotationService.listTags(tagSet)) {
-                    de.tudarmstadt.ukp.clarin.webanno.model.export.Tag exTag = new de.tudarmstadt.ukp.clarin.webanno.model.export.Tag();
-                    exTag.setDescription(tag.getDescription());
-                    exTag.setName(tag.getName());
-                    exportedTags.add(exTag);
-                }
-                exTagSet.setTags(exportedTags);
-
-                exFeature.setTagSet(exTagSet);
+            List<de.tudarmstadt.ukp.clarin.webanno.model.export.Tag> exportedTags = new ArrayList<de.tudarmstadt.ukp.clarin.webanno.model.export.Tag>();
+            for (Tag tag : aAnnotationService.listTags(tagSet)) {
+                de.tudarmstadt.ukp.clarin.webanno.model.export.Tag exTag = new de.tudarmstadt.ukp.clarin.webanno.model.export.Tag();
+                exTag.setDescription(tag.getDescription());
+                exTag.setName(tag.getName());
+                exportedTags.add(exTag);
             }
+            exTagSet.setTags(exportedTags);
+            exFeature.setTagSet(exTagSet);
+        }
             exFeatures.add(exFeature);
+            if (aFeatureToExFeature != null) {
+                aFeatureToExFeature.put(feature, exFeature);
+            }
         }
         exLayer.setFeatures(exFeatures);
+        return exLayer;
     }
+
 }

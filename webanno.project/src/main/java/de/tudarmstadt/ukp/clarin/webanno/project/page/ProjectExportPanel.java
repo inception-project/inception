@@ -67,8 +67,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
-import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.export.ProjectPermission;
@@ -647,67 +645,22 @@ public class ProjectExportPanel
 
         List<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer> exLayers = new ArrayList<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer>();
         // Store map of layer and its equivalent exLayer so that the attach type is attached later
-        Map<AnnotationLayer, de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer> layerToExLayer = new HashMap<AnnotationLayer, de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer>();
+        Map<AnnotationLayer, de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer> layerToExLayers = new HashMap<AnnotationLayer, de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer>();
         // Store map of feature and its equivalent exFeature so that the attach feature is attached
         // later
-        Map<AnnotationFeature, de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature> featureToExFeature = new HashMap<AnnotationFeature, de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature>();
+        Map<AnnotationFeature, de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature> featureToExFeatures = new HashMap<AnnotationFeature, de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature>();
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
-            de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer exLayer = new de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer();
-            exLayer.setAllowSTacking(layer.isAllowSTacking());
-            exLayer.setBuiltIn(layer.isBuiltIn());
-            exLayer.setCrossSentence(layer.isCrossSentence());
-            exLayer.setDescription(layer.getDescription());
-            exLayer.setEnabled(layer.isEnabled());
-            exLayer.setLockToTokenOffset(layer.isLockToTokenOffset());
-            exLayer.setMultipleTokens(layer.isMultipleTokens());
-            exLayer.setName(layer.getName());
-            exLayer.setType(layer.getType());
-            exLayer.setUiName(layer.getUiName());
-
-            layerToExLayer.put(layer, exLayer);
-
-            List<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature> exFeatures = new ArrayList<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature>();
-            for (AnnotationFeature feature : annotationService.listAnnotationFeature(layer)) {
-                de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature exFeature = new de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature();
-                exFeature.setDescription(feature.getDescription());
-                exFeature.setEnabled(feature.isEnabled());
-                exFeature.setName(feature.getName());
-                exFeature.setType(feature.getType());
-                exFeature.setUiName(feature.getUiName());
-                exFeature.setVisible(feature.isVisible());
-
-                TagSet tagSet = annotationService.getTagSet(feature, feature.getProject());
-                de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet exTagSet = new de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet();
-                exTagSet.setDescription(tagSet.getDescription());
-                exTagSet.setLanguage(tagSet.getLanguage());
-                exTagSet.setName(tagSet.getName());
-                exTagSet.setCreateTag(tagSet.isCreateTag());
-
-                List<de.tudarmstadt.ukp.clarin.webanno.model.export.Tag> exportedTags = new ArrayList<de.tudarmstadt.ukp.clarin.webanno.model.export.Tag>();
-                for (Tag tag : annotationService.listTags(tagSet)) {
-                    de.tudarmstadt.ukp.clarin.webanno.model.export.Tag exTag = new de.tudarmstadt.ukp.clarin.webanno.model.export.Tag();
-                    exTag.setDescription(tag.getDescription());
-                    exTag.setName(tag.getName());
-                    exportedTags.add(exTag);
-                }
-                exTagSet.setTags(exportedTags);
-                exFeature.setTagSet(exTagSet);
-                exFeatures.add(exFeature);
-
-                featureToExFeature.put(feature, exFeature);
-            }
-            exLayer.setFeatures(exFeatures);
-            exLayers.add(exLayer);
+            exLayers.add(ProjectUtil.exportLayerDetails(layerToExLayers, featureToExFeatures, layer, annotationService));
         }
 
         // add the attach type and attache featureto the exported layer and exported feature
-        for (AnnotationLayer layer : layerToExLayer.keySet()) {
+        for (AnnotationLayer layer : layerToExLayers.keySet()) {
             if (layer.getAttachType() != null) {
-                layerToExLayer.get(layer).setAttachType(layerToExLayer.get(layer.getAttachType()));
+                layerToExLayers.get(layer).setAttachType(layerToExLayers.get(layer.getAttachType()));
             }
             if (layer.getAttachFeature() != null) {
-                layerToExLayer.get(layer).setAttachFeature(
-                        featureToExFeature.get(layerToExLayer.get(layer.getAttachType())
+                layerToExLayers.get(layer).setAttachFeature(
+                        featureToExFeatures.get(layerToExLayers.get(layer.getAttachType())
                                 .getAttachFeature()));
             }
         }
@@ -735,7 +688,7 @@ public class ProjectExportPanel
             exDocument.setProcessed(false);
 
             if (sourceDocument.getFeature() != null) {
-                exDocument.setFeature(featureToExFeature.get(sourceDocument.getFeature()));
+                exDocument.setFeature(featureToExFeatures.get(sourceDocument.getFeature()));
             }
 
             // add annotation document to Project
@@ -769,7 +722,6 @@ public class ProjectExportPanel
 
             Set<SourceDocument> docs = new HashSet<SourceDocument>();
 
-            System.out.println(crowdJob.getDocuments().size());
             for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument document : crowdJob
                     .getDocuments()) {
                 docs.add(exDocuments.get(document));
@@ -809,12 +761,12 @@ public class ProjectExportPanel
             exTemplate.setAutomationStarted(template.isAutomationStarted());
             exTemplate.setCurrentLayer(template.isCurrentLayer());
             exTemplate.setResult(template.getResult());
-            exTemplate.setTrainFeature(featureToExFeature.get(template.getTrainFeature()));
+            exTemplate.setTrainFeature(featureToExFeatures.get(template.getTrainFeature()));
 
             if (template.getOtherFeatures().size() > 0) {
                 Set<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature> exOtherFeatures = new HashSet<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature>();
                 for (AnnotationFeature feature : template.getOtherFeatures()) {
-                    exOtherFeatures.add(featureToExFeature.get(feature));
+                    exOtherFeatures.add(featureToExFeatures.get(feature));
                 }
                 exTemplate.setOtherFeatures(exOtherFeatures);
             }
