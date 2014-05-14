@@ -472,6 +472,23 @@ public class AutomationUtil
     {
         StringBuffer sb = new StringBuffer();
 
+        String tag = "";
+        List<String> annotations = new ArrayList<String>();
+        Map<Integer, String> multAnno = null;
+        if (aLayerFeature != null) {
+            TypeAdapter adapter = TypeUtil.getAdapter(aLayerFeature.getLayer(),
+                    annotationService);
+            if (aLayerFeature.getLayer().isMultipleTokens()) {
+                multAnno = ((SpanAdapter) adapter).getMultipleAnnotation(
+                        sentence, aLayerFeature);
+            }
+            else {
+                annotations = adapter.getAnnotation(sentence.getCAS().getJCas(), aLayerFeature,
+                		sentence.getBegin(), sentence.getEnd());
+            }
+
+        }
+        
         for (Token token : selectCovered(sentence.getCAS().getJCas(), Token.class,
                 sentence.getBegin(), sentence.getEnd())) {
             String word = token.getCoveredText();
@@ -506,20 +523,13 @@ public class AutomationUtil
                     + " ";
 
             String nl = "\n";
-            String tag = "";
-            List<String> annotations = new ArrayList<String>();
+
             if (aLayerFeature != null) {
-                TypeAdapter adapter = TypeUtil.getAdapter(aLayerFeature.getLayer(),
-                        annotationService);
                 if (aLayerFeature.getLayer().isMultipleTokens()) {
-                    Map<Integer, String> multAnno = ((SpanAdapter) adapter).getMultipleAnnotation(
-                            sentence, aLayerFeature);
                     tag = multAnno.get(token.getAddress()) == null ? "O" : multAnno.get(token
                             .getAddress());
                 }
                 else {
-                    annotations = adapter.getAnnotation(sentence.getCAS().getJCas(), aLayerFeature,
-                            token.getBegin(), token.getEnd());
                     tag = annotations.size() == 0 ? "__nill__" : annotations.get(0);
                 }
 

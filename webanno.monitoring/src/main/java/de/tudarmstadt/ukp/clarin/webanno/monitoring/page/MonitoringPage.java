@@ -827,6 +827,9 @@ public class MonitoringPage
                 {
                     MiraTemplate template = selectedTemplate.getModelObject();
                     if (template != null) {
+                    	if(repository.getAutomationStatus(template).getEndTime().equals(repository.getAutomationStatus(template).getEndTime())){
+                    		return "---";
+                    	}
                         return repository.getAutomationStatus(template).getEndTime().toString();
                     }
                     else {
