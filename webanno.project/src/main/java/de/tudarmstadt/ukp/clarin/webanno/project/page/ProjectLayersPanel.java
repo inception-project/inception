@@ -17,6 +17,7 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.project.page;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
@@ -49,6 +50,7 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
+import org.apache.wicket.markup.html.link.DownloadLink;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -60,12 +62,13 @@ import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.ArcAnnotationModalWindowPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -778,6 +781,46 @@ public class ProjectLayersPanel
                     }
                 }
             });
+
+            add(new DownloadLink("export", new LoadableDetachableModel<File>()
+            {
+                private static final long serialVersionUID = 840863954694163375L;
+
+                @Override
+                protected File load()
+                {
+                    File exportFile = null;
+                    try {
+                        exportFile = File.createTempFile("exportedLayer", ".json");
+                    }
+                    catch (IOException e1) {
+                        error("Unable to create temporary File!!");
+
+                    }
+                    if (selectedProjectModel.getObject().getId() == 0) {
+                        error("Project not yet created. Please save project details first!");
+                        return null;
+                    }
+                    AnnotationLayer layer = layerDetailForm.getModelObject();
+
+                    de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer exLayer = new de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer();
+
+                    ProjectUtil.exportLayerDetails(layer, exLayer, annotationService);
+
+                    MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
+                    ProjectUtil.setJsonConverter(jsonConverter);
+
+                    try {
+                        ProjectUtil.generateJson(exLayer, exportFile);
+                    }
+                    catch (IOException e) {
+                        error("File Path not found or No permision to save the file!");
+                    }
+                    info("TagSets successfully exported to :" + exportFile.getAbsolutePath());
+
+                    return exportFile;
+                }
+            }).setOutputMarkupId(true));
 
         }
     }

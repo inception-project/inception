@@ -17,8 +17,6 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.model.export;
 
-import java.util.List;
-
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 
@@ -37,8 +35,8 @@ public class AnnotationFeature
     @JsonProperty("name")
     String name;
 
-    @JsonProperty("tag_sets")
-    private List<TagSet> tagSets;
+    @JsonProperty("tag_set")
+    private TagSet tagSet;
 
     @JsonProperty("uiName")
     private String uiName;
@@ -63,16 +61,6 @@ public class AnnotationFeature
     public void setName(String name)
     {
         this.name = name;
-    }
-
-    public List<TagSet> getTagSets()
-    {
-        return tagSets;
-    }
-
-    public void setTagSets(List<TagSet> tagSets)
-    {
-        this.tagSets = tagSets;
     }
 
     public String getUiName()
@@ -123,6 +111,16 @@ public class AnnotationFeature
     public void setDescription(String description)
     {
         this.description = description;
+    }
+
+    public TagSet getTagSet()
+    {
+        return tagSet;
+    }
+
+    public void setTagSet(TagSet tagSet)
+    {
+        this.tagSet = tagSet;
     }
 
 }

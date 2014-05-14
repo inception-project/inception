@@ -675,25 +675,23 @@ public class ProjectExportPanel
                 exFeature.setType(feature.getType());
                 exFeature.setUiName(feature.getUiName());
                 exFeature.setVisible(feature.isVisible());
-                List<de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet> exTagSets = new ArrayList<de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet>();
-                for (TagSet tagSet : annotationService.listTagSets(feature)) {
-                    de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet exTagSet = new de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet();
-                    exTagSet.setDescription(tagSet.getDescription());
-                    exTagSet.setLanguage(tagSet.getLanguage());
-                    exTagSet.setName(tagSet.getName());
-                    exTagSet.setCreateTag(tagSet.isCreateTag());
 
-                    List<de.tudarmstadt.ukp.clarin.webanno.model.export.Tag> exportedTags = new ArrayList<de.tudarmstadt.ukp.clarin.webanno.model.export.Tag>();
-                    for (Tag tag : annotationService.listTags(tagSet)) {
-                        de.tudarmstadt.ukp.clarin.webanno.model.export.Tag exTag = new de.tudarmstadt.ukp.clarin.webanno.model.export.Tag();
-                        exTag.setDescription(tag.getDescription());
-                        exTag.setName(tag.getName());
-                        exportedTags.add(exTag);
-                    }
-                    exTagSet.setTags(exportedTags);
-                    exTagSets.add(exTagSet);
+                TagSet tagSet = annotationService.getTagSet(feature, feature.getProject());
+                de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet exTagSet = new de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet();
+                exTagSet.setDescription(tagSet.getDescription());
+                exTagSet.setLanguage(tagSet.getLanguage());
+                exTagSet.setName(tagSet.getName());
+                exTagSet.setCreateTag(tagSet.isCreateTag());
+
+                List<de.tudarmstadt.ukp.clarin.webanno.model.export.Tag> exportedTags = new ArrayList<de.tudarmstadt.ukp.clarin.webanno.model.export.Tag>();
+                for (Tag tag : annotationService.listTags(tagSet)) {
+                    de.tudarmstadt.ukp.clarin.webanno.model.export.Tag exTag = new de.tudarmstadt.ukp.clarin.webanno.model.export.Tag();
+                    exTag.setDescription(tag.getDescription());
+                    exTag.setName(tag.getName());
+                    exportedTags.add(exTag);
                 }
-                exFeature.setTagSets(exTagSets);
+                exTagSet.setTags(exportedTags);
+                exFeature.setTagSet(exTagSet);
                 exFeatures.add(exFeature);
 
                 featureToExFeature.put(feature, exFeature);
@@ -724,9 +722,9 @@ public class ProjectExportPanel
         List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = repository
                 .listSourceDocuments(aProject);
         documents.addAll(repository.listTabSepDocuments(aProject));
-        for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument :documents) {
+        for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
 
-        	SourceDocument exDocument = new SourceDocument();
+            SourceDocument exDocument = new SourceDocument();
             exDocument.setFormat(sourceDocument.getFormat());
             exDocument.setName(sourceDocument.getName());
             exDocument.setState(sourceDocument.getState());
@@ -757,32 +755,34 @@ public class ProjectExportPanel
         exProjekt.setAnnotationDocuments(annotationDocuments);
 
         List<de.tudarmstadt.ukp.clarin.webanno.model.export.CrowdJob> exCrowdJobs = new ArrayList<de.tudarmstadt.ukp.clarin.webanno.model.export.CrowdJob>();
-        for(CrowdJob crowdJob: repository.listCrowdJobs(aProject)){
+        for (CrowdJob crowdJob : repository.listCrowdJobs(aProject)) {
 
-        	de.tudarmstadt.ukp.clarin.webanno.model.export.CrowdJob exCrowdJob = new de.tudarmstadt.ukp.clarin.webanno.model.export.CrowdJob();
-        	exCrowdJob.setApiKey(crowdJob.getApiKey());
-        	exCrowdJob.setLink(crowdJob.getLink());
-        	exCrowdJob.setName(crowdJob.getName());
-        	exCrowdJob.setStatus(crowdJob.getStatus());
-        	exCrowdJob.setTask1Id(crowdJob.getTask1Id());
-        	exCrowdJob.setTask2Id(crowdJob.getTask2Id());
-        	exCrowdJob.setUseGoldSents(crowdJob.getUseGoldSents());
-        	exCrowdJob.setUseSents(crowdJob.getUseSents());
+            de.tudarmstadt.ukp.clarin.webanno.model.export.CrowdJob exCrowdJob = new de.tudarmstadt.ukp.clarin.webanno.model.export.CrowdJob();
+            exCrowdJob.setApiKey(crowdJob.getApiKey());
+            exCrowdJob.setLink(crowdJob.getLink());
+            exCrowdJob.setName(crowdJob.getName());
+            exCrowdJob.setStatus(crowdJob.getStatus());
+            exCrowdJob.setTask1Id(crowdJob.getTask1Id());
+            exCrowdJob.setTask2Id(crowdJob.getTask2Id());
+            exCrowdJob.setUseGoldSents(crowdJob.getUseGoldSents());
+            exCrowdJob.setUseSents(crowdJob.getUseSents());
 
-        	Set<SourceDocument> docs = new HashSet<SourceDocument>();
+            Set<SourceDocument> docs = new HashSet<SourceDocument>();
 
-        	System.out.println(crowdJob.getDocuments().size());
-        	for(de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument document:crowdJob.getDocuments()){
-        		docs.add(exDocuments.get(document));
-        	}
+            System.out.println(crowdJob.getDocuments().size());
+            for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument document : crowdJob
+                    .getDocuments()) {
+                docs.add(exDocuments.get(document));
+            }
 
-        	Set<SourceDocument> goldDocs = new HashSet<SourceDocument>();
-        	for(de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument document:crowdJob.getGoldDocuments()){
-        		goldDocs.add(exDocuments.get(document));
-        	}
-        	exCrowdJob.setDocuments(docs);
-        	exCrowdJob.setGoldDocuments(goldDocs);
-        	exCrowdJobs.add(exCrowdJob);
+            Set<SourceDocument> goldDocs = new HashSet<SourceDocument>();
+            for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument document : crowdJob
+                    .getGoldDocuments()) {
+                goldDocs.add(exDocuments.get(document));
+            }
+            exCrowdJob.setDocuments(docs);
+            exCrowdJob.setGoldDocuments(goldDocs);
+            exCrowdJobs.add(exCrowdJob);
         }
         exProjekt.setCrowdJobs(exCrowdJobs);
 

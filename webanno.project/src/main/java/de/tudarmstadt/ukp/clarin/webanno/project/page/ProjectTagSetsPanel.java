@@ -650,14 +650,14 @@ public class ProjectTagSetsPanel
                         else {
                             de.tudarmstadt.ukp.clarin.webanno.model.TagSet tagSet = tagSetDetailForm
                                     .getModelObject();
-                            TagSet exportedTagSetContent = new TagSet();
-                            exportedTagSetContent.setDescription(tagSet.getDescription());
-                            exportedTagSetContent.setLanguage(tagSet.getLanguage());
-                            exportedTagSetContent.setName(tagSet.getName());
+                            TagSet exTagSet = new TagSet();
+                            exTagSet.setDescription(tagSet.getDescription());
+                            exTagSet.setLanguage(tagSet.getLanguage());
+                            exTagSet.setName(tagSet.getName());
 
-                            exportedTagSetContent.setType(tagSet.getLayer().getType());
-                            exportedTagSetContent.setTypeName(tagSet.getLayer().getName());
-                            exportedTagSetContent.setTypeDescription(tagSet.getLayer()
+                            exTagSet.setType(tagSet.getLayer().getType());
+                            exTagSet.setTypeName(tagSet.getLayer().getName());
+                            exTagSet.setTypeDescription(tagSet.getLayer()
                                     .getDescription());
 
                             List<de.tudarmstadt.ukp.clarin.webanno.model.export.Tag> exportedTags = new ArrayList<de.tudarmstadt.ukp.clarin.webanno.model.export.Tag>();
@@ -668,12 +668,12 @@ public class ProjectTagSetsPanel
                                 exportedTags.add(exportedTag);
 
                             }
-                            exportedTagSetContent.setTags(exportedTags);
+                            exTagSet.setTags(exportedTags);
                             MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
                             ProjectUtil.setJsonConverter(jsonConverter);
 
                             try {
-                                ProjectUtil.generateJson(exportedTagSetContent, exportFile);
+                                ProjectUtil.generateJson(exTagSet, exportFile);
                             }
                             catch (IOException e) {
                                 error("File Path not found or No permision to save the file!");

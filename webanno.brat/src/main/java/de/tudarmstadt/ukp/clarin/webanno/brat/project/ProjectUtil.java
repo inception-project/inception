@@ -57,6 +57,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -64,6 +65,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationDocument;
@@ -821,5 +823,59 @@ public class ProjectUtil
 
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         aRepository.saveUserSettings(username, aBModel.getProject(), aBModel.getMode(), preference);
+    }
+
+    public static void exportLayerDetails(AnnotationLayer layer,
+            de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer exLayer,
+            AnnotationService aAnnotationService)
+    {
+        exLayer.setAllowSTacking(layer.isAllowSTacking());
+        exLayer.setBuiltIn(layer.isBuiltIn());
+        exLayer.setCrossSentence(layer.isCrossSentence());
+        exLayer.setDescription(layer.getDescription());
+        exLayer.setEnabled(layer.isEnabled());
+        exLayer.setLockToTokenOffset(layer.isLockToTokenOffset());
+        exLayer.setMultipleTokens(layer.isMultipleTokens());
+        exLayer.setName(layer.getName());
+        exLayer.setType(layer.getType());
+        exLayer.setUiName(layer.getUiName());
+
+        List<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature> exFeatures = new ArrayList<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature>();
+
+        for (AnnotationFeature feature : aAnnotationService.listAnnotationFeature(layer)) {
+
+            de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature exFeature = new de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature();
+
+            exFeature.setDescription(feature.getDescription());
+            exFeature.setEnabled(feature.isEnabled());
+            exFeature.setName(feature.getName());
+            exFeature.setType(feature.getType());
+            exFeature.setUiName(feature.getUiName());
+            exFeature.setVisible(feature.isVisible());
+
+            if (feature.getTagset() != null) {
+                TagSet tagSet = feature.getTagset();
+
+                de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet exTagSet = new de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet();
+
+                exTagSet.setDescription(tagSet.getDescription());
+                exTagSet.setLanguage(tagSet.getLanguage());
+                exTagSet.setName(tagSet.getName());
+                exTagSet.setCreateTag(tagSet.isCreateTag());
+
+                List<de.tudarmstadt.ukp.clarin.webanno.model.export.Tag> exportedTags = new ArrayList<de.tudarmstadt.ukp.clarin.webanno.model.export.Tag>();
+                for (Tag tag : aAnnotationService.listTags(tagSet)) {
+                    de.tudarmstadt.ukp.clarin.webanno.model.export.Tag exTag = new de.tudarmstadt.ukp.clarin.webanno.model.export.Tag();
+                    exTag.setDescription(tag.getDescription());
+                    exTag.setName(tag.getName());
+                    exportedTags.add(exTag);
+                }
+                exTagSet.setTags(exportedTags);
+
+                exFeature.setTagSet(exTagSet);
+            }
+            exFeatures.add(exFeature);
+        }
+        exLayer.setFeatures(exFeatures);
     }
 }
