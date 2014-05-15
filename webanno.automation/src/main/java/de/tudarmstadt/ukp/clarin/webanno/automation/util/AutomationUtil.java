@@ -480,7 +480,7 @@ public class AutomationUtil
         String tag = "";
         List<String> annotations = new ArrayList<String>();
         Map<Integer, String> multAnno = null;
-        if (aLayerFeature != null) {           
+        if (aLayerFeature != null) {
             if (aLayerFeature.getLayer().isMultipleTokens()) {
                 multAnno = ((SpanAdapter) aAdapter).getMultipleAnnotation(
                         sentence, aLayerFeature);
@@ -491,7 +491,7 @@ public class AutomationUtil
             }
 
         }
-        
+
         for (Token token : selectCovered(sentence.getCAS().getJCas(), Token.class,
                 sentence.getBegin(), sentence.getEnd())) {
             String word = token.getCoveredText();
@@ -984,7 +984,7 @@ public class AutomationUtil
     private static void getFeaturesTabSep(MiraTemplate aTemplate, RepositoryService aRepository,
             int beamSize, boolean maxPosteriors, AnnotationFeature layerFeature,
             List<List<String>> predictions, Mira mira, File predFile, File predcitedFile)
-        throws FileNotFoundException, IOException, ClassNotFoundException
+        throws FileNotFoundException, IOException, ClassNotFoundException, AutomationException
     {
         for (SourceDocument document : aRepository.listTabSepDocuments(aTemplate.getTrainFeature()
                 .getProject())) {
@@ -1007,7 +1007,12 @@ public class AutomationUtil
             mira.nbest = nbest;
             mira.beamSize = beamSize;
             mira.maxPosteriors = maxPosteriors;
+            try{
             mira.test(input, stream);
+            }
+            catch(Exception e){
+                throw new AutomationException(document.getName() + " is Invalid TAB-SEP file!");
+            }
 
             LineIterator it = IOUtils.lineIterator(new FileReader(predcitedFile));
             List<String> annotations = new ArrayList<String>();
@@ -1030,11 +1035,12 @@ public class AutomationUtil
 
     /**
      * Based on the other layer, add features for the prediction document
+     * @throws AutomationException
      */
     public static void addOtherFeatureToPredictDocument(MiraTemplate aTemplate,
             RepositoryService aRepository)
         throws CASException, UIMAException, ClassNotFoundException, IOException,
-        BratAnnotationException
+        BratAnnotationException, AutomationException
     {
         AnnotationFeature layerFeature = aTemplate.getTrainFeature();
 

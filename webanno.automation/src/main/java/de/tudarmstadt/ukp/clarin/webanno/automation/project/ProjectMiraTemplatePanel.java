@@ -656,10 +656,12 @@ public class ProjectMiraTemplatePanel
                         }
                         if (!existsTrainDocument) {
                             error("No training document exists to proceed.");
+                            aTarget.appendJavaScript("alert('No training document exists to proceed.')");
                             return;
                         }
                         if (!template.isCurrentLayer()) {
                             error("Please save automation layer details to proceed.");
+                            aTarget.appendJavaScript("alert('Please save automation layer details to proceed.')");
                             return;
                         }
 
@@ -681,6 +683,7 @@ public class ProjectMiraTemplatePanel
                         }
                         if (!existUnprocessedDocument) {
                             error("No new training/annotation document added.");
+                            aTarget.appendJavaScript("alert('No new training/annotation document added.')");
                             return;
                         }
 
@@ -737,18 +740,21 @@ public class ProjectMiraTemplatePanel
                     }
                     catch (UIMAException e) {
                         error(ExceptionUtils.getRootCause(e));
+                        aTarget.appendJavaScript("alert('"+ExceptionUtils.getRootCause(e)+"')");
                     }
                     catch (ClassNotFoundException e) {
                         error(e.getMessage());
+                        aTarget.appendJavaScript("alert('"+e.getMessage()+"')");
                     }
                     catch (IOException e) {
                         error(e.getMessage());
+                        aTarget.appendJavaScript("alert('"+e.getMessage()+"')");
                     }
                     catch (BratAnnotationException e) {
-                        error(e.getMessage());
+                        aTarget.appendJavaScript("alert('"+e.getMessage()+"')");
                     }
                     catch (AutomationException e) {
-                        error(e.getMessage());
+                        aTarget.appendJavaScript("alert('"+e.getMessage()+"')");
                     }
                     finally {
                         automationStatus.setStatus(Status.COMPLETED);
