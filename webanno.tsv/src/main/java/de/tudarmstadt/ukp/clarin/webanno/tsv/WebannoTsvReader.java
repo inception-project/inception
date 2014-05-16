@@ -40,6 +40,7 @@ import org.apache.uima.util.Level;
 
 import de.tudarmstadt.ukp.dkpro.core.api.io.JCasResourceCollectionReader_ImplBase;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
+import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.parameter.ComponentParameters;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
@@ -61,6 +62,7 @@ public class WebannoTsvReader
     extends JCasResourceCollectionReader_ImplBase
 {
 
+    private String  fileName;
     public void convertToCas(JCas aJCas, InputStream aIs, String aEncoding)
         throws IOException
 
@@ -75,6 +77,8 @@ public class WebannoTsvReader
 
         List<Integer> firstTokenInSentence = new ArrayList<Integer>();
 
+        DocumentMetaData documentMetadata = DocumentMetaData.get(aJCas);
+        fileName = documentMetadata.getDocumentTitle();
         setAnnotations(aIs, aEncoding, text, tokens, pos, lemma, namedEntity, dependencyFunction,
                 dependencyDependent, firstTokenInSentence);
 
@@ -254,7 +258,7 @@ public class WebannoTsvReader
             }
             if (count != 9) {// not a proper TSV file
                 getUimaContext().getLogger().log(Level.INFO, "This is not a valid TSV File");
-                throw new IOException("This is not a valid TSV File");
+                throw new IOException(fileName + " This is not a valid TSV File");
             }
             StringTokenizer lineTk = new StringTokenizer(line, "\t");
 
