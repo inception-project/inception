@@ -726,6 +726,10 @@ public class ProjectLayersPanel
                 {
                     AnnotationLayer layer = LayerDetailForm.this.getModelObject();
 
+                    if (layer.isLockToTokenOffset() && layer.isMultipleTokens()) {
+                        layer.setLockToTokenOffset(false);
+                    }
+
                     if (layer.getId() == 0) {
                         if (annotationService.existsLayer(prefix + layerName, layer.getType(),
                                 project)) {

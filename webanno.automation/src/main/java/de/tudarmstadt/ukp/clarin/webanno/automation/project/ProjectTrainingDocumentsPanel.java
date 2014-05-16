@@ -164,6 +164,12 @@ public class ProjectTrainingDocumentsPanel
                                 sd.setProcessed(false);
                             }
                         }
+
+                        for (SourceDocument sd : repository.listTabSepDocuments(project)) {
+                            if (!sd.isTrainingDocument()) {
+                                sd.setProcessed(false);
+                            }
+                        }
                         // If this document is tab-sep and used as a feature itself, no need to add
                         // a feature to the document
                         if (aTabsDocModel.getObject().isTraining()

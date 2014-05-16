@@ -194,6 +194,8 @@ public class AutomationUtil
         aRepository.createCorrectionDocumentContent(jCas, aModel.getDocument(), user);
     }
 
+    // generates training document that will be used to predict the training document
+    // to add extra features, for example add POS tag as a feature for NE classifier
     public static void addOtherFeatureTrainDocument(MiraTemplate aTemplate,
             RepositoryService aRepository)
         throws IOException, UIMAException, ClassNotFoundException
@@ -221,8 +223,7 @@ public class AutomationUtil
             }
 
             BufferedWriter trainOut = new BufferedWriter(new FileWriter(trainFile));
-            TypeAdapter adapter = TypeUtil.getAdapter(feature.getLayer(),
-                    annotationService);
+            TypeAdapter adapter = TypeUtil.getAdapter(feature.getLayer(), annotationService);
             for (SourceDocument sourceDocument : aRepository.listSourceDocuments(feature
                     .getProject())) {
                 if ((sourceDocument.isTrainingDocument() && sourceDocument.getFeature() != null && sourceDocument
@@ -254,9 +255,7 @@ public class AutomationUtil
         boolean documentChanged = false;
         for (SourceDocument document : aRepository.listTabSepDocuments(aTemplate.getTrainFeature()
                 .getProject())) {
-            if (!document.isProcessed()
-                    && (document.getFeature() != null && document.getFeature().equals(
-                            aTemplate.getTrainFeature()))) {
+            if (!document.isProcessed()) {
                 documentChanged = true;
                 break;
             }
@@ -362,8 +361,7 @@ public class AutomationUtil
         AutomationStatus status = aRepository.getAutomationStatus(aTemplate);
 
         BufferedWriter trainOut = new BufferedWriter(new FileWriter(trainFile));
-        TypeAdapter adapter = TypeUtil.getAdapter(feature.getLayer(),
-                annotationService);
+        TypeAdapter adapter = TypeUtil.getAdapter(feature.getLayer(), annotationService);
         // Training documents (Curated or webanno-compatible imported ones - read using UIMA)
         for (SourceDocument sourceDocument : aRepository.listSourceDocuments(feature.getProject())) {
             if ((sourceDocument.isTrainingDocument() && sourceDocument.getFeature() != null && sourceDocument
@@ -389,7 +387,7 @@ public class AutomationUtil
                         trainOut.append(getMiraLine(sentence, null, adapter).toString() + "\n");
                     }
                     else {// training document with other features
-                        trainOut.append(getMiraLine(sentence, feature,adapter).toString() + "\n");
+                        trainOut.append(getMiraLine(sentence, feature, adapter).toString() + "\n");
                     }
                 }
                 sourceDocument.setProcessed(!aBase);
@@ -450,8 +448,7 @@ public class AutomationUtil
         if (!documentChanged) {
             return;
         }
-        TypeAdapter adapter = TypeUtil.getAdapter(feature.getLayer(),
-                annotationService);
+        TypeAdapter adapter = TypeUtil.getAdapter(feature.getLayer(), annotationService);
         for (SourceDocument document : aRepository.listSourceDocuments(feature.getProject())) {
             if (!document.isProcessed() && !document.isTrainingDocument()) {
                 File predFile = new File(miraDir, document.getId() + ".pred.ft");
@@ -472,7 +469,8 @@ public class AutomationUtil
         }
     }
 
-    private static StringBuffer getMiraLine(Sentence sentence, AnnotationFeature aLayerFeature,TypeAdapter aAdapter)
+    private static StringBuffer getMiraLine(Sentence sentence, AnnotationFeature aLayerFeature,
+            TypeAdapter aAdapter)
         throws CASException
     {
         StringBuffer sb = new StringBuffer();
@@ -482,49 +480,51 @@ public class AutomationUtil
         Map<Integer, String> multAnno = null;
         if (aLayerFeature != null) {
             if (aLayerFeature.getLayer().isMultipleTokens()) {
-                multAnno = ((SpanAdapter) aAdapter).getMultipleAnnotation(
-                        sentence, aLayerFeature);
+                multAnno = ((SpanAdapter) aAdapter).getMultipleAnnotation(sentence, aLayerFeature);
             }
             else {
                 annotations = aAdapter.getAnnotation(sentence.getCAS().getJCas(), aLayerFeature,
-                		sentence.getBegin(), sentence.getEnd());
+                        sentence.getBegin(), sentence.getEnd());
             }
 
         }
 
+        int i = 0;
         for (Token token : selectCovered(sentence.getCAS().getJCas(), Token.class,
                 sentence.getBegin(), sentence.getEnd())) {
             String word = token.getCoveredText();
 
             char[] words = word.toCharArray();
 
-            String prefix1 = Character.toString(words[0]) + " ";
-            String prefix2 = (words.length > 1 ? prefix1.trim()
-                    + (Character.toString(words[1]).trim().equals("") ? "__nil__" : Character
-                            .toString(words[1])) : "__nil__")
-                    + " ";
-            String prefix3 = (words.length > 2 ? prefix2.trim()
-                    + (Character.toString(words[2]).trim().equals("") ? "__nil__" : Character
-                            .toString(words[2])) : "__nil__")
-                    + " ";
-            String prefix4 = (words.length > 3 ? prefix3.trim()
-                    + (Character.toString(words[3]).trim().equals("") ? "__nil__" : Character
-                            .toString(words[3])) : "__nil__")
-                    + " ";
-            String suffix1 = Character.toString(words[words.length - 1]) + " ";
-            String suffix2 = (words.length > 1 ? (Character.toString(words[words.length - 2])
-                    .trim().equals("") ? "__nil__" : Character.toString(words[words.length - 2]))
-                    + suffix1.trim() : "__nil__")
-                    + " ";
-            String suffix3 = (words.length > 2 ? (Character.toString(words[words.length - 3])
-                    .trim().equals("") ? "__nil__" : Character.toString(words[words.length - 3]))
-                    + suffix2.trim() : "__nil__")
-                    + " ";
-            String suffix4 = (words.length > 3 ? (Character.toString(words[words.length - 4])
-                    .trim().equals("") ? "__nil__" : Character.toString(words[words.length - 4]))
-                    + suffix3.trim() : "__nil__")
-                    + " ";
-
+            String prefix1 = "", prefix2 = "", prefix3 = "", prefix4 = "", suffix1 = "", suffix2 = "", suffix3 = "", suffix4 = "";
+            if (aLayerFeature == null || aLayerFeature.getLayer().isLockToTokenOffset()) {
+                prefix1 = Character.toString(words[0]) + " ";
+                prefix2 = (words.length > 1 ? prefix1.trim()
+                        + (Character.toString(words[1]).trim().equals("") ? "__nil__" : Character
+                                .toString(words[1])) : "__nil__")
+                        + " ";
+                prefix3 = (words.length > 2 ? prefix2.trim()
+                        + (Character.toString(words[2]).trim().equals("") ? "__nil__" : Character
+                                .toString(words[2])) : "__nil__")
+                        + " ";
+                prefix4 = (words.length > 3 ? prefix3.trim()
+                        + (Character.toString(words[3]).trim().equals("") ? "__nil__" : Character
+                                .toString(words[3])) : "__nil__")
+                        + " ";
+                suffix1 = Character.toString(words[words.length - 1]) + " ";
+                suffix2 = (words.length > 1 ? (Character.toString(words[words.length - 2]).trim()
+                        .equals("") ? "__nil__" : Character.toString(words[words.length - 2]))
+                        + suffix1.trim() : "__nil__")
+                        + " ";
+                suffix3 = (words.length > 2 ? (Character.toString(words[words.length - 3]).trim()
+                        .equals("") ? "__nil__" : Character.toString(words[words.length - 3]))
+                        + suffix2.trim() : "__nil__")
+                        + " ";
+                suffix4 = (words.length > 3 ? (Character.toString(words[words.length - 4]).trim()
+                        .equals("") ? "__nil__" : Character.toString(words[words.length - 4]))
+                        + suffix3.trim() : "__nil__")
+                        + " ";
+            }
             String nl = "\n";
 
             if (aLayerFeature != null) {
@@ -533,7 +533,8 @@ public class AutomationUtil
                             .getAddress());
                 }
                 else {
-                    tag = annotations.size() == 0 ? "__nill__" : annotations.get(0);
+                    tag = annotations.size() == 0 ? "__nill__" : annotations.get(i);
+                    i++;
                 }
 
             }
@@ -617,8 +618,7 @@ public class AutomationUtil
         }
 
         for (AnnotationFeature feature : aTemplate.getOtherFeatures()) {
-            templateName = createOtherTemplate(aRepository, aTemplate,
-                    getMiraTemplateFile(feature, aRepository), 0);
+            templateName = createTemplate(feature, getMiraTemplateFile(feature, aRepository), 0);
 
             File miraDir = aRepository.getMiraDir(aTemplate.getTrainFeature());
             File trainFile = new File(miraDir, feature.getId() + ".train");
@@ -667,9 +667,7 @@ public class AutomationUtil
         boolean documentChanged = false;
         for (SourceDocument document : aRepository.listTabSepDocuments(aTemplate.getTrainFeature()
                 .getProject())) {
-            if (!document.isProcessed()
-                    && (document.getFeature() != null && document.getFeature().equals(
-                            aTemplate.getTrainFeature()))) {
+            if (!document.isProcessed()) {
                 documentChanged = true;
                 break;
             }
@@ -686,7 +684,7 @@ public class AutomationUtil
             File miraDir = aRepository.getMiraDir(aTemplate.getTrainFeature());
             File trainFile = new File(miraDir, sourceDocument.getId()
                     + sourceDocument.getProject().getId() + ".train");
-            templateName = createOtherTemplate(aRepository, aTemplate,
+            templateName = createTemplate(null,
                     getMiraTemplateFile(aTemplate.getTrainFeature(), aRepository), 0);
 
             String initalModelName = "";
@@ -712,62 +710,77 @@ public class AutomationUtil
         }
     }
 
-    public static String createOtherTemplate(RepositoryService aRepository, MiraTemplate aTemplate,
-            File templateFile, int other)
+    public static String createTemplate(AnnotationFeature aFeature, File templateFile, int aOther)
         throws IOException
     {
 
         StringBuffer sb = new StringBuffer();
-        int i = 1;
-        i = setMorphoTemplate(aTemplate, sb, i);
-        setNgramForLable(aTemplate, sb, i, other);
-
+        if (aFeature == null || aFeature.getLayer().isLockToTokenOffset()) {
+            setMorphoTemplate(sb, aOther);
+        }
+        else {
+            setNgramForLable(sb, aOther);
+        }
         sb.append("\n");
         sb.append("B\n");
         FileUtils.writeStringToFile(templateFile, sb.toString());
         return templateFile.getAbsolutePath();
     }
 
-    private static void setNgramForLable(MiraTemplate aTemplate, StringBuffer sb, int i, int other)
+    private static void setNgramForLable(StringBuffer aSb, int aOther)
     {
-        int temp = i;
-        sb.append("U" + String.format("%02d", i) + "%x[0,0]\n");
+        int i = 1;
+        aSb.append("U" + String.format("%02d", i) + "%x[0,0]\n");
         i++;
-        sb.append("U" + String.format("%02d", i) + "%x[-1,0]\n");
+        /*
+         * aSb.append("U" + String.format("%02d", i) + "%x[0,1]\n"); i++; aSb.append("U" +
+         * String.format("%02d", i) + "%x[0,0]" + "%x[0,1]\n"); i++;
+         */
+        aSb.append("U" + String.format("%02d", i) + "%x[-1,0]" + "%x[0,0]\n");
         i++;
-        sb.append("U" + String.format("%02d", i) + "%x[1,0]\n");
-        i++;
-        sb.append("U" + String.format("%02d", i) + "%x[0,0]" + "%x[1,0]\n");
-        i++;
-        sb.append("U" + String.format("%02d", i) + "%x[-1,0]" + "%x[0,0]\n");
-        i++;
-        sb.append("U" + String.format("%02d", i) + "%x[-1,0]" + "%x[0,0]" + "%x[1,0]\n");
-        i++;
-        sb.append("\n");
+        /*
+         * aSb.append("U" + String.format("%02d", i) + "%x[-1,1]" + "%x[0,1]\n"); i++;
+         */
 
-        i = temp;
-        sb.append("B" + String.format("%02d", i) + "%x[0,0]\n");
-        i++;
-        sb.append("B" + String.format("%02d", i) + "%x[-1,0]\n");
-        i++;
-        sb.append("B" + String.format("%02d", i) + "%x[1,0]\n");
-        i++;
-        sb.append("B" + String.format("%02d", i) + "%x[0,0]" + "%x[1,0]\n");
-        i++;
-        sb.append("B" + String.format("%02d", i) + "%x[-1,0]" + "%x[0,0]\n");
-        i++;
-        sb.append("B" + String.format("%02d", i) + "%x[-1,0]" + "%x[0,0]" + "%x[1,0]\n");
-        i++;
-        sb.append("\n");
+        int temp = 1;
+        int tempOther = aOther;
+        if (aOther > 0) {// consider other layer annotations as features
+            while (aOther > 0) {
+                aOther--;
+                aSb.append("U" + String.format("%02d", i) + "%x[0," + temp + "]\n");
+                i++;
+                aSb.append("U" + String.format("%02d", i) + "%x[0,0] %x[0," + temp + "]\n");
+                i++;
+                aSb.append("U" + String.format("%02d", i) + "%x[-1," + temp + "] %x[0," + temp
+                        + "]\n");
+                i++;
+                temp++;
+            }
+        }
+        aSb.append("\n");
 
-        if (other > 0) {// consider other layer annotations as features
-            while (other > 0) {
-                other--;
-                sb.append("B" + String.format("%02d", i) + "%x[0," + temp + "]\n");
+        i = 1;
+        aSb.append("B" + String.format("%02d", i) + "%x[0,0]\n");
+        i++;
+        /*
+         * aSb.append("B" + String.format("%02d", i) + "%x[0,1]\n"); i++; aSb.append("B" +
+         * String.format("%02d", i) + "%x[0,0]" + "%x[0,1]\n"); i++;
+         */
+        aSb.append("B" + String.format("%02d", i) + "%x[-1,0]" + "%x[0,0]\n");
+        i++;
+        /*
+         * aSb.append("B" + String.format("%02d", i) + "%x[-1,1]" + "%x[0,1]\n"); i++;
+         */
+        aSb.append("\n");
+        temp = 1;
+        if (tempOther > 0) {// consider other layer annotations as features
+            while (aOther > 0) {
+                aOther--;
+                aSb.append("B" + String.format("%02d", i) + "%x[0," + temp + "]\n");
                 i++;
-                sb.append("B" + String.format("%02d", i) + "%x[0,0] %x[0," + temp + "]\n");
+                aSb.append("B" + String.format("%02d", i) + "%x[0,0] %x[0," + temp + "]\n");
                 i++;
-                sb.append("B" + String.format("%02d", i) + "%x[-1," + temp + "] %x[0," + temp
+                aSb.append("B" + String.format("%02d", i) + "%x[-1," + temp + "] %x[0," + temp
                         + "]\n");
                 i++;
                 temp++;
@@ -775,28 +788,76 @@ public class AutomationUtil
         }
     }
 
-    private static int setMorphoTemplate(MiraTemplate aTemplate, StringBuffer sb, int i)
+    // only for token based automation, we need morphological features.
+    private static void setMorphoTemplate(StringBuffer aSb, int aOther)
     {
+        int i = 1;
+        aSb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+        i++;
+        aSb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+        i++;
+        aSb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+        i++;
+        aSb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+        i++;
+        aSb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+        i++;
+        aSb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+        i++;
+        aSb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+        i++;
+        aSb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+        i++;
+        aSb.append("\n");
 
-        sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+        aSb.append("U" + String.format("%02d", i) + "%x[0,0]\n");
         i++;
-        sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+        aSb.append("U" + String.format("%02d", i) + "%x[-1,0]\n");
         i++;
-        sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+        aSb.append("U" + String.format("%02d", i) + "%x[1,0]\n");
         i++;
-        sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+        aSb.append("U" + String.format("%02d", i) + "%x[-2,0]\n");
         i++;
-        sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+        aSb.append("U" + String.format("%02d", i) + "%x[2,0]\n");
         i++;
-        sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+        aSb.append("U" + String.format("%02d", i) + "%x[-2,0]" + "%x[-1,0]\n");
         i++;
-        sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+        aSb.append("U" + String.format("%02d", i) + "%x[-1,0]" + "%x[0,0]\n");
         i++;
-        sb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+        aSb.append("U" + String.format("%02d", i) + "%x[0,0]" + "%x[1,0]\n");
         i++;
-        sb.append("\n");
-
-        return i;
+        aSb.append("U" + String.format("%02d", i) + "%x[1,0]" + "%x[2,0]\n");
+        i++;
+        aSb.append("U" + String.format("%02d", i) + "%x[-2,0]" + "%x[-1,0]" + "%x[0,0]\n");
+        i++;
+        aSb.append("U" + String.format("%02d", i) + "%x[-1,0]" + "%x[0,0]" + "%x[1,0]\n");
+        i++;
+        aSb.append("U" + String.format("%02d", i) + "%x[0,0]" + "%x[1,0]" + "%x[2,0]\n");
+        i++;
+        aSb.append("U" + String.format("%02d", i) + "%x[-2,0]" + "%x[-1,0]" + "%x[0,0]"
+                + "%x[1,0]\n");
+        i++;
+        aSb.append("U" + String.format("%02d", i) + "%x[-1,0]" + "%x[0,0]" + "%x[1,0]"
+                + "%x[2,0]\n");
+        i++;
+        aSb.append("U" + String.format("%02d", i) + "%x[-2,0]" + "%x[-1,0]" + "%x[0,0" + "%x[1,0]"
+                + "%x[2,0]]\n");
+        aSb.append("\n");
+        int temp = 1;
+        if (aOther > 0) {// consider other layer annotations as features
+            while (aOther > 0) {
+                aOther--;
+                aSb.append("U" + String.format("%02d", i) + "%x[0," + temp + "]\n");
+                i++;
+                aSb.append("U" + String.format("%02d", i) + "%x[0,0] %x[0," + temp + "]\n");
+                i++;
+                aSb.append("U" + String.format("%02d", i) + "%x[-1," + temp + "] %x[0," + temp
+                        + "]\n");
+                i++;
+                temp++;
+            }
+        }
+        aSb.append("\n");
     }
 
     public static File getMiraTemplateFile(AnnotationFeature aFeature, RepositoryService aRepository)
@@ -895,12 +956,12 @@ public class AutomationUtil
 
         String trainTemplate;
         if (predictions.size() == 0) {
-            trainTemplate = createOtherTemplate(aRepository, aTemplate,
+            trainTemplate = createTemplate(aTemplate.getTrainFeature(),
                     getMiraTemplateFile(layerFeature, aRepository), 0);
             FileUtils.copyFile(baseTrainFile, trainFile);
         }
         else {
-            trainTemplate = createOtherTemplate(aRepository, aTemplate,
+            trainTemplate = createTemplate(aTemplate.getTrainFeature(),
                     getMiraTemplateFile(layerFeature, aRepository), predictions.size());
             buildTrainFile(baseTrainFile, trainFile, predictions);
         }
@@ -1007,10 +1068,10 @@ public class AutomationUtil
             mira.nbest = nbest;
             mira.beamSize = beamSize;
             mira.maxPosteriors = maxPosteriors;
-            try{
-            mira.test(input, stream);
+            try {
+                mira.test(input, stream);
             }
-            catch(Exception e){
+            catch (Exception e) {
                 throw new AutomationException(document.getName() + " is Invalid TAB-SEP file!");
             }
 
@@ -1035,6 +1096,7 @@ public class AutomationUtil
 
     /**
      * Based on the other layer, add features for the prediction document
+     *
      * @throws AutomationException
      */
     public static void addOtherFeatureToPredictDocument(MiraTemplate aTemplate,
@@ -1062,19 +1124,21 @@ public class AutomationUtil
 
                 File basePredFile = new File(miraDir, document.getId() + ".pred");
                 if (predictions.size() == 0) {
-                    createOtherTemplate(aRepository, aTemplate,
+                    createTemplate(aTemplate.getTrainFeature(),
                             getMiraTemplateFile(layerFeature, aRepository), 0);
                     FileUtils.copyFile(predFtFile, basePredFile);
                 }
                 else {
-                    createOtherTemplate(aRepository, aTemplate,
+                    createTemplate(aTemplate.getTrainFeature(),
                             getMiraTemplateFile(layerFeature, aRepository), predictions.size());
-                    buildPredictFile(predFtFile, basePredFile, predictions);
+                    buildPredictFile(predFtFile, basePredFile, predictions,
+                            aTemplate.getTrainFeature());
                 }
             }
         }
     }
 
+    // add all predicted features and its own label at the end, to train a classifier.
     private static void buildTrainFile(File aBaseFile, File aTrainFile,
             List<List<String>> aPredictions)
         throws IOException
@@ -1105,7 +1169,7 @@ public class AutomationUtil
             for (List<String> prediction : aPredictions) {
                 trainBuffer.append(prediction.get(i) + " ");
             }
-            // add its
+            // add its own label
             trainBuffer.append(label + "\n");
             i++;
         }
@@ -1113,8 +1177,10 @@ public class AutomationUtil
 
     }
 
+    // add additional features predicted so that it will have the same number of features as the
+    // classifier
     private static void buildPredictFile(File apredFt, File aPredFile,
-            List<List<String>> aPredictions)
+            List<List<String>> aPredictions, AnnotationFeature aFeature)
         throws IOException
     {
         LineIterator it = IOUtils.lineIterator(new FileReader(apredFt));
@@ -1127,9 +1193,15 @@ public class AutomationUtil
                 continue;
             }
             StringTokenizer st = new StringTokenizer(line, " ");
-            while (st.hasMoreTokens()) {
-                String feature = st.nextToken();
-                predBuffer.append(feature + " ");
+            // if the target feature is on multiple token, we do not need the morphological features
+            // in the prediction file
+            if (aFeature.getLayer().isMultipleTokens()) {
+                predBuffer.append(st.nextToken() + " ");
+            }
+            else {
+                while (st.hasMoreTokens()) {
+                    predBuffer.append(st.nextToken() + " ");
+                }
             }
             for (List<String> prediction : aPredictions) {
                 predBuffer.append(prediction.get(i) + " ");
