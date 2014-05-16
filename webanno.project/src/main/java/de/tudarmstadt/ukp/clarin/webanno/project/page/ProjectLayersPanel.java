@@ -773,7 +773,7 @@ public class ProjectLayersPanel
                             }
                         }
                         catch (IOException e) {
-                            error("unable to create Log file while creating the TagSet" + ":"
+                            error("unable to create Log file while creating this layer" + ":"
                                     + ExceptionUtils.getRootCauseMessage(e));
                         }
                         featureSelectionForm.setVisible(true);
@@ -944,21 +944,9 @@ public class ProjectLayersPanel
                         @Override
                         protected List<TagSet> load()
                         {
-                            if (FeatureDetailForm.this.getModelObject().getTagset() != null) {
-                                return Arrays.asList(FeatureDetailForm.this.getModelObject()
-                                        .getTagset());
-                            }
-                            List<TagSet> allTagSets = annotationService
+
+                            return annotationService
                                     .listTagSets(selectedProjectModel.getObject());
-                            List<TagSet> avalableTagSets = new ArrayList<TagSet>();
-
-                            for (TagSet tagSet : allTagSets) {
-                                if (tagSet.getFeature() == null) {
-                                    avalableTagSets.add(tagSet);
-                                }
-                            }
-
-                            return avalableTagSets;
 
                         }
                     });

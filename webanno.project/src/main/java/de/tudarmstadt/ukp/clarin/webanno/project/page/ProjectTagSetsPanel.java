@@ -213,9 +213,9 @@ public class ProjectTagSetsPanel
                                 de.tudarmstadt.ukp.clarin.webanno.model.TagSet aObject)
                         {
                             if (aObject.getFeature() == null) {
-                                return "[ ]" + aObject.getName();
+                                return  aObject.getName();
                             }
-                            return "[" + aObject.getFeature().getName() + "] " + aObject.getName();
+                            return  aObject.getName();
                         }
                     });
                     setNullValid(false);
