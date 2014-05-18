@@ -45,6 +45,10 @@ public enum Status
      */
     PREDICTION("suggesting annotations..."),
     /**
+     * automation process is interrupted due to error
+     */
+    INTERRUPTED("Process interrupted"),
+    /**
      * Automation completed
      */
     COMPLETED("completed");

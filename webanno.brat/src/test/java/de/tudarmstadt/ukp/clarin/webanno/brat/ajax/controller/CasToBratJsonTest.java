@@ -108,7 +108,6 @@ public class CasToBratJsonTest
         tagset.setDescription("pos");
         tagset.setLanguage("de");
         tagset.setName("STTS");
-        tagset.setLayer(layer);
 
         Tag tag = new Tag();
         tag.setDescription("noun");

@@ -753,7 +753,7 @@ public class ProjectLayersPanel
                         try {
                             layerName = layerName.replaceAll("\\W", "");
                             layer.setName(prefix + layerName);
-                            annotationService.createType(layer, user);
+                            annotationService.createLayer(layer, user);
                             if (layer.getType().equals("chain")) {
                                 AnnotationFeature relationFeature = new AnnotationFeature();
                                 relationFeature.setType(layer.getName());
@@ -1007,16 +1007,14 @@ public class ProjectLayersPanel
                         feature.setLayer(layerDetailForm.getModelObject());
                         feature.setProject(selectedProjectModel.getObject());
 
-                        if (annotationService.existsFeature(feature.getName(), feature.getLayer(),
-                                feature.getProject())) {
+                        if (annotationService.existsFeature(feature.getName(), feature.getLayer())) {
                             error("This feature is already added for this layer!");
                             return;
                         }
 
                         String name = feature.getUiName();
                         name = name.replaceAll("\\W", "");
-                        if (annotationService.existsFeature(name, feature.getLayer(),
-                                feature.getProject())) {
+                        if (annotationService.existsFeature(name, feature.getLayer())) {
                             error("this feature already exists!");
                             return;
                         }
@@ -1026,8 +1024,6 @@ public class ProjectLayersPanel
                     }
                     if (tagSet.getModelObject() != null) {
                         FeatureDetailForm.this.getModelObject().setTagset(tagSet.getModelObject());
-                        tagSet.getModelObject().setFeature(FeatureDetailForm.this.getModelObject());
-                        tagSet.getModelObject().setLayer(layerDetailForm.getModelObject());
                     }
                 }
             });

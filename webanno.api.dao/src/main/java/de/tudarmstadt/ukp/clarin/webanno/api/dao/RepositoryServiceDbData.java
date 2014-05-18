@@ -116,6 +116,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.io.JCasFileWriter_ImplBase;
 import de.tudarmstadt.ukp.dkpro.core.api.io.ResourceCollectionReaderBase;
+import de.tudarmstadt.ukp.dkpro.core.api.metadata.Tagset;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -1176,10 +1177,6 @@ public class RepositoryServiceDbData
 
         for (AnnotationFeature feature : annotationService.listAnnotationFeature(aProject)) {
             annotationService.removeAnnotationFeature(feature);
-            // remove tagsets
-            for (TagSet tagset : annotationService.listTagSets(feature)) {
-                annotationService.removeTagSet(tagset);
-            }
         }
 
         // remove the layers too
@@ -1187,6 +1184,9 @@ public class RepositoryServiceDbData
             annotationService.removeAnnotationLayer(layer);
         }
 
+        for(TagSet tagSet:annotationService.listTagSets(aProject)){
+        	annotationService.removeTagSet(tagSet);
+        }
 
         // remove the project directory from the file system
         String path = dir.getAbsolutePath() + PROJECT + aProject.getId();

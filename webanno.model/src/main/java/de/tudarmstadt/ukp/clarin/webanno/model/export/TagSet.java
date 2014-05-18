@@ -93,10 +93,6 @@ public class TagSet
     {
         return type;
     }
-    public void setType(String aType)
-    {
-        type = aType;
-    }
     public String getTypeName()
     {
         return typeName;

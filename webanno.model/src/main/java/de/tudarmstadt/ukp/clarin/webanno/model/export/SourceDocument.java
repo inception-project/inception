@@ -22,6 +22,7 @@ import java.util.Date;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.annotate.JsonPropertyOrder;
 
@@ -34,6 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
  *
  */
 @JsonPropertyOrder(value = { "name", "format", "state" })
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SourceDocument
 {
     @JsonProperty("name")

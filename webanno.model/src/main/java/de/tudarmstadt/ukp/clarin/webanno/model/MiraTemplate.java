@@ -49,11 +49,6 @@ public class MiraTemplate
     private long id;
 
     private boolean automationStarted = false;
-    /**
-     * Limit prediction only to this page while automatic annotation
-     */
-
-    private boolean predictInThisPage;
 
     /**
      * Train {@link TagSet} used for MIRA prediction
@@ -97,16 +92,6 @@ public class MiraTemplate
     public void setOtherFeatures(Set<AnnotationFeature> otherFeatures)
     {
         this.otherFeatures = otherFeatures;
-    }
-
-    public boolean isPredictInThisPage()
-    {
-        return predictInThisPage;
-    }
-
-    public void setPredictInThisPage(boolean predictInThisPage)
-    {
-        this.predictInThisPage = predictInThisPage;
     }
 
     public long getId()

@@ -74,7 +74,7 @@ public interface AnnotationService
      * @throws IOException
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void createType(AnnotationLayer type, User user)
+    void createLayer(AnnotationLayer type, User user)
         throws IOException;
 
     void createFeature(AnnotationFeature feature);
@@ -99,9 +99,9 @@ public interface AnnotationService
     boolean existsTagSet(String name, Project project);
 
     /**
-     * check is a {@link TagSet} for this {@link AnnotationFeature} in this {@link Project} exists
+     * check if a {@link TagSet} in this {@link Project} exists
      */
-    boolean existsTagSet(AnnotationFeature feature, Project project);
+    boolean existsTagSet(Project project);
 
     /**
      * check if an {@link AnnotationLayer} exists with this name and type in this {@link Project}
@@ -112,15 +112,15 @@ public interface AnnotationService
      *
      * Check if this {@link AnnotationFeature} already exists
      */
-    boolean existsFeature(String name, AnnotationLayer type, Project project);
+    boolean existsFeature(String name, AnnotationLayer type);
 
     /**
-     * get a {@link TagSet} of a given {@link AnnotationFeature} in a {@link Project}
+     * get a {@link TagSet} with this name in a {@link Project}
      *
      * @param tagName
      * @return {@link TagSet}
      */
-    TagSet getTagSet(AnnotationFeature feature, Project project);
+    TagSet getTagSet(String name, Project project);
 
     /**
      * Get Tagset by its ID
@@ -146,6 +146,10 @@ public interface AnnotationService
      */
     AnnotationFeature getFeature(long id);
 
+    /**
+     * Get an {@link AnnotationFeature} using its name
+     */
+    AnnotationFeature getFeature(String name, AnnotationLayer type);
     /**
      * Check if an {@link AnnotationLayer} already exists.
      */
@@ -217,14 +221,6 @@ public interface AnnotationService
      * @return
      */
     List<TagSet> listTagSets(Project project);
-
-    /**
-     * List all {@link TagSet }s in a {@link AnnotationFeature}
-     *
-     * @param project
-     * @return
-     */
-    List<TagSet> listTagSets(AnnotationFeature feature);
 
     /**
      * Removes a {@link Tag} from the database

@@ -17,6 +17,7 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.model.export;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
@@ -42,7 +43,7 @@ public class MiraTemplate
     private AnnotationFeature trainFeature;
 
     @JsonProperty("other_features")
-    private Set<AnnotationFeature> otherFeatures;
+    private Set<AnnotationFeature> otherFeatures = new HashSet<AnnotationFeature>();
 
     @JsonProperty("current_layer")
     private boolean currentLayer = false;

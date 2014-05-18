@@ -112,17 +112,8 @@ public class AutomationUtil
 
         int beginOffset = aModel.getSentenceBeginOffset();
 
-        int endOffset;
-        if (template != null && template.isPredictInThisPage()) {
-            endOffset = BratAjaxCasUtil.getLastSentenceEndOffsetInDisplayWindow(annoCas,
-                    aModel.getSentenceAddress(), aModel.getWindowSize());
-        }
-        else {
-
-            endOffset = BratAjaxCasUtil.selectByAddr(annoCas, aModel.getLastSentenceAddress())
+        int endOffset = BratAjaxCasUtil.selectByAddr(annoCas, aModel.getLastSentenceAddress())
                     .getEnd();
-        }
-
         for (Sentence sentence : selectCovered(jCas, Sentence.class, beginOffset, endOffset)) {
             String sentenceText = sentence.getCoveredText().toLowerCase();
             for (int i = -1; (i = sentenceText.indexOf(selectedText.toLowerCase(), i)) != -1; i = i
@@ -170,16 +161,9 @@ public class AutomationUtil
 
         int beginOffset = aModel.getSentenceBeginOffset();
 
-        int endOffset;
-        if (template != null && template.isPredictInThisPage()) {
-            endOffset = BratAjaxCasUtil.getLastSentenceEndOffsetInDisplayWindow(annoCas,
-                    aModel.getSentenceAddress(), aModel.getWindowSize());
-        }
-        else {
-
-            endOffset = BratAjaxCasUtil.selectByAddr(annoCas, aModel.getLastSentenceAddress())
+        int endOffset = BratAjaxCasUtil.selectByAddr(annoCas, aModel.getLastSentenceAddress())
                     .getEnd();
-        }
+
         for (Sentence sentence : selectCovered(jCas, Sentence.class, beginOffset, endOffset)) {
             String sentenceText = sentence.getCoveredText().toLowerCase();
             for (int i = -1; (i = sentenceText.indexOf(selectedText.toLowerCase(), i)) != -1; i = i

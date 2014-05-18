@@ -50,16 +50,6 @@ public class TagSet
     @JoinColumn(name = "project")
     Project project;
 
-    @ManyToOne
-    @ForeignKey(name = "none")
-    @JoinColumn(name = "annotation_type")
-    AnnotationLayer layer;
-
-    @ManyToOne
-    @ForeignKey(name = "none")
-    @JoinColumn(name = "annotation_feature")
-    AnnotationFeature feature;
-
     @Column(nullable = false)
     private String name;
 
@@ -78,17 +68,6 @@ public class TagSet
     public void setId(long aId)
     {
         id = aId;
-    }
-
-
-    public AnnotationFeature getFeature()
-    {
-        return feature;
-    }
-
-    public void setFeature(AnnotationFeature feature)
-    {
-        this.feature = feature;
     }
 
     public String getName()
@@ -130,18 +109,6 @@ public class TagSet
     public void setProject(Project aProject)
     {
         project = aProject;
-    }
-
-
-
-    public AnnotationLayer getLayer()
-    {
-        return layer;
-    }
-
-    public void setLayer(AnnotationLayer layer)
-    {
-        this.layer = layer;
     }
 
     public boolean isCreateTag()

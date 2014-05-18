@@ -109,6 +109,7 @@ public class ProjectMiraTemplatePanel
     {
         super(id);
         this.selectedProjectModel = aProjectModel;
+        System.out.println(repository.getDir());
         for (MiraTemplate template : repository.listMiraTemplates(selectedProjectModel.getObject())) {
             if (template.isCurrentLayer()) {
                 this.template = template;
@@ -715,6 +716,7 @@ public class ProjectMiraTemplatePanel
                         template.setAutomationStarted(true);
 
                         automationStatus.setStatus(Status.GENERATE_TRAIN_DOC);
+                        template.setResult("---");
 
                         AutomationUtil.addOtherFeatureTrainDocument(template, repository);
                         AutomationUtil.otherFeatureClassifiers(template, repository);
@@ -743,22 +745,48 @@ public class ProjectMiraTemplatePanel
 
                     }
                     catch (UIMAException e) {
-                        error(ExceptionUtils.getRootCause(e));
+                        template.setAutomationStarted(false);
+                        automationStatus.setStatus(Status.INTERRUPTED);
+                        automationStatus.setEndTime(new Timestamp(new Date().getTime()));
+                        repository.createTemplate(template);
+                        repository.createAutomationStatus(automationStatus);
                         aTarget.appendJavaScript("alert('"+ExceptionUtils.getRootCause(e)+"')");
                     }
                     catch (ClassNotFoundException e) {
-                        error(e.getMessage());
+                    	template.setAutomationStarted(false);
+                        automationStatus.setStatus(Status.INTERRUPTED);
+                        automationStatus.setEndTime(new Timestamp(new Date().getTime()));
+                        repository.createTemplate(template);
+                        repository.createAutomationStatus(automationStatus);
                         aTarget.appendJavaScript("alert('"+e.getMessage()+"')");
                     }
                     catch (IOException e) {
-                        error(e.getMessage());
+                    	template.setAutomationStarted(false);
+                        automationStatus.setStatus(Status.INTERRUPTED);
+                        automationStatus.setEndTime(new Timestamp(new Date().getTime()));
+                        repository.createTemplate(template);
+                        repository.createAutomationStatus(automationStatus);
                         aTarget.appendJavaScript("alert('"+e.getMessage()+"')");
                     }
                     catch (BratAnnotationException e) {
                         aTarget.appendJavaScript("alert('"+e.getMessage()+"')");
                     }
                     catch (AutomationException e) {
+                    	template.setAutomationStarted(false);
+                        automationStatus.setStatus(Status.INTERRUPTED);
+                        automationStatus.setEndTime(new Timestamp(new Date().getTime()));
+                        repository.createTemplate(template);
+                        repository.createAutomationStatus(automationStatus);
                         aTarget.appendJavaScript("alert('"+e.getMessage()+"')");
+                    }
+                    // any other exception such as Memmory heap
+                    catch(Exception e){
+                    	template.setAutomationStarted(false);
+                        automationStatus.setStatus(Status.INTERRUPTED);
+                        automationStatus.setEndTime(new Timestamp(new Date().getTime()));
+                        repository.createTemplate(template);
+                        repository.createAutomationStatus(automationStatus);
+                    	aTarget.appendJavaScript("alert('"+e.getMessage()+"')");
                     }
                     finally {
                         automationStatus.setStatus(Status.COMPLETED);
