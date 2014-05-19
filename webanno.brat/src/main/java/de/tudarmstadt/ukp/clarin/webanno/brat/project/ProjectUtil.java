@@ -46,7 +46,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.tools.ant.taskdefs.condition.Xor;
 import org.codehaus.jackson.JsonGenerator;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
@@ -77,9 +76,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.export.MiraTemplate;
 
 /**
  * This class contains Utility methods that can be used in Project settings
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 public class ProjectUtil {
 
@@ -103,7 +102,7 @@ public class ProjectUtil {
 	/**
 	 * Read Tag and Tag Description. A line has a tag name and a tag description
 	 * separated by a TAB
-	 * 
+	 *
 	 */
 	public static Map<String, String> getTagSetFromFile(
 			String aLineSeparatedTags) {
@@ -141,7 +140,7 @@ public class ProjectUtil {
 
 	/**
 	 * Determine if the User is allowed to update a project
-	 * 
+	 *
 	 * @param aProject
 	 * @return
 	 */
@@ -179,7 +178,7 @@ public class ProjectUtil {
 
 	/**
 	 * Determine if the User is a curator or not
-	 * 
+	 *
 	 * @param aProject
 	 * @return
 	 */
@@ -217,7 +216,7 @@ public class ProjectUtil {
 
 	/**
 	 * Determine if the User is member of a project
-	 * 
+	 *
 	 * @param aProject
 	 * @return
 	 */
@@ -257,7 +256,7 @@ public class ProjectUtil {
 
 	/**
 	 * Convert Java objects into JSON format and write it to a file
-	 * 
+	 *
 	 * @param aObject
 	 * @param aFile
 	 * @throws IOException
@@ -277,7 +276,7 @@ public class ProjectUtil {
 	/**
 	 * Set annotation preferences of users for a given project such as window
 	 * size, annotation layers,... reading from the file system.
-	 * 
+	 *
 	 * @param aUsername
 	 *            The {@link User} for whom we need to read the preference
 	 *            (preferences are stored per user)
@@ -344,7 +343,7 @@ public class ProjectUtil {
 			 * == null) { noFeatureTagSet.add(tagSet); } else if
 			 * (tagSet.getLayer().getType().equals("chain")) {
 			 * corefTagSets.add(tagSet); } }
-			 * 
+			 *
 			 * if (aMode.equals(Mode.CORRECTION) ||
 			 * aMode.equals(Mode.AUTOMATION) || aMode.equals(Mode.CURATION)) {
 			 * tagSets.removeAll(corefTagSets); }
@@ -393,7 +392,7 @@ public class ProjectUtil {
 
 	/**
 	 * Check if the zip file is webanno compatible
-	 * 
+	 *
 	 */
 	@SuppressWarnings({ "resource", "rawtypes" })
 	public static boolean isZipValidWebanno(File aZipFile) throws ZipException,
@@ -659,7 +658,7 @@ public class ProjectUtil {
 	/**
 	 * create new {@link Project} from the
 	 * {@link de.tudarmstadt.ukp.clarin.webanno.model.export.Project} model
-	 * 
+	 *
 	 * @throws IOException
 	 */
 	public static Project createProject(
@@ -683,7 +682,7 @@ public class ProjectUtil {
 	/**
 	 * Get a project name to be used when importing. Use the prefix,
 	 * copy_of_...+ i to avoid conflicts
-	 * 
+	 *
 	 * @return
 	 */
 	private static String copyProjectName(RepositoryService aRepository,
@@ -721,9 +720,10 @@ public class ProjectUtil {
 			sourceDocument.setState(importedSourceDocument.getState());
 			sourceDocument.setProject(aImportedProject);
 			sourceDocument.setTimestamp(importedSourceDocument.getTimestamp());
-			if (aFeatureMap.size() > 0)
-				sourceDocument.setFeature(aFeatureMap
+			if (aFeatureMap.size() > 0) {
+                sourceDocument.setFeature(aFeatureMap
 						.get(importedSourceDocument.getFeature()));
+            }
 			sourceDocument.setProcessed(false);// automation re-start in the new
 												// project settings
 			sourceDocument.setTrainingDocument(importedSourceDocument

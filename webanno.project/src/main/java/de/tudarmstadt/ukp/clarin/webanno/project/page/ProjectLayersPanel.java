@@ -17,8 +17,11 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.project.page;
 
+import static org.apache.commons.collections.CollectionUtils.isEmpty;
+
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
@@ -28,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.cas.CAS;
@@ -50,6 +54,8 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
+import org.apache.wicket.markup.html.form.upload.FileUpload;
+import org.apache.wicket.markup.html.form.upload.FileUploadField;
 import org.apache.wicket.markup.html.link.DownloadLink;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
@@ -99,14 +105,16 @@ public class ProjectLayersPanel
     private FeatureSelectionForm featureSelectionForm;
     private LayerDetailForm layerDetailForm;
     private final FeatureDetailForm featureDetailForm;
-
+    private final ImportLayerForm importLayerForm;
     private Select<AnnotationLayer> layerSelection;
 
     private final Model<Project> selectedProjectModel;
-    List<String> types = new ArrayList<String>();
-
-    String layerType = WebAnnoConst.SPAN_TYPE;
     private IModel<String> helpDataModel = new Model<String>();
+
+    List<String> types = new ArrayList<String>();
+    String layerType = WebAnnoConst.SPAN_TYPE;
+    private List<FileUpload> uploadedFiles;
+    private FileUploadField fileUpload;
 
     public ProjectLayersPanel(String id, final Model<Project> aProjectModel)
     {
@@ -138,6 +146,9 @@ public class ProjectLayersPanel
         add(featureSelectionForm);
         add(layerDetailForm);
         add(featureDetailForm);
+
+        importLayerForm = new ImportLayerForm("importLayerForm");
+        add(importLayerForm);
     }
 
     /**
@@ -263,6 +274,110 @@ public class ProjectLayersPanel
                     aTarget.add(featureSelectionForm);
                     aTarget.add(featureDetailForm);
 
+                }
+            });
+        }
+    }
+
+    private class ImportLayerForm
+        extends Form<String>
+    {
+        private static final long serialVersionUID = -7777616763931128598L;
+
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        public ImportLayerForm(String id)
+        {
+            super(id);
+            add(fileUpload = new FileUploadField("content", new Model()));
+            add(new Button("import", new ResourceModel("label"))
+            {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public void onSubmit()
+                {
+                    uploadedFiles = fileUpload.getFileUploads();
+                    Project project = selectedProjectModel.getObject();
+                    String username = SecurityContextHolder.getContext().getAuthentication()
+                            .getName();
+                    User user = repository.getUser(username);
+
+                    if (isEmpty(uploadedFiles)) {
+                        error("Please choose file with layer details before uploading");
+                        return;
+                    }
+                    else if (project.getId() == 0) {
+                        error("Project not yet created, please save project Details!");
+                        return;
+                    }
+                    for (FileUpload tagFile : uploadedFiles) {
+                        InputStream tagInputStream;
+                        try {
+                            tagInputStream = tagFile.getInputStream();
+                            String text = IOUtils.toString(tagInputStream, "UTF-8");
+
+                            MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
+                            de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer exLayer = jsonConverter
+                                    .getObjectMapper()
+                                    .readValue(
+                                            text,
+                                            de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer.class);
+                            createLayer(exLayer, user);
+
+                        }
+                        catch (IOException e) {
+                            error("Error Importing TagSet " + ExceptionUtils.getRootCauseMessage(e));
+                        }
+                    }
+
+                    layerDetailForm.setModelObject(new AnnotationLayer());
+                    featureSelectionForm.setVisible(false);
+                    featureDetailForm.setVisible(false);
+                }
+
+                private void createLayer(
+                        de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer aExLayer,
+                        User aUser)
+                    throws IOException
+                {
+                    Project project = selectedProjectModel.getObject();
+                    if (annotationService.existsLayer(aExLayer.getName(), aExLayer.getType(),
+                            project)) {
+                        AnnotationLayer layer = annotationService.getLayer(aExLayer.getName(),
+                                aExLayer.getType(), selectedProjectModel.getObject());
+                        ProjectUtil.setLayer(annotationService, layer, aExLayer, project, aUser);
+                        for (de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature exfeature : aExLayer
+                                .getFeatures()) {
+
+                            de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet exTagset = exfeature
+                                    .getTagSet();
+                            TagSet tagSet = null;
+                            if (exTagset != null
+                                    && annotationService.existsTagSet(exTagset.getName(), project)) {
+                                tagSet = annotationService.getTagSet(exTagset.getName(), project);
+                                ProjectUtil.createTagSet(tagSet, exTagset, project, aUser,
+                                        annotationService);
+                            }
+                            else if (exTagset != null) {
+                                tagSet = new TagSet();
+                                ProjectUtil.createTagSet(tagSet, exTagset, project, aUser,
+                                        annotationService);
+                            }
+                            if (annotationService.existsFeature(exfeature.getName(), layer)) {
+                                AnnotationFeature feature = annotationService.getFeature(
+                                        exfeature.getName(), layer);
+                                feature.setTagset(tagSet);
+                                ProjectUtil.setFeature(annotationService, feature, exfeature,
+                                        project, aUser);
+                                continue;
+                            }
+                            AnnotationFeature feature = new AnnotationFeature();
+                            feature.setLayer(layer);
+                            feature.setTagset(tagSet);
+                            ProjectUtil.setFeature(annotationService, feature, exfeature, project,
+                                    aUser);
+                        }
+                    }
                 }
             });
         }
@@ -949,8 +1064,7 @@ public class ProjectLayersPanel
                         protected List<TagSet> load()
                         {
 
-                            return annotationService
-                                    .listTagSets(selectedProjectModel.getObject());
+                            return annotationService.listTagSets(selectedProjectModel.getObject());
 
                         }
                     });

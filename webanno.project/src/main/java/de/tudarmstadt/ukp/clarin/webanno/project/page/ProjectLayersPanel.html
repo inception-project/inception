@@ -40,6 +40,21 @@
 						</div>
 					</fieldset>
 				</form>
+				<form wicket:id="importLayerForm">
+					<fieldset class="ui-widget-content ui-corner-all labels-left">
+						<legend>Import layer</legend>
+						<table class="hfill">
+							<tr>
+								<td><label>Files:</label></td>
+								<td class="hfill"><input wicket:id="content" type="file"
+									multiple /></td>
+							</tr>
+						</table>
+						<div class="buttons">
+							<input type="submit" wicket:id="import" />
+						</div>
+					</fieldset>
+				</form>
 			</td>
 
 			<td style="vertical-align: top" width="40%">
@@ -108,8 +123,8 @@
 					</fieldset>
 
 					<div class="buttons">
-						<input type="submit" wicket:id="save" /> 
-						<input type="submit" wicket:id="export" value="Export tagset" />
+						<input type="submit" wicket:id="save" /> <input type="submit"
+							wicket:id="export" value="Export layer" />
 					</div>
 
 				</form>

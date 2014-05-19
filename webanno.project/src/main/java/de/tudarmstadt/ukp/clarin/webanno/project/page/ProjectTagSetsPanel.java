@@ -90,7 +90,7 @@ public class ProjectTagSetsPanel extends Panel {
 	@SpringBean(name = "annotationService")
 	private AnnotationService annotationService;
 	@SpringBean(name = "documentRepository")
-	private RepositoryService projectRepository;
+	private RepositoryService repository;
 
 	private List<FileUpload> uploadedFiles;
 	private FileUploadField fileUpload;
@@ -257,7 +257,7 @@ public class ProjectTagSetsPanel extends Panel {
 					Project project = selectedProjectModel.getObject();
 					String username = SecurityContextHolder.getContext()
 							.getAuthentication().getName();
-					User user = projectRepository.getUser(username);
+					User user = repository.getUser(username);
 
 					if (isEmpty(uploadedFiles)) {
 						error("Please choose file with tagset before uploading");
@@ -450,7 +450,7 @@ public class ProjectTagSetsPanel extends Panel {
 
 							String username = SecurityContextHolder
 									.getContext().getAuthentication().getName();
-							User user = projectRepository.getUser(username);
+							User user = repository.getUser(username);
 
 							tagSet.setProject(selectedProjectModel.getObject());
 							try {
@@ -640,7 +640,7 @@ public class ProjectTagSetsPanel extends Panel {
 
 							String username = SecurityContextHolder
 									.getContext().getAuthentication().getName();
-							User user = projectRepository.getUser(username);
+							User user = repository.getUser(username);
 
 							try {
 								annotationService.createTag(tag, user);
