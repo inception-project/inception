@@ -288,8 +288,7 @@ public class WebannoTsvReader
                 pos.put(tokenNumber, lineTk.nextToken());
                 String ne = lineTk.nextToken();
                 lineTk.nextToken();// make it compatible with prev WebAnno TSV reader
-                namedEntity.put(tokenNumber, ne.equals("_") ? "O" : ne);
-                ;
+                namedEntity.put(tokenNumber, (ne.equals("_")||ne.equals("-")) ? "O" : ne);
                 String dependentValue = lineTk.nextToken();
                 if (NumberUtils.isDigits(dependentValue)) {
                     int dependent = Integer.parseInt(dependentValue);
@@ -348,7 +347,7 @@ public class WebannoTsvReader
                 if (ne.equals("O")) {// for annotations such as B_LOC|O|I_PER and the like
                     index++;
                 }
-                else if (ne.startsWith("B_")) {
+                else if (ne.startsWith("B_") || ne.startsWith("B-")) {
                     NamedEntity outNamedEntity = new NamedEntity(aJCas, aJcasTokens.get("t_" + i)
                             .getBegin(), aJcasTokens.get("t_" + i).getEnd());
                     outNamedEntity.setValue(ne.substring(2));
@@ -356,7 +355,7 @@ public class WebannoTsvReader
                     indexedNeAnnos.put(index, outNamedEntity);
                     index++;
                 }
-                else if (ne.startsWith("I_")) {
+                else if (ne.startsWith("I_")||ne.startsWith("I-")) {
                     NamedEntity outNamedEntity = indexedNeAnnos.get(index);
                     outNamedEntity.setEnd(aJcasTokens.get("t_" + i).getEnd());
                     outNamedEntity.addToIndexes();

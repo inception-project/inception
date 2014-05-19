@@ -169,7 +169,7 @@ public class WebannoTsvWriter
                     for (Integer address : ne.keySet()) {
                         if (nestedNe.get(address) != null) {
                             prevAnnos.add(nestedNe.get(address));
-                            ne.put(address, "I_" + ne.get(address));
+                            ne.put(address, "I-" + ne.get(address));
                         }
                     }
 
@@ -183,7 +183,7 @@ public class WebannoTsvWriter
                                     index++;
                                 }
                                 else {
-                                    ne.put(address, "B_" + ne.get(address));
+                                    ne.put(address, "B-" + ne.get(address));
                                     nestedNe.put(address, index);
                                     prevAnnos.add(index);
                                     index++;
