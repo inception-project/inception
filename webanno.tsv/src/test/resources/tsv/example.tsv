@@ -1,22 +1,22 @@
 #id=1
 #text=Ms. Haag plays Elianti .
-1	Ms.	_	NNP	B_PER	O	3	SUBJ	_	_
-2	Haag	_	NNP	I_PER	O	3	SBJ	_	_
+1	Ms.	_	NNP	B-PER	O	3	SUBJ	_	_
+2	Haag	_	NNP	I-PER	O	3	SBJ	_	_
 3	plays	_	VBD	O	O	0	ROOT	_	_
-4	Elianti	_	NNP	B_OTH	O	3	OBJ	_	_
+4	Elianti	_	NNP	B-OTH	O	3	OBJ	_	_
 5	.	_	.	O	O	0	ROOT	_	_
 
 #id=2
 #text=Rolls-Royce Motor Cars Inc. said it expects its U.S. sales to remain steady at about 1,200 cars in 1990 .
-1	Rolls-Royce	_	NNP	B_ORGpart|B_ORG	O	3	NAME	_	_
-2	Motor	_	NNP	I_ORGpart	O	3	NAME	_	_
+1	Rolls-Royce	_	NNP	B-ORGpart|B-ORG	O	3	NAME	_	_
+2	Motor	_	NNP	I-ORGpart	O	3	NAME	_	_
 3	Cars	_	NNPS	O	O	5	SBJ	_	_
 4	Inc.	_	NNP	O	O	3	POSTHON	_	_
 5	said	_	VBD	O	O	0	ROOT	_	_
 6	it	_	PRP	O	O	7	SBJ	_	_
 7	expects	_	VBZ	O	O	11	OPRD	_	_
 8	its	_	PRP$	O	O	10	NMOD	_	_
-9	U.S.	_	NNP	B_LOC	O	10	NMOD	_	_
+9	U.S.	_	NNP	B-LOC	O	10	NMOD	_	_
 10	sales	_	NNS	O	O	7	OBJ	_	_
 11	to	_	TO	O	O	0	ROOT	_	_
 12	remain	_	VB	O	O	11	IM	_	_
@@ -42,13 +42,13 @@
 9	cars	_	NNS	O	O	7	OBJ	_	_
 10	in	_	IN	O	O	9	LOC	_	_
 11	the	_	DT	O	O	12	NMOD	_	_
-12	U.S.	_	NNP	B_LOC	O	10	PMOD	_	_
+12	U.S.	_	NNP	B-LOC	O	10	PMOD	_	_
 
 #id=4
 #text=BELL INDUSTRIES Inc. increased its quarterly to 10 cents from seven cents a share .
-1	BELL	_	NNP	B_ORGpart|B_ORG|B_PER	O	2	NAME	_	_
-2	INDUSTRIES	_	NNP	I_ORGpart|I_ORG	O	4	SBJ	_	_
-3	Inc.	_	NNP	I_ORGpart	O	2	POSTHON	_	_
+1	BELL	_	NNP	B-ORGpart|B-ORG|B-PER	O	2	NAME	_	_
+2	INDUSTRIES	_	NNP	I-ORGpart|I-ORG	O	4	SBJ	_	_
+3	Inc.	_	NNP	I-ORGpart	O	2	POSTHON	_	_
 4	increased	_	VBD	O	O	0	ROOT	_	_
 5	its	_	PRP$	O	O	6	NMOD	_	_
 6	quarterly	_	NN	O	O	4	OBJ	_	_
@@ -87,12 +87,12 @@
 
 #id=7
 #text= Bell , based in Los Angeles , makes and distributes electronic , computer and building products .
-1	Bell	_	NNP	B_ORG	O	8	SBJ	_	_
+1	Bell	_	NNP	B-ORG	O	8	SBJ	_	_
 2	,	_	,	O	O	1	P	_	_
 3	based	_	VBN	O	O	1	APPO	_	_
 4	in	_	IN	O	O	3	LOC	_	_
-5	Los	_	NNP	B_LOC	O	6	NAME	_	_
-6	Angeles	_	NNP	I_LOC	O	4	PMOD	_	_
+5	Los	_	NNP	B-LOC	O	6	NAME	_	_
+6	Angeles	_	NNP	I-LOC	O	4	PMOD	_	_
 7	,	_	,	O	O	1	P	_	_
 8	makes	_	VBZ	O	O	0	ROOT	_	_
 9	and	_	CC	O	O	8	COORD	_	_
