@@ -41,7 +41,7 @@ import javax.persistence.UniqueConstraint;
  */
 @Entity
 @Table(name = "crowd_job", uniqueConstraints = { @UniqueConstraint(columnNames = {
-        "name" }) })
+        "name","project" }) })
 public class CrowdJob
     implements Serializable
 {

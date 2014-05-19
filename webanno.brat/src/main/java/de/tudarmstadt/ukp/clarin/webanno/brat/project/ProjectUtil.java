@@ -394,7 +394,7 @@ public class ProjectUtil {
 	 * Check if the zip file is webanno compatible
 	 *
 	 */
-	@SuppressWarnings({ "resource", "rawtypes" })
+	@SuppressWarnings({ "rawtypes" })
 	public static boolean isZipValidWebanno(File aZipFile) throws ZipException,
 			IOException {
 

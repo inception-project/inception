@@ -269,7 +269,7 @@ public interface RepositoryService
         throws IOException, UIMAException;
     /**
      * Get the directory of this {@link SourceDocument} usually to read the content of the document
-     * @throws IOException 
+     * @throws IOException
      */
     File getDocumentFolder(SourceDocument aDocument) throws IOException;
     // --------------------------------------------------------------------------------------------
@@ -671,9 +671,9 @@ public interface RepositoryService
     boolean existsCrowdJob(String name);
 
     /**
-     * Get a {@link CrowdJob} by its name
+     * Get a {@link CrowdJob} by its name in a {@link Project}
      */
-    CrowdJob getCrowdJob(String name);
+    CrowdJob getCrowdJob(String name, Project project);
 
     /**
      * Get a crowdFlower Template from the WebAnno root directory
@@ -687,8 +687,8 @@ public interface RepositoryService
     List<CrowdJob> listCrowdJobs();
 
     List<CrowdJob> listCrowdJobs(Project project);
-    
-    
+
+
 
     /**
      * remove a crowd project

@@ -1326,7 +1326,7 @@ public class CrowdSourcePage
                     @Override
                     protected void onEvent(AjaxRequestTarget aTarget)
                     {
-                        selectedCrowdJob = repository.getCrowdJob(value);
+                        selectedCrowdJob = repository.getCrowdJob(value, selectedProject);
                         SelectionModel selectionModel = new SelectionModel();
                         selectionModel.name = selectedCrowdJob.getName();
                         selectionModel.apiKey = selectedCrowdJob.getApiKey();

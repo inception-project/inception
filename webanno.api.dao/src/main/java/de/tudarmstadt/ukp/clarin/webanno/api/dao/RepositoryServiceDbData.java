@@ -116,7 +116,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.io.JCasFileWriter_ImplBase;
 import de.tudarmstadt.ukp.dkpro.core.api.io.ResourceCollectionReaderBase;
-import de.tudarmstadt.ukp.dkpro.core.api.metadata.Tagset;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -807,10 +806,10 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public CrowdJob getCrowdJob(String aName)
+    public CrowdJob getCrowdJob(String aName, Project aProjec)
     {
-        return entityManager.createQuery("FROM CrowdJob WHERE name = :name", CrowdJob.class)
-                .setParameter("name", aName).getSingleResult();
+        return entityManager.createQuery("FROM CrowdJob WHERE name = :name AND project = :project", CrowdJob.class)
+                .setParameter("name", aName).setParameter("project",aProjec).getSingleResult();
     }
 
     @Override
@@ -1102,7 +1101,7 @@ public class RepositoryServiceDbData
     	sourceDocuments.removeAll(tabSepDocuments);
         return sourceDocuments;
     }
-    
+
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public List<SourceDocument> listTabSepDocuments(Project aProject)

@@ -137,7 +137,7 @@ public class ProjectLayersPanel
         openHelpDialog = new ModalWindow("openHelpDialog");
         openHelpDialog.setOutputMarkupId(true);
         openHelpDialog.setInitialWidth(550);
-        openHelpDialog.setInitialHeight(280);
+        openHelpDialog.setInitialHeight(250);
         openHelpDialog.setResizable(true);
         openHelpDialog.setWidthUnit("px");
         openHelpDialog.setHeightUnit("px");
