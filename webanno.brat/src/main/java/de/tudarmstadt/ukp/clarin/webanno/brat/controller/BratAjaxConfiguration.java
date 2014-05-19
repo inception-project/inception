@@ -266,7 +266,7 @@ public class BratAjaxConfiguration
                             "#C11B17", "#800000" };
                     int i = 1;
                     for (String color : colors) {
-                        RelationType arc = new RelationType(color, "triangle,5",
+                        RelationType arc = new RelationType(color, "none",
                                 Arrays.asList(arcLabels), i + "_" + aChildPrefix + arcLabels,
                                 arcTargets, "");
                         arcs.add(arc);
