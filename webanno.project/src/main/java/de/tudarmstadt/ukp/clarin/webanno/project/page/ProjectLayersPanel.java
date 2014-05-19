@@ -422,30 +422,19 @@ public class ProjectLayersPanel
                     layerName = modelValue;
                 }
             });
-            add(new AjaxLink<Void>("showLayerNameHelpModal")
+            add(new AjaxLink<Void>("showLayerPropertyModal")
             {
                 private static final long serialVersionUID = 7496156015186497496L;
 
                 @Override
                 public void onClick(AjaxRequestTarget target)
                 {
-                    openHelpDialog(openHelpDialog, target, "layerName");
+                    openHelpDialog(openHelpDialog, target, "layerProperty");
                 }
             });
 
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
             add(new CheckBox("enabled"));
-            add(new AjaxLink<Void>("showLayerEnabledHelpModal")
-            {
-                private static final long serialVersionUID = 7496156015186497496L;
-
-                @Override
-                public void onClick(AjaxRequestTarget target)
-                {
-                    openHelpDialog(openHelpDialog, target, "layerEnabled");
-                }
-            });
-
             add(layerTypes = (DropDownChoice<String>) new DropDownChoice<String>("type",
                     Arrays.asList(new String[] { "span", "relation", "chain" }))
             {
@@ -473,14 +462,14 @@ public class ProjectLayersPanel
                     target.add(attachTypes);
                 }
             });
-            add(new AjaxLink<Void>("showLayerTypesHelpModal")
+            add(new AjaxLink<Void>("showLayerTechnicalPropertyModal")
             {
                 private static final long serialVersionUID = 7496156015186497496L;
 
                 @Override
                 public void onClick(AjaxRequestTarget target)
                 {
-                    openHelpDialog(openHelpDialog, target, "layerTypes");
+                    openHelpDialog(openHelpDialog, target, "layerTechnicalProperty");
                 }
             });
 
@@ -558,16 +547,6 @@ public class ProjectLayersPanel
                 }
 
             }.setOutputMarkupPlaceholderTag(true));
-            add(new AjaxLink<Void>("showAttachTypeHelpModal")
-            {
-                private static final long serialVersionUID = 7496156015186497496L;
-
-                @Override
-                public void onClick(AjaxRequestTarget target)
-                {
-                    openHelpDialog(openHelpDialog, target, "attachType");
-                }
-            });
 
             // behaviours of layers
             add(new Label("lockToTokenOffsetLabel", "Lock to token offsets:")
@@ -614,32 +593,14 @@ public class ProjectLayersPanel
                     }
                 }
             });
-            add(new AjaxLink<Void>("showLockToTokenOffsetHelpModal")
+            add(new AjaxLink<Void>("showlayerBehaviorModal")
             {
                 private static final long serialVersionUID = 7496156015186497496L;
 
                 @Override
                 public void onClick(AjaxRequestTarget target)
                 {
-                    openHelpDialog(openHelpDialog, target, "lockToToken");
-                }
-
-                @Override
-                protected void onConfigure()
-                {
-                    super.onConfigure();
-                    if (LayerDetailForm.this.getModelObject().getId() != 0
-                            && LayerDetailForm.this.getModelObject().getAttachFeature() != null) {
-                        this.setVisible(false);
-                    }
-                    else if (LayerDetailForm.this.getModelObject().getId() != 0
-                            && LayerDetailForm.this.getModelObject().getType()
-                                    .equals(WebAnnoConst.RELATION_TYPE)) {
-                        this.setVisible(false);
-                    }
-                    else {
-                        this.setVisible(true);
-                    }
+                    openHelpDialog(openHelpDialog, target, "layerBehavior");
                 }
             });
 
@@ -677,29 +638,6 @@ public class ProjectLayersPanel
                     }
                 }
             });
-            add(new AjaxLink<Void>("showAllowSTackingHelpModal")
-            {
-                private static final long serialVersionUID = 7496156015186497496L;
-
-                @Override
-                public void onClick(AjaxRequestTarget target)
-                {
-                    openHelpDialog(openHelpDialog, target, "allowStacking");
-                }
-
-                @Override
-                protected void onConfigure()
-                {
-                    super.onConfigure();
-                    if (LayerDetailForm.this.getModelObject().getId() != 0
-                            && LayerDetailForm.this.getModelObject().getAttachFeature() != null) {
-                        this.setVisible(false);
-                    }
-                    else {
-                        this.setVisible(true);
-                    }
-                }
-            });
 
             add(new Label("crossSentenceLabel", "Allow crossing sentence boundary:")
             {
@@ -721,29 +659,6 @@ public class ProjectLayersPanel
             add(new CheckBox("crossSentence")
             {
                 private static final long serialVersionUID = -5986386642712152491L;
-
-                @Override
-                protected void onConfigure()
-                {
-                    super.onConfigure();
-                    if (LayerDetailForm.this.getModelObject().getId() != 0
-                            && LayerDetailForm.this.getModelObject().getAttachFeature() != null) {
-                        this.setVisible(false);
-                    }
-                    else {
-                        this.setVisible(true);
-                    }
-                }
-            });
-            add(new AjaxLink<Void>("showCrossSentenceHelpModal")
-            {
-                private static final long serialVersionUID = 7496156015186497496L;
-
-                @Override
-                public void onClick(AjaxRequestTarget target)
-                {
-                    openHelpDialog(openHelpDialog, target, "crossSentence");
-                }
 
                 @Override
                 protected void onConfigure()
@@ -803,35 +718,6 @@ public class ProjectLayersPanel
                     }
                 }
             });
-            add(new AjaxLink<Void>("showMultipleTokensHelpModal")
-            {
-                private static final long serialVersionUID = 7496156015186497496L;
-
-                @Override
-                public void onClick(AjaxRequestTarget target)
-                {
-                    openHelpDialog(openHelpDialog, target, "multipleToken");
-                }
-
-                @Override
-                protected void onConfigure()
-                {
-                    super.onConfigure();
-                    if (LayerDetailForm.this.getModelObject().getId() != 0
-                            && LayerDetailForm.this.getModelObject().getAttachFeature() != null) {
-                        this.setVisible(false);
-                    }
-                    else if (LayerDetailForm.this.getModelObject().getId() != 0
-                            && LayerDetailForm.this.getModelObject().getType()
-                                    .equals(WebAnnoConst.RELATION_TYPE)) {
-                        this.setVisible(false);
-                    }
-                    else {
-                        this.setVisible(true);
-                    }
-                }
-            });
-
             add(new Button("save", new ResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;
@@ -956,39 +842,19 @@ public class ProjectLayersPanel
                     new EntityModel<AnnotationFeature>(new AnnotationFeature())));
 
             add(new TextField<String>("uiName").setRequired(true));
-            add(new AjaxLink<Void>("showFeatureNameHelpModal")
+            add(new AjaxLink<Void>("showfeatureDetailModal")
             {
                 private static final long serialVersionUID = 7496156015186497496L;
 
                 @Override
                 public void onClick(AjaxRequestTarget target)
                 {
-                    openHelpDialog(openHelpDialog, target, "featureName");
+                    openHelpDialog(openHelpDialog, target, "featureDetail");
                 }
             });
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
             add(new CheckBox("enabled"));
-            add(new AjaxLink<Void>("showFeatureEnabledHelpModal")
-            {
-                private static final long serialVersionUID = 7496156015186497496L;
-
-                @Override
-                public void onClick(AjaxRequestTarget target)
-                {
-                    openHelpDialog(openHelpDialog, target, "featureEnabled");
-                }
-            });
             add(new CheckBox("visible"));
-            add(new AjaxLink<Void>("showFeatureVisibleHelpModal")
-            {
-                private static final long serialVersionUID = 7496156015186497496L;
-
-                @Override
-                public void onClick(AjaxRequestTarget target)
-                {
-                    openHelpDialog(openHelpDialog, target, "featureVisible");
-                }
-            });
 
             types.add(CAS.TYPE_NAME_STRING);
             types.add(CAS.TYPE_NAME_INTEGER);
@@ -1040,17 +906,6 @@ public class ProjectLayersPanel
 
                 }
             });
-            add(new AjaxLink<Void>("showtFeatureTypeHelpModal")
-            {
-                private static final long serialVersionUID = 7496156015186497496L;
-
-                @Override
-                public void onClick(AjaxRequestTarget target)
-                {
-                    openHelpDialog(openHelpDialog, target, "featureType");
-                }
-            });
-
             add(tagSet = new DropDownChoice<TagSet>("tagset")
             {
                 private static final long serialVersionUID = -6705445053442011120L;
@@ -1097,17 +952,6 @@ public class ProjectLayersPanel
                 }
             });
             tagSet.setOutputMarkupPlaceholderTag(true);
-
-            add(new AjaxLink<Void>("showTagSetHelpModal")
-            {
-                private static final long serialVersionUID = 7496156015186497496L;
-
-                @Override
-                public void onClick(AjaxRequestTarget target)
-                {
-                    openHelpDialog(openHelpDialog, target, "tagSet");
-                }
-            });
 
             add(new Button("save", new ResourceModel("label"))
             {

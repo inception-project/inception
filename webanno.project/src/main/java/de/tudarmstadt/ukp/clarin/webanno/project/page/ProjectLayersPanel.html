@@ -63,8 +63,11 @@
 						<legend>Properties</legend>
 						<table class="hfill">
 							<tr>
-								<td>Layer name: <a wicket:id="showLayerNameHelpModal">?
-								</a></td>
+								<td><a wicket:id="showLayerPropertyModal"
+									title="Show details">? </a></td>
+							</tr>
+							<tr>
+								<td>Layer name:</td>
 								<td><input class="hfill" type="text" wicket:id="uiName" /></td>
 							</tr>
 							<tr>
@@ -72,8 +75,7 @@
 								<td><textarea wicket:id="description" rows="2"></textarea></td>
 							</tr>
 							<tr>
-								<td style="vertical-align: top;">Enabled: <a
-									wicket:id="showLayerEnabledHelpModal">? </a></td>
+								<td style="vertical-align: top;">Enabled:</td>
 								<td><input type="checkbox" wicket:id="enabled" /></td>
 							</tr>
 						</table>
@@ -82,12 +84,16 @@
 						<legend>Technical Properties</legend>
 						<table class="hfill">
 							<tr>
-								<td>Type: <a wicket:id="showLayerTypesHelpModal">? </a></td>
+								<td></td>
+								<a wicket:id="showLayerTechnicalPropertyModal"
+									title="Show details">? </a>
+							</tr>
+							<tr>
+								<td>Type:</td>
 								<td><select wicket:id="type"></select></td>
 							</tr>
 							<tr>
-								<td>Attach to layer: <a wicket:id="showAttachTypeHelpModal">?
-								</a></td>
+								<td>Attach to layer:</td>
 								<td><select wicket:id="attachType"></select></td>
 							</tr>
 						</table>
@@ -96,27 +102,27 @@
 						<legend>Behaviors</legend>
 						<table>
 							<tr>
+								<td><a wicket:id="showlayerBehaviorModal"
+									title="Show details">? </a></td>
+							</tr>
+							<tr>
 								<td style="vertical-align: top;"><span
-									wicket:id="lockToTokenOffsetLabel"></span><a
-									wicket:id="showLockToTokenOffsetHelpModal">? </a></td>
+									wicket:id="lockToTokenOffsetLabel"></span></td>
 								<td><input type="checkbox" wicket:id="lockToTokenOffset" /></td>
 							</tr>
 							<tr>
 								<td style="vertical-align: top;"><span
-									wicket:id="allowSTackingLabel"></span><a
-									wicket:id="showAllowSTackingHelpModal">? </a></td>
+									wicket:id="allowSTackingLabel"></span></td>
 								<td><input type="checkbox" wicket:id="allowSTacking" /></td>
 							</tr>
 							<tr>
 								<td style="vertical-align: top;"><span
-									wicket:id="crossSentenceLabel"></span> <a
-									wicket:id="showCrossSentenceHelpModal">? </a></td>
+									wicket:id="crossSentenceLabel"></span></td>
 								<td><input type="checkbox" wicket:id="crossSentence" /></td>
 							</tr>
 							<tr>
 								<td style="vertical-align: top;"><span
-									wicket:id="multipleTokensLabel"></span><a
-									wicket:id="showMultipleTokensHelpModal">? </a></td>
+									wicket:id="multipleTokensLabel"></span></td>
 								<td><input type="checkbox" wicket:id="multipleTokens" /></td>
 							</tr>
 						</table>
@@ -146,12 +152,15 @@
 						<legend>Feature details</legend>
 						<table class="hfill">
 							<tr>
-								<td>Type: <a wicket:id="showtFeatureTypeHelpModal">? </a></td>
+								<td><a wicket:id="showfeatureDetailModal"
+									title="Show details">? </a></td>
+							</tr>
+							<tr>
+								<td>Type:</td>
 								<td><select wicket:id="type"></select></td>
 							</tr>
 							<tr>
-								<td>Feature name: <a wicket:id="showFeatureNameHelpModal">?
-								</a></td>
+								<td>Feature name:</td>
 								<td><input class="hfill" type="text" wicket:id="uiName" /></td>
 							</tr>
 							<tr>
@@ -159,18 +168,15 @@
 								<td><textarea wicket:id="description" rows="2"></textarea></td>
 							</tr>
 							<tr>
-								<td style="vertical-align: top;">Enabled: <a
-									wicket:id="showFeatureEnabledHelpModal">? </a></td>
+								<td style="vertical-align: top;">Enabled:</td>
 								<td><input type="checkbox" wicket:id="enabled" /></td>
 							</tr>
 							<tr>
-								<td style="vertical-align: top;">Show: <a
-									wicket:id="showFeatureVisibleHelpModal">? </a></td>
+								<td style="vertical-align: top;">Show:</td>
 								<td><input type="checkbox" wicket:id="visible" /></td>
 							</tr>
 							<tr>
-								<td><label>TagSet: <a
-										wicket:id="showTagSetHelpModal">? </a></label></td>
+								<td><label>TagSet: </label></td>
 								<td class="hfill"><select wicket:id="tagset"></select></td>
 							</tr>
 						</table>
