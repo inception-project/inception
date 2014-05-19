@@ -482,7 +482,7 @@ public class MonitoringPage extends SettingsPageBase {
 		public AnnotationTypeSelectionForm(String id) {
 			super(id, new CompoundPropertyModel<SelectionModel>(
 					new SelectionModel()));
-			add(features = new ListChoice<AnnotationFeature>("tagSets") {
+			add(features = new ListChoice<AnnotationFeature>("features") {
 				private static final long serialVersionUID = 1L;
 
 				{
@@ -618,7 +618,7 @@ public class MonitoringPage extends SettingsPageBase {
 		private static final long serialVersionUID = -1L;
 
 		public Project project;
-		public TagSet tagSets;
+		public AnnotationFeature features;
 	}
 
 	private class MonitoringDetailForm extends Form<Project> {
