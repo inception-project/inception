@@ -61,10 +61,10 @@ public class Project
     private List<AnnotationLayer> layers;
 
     @JsonProperty("mira_templates")
-    private List<MiraTemplate> miraTemplates;
-    
+    private List<MiraTemplate> miraTemplates = new ArrayList<MiraTemplate>();
+
     @JsonProperty("crowd_jobs")
-    private List<CrowdJob> crowdJobs;
+    private List<CrowdJob> crowdJobs = new ArrayList<CrowdJob>();
 
 
     @JsonProperty("version")
