@@ -17,17 +17,17 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.tcf;
 
-import static org.junit.Assert.assertEquals;
-import static org.apache.uima.fit.factory.AnalysisEngineFactory.createPrimitiveDescription;
-import static org.apache.uima.fit.factory.CollectionReaderFactory.createCollectionReader;
+import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
+import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
 import static org.apache.uima.fit.pipeline.SimplePipeline.runPipeline;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
-import org.apache.uima.collection.CollectionReader;
+import org.apache.uima.collection.CollectionReaderDescription;
 import org.junit.Test;
 //import org.uimafit.component.xwriter.CASDumpWriter;
 
@@ -42,12 +42,14 @@ public class TcfReaderWriterTest
     public void test()
         throws Exception
     {
-        CollectionReader reader = createCollectionReader(TcfReader.class, TcfReader.PARAM_PATH,
-                new File("src/test/resources/").getAbsolutePath(), TcfReader.PARAM_PATTERNS,
-                new String[] { "[+]tcf-after.xml" });
+        CollectionReaderDescription reader = createReaderDescription(TcfReader.class, 
+                TcfReader.PARAM_SOURCE_LOCATION, "src/test/resources/",
+                TcfReader.PARAM_PATTERNS, "tcf-after.xml");
 
-        AnalysisEngineDescription writer = createPrimitiveDescription(TcfWriter.class,
-                TcfWriter.PARAM_TARGET_LOCATION, "target/test-output", TcfWriter.PARAM_STRIP_EXTENSION, true);
+        AnalysisEngineDescription writer = createEngineDescription(
+                TcfWriter.class,
+                TcfWriter.PARAM_TARGET_LOCATION, "target/test-output",
+                TcfWriter.PARAM_STRIP_EXTENSION, true);
 
        /* AnalysisEngineDescription dumper = createPrimitiveDescription(CASDumpWriter.class,
                 CASDumpWriter.PARAM_OUTPUT_FILE, "target/test-output/dump.txt");
