@@ -218,9 +218,8 @@ public class BratAjaxCasController {
 		 */
 		GetCollectionInformationResponse info = new GetCollectionInformationResponse();
 		BratAjaxConfiguration configuration = new BratAjaxConfiguration();
-		info.setEntityTypes(configuration.configureVisualizationAndAnnotation(
-				new ArrayList<AnnotationLayer>(aAnnotationLayers), annotationService,
-				aStaticColor));
+        info.setEntityTypes(configuration.buildEntityTypes(new ArrayList<AnnotationLayer>(
+                aAnnotationLayers), annotationService, aStaticColor));
 
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
 		User user = repository.getUser(username);
