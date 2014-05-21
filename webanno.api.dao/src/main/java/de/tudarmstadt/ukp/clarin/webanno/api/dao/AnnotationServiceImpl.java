@@ -17,6 +17,10 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.SPAN_TYPE;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +29,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
+import org.apache.uima.cas.CAS;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -335,8 +340,8 @@ public class AnnotationServiceImpl implements AnnotationService {
 	public void createLemmaLayer(Project aProject, User aUser)
 			throws IOException {
 		AnnotationLayer lemmaLayer = setLayer(Lemma.class.getName(), "value",
-				"Lemma", "span", aProject);
-		AnnotationLayer tokenLayer = getLayer(Token.class.getName(), "span",
+				"Lemma", SPAN_TYPE, aProject);
+		AnnotationLayer tokenLayer = getLayer(Token.class.getName(), SPAN_TYPE,
 				aProject);
 		AnnotationFeature tokenLemmaFeature = setFeature("lemma", "lemma",
 				aProject, tokenLayer, Lemma.class.getName());
@@ -349,7 +354,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 		AnnotationFeature lemmaFeature = new AnnotationFeature();
 		lemmaFeature.setDescription("lemma Annotation");
 		lemmaFeature.setName("value");
-		lemmaFeature.setType("uima.cas.String");
+		lemmaFeature.setType(CAS.TYPE_NAME_STRING);
 		lemmaFeature.setProject(aProject);
 		lemmaFeature.setUiName("Lemma value");
 		lemmaFeature.setLayer(lemmaLayer);
@@ -379,7 +384,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 
 		AnnotationLayer base = setLayer(
 				"de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference",
-				"coreference", "Coreference", "chain", aProject);
+				"coreference", "Coreference", CHAIN_TYPE, aProject);
 		base.setCrossSentence(true);
 		base.setAllowSTacking(true);
 		base.setMultipleTokens(true);
@@ -416,12 +421,12 @@ public class AnnotationServiceImpl implements AnnotationService {
 						"Other: Every name that is not a location, person or organisation",
 						"Other derivative", "Hyphenated part  is Other" };
 		AnnotationFeature neFeature  = initializeType("value", "value",
-				"Named Entity annotation", "uima.cas.String", "NER_WebAnno",
+				"Named Entity annotation", CAS.TYPE_NAME_STRING, "NER_WebAnno",
 				"de", neTags, neTagDescriptions, aProject, aUser);
 
 
 		AnnotationLayer neLayer = setLayer(NamedEntity.class.getName(),
-				"value", "Named Entity", "span", aProject);
+				"value", "Named Entity", SPAN_TYPE, aProject);
 		neLayer.setAllowSTacking(true);
 		neLayer.setMultipleTokens(true);
 		neLayer.setLockToTokenOffset(false);
@@ -448,12 +453,12 @@ public class AnnotationServiceImpl implements AnnotationService {
 		String[] depTagsDescription = aDepTagDescriptions.length == depTags.length ? aDepTagDescriptions
 				: depTags;
 		AnnotationFeature deFeature = initializeType("DependencyType", "DependencyType",
-				"Dependency annotation", "uima.cas.String", "Tiger", "de",
+				"Dependency annotation", CAS.TYPE_NAME_STRING, "Tiger", "de",
 				depTags, depTagsDescription, aProject, aUser);
 
 		AnnotationLayer depLayer = setLayer(Dependency.class.getName(),
-				"DependencyType", "Dependency", "relation", aProject);
-		AnnotationLayer tokenLayer = getLayer(Token.class.getName(), "span",
+				"DependencyType", "Dependency", RELATION_TYPE, aProject);
+		AnnotationLayer tokenLayer = getLayer(Token.class.getName(), SPAN_TYPE,
 				aProject);
 		List<AnnotationFeature> tokenFeatures = listAnnotationFeature(tokenLayer);
 		AnnotationFeature tokenPosFeature = null;
@@ -549,13 +554,13 @@ public class AnnotationServiceImpl implements AnnotationService {
 				"Stuttgart-Tübingen-Tag-Set \nGerman Part of Speech tagset "
 						+ "STTS Tag Table (1995/1999): "
 						+ "http://www.ims.uni-stuttgart.de/projekte/corplex/TagSets/stts-table.html",
-				"uima.cas.String", "STTS", "de", posTags, posTagDescriptions,
+				CAS.TYPE_NAME_STRING, "STTS", "de", posTags, posTagDescriptions,
 				aProject, aUser);
 
-		AnnotationLayer tokenLayer = getLayer(Token.class.getName(), "span",
+		AnnotationLayer tokenLayer = getLayer(Token.class.getName(), SPAN_TYPE,
 				aProject);
 		AnnotationLayer posLayer = setLayer(POS.class.getName(), "PosValue",
-				"POS", "span", aProject);
+				"POS", SPAN_TYPE, aProject);
 		AnnotationFeature tokenPosFeature = setFeature("pos", "pos", aProject,
 				tokenLayer, POS.class.getName());
 		tokenPosFeature.setVisible(true);
@@ -570,7 +575,7 @@ public class AnnotationServiceImpl implements AnnotationService {
 	private AnnotationLayer createTokenLayer(Project aProject, User aUser)
 			throws IOException {
 		AnnotationLayer tokenLayer = setLayer(Token.class.getName(), "",
-				"Token", "span", aProject);
+				"Token", SPAN_TYPE, aProject);
 
 		createLayer(tokenLayer, aUser);
 		return tokenLayer;

@@ -17,6 +17,8 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.RELATION_TYPE;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.commons.io.IOUtils.copyLarge;
 import static org.apache.commons.lang.StringUtils.isBlank;
@@ -2201,7 +2203,7 @@ public class RepositoryServiceDbData
 
                 types.add(tsd);
             }
-            else if (type.getType().equals("relation") && !type.isBuiltIn()) {
+            else if (type.getType().equals(RELATION_TYPE) && !type.isBuiltIn()) {
                 TypeSystemDescription tsd = new TypeSystemDescription_impl();
                 TypeDescription td = tsd.addType(type.getName(), "", CAS.TYPE_NAME_ANNOTATION);
                 AnnotationLayer attachType = type.getAttachType();
@@ -2216,7 +2218,7 @@ public class RepositoryServiceDbData
 
                 types.add(tsd);
             }
-            else if (type.getType().equals("chain") && !type.isBuiltIn()) {
+            else if (type.getType().equals(CHAIN_TYPE) && !type.isBuiltIn()) {
                 TypeSystemDescription tsdchains = new TypeSystemDescription_impl();
                 TypeDescription tdChains = tsdchains.addType(type.getName() + "Chain", "",
                         CAS.TYPE_NAME_ANNOTATION);

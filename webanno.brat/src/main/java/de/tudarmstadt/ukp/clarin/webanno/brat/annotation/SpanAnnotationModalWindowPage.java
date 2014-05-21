@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.*;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -144,14 +145,14 @@ public class SpanAnnotationModalWindowPage extends WebPage {
 				if (features.size() == 0) {
 					continue;
 				}
-				if (layer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
+				if (layer.getType().equals(CHAIN_TYPE)) {
 					for (AnnotationFeature feature : features) {
 						if (feature.getTagset() == null) {
 							continue addSpanLayers;
 						}
 					}
 				}
-				if (!layer.getType().equals("relation")) {
+				if (!layer.getType().equals(RELATION_TYPE)) {
 					spanLayers.add(layer);
 				}
 			}

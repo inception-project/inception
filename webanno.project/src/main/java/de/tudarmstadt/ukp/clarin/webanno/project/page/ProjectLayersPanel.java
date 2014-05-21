@@ -17,6 +17,11 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.project.page;
 
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.SPAN_TYPE;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 
 import java.io.File;
@@ -436,7 +441,7 @@ public class ProjectLayersPanel
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
             add(new CheckBox("enabled"));
             add(layerTypes = (DropDownChoice<String>) new DropDownChoice<String>("type",
-                    Arrays.asList(new String[] { "span", "relation", "chain" }))
+                    Arrays.asList(new String[] { SPAN_TYPE, RELATION_TYPE, CHAIN_TYPE }))
             {
                 private static final long serialVersionUID = 1244555334843130802L;
 
@@ -498,7 +503,7 @@ public class ProjectLayersPanel
                                 return Arrays.asList(LayerDetailForm.this.getModelObject()
                                         .getAttachType());
                             }
-                            if (!layerType.equals(WebAnnoConst.RELATION_TYPE)) {
+                            if (!layerType.equals(RELATION_TYPE)) {
                                 return new ArrayList<AnnotationLayer>();
                             }
 
@@ -514,7 +519,7 @@ public class ProjectLayersPanel
                             allLayers.removeAll(usedLayers);
 
                             for (AnnotationLayer layer : allLayers) {
-                                if (layer.getType().equals("span") && !layer.isBuiltIn()) {
+                                if (layer.getType().equals(SPAN_TYPE) && !layer.isBuiltIn()) {
                                     attachTeypes.add(layer);
                                 }
                             }
@@ -559,7 +564,7 @@ public class ProjectLayersPanel
                     super.onConfigure();
                     if (LayerDetailForm.this.getModelObject().getId() != 0
                             && LayerDetailForm.this.getModelObject().getType()
-                                    .equals(WebAnnoConst.RELATION_TYPE)) {
+                                    .equals(RELATION_TYPE)) {
                         this.setVisible(false);
                     }
                     else if (LayerDetailForm.this.getModelObject().getId() != 0
@@ -585,7 +590,7 @@ public class ProjectLayersPanel
                     }
                     else if (LayerDetailForm.this.getModelObject().getId() != 0
                             && LayerDetailForm.this.getModelObject().getType()
-                                    .equals(WebAnnoConst.RELATION_TYPE)) {
+                                    .equals(RELATION_TYPE)) {
                         this.setVisible(false);
                     }
                     else {
@@ -688,7 +693,7 @@ public class ProjectLayersPanel
                     }
                     else if (LayerDetailForm.this.getModelObject().getId() != 0
                             && LayerDetailForm.this.getModelObject().getType()
-                                    .equals(WebAnnoConst.RELATION_TYPE)) {
+                                    .equals(RELATION_TYPE)) {
                         this.setVisible(false);
                     }
                     else {
@@ -710,7 +715,7 @@ public class ProjectLayersPanel
                     }
                     else if (LayerDetailForm.this.getModelObject().getId() != 0
                             && LayerDetailForm.this.getModelObject().getType()
-                                    .equals(WebAnnoConst.RELATION_TYPE)) {
+                                    .equals(RELATION_TYPE)) {
                         this.setVisible(false);
                     }
                     else {
@@ -737,7 +742,7 @@ public class ProjectLayersPanel
                             error("Only one Layer per project is allowed!");
                             return;
                         }
-                        if (layer.getType().equals("relation") && layer.getAttachType() == null) {
+                        if (layer.getType().equals(RELATION_TYPE) && layer.getAttachType() == null) {
                             error("a relation layer need an attach type!");
                             return;
                         }
@@ -758,7 +763,7 @@ public class ProjectLayersPanel
                             if (layer.getType().equals("chain")) {
                                 AnnotationFeature relationFeature = new AnnotationFeature();
                                 relationFeature.setType(layer.getName());
-                                relationFeature.setName(WebAnnoConst.COREFERENCE_RELATION_FEATURE);
+                                relationFeature.setName(COREFERENCE_RELATION_FEATURE);
                                 relationFeature.setLayer(layer);
                                 relationFeature.setEnabled(true);
                                 relationFeature.setUiName("Reference Relation");
@@ -768,7 +773,7 @@ public class ProjectLayersPanel
 
                                 AnnotationFeature typeFeature = new AnnotationFeature();
                                 typeFeature.setType(layer.getName());
-                                typeFeature.setName(WebAnnoConst.COREFERENCE_TYPE_FEATURE);
+                                typeFeature.setName(COREFERENCE_TYPE_FEATURE);
                                 typeFeature.setLayer(layer);
                                 typeFeature.setEnabled(true);
                                 typeFeature.setUiName("Reference Type");
@@ -1068,7 +1073,7 @@ public class ProjectLayersPanel
                     return layerDetailForm.getModelObject() != null
                             && !layerDetailForm.getModelObject().isBuiltIn()
                             && !layerDetailForm.getModelObject().getType()
-                                    .equals(WebAnnoConst.CHAIN_TYPE);
+                                    .equals(CHAIN_TYPE);
                 }
             });
         }

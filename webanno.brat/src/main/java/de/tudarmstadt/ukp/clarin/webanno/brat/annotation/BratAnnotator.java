@@ -76,6 +76,7 @@ public class BratAnnotator
     private static final String ACTION_GET_COLLECTION_INFORMATION = "getCollectionInformation";
     private static final String ACTION_GET_DOCUMENT = "getDocument";
     private static final String ACTION_LOAD_CONF = "loadConf";
+    private static final String ACTION_SPAN_OPEN_DIALOG = "spanOpenDialog";
     private static final String ACTION_STORE_SVG = "storeSVG";
     private static final String ACTION_WHOAMI = "whoami";
 
@@ -219,7 +220,7 @@ public class BratAnnotator
                         result = controller.storeSVG();
                     }
                     else if (request.getParameterValue(PARAM_ACTION).toString()
-                            .equals("spanOpenDialog")) {
+                            .equals(ACTION_SPAN_OPEN_DIALOG)) {
 
                         if (request.getParameterValue(PARAM_ID).toString() == null) {
                             selectedSpanID = -1;

@@ -39,6 +39,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.*;
+
 /**
  *
  * Configuring The brat JSON collection information responses getting tags from DB
@@ -70,11 +72,11 @@ public class BratAjaxConfiguration
         int i = 0;
         for (AnnotationLayer relationLayer : aLayers) {
 
-            if (relationLayer.getType().equals("chain")) {
+            if (relationLayer.getType().equals(CHAIN_TYPE)) {
                 relationLayers.put(relationLayer, relationLayer);
                 checkRelation.put(relationLayer, true);
             }
-            else if (relationLayer.getType().equals("relation")) {
+            else if (relationLayer.getType().equals(RELATION_TYPE)) {
                 relationLayers.put(relationLayer.getAttachType(), relationLayer);
                 checkRelation.put(relationLayer.getAttachType(), true);
 
@@ -148,7 +150,7 @@ public class BratAjaxConfiguration
         }
 
         if (aSpanLayer.isBuiltIn() && aSpanLayer.getName().equals(POS.class.getName())) {
-            aRelationLayer = aAnnotationService.getLayer(Dependency.class.getName(), "relation",
+            aRelationLayer = aAnnotationService.getLayer(Dependency.class.getName(), RELATION_TYPE,
                     aSpanLayer.getProject());
         }
 
