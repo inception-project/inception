@@ -17,6 +17,11 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.RELATION_TYPE;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -38,8 +43,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
-
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.*;
 
 /**
  *
@@ -127,14 +130,14 @@ public class BratAjaxConfiguration
                 continue;
             }
             List<String> tags = new ArrayList<String>();
-            if (feature.getName().equals(WebAnnoConst.COREFERENCE_TYPE_FEATURE)
+            if (feature.getName().equals(COREFERENCE_TYPE_FEATURE)
                     && feature.getTagset() != null) {
                 for (Tag tag : aAnnotationService.listTags(feature.getTagset())) {
                     tags.add(tag.getName());
                 }
                 spanTags.add(tags);
             }
-            else if (feature.getName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE)
+            else if (feature.getName().equals(COREFERENCE_RELATION_FEATURE)
                     && feature.getTagset() != null) {
                 for (Tag tag : aAnnotationService.listTags(feature.getTagset())) {
                     tags.add(tag.getName());
@@ -155,7 +158,7 @@ public class BratAjaxConfiguration
         }
 
         if (aRelationLayer.getId() != 0
-                && !aRelationLayer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
+                && !aRelationLayer.getType().equals(CHAIN_TYPE)) {
             for (AnnotationFeature feature : aAnnotationService
                     .listAnnotationFeature(aRelationLayer)) {
                 if (!(feature.isEnabled() || feature.isEnabled())) {
