@@ -58,7 +58,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
@@ -285,12 +284,9 @@ public class BratAnnotator
                                 getModelObject().isStaticColor());
 
                     }
-
                     else if (request.getParameterValue("action").toString().equals("getDocument")) {
-                        result = BratAnnotatorUtility.getDocument(jCas, repository,
-                                annotationService, getModelObject());
+                        result = controller.getDocumentResponse(getModelObject(), 0, jCas, true);
                     }
-
                 }
                 catch (ClassNotFoundException e) {
                     error("Invalid reader: " + e.getMessage());

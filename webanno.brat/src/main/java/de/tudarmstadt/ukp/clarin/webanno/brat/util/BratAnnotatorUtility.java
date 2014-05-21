@@ -53,16 +53,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 public class BratAnnotatorUtility
 {
 
-    public static Object getDocument(JCas aJcas, RepositoryService repository,
-            AnnotationService annotationService, BratAnnotatorModel bratAnnotatorModel)
-        throws ClassNotFoundException, IOException, UIMAException
-    {
-        Object result = null;
-        BratAjaxCasController controller = new BratAjaxCasController(repository, annotationService);
-        result = controller.getDocumentResponse(bratAnnotatorModel, 0, aJcas, true);
-        return result;
-    }
-
     public static boolean isDocumentFinished(RepositoryService aRepository,
             BratAnnotatorModel aBratAnnotatorModel)
     {
