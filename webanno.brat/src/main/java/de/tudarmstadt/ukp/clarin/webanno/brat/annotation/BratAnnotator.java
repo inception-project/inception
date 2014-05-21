@@ -72,8 +72,26 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 public class BratAnnotator
     extends Panel
 {
-    private static final long serialVersionUID = -1537506294440056609L;
+    private static final String ACTION_ARC_OPEN_DIALOG = "arcOpenDialog";
+    private static final String ACTION_GET_COLLECTION_INFORMATION = "getCollectionInformation";
+    private static final String ACTION_GET_DOCUMENT = "getDocument";
+    private static final String ACTION_LOAD_CONF = "loadConf";
+    private static final String ACTION_STORE_SVG = "storeSVG";
+    private static final String ACTION_WHOAMI = "whoami";
 
+    private static final String PARAM_ACTION = "action";
+    private static final String PARAM_ARC_ID = "arcId";
+    private static final String PARAM_ARC_TYPE = "arcType";
+    private static final String PARAM_ID = "id";
+    private static final String PARAM_OFFSETS = "offsets";
+    private static final String PARAM_SPAN_TEXT = "spanText";
+    private static final String PARAM_TARGET_SPAN_ID = "targetSpanId";
+    private static final String PARAM_TARGET_TYPE = "targetType";
+    private static final String PARAM_ORIGIN_SPAN_ID = "originSpanId";
+    private static final String PARAM_ORIGIN_TYPE = "originType";
+
+    private static final long serialVersionUID = -1537506294440056609L;
+    
     private WebMarkupContainer vis;
 
     private AbstractAjaxBehavior controller;
@@ -89,17 +107,17 @@ public class BratAnnotator
 
     private String collection = "";
 
-    String selectedSpan, offsets, selectedSpanType, selectedArcType;
-    Integer selectedSpanID, selectedArcId;
+    private String selectedSpan, offsets, selectedSpanType, selectedArcType;
+    private Integer selectedSpanID, selectedArcId;
 
-    Integer originSpanId, targetSpanId;
+    private Integer originSpanId, targetSpanId;
     private boolean closeButtonClicked;// check if the annotation dialog has a change
 
     private String originSpanType = null, targetSpanType = null;
 
-    int beginOffset;
-    int endOffset;
-    boolean annotate;
+    private int beginOffset;
+    private int endOffset;
+    private boolean annotate;
 
     /**
      * Data models for {@link BratAnnotator}
@@ -194,24 +212,24 @@ public class BratAnnotator
                         annotationService);
 
                 try {
-                    if (request.getParameterValue("action").toString().equals("whoami")) {
+                    if (request.getParameterValue(PARAM_ACTION).toString().equals(ACTION_WHOAMI)) {
                         result = controller.whoami();
                     }
-                    else if (request.getParameterValue("action").toString().equals("storeSVG")) {
+                    else if (request.getParameterValue(PARAM_ACTION).toString().equals(ACTION_STORE_SVG)) {
                         result = controller.storeSVG();
                     }
-                    else if (request.getParameterValue("action").toString()
+                    else if (request.getParameterValue(PARAM_ACTION).toString()
                             .equals("spanOpenDialog")) {
 
-                        if (request.getParameterValue("id").toString() == null) {
+                        if (request.getParameterValue(PARAM_ID).toString() == null) {
                             selectedSpanID = -1;
                         }
                         else {
-                            selectedSpanID = request.getParameterValue("id").toInt();
+                            selectedSpanID = request.getParameterValue(PARAM_ID).toInt();
                             selectedSpanType = request.getParameterValue("type").toString();
                         }
 
-                        offsets = request.getParameterValue("offsets").toString();
+                        offsets = request.getParameterValue(PARAM_OFFSETS).toString();
                         OffsetsList offsetLists = jsonConverter.getObjectMapper().readValue(
                                 offsets, OffsetsList.class);
 
@@ -231,7 +249,7 @@ public class BratAnnotator
                             endOffset = fs.getEnd();
                         }
 
-                        selectedSpan = request.getParameterValue("spanText").toString();
+                        selectedSpan = request.getParameterValue(PARAM_SPAN_TEXT).toString();
                         /*
                          * selectedSpan = BratAjaxCasUtil .getSelectedText(jCas, beginOffset,
                          * endOffset);
@@ -247,20 +265,20 @@ public class BratAnnotator
                         result = controller.loadConf();
                     }
 
-                    else if (request.getParameterValue("action").toString().equals("arcOpenDialog")) {
+                    else if (request.getParameterValue(PARAM_ACTION).toString().equals(ACTION_ARC_OPEN_DIALOG)) {
 
                         Session.get().getFeedbackMessages().clear();
-                        originSpanType = request.getParameterValue("originType").toString();
-                        originSpanId = request.getParameterValue("originSpanId").toInteger();
-                        selectedArcType = request.getParameterValue("arcType").toString();
-                        targetSpanType = request.getParameterValue("targetType").toString();
-                        targetSpanId = request.getParameterValue("targetSpanId").toInteger();
+                        originSpanType = request.getParameterValue(PARAM_ORIGIN_TYPE).toString();
+                        originSpanId = request.getParameterValue(PARAM_ORIGIN_SPAN_ID).toInteger();
+                        selectedArcType = request.getParameterValue(PARAM_ARC_TYPE).toString();
+                        targetSpanType = request.getParameterValue(PARAM_TARGET_TYPE).toString();
+                        targetSpanId = request.getParameterValue(PARAM_TARGET_SPAN_ID).toInteger();
 
-                        if (request.getParameterValue("arcId").toString() == null) {
+                        if (request.getParameterValue(PARAM_ARC_ID).toString() == null) {
                             selectedArcId = -1;
                         }
                         else {
-                            selectedArcId = request.getParameterValue("arcId").toInt();
+                            selectedArcId = request.getParameterValue(PARAM_ARC_ID).toInt();
                         }
 
                         if (BratAnnotatorUtility.isDocumentFinished(repository, getModelObject())) {
@@ -273,18 +291,18 @@ public class BratAnnotator
 
                         result = controller.loadConf();
                     }
-                    else if (request.getParameterValue("action").toString().equals("loadConf")) {
+                    else if (request.getParameterValue(PARAM_ACTION).toString().equals(ACTION_LOAD_CONF)) {
                         result = controller.loadConf();
                     }
-                    else if (request.getParameterValue("action").toString()
-                            .equals("getCollectionInformation")
+                    else if (request.getParameterValue(PARAM_ACTION).toString()
+                            .equals(ACTION_GET_COLLECTION_INFORMATION)
                             && getModelObject().getProject() != null) {
                         result = controller.getCollectionInformation(getModelObject().getProject()
                                 .getName(), getModelObject().getAnnotationLayers(),
                                 getModelObject().isStaticColor());
 
                     }
-                    else if (request.getParameterValue("action").toString().equals("getDocument")) {
+                    else if (request.getParameterValue(PARAM_ACTION).toString().equals(ACTION_GET_DOCUMENT)) {
                         result = controller.getDocumentResponse(getModelObject(), 0, jCas, true);
                     }
                 }
