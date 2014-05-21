@@ -213,15 +213,15 @@ public class BratAnnotator
                         annotationService);
 
                 try {
-                    if (request.getParameterValue(PARAM_ACTION).toString().equals(ACTION_WHOAMI)) {
+                    final String action = request.getParameterValue(PARAM_ACTION).toString();
+                    
+                    if (action.equals(ACTION_WHOAMI)) {
                         result = controller.whoami();
                     }
-                    else if (request.getParameterValue(PARAM_ACTION).toString().equals(ACTION_STORE_SVG)) {
+                    else if (action.equals(ACTION_STORE_SVG)) {
                         result = controller.storeSVG();
                     }
-                    else if (request.getParameterValue(PARAM_ACTION).toString()
-                            .equals(ACTION_SPAN_OPEN_DIALOG)) {
-
+                    else if (action.equals(ACTION_SPAN_OPEN_DIALOG)) {
                         if (request.getParameterValue(PARAM_ID).toString() == null) {
                             selectedSpanID = -1;
                         }
@@ -266,7 +266,7 @@ public class BratAnnotator
                         result = controller.loadConf();
                     }
 
-                    else if (request.getParameterValue(PARAM_ACTION).toString().equals(ACTION_ARC_OPEN_DIALOG)) {
+                    else if (action.equals(ACTION_ARC_OPEN_DIALOG)) {
 
                         Session.get().getFeedbackMessages().clear();
                         originSpanType = request.getParameterValue(PARAM_ORIGIN_TYPE).toString();
@@ -292,18 +292,17 @@ public class BratAnnotator
 
                         result = controller.loadConf();
                     }
-                    else if (request.getParameterValue(PARAM_ACTION).toString().equals(ACTION_LOAD_CONF)) {
+                    else if (action.equals(ACTION_LOAD_CONF)) {
                         result = controller.loadConf();
                     }
-                    else if (request.getParameterValue(PARAM_ACTION).toString()
-                            .equals(ACTION_GET_COLLECTION_INFORMATION)
+                    else if (action.equals(ACTION_GET_COLLECTION_INFORMATION)
                             && getModelObject().getProject() != null) {
                         result = controller.getCollectionInformation(getModelObject().getProject()
                                 .getName(), getModelObject().getAnnotationLayers(),
                                 getModelObject().isStaticColor());
 
                     }
-                    else if (request.getParameterValue(PARAM_ACTION).toString().equals(ACTION_GET_DOCUMENT)) {
+                    else if (action.equals(ACTION_GET_DOCUMENT)) {
                         result = controller.getDocumentResponse(getModelObject(), 0, jCas, true);
                     }
                 }
