@@ -34,12 +34,15 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.BeanAsArraySerializer;
  *
  */
 @JsonSerialize(using = BeanAsArraySerializer.class)
-@JsonPropertyOrder(value = { "id", "type", "offsets" })
+@JsonPropertyOrder(value = { "id", "type", "offsets", "labelText" })
 public class Entity
 {
     private int id;
     private String type;
-    List<Offsets> offsets = new ArrayList<Offsets>();
+    private List<Offsets> offsets = new ArrayList<Offsets>();
+    // WEBANNO EXTENSION BEGIN
+    private String labelText;
+    // WEBANNO EXTENSION END
 
     public Entity()
     {
@@ -48,10 +51,16 @@ public class Entity
 
     public Entity(int aId, String aType, List<Offsets> aOffsets)
     {
+        this(aId, aType, aOffsets, null);
+    }
+
+    public Entity(int aId, String aType, List<Offsets> aOffsets, String aLabelText)
+    {
         super();
         id = aId;
         type = aType;
         offsets = aOffsets;
+        labelText = aLabelText;
     }
 
     public int getId()
@@ -84,4 +93,13 @@ public class Entity
         offsets = aOffsets;
     }
 
+    public void setLabelText(String aLabelText)
+    {
+        labelText = aLabelText;
+    }
+    
+    public String getLabelText()
+    {
+        return labelText;
+    }
 }

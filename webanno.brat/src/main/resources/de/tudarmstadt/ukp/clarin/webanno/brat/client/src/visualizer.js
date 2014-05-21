@@ -138,6 +138,9 @@ var Visualizer = (function($, window, undefined) {
       // this.leftSpans = undefined;
       // this.rightSpans = undefined;
       // this.annotatorNotes = undefined;
+      // WEBANNO EXTENSION BEGIN
+      // this.labelText = undefined;
+      // WEBANNO EXTENSION END
     };
 
     var Chunk = function(index, text, from, to, space, spans) {
@@ -545,6 +548,11 @@ var Visualizer = (function($, window, undefined) {
           var span =
               //      (id,        type,      offsets,   generalType)
               new Span(entity[0], entity[1], entity[2], 'entity');
+          // WEBANNO EXTENSION BEGIN
+          if (entity[3]) {
+        	  span.labelText = entity[3];
+          }
+          // WEBANNO EXTENSION END
           span.splitMultilineOffsets(data.text);
           data.spans[entity[0]] = span;
         });
@@ -646,6 +654,11 @@ var Visualizer = (function($, window, undefined) {
           data.eventDescs[rel[0]] =
               //           (id, triggerId, roles,          klass)
               new EventDesc(t1, t1,        [[rel[1], t2]], 'relation');
+          // WEBANNO EXTENSION BEGIN
+          if (rel[3]) {
+        	  data.eventDescs[rel[0]].labelText = rel[3];
+          }
+          // WEBANNO EXTENSION END
         });
 
         // attributes
@@ -1009,6 +1022,11 @@ var Visualizer = (function($, window, undefined) {
                 labelIdx++;
               }
             }
+            // WEBANNO EXTENSION BEGIN
+            if (fragment.span.labelText) {
+            	fragment.labelText = fragment.span.labelText;
+            }
+            // WEBANNO EXTENSION END
 
             var svgtext = svg.createText(); // one "text" element per row
             var postfixArray = [];
@@ -1263,6 +1281,13 @@ var Visualizer = (function($, window, undefined) {
         $.each(data.arcs, function(arcNo, arc) {
           var labels = Util.getArcLabels(spanTypes, data.spans[arc.origin].type, arc.type, relationTypesHash);
           if (!labels.length) labels = [arc.type];
+          // WEBANNO EXTENSION BEGIN
+          if (arc.eventDescId && data.eventDescs[arc.eventDescId]) {
+            if (data.eventDescs[arc.eventDescId].labelText) {
+              labels = [data.eventDescs[arc.eventDescId].labelText];
+            }
+          }
+          // WEBANNO EXTENSION END
           $.each(labels, function(labelNo, label) {
             arcTexts[label] = true;
           });
@@ -1721,6 +1746,13 @@ Util.profileStart('chunks');
                 if (origin.row) {
                   var labels = Util.getArcLabels(spanTypes, leftSpan.type, arc.type, relationTypesHash);
                   if (!labels.length) labels = [arc.type];
+                  // WEBANNO EXTENSION BEGIN
+                  if (arc.eventDescId && data.eventDescs[arc.eventDescId]) {
+                    if (data.eventDescs[arc.eventDescId].labelText) {
+                      labels = [data.eventDescs[arc.eventDescId].labelText];
+                    }
+                  }
+                  // WEBANNO EXTENSION END
                   if (origin.row.index == rowIndex) {
                     // same row, but before this
                     border = origin.translation.x + leftSpan.fragments[leftSpan.fragments.length - 1].right;
@@ -1751,6 +1783,13 @@ Util.profileStart('chunks');
                 if (target.row) {
                   var labels = Util.getArcLabels(spanTypes, span.type, arc.type, relationTypesHash);
                   if (!labels.length) labels = [arc.type];
+                  // WEBANNO EXTENSION BEGIN
+                  if (arc.eventDescId && data.eventDescs[arc.eventDescId]) {
+                    if (data.eventDescs[arc.eventDescId].labelText) {
+                      labels = [data.eventDescs[arc.eventDescId].labelText];
+                    }
+                  }
+                  // WEBANNO EXTENSION END
                   if (target.row.index == rowIndex) {
                     // same row, but before this
                     border = target.translation.x + leftSpan.fragments[leftSpan.fragments.length - 1].right;
@@ -2194,6 +2233,14 @@ Util.profileStart('arcs');
                   labelIdx++;
                 }
               }
+
+              // WEBANNO EXTENSION BEGIN
+              if (arc.eventDescId && data.eventDescs[arc.eventDescId]) {
+                if (data.eventDescs[arc.eventDescId].labelText) {
+              	  labelText = data.eventDescs[arc.eventDescId].labelText;
+                }
+              }
+              // WEBANNO EXTENSION END
 
               var shadowGroup;
               if (arc.shadowClass || arc.marked) {

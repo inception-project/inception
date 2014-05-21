@@ -34,7 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.BeanAsArraySerializer;
  *
  */
 @JsonSerialize(using = BeanAsArraySerializer.class)
-@JsonPropertyOrder(value = { "id", "type", "arguments" })
+@JsonPropertyOrder(value = { "id", "type", "arguments", "labelText" })
 public class Relation
 {
     private int id;
@@ -47,8 +47,12 @@ public class Relation
     /**
      * The initial/destination span annotations as shown in the example above
      */
-    List<Argument> arguments = new ArrayList<Argument>();
+    private List<Argument> arguments = new ArrayList<Argument>();
 
+    // WEBANNO EXTENSION BEGIN
+    private String labelText;
+    // WEBANNO EXTENSION END
+    
     public Relation()
     {
         // Nothing to do
@@ -56,10 +60,16 @@ public class Relation
 
     public Relation(int aId, String aType, List<Argument> aArguments)
     {
+        this(aId, aType, aArguments, null);
+    }
+
+    public Relation(int aId, String aType, List<Argument> aArguments, String aLabelText)
+    {
         super();
         id = aId;
         type = aType;
         arguments = aArguments;
+        labelText = aLabelText;
     }
 
     public int getId()
@@ -90,5 +100,16 @@ public class Relation
     public void setArguments(List<Argument> aArguments)
     {
         arguments = aArguments;
+    }
+
+
+    public void setLabelText(String aLabelText)
+    {
+        labelText = aLabelText;
+    }
+    
+    public String getLabelText()
+    {
+        return labelText;
     }
 }
