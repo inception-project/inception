@@ -16,6 +16,6 @@
  * limitations under the License.
  ******************************************************************************/
 /**
- * Provides Utility Classes for the statistics, such as Kappa measures
+ * Provides Utility Classes for the monitoring, such as Kappa measures
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.statistics;
+package de.tudarmstadt.ukp.clarin.webanno.monitoring.support;
