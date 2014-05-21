@@ -191,17 +191,10 @@ public class BratAjaxCasController {
 	 * {@link Dependency}, {@link CoreferenceChain}
 	 *
 	 * @see <a href="http://brat.nlplab.org/index.html">Brat</a>
-	 * @param aCollection
-	 * @param aRequest
-	 * @return
-	 * @throws UIMAException
-	 * @throws IOException
 	 */
-
 	public GetCollectionInformationResponse getCollectionInformation(
 			String aCollection, HashSet<AnnotationLayer> aAnnotationLayers,
 			boolean aStaticColor)
-
 	{
 		LOG.info("AJAX-RPC: getCollectionInformation");
 
@@ -229,8 +222,7 @@ public class BratAjaxCasController {
 				new ArrayList<AnnotationLayer>(aAnnotationLayers), annotationService,
 				aStaticColor));
 
-		String username = SecurityContextHolder.getContext()
-				.getAuthentication().getName();
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
 		User user = repository.getUser(username);
 		if (aCollection.equals("/")) {
 			for (Project projects : repository.listProjects()) {
@@ -238,17 +230,16 @@ public class BratAjaxCasController {
 					info.addCollection(projects.getName());
 				}
 			}
-		} else {
+        }
+        else {
+            project = repository.getProject(aCollection.replace("/", ""));
 
-			project = repository.getProject(aCollection.replace("/", ""));
-
-			for (SourceDocument document : repository
-					.listSourceDocuments(project)) {
-				info.addDocument(document.getName());
-			}
+            for (SourceDocument document : repository.listSourceDocuments(project)) {
+                info.addDocument(document.getName());
+            }
 			info.addCollection("../");
 		}
-		// The norm_search_dialog seems required in the annotation page.
+		// FIXME: The norm_search_dialog seems required in the annotation page.
 		// This will be removed when our own open dialog is implemented
 		info.setSearchConfig(new ArrayList<String[]>());
 
