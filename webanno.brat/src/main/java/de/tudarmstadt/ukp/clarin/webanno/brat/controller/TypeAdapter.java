@@ -38,6 +38,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
  */
 public interface TypeAdapter
 {
+    static final String FEATURE_SEPARATOR = " | ";
+
     /**
      * Add new annotation to the CAS using the MIRA prediction. This is different from the add
      * methods in the {@link TypeAdapter}s in such a way that the begin and end offsets are always

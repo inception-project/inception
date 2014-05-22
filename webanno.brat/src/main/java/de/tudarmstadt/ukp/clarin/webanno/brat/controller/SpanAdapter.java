@@ -206,25 +206,8 @@ public class SpanAdapter
         for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, firstSentence.getBegin(),
                 lastSentenceInPage.getEnd())) {
 
-            String annotations = "";
-            for (AnnotationFeature feature : aFeatures) {
-                if (!(feature.isEnabled() || feature.isVisible())) {
-                    continue;
-                }
-                Feature labelFeature = fs.getType().getFeatureByBaseName(feature.getName());
-                if (annotations.equals("")) {
-                    annotations = typeId
-                            + "_"
-                            + (fs.getFeatureValueAsString(labelFeature) == null ? " " : fs
-                                    .getFeatureValueAsString(labelFeature));
-                }
-                else {
-                    annotations = annotations
-                            + " | "
-                            + (fs.getFeatureValueAsString(labelFeature) == null ? " " : fs
-                                    .getFeatureValueAsString(labelFeature));
-                }
-            }
+            String bratTypeName = ArcAdapter.getBratTypeName(this, fs, aFeatures);
+            String bratLabelText = ArcAdapter.getBratLabelText(this, fs, aFeatures);
             Sentence beginSent = null, endSent = null;
             // check if annotation spans multiple sentence
             for (Sentence sentence : selectCovered(aJcas, Sentence.class, firstSentence.getBegin(),
@@ -260,12 +243,12 @@ public class SpanAdapter
                     }
                 }
                 aResponse.addEntity(new Entity(((FeatureStructureImpl) fs).getAddress(),
-                        annotations, offsets));
+                        bratTypeName, offsets, bratLabelText.toString()));
             }
             else {
                 aResponse.addEntity(new Entity(((FeatureStructureImpl) fs).getAddress(),
-                        annotations, asList(new Offsets(fs.getBegin() - aFirstSentenceOffset, fs
-                                .getEnd() - aFirstSentenceOffset))));
+                        bratTypeName, asList(new Offsets(fs.getBegin() - aFirstSentenceOffset, fs
+                                .getEnd() - aFirstSentenceOffset)), bratLabelText.toString()));
             }
         }
     }

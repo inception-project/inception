@@ -164,7 +164,7 @@ public class BratAjaxConfiguration
                     aSpanLayer.getProject());
         }
 
-        if (aRelationLayer.getId() != 0
+        if (aRelationLayer != null
                 && !aRelationLayer.getType().equals(CHAIN_TYPE)) {
             for (AnnotationFeature feature : aAnnotationService
                     .listAnnotationFeature(aRelationLayer)) {
@@ -196,7 +196,7 @@ public class BratAjaxConfiguration
         else if (aSpanLayer.isBuiltIn() && aSpanLayer.getName().equals(NamedEntity.class.getName())) {
 
             tagLists = getChildren(aSpanLayer,
-                    aRelationLayer.getId() == 0 ? "" : aRelationLayer.getId() + "_",
+                    aRelationLayer == null ? "" : aRelationLayer.getId() + "_",
                     concatTagsPerFeature(spanTags), concatTagsPerFeature(relationTags), "black",
                     "cyan", "green", "", aStaticColor);
 
@@ -208,7 +208,7 @@ public class BratAjaxConfiguration
         else if (aSpanLayer.isBuiltIn() && aSpanLayer.getName().equals(Lemma.class.getName())) {
 
             tagLists = getChildren(aSpanLayer,
-                    aRelationLayer.getId() == 0 ? "" : aRelationLayer.getId() + "_",
+                    aRelationLayer == null ? "" : aRelationLayer.getId() + "_",
                     concatTagsPerFeature(spanTags), concatTagsPerFeature(relationTags), "", "", "",
                     "", aStaticColor);
 
@@ -221,7 +221,7 @@ public class BratAjaxConfiguration
         // custom layers
         else {
             tagLists = getChildren(aSpanLayer,
-                    aRelationLayer.getId() == 0 ? "" : aRelationLayer.getId() + "_",
+                    aRelationLayer == null ? "" : aRelationLayer.getId() + "_",
                     concatTagsPerFeature(spanTags), concatTagsPerFeature(relationTags),
                     fGColors.get(i), bGColors.get(i), bDColors.get(i), bDColors.get(i),
                     aStaticColor);

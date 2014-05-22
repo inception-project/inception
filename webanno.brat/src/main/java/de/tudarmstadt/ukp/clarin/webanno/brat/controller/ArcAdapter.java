@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
@@ -163,28 +164,10 @@ public class ArcAdapter
 
             List<Argument> argumentList = getArgument(governorFs, dependentFs);
 
-            String annotations = "";
-            for (AnnotationFeature feature : aFeatures) {
-                if (!(feature.isEnabled() || feature.isEnabled())) {
-                    continue;
-                }
-                Feature labelFeature = fs.getType().getFeatureByBaseName(feature.getName());
-                if (annotations.equals("")) {
-                    annotations = typeId
-                            + "_"
-                            + (fs.getFeatureValueAsString(labelFeature) == null ? " " : fs
-                                    .getFeatureValueAsString(labelFeature));
-                }
-                else {
-                    annotations = annotations
-                            + " | "
-                            + (fs.getFeatureValueAsString(labelFeature) == null ? " " : fs
-                                    .getFeatureValueAsString(labelFeature));
-                }
-            }
-
+            String bratLabelText = getBratLabelText(this, fs, aFeatures);
+            String bratTypeName = getBratTypeName(this, fs, aFeatures);
             aResponse.addRelation(new Relation(((FeatureStructureImpl) fs).getAddress(),
-                    annotations, argumentList));
+                    bratTypeName, argumentList, bratLabelText.toString()));
         }
     }
 
@@ -457,4 +440,62 @@ public class ArcAdapter
         this.crossMultipleSentence = crossMultipleSentence;
     }
 
+    // FIXME this is the version that treats each tag as a separate type in brat - should be removed
+    public static String getBratTypeName(TypeAdapter aAdapter, AnnotationFS aFs, List<AnnotationFeature> aFeatures)
+    {
+        String annotations = "";
+        for (AnnotationFeature feature : aFeatures) {
+            if (!(feature.isEnabled() || feature.isEnabled())) {
+                continue;
+            }
+            Feature labelFeature = aFs.getType().getFeatureByBaseName(feature.getName());
+            if (annotations.equals("")) {
+                annotations = aAdapter.getTypeId()
+                        + "_"
+                        + (aFs.getFeatureValueAsString(labelFeature) == null ? " " : aFs
+                                .getFeatureValueAsString(labelFeature));
+            }
+            else {
+                annotations = annotations
+                        + " | "
+                        + (aFs.getFeatureValueAsString(labelFeature) == null ? " " : aFs
+                                .getFeatureValueAsString(labelFeature));
+            }
+        }
+        return annotations;
+    }
+
+    // FIXME this is the method that should replace the method above. Every layer is treated as
+    // as a type in brat
+    // FIXME this method should be moved to a common base class for adapters or to a utility class
+    public static String getBratType2(TypeAdapter aAdapter, AnnotationFS aFs, List<AnnotationFeature> aFeatures)
+    {
+        return aAdapter.getTypeId() + "_" + aAdapter.getAnnotationTypeName();
+    }
+
+    /**
+     * Construct the label text used in the brat user interface.
+     */
+    // FIXME this method should be moved to a common base class for adapters or to a utility class
+    public static String getBratLabelText(TypeAdapter aAdapter, AnnotationFS aFs,
+            List<AnnotationFeature> aFeatures)
+    {
+        Type type = getType(aFs.getCAS(), aAdapter.getAnnotationTypeName());
+        
+        StringBuilder bratLabelText = new StringBuilder();
+        for (AnnotationFeature feature : aFeatures) {
+            if (!(feature.isEnabled() || feature.isVisible())) {
+                continue;
+            }
+            
+            Feature labelFeature = aFs.getType().getFeatureByBaseName(feature.getName());
+            
+            if (bratLabelText.length() > 0) {
+                bratLabelText.append(FEATURE_SEPARATOR);
+            }
+            
+            bratLabelText.append(StringUtils.defaultString(aFs.getFeatureValueAsString(labelFeature)));
+        }
+        return bratLabelText.toString();
+    }
 }
