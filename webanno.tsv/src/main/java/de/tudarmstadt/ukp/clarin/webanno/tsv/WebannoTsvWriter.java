@@ -23,24 +23,33 @@ import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.NavigableMap;
+import java.util.Set;
+import java.util.TreeMap;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.jcas.tcas.Annotation;
+import org.apache.uima.resource.ResourceInitializationException;
 
 import de.tudarmstadt.ukp.dkpro.core.api.io.JCasFileWriter_ImplBase;
+import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
+import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.TagsetDescription;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.parameter.ComponentParameters;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
  * Writes a specific TSV File (9 TAB separated) annotation from the CAS object. Example of output
@@ -98,154 +107,227 @@ public class WebannoTsvWriter
     }
 
     private void convertToTsv(JCas aJCas, OutputStream aOs, String aEncoding)
-        throws IOException
+        throws IOException, ResourceInitializationException
     {
-        // StringBuilder conllSb = new StringBuilder();
+
+        NavigableMap<Integer, Integer> tokenPosition = new TreeMap<Integer, Integer>();
+        setTokenPosition(aJCas, tokenPosition);
+
+        Map<Integer, Integer> getTokensPerSentence = new TreeMap<Integer, Integer>();
+        setTokenSentenceAddress(aJCas, getTokensPerSentence);
+
+        // list of annotation types
+        Set<Type> types = new LinkedHashSet<Type>();
+        Set<Feature> features = new LinkedHashSet<Feature>();
+
+        for (Annotation a : select(aJCas, Annotation.class)) {
+            if (!(a instanceof Token || a instanceof Sentence || a instanceof DocumentMetaData || a instanceof TagsetDescription)) {
+                types.add(a.getType());
+            }
+        }
+
+        for (Type type : types) {
+            if (type.getFeatures().size() == 0) {
+                continue;
+            }
+            for (Feature feature : type.getFeatures()) {
+                if (feature.toString().equals("uima.cas.AnnotationBase:sofa")
+                        || feature.toString().equals("uima.tcas.Annotation:begin")
+                        || feature.toString().equals("uima.tcas.Annotation:end")) {
+                    continue;
+                }
+                features.add(feature);
+                IOUtils.write("#[ " + type.getName() + " ]" + " [ " + feature.getShortName()
+                        + " ]\t", aOs, aEncoding);
+            }
+        }
+        IOUtils.write("\n", aOs, aEncoding);
+
+        Map<Feature, Map<Integer, String>> allAnnos = new HashMap<Feature, Map<Integer, String>>();
+        for (Type type : types) {
+            for (Feature feature : type.getFeatures()) {
+                if (feature.toString().equals("uima.cas.AnnotationBase:sofa")
+                        || feature.toString().equals("uima.tcas.Annotation:begin")
+                        || feature.toString().equals("uima.tcas.Annotation:end")) {
+                    continue;
+                }
+
+                Map<Integer, String> tokenAnnoMap = new HashMap<Integer, String>();
+                setTokenAnnos(aJCas.getCas(), tokenAnnoMap, type, feature);
+                allAnnos.put(feature, tokenAnnoMap);
+
+            }
+        }
 
         int sentId = 1;
         for (Sentence sentence : select(aJCas, Sentence.class)) {
-
+            int tokenId = 1;
             IOUtils.write("#id=" + sentId++ + "\n", aOs, aEncoding);
             IOUtils.write("#text=" + sentence.getCoveredText().replace("\n", "") + "\n", aOs,
                     aEncoding);
-            // Map of token and the dependent (token address used as a Key)
-            Map<Integer, Integer> dependentMap = new HashMap<Integer, Integer>();
-            // Map of governor token address and its token position
-            Map<Integer, Integer> dependencyMap = new HashMap<Integer, Integer>();
-            // Map of goverenor token address and its dependency function value
-            Map<Integer, String> dependencyTypeMap = new HashMap<Integer, String>();
-
-            for (Dependency dependecny : selectCovered(Dependency.class, sentence)) {
-                dependentMap.put(dependecny.getDependent().getAddress(), dependecny.getGovernor()
-                        .getAddress());
-            }
-
-            // List of governors (heads), that will be used, if ROOT is not explicitly added,
-            // we should add it.
-            List<Integer> governorAddresses = new ArrayList<Integer>();
-
-            for (Dependency dependecny : selectCovered(Dependency.class, sentence)) {
-                governorAddresses.add(dependecny.getGovernor().getAddress());
-            }
-
-            int i = 1;
             for (Token token : selectCovered(Token.class, sentence)) {
-                dependencyMap.put(token.getAddress(), i);
-                i++;
-            }
-
-            for (Dependency dependecny : selectCovered(Dependency.class, sentence)) {
-                dependencyTypeMap.put(dependecny.getDependent().getAddress(),
-                        dependecny.getDependencyType());
-            }
-
-            int j = 1;
-            // Add named Entity to a token
-            Map<Integer, Map<Integer, String>> neAnnos = new HashMap<Integer, Map<Integer, String>>();
-
-            createNEColumn(sentence, neAnnos);
-            int max = 0;
-            for (Map<Integer, String> neAnno : neAnnos.values()) {
-                if (neAnno.size() > max) {
-                    max = neAnno.size();
-                }
-            }
-            Map<Integer, Integer> nestedNe = new HashMap<Integer, Integer>();
-            for (Token token : selectCovered(Token.class, sentence)) {
-
-                String lemma = token.getLemma() == null ? "_" : token.getLemma().getValue();
-                String pos = token.getPos() == null ? "_" : token.getPos().getPosValue();
-                String dependent = "_";
-
-                String neAnnotations = "O";
-                Map<Integer, String> ne = neAnnos.get(token.getAddress());
-                List<Integer> prevAnnos = new ArrayList<Integer>();
-
-                // ========================GET the Previous Named Entity annotations
-                // positions=================
-
-                if (ne != null) {
-                    neAnnotations = "";
-                    for (Integer address : ne.keySet()) {
-                        if (nestedNe.get(address) != null) {
-                            prevAnnos.add(nestedNe.get(address));
-                            ne.put(address, "I-" + ne.get(address));
-                        }
+                IOUtils.write(tokenId++ + "\t" + token.getCoveredText() + "\t", aOs, aEncoding);
+                for (Feature feature : features) {
+                    String annos = allAnnos.get(feature).get(token.getAddress());
+                    if (annos == null) {
+                        IOUtils.write("O\t", aOs, aEncoding);
                     }
-
-                    // get unoccupied position for ne annotation now
-
-                    int index = 1;
-                    for (Integer address : ne.keySet()) {
-                        if (nestedNe.get(address) == null) {
-                            while (true) {
-                                if (prevAnnos.contains(index)) {
-                                    index++;
-                                }
-                                else {
-                                    ne.put(address, "B-" + ne.get(address));
-                                    nestedNe.put(address, index);
-                                    prevAnnos.add(index);
-                                    index++;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-                    // add nes in the column
-                    Collections.sort(prevAnnos);
-                    for (int indexRange = 1; indexRange <= Collections.max(prevAnnos); indexRange++) {
-                        boolean added = false;
-                        for (Integer address : ne.keySet()) {
-                            if (nestedNe.get(address) == indexRange) {
-                                neAnnotations = neAnnotations + ne.get(address) + "|";
-                                added = true;
-                                break;
-                            }
-                        }
-                        if (!added) {
-                            neAnnotations = neAnnotations + "O|";
-                        }
-                    }
-
-                }
-                int lastSeparator = neAnnotations.lastIndexOf("|");
-                if (lastSeparator > 0) {
-                    neAnnotations = new StringBuilder(neAnnotations).replace(lastSeparator,
-                            lastSeparator + 1, "").toString();
-                }
-                String type = dependencyTypeMap.get(token.getAddress()) == null ? "_"
-                        : dependencyTypeMap.get(token.getAddress());
-
-                if (dependentMap.get(token.getAddress()) != null) {
-                    if (dependencyMap.get(dependentMap.get(token.getAddress())) != null) {
-                        dependent = "" + dependencyMap.get(dependentMap.get(token.getAddress()));
+                    else {
+                        IOUtils.write(annos + "\t", aOs, aEncoding);
                     }
                 }
-                // ROOT was not explicitly mentioned in the annotation
-                else if (governorAddresses.contains(token.getAddress())) {
-                    dependent = "0";
-                    type = "ROOT";
-                }
-
-                // the "O\t" should be some where in the future. it is added for backward
-                // compatibility
-                if (dependentMap.get(token.getAddress()) != null
-                        && dependencyMap.get(dependentMap.get(token.getAddress())) != null
-                        && j == dependencyMap.get(dependentMap.get(token.getAddress()))) {
-                    IOUtils.write(j + "\t" + token.getCoveredText() + "\t" + lemma + "\t" + pos
-                            + "\t" + neAnnotations + "\tO" + "\t" + 0 + "\t" + type + "\t_\t_\n",
-                            aOs, aEncoding);
-                }
-                else {
-                    IOUtils.write(j + "\t" + token.getCoveredText() + "\t" + lemma + "\t" + pos
-                            + "\t" + neAnnotations + "\tO" + "\t" + dependent + "\t" + type
-                            + "\t_\t_\n", aOs, aEncoding);
-                }
-                j++;
+                IOUtils.write("\n", aOs, aEncoding);
             }
             IOUtils.write("\n", aOs, aEncoding);
+        }
+        /*
+         * for (AnnotationFS anno : annos) { if (anno.getFeatureValueAsString(feature) != null) {
+         *
+         * Map<Integer, String> tokenAnnos = new HashMap<Integer, String>();
+         *
+         * String tokenAnno = tokenAnnos .get(tokenPosition.floorEntry(anno.getBegin())); if
+         * (tokenAnno == null) { tokenAnno = ""; } tokenAnnos.put(
+         * tokenPosition.get(tokenPosition.floorEntry(anno.getBegin())), tokenAnno + "\t"); } else {
+         * String tokenAnno = tokenAnnoMap.get(tokenPosition.floorEntry(anno .getBegin())); if
+         * (tokenAnno == null) { tokenAnno = ""; } tokenAnnoMap.put(
+         * tokenPosition.get(tokenPosition.floorEntry(anno.getBegin())), tokenAnno + "\t" +
+         * anno.getFeatureValueAsString(feature) + "\t"); }
+         *
+         * } }
+         */
+        // }
+
+        /*
+         * for (Sentence sentence : select(aJCas, Sentence.class)) { for (Token token :
+         * selectCovered(Token.class, sentence)) { IOUtils.write(token.getCoveredText() + "\t", aOs,
+         * aEncoding); for (Type type : types) { List<AnnotationFS> annos =
+         * CasUtil.selectCovered(aJCas.getCas(), type, token.getBegin(), token.getEnd()); if
+         * (annos.size() == 0) { IOUtils.write("_\t", aOs, aEncoding); continue; } for (Feature
+         * feature : type.getFeatures()) { if
+         * (feature.toString().equals("uima.cas.AnnotationBase:sofa") ||
+         * feature.toString().equals("uima.tcas.Annotation:begin") ||
+         * feature.toString().equals("uima.tcas.Annotation:end")) { continue; }
+         * IOUtils.write(annos.get(0).getFeatureValueAsString(feature) == null ? " " :
+         * annos.get(0).getFeatureValueAsString(feature) + "\t", aOs, aEncoding);
+         *
+         * } } IOUtils.write("\n", aOs, aEncoding); }
+         *
+         * }
+         *
+         * for (Sentence sentence : select(aJCas, Sentence.class)) {
+         *
+         * IOUtils.write("#id=" + sentId++ + "\n", aOs, aEncoding); IOUtils.write("#text=" +
+         * sentence.getCoveredText().replace("\n", "") + "\n", aOs, aEncoding); // Map of token and
+         * the dependent (token address used as a Key) // Map of governor token address and its
+         * token position Map<Integer, Integer> dependentMap = new HashMap<Integer, Integer>(); //
+         * Map of goverenor token address and its dependency function value Map<Integer, Integer>
+         * dependencyMap = new HashMap<Integer, Integer>(); Map<Integer, String> dependencyTypeMap =
+         * new HashMap<Integer, String>();
+         *
+         * for (Dependency dependecny : selectCovered(Dependency.class, sentence)) {
+         * dependentMap.put(dependecny.getDependent().getAddress(), dependecny.getGovernor()
+         * .getAddress()); } // List of governors (heads), that will be used, if ROOT is not
+         * explicitly added, we // should add it. List<Integer> governorAddresses = new
+         * ArrayList<Integer>();
+         *
+         * for (Dependency dependecny : selectCovered(Dependency.class, sentence)) {
+         * governorAddresses.add(dependecny.getGovernor().getAddress()); }
+         *
+         * int i = 1; for (Token token : selectCovered(Token.class, sentence)) {
+         * dependencyMap.put(token.getAddress(), i); i++; }
+         *
+         * for (Dependency dependecny : selectCovered(Dependency.class, sentence)) {
+         * dependencyTypeMap.put(dependecny.getDependent().getAddress(),
+         * dependecny.getDependencyType()); }
+         *
+         * int j = 1; // Add named Entity to a token Map<Integer, Map<Integer, String>> neAnnos =
+         * new HashMap<Integer, Map<Integer, String>>();
+         *
+         * createNEColumn(sentence, neAnnos);
+         *
+         * Map<Integer, Integer> nestedNe = new HashMap<Integer, Integer>(); for (Token token :
+         * selectCovered(Token.class, sentence)) {
+         *
+         * String lemma = token.getLemma() == null ? "_" : token.getLemma().getValue(); String pos =
+         * token.getPos() == null ? "_" : token.getPos().getPosValue(); String dependent = "_";
+         * String neAnnotations = "O"; Map<Integer, String> ne = neAnnos.get(token.getAddress());
+         * List<Integer> prevAnnos = new ArrayList<Integer>();
+         *
+         * // ========================GET the Previous Named Entity annotations //
+         * positions================= if (ne != null) { neAnnotations = ""; for (Integer address :
+         * ne.keySet()) { if (nestedNe.get(address) != null) { prevAnnos.add(nestedNe.get(address));
+         * ne.put(address, "I-" + ne.get(address)); } } // get unoccupied position for ne annotation
+         * now
+         *
+         * int index = 1; for (Integer address : ne.keySet()) { if (nestedNe.get(address) == null) {
+         * while (true) { if (prevAnnos.contains(index)) { index++; } else { ne.put(address, "B-" +
+         * ne.get(address)); nestedNe.put(address, index); prevAnnos.add(index); index++; break; } }
+         * } } // add nes in the column Collections.sort(prevAnnos); for (int indexRange = 1;
+         * indexRange <= Collections.max(prevAnnos); indexRange++) { boolean added = false; for
+         * (Integer address : ne.keySet()) { if (nestedNe.get(address) == indexRange) {
+         * neAnnotations = neAnnotations + ne.get(address) + "|"; added = true; break; } } if
+         * (!added) { neAnnotations = neAnnotations + "O|"; } } } int lastSeparator =
+         * neAnnotations.lastIndexOf("|"); if (lastSeparator > 0) { neAnnotations = new
+         * StringBuilder(neAnnotations).replace(lastSeparator, lastSeparator + 1, "").toString(); }
+         * String type = dependencyTypeMap.get(token.getAddress()) == null ? "_" :
+         * dependencyTypeMap.get(token.getAddress()); if (dependentMap.get(token.getAddress()) !=
+         * null) { if (dependencyMap.get(dependentMap.get(token.getAddress())) != null) { dependent
+         * = "" + dependencyMap.get(dependentMap.get(token.getAddress())); } } // ROOT was not
+         * explicitly mentioned in the annotation else if
+         * (governorAddresses.contains(token.getAddress())) { dependent = "0"; type = "ROOT"; } //
+         * the "O\t" should be some where in the future. it is added for backward // compatibility
+         * if (dependentMap.get(token.getAddress()) != null &&
+         * dependencyMap.get(dependentMap.get(token.getAddress())) != null && j ==
+         * dependencyMap.get(dependentMap.get(token.getAddress()))) { IOUtils.write(j + "\t" +
+         * token.getCoveredText() + "\t" + lemma + "\t" + pos + "\t" + neAnnotations + "\tO" + "\t"
+         * + 0 + "\t" + type + "\t_\t_\n", aOs, aEncoding); } else { IOUtils.write(j + "\t" +
+         * token.getCoveredText() + "\t" + lemma + "\t" + pos + "\t" + neAnnotations + "\tO" + "\t"
+         * + dependent + "\t" + type + "\t_\t_\n", aOs, aEncoding); } j++; } IOUtils.write("\n",
+         * aOs, aEncoding); }
+         */
+
+    }
+
+    private void setTokenSentenceAddress(JCas aJCas, Map<Integer, Integer> aTokenListInSentence)
+    {
+        for (Sentence sentence : select(aJCas, Sentence.class)) {
+
+            for (Token token : selectCovered(Token.class, sentence)) {
+                aTokenListInSentence.put(token.getAddress(), sentence.getAddress());
+            }
+        }
+
+    }
+
+    private void setTokenPosition(JCas aJCas, Map<Integer, Integer> aTokenAddress)
+    {
+        for (Token token : select(aJCas, Token.class)) {
+            aTokenAddress.put(token.getBegin(), token.getAddress());
+        }
+
+    }
+
+    private void setTokenAnnos(CAS aCas, Map<Integer, String> aTokenAnnoMap, Type aType,
+            Feature aFeature)
+    {
+        for (AnnotationFS anno : CasUtil.select(aCas, aType)) {
+            boolean first = true;
+            for (Token token : selectCovered(Token.class, anno)) {
+                if (anno.getBegin() <= token.getBegin() && anno.getEnd() >= token.getEnd()) {
+
+                    if (aTokenAnnoMap.get(token.getAddress()) == null) {
+                        aTokenAnnoMap.put(token.getAddress(), (first ? "B-"
+                                : "I-") + anno.getFeatureValueAsString(aFeature));
+                        first = false;
+                    }
+                    else {
+                        aTokenAnnoMap.put(token.getAddress(),
+                                aTokenAnnoMap.get(token.getAddress()) + "|" + (first ? "B-" : "I-")
+                                        + anno.getFeatureValueAsString(aFeature));
+                        first = false;
+                    }
+                }
+            }
         }
     }
 
