@@ -86,7 +86,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
+import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
+import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
  * A Panel Used to add Layers to a selected {@link Project} in the project settings page
@@ -105,6 +108,11 @@ public class ProjectLayersPanel
     private RepositoryService repository;
 
     ModalWindow openHelpDialog;
+
+    private final String DEPENDENT ="Dependent";
+    private final String GOVERNOR ="Governor";
+    private final String FIRST = "first";
+    private final String NEXT = "next";
 
     private LayerSelectionForm layerSelectionForm;
     private FeatureSelectionForm featureSelectionForm;
@@ -737,6 +745,7 @@ public class ProjectLayersPanel
                     }
 
                     if (layer.getId() == 0) {
+                    	  layerName = layerName.replaceAll("\\W", "");
                         if (annotationService.existsLayer(prefix + layerName, layer.getType(),
                                 project)) {
                             error("Only one Layer per project is allowed!");
@@ -751,13 +760,13 @@ public class ProjectLayersPanel
                             error("please give a proper layer name!");
                             return;
                         }
+
                         String username = SecurityContextHolder.getContext().getAuthentication()
                                 .getName();
                         User user = repository.getUser(username);
 
                         layer.setProject(project);
-                        try {
-                            layerName = layerName.replaceAll("\\W", "");
+                        try {                         
                             layer.setName(prefix + layerName);
                             annotationService.createLayer(layer, user);
                             if (layer.getType().equals("chain")) {
@@ -966,6 +975,14 @@ public class ProjectLayersPanel
                 public void onSubmit()
                 {
                     AnnotationFeature feature = FeatureDetailForm.this.getModelObject();
+                    String name = feature.getUiName();
+                    name = name.replaceAll("\\W", "");
+                    if(layerDetailForm.getModelObject().getType().equals(RELATION_TYPE) 
+                    		&& (name.equals(GOVERNOR) || name.equals(DEPENDENT)
+                    				||name.equals(FIRST) ||name.equals(NEXT))){
+                    	error("layer " + name +" is not allowed as a feature name");
+                        return;
+                    }
                     if (feature.getId() == 0) {
                         feature.setLayer(layerDetailForm.getModelObject());
                         feature.setProject(selectedProjectModel.getObject());
@@ -975,8 +992,6 @@ public class ProjectLayersPanel
                             return;
                         }
 
-                        String name = feature.getUiName();
-                        name = name.replaceAll("\\W", "");
                         if (annotationService.existsFeature(name, feature.getLayer())) {
                             error("this feature already exists!");
                             return;
