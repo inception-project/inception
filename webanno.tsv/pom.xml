@@ -57,5 +57,11 @@
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+			<artifactId>
+				de.tudarmstadt.ukp.dkpro.core.api.coref-asl
+			</artifactId>
+		</dependency>
 	</dependencies>
 </project>
