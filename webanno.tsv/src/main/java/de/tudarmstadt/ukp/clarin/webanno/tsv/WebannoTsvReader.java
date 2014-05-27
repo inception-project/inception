@@ -24,19 +24,19 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.TreeMap;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.math.NumberUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionException;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.jcas.JCas;
-import org.apache.uima.util.Level;
 
 import de.tudarmstadt.ukp.dkpro.core.api.io.JCasResourceCollectionReader_ImplBase;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
@@ -62,7 +62,8 @@ public class WebannoTsvReader
     extends JCasResourceCollectionReader_ImplBase
 {
 
-    private String  fileName;
+    private String fileName;
+
     public void convertToCas(JCas aJCas, InputStream aIs, String aEncoding)
         throws IOException
 
@@ -79,20 +80,22 @@ public class WebannoTsvReader
 
         DocumentMetaData documentMetadata = DocumentMetaData.get(aJCas);
         fileName = documentMetadata.getDocumentTitle();
-        setAnnotations(aIs, aEncoding, text, tokens, pos, lemma, namedEntity, dependencyFunction,
-                dependencyDependent, firstTokenInSentence);
+        setAnnotations(aJCas, aIs, aEncoding, text, tokens, pos, lemma, namedEntity,
+                dependencyFunction, dependencyDependent, firstTokenInSentence);
 
         aJCas.setDocumentText(text.toString());
 
-        Map<String, Token> tokensStored = new HashMap<String, Token>();
-
-        createToken(aJCas, text, tokens, pos, lemma, tokensStored);
-
-        createNamedEntity(namedEntity, aJCas, tokens, tokensStored);
-
-        createDependency(aJCas, tokens, dependencyFunction, dependencyDependent, tokensStored);
-
-        createSentence(aJCas, firstTokenInSentence, tokensStored);
+        /*
+         * Map<String, Token> tokensStored = new HashMap<String, Token>();
+         *
+         * createToken(aJCas, text, tokens, pos, lemma, tokensStored);
+         *
+         * createNamedEntity(namedEntity, aJCas, tokens, tokensStored);
+         *
+         * createDependency(aJCas, tokens, dependencyFunction, dependencyDependent, tokensStored);
+         *
+         * createSentence(aJCas, firstTokenInSentence, tokensStored);
+         */
     }
 
     /**
@@ -229,82 +232,103 @@ public class WebannoTsvReader
      * The seventh column is the function/type of the dependency parsing <br>
      * eighth and ninth columns are undefined currently
      */
-    private void setAnnotations(InputStream aIs, String aEncoding, StringBuilder text,
+    private void setAnnotations(JCas aJcas, InputStream aIs, String aEncoding, StringBuilder text,
             Map<Integer, String> tokens, Map<Integer, String> pos, Map<Integer, String> lemma,
             Map<Integer, String> namedEntity, Map<Integer, String> dependencyFunction,
             Map<Integer, Integer> dependencyDependent, List<Integer> firstTokenInSentence)
         throws IOException
     {
-        int tokenNumber = 0;
-        boolean first = true;
-        int base = 0;
 
+        // getting header information
         LineIterator lineIterator = IOUtils.lineIterator(aIs, aEncoding);
-        boolean textFound = false;
-        StringBuffer tmpText = new StringBuffer();
+        int columns = 2;// token number + token columns (minimum required)
+        int tokenStart = 0, sentenceStart = 0;
         while (lineIterator.hasNext()) {
             String line = lineIterator.next().trim();
-            if (line.startsWith("#text=")) {
-                text.append(line.substring(6) + "\n");
-                textFound = true;
+            if (line.trim().equals("")) {
+                Sentence sentence = new Sentence(aJcas, sentenceStart, tokenStart);
+                sentence.addToIndexes();
+                tokenStart++;
+                sentenceStart = tokenStart;
+                text.append("\n");
                 continue;
             }
-            if (line.startsWith("#")) {
+            if (line.startsWith("#text=")) {
+                continue;
+            }
+            if (line.startsWith("#id=")) {
                 continue;// it is a comment line
             }
-            int count = StringUtils.countMatches(line, "\t");
-            if (line.isEmpty()) {
+            if (line.startsWith("#")) {
+                StringTokenizer headerTk = new StringTokenizer(line, "#");
+                Map<String, Set<String>> layers = new TreeMap<String, Set<String>>();
+                while (headerTk.hasMoreTokens()) {
+                    String layer = headerTk.nextToken().trim();
+                    StringTokenizer layerTk = new StringTokenizer(layer, "|");
+
+                    Set<String> features = new LinkedHashSet<String>();
+                    String layerName = layerTk.nextToken().trim();
+                    while (layerTk.hasMoreTokens()) {
+                        features.add(layerTk.nextToken().trim());
+                        columns++;
+                    }
+                    layers.put(layerName, features);
+                }
                 continue;
             }
-            if (count != 9) {// not a proper TSV file
-                getUimaContext().getLogger().log(Level.INFO, "This is not a valid TSV File");
-                throw new IOException(fileName + " This is not a valid TSV File");
-            }
+
+            /*
+             * int count = StringUtils.countMatches(line, "\t");
+             *
+             * if(columns != count){ throw new IOException(fileName +
+             * " This is not a valid TSV File. check this line: " + line ); }
+             */
+            // adding tokens and sentence
             StringTokenizer lineTk = new StringTokenizer(line, "\t");
+            String tokenNumberColumn = lineTk.nextToken();
+            int tokenNumber = Integer.parseInt(tokenNumberColumn.split("-")[1]);
+            String tokenColumn = lineTk.nextToken();
 
-            if (first) {
-                tokenNumber = Integer.parseInt(line.substring(0, line.indexOf("\t")));
-                firstTokenInSentence.add(tokenNumber);
-                first = false;
-            }
-            else {
-                int lineNumber = Integer.parseInt(line.substring(0, line.indexOf("\t")));
-                if (lineNumber == 1) {
-                    base = tokenNumber;
-                    firstTokenInSentence.add(base);
-                }
-                tokenNumber = base + Integer.parseInt(line.substring(0, line.indexOf("\t")));
-            }
-
-            while (lineTk.hasMoreElements()) {
-                lineTk.nextToken();
-                String token = lineTk.nextToken();
-
-                // for backward compatibility
-                tmpText.append(token + " ");
-
-                tokens.put(tokenNumber, token);
-                lemma.put(tokenNumber, lineTk.nextToken());
-                pos.put(tokenNumber, lineTk.nextToken());
-                String ne = lineTk.nextToken();
-                lineTk.nextToken();// make it compatible with prev WebAnno TSV reader
-                namedEntity.put(tokenNumber, (ne.equals("_")||ne.equals("-")) ? "O" : ne);
-                String dependentValue = lineTk.nextToken();
-                if (NumberUtils.isDigits(dependentValue)) {
-                    int dependent = Integer.parseInt(dependentValue);
-                    dependencyDependent.put(tokenNumber, dependent == 0 ? 0 : base + dependent);
-                    dependencyFunction.put(tokenNumber, lineTk.nextToken());
-                }
-                else {
-                    lineTk.nextToken();
-                }
-                lineTk.nextToken();
-                lineTk.nextToken();
-            }
+            Token token = new Token(aJcas, tokenStart, tokenStart + tokenColumn.length());
+            token.addToIndexes();
+            tokenStart = tokenStart + tokenColumn.length() + 1;
+            text.append(tokenColumn + " ");
         }
-        if (!textFound) {
-            text.append(tmpText);
-        }
+
+        /*
+         * int tokenNumber = 0; boolean first = true; int base = 0;
+         *
+         * lineIterator = IOUtils.lineIterator(aIs, aEncoding); boolean textFound = false;
+         * StringBuffer tmpText = new StringBuffer(); while (lineIterator.hasNext()) { String line =
+         * lineIterator.next().trim(); if (line.startsWith("#text=")) {
+         * text.append(line.substring(6) + "\n"); textFound = true; continue; } if
+         * (line.startsWith("#")) { continue;// it is a comment line } int count =
+         * StringUtils.countMatches(line, "\t"); if (line.isEmpty()) { continue; } if (count != 9)
+         * {// not a proper TSV file getUimaContext().getLogger().log(Level.INFO,
+         * "This is not a valid TSV File"); throw new IOException(fileName +
+         * " This is not a valid TSV File"); } StringTokenizer lineTk = new StringTokenizer(line,
+         * "\t");
+         *
+         * if (first) { tokenNumber = Integer.parseInt(line.substring(0, line.indexOf("\t")));
+         * firstTokenInSentence.add(tokenNumber); first = false; } else { int lineNumber =
+         * Integer.parseInt(line.substring(0, line.indexOf("\t"))); if (lineNumber == 1) { base =
+         * tokenNumber; firstTokenInSentence.add(base); } tokenNumber = base +
+         * Integer.parseInt(line.substring(0, line.indexOf("\t"))); }
+         *
+         * while (lineTk.hasMoreElements()) { lineTk.nextToken(); String token = lineTk.nextToken();
+         *
+         * // for backward compatibility tmpText.append(token + " ");
+         *
+         * tokens.put(tokenNumber, token); lemma.put(tokenNumber, lineTk.nextToken());
+         * pos.put(tokenNumber, lineTk.nextToken()); String ne = lineTk.nextToken();
+         * lineTk.nextToken();// make it compatible with prev WebAnno TSV reader
+         * namedEntity.put(tokenNumber, (ne.equals("_") || ne.equals("-")) ? "O" : ne); String
+         * dependentValue = lineTk.nextToken(); if (NumberUtils.isDigits(dependentValue)) { int
+         * dependent = Integer.parseInt(dependentValue); dependencyDependent.put(tokenNumber,
+         * dependent == 0 ? 0 : base + dependent); dependencyFunction.put(tokenNumber,
+         * lineTk.nextToken()); } else { lineTk.nextToken(); } lineTk.nextToken();
+         * lineTk.nextToken(); } } if (!textFound) { text.append(tmpText); }
+         */
     }
 
     public static final String PARAM_ENCODING = ComponentParameters.PARAM_SOURCE_ENCODING;
@@ -355,7 +379,7 @@ public class WebannoTsvReader
                     indexedNeAnnos.put(index, outNamedEntity);
                     index++;
                 }
-                else if (ne.startsWith("I_")||ne.startsWith("I-")) {
+                else if (ne.startsWith("I_") || ne.startsWith("I-")) {
                     NamedEntity outNamedEntity = indexedNeAnnos.get(index);
                     outNamedEntity.setEnd(aJcasTokens.get("t_" + i).getEnd());
                     outNamedEntity.addToIndexes();
