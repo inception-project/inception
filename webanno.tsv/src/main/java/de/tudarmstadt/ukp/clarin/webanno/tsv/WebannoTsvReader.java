@@ -29,13 +29,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.TreeMap;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
+import org.apache.commons.lang.StringUtils;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.collection.CollectionException;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.dkpro.core.api.io.JCasResourceCollectionReader_ImplBase;
@@ -241,8 +245,14 @@ public class WebannoTsvReader
 
         // getting header information
         LineIterator lineIterator = IOUtils.lineIterator(aIs, aEncoding);
-        int columns = 2;// token number + token columns (minimum required)
+        int columns = 1;// token number + token columns (minimum required)
         int tokenStart = 0, sentenceStart = 0;
+        Map<Type, Set<Feature>> layers = new LinkedHashMap<Type, Set<Feature>>();
+        // start of an annotation for a layer
+        Map<Type, Integer> annotationBegin = new HashMap<Type, Integer>();
+        // an annotation for every feature in a layer
+        Map<Feature, String> annotations = new HashMap<Feature, String>();
+
         while (lineIterator.hasNext()) {
             String line = lineIterator.next().trim();
             if (line.trim().equals("")) {
@@ -259,38 +269,74 @@ public class WebannoTsvReader
             if (line.startsWith("#id=")) {
                 continue;// it is a comment line
             }
+
             if (line.startsWith("#")) {
                 StringTokenizer headerTk = new StringTokenizer(line, "#");
-                Map<String, Set<String>> layers = new TreeMap<String, Set<String>>();
                 while (headerTk.hasMoreTokens()) {
-                    String layer = headerTk.nextToken().trim();
-                    StringTokenizer layerTk = new StringTokenizer(layer, "|");
+                    String layerNames = headerTk.nextToken().trim();
+                    StringTokenizer layerTk = new StringTokenizer(layerNames, "|");
 
-                    Set<String> features = new LinkedHashSet<String>();
+                    Set<Feature> features = new LinkedHashSet<Feature>();
                     String layerName = layerTk.nextToken().trim();
+                    Type layer = CasUtil.getType(aJcas.getCas(), layerName);
                     while (layerTk.hasMoreTokens()) {
-                        features.add(layerTk.nextToken().trim());
+                        Feature feature = layer.getFeatureByBaseName(layerTk.nextToken().trim());
+                        features.add(feature);
                         columns++;
                     }
-                    layers.put(layerName, features);
+
+                    layers.put(layer, features);
                 }
                 continue;
             }
 
-            /*
-             * int count = StringUtils.countMatches(line, "\t");
-             *
-             * if(columns != count){ throw new IOException(fileName +
-             * " This is not a valid TSV File. check this line: " + line ); }
-             */
+            int count = StringUtils.countMatches(line, "\t");
+
+            if (columns != count) {
+                throw new IOException(fileName + " This is not a valid TSV File. check this line: "
+                        + line);
+            }
+
             // adding tokens and sentence
             StringTokenizer lineTk = new StringTokenizer(line, "\t");
             String tokenNumberColumn = lineTk.nextToken();
             int tokenNumber = Integer.parseInt(tokenNumberColumn.split("-")[1]);
             String tokenColumn = lineTk.nextToken();
-
             Token token = new Token(aJcas, tokenStart, tokenStart + tokenColumn.length());
             token.addToIndexes();
+
+            // adding the annotations
+
+            for (Type layer : layers.keySet()) {
+                for (Feature feature : layers.get(layer)) {
+                    String annotation = lineTk.nextToken();
+                    if (annotation.startsWith("AttachTo=")) {// export just spans now!
+                        continue;
+                    }
+                    if (!(annotation.startsWith("B-") || annotation.startsWith("I-"))) {
+                        continue;
+                    }
+                    if (annotations.get(feature) == null) {
+                        annotations.put(feature, annotation);
+                        annotationBegin.put(layer, tokenStart);
+                    }
+                    else {
+                        // This is a begining of new annotation, save old ones
+                        if (annotation.startsWith("B-")) {
+                            AnnotationFS newAnnotation = aJcas.getCas().createAnnotation(layer,
+                                    annotationBegin.get(layer), tokenStart);
+                            // remove prefixes such as B-/I- before creating the annotation
+                            newAnnotation.setFeatureValueFromString(feature,
+                                    annotations.get(feature).substring(2));
+                            aJcas.addFsToIndexes(newAnnotation);
+                            // store new annotations now
+                            annotations.put(feature, annotation);
+                            annotationBegin.put(layer, tokenStart+tokenColumn.length()+1);
+                        }
+                    }
+                }
+
+            }
             tokenStart = tokenStart + tokenColumn.length() + 1;
             text.append(tokenColumn + " ");
         }
