@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2012
+ * Copyright 2014
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -24,7 +24,6 @@ import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -50,7 +49,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.io.JCasFileWriter_ImplBase;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.TagsetDescription;
-import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.parameter.ComponentParameters;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -58,11 +56,11 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
  * Export annotations in TAB separated format. Header includes information about the UIMA type and features
- * The number of columns are depend on the number of types/features exist. 
+ * The number of columns are depend on the number of types/features exist.
  * All the spans will be written first and subsequently all the relations.
  * relation is given in the form of Source-->Target and the RelationType is added to the Target token.
  * The next column indicates the source of the relation (the source of the arc drown)
- * 
+ *
  * @author Seid Muhie Yimam
  *
  */
@@ -112,7 +110,7 @@ public class WebannoTsvWriter
         setTokenId(aJCas, tokenIds);
         tokenPositions = new TreeMap<Integer, Integer>();
         setTokenPosition(aJCas, tokenPositions);
-        
+
         Map<Integer, Integer> getTokensPerSentence = new TreeMap<Integer, Integer>();
         setTokenSentenceAddress(aJCas, getTokensPerSentence);
 
@@ -167,7 +165,7 @@ public class WebannoTsvWriter
             if (type.getFeatures().size() == 0) {
                 continue;
             }
-            IOUtils.write(" #[ " + type.getName(), aOs, aEncoding);
+            IOUtils.write(" # " + type.getName(), aOs, aEncoding);
             for (Feature feature : type.getFeatures()) {
                 if (feature.toString().equals("uima.cas.AnnotationBase:sofa")
                         || feature.toString().equals("uima.tcas.Annotation:begin")
@@ -177,14 +175,12 @@ public class WebannoTsvWriter
                 spanFeatures.add(feature);
                 IOUtils.write(" | " + feature.getShortName(), aOs, aEncoding);
             }
-            // End of all features in a type
-            IOUtils.write(" ] ", aOs, aEncoding);
         }
 
         // write all relation annotation first
         Set<Feature> relationFeatures = new LinkedHashSet<Feature>();
         for (Type type : relationTypes) {
-            IOUtils.write(" #[ " + type.getName(), aOs, aEncoding);
+            IOUtils.write(" # " + type.getName(), aOs, aEncoding);
             for (Feature feature : type.getFeatures()) {
                 if (feature.toString().equals("uima.cas.AnnotationBase:sofa")
                         || feature.toString().equals("uima.tcas.Annotation:begin")
@@ -196,8 +192,8 @@ public class WebannoTsvWriter
                 relationFeatures.add(feature);
                 IOUtils.write(" | " + feature.getShortName(), aOs, aEncoding);
             }
-            // End of all features in a type
-            IOUtils.write(" [ " + relationTypesMap.get(type) + " ] " + " ] ", aOs, aEncoding);
+            // Add the attach type for the realtion anotation
+            IOUtils.write(" | AttachTo=" + relationTypesMap.get(type), aOs, aEncoding);
         }
 
         IOUtils.write("\n", aOs, aEncoding);
@@ -288,8 +284,9 @@ public class WebannoTsvWriter
                     if(govPos == null){
                     	IOUtils.write( "_\t", aOs, aEncoding);
                     }
-                    else
-                    IOUtils.write(governorAnnos.get(type).get(token.getAddress()) + "\t", aOs, aEncoding);
+                    else {
+                        IOUtils.write(governorAnnos.get(type).get(token.getAddress()) + "\t", aOs, aEncoding);
+                    }
                 }
                 IOUtils.write("\n", aOs, aEncoding);
             }
@@ -321,7 +318,7 @@ public class WebannoTsvWriter
         }
 
     }
-    
+
     private void setTokenPosition(JCas aJCas, Map<Integer, Integer> aTokenAddress)
     {
             for (Token token : select(aJCas,Token.class)) {
@@ -413,7 +410,7 @@ public class WebannoTsvWriter
                 dependent = feature;
             }
         }
-        
+
         for (AnnotationFS anno : CasUtil.select(aCas, aType)) {
             // relation annotation will be from Governor to Dependent
             // Entry done on Dependent side
@@ -436,43 +433,6 @@ public class WebannoTsvWriter
                                         + "|"
                                         + tokenIds.get(tokenPositions.floorEntry(govAnno
                                                 .getBegin()).getValue()));
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * If a named entity covers multiple span, it will be recorded only to the first token, with the
-     * beign/end offsets attached to it
-     */
-
-    private void createNEColumn(Sentence sentence,
-            Map<Integer, Map<Integer, String>> tokenNamedEntityMap)
-    {
-        for (NamedEntity namedEntity : selectCovered(NamedEntity.class, sentence)) {
-            for (Token token : selectCovered(Token.class, sentence)) {
-                if (namedEntity.getBegin() <= token.getBegin()
-                        && namedEntity.getEnd() >= token.getEnd()) {
-                    if (tokenNamedEntityMap.get(token.getAddress()) == null) {
-
-                        if (tokenNamedEntityMap.size() == 0) {
-                            Map<Integer, String> neAnnoMaps = new LinkedHashMap<Integer, String>();
-                            neAnnoMaps.put(namedEntity.getAddress(), namedEntity.getValue());
-                            tokenNamedEntityMap.put(token.getAddress(), neAnnoMaps);
-                        }
-                        else {
-                            Map<Integer, String> neAnnoMaps = new LinkedHashMap<Integer, String>();
-                            neAnnoMaps.put(namedEntity.getAddress(), namedEntity.getValue());
-                            tokenNamedEntityMap.put(token.getAddress(), neAnnoMaps);
-                        }
-                    }
-                    else {
-                        Map<Integer, String> neAnnoMaps = tokenNamedEntityMap.get(token
-                                .getAddress());
-                        neAnnoMaps.put(namedEntity.getAddress(), namedEntity.getValue());
-                        tokenNamedEntityMap.put(token.getAddress(), neAnnoMaps);
-
                     }
                 }
             }

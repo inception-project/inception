@@ -41,6 +41,7 @@ import org.apache.uima.collection.CollectionException;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.jcas.tcas.Annotation;
 
 import de.tudarmstadt.ukp.dkpro.core.api.io.JCasResourceCollectionReader_ImplBase;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
@@ -251,9 +252,11 @@ public class WebannoTsvReader
         // start of an annotation for a layer
         Map<Type, Integer> annotationBegin = new HashMap<Type, Integer>();
         // an annotation for every feature in a layer
-        Map<Feature, String> annotations = new HashMap<Feature, String>();
+        Map<Type, Map<Integer, AnnotationFS>> annotations = new LinkedHashMap<Type, Map<Integer, AnnotationFS>>();
+        Map<Type, String> beginEndAnnotation = new HashMap<Type, String>();
 
         while (lineIterator.hasNext()) {
+
             String line = lineIterator.next().trim();
             if (line.trim().equals("")) {
                 Sentence sentence = new Sentence(aJcas, sentenceStart, tokenStart);
@@ -308,34 +311,76 @@ public class WebannoTsvReader
             // adding the annotations
 
             for (Type layer : layers.keySet()) {
+                boolean existsAnnotation = false;
                 for (Feature feature : layers.get(layer)) {
-                    String annotation = lineTk.nextToken();
-                    if (annotation.startsWith("AttachTo=")) {// export just spans now!
-                        continue;
-                    }
-                    if (!(annotation.startsWith("B-") || annotation.startsWith("I-"))) {
-                        continue;
-                    }
-                    if (annotations.get(feature) == null) {
-                        annotations.put(feature, annotation);
-                        annotationBegin.put(layer, tokenStart);
-                    }
-                    else {
-                        // This is a begining of new annotation, save old ones
-                        if (annotation.startsWith("B-")) {
-                            AnnotationFS newAnnotation = aJcas.getCas().createAnnotation(layer,
-                                    annotationBegin.get(layer), tokenStart);
+                    int index = 1;
+                    String multipleAnnotations = lineTk.nextToken();
+                    for (String annotation : multipleAnnotations.split("\\|")) {
+                        // for annotations such as B_LOC|O|I_PER and the like
+                        /*
+                         * if (annotation.equals("B-_") || annotation.equals("I-_")) { index++; }
+                         * else
+                         */if (annotation.startsWith("B-")) {
+                            existsAnnotation = true;
+                            Map<Integer, AnnotationFS> indexedAnnos = annotations.get(layer);
+                            AnnotationFS newAnnotation;
+
+                            if (indexedAnnos == null) {
+                                newAnnotation = aJcas.getCas().createAnnotation(layer, tokenStart,
+                                        tokenStart + tokenColumn.length());
+                                indexedAnnos = new LinkedHashMap<Integer, AnnotationFS>();
+                            }
+                            else if (indexedAnnos.get(index) == null) {
+                                newAnnotation = aJcas.getCas().createAnnotation(layer, tokenStart,
+                                        tokenStart + tokenColumn.length());
+                            }
+                            // for consecutive annotations such as B-anno I-anno B-anno
+                            else if (beginEndAnnotation.get(layer) != null
+                                    && beginEndAnnotation.get(layer).equals("I-")) {
+                                newAnnotation = aJcas.getCas().createAnnotation(layer, tokenStart,
+                                        tokenStart + tokenColumn.length());
+                                indexedAnnos = new LinkedHashMap<Integer, AnnotationFS>();
+                                beginEndAnnotation.put(layer, null);
+                            }
+                            // consequetive Token Annotation such as B-LOC B-LOC
+                            else if (beginEndAnnotation.get(layer) != null
+                                    && beginEndAnnotation.get(layer).equals("B-")) {
+                                newAnnotation = aJcas.getCas().createAnnotation(layer, tokenStart,
+                                        tokenStart + tokenColumn.length());
+                                indexedAnnos = new LinkedHashMap<Integer, AnnotationFS>();
+                                beginEndAnnotation.put(layer, null);
+                            }
+                            else {
+                                newAnnotation = indexedAnnos.get(index);
+                            }
+
                             // remove prefixes such as B-/I- before creating the annotation
                             newAnnotation.setFeatureValueFromString(feature,
-                                    annotations.get(feature).substring(2));
+                                    (annotation.substring(2)));
                             aJcas.addFsToIndexes(newAnnotation);
-                            // store new annotations now
-                            annotations.put(feature, annotation);
-                            annotationBegin.put(layer, tokenStart+tokenColumn.length()+1);
+                            indexedAnnos.put(index, newAnnotation);
+                            annotations.put(layer, indexedAnnos);
+                            index++;
+                        }
+                        else if (annotation.startsWith("I-")) {
+                            beginEndAnnotation.put(layer, "I-");
+                            Map<Integer, AnnotationFS> indexedAnnos = annotations.get(layer);
+                            AnnotationFS newAnnotation = indexedAnnos.get(index);
+                            ((Annotation) newAnnotation).setEnd(tokenStart + tokenColumn.length());
+                            aJcas.addFsToIndexes(newAnnotation);
+                            index++;
+                        }
+                        else {
+                            annotations.put(layer, null);
+                            index++;
                         }
                     }
                 }
-
+                if (existsAnnotation
+                        && (beginEndAnnotation.get(layer) == null || !beginEndAnnotation.get(layer)
+                                .equals("I-"))) {
+                    beginEndAnnotation.put(layer, "B-");
+                }
             }
             tokenStart = tokenStart + tokenColumn.length() + 1;
             text.append(tokenColumn + " ");
@@ -375,6 +420,38 @@ public class WebannoTsvReader
          * lineTk.nextToken()); } else { lineTk.nextToken(); } lineTk.nextToken();
          * lineTk.nextToken(); } } if (!textFound) { text.append(tmpText); }
          */
+    }
+
+    private void createAnnotation(JCas aJcas, int tokenStart, Map<Type, Integer> annotationBegin,
+            Map<Feature, String> annotations, String tokenColumn, Type layer, Feature feature,
+            String annotation)
+    {
+        // check if annotation (for other features) exists
+        for (AnnotationFS fs : CasUtil.selectCovered(aJcas.getCas(), layer,
+                annotationBegin.get(layer), tokenStart)) {
+            if (fs.getBegin() == annotationBegin.get(layer) && fs.getEnd() == tokenStart) {
+                // annotation created for another feature
+                if (fs.getFeatureValueAsString(feature) == null) {
+                    fs.setFeatureValueFromString(feature, annotations.get(feature).substring(2));
+                    aJcas.addFsToIndexes(fs);
+                    return;
+                }
+                // otherwise, stacking is allowed and create new annotation
+                else if (fs.getFeatureValueAsString(feature).equals(
+                        annotations.get(feature).substring(2))) {
+                    break;
+
+                }
+            }
+        }
+
+        AnnotationFS newAnnotation = aJcas.getCas().createAnnotation(layer,
+                annotationBegin.get(layer), tokenStart);
+        // remove prefixes such as B-/I- before creating the annotation
+        newAnnotation.setFeatureValueFromString(feature, annotations.get(feature).substring(2));
+        aJcas.addFsToIndexes(newAnnotation);
+        // store new annotations now
+        annotations.put(feature, annotation);
     }
 
     public static final String PARAM_ENCODING = ComponentParameters.PARAM_SOURCE_ENCODING;
