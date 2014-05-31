@@ -253,12 +253,14 @@ public class WebannoTsvReader
         Map<Type, Integer> annotationBegin = new HashMap<Type, Integer>();
         // an annotation for every feature in a layer
         Map<Type, Map<Integer, AnnotationFS>> annotations = new LinkedHashMap<Type, Map<Integer, AnnotationFS>>();
-        Map<Type, String> beginEndAnnotation = new HashMap<Type, String>();
+     //   Map<Type, String> beginEndAnnotation = new HashMap<Type, String>();
+        Map<Type, Map<Integer, String>> beginEndAnno = new LinkedHashMap<Type, Map<Integer, String>>();
 
         while (lineIterator.hasNext()) {
-
             String line = lineIterator.next().trim();
             if (line.trim().equals("")) {
+            	text.replace(tokenStart-1, tokenStart, "");
+            	tokenStart = tokenStart-1;
                 Sentence sentence = new Sentence(aJcas, sentenceStart, tokenStart);
                 sentence.addToIndexes();
                 tokenStart++;
@@ -317,24 +319,30 @@ public class WebannoTsvReader
                     String multipleAnnotations = lineTk.nextToken();
                     for (String annotation : multipleAnnotations.split("\\|")) {
                         // for annotations such as B_LOC|O|I_PER and the like
-                        /*
-                         * if (annotation.equals("B-_") || annotation.equals("I-_")) { index++; }
-                         * else
-                         */if (annotation.startsWith("B-")) {
+                        
+                          if (annotation.equals("B-_") || annotation.equals("I-_")) { index++; }
+                          else
+                         if (annotation.startsWith("B-")) {
                             existsAnnotation = true;
                             Map<Integer, AnnotationFS> indexedAnnos = annotations.get(layer);
+                            Map<Integer, String> indexedBeginEndAnnos = beginEndAnno.get(layer);
                             AnnotationFS newAnnotation;
 
                             if (indexedAnnos == null) {
                                 newAnnotation = aJcas.getCas().createAnnotation(layer, tokenStart,
                                         tokenStart + tokenColumn.length());
                                 indexedAnnos = new LinkedHashMap<Integer, AnnotationFS>();
+                                indexedBeginEndAnnos = new LinkedHashMap<Integer, String>();
                             }
                             else if (indexedAnnos.get(index) == null) {
                                 newAnnotation = aJcas.getCas().createAnnotation(layer, tokenStart,
                                         tokenStart + tokenColumn.length());
                             }
-                            // for consecutive annotations such as B-anno I-anno B-anno
+                            else if(indexedBeginEndAnnos.get(index).equals("I-")){
+                            	 newAnnotation = aJcas.getCas().createAnnotation(layer, tokenStart,
+                                         tokenStart + tokenColumn.length());
+                            }
+                       /*     // for consecutive annotations such as B-anno I-anno B-anno
                             else if (beginEndAnnotation.get(layer) != null
                                     && beginEndAnnotation.get(layer).equals("I-")) {
                                 newAnnotation = aJcas.getCas().createAnnotation(layer, tokenStart,
@@ -349,9 +357,10 @@ public class WebannoTsvReader
                                         tokenStart + tokenColumn.length());
                                 indexedAnnos = new LinkedHashMap<Integer, AnnotationFS>();
                                 beginEndAnnotation.put(layer, null);
-                            }
+                            }*/
                             else {
                                 newAnnotation = indexedAnnos.get(index);
+                                
                             }
 
                             // remove prefixes such as B-/I- before creating the annotation
@@ -359,11 +368,19 @@ public class WebannoTsvReader
                                     (annotation.substring(2)));
                             aJcas.addFsToIndexes(newAnnotation);
                             indexedAnnos.put(index, newAnnotation);
+                            indexedBeginEndAnnos.put(index, "B-");
                             annotations.put(layer, indexedAnnos);
+                            
+                            beginEndAnno.put(layer, indexedBeginEndAnnos);
                             index++;
                         }
                         else if (annotation.startsWith("I-")) {
-                            beginEndAnnotation.put(layer, "I-");
+                           // beginEndAnnotation.put(layer, "I-");
+  
+                            Map<Integer, String> indexedBeginEndAnnos = beginEndAnno.get(layer);
+                            indexedBeginEndAnnos.put(index, "I-");
+                            beginEndAnno.put(layer, indexedBeginEndAnnos);
+                            
                             Map<Integer, AnnotationFS> indexedAnnos = annotations.get(layer);
                             AnnotationFS newAnnotation = indexedAnnos.get(index);
                             ((Annotation) newAnnotation).setEnd(tokenStart + tokenColumn.length());
@@ -376,12 +393,13 @@ public class WebannoTsvReader
                         }
                     }
                 }
-                if (existsAnnotation
+      /*          if (existsAnnotation
                         && (beginEndAnnotation.get(layer) == null || !beginEndAnnotation.get(layer)
                                 .equals("I-"))) {
                     beginEndAnnotation.put(layer, "B-");
-                }
+                }*/
             }
+            
             tokenStart = tokenStart + tokenColumn.length() + 1;
             text.append(tokenColumn + " ");
         }
