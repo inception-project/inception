@@ -598,4 +598,11 @@ public class SpanAdapter
         }
     }
 
+    @Override
+    public String getAttachTypeName()
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }

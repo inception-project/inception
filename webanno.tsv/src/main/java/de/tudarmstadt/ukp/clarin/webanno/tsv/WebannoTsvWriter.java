@@ -55,11 +55,11 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
- * Export annotations in TAB separated format. Header includes information about the UIMA type and features
- * The number of columns are depend on the number of types/features exist.
- * All the spans will be written first and subsequently all the relations.
- * relation is given in the form of Source-->Target and the RelationType is added to the Target token.
- * The next column indicates the source of the relation (the source of the arc drown)
+ * Export annotations in TAB separated format. Header includes information about the UIMA type and
+ * features The number of columns are depend on the number of types/features exist. All the spans
+ * will be written first and subsequently all the relations. relation is given in the form of
+ * Source-->Target and the RelationType is added to the Target token. The next column indicates the
+ * source of the relation (the source of the arc drown)
  *
  * @author Seid Muhie Yimam
  *
@@ -281,11 +281,12 @@ public class WebannoTsvWriter
 
                     // the governor positions
                     String govPos = governorAnnos.get(type).get(token.getAddress());
-                    if(govPos == null){
-                    	IOUtils.write( "_\t", aOs, aEncoding);
+                    if (govPos == null) {
+                        IOUtils.write("_\t", aOs, aEncoding);
                     }
                     else {
-                        IOUtils.write(governorAnnos.get(type).get(token.getAddress()) + "\t", aOs, aEncoding);
+                        IOUtils.write(governorAnnos.get(type).get(token.getAddress()) + "\t", aOs,
+                                aEncoding);
                     }
                 }
                 IOUtils.write("\n", aOs, aEncoding);
@@ -321,9 +322,9 @@ public class WebannoTsvWriter
 
     private void setTokenPosition(JCas aJCas, Map<Integer, Integer> aTokenAddress)
     {
-            for (Token token : select(aJCas,Token.class)) {
-                aTokenAddress.put(token.getBegin(), token.getAddress());
-            }
+        for (Token token : select(aJCas, Token.class)) {
+            aTokenAddress.put(token.getBegin(), token.getAddress());
+        }
     }
 
     private void setTokenAnnos(CAS aCas, Map<Integer, String> aTokenAnnoMap, Type aType,
@@ -331,22 +332,30 @@ public class WebannoTsvWriter
     {
         for (AnnotationFS annoFs : CasUtil.select(aCas, aType)) {
             boolean first = true;
+            boolean previous = false; // exists previous annotation, place-holed O-_ should be kept
             for (Token token : selectCovered(Token.class, annoFs)) {
                 if (annoFs.getBegin() <= token.getBegin() && annoFs.getEnd() >= token.getEnd()) {
-                	String annotation = annoFs.getFeatureValueAsString(aFeature);
-                	if(annotation == null){
-                		annotation = "_";
-                	}
+                    String annotation = annoFs.getFeatureValueAsString(aFeature);
+                    if (annotation == null) {
+                        annotation = "_";
+                    }
                     if (aTokenAnnoMap.get(token.getAddress()) == null) {
-                        aTokenAnnoMap.put(token.getAddress(),
-                                (first ? "B-" : "I-") + annotation);
-                        first = false;
+                        if (previous) {
+                            aTokenAnnoMap.put(token.getAddress(), "O-_|" + (first ? "B-" : "I-")
+                                    + annotation);
+                            first = false;
+                        }
+                        else {
+                            aTokenAnnoMap.put(token.getAddress(), (first ? "B-" : "I-")
+                                    + annotation);
+                            first = false;
+                        }
                     }
                     else {
-                        aTokenAnnoMap.put(token.getAddress(),
-                                aTokenAnnoMap.get(token.getAddress()) + "|" + (first ? "B-" : "I-")
-                                        + annotation);
+                        aTokenAnnoMap.put(token.getAddress(), aTokenAnnoMap.get(token.getAddress())
+                                + "|" + (first ? "B-" : "I-") + annotation);
                         first = false;
+                        previous = true;
                     }
 
                 }
@@ -377,18 +386,16 @@ public class WebannoTsvWriter
                     annoFs = temp;
 
                     String annotation = annoFs.getFeatureValueAsString(aFeature);
-                	if(annotation == null){
-                		annotation = "_";
-                	}
+                    if (annotation == null) {
+                        annotation = "_";
+                    }
                     if (aRelAnnoMap.get(token.getAddress()) == null) {
-                        aRelAnnoMap.put(token.getAddress(),
-                                (first ? "B-" : "I-") + annotation);
+                        aRelAnnoMap.put(token.getAddress(), (first ? "B-" : "I-") + annotation);
                         first = false;
                     }
                     else {
-                        aRelAnnoMap.put(token.getAddress(),
-                                aRelAnnoMap.get(token.getAddress()) + "|" + (first ? "B-" : "I-")
-                                        + annotation);
+                        aRelAnnoMap.put(token.getAddress(), aRelAnnoMap.get(token.getAddress())
+                                + "|" + (first ? "B-" : "I-") + annotation);
                         first = false;
                     }
                 }
@@ -422,8 +429,8 @@ public class WebannoTsvWriter
 
                     if (aRelationGovernorMap.get(token.getAddress()) == null) {
                         AnnotationFS govAnno = (AnnotationFS) temp.getFeatureValue(governor);
-                        aRelationGovernorMap.put(token.getAddress(),
-                                tokenIds.get(tokenPositions.floorEntry(govAnno.getBegin()).getValue()));
+                        aRelationGovernorMap.put(token.getAddress(), tokenIds.get(tokenPositions
+                                .floorEntry(govAnno.getBegin()).getValue()));
                     }
                     else {
                         AnnotationFS govAnno = (AnnotationFS) temp.getFeatureValue(governor);
@@ -431,8 +438,8 @@ public class WebannoTsvWriter
                                 token.getAddress(),
                                 aRelationGovernorMap.get(token.getAddress())
                                         + "|"
-                                        + tokenIds.get(tokenPositions.floorEntry(govAnno
-                                                .getBegin()).getValue()));
+                                        + tokenIds.get(tokenPositions
+                                                .floorEntry(govAnno.getBegin()).getValue()));
                     }
                 }
             }

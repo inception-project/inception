@@ -139,7 +139,7 @@ public class ChainAdapter
                 BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(aJcas,
                         aBratAnnotatorModel.getSentenceAddress(),
                         aBratAnnotatorModel.getWindowSize()));
-       
+
         int windowBegin = firstSentence.getBegin();
         int windowEnd = lastSentence.getEnd();
 
@@ -788,6 +788,13 @@ public class ChainAdapter
     {
         // TODO Auto-generated method stub
 
+    }
+
+    @Override
+    public String getAttachTypeName()
+    {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

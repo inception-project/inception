@@ -95,6 +95,12 @@ public interface TypeAdapter
      *
      */
     String getAttachFeatureName();
+    /**
+     * determine the type of Span annotation to be used to have arc annotations (as Origin and
+     * target)
+     *
+     */
+    String getAttachTypeName();
 
     // /**
     // * Update the CAS with new/modification of span annotations from brat

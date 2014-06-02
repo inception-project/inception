@@ -19,7 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.*;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.RELATION_TYPE;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -82,9 +83,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * A page that is used to display an annotation modal dialog for span annotation
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 public class SpanAnnotationModalWindowPage extends WebPage {
 	private static final long serialVersionUID = -2102136855109258306L;
@@ -448,6 +449,7 @@ public class SpanAnnotationModalWindowPage extends WebPage {
 								annotationService);
 						String attachFeatureName = adapter
 								.getAttachFeatureName();
+						String attachTypeName = adapter.getAnnotationTypeName();
 
 						Set<TypeAdapter> typeAdapters = new HashSet<TypeAdapter>();
 
@@ -464,6 +466,20 @@ public class SpanAnnotationModalWindowPage extends WebPage {
 									ad.getAnnotationTypeName())) {
 								continue;
 							}
+							String tn = ad.getAttachTypeName();
+							if(tn ==null){
+							    continue;
+							}
+							 if (tn.equals(attachTypeName)) {
+	                                Sentence thisSentence = BratAjaxCasUtil
+	                                        .getCurrentSentence(jCas, beginOffset,
+	                                                endOffset);
+	                                ad.deleteBySpan(jCas, fs,
+	                                        thisSentence.getBegin(),
+	                                        thisSentence.getEnd());
+	                                break;
+	                            }
+
 							String fn = ad.getAttachFeatureName();
 							if (fn == null) {
 								continue;

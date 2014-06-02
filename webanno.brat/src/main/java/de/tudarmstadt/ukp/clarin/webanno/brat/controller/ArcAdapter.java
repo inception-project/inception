@@ -46,9 +46,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
  * A class that is used to create Brat Arc to CAS relations and vice-versa
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 public class ArcAdapter
     implements TypeAdapter
@@ -56,7 +56,7 @@ public class ArcAdapter
     /**
      * Prefix of the label value for Brat to make sure that different annotation types can use the
      * same label, e.g. a POS tag "N" and a named entity type "N".
-     * 
+     *
      */
     private final long typeId;
 
@@ -117,7 +117,7 @@ public class ArcAdapter
     /**
      * Add arc annotations from the CAS, which is controlled by the window size, to the brat
      * response {@link GetDocumentResponse}
-     * 
+     *
      * @param aJcas
      *            The JCAS object containing annotations
      * @param aResponse
@@ -173,7 +173,7 @@ public class ArcAdapter
 
     /**
      * Update the CAS with new/modification of arc annotations from brat
-     * 
+     *
      * @param aLabelValue
      *            the value of the annotation for the arc
      * @param aReverse
@@ -196,8 +196,7 @@ public class ArcAdapter
                         aBratAnnotatorModel.getWindowSize())).getEnd();
         if (crossMultipleSentence
                 || BratAjaxCasUtil.isSameSentence(aJCas, aOriginFs.getBegin(), aTargetFs.getEnd())) {
-            updateCas(aJCas, beginOffset, endOffset, aOriginFs, aTargetFs, aLabelValue,
-                    aFeature);
+            updateCas(aJCas, beginOffset, endOffset, aOriginFs, aTargetFs, aLabelValue, aFeature);
         }
         else {
             throw new ArcCrossedMultipleSentenceException(
@@ -323,17 +322,32 @@ public class ArcAdapter
         Set<AnnotationFS> fsToDelete = new HashSet<AnnotationFS>();
 
         for (AnnotationFS fs : selectCovered(aJCas.getCas(), type, aBegin, aEnd)) {
-            FeatureStructure dependentFs = fs.getFeatureValue(dependentFeature).getFeatureValue(
-                    arcSpanFeature);
-            if (((FeatureStructureImpl) afs).getAddress() == ((FeatureStructureImpl) dependentFs)
-                    .getAddress()) {
-                fsToDelete.add(fs);
+
+            if (attacheFeatureName != null) {
+                FeatureStructure dependentFs = fs.getFeatureValue(dependentFeature)
+                        .getFeatureValue(arcSpanFeature);
+                if (((FeatureStructureImpl) afs).getAddress() == ((FeatureStructureImpl) dependentFs)
+                        .getAddress()) {
+                    fsToDelete.add(fs);
+                }
+                FeatureStructure governorFs = fs.getFeatureValue(governorFeature).getFeatureValue(
+                        arcSpanFeature);
+                if (((FeatureStructureImpl) afs).getAddress() == ((FeatureStructureImpl) governorFs)
+                        .getAddress()) {
+                    fsToDelete.add(fs);
+                }
             }
-            FeatureStructure governorFs = fs.getFeatureValue(governorFeature).getFeatureValue(
-                    arcSpanFeature);
-            if (((FeatureStructureImpl) afs).getAddress() == ((FeatureStructureImpl) governorFs)
-                    .getAddress()) {
-                fsToDelete.add(fs);
+            else {
+                FeatureStructure dependentFs = fs.getFeatureValue(dependentFeature);
+                if (((FeatureStructureImpl) afs).getAddress() == ((FeatureStructureImpl) dependentFs)
+                        .getAddress()) {
+                    fsToDelete.add(fs);
+                }
+                FeatureStructure governorFs = fs.getFeatureValue(governorFeature);
+                if (((FeatureStructureImpl) afs).getAddress() == ((FeatureStructureImpl) governorFs)
+                        .getAddress()) {
+                    fsToDelete.add(fs);
+                }
             }
         }
         for (AnnotationFS fs : fsToDelete) {
@@ -344,7 +358,7 @@ public class ArcAdapter
 
     /**
      * Convenience method to get an adapter for Dependency Parsing.
-     * 
+     *
      * NOTE: This is not meant to stay. It's just a convenience during refactoring!
      */
     /*
@@ -355,7 +369,7 @@ public class ArcAdapter
      */
     /**
      * Argument lists for the arc annotation
-     * 
+     *
      * @return
      */
     private List<Argument> getArgument(FeatureStructure aGovernorFs, FeatureStructure aDependentFs)
@@ -441,7 +455,8 @@ public class ArcAdapter
     }
 
     // FIXME this is the version that treats each tag as a separate type in brat - should be removed
-    public static String getBratTypeName(TypeAdapter aAdapter, AnnotationFS aFs, List<AnnotationFeature> aFeatures)
+    public static String getBratTypeName(TypeAdapter aAdapter, AnnotationFS aFs,
+            List<AnnotationFeature> aFeatures)
     {
         String annotations = "";
         for (AnnotationFeature feature : aFeatures) {
@@ -468,7 +483,8 @@ public class ArcAdapter
     // FIXME this is the method that should replace the method above. Every layer is treated as
     // as a type in brat
     // FIXME this method should be moved to a common base class for adapters or to a utility class
-    public static String getBratType2(TypeAdapter aAdapter, AnnotationFS aFs, List<AnnotationFeature> aFeatures)
+    public static String getBratType2(TypeAdapter aAdapter, AnnotationFS aFs,
+            List<AnnotationFeature> aFeatures)
     {
         return aAdapter.getTypeId() + "_" + aAdapter.getAnnotationTypeName();
     }
@@ -481,21 +497,29 @@ public class ArcAdapter
             List<AnnotationFeature> aFeatures)
     {
         Type type = getType(aFs.getCAS(), aAdapter.getAnnotationTypeName());
-        
+
         StringBuilder bratLabelText = new StringBuilder();
         for (AnnotationFeature feature : aFeatures) {
             if (!(feature.isEnabled() || feature.isVisible())) {
                 continue;
             }
-            
+
             Feature labelFeature = aFs.getType().getFeatureByBaseName(feature.getName());
-            
+
             if (bratLabelText.length() > 0) {
                 bratLabelText.append(FEATURE_SEPARATOR);
             }
-            
-            bratLabelText.append(StringUtils.defaultString(aFs.getFeatureValueAsString(labelFeature)));
+
+            bratLabelText.append(StringUtils.defaultString(aFs
+                    .getFeatureValueAsString(labelFeature)));
         }
         return bratLabelText.toString();
+    }
+
+    @Override
+    public String getAttachTypeName()
+    {
+
+        return attachType;
     }
 }
