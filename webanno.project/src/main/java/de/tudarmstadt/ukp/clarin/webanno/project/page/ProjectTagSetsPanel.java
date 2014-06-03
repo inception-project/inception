@@ -111,35 +111,14 @@ public class ProjectTagSetsPanel extends Panel {
 		this.selectedProjectModel = aProjectModel;
 		tagSetSelectionForm = new TagSetSelectionForm("tagSetSelectionForm");
 
-		tagSelectionForm = new TagSelectionForm("tagSelectionForm") {
-
-			private static final long serialVersionUID = -4772415754052553741L;
-
-			@Override
-			public boolean isVisible() {
-				return tagSetSelectionForm.getModelObject().tagSet != null
-						&& tagSetSelectionForm.getModelObject().tagSet
-								.isCreateTag()
-						&& tagSetSelectionForm.getModelObject().tagSet
-								.getProject().equals(aProjectModel.getObject());
-			}
-		};
+		tagSelectionForm = new TagSelectionForm("tagSelectionForm");
+		tagSelectionForm.setVisible(false);
 
 		tagSetDetailForm = new TagSetDetailForm("tagSetDetailForm");
 		tagSetDetailForm.setVisible(false);
 
-		tagDetailForm = new TagDetailForm("tagDetailForm") {
-			private static final long serialVersionUID = 2338721044859355652L;
-
-			@Override
-			public boolean isVisible() {
-				return tagSetSelectionForm.getModelObject().tagSet != null
-						&& tagSetSelectionForm.getModelObject().tagSet
-								.isCreateTag()
-						&& tagSetSelectionForm.getModelObject().tagSet
-								.getProject().equals(aProjectModel.getObject());
-			}
-		};
+		tagDetailForm = new TagDetailForm("tagDetailForm");
+		tagDetailForm.setVisible(false);
 
 		importTagSetForm = new ImportTagSetForm("importTagSetForm");
 
@@ -169,6 +148,8 @@ public class ProjectTagSetsPanel extends Panel {
 						tagSetDetailForm
 								.setModelObject(new de.tudarmstadt.ukp.clarin.webanno.model.TagSet());
 						tagSetDetailForm.setVisible(true);
+						tagDetailForm.setVisible(false);
+						tagSelectionForm.setVisible(false);
 					}
 				}
 			});
@@ -213,7 +194,8 @@ public class ProjectTagSetsPanel extends Panel {
 								tagSetDetailForm.clearInput();
 								tagSetDetailForm.setModelObject(aNewSelection);
 								tagSetDetailForm.setVisible(true);
-								tagDetailForm.setModelObject(new Tag());
+								tagSelectionForm.setVisible(true);
+								tagDetailForm.setVisible(true);
 								TagSetSelectionForm.this.setVisible(true);
 
 							}
@@ -445,9 +427,8 @@ public class ProjectTagSetsPanel extends Panel {
 						if (annotationService.existsTagSet(
 								TagSetDetailForm.this.getModelObject()
 										.getName(), project)) {
-							error("Only one tagset per type per project is allowed!");
+							error("Only one tagset per project is allowed!");
 						} else {
-
 							String username = SecurityContextHolder
 									.getContext().getAuthentication().getName();
 							User user = repository.getUser(username);
@@ -455,6 +436,8 @@ public class ProjectTagSetsPanel extends Panel {
 							tagSet.setProject(selectedProjectModel.getObject());
 							try {
 								annotationService.createTagSet(tagSet, user);
+                                tagSelectionForm.setVisible(true);
+                                tagDetailForm.setVisible(true);
 								// annotationService.createType(tagSet.getFeature().getLayer(),
 								// user);
 							} catch (IOException e) {
