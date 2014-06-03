@@ -39,7 +39,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.monitoring.page.MonitoringPage;
 import de.tudarmstadt.ukp.clarin.webanno.tcf.TcfReader;
-import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsvReader;
+import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoCustomTsvReader;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
@@ -73,26 +73,26 @@ public class TwoPairedKappaTest
         document = new SourceDocument();
 
         cas1 = JCasFactory.createJCas().getCas();
-        CollectionReader reader1 = createCollectionReader(WebannoTsvReader.class,
-                WebannoTsvReader.PARAM_PATH, new File("src/test/resources/").getAbsolutePath(),
+        CollectionReader reader1 = createCollectionReader(WebannoCustomTsvReader.class,
+                WebannoCustomTsvReader.PARAM_PATH, new File("src/test/resources/").getAbsolutePath(),
                 TcfReader.PARAM_PATTERNS, new String[] { "[+]kappatest.tsv" });
         reader1.getNext(cas1);
 
         cas2 = JCasFactory.createJCas().getCas();
-        CollectionReader reader2 = createCollectionReader(WebannoTsvReader.class,
-                WebannoTsvReader.PARAM_PATH, new File("src/test/resources/").getAbsolutePath(),
+        CollectionReader reader2 = createCollectionReader(WebannoCustomTsvReader.class,
+                WebannoCustomTsvReader.PARAM_PATH, new File("src/test/resources/").getAbsolutePath(),
                 TcfReader.PARAM_PATTERNS, new String[] { "[+]kappaspandiff.tsv" });
         reader2.getNext(cas2);
 
         cas3 = JCasFactory.createJCas().getCas();
-        CollectionReader reader3 = createCollectionReader(WebannoTsvReader.class,
-                WebannoTsvReader.PARAM_PATH, new File("src/test/resources/").getAbsolutePath(),
+        CollectionReader reader3 = createCollectionReader(WebannoCustomTsvReader.class,
+                WebannoCustomTsvReader.PARAM_PATH, new File("src/test/resources/").getAbsolutePath(),
                 TcfReader.PARAM_PATTERNS, new String[] { "[+]kappaarcdiff.tsv" });
         reader3.getNext(cas3);
 
         cas4 = JCasFactory.createJCas().getCas();
-        CollectionReader reader4 = createCollectionReader(WebannoTsvReader.class,
-                WebannoTsvReader.PARAM_PATH, new File("src/test/resources/").getAbsolutePath(),
+        CollectionReader reader4 = createCollectionReader(WebannoCustomTsvReader.class,
+                WebannoCustomTsvReader.PARAM_PATH, new File("src/test/resources/").getAbsolutePath(),
                 TcfReader.PARAM_PATTERNS, new String[] { "[+]kappaspanarcdiff.tsv" });
         reader4.getNext(cas4);
 

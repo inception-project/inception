@@ -37,12 +37,12 @@ public class WebAnnoTsvReaderWriterTest
     public void test()
         throws Exception
     {
-        CollectionReader reader = createCollectionReader(WebannoTsvReader.class, WebannoTsvReader.PARAM_PATH,
-                new File("src/test/resources/tsv/").getAbsolutePath(), WebannoTsvReader.PARAM_PATTERNS,
+        CollectionReader reader = createCollectionReader(WebannoCustomTsvReader.class, WebannoCustomTsvReader.PARAM_PATH,
+                new File("src/test/resources/tsv/").getAbsolutePath(), WebannoCustomTsvReader.PARAM_PATTERNS,
                 new String[] { "[+]example.tsv" });
 
-        AnalysisEngineDescription writer = createPrimitiveDescription(WebannoTsvWriter.class,
-                WebannoTsvWriter.PARAM_TARGET_LOCATION, "target/test-output", WebannoTsvWriter.PARAM_STRIP_EXTENSION,
+        AnalysisEngineDescription writer = createPrimitiveDescription(WebannoCustomTsvWriter.class,
+                WebannoCustomTsvWriter.PARAM_TARGET_LOCATION, "target/test-output", WebannoCustomTsvWriter.PARAM_STRIP_EXTENSION,
                 true);
 
     /*    AnalysisEngineDescription dumper = createPrimitiveDescription(CASDumpWriter.class,

@@ -65,7 +65,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  *
  */
 
-public class WebannoTsvWriter
+public class WebannoCustomTsvWriter
     extends JCasFileWriter_ImplBase
 {
 
