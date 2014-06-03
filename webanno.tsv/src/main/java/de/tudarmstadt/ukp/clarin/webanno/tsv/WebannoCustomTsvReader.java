@@ -327,8 +327,27 @@ public class WebannoCustomTsvReader
                         indexedBeginEndAnnos.put(index, "B-");
                         aAnnotations.put(layer, indexedAnnos);
 
-                        storeRelationInfos(aRelationayers, aRelationTargets, aTokenNumberColumn,
-                                layer, i, relationTargets);
+                        if (aRelationayers.containsKey(layer)) {
+                            Map<String, List<String>> targets = aRelationTargets.get(layer);
+                            if (targets == null) {
+                                List<String> governors = new ArrayList<String>();
+                                governors.add(relationTargets[i]);
+                                targets = new HashMap<String, List<String>>();
+                                targets.put(aTokenNumberColumn, governors);
+                                i++;
+                                aRelationTargets.put(layer, targets);
+                            }
+                            else {
+                                List<String> governors = targets.get(aTokenNumberColumn);
+                                if (governors == null) {
+                                    governors = new ArrayList<String>();
+                                }
+                                governors.add(relationTargets[i]);
+                                targets.put(aTokenNumberColumn, governors);
+                                i++;
+                                aRelationTargets.put(layer, targets);
+                            }
+                        }
 
                         Map<String, List<AnnotationFS>> tokenAnnotations = aTokenAnnotations
                                 .get(layer);
@@ -373,33 +392,6 @@ public class WebannoCustomTsvReader
             if (aBeginEndAnno.get(layer) != null && aBeginEndAnno.get(layer).get(lastIndex) != null
                     && aBeginEndAnno.get(layer).get(lastIndex).equals("B-")) {
                 aBeginEndAnno.get(layer).put(lastIndex, "E-");
-            }
-        }
-    }
-
-    private void storeRelationInfos(Map<Type, Type> aRelationayers,
-            Map<Type, Map<String, List<String>>> aRelationTargets, String aTokenNumberColumn,
-            Type layer, int i, String[] relationTargets)
-    {
-        if (aRelationayers.containsKey(layer)) {
-            Map<String, List<String>> targets = aRelationTargets.get(layer);
-            if (targets == null) {
-                List<String> governors = new ArrayList<String>();
-                governors.add(relationTargets[i]);
-                targets = new HashMap<String, List<String>>();
-                targets.put(aTokenNumberColumn, governors);
-                i++;
-                aRelationTargets.put(layer, targets);
-            }
-            else {
-                List<String> governors = targets.get(aTokenNumberColumn);
-                if (governors == null) {
-                    governors = new ArrayList<String>();
-                }
-                governors.add(relationTargets[i]);
-                targets.put(aTokenNumberColumn, governors);
-                i++;
-                aRelationTargets.put(layer, targets);
             }
         }
     }
