@@ -136,7 +136,7 @@ public class TwoPairedKappaTest
         documentJCases.put(document, userCases);
         results = MonitoringPage.computeKappa(Arrays.asList(new User[] { user1, user2 }), adapter,
                 "DependencyType", userDocs, documentJCases);
-        assertEquals(results[0][1], 0.87, 0.0005);
+        assertEquals(results[0][1], 0.82, 0.0005);
     }
 
     @Test
@@ -177,7 +177,7 @@ public class TwoPairedKappaTest
         documentJCases.put(document, userCases);
         results = MonitoringPage.computeKappa(Arrays.asList(new User[] { user1, user2 }), adapter,
                 "DependencyType", userDocs, documentJCases);
-        assertEquals(results[0][1], 0.69, 0.0005);
+        assertEquals(results[0][1], 0.64, 0.0005);
     }
 
     @Test
@@ -201,7 +201,7 @@ public class TwoPairedKappaTest
         results = MonitoringPage.computeKappa(Arrays.asList(new User[] { user1, user2, user3 }),
                 adapter, "DependencyType", userDocs, documentJCases);
         assertEquals(results[0][1], 0.94, 0.0005); // user1 V user2
-        assertEquals(results[0][2], 0.69, 0.0005);// user1 V user3
-        assertEquals(results[1][2], 0.63, 0.0005);// user2 V user3
+        assertEquals(results[0][2], 0.64, 0.0005);// user1 V user3
+        assertEquals(results[1][2], 0.58, 0.0005);// user2 V user3
     }
 }

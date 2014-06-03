@@ -1,9 +1,13 @@
-1	The	_	DT	O	O	4	DET	_	_
-2	quick	_	JJ	O	O	4	amod	_	_
-3	brown	_	JJ	O	O	4	amod	_	_
-4	fox	_	NN	O	O	5	nsubj	_	_
-5	jumps	_	VBZ	O	O	0	ROOT	_	_
-6	over	_	IN	O	O	5	prep	_	_
-7	the	_	DT	O	O	9	DET	_	_
-8	lazy	_	JJ	O	O	9	amod	_	_
-9	dog	_	NN	O	O	6	pobj	_	_
+ # de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS | PosValue # de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency | DependencyType | AttachTo=de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS
+#id=1
+#text=The quick brown fox jumps over the lazy dog
+1-1	The	B-DT	B-DET	1-4	
+1-2	quick	B-JJ	B-amod	1-4	
+1-3	brown	B-JJ	B-amod	1-4	
+1-4	fox	B-NN	B-nsubj	1-5	
+1-5	jumps	B-VBZ	B-ROOT	1-5	
+1-6	over	B-IN	B-prep	1-5	
+1-7	the	B-DT	B-DET	1-9	
+1-8	lazy	B-JJ	B-amod	1-9	
+1-9	dog	B-NN	B-pobj	1-6	
+
