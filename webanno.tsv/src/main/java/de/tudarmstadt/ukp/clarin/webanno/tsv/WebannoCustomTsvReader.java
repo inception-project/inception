@@ -225,7 +225,7 @@ public class WebannoCustomTsvReader
             for (String dependnetId : tokenIdMaps.keySet()) {
                 int i = 0;
                 for (String governorId : tokenIdMaps.get(dependnetId)) {
-
+                    
                     AnnotationFS relationAnno = relationAnnos.get(dependnetId).get(i);
                     AnnotationFS dependentAnno = tokenAnnos.get(dependnetId).get(0);
                     AnnotationFS governorAnno = tokenAnnos.get(governorId).get(0);
@@ -389,9 +389,11 @@ public class WebannoCustomTsvReader
                 lastIndex = index - 1;
             }
             // tokens annotated as B-X B-X, no I means it is end by itself
-            if (aBeginEndAnno.get(layer) != null && aBeginEndAnno.get(layer).get(lastIndex) != null
-                    && aBeginEndAnno.get(layer).get(lastIndex).equals("B-")) {
-                aBeginEndAnno.get(layer).put(lastIndex, "E-");
+            for(int i=1;i<=lastIndex;i++){
+            if (aBeginEndAnno.get(layer) != null && aBeginEndAnno.get(layer).get(i) != null
+                    && aBeginEndAnno.get(layer).get(i).equals("B-")) {
+                aBeginEndAnno.get(layer).put(i, "E-");
+            }
             }
         }
     }
