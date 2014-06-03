@@ -51,10 +51,15 @@ public class WebAnnoTsvReaderWriterTest
         AnalysisEngineDescription writer = createPrimitiveDescription(WebannoCustomTsvWriter.class,
                 WebannoCustomTsvWriter.PARAM_TARGET_LOCATION, "target/test-output",
                 WebannoCustomTsvWriter.PARAM_STRIP_EXTENSION, true);
-        
-        CAS cas1 = JCasFactory.createJCas().getCas();
-        reader.getNext(cas1);
+       
         runPipeline(reader, writer);
+        
+        CollectionReader reader1 = createCollectionReader(WebannoCustomTsvReader.class,
+                WebannoCustomTsvReader.PARAM_PATH,
+                new File("src/test/resources/tsv/").getAbsolutePath(),
+                WebannoCustomTsvReader.PARAM_PATTERNS, new String[] { "[+]example2.tsv" });
+        CAS cas1 = JCasFactory.createJCas().getCas();
+        reader1.getNext(cas1);
 
         CollectionReader reader2 = createCollectionReader(WebannoCustomTsvReader.class,
                 WebannoCustomTsvReader.PARAM_PATH,
