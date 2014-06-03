@@ -82,6 +82,8 @@ public class WebannoTsvWriter
 
     private final String DEPENDENT = "Dependent";
     private final String GOVERNOR = "Governor";
+    private final String FIRST = "first";
+    private final String NEXT = "next";
     Map<Integer, String> tokenIds;
     NavigableMap<Integer, Integer> tokenPositions;
 
@@ -161,9 +163,15 @@ public class WebannoTsvWriter
         // all span annotation first
 
         Set<Feature> spanFeatures = new LinkedHashSet<Feature>();
-        for (Type type : allTypes) {
+       allTypes: for (Type type : allTypes) {
             if (type.getFeatures().size() == 0) {
                 continue;
+            }
+            for (Feature feature : type.getFeatures()) {
+                // coreference annotation not supported
+                if(feature.getShortName().equals(FIRST) || feature.getShortName().equals(NEXT)){
+                    continue allTypes;
+                }
             }
             IOUtils.write(" # " + type.getName(), aOs, aEncoding);
             for (Feature feature : type.getFeatures()) {
@@ -199,7 +207,13 @@ public class WebannoTsvWriter
         IOUtils.write("\n", aOs, aEncoding);
 
         Map<Feature, Map<Integer, String>> allAnnos = new HashMap<Feature, Map<Integer, String>>();
-        for (Type type : allTypes) {
+        allTypes: for (Type type : allTypes) {
+            for (Feature feature : type.getFeatures()) {
+                // coreference annotation not supported
+                if(feature.getShortName().equals(FIRST) || feature.getShortName().equals(NEXT)){
+                    continue allTypes;
+                }
+            }
             for (Feature feature : type.getFeatures()) {
                 if (feature.toString().equals("uima.cas.AnnotationBase:sofa")
                         || feature.toString().equals("uima.tcas.Annotation:begin")

@@ -86,10 +86,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
-import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
-import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
  * A Panel Used to add Layers to a selected {@link Project} in the project settings page
@@ -109,8 +106,8 @@ public class ProjectLayersPanel
 
     ModalWindow openHelpDialog;
 
-    private final String DEPENDENT ="Dependent";
-    private final String GOVERNOR ="Governor";
+    private final String DEPENDENT = "Dependent";
+    private final String GOVERNOR = "Governor";
     private final String FIRST = "first";
     private final String NEXT = "next";
 
@@ -745,7 +742,7 @@ public class ProjectLayersPanel
                     }
 
                     if (layer.getId() == 0) {
-                    	  layerName = layerName.replaceAll("\\W", "");
+                        layerName = layerName.replaceAll("\\W", "");
                         if (annotationService.existsLayer(prefix + layerName, layer.getType(),
                                 project)) {
                             error("Only one Layer per project is allowed!");
@@ -766,7 +763,7 @@ public class ProjectLayersPanel
                         User user = repository.getUser(username);
 
                         layer.setProject(project);
-                        try {                         
+                        try {
                             layer.setName(prefix + layerName);
                             annotationService.createLayer(layer, user);
                             if (layer.getType().equals("chain")) {
@@ -955,15 +952,6 @@ public class ProjectLayersPanel
                 {
                     return isVisible();
                 }
-
-                @Override
-                public boolean isEnabled()
-                {
-                    return FeatureDetailForm.this.getModelObject().getTagset() == null
-                            && featureType.getModelObject() == null
-                            || (featureType.getModelObject() != null && featureType
-                                    .getModelObject().equals(CAS.TYPE_NAME_STRING));
-                }
             });
             tagSet.setOutputMarkupPlaceholderTag(true);
 
@@ -977,10 +965,10 @@ public class ProjectLayersPanel
                     AnnotationFeature feature = FeatureDetailForm.this.getModelObject();
                     String name = feature.getUiName();
                     name = name.replaceAll("\\W", "");
-                    if(layerDetailForm.getModelObject().getType().equals(RELATION_TYPE) 
-                    		&& (name.equals(GOVERNOR) || name.equals(DEPENDENT)
-                    				||name.equals(FIRST) ||name.equals(NEXT))){
-                    	error("layer " + name +" is not allowed as a feature name");
+                    if (layerDetailForm.getModelObject().getType().equals(RELATION_TYPE)
+                            && (name.equals(GOVERNOR) || name.equals(DEPENDENT)
+                                    || name.equals(FIRST) || name.equals(NEXT))) {
+                        error("layer " + name + " is not allowed as a feature name");
                         return;
                     }
                     if (feature.getId() == 0) {
@@ -1087,8 +1075,7 @@ public class ProjectLayersPanel
                 {
                     return layerDetailForm.getModelObject() != null
                             && !layerDetailForm.getModelObject().isBuiltIn()
-                            && !layerDetailForm.getModelObject().getType()
-                                    .equals(CHAIN_TYPE);
+                            && !layerDetailForm.getModelObject().getType().equals(CHAIN_TYPE);
                 }
             });
         }
