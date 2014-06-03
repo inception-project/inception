@@ -255,7 +255,6 @@ public class WebannoCustomTsvReader
 
                     relationAnno.setFeatureValue(dependentFeature, dependentAnno);
                     relationAnno.setFeatureValue(governorFeature, governorAnno);
-                    aJcas.addFsToIndexes(relationAnno);
                     i++;
                 }
 
@@ -361,7 +360,6 @@ public class WebannoCustomTsvReader
                         AnnotationFS newAnnotation = indexedAnnos.get(index);
                         ((Annotation) newAnnotation).setEnd(aTokenStart + aToken.length());
 
-                        aJcas.addFsToIndexes(newAnnotation);
                         index++;
                     }
                     else {

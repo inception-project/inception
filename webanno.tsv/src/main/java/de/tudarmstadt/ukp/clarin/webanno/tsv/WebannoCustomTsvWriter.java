@@ -221,7 +221,7 @@ public class WebannoCustomTsvWriter
                     continue;
                 }
 
-                Map<Integer, String> tokenAnnoMap = new HashMap<Integer, String>();
+                Map<Integer, String> tokenAnnoMap = new TreeMap<Integer, String>();
                 setTokenAnnos(aJCas.getCas(), tokenAnnoMap, type, feature);
                 allAnnos.put(feature, tokenAnnoMap);
 
