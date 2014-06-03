@@ -257,10 +257,12 @@ public class RepositoryServiceDbData
         FileUtils.forceMkdir(annotationFolder);
         return annotationFolder;
     }
+
     @Override
-    public
-    File getDocumentFolder(SourceDocument aDocument) throws IOException{
-    	File sourceDocFolder = new File(dir, PROJECT + aDocument.getProject().getId() + DOCUMENT
+    public File getDocumentFolder(SourceDocument aDocument)
+        throws IOException
+    {
+        File sourceDocFolder = new File(dir, PROJECT + aDocument.getProject().getId() + DOCUMENT
                 + aDocument.getId() + SOURCE);
         FileUtils.forceMkdir(sourceDocFolder);
         return sourceDocFolder;
@@ -810,8 +812,10 @@ public class RepositoryServiceDbData
     @Transactional
     public CrowdJob getCrowdJob(String aName, Project aProjec)
     {
-        return entityManager.createQuery("FROM CrowdJob WHERE name = :name AND project = :project", CrowdJob.class)
-                .setParameter("name", aName).setParameter("project",aProjec).getSingleResult();
+        return entityManager
+                .createQuery("FROM CrowdJob WHERE name = :name AND project = :project",
+                        CrowdJob.class).setParameter("name", aName)
+                .setParameter("project", aProjec).getSingleResult();
     }
 
     @Override
@@ -1091,16 +1095,16 @@ public class RepositoryServiceDbData
     @Transactional(noRollbackFor = NoResultException.class)
     public List<SourceDocument> listSourceDocuments(Project aProject)
     {
-    	List<SourceDocument> sourceDocuments = entityManager
+        List<SourceDocument> sourceDocuments = entityManager
                 .createQuery("FROM SourceDocument where project =:project", SourceDocument.class)
                 .setParameter("project", aProject).getResultList();
-    	List<SourceDocument> tabSepDocuments = new ArrayList<SourceDocument>();
-    	for (SourceDocument sourceDocument : sourceDocuments) {
-			if(sourceDocument.getFormat().equals(WebAnnoConst.TAB_SEP)){
-				tabSepDocuments.add(sourceDocument);
-			}
-		}
-    	sourceDocuments.removeAll(tabSepDocuments);
+        List<SourceDocument> tabSepDocuments = new ArrayList<SourceDocument>();
+        for (SourceDocument sourceDocument : sourceDocuments) {
+            if (sourceDocument.getFormat().equals(WebAnnoConst.TAB_SEP)) {
+                tabSepDocuments.add(sourceDocument);
+            }
+        }
+        sourceDocuments.removeAll(tabSepDocuments);
         return sourceDocuments;
     }
 
@@ -1108,18 +1112,17 @@ public class RepositoryServiceDbData
     @Transactional(noRollbackFor = NoResultException.class)
     public List<SourceDocument> listTabSepDocuments(Project aProject)
     {
-    	List<SourceDocument> sourceDocuments = entityManager
+        List<SourceDocument> sourceDocuments = entityManager
                 .createQuery("FROM SourceDocument where project =:project", SourceDocument.class)
                 .setParameter("project", aProject).getResultList();
-    	List<SourceDocument> tabSepDocuments = new ArrayList<SourceDocument>();
-    	for (SourceDocument sourceDocument : sourceDocuments) {
-			if(sourceDocument.getFormat().equals(WebAnnoConst.TAB_SEP)){
-				tabSepDocuments.add(sourceDocument);
-			}
-		}
+        List<SourceDocument> tabSepDocuments = new ArrayList<SourceDocument>();
+        for (SourceDocument sourceDocument : sourceDocuments) {
+            if (sourceDocument.getFormat().equals(WebAnnoConst.TAB_SEP)) {
+                tabSepDocuments.add(sourceDocument);
+            }
+        }
         return tabSepDocuments;
     }
-
 
     @Override
     @Transactional
@@ -1185,8 +1188,8 @@ public class RepositoryServiceDbData
             annotationService.removeAnnotationLayer(layer);
         }
 
-        for(TagSet tagSet:annotationService.listTagSets(aProject)){
-        	annotationService.removeTagSet(tagSet);
+        for (TagSet tagSet : annotationService.listTagSets(aProject)) {
+            annotationService.removeTagSet(tagSet);
         }
 
         // remove the project directory from the file system
@@ -2000,22 +2003,22 @@ public class RepositoryServiceDbData
         throws IOException
     {
         JCas jCas;
-        // change the state of the source document to inprogress
+        // change the state of the source document to in progress
         aDocument.setState(SourceDocumentStateTransition
                 .transition(SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
-
-        if (!existsAnnotationDocument(aDocument, aUser)) {
-            aAnnotationDocument = new AnnotationDocument();
-            aAnnotationDocument.setDocument(aDocument);
-            aAnnotationDocument.setName(aDocument.getName());
-            aAnnotationDocument.setUser(aUser.getUsername());
-            aAnnotationDocument.setProject(aProject);
-            createAnnotationDocument(aAnnotationDocument);
-        }
 
         try {
             jCas = getJCasFromFile(getSourceDocumentContent(aDocument),
                     getReadableFormats().get(aDocument.getFormat()), aDocument);
+
+            if (!existsAnnotationDocument(aDocument, aUser)) {
+                aAnnotationDocument = new AnnotationDocument();
+                aAnnotationDocument.setDocument(aDocument);
+                aAnnotationDocument.setName(aDocument.getName());
+                aAnnotationDocument.setUser(aUser.getUsername());
+                aAnnotationDocument.setProject(aProject);
+                createAnnotationDocument(aAnnotationDocument);
+            }
         }
         catch (UIMAException e) {
             throw new IOException(e);
@@ -2105,12 +2108,14 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public File getMiraModel(AnnotationFeature aFeature, boolean aOtherLayer, SourceDocument aDocument)
+    public File getMiraModel(AnnotationFeature aFeature, boolean aOtherLayer,
+            SourceDocument aDocument)
     {
-    	if(aDocument !=null){
-    	  return new File(getMiraDir(aFeature), aDocument.getId() + "- " +aDocument.getProject().getId()+ "-model");
-    	}
-    	else if (aOtherLayer) {
+        if (aDocument != null) {
+            return new File(getMiraDir(aFeature), aDocument.getId() + "- "
+                    + aDocument.getProject().getId() + "-model");
+        }
+        else if (aOtherLayer) {
             return new File(getMiraDir(aFeature), aFeature.getId() + "-model");
         }
         else {
