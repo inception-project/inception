@@ -455,11 +455,6 @@ public class ProjectLayersPanel
                 {
                     return LayerDetailForm.this.getModelObject().getId() == 0;
                 }
-
-                /*
-                 * @Override protected boolean wantOnSelectionChangedNotifications() { return true;
-                 * }
-                 */
             }.setRequired(true));
             layerTypes.add(new AjaxFormComponentUpdatingBehavior("onchange")
             {
