@@ -52,7 +52,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  */
 public class BratAjaxConfiguration
 {
-    private static final String AQUA = "aqua";
+    private static final String AMAZON = "#3B7A57";
     private static final String NO_COLOR = "";
     private static final String CHOCOLATE = "chocolate";
     private static final String BLUEVIOLET = "blueviolet";
@@ -64,7 +64,7 @@ public class BratAjaxConfiguration
     private static final String DARKGREEN = "darkgreen";
     private static final String DARKORCHID = "darkorchid";
     private static final String BROWN = "brown";
-    private static final String LIGHTGREEN = "lightgreen";
+    private static final String LIGHTGREEN = "#4B5320";
     private static final String SIENNA = "Sienna ";
     private static final String GOLD = "gold";
     private static final String DEEPPINK = "deeppink";
@@ -83,7 +83,7 @@ public class BratAjaxConfiguration
             BLACK, CORAL, DARKORANGE, DEEPSKYBLUE, FUCHSIA, NAVY, MAROON);
     private final List<String> bGColors = Arrays.asList(MAGENTA, LIGHTGREEN,
             BROWN, SIENNA, DARKGREEN, DARKORCHID, DEEPPINK, GOLD, GREEN, ORANGE);
-    private final List<String> bDColors = Arrays.asList(AQUA, BLUEVIOLET,
+    private final List<String> bDColors = Arrays.asList(AMAZON, BLUEVIOLET,
             CHOCOLATE, CYAN, DARKGREEN, DARKORCHID, DEEPPINK, GOLD, MAGENTA, ORANGE);
 
     /**
