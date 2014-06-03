@@ -77,7 +77,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
  * This is the main class for the curation page. It contains an interface which displays differences
  * between user annotations for a specific document. The interface provides a tool for merging these
  * annotations and storing them as a new annotation.
- *
+ * 
  * @author Andreas Straninger
  * @author Seid Muhie Yimam
  */
@@ -280,7 +280,7 @@ public class CurationPage
         });
 
         add(new AnnotationLayersModalPanel("annotationLayersModalPanel",
-                new Model<BratAnnotatorModel>(bratAnnotatorModel) )
+                new Model<BratAnnotatorModel>(bratAnnotatorModel))
         {
             private static final long serialVersionUID = -4657965743173979437L;
 
@@ -608,8 +608,9 @@ public class CurationPage
                 }
                 else {
                     finishCurationModal
-                            .setContent(new YesNoFinishModalPanel(finishCurationModal.getContentId(),
-                                    bratAnnotatorModel, finishCurationModal, Mode.CURATION));
+                            .setContent(new YesNoFinishModalPanel(finishCurationModal
+                                    .getContentId(), bratAnnotatorModel, finishCurationModal,
+                                    Mode.CURATION));
                     finishCurationModal
                             .setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
                             {
@@ -619,6 +620,7 @@ public class CurationPage
                                 public void onClose(AjaxRequestTarget target)
                                 {
                                     target.add(finish.setOutputMarkupId(true));
+                                    target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
                                 }
                             });
                     finishCurationModal.show(target);
@@ -693,6 +695,14 @@ public class CurationPage
                     }
                 });
                 reCreateMergeCas.show(target);
+            }
+
+            @Override
+            public boolean isEnabled()
+            {
+                return bratAnnotatorModel.getDocument() != null
+                        && !bratAnnotatorModel.getDocument().getState()
+                                .equals(SourceDocumentState.CURATION_FINISHED);
             }
         });
         // Show the next page of this document
