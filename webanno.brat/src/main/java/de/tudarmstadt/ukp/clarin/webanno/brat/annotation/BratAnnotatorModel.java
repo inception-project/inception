@@ -90,7 +90,7 @@ public class BratAnnotatorModel implements Serializable {
 	/**
 	 * Used to enable/disable auto-scrolling while annotation
 	 */
-	private boolean scrollPage;
+	private boolean scrollPage = true;
 	/**
 	 * If the document is opened through the next/previous buttons on the
 	 * annotation page, not with the open dialog method, used to change
