@@ -359,12 +359,6 @@ public class SpanAdapter
                     duplicate = true;
                     continue;
                 }
-                if (fs.getFeatureValueAsString(feature).equals(aValue)) {
-                    duplicate = true;
-                    // break;
-                    // if (!fs.getStringValue(feature).equals(aValue)) {
-                    // fs.setStringValue(feature, aValue);
-                }
             }
         }
         if (!duplicate) {
@@ -603,6 +597,16 @@ public class SpanAdapter
     {
         // TODO Auto-generated method stub
         return null;
+    }
+
+    @Override
+    public void updateFeature(JCas aJcas, AnnotationFeature aFeature,int aAddress, String aValue)
+    {
+        Type type = CasUtil.getType(aJcas.getCas(), annotationTypeName);
+        Feature feature = type.getFeatureByBaseName(aFeature.getName());
+        FeatureStructure fs = BratAjaxCasUtil.selectByAddr(aJcas, FeatureStructure.class, aAddress);
+        fs.setFeatureValueFromString(feature, aValue);
+
     }
 
 }

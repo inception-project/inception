@@ -797,4 +797,13 @@ public class ChainAdapter
         return null;
     }
 
+    @Override
+    public void updateFeature(JCas aJcas, AnnotationFeature aFeature,int aAddress, String aValue)
+    {
+        Type type = CasUtil.getType(aJcas.getCas(), annotationTypeName);
+        Feature feature = type.getFeatureByBaseName(aFeature.getName());
+        FeatureStructure fs = BratAjaxCasUtil.selectByAddr(aJcas, FeatureStructure.class, aAddress);
+        fs.setFeatureValueFromString(feature, aValue);
+
+    }
 }

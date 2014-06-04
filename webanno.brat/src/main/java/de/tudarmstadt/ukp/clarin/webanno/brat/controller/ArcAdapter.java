@@ -98,6 +98,10 @@ public class ArcAdapter
 
     private boolean deletable;
 
+    /**
+     * Allow multiple annotations of the same layer (only when the type value is different)
+     */
+    private boolean allowStacking;
     private boolean crossMultipleSentence;
 
     public ArcAdapter(long aTypeId, String aTypeName, String aTargetFeatureName,
@@ -248,13 +252,14 @@ public class ArcAdapter
 
                     if (fs.getFeatureValueAsString(feature) == null) {
                         fs.setFeatureValueFromString(feature, aValue);
+                        duplicate = true;
+                        break;
                     }
-                    // It is update of arc value, update it
-                    else if (!fs.getFeatureValueAsString(feature).equals(aValue)) {
+                    if (!allowStacking) {
                         fs.setFeatureValueFromString(feature, aValue);
+                        duplicate = true;
+                        break;
                     }
-                    duplicate = true;
-                    break;
                 }
             }
         }
@@ -357,17 +362,6 @@ public class ArcAdapter
     }
 
     /**
-     * Convenience method to get an adapter for Dependency Parsing.
-     *
-     * NOTE: This is not meant to stay. It's just a convenience during refactoring!
-     */
-    /*
-     * public static final ArcAdapter getDependencyAdapter() { ArcAdapter adapter = new
-     * ArcAdapter(AnnotationTypeConstant.DEP_PREFIX, Dependency.class.getName(), "DependencyType",
-     * "Dependent", "Governor", Token.class.getName(), "pos", Token.class.getName()); return
-     * adapter; }
-     */
-    /**
      * Argument lists for the arc annotation
      *
      * @return
@@ -454,6 +448,17 @@ public class ArcAdapter
         this.crossMultipleSentence = crossMultipleSentence;
     }
 
+
+    public boolean isAllowStacking()
+    {
+        return allowStacking;
+    }
+
+    public void setAllowStacking(boolean allowStacking)
+    {
+        this.allowStacking = allowStacking;
+    }
+
     // FIXME this is the version that treats each tag as a separate type in brat - should be removed
     public static String getBratTypeName(TypeAdapter aAdapter, AnnotationFS aFs,
             List<AnnotationFeature> aFeatures)
@@ -519,7 +524,16 @@ public class ArcAdapter
     @Override
     public String getAttachTypeName()
     {
-
         return attachType;
+    }
+
+    @Override
+    public void updateFeature(JCas aJcas, AnnotationFeature aFeature, int aAddress, String aValue)
+    {
+        Type type = CasUtil.getType(aJcas.getCas(), annotationTypeName);
+        Feature feature = type.getFeatureByBaseName(aFeature.getName());
+        FeatureStructure fs = BratAjaxCasUtil.selectByAddr(aJcas, FeatureStructure.class, aAddress);
+        fs.setFeatureValueFromString(feature, aValue);
+
     }
 }

@@ -52,8 +52,13 @@ public interface TypeAdapter
      * @throws BratAnnotationException
      * @throws IOException
      */
-    void automate(JCas aJcas,AnnotationFeature feature, List<String> labelValues)
+    void automate(JCas aJcas, AnnotationFeature feature, List<String> labelValues)
         throws BratAnnotationException, IOException;
+
+    /**
+     * Update this feature with a new value
+     */
+    void updateFeature(JCas aJcas, AnnotationFeature feature, int address, String value);
 
     /**
      * Add annotations from the CAS, which is controlled by the window size, to the brat response
@@ -66,7 +71,8 @@ public interface TypeAdapter
      * @param aBratAnnotatorModel
      *            Data model for brat annotations
      */
-    void render(JCas aJcas, List<AnnotationFeature> features, GetDocumentResponse aResponse, BratAnnotatorModel aBratAnnotatorModel);
+    void render(JCas aJcas, List<AnnotationFeature> features, GetDocumentResponse aResponse,
+            BratAnnotatorModel aBratAnnotatorModel);
 
     /**
      * Prefix of the label value for Brat to make sure that different annotation types can use the
@@ -95,6 +101,7 @@ public interface TypeAdapter
      *
      */
     String getAttachFeatureName();
+
     /**
      * determine the type of Span annotation to be used to have arc annotations (as Origin and
      * target)
@@ -126,10 +133,10 @@ public interface TypeAdapter
 
     public void delete(JCas aJCas, int aAddress);
 
-    //delete based on the begin,end, and type of annotation
+    // delete based on the begin,end, and type of annotation
     void delete(JCas aJCas, AnnotationFeature feature, int aBegin, int aEnd, String aValue);
 
     void deleteBySpan(JCas aJCas, AnnotationFS fs, int aBegin, int aEnd);
 
-    List<String> getAnnotation(JCas aJcas,AnnotationFeature feature, int begin, int end);
+    List<String> getAnnotation(JCas aJcas, AnnotationFeature feature, int begin, int end);
 }
