@@ -351,42 +351,47 @@ public class ProjectLayersPanel
                     throws IOException
                 {
                     Project project = selectedProjectModel.getObject();
+                    AnnotationLayer layer;
                     if (annotationService.existsLayer(aExLayer.getName(), aExLayer.getType(),
                             project)) {
-                        AnnotationLayer layer = annotationService.getLayer(aExLayer.getName(),
-                                aExLayer.getType(), selectedProjectModel.getObject());
+                        layer = annotationService.getLayer(aExLayer.getName(), aExLayer.getType(),
+                                selectedProjectModel.getObject());
                         ProjectUtil.setLayer(annotationService, layer, aExLayer, project, aUser);
-                        for (de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature exfeature : aExLayer
-                                .getFeatures()) {
+                    }
+                    else {
+                        layer = new AnnotationLayer();
+                        ProjectUtil.setLayer(annotationService, layer, aExLayer, project, aUser);
+                    }
+                    for (de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature exfeature : aExLayer
+                            .getFeatures()) {
 
-                            de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet exTagset = exfeature
-                                    .getTagSet();
-                            TagSet tagSet = null;
-                            if (exTagset != null
-                                    && annotationService.existsTagSet(exTagset.getName(), project)) {
-                                tagSet = annotationService.getTagSet(exTagset.getName(), project);
-                                ProjectUtil.createTagSet(tagSet, exTagset, project, aUser,
-                                        annotationService);
-                            }
-                            else if (exTagset != null) {
-                                tagSet = new TagSet();
-                                ProjectUtil.createTagSet(tagSet, exTagset, project, aUser,
-                                        annotationService);
-                            }
-                            if (annotationService.existsFeature(exfeature.getName(), layer)) {
-                                AnnotationFeature feature = annotationService.getFeature(
-                                        exfeature.getName(), layer);
-                                feature.setTagset(tagSet);
-                                ProjectUtil.setFeature(annotationService, feature, exfeature,
-                                        project, aUser);
-                                continue;
-                            }
-                            AnnotationFeature feature = new AnnotationFeature();
-                            feature.setLayer(layer);
+                        de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet exTagset = exfeature
+                                .getTagSet();
+                        TagSet tagSet = null;
+                        if (exTagset != null
+                                && annotationService.existsTagSet(exTagset.getName(), project)) {
+                            tagSet = annotationService.getTagSet(exTagset.getName(), project);
+                            ProjectUtil.createTagSet(tagSet, exTagset, project, aUser,
+                                    annotationService);
+                        }
+                        else if (exTagset != null) {
+                            tagSet = new TagSet();
+                            ProjectUtil.createTagSet(tagSet, exTagset, project, aUser,
+                                    annotationService);
+                        }
+                        if (annotationService.existsFeature(exfeature.getName(), layer)) {
+                            AnnotationFeature feature = annotationService.getFeature(
+                                    exfeature.getName(), layer);
                             feature.setTagset(tagSet);
                             ProjectUtil.setFeature(annotationService, feature, exfeature, project,
                                     aUser);
+                            continue;
                         }
+                        AnnotationFeature feature = new AnnotationFeature();
+                        feature.setLayer(layer);
+                        feature.setTagset(tagSet);
+                        ProjectUtil.setFeature(annotationService, feature, exfeature, project,
+                                aUser);
                     }
                 }
             });
