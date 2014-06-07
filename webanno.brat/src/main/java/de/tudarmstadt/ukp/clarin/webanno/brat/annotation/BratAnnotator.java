@@ -49,9 +49,9 @@ import org.springframework.http.converter.json.MappingJacksonHttpMessageConverte
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.OffsetsList;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -92,7 +92,7 @@ public class BratAnnotator
     private static final String PARAM_ORIGIN_TYPE = "originType";
 
     private static final long serialVersionUID = -1537506294440056609L;
-    
+
     private WebMarkupContainer vis;
 
     private AbstractAjaxBehavior controller;
@@ -108,7 +108,7 @@ public class BratAnnotator
 
     private String collection = "";
 
-    private String selectedSpan, offsets, selectedSpanType, selectedArcType;
+    private String selectedSpan, offsets, selectedArcType;
     private Integer selectedSpanID, selectedArcId;
 
     private Integer originSpanId, targetSpanId;
@@ -118,7 +118,6 @@ public class BratAnnotator
 
     private int beginOffset;
     private int endOffset;
-    private boolean annotate;
 
     /**
      * Data models for {@link BratAnnotator}
@@ -214,7 +213,7 @@ public class BratAnnotator
 
                 try {
                     final String action = request.getParameterValue(PARAM_ACTION).toString();
-                    
+
                     if (action.equals(ACTION_WHOAMI)) {
                         result = controller.whoami();
                     }
@@ -227,7 +226,6 @@ public class BratAnnotator
                         }
                         else {
                             selectedSpanID = request.getParameterValue(PARAM_ID).toInt();
-                            selectedSpanType = request.getParameterValue("type").toString();
                         }
 
                         offsets = request.getParameterValue(PARAM_OFFSETS).toString();
@@ -372,9 +370,9 @@ public class BratAnnotator
                 }
                 else {
                     openAnnotationDialog.setTitle("Edit Span Annotation");
+
                     return new SpanAnnotationModalWindowPage(openAnnotationDialog,
-                            getModelObject(), selectedSpan, aBeginOffset, aEndOffset,
-                            selectedSpanType, selectedSpanID);
+                            getModelObject(), selectedSpanID);
                 }
             }
 
@@ -423,9 +421,9 @@ public class BratAnnotator
         // open the annotation dialog if only there is
         // span annotation layer (from the settings button) selected
         for (AnnotationLayer layer : getModelObject().getAnnotationLayers()) {
-      /*      if (layer.getFeature() == null || layer.getLayer() == null) {
-                continue;
-            }*/
+            /*
+             * if (layer.getFeature() == null || layer.getLayer() == null) { continue; }
+             */
             if (layer.getType().equals(WebAnnoConst.SPAN_TYPE)
                     || layer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
                 openAnnotationDialog.show(aTarget);
@@ -452,7 +450,7 @@ public class BratAnnotator
             openAnnotationDialog.setTitle("Edit Arc Annotation");
             openAnnotationDialog.setContent(new ArcAnnotationModalWindowPanel(openAnnotationDialog
                     .getContentId(), openAnnotationDialog, getModelObject(), originSpanId,
-                    originSpanType, targetSpanId, targetSpanType, selectedArcId, selectedArcType));
+                    targetSpanId, selectedArcId));
         }
 
         openAnnotationDialog.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
@@ -472,9 +470,9 @@ public class BratAnnotator
         // open the annotation dialog if only there is
         // span annotation layer (from the settings button) selected
         for (AnnotationLayer layer : getModelObject().getAnnotationLayers()) {
-         /*   if (layer.getFeature() == null) {
-                continue;
-            }*/
+            /*
+             * if (layer.getFeature() == null) { continue; }
+             */
             if (layer.getType().equals(WebAnnoConst.SPAN_TYPE)
                     || layer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
                 openAnnotationDialog.show(aTarget);

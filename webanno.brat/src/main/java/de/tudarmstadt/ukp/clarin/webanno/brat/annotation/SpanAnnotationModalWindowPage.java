@@ -36,6 +36,7 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
@@ -64,7 +65,6 @@ import org.springframework.http.converter.json.MappingJacksonHttpMessageConverte
 
 import com.googlecode.wicket.jquery.ui.kendo.combobox.ComboBox;
 import com.googlecode.wicket.jquery.ui.kendo.combobox.ComboBoxRenderer;
-import com.ibm.icu.util.StringTokenizer;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
@@ -612,42 +612,52 @@ public class SpanAnnotationModalWindowPage
     }
 
     public SpanAnnotationModalWindowPage(ModalWindow modalWindow,
-            BratAnnotatorModel aBratAnnotatorModel, String aSelectedText, int aBeginOffset,
-            int aEndOffset, String aType, int selectedSpanId)
+            BratAnnotatorModel aBratAnnotatorModel, int selectedSpanId)
     {
         this.selectedSpanId = selectedSpanId;
-        this.selectedSpanType = aType.substring(aType.indexOf("_") + 1);
-
-        long layerId = Integer.parseInt(aType.substring(0, aType.indexOf("_")));
-
-        this.selectedLayer = annotationService.getLayer(layerId);
-
-        if (selectedLayer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
-            for (AnnotationFeature feature : annotationService.listAnnotationFeature(selectedLayer)) {
-                if (feature.getName().equals(WebAnnoConst.COREFERENCE_TYPE_FEATURE)) {
-                    this.selectedFeatureValues.put(feature, null);
-                    break;
-                }
-            }
+        this.bratAnnotatorModel = aBratAnnotatorModel;
+        JCas jCas = null;
+        try {
+            jCas = getCas(bratAnnotatorModel);
         }
-        else {
-            StringTokenizer st = new StringTokenizer(selectedSpanType, "|");
-            for (AnnotationFeature feature : annotationService.listAnnotationFeature(selectedLayer)) {
-                if (feature.isEnabled() || feature.isVisible()) {
-                    this.selectedFeatureValues.put(feature, st.nextToken().trim());
-                }
+        catch (UIMAException e) {
+            error(ExceptionUtils.getRootCause(e));
+        }
+        catch (IOException e) {
+            error(e.getMessage());
+        }
+        catch (ClassNotFoundException e) {
+            error(e.getMessage());
+        }
+        AnnotationFS annoFs = BratAjaxCasUtil.selectByAddr(jCas, selectedSpanId);
+        this.selectedText = annoFs.getCoveredText();
+        this.beginOffset = annoFs.getBegin();
+        this.endOffset = annoFs.getEnd();
 
-            }
+        String type = annoFs.getType().getName();
+
+        if (type.endsWith("Chain")) {
+            type = type.substring(0, type.length() - 5);
+        }
+        else if (type.endsWith("Link")) {
+            type = type.substring(0, type.length() - 4);
         }
 
+        this.selectedLayer = annotationService.getLayer(type, bratAnnotatorModel.getProject());
+
+        for (AnnotationFeature feature : annotationService.listAnnotationFeature(selectedLayer)) {
+            if (feature.getName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
+              continue;
+            }
+            if (feature.isEnabled() || feature.isVisible()) {
+                Feature annoFeature = annoFs.getType().getFeatureByBaseName(feature.getName());
+                this.selectedFeatureValues
+                        .put(feature, annoFs.getFeatureValueAsString(annoFeature));
+            }
+
+        }
         layersModel = new Model<AnnotationLayer>(selectedLayer);
 
-        this.beginOffset = aBeginOffset;
-        this.endOffset = aEndOffset;
-
-        this.selectedText = aSelectedText;
-
-        this.bratAnnotatorModel = aBratAnnotatorModel;
         this.annotationDialogForm = new AnnotationDialogForm("annotationDialogForm", modalWindow);
         add(annotationDialogForm);
         this.isModify = true;

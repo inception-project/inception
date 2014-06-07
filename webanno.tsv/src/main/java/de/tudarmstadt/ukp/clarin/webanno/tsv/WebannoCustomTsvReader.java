@@ -284,9 +284,16 @@ public class WebannoCustomTsvReader
                     relationTargets = relationTargetNumbers.split("\\|");
                 }
                 for (String annotation : multipleAnnotations.split("\\|")) {
+                	// If annotation is not on multpile spans
+                	if(!(annotation.startsWith("B-")||annotation.startsWith("I-")||annotation.startsWith("O-") )&& !annotation.equals("_")){
+                		AnnotationFS newAnnotation = aJcas.getCas().createAnnotation(layer, aTokenStart,
+                                  aTokenStart + aToken.length());
+                        newAnnotation.setFeatureValueFromString(feature, annotation);
+                        aJcas.addFsToIndexes(newAnnotation);
+                	}
                     // for annotations such as B_LOC|B-_|I_PER and the like
                     // O-_ is a position marker
-                    if (annotation.equals("O-_") || annotation.equals("B-_")
+                	else if (annotation.equals("O-_") || annotation.equals("B-_")
                             || annotation.equals("I-_")) {
                         index++;
                     }
@@ -401,6 +408,10 @@ public class WebannoCustomTsvReader
     public static final String PARAM_ENCODING = ComponentParameters.PARAM_SOURCE_ENCODING;
     @ConfigurationParameter(name = PARAM_ENCODING, mandatory = true, defaultValue = "UTF-8")
     private String encoding;
+    
+/*    public static final String MULTIPLE_SPAN_ANNOTATIONS = "multipleSpans";
+    @ConfigurationParameter(name = MULTIPLE_SPAN_ANNOTATIONS, mandatory = true, defaultValue = {})
+    private List<String>multipleSpans;*/
 
     @Override
     public void getNext(JCas aJCas)

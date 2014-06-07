@@ -220,7 +220,7 @@ public class ProjectLayersPanel
                                 List<AnnotationLayer> layers = annotationService
                                         .listAnnotationLayer(project);
                                 AnnotationLayer tokenLayer = annotationService.getLayer(
-                                        Token.class.getName(), WebAnnoConst.SPAN_TYPE, project);
+                                        Token.class.getName(), project);
                                 layers.remove(tokenLayer);
                                 for (AnnotationLayer layer : layers) {
                                     if (layer.isBuiltIn() && layer.isEnabled()) {
@@ -354,7 +354,7 @@ public class ProjectLayersPanel
                     AnnotationLayer layer;
                     if (annotationService.existsLayer(aExLayer.getName(), aExLayer.getType(),
                             project)) {
-                        layer = annotationService.getLayer(aExLayer.getName(), aExLayer.getType(),
+                        layer = annotationService.getLayer(aExLayer.getName(),
                                 selectedProjectModel.getObject());
                         ProjectUtil.setLayer(annotationService, layer, aExLayer, project, aUser);
                     }
@@ -766,7 +766,7 @@ public class ProjectLayersPanel
                         try {
                             layer.setName(prefix + layerName);
                             annotationService.createLayer(layer, user);
-                            if (layer.getType().equals("chain")) {
+                            if (layer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
                                 AnnotationFeature relationFeature = new AnnotationFeature();
                                 relationFeature.setType(layer.getName());
                                 relationFeature.setName(COREFERENCE_RELATION_FEATURE);

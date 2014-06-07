@@ -29,15 +29,18 @@ import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
+import org.apache.wicket.ajax.form.AjaxFormValidatingBehavior;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.IHeaderResponse;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.string.AppendingStringBuffer;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -488,6 +491,9 @@ public class AnnotationPage
                         aTarget.add(feedbackPanel);
                         annotator.reloadContent(aTarget);
                         aTarget.add(numberOfPages);
+                        gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(jCas,
+                                bratAnnotatorModel.getSentenceAddress())+1);
+                        aTarget.add(gotoPageTextField);
                     }
 
                     else {
@@ -527,6 +533,9 @@ public class AnnotationPage
                         aTarget.add(feedbackPanel);
                         annotator.reloadContent(aTarget);
                         aTarget.add(numberOfPages);
+                        gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(jCas,
+                                bratAnnotatorModel.getSentenceAddress())+1);
+                        aTarget.add(gotoPageTextField);
                     }
                     else {
                         aTarget.appendJavaScript("alert('This is First Page!')");
@@ -563,6 +572,9 @@ public class AnnotationPage
                         aTarget.add(feedbackPanel);
                         annotator.reloadContent(aTarget);
                         aTarget.add(numberOfPages);
+                        gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(jCas,
+                                bratAnnotatorModel.getSentenceAddress())+1);
+                        aTarget.add(gotoPageTextField);
                     }
                     else {
                         aTarget.appendJavaScript("alert('This is first page!')");
@@ -603,6 +615,9 @@ public class AnnotationPage
                         aTarget.add(feedbackPanel);
                         annotator.reloadContent(aTarget);
                         aTarget.add(numberOfPages);
+                        gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(jCas,
+                                bratAnnotatorModel.getSentenceAddress())+1);
+                        aTarget.add(gotoPageTextField);
                     }
                     else {
                         aTarget.appendJavaScript("alert('This is last Page!')");
@@ -619,8 +634,49 @@ public class AnnotationPage
 
         gotoPageTextField = (NumberTextField<Integer>) new NumberTextField<Integer>("gotoPageText",
                 new Model<Integer>(0));
+        Form<Void> gotoPageTextFieldForm = new Form<Void>("gotoPageTextFieldForm");
+        gotoPageTextFieldForm.add(new AjaxFormValidatingBehavior(gotoPageTextFieldForm, "onsubmit") { 
+			private static final long serialVersionUID = -4549805321484461545L;
+			@Override 
+            protected void onSubmit(AjaxRequestTarget aTarget) { 
+				 if (gotoPageAddress == 0) {
+	                    aTarget.appendJavaScript("alert('The sentence number entered is not valid')");
+	                    return;
+	                }
+				if (bratAnnotatorModel.getSentenceAddress() != gotoPageAddress) {
+                    bratAnnotatorModel.setSentenceAddress(gotoPageAddress);
+
+                    JCas jCas = getJCas(bratAnnotatorModel.getProject(),
+                            bratAnnotatorModel.getDocument());
+
+                    Sentence sentence = selectByAddr(jCas, Sentence.class, gotoPageAddress);
+                    bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
+                    bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
+
+                    aTarget.add(feedbackPanel);
+                    annotator.reloadContent(aTarget);
+                    aTarget.add(numberOfPages);
+                    gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(jCas,
+                            bratAnnotatorModel.getSentenceAddress())+1);
+                    aTarget.add(gotoPageTextField);
+                }
+                else {
+                    aTarget.appendJavaScript("alert('This sentence is on the same page!')");
+                }
+            } 
+            @Override 
+            protected CharSequence getEventHandler() { 
+                AppendingStringBuffer handler = new AppendingStringBuffer(); 
+                handler.append(super.getEventHandler()); 
+                handler.append("; return false;"); 
+                return handler; 
+           } 
+        }); 
         gotoPageTextField.setType(Integer.class);
-        add(gotoPageTextField);
+        gotoPageTextField.setMinimum(1);
+        gotoPageTextField.setDefaultModelObject(1);
+        add(gotoPageTextFieldForm.add(gotoPageTextField));
+        
         gotoPageTextField.add(new AjaxFormComponentUpdatingBehavior("onchange")
         {
             private static final long serialVersionUID = 56637289242712170L;
@@ -637,7 +693,7 @@ public class AnnotationPage
 
             }
         });
-
+        
         add(new AjaxLink<Void>("gotoPageLink")
         {
             private static final long serialVersionUID = 7496156015186497496L;
@@ -666,6 +722,9 @@ public class AnnotationPage
                     aTarget.add(feedbackPanel);
                     annotator.reloadContent(aTarget);
                     aTarget.add(numberOfPages);
+                    gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(jCas,
+                            bratAnnotatorModel.getSentenceAddress())+1);
+                    aTarget.add(gotoPageTextField);
                 }
                 else {
                     aTarget.appendJavaScript("alert('This sentence is on the same page!')");

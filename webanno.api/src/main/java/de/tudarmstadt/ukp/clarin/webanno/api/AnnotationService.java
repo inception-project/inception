@@ -135,7 +135,7 @@ public interface AnnotationService
     /**
      * Get an {@link AnnotationLayer}
      */
-    AnnotationLayer getLayer(String name, String type, Project project);
+    AnnotationLayer getLayer(String name, Project project);
 
     /**
      * Get a {@link AnnotationFeature} name using its ID. Used for updating annotations as it is

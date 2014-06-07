@@ -31,6 +31,7 @@ import java.util.Map;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
@@ -56,7 +57,6 @@ import org.springframework.http.converter.json.MappingJacksonHttpMessageConverte
 
 import com.googlecode.wicket.jquery.ui.kendo.combobox.ComboBox;
 import com.googlecode.wicket.jquery.ui.kendo.combobox.ComboBoxRenderer;
-import com.ibm.icu.util.StringTokenizer;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
@@ -536,7 +536,7 @@ public class ArcAnnotationModalWindowPanel
         AnnotationLayer spanLayer = annotationService.getLayer(layerId);
         if (spanLayer.isBuiltIn() && spanLayer.getName().equals(POS.class.getName())) {
             this.selectedLayer = annotationService.getLayer(Dependency.class.getName(),
-                    WebAnnoConst.RELATION_TYPE, aBratAnnotatorModel.getProject());
+                    aBratAnnotatorModel.getProject());
         }
         else if (spanLayer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
             this.selectedLayer = spanLayer;// one layer both for the span and
@@ -561,47 +561,50 @@ public class ArcAnnotationModalWindowPanel
     }
 
     public ArcAnnotationModalWindowPanel(String aId, final ModalWindow modalWindow,
-            BratAnnotatorModel aBratAnnotatorModel, int aOriginSpanId, String aOriginSpanType,
-            int aTargetSpanId, String aTargetSpanType, int selectedArcId, String aType)
+            BratAnnotatorModel aBratAnnotatorModel, int aOriginSpanId, int aTargetSpanId,
+            int selectedArcId)
     {
         super(aId);
         this.selectedArcId = selectedArcId;
-        this.selectedArcType = aType.substring(aType.indexOf("_") + 1);
-
-        String id = aType.substring(0, aType.lastIndexOf("_"));
-        long layerId;
-        if (id.contains("_")) {
-            // for chain arcs, strip the first prefix, that is used for chain
-            // colouring
-            layerId = Integer.parseInt(id.substring(id.indexOf("_") + 1));
-            this.selectedArcType = this.selectedArcType.substring(aType.indexOf("_") + 1);
+        this.bratAnnotatorModel = aBratAnnotatorModel;
+        JCas jCas = null;
+        try {
+            jCas = getCas(bratAnnotatorModel);
         }
-        else {
-            layerId = Integer.parseInt(id);
+        catch (UIMAException e) {
+            error(ExceptionUtils.getRootCause(e));
         }
-        this.selectedLayer = annotationService.getLayer(layerId);
-        if (selectedLayer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
-            for (AnnotationFeature feature : annotationService.listAnnotationFeature(selectedLayer)) {
-                if (feature.getName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
-                    this.selectedFeatureValues.put(feature, this.selectedArcType);
-                    break;
-                }
-            }
+        catch (IOException e) {
+            error(e.getMessage());
         }
-        else {
-            StringTokenizer st = new StringTokenizer(selectedArcType, "|");
-            for (AnnotationFeature feature : annotationService.listAnnotationFeature(selectedLayer)) {
-                if (feature.isEnabled() || feature.isVisible()) {
-                    this.selectedFeatureValues.put(feature, st.nextToken().trim());
-                }
-
-            }
+        catch (ClassNotFoundException e) {
+            error(e.getMessage());
         }
-        layersModel = new Model<AnnotationLayer>(selectedLayer);
+        AnnotationFS annoFs = BratAjaxCasUtil.selectByAddr(jCas, selectedArcId);
+        this.selectedArcType = annoFs.getCoveredText();
         this.originSpanId = aOriginSpanId;
         this.targetSpanId = aTargetSpanId;
+        String type = annoFs.getType().getName();
 
-        this.bratAnnotatorModel = aBratAnnotatorModel;
+        if (type.endsWith("Chain")) {
+            type = type.substring(0, type.length() - 5);
+        }
+        else if (type.endsWith("Link")) {
+            type = type.substring(0, type.length() - 4);
+        }
+        this.selectedLayer = annotationService.getLayer(type, bratAnnotatorModel.getProject());
+        layersModel = new Model<AnnotationLayer>(selectedLayer);
+        for (AnnotationFeature feature : annotationService.listAnnotationFeature(selectedLayer)) {
+            if (feature.getName().equals(WebAnnoConst.COREFERENCE_TYPE_FEATURE)) {
+                continue;
+            }
+            if (feature.isEnabled() || feature.isVisible()) {
+                Feature annoFeature = annoFs.getType().getFeatureByBaseName(feature.getName());
+                this.selectedFeatureValues
+                        .put(feature, annoFs.getFeatureValueAsString(annoFeature));
+            }
+
+        }
         annotationDialogForm = new AnnotationDialogForm("annotationDialogForm", modalWindow);
         add(annotationDialogForm);
         this.isModify = true;

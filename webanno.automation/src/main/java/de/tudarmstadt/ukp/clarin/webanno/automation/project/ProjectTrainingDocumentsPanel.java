@@ -258,13 +258,17 @@ public class ProjectTrainingDocumentsPanel
             public void onSubmit()
             {
                 Project project = selectedProjectModel.getObject();
+                boolean isTrain = false;
                 for (String document : selectedDocuments) {
                     try {
                         String username = SecurityContextHolder.getContext().getAuthentication()
                                 .getName();
                         User user = repository.getUser(username);
-                        repository.removeSourceDocument(
-                                repository.getSourceDocument(project, document), user);
+                        SourceDocument srDoc = repository.getSourceDocument(project, document);
+                        if(srDoc.isTrainingDocument()){
+                        	isTrain = true;
+                        }
+                        repository.removeSourceDocument(srDoc, user);
                     }
                     catch (IOException e) {
                         error("Error while removing a document document "
@@ -272,7 +276,16 @@ public class ProjectTrainingDocumentsPanel
                     }
                     documents.remove(document);
                 }
+                // If the deleted document is training document, re-training an automation should be possible again
+                if(isTrain){
+                	List<SourceDocument> docs = repository.listSourceDocuments(project);
+                		docs.addAll(repository.listTabSepDocuments(project));
+                	for(SourceDocument srDoc:docs){
+                		srDoc.setProcessed(false);
+                	}
+                }
             }
         });
     }
+    
 }

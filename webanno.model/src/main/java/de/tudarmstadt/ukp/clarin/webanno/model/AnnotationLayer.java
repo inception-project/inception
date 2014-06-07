@@ -47,8 +47,7 @@ import org.hibernate.annotations.ForeignKey;
  *
  */
 @Entity
-@Table(name = "annotation_type", uniqueConstraints = { @UniqueConstraint(columnNames = { "type",
-        "name", "project" }) })
+@Table(name = "annotation_type", uniqueConstraints = { @UniqueConstraint(columnNames = { "name", "project" }) })
 public class AnnotationLayer
     implements Serializable
 {

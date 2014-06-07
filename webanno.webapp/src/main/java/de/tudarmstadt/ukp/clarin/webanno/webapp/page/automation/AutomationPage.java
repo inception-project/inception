@@ -37,15 +37,18 @@ import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
+import org.apache.wicket.ajax.form.AjaxFormValidatingBehavior;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.IHeaderResponse;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.string.AppendingStringBuffer;
 import org.springframework.beans.BeansException;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
@@ -499,9 +502,66 @@ public class AutomationPage
         add(new ExportModalPanel("exportModalPanel", new Model<BratAnnotatorModel>(
                 bratAnnotatorModel)));
 
-        gotoPageTextField = new NumberTextField<Integer>("gotoPageText", new Model<Integer>(0));
+        gotoPageTextField = (NumberTextField<Integer>) new NumberTextField<Integer>("gotoPageText",
+                new Model<Integer>(0));
+        Form<Void> gotoPageTextFieldForm = new Form<Void>("gotoPageTextFieldForm");
+        gotoPageTextFieldForm.add(new AjaxFormValidatingBehavior(gotoPageTextFieldForm, "onsubmit") { 
+			private static final long serialVersionUID = -4549805321484461545L;
+			@Override 
+            protected void onSubmit(AjaxRequestTarget aTarget) { 
+				 if (gotoPageAddress == 0) {
+	                    aTarget.appendJavaScript("alert('The sentence number entered is not valid')");
+	                    return;
+	                }
+			        JCas mergeJCas = null;
+	                try {
+	                    aTarget.add(feedbackPanel);
+	                    mergeJCas = repository.getCorrectionDocumentContent(bratAnnotatorModel
+	                            .getDocument());
+	                    if (bratAnnotatorModel.getSentenceAddress() != gotoPageAddress) {
+	                        bratAnnotatorModel.setSentenceAddress(gotoPageAddress);
+
+	                        Sentence sentence = selectByAddr(mergeJCas, Sentence.class, gotoPageAddress);
+	                        bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
+	                        bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
+
+	                        CurationBuilder builder = new CurationBuilder(repository);
+	                        curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
+	                        setCurationSegmentBeginEnd();
+	                        curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
+	                        update(aTarget);
+	                        mergeVisualizer.reloadContent(aTarget);
+	                    }
+	                    else {
+	                        aTarget.appendJavaScript("alert('This sentence is on the same page!')");
+	                    }
+	                }
+	                catch (UIMAException e) {
+	                    error(ExceptionUtils.getRootCause(e));
+	                }
+	                catch (ClassNotFoundException e) {
+	                    error(e.getMessage());
+	                }
+	                catch (IOException e) {
+	                    error(e.getMessage());
+	                }
+	                catch (BratAnnotationException e) {
+	                    error(e.getMessage());
+	                }
+            } 
+            @Override 
+            protected CharSequence getEventHandler() { 
+                AppendingStringBuffer handler = new AppendingStringBuffer(); 
+                handler.append(super.getEventHandler()); 
+                handler.append("; return false;"); 
+                return handler; 
+           } 
+        }); 
+        
         gotoPageTextField.setType(Integer.class);
-        add(gotoPageTextField);
+        gotoPageTextField.setMinimum(1);
+        gotoPageTextField.setDefaultModelObject(1);
+        add(gotoPageTextFieldForm.add(gotoPageTextField));
         gotoPageTextField.add(new AjaxFormComponentUpdatingBehavior("onchange")
         {
             private static final long serialVersionUID = -3853194405966729661L;
@@ -1147,5 +1207,21 @@ public class AutomationPage
         }
         target.add(automateView);
         target.add(numberOfPages);
+        JCas mergeJCas = null;
+		try {
+			mergeJCas = repository
+			            .getCurationDocumentContent(bratAnnotatorModel
+			                    .getDocument());
+		} catch (UIMAException e) {
+			error(e.getMessage());
+		} catch (ClassNotFoundException e) {
+			error(e.getMessage());
+		} catch (IOException e) {
+			error(e.getMessage());
+		}
+
+        gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(mergeJCas,
+                bratAnnotatorModel.getSentenceAddress())+1);
+        target.add(gotoPageTextField);
     }
 }

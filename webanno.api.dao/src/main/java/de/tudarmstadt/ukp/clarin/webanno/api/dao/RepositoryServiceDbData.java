@@ -579,10 +579,15 @@ public class RepositoryServiceDbData
             throw new FileNotFoundException("Annotation file [" + serializedCaseFileName
                     + "] not found in [" + annotationFolder + "]");
         }
-
+        List<AnnotationLayer> layers = annotationService.listAnnotationLayer(aDocument.getProject());
+        List<String> multipleSpans = new ArrayList<String>();
+        for(AnnotationLayer layer:layers){
+        	if(layer.isMultipleTokens())
+        	multipleSpans.add(layer.getName());
+        }
         AnalysisEngineDescription writer = createPrimitiveDescription(aWriter,
                 JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
-                JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, true);
+                JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, true, "multipleSpans", multipleSpans);
 
         CAS cas = JCasFactory.createJCas().getCas();
         reader.getNext(cas);
@@ -2044,10 +2049,16 @@ public class RepositoryServiceDbData
 
         CAS cas = JCasFactory.createJCas(allTypes).getCas();
 
+/*        List<AnnotationLayer> layers = annotationService.listAnnotationLayer(aDocument.getProject());
+        List<String> multipleSpans = new ArrayList<String>();
+        for(AnnotationLayer layer:layers){
+        	if(layer.isMultipleTokens())
+        	multipleSpans.add(layer.getName());
+        }*/
         CollectionReader reader = CollectionReaderFactory.createCollectionReader(aReader,
                 ResourceCollectionReaderBase.PARAM_PATH, aFile.getParentFile().getAbsolutePath(),
                 ResourceCollectionReaderBase.PARAM_PATTERNS,
-                new String[] { "[+]" + aFile.getName() });
+                new String[] { "[+]" + aFile.getName() }/*, "multipleSpans", multipleSpans*/);
         if (!reader.hasNext()) {
             throw new FileNotFoundException("Annotation file [" + aFile.getName()
                     + "] not found in [" + aFile.getPath() + "]");

@@ -57,16 +57,18 @@
 									src="images/drawer_open.png" title="Open" /><br />Open
 							</a></li>
 
-							<li><a wicket:id="showPreviousDocument"> <img
-									src="images/document_back.png" title="First page" /><br />Prev.
+							<li><a wicket:id="showPreviousDocument"
+								title="press Shift+PgUp"> <img
+									src="images/document_back.png" title="Previous document" /><br />Prev.
 							</a></li>
-							<li><a wicket:id="showNextDocument"> <img
-									src="images/document_next.png" title="Done" /><br />Next
+							<li><a wicket:id="showNextDocument"
+								title="press Shift+PgDown"> <img
+									src="images/document_next.png" title="Next document " /><br />Next
 							</a></li>
 
-							<span wicket:id="exportModalPanel"/>
+							<span wicket:id="exportModalPanel" />
 
-							<span wicket:id="annotationLayersModalPanel"/> 
+							<span wicket:id="annotationLayersModalPanel" />
 						</ul>
 					</fieldset>
 				</li>
@@ -75,29 +77,31 @@
 					<fieldset>
 						<legend>Page</legend>
 						<ul class="horizontal">
-							<li><a wicket:id="showFirst"> <img
+							<li><a wicket:id="showFirst" title="press Home"> <img
 									src="images/document_page.png" title="First page" /><br />First
 							</a></li>
 
-							<li><a wicket:id="showPrevious"> <img
+							<li><a wicket:id="showPrevious" title="press PgUp"> <img
 									src="images/document_page_previous.png" title="Previous page" /><br />Prev.
 							</a></li>
 
 							<li>
 								<div style="height: 32px;">
-									<input type="number" wicket:id="gotoPageText"
-										style="width: 4em; text-align: right;" />
+									<form wicket:id="gotoPageTextFieldForm">
+										<input type="number" wicket:id="gotoPageText"
+											style="width: 4em; text-align: right;" title="press Enter" />
+									</form>
 								</div>
 								<div>
 									<a wicket:id="gotoPageLink">Go to</a>
 								</div>
 							</li>
 
-							<li><a wicket:id="showNext"> <img
+							<li><a wicket:id="showNext" title="press PgDown"> <img
 									src="images/document_page_next.png" title="Next page" /><br />Next
 							</a></li>
 
-							<li><a wicket:id="showLast"> <img
+							<li><a wicket:id="showLast" title="press End"> <img
 									src="images/document_page_last.png" title="Last page" /><br />Last
 							</a></li>
 						</ul>
@@ -108,7 +112,7 @@
 					<fieldset>
 						<legend>Help</legend>
 						<ul class="horizontal">
-						<span wicket:id="guidelineModalPanel"/>
+							<span wicket:id="guidelineModalPanel" />
 						</ul>
 					</fieldset>
 				</li>
@@ -117,24 +121,22 @@
 					<fieldset>
 						<legend>Workflow</legend>
 						<ul class="horizontal">
-							<span wicket:id="showYesNoModalPanel"/> 
+							<span wicket:id="showYesNoModalPanel" />
 						</ul>
 					</fieldset>
 				</li>
 			</ul>
 		</div>
-	
-      <span wicket:id="documentNamePanel"></span>
-      <div style="text-align: center;color: maroon;" wicket:id="numberOfPages">
-      </div>
-      	
+
+		<span wicket:id="documentNamePanel"></span>
+		<div style="text-align: center; color: maroon;"
+			wicket:id="numberOfPages"></div>
+
 		<div wicket:id=openDocumentsModal></div>
-	
-		<div wicket:id="feedback">
-       	 [Feedback]
-    	</div>
+
+		<div wicket:id="feedback">[Feedback]</div>
 		<div class="hfill" wicket:id="embedder1"></div>
-			
+
 	</wicket:extend>
 </body>
 </html>
