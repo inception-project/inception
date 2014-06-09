@@ -368,8 +368,8 @@ public class ArcAdapter
      */
     private List<Argument> getArgument(FeatureStructure aGovernorFs, FeatureStructure aDependentFs)
     {
-        return asList(new Argument("Arg1", ((FeatureStructureImpl) aGovernorFs).getAddress() + ""),
-                new Argument("Arg2", ((FeatureStructureImpl) aDependentFs).getAddress() + ""));
+        return asList(new Argument("Arg1", ((FeatureStructureImpl) aGovernorFs).getAddress()),
+                new Argument("Arg2", ((FeatureStructureImpl) aDependentFs).getAddress()));
     }
 
     private boolean isDuplicate(AnnotationFS aAnnotationFSOldOrigin,

@@ -278,8 +278,8 @@ public class ChainAdapter
      */
     private static List<Argument> getArgument(FeatureStructure aOriginFs, FeatureStructure aTargetFs)
     {
-        return asList(new Argument("Arg1", ((FeatureStructureImpl) aOriginFs).getAddress() + ""),
-                new Argument("Arg2", ((FeatureStructureImpl) aTargetFs).getAddress() + ""));
+        return asList(new Argument("Arg1", ((FeatureStructureImpl) aOriginFs).getAddress()),
+                new Argument("Arg2", ((FeatureStructureImpl) aTargetFs).getAddress()));
     }
 
     /**

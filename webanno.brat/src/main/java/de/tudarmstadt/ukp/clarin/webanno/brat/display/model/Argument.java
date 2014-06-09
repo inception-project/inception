@@ -40,14 +40,14 @@ public class Argument
     /**
      * the intial/target tokens (Span annotations)
      */
-    private String token;
+    private int token;
 
     public Argument()
     {
         // Nothing to do
     }
 
-    public Argument(String aArgument, String aToken)
+    public Argument(String aArgument, int aToken)
     {
         argument = aArgument;
         token = aToken;
@@ -63,12 +63,12 @@ public class Argument
         argument = aArgument;
     }
 
-    public String getToken()
+    public int getToken()
     {
         return token;
     }
 
-    public void setTarget(String aTarget)
+    public void setTarget(int aTarget)
     {
         token = aTarget;
     }

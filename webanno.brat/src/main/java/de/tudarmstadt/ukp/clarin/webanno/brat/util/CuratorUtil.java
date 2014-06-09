@@ -356,7 +356,7 @@ public class CuratorUtil
                 boolean hasArc = false;
                 for (Relation relation : response.getRelations()) {
                     Argument argument = relation.getArguments().get(0);
-                    if (argument.getToken().equals(entity.getId())) {// has outgoing
+                    if (argument.getToken() == entity.getId()) {// has outgoing
                                                                 // arc
                         hasArc = true;
                         List<RelationType> relations = getRelationTypes(response,
