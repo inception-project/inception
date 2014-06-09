@@ -57,6 +57,7 @@ public class WebAnnoConst
     public static final String COREFERENCE_TYPE_FEATURE = "referenceType";
     
     public static final String TAB_SEP ="TAB-SEP";
+    public static final String COREFERENCE_LAYER = "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference";
 
 
 

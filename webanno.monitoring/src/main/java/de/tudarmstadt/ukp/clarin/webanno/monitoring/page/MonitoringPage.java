@@ -88,6 +88,8 @@ import de.tudarmstadt.ukp.clarin.webanno.monitoring.support.TableDataProvider;
 import de.tudarmstadt.ukp.clarin.webanno.monitoring.support.TwoPairedKappa;
 import de.tudarmstadt.ukp.clarin.webanno.project.page.SettingsPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
+import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.TwoRaterKappaAgreement;
 
 /**
@@ -225,6 +227,7 @@ public class MonitoringPage extends SettingsPageBase {
 				.add(annotatorsProgressPercentageImage).add(projectName)
 				.add(annotationDocumentStatusTable));
 		annotationDocumentStatusTable.setVisible(false);
+		
 	}
 
 	private class ProjectSelectionForm extends Form<SelectionModel> {
@@ -491,9 +494,18 @@ public class MonitoringPage extends SettingsPageBase {
 
 						@Override
 						protected List<AnnotationFeature> load() {
-							return annotationService
+							List<AnnotationFeature> features = annotationService
 									.listAnnotationFeature((projectSelectionForm
 											.getModelObject().project));
+							List<AnnotationFeature> unusedFeatures = new ArrayList<AnnotationFeature>();
+							for(AnnotationFeature feature:features){
+								if(feature.getLayer().getName().equals(Token.class.getName())
+							|| feature.getLayer().getName().equals(WebAnnoConst.COREFERENCE_LAYER)){
+									unusedFeatures.add(feature);
+								}
+							}
+							features.removeAll(unusedFeatures);
+							return features;
 						}
 					});
 					setChoiceRenderer(new ChoiceRenderer<AnnotationFeature>() {
@@ -1045,6 +1057,9 @@ public class MonitoringPage extends SettingsPageBase {
 							.getState().equals(AnnotationDocumentState.NEW))) {
 						try {
 							JCas jCas = repository
+									.getAnnotationDocumentContent(annotationDocument);
+							repository.upgradeCasAndSave(document, document.getProject().getMode(), user.getUsername());
+							jCas = repository
 									.getAnnotationDocumentContent(annotationDocument);
 							jCases.put(user, jCas);
 						} catch (UIMAException e) {

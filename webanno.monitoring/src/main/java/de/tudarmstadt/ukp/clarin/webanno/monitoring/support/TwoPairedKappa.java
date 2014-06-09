@@ -175,7 +175,6 @@ public class TwoPairedKappa
      * set value for {@link IAnnotationStudy} when {@link TwoRaterKappaAgreement} is used for kappa
      * measures
      */
-    // TODO: unit test
     public void getStudy(String aType, String featureName, User user1, User user2,
             Map<String, Map<String, String>> allUserAnnotations, SourceDocument aDocument,
             Map<User, JCas> JCases)

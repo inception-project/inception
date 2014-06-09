@@ -1881,9 +1881,7 @@ public class RepositoryServiceDbData
     public void upgradeCasAndSave(SourceDocument aDocument, Mode aMode, String aUsername)
         throws IOException
     {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-
-        User user = getUser(username);
+        User user = getUser(aUsername);
         if (existsAnnotationDocument(aDocument, user)) {
             AnnotationDocument annotationDocument = getAnnotationDocument(aDocument, user);
             try {
