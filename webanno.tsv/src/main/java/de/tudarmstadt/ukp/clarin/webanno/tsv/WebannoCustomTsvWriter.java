@@ -426,12 +426,12 @@ public class WebannoCustomTsvWriter
                         annotation = "_";
                     }
                     if (aRelAnnoMap.get(token.getAddress()) == null) {
-                        aRelAnnoMap.put(token.getAddress(), (first ? "B-" : "I-") + annotation);
+                        aRelAnnoMap.put(token.getAddress(), annotation);
                         first = false;
                     }
                     else {
                         aRelAnnoMap.put(token.getAddress(), aRelAnnoMap.get(token.getAddress())
-                                + "|" + (first ? "B-" : "I-") + annotation);
+                                + "|" +  annotation);
                         first = false;
                     }
                 }

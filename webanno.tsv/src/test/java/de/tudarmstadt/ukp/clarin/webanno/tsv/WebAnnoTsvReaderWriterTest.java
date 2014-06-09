@@ -23,6 +23,8 @@ import static org.apache.uima.fit.pipeline.SimplePipeline.runPipeline;
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.cas.CAS;
@@ -47,10 +49,13 @@ public class WebAnnoTsvReaderWriterTest
                 WebannoCustomTsvReader.PARAM_PATH,
                 new File("src/test/resources/tsv/").getAbsolutePath(),
                 WebannoCustomTsvReader.PARAM_PATTERNS, new String[] { "[+]example2.tsv" });
-
+     
+        List<String> multipleSpans = new ArrayList<String>();
+        multipleSpans.add("de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity");
+        multipleSpans.add("de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference");
         AnalysisEngineDescription writer = createPrimitiveDescription(WebannoCustomTsvWriter.class,
                 WebannoCustomTsvWriter.PARAM_TARGET_LOCATION, "target/test-output",
-                WebannoCustomTsvWriter.PARAM_STRIP_EXTENSION, true);
+                WebannoCustomTsvWriter.PARAM_STRIP_EXTENSION, true, "multipleSpans", multipleSpans);
        
         runPipeline(reader, writer);
         

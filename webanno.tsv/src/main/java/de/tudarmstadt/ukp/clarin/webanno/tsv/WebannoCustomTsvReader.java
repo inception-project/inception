@@ -290,6 +290,41 @@ public class WebannoCustomTsvReader
                                   aTokenStart + aToken.length());
                         newAnnotation.setFeatureValueFromString(feature, annotation);
                         aJcas.addFsToIndexes(newAnnotation);
+                        
+                        if (aRelationayers.containsKey(layer)) {
+                            Map<String, List<String>> targets = aRelationTargets.get(layer);
+                            if (targets == null) {
+                                List<String> governors = new ArrayList<String>();
+                                governors.add(relationTargets[i]);
+                                targets = new HashMap<String, List<String>>();
+                                targets.put(aTokenNumberColumn, governors);
+                                i++;
+                                aRelationTargets.put(layer, targets);
+                            }
+                            else {
+                                List<String> governors = targets.get(aTokenNumberColumn);
+                                if (governors == null) {
+                                    governors = new ArrayList<String>();
+                                }
+                                governors.add(relationTargets[i]);
+                                targets.put(aTokenNumberColumn, governors);
+                                i++;
+                                aRelationTargets.put(layer, targets);
+                            }
+                        }
+
+                        Map<String, List<AnnotationFS>> tokenAnnotations = aTokenAnnotations
+                                .get(layer);
+                            if (tokenAnnotations == null) {
+                                tokenAnnotations = new HashMap<String, List<AnnotationFS>>();
+                            }
+                            List<AnnotationFS> relAnnos = tokenAnnotations.get(aTokenNumberColumn);
+                            if (relAnnos == null) {
+                                relAnnos = new ArrayList<AnnotationFS>();
+                            }
+                            relAnnos.add(newAnnotation);
+                            tokenAnnotations.put(aTokenNumberColumn, relAnnos);
+                            aTokenAnnotations.put(layer, tokenAnnotations);
                 	}
                     // for annotations such as B_LOC|B-_|I_PER and the like
                     // O-_ is a position marker
