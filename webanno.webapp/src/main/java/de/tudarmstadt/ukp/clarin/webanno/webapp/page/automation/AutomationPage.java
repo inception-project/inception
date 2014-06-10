@@ -77,10 +77,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.project.page.SettingsPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenModalWindowPanel;
@@ -97,7 +94,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
  * This is the main class for the Automation page. Displays in the lower panel the Automatically
  * annotated document and in the upper panel the annotation pane to trigger automation on the lower
  * pane.
- * 
+ *
  * @author Seid Muhie Yimam
  */
 public class AutomationPage
@@ -254,8 +251,10 @@ public class AutomationPage
                     if (!template.isAnnotateAndPredict()) {
                         return;
                     }
-                    /*Tag tag = annotationService.getTag(bratAnnotatorModel
-                            .getRememberedSpanFeatures().get(autoFeature), autoFeature.getTagset());*/
+                    /*
+                     * Tag tag = annotationService.getTag(bratAnnotatorModel
+                     * .getRememberedSpanFeatures().get(autoFeature), autoFeature.getTagset());
+                     */
                     AutomationUtil.repeateAnnotation(bratAnnotatorModel, repository,
                             annotationService, aStart, aEnd, autoFeature);
                 }
@@ -296,8 +295,10 @@ public class AutomationPage
                     if (!template.isAnnotateAndPredict()) {
                         return;
                     }
-                    /*Tag tag = annotationService.getTag(bratAnnotatorModel
-                            .getRememberedSpanFeatures().get(autoFeature), autoFeature.getTagset());*/
+                    /*
+                     * Tag tag = annotationService.getTag(bratAnnotatorModel
+                     * .getRememberedSpanFeatures().get(autoFeature), autoFeature.getTagset());
+                     */
                     AutomationUtil.deleteAnnotation(bratAnnotatorModel, repository,
                             annotationService, aStart, aEnd, autoFeature);
                 }
@@ -505,59 +506,64 @@ public class AutomationPage
         gotoPageTextField = (NumberTextField<Integer>) new NumberTextField<Integer>("gotoPageText",
                 new Model<Integer>(0));
         Form<Void> gotoPageTextFieldForm = new Form<Void>("gotoPageTextFieldForm");
-        gotoPageTextFieldForm.add(new AjaxFormValidatingBehavior(gotoPageTextFieldForm, "onsubmit") { 
-			private static final long serialVersionUID = -4549805321484461545L;
-			@Override 
-            protected void onSubmit(AjaxRequestTarget aTarget) { 
-				 if (gotoPageAddress == 0) {
-	                    aTarget.appendJavaScript("alert('The sentence number entered is not valid')");
-	                    return;
-	                }
-			        JCas mergeJCas = null;
-	                try {
-	                    aTarget.add(feedbackPanel);
-	                    mergeJCas = repository.getCorrectionDocumentContent(bratAnnotatorModel
-	                            .getDocument());
-	                    if (bratAnnotatorModel.getSentenceAddress() != gotoPageAddress) {
-	                        bratAnnotatorModel.setSentenceAddress(gotoPageAddress);
+        gotoPageTextFieldForm.add(new AjaxFormValidatingBehavior(gotoPageTextFieldForm, "onsubmit")
+        {
+            private static final long serialVersionUID = -4549805321484461545L;
 
-	                        Sentence sentence = selectByAddr(mergeJCas, Sentence.class, gotoPageAddress);
-	                        bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
-	                        bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
+            @Override
+            protected void onSubmit(AjaxRequestTarget aTarget)
+            {
+                if (gotoPageAddress == 0) {
+                    aTarget.appendJavaScript("alert('The sentence number entered is not valid')");
+                    return;
+                }
+                JCas mergeJCas = null;
+                try {
+                    aTarget.add(feedbackPanel);
+                    mergeJCas = repository.getCorrectionDocumentContent(bratAnnotatorModel
+                            .getDocument());
+                    if (bratAnnotatorModel.getSentenceAddress() != gotoPageAddress) {
+                        bratAnnotatorModel.setSentenceAddress(gotoPageAddress);
 
-	                        CurationBuilder builder = new CurationBuilder(repository);
-	                        curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
-	                        setCurationSegmentBeginEnd();
-	                        curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
-	                        update(aTarget);
-	                        mergeVisualizer.reloadContent(aTarget);
-	                    }
-	                    else {
-	                        aTarget.appendJavaScript("alert('This sentence is on the same page!')");
-	                    }
-	                }
-	                catch (UIMAException e) {
-	                    error(ExceptionUtils.getRootCause(e));
-	                }
-	                catch (ClassNotFoundException e) {
-	                    error(e.getMessage());
-	                }
-	                catch (IOException e) {
-	                    error(e.getMessage());
-	                }
-	                catch (BratAnnotationException e) {
-	                    error(e.getMessage());
-	                }
-            } 
-            @Override 
-            protected CharSequence getEventHandler() { 
-                AppendingStringBuffer handler = new AppendingStringBuffer(); 
-                handler.append(super.getEventHandler()); 
-                handler.append("; return false;"); 
-                return handler; 
-           } 
-        }); 
-        
+                        Sentence sentence = selectByAddr(mergeJCas, Sentence.class, gotoPageAddress);
+                        bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
+                        bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
+
+                        CurationBuilder builder = new CurationBuilder(repository);
+                        curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
+                        setCurationSegmentBeginEnd();
+                        curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
+                        update(aTarget);
+                        mergeVisualizer.reloadContent(aTarget);
+                    }
+                    else {
+                        aTarget.appendJavaScript("alert('This sentence is on the same page!')");
+                    }
+                }
+                catch (UIMAException e) {
+                    error(ExceptionUtils.getRootCause(e));
+                }
+                catch (ClassNotFoundException e) {
+                    error(e.getMessage());
+                }
+                catch (IOException e) {
+                    error(e.getMessage());
+                }
+                catch (BratAnnotationException e) {
+                    error(e.getMessage());
+                }
+            }
+
+            @Override
+            protected CharSequence getEventHandler()
+            {
+                AppendingStringBuffer handler = new AppendingStringBuffer();
+                handler.append(super.getEventHandler());
+                handler.append("; return false;");
+                return handler;
+            }
+        });
+
         gotoPageTextField.setType(Integer.class);
         gotoPageTextField.setMinimum(1);
         gotoPageTextField.setDefaultModelObject(1);
@@ -1208,20 +1214,23 @@ public class AutomationPage
         target.add(automateView);
         target.add(numberOfPages);
         JCas mergeJCas = null;
-		try {
-			mergeJCas = repository
-			            .getCurationDocumentContent(bratAnnotatorModel
-			                    .getDocument());
-		} catch (UIMAException e) {
-			error(e.getMessage());
-		} catch (ClassNotFoundException e) {
-			error(e.getMessage());
-		} catch (IOException e) {
-			error(e.getMessage());
-		}
+        try {
+
+            mergeJCas = repository.getCorrectionDocumentContent(bratAnnotatorModel.getDocument());
+
+        }
+        catch (UIMAException e) {
+            error(e.getMessage());
+        }
+        catch (ClassNotFoundException e) {
+            error(e.getMessage());
+        }
+        catch (IOException e) {
+            error(e.getMessage());
+        }
 
         gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(mergeJCas,
-                bratAnnotatorModel.getSentenceAddress())+1);
+                bratAnnotatorModel.getSentenceAddress()) + 1);
         target.add(gotoPageTextField);
     }
 }
