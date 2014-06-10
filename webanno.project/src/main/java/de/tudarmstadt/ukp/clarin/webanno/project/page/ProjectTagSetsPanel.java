@@ -295,9 +295,6 @@ public class ProjectTagSetsPanel
                                 String tagSetName = "";
                                 String tagSetDescription = "";
                                 String tagsetLanguage = "";
-                                String tagsetType = "";
-                                String tagsetTypeName = "";
-                                String tagsetTypeDescription = "";
                                 de.tudarmstadt.ukp.clarin.webanno.model.TagSet tagSet = null;
                                 for (String key : listOfTagsFromFile) {
                                     // the first key is the tagset name and its
@@ -306,18 +303,8 @@ public class ProjectTagSetsPanel
                                         tagSetName = key;
                                         tagSetDescription = tabbedTagsetFromFile.get(key);
                                     }
-                                    // the second key is the tagset type
+                                    // the second key is the tagset language
                                     else if (i == 1) {
-                                        tagsetType = key;
-                                    }
-                                    // the third key is the tagset type name and
-                                    // its description
-                                    else if (i == 2) {
-                                        tagsetTypeName = key;
-                                        tagsetTypeDescription = tabbedTagsetFromFile.get(key);
-                                    }
-                                    // the fourth key is the tagset language
-                                    else if (i == 3) {
                                         tagsetLanguage = key;
                                         // remove and replace the tagset if it
                                         // exist
@@ -373,6 +360,14 @@ public class ProjectTagSetsPanel
                     newTagSet.setLanguage(importedTagSet.getLanguage());
                     newTagSet.setProject(project);
                     annotationService.createTagSet(newTagSet, user);
+                    for (de.tudarmstadt.ukp.clarin.webanno.model.export.Tag tag : importedTagSet
+                            .getTags()) {
+                        Tag newTag = new Tag();
+                        newTag.setDescription(tag.getDescription());
+                        newTag.setName(tag.getName());
+                        newTag.setTagSet(newTagSet);
+                        annotationService.createTag(newTag, user);
+                    }
                 }
             });
         }
@@ -383,6 +378,7 @@ public class ProjectTagSetsPanel
     {
         private static final long serialVersionUID = -1L;
 
+        @SuppressWarnings("unused")
         private de.tudarmstadt.ukp.clarin.webanno.model.TagSet tagSet;
         private Tag tag;
     }

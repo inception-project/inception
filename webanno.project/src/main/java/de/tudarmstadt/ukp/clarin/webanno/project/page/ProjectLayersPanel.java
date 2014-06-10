@@ -332,7 +332,14 @@ public class ProjectLayersPanel
                                     .readValue(
                                             text,
                                             de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer.class);
-                            createLayer(exLayer, user);
+
+                            AnnotationLayer attachLayer = null;
+                            if(exLayer.getAttachType() != null){
+                                de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer exAttachLayer = exLayer.getAttachType();
+                                createLayer(exAttachLayer, user,null);
+                                attachLayer = annotationService.getLayer(exAttachLayer.getName(), project);
+                            }
+                            createLayer(exLayer, user, attachLayer);
 
                         }
                         catch (IOException e) {
@@ -347,7 +354,7 @@ public class ProjectLayersPanel
 
                 private void createLayer(
                         de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer aExLayer,
-                        User aUser)
+                        User aUser, AnnotationLayer aAttachLayer)
                     throws IOException
                 {
                     Project project = selectedProjectModel.getObject();
@@ -362,6 +369,7 @@ public class ProjectLayersPanel
                         layer = new AnnotationLayer();
                         ProjectUtil.setLayer(annotationService, layer, aExLayer, project, aUser);
                     }
+                    layer.setAttachType(aAttachLayer);
                     for (de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature exfeature : aExLayer
                             .getFeatures()) {
 
@@ -821,6 +829,12 @@ public class ProjectLayersPanel
 
                     de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer exLayer = ProjectUtil
                             .exportLayerDetails(null, null, layer, annotationService);
+                    if (layer.getAttachType() != null) {
+                        AnnotationLayer attachLayer = layer.getAttachType();
+                        de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer exAttachLayer = ProjectUtil
+                                .exportLayerDetails(null, null, attachLayer, annotationService);
+                        exLayer.setAttachType(exAttachLayer);
+                    }
 
                     MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
                     ProjectUtil.setJsonConverter(jsonConverter);
