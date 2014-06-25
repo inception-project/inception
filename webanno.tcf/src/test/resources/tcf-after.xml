@@ -101,8 +101,9 @@
 		<references typetagset="BART" reltagset="t_uebaDZ">
 			<entity>
 				<reference ID="rc_0" rel="cataphoric" target="rc_1"
-					tokenIDs="t_1" mintokIDs="t_1" type="pro.per3" />							
-					<reference ID="rc_1" tokenIDs="t_18 t_19 t_20 t_21 t_22" mintokIDs="t_20 t_21" type="nam" />
+					tokenIDs="t_1" mintokIDs="t_1" type="pro.per3" />
+				<reference ID="rc_1" tokenIDs="t_18 t_19 t_20 t_21 t_22"
+					mintokIDs="t_20 t_21" type="nam" />
 			</entity>
 		</references>
 	</TextCorpus>
