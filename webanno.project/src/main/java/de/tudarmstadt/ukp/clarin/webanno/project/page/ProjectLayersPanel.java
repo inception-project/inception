@@ -334,21 +334,24 @@ public class ProjectLayersPanel
                                             de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer.class);
 
                             AnnotationLayer attachLayer = null;
-                            if(exLayer.getAttachType() != null){
-                                de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer exAttachLayer = exLayer.getAttachType();
-                                createLayer(exAttachLayer, user,null);
-                                attachLayer = annotationService.getLayer(exAttachLayer.getName(), project);
+                            if (exLayer.getAttachType() != null) {
+                                de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer exAttachLayer = exLayer
+                                        .getAttachType();
+                                createLayer(exAttachLayer, user, null);
+                                attachLayer = annotationService.getLayer(exAttachLayer.getName(),
+                                        project);
                             }
                             createLayer(exLayer, user, attachLayer);
+                            layerDetailForm.setModelObject(annotationService.getLayer(
+                                    exLayer.getName(), project));
+                            layerDetailForm.setVisible(true);
+                            featureSelectionForm.setVisible(true);
 
                         }
                         catch (IOException e) {
                             error("Error Importing TagSet " + ExceptionUtils.getRootCauseMessage(e));
                         }
                     }
-
-                    layerDetailForm.setModelObject(new AnnotationLayer());
-                    featureSelectionForm.setVisible(false);
                     featureDetailForm.setVisible(false);
                 }
 

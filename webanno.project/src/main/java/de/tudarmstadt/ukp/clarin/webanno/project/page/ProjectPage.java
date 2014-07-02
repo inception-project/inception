@@ -80,10 +80,10 @@ import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
  * {@link ProjectTagSetsPanel} is used to add {@link TagSet} and {@link Tag}
  * details to a Project as well as updating them The {@link ProjectUsersPanel}
  * is used to update {@link User} to a Project
- * 
+ *
  * @author Seid Muhie Yimam
  * @author Richard Eckart de Castilho
- * 
+ *
  */
 public class ProjectPage extends SettingsPageBase {
 	private static final long serialVersionUID = -2102136855109258306L;
@@ -134,7 +134,7 @@ public class ProjectPage extends SettingsPageBase {
 				public void onSubmit() {
 					projectDetailForm.setModelObject(new Project());
 					projectDetailForm.setVisible(true);
-					ProjectSelectionForm.this.setVisible(true);
+					ProjectSelectionForm.this.setModelObject(null);
 					if (projectType != null) {
 						projectType.setEnabled(true);
 					}
@@ -557,6 +557,9 @@ public class ProjectPage extends SettingsPageBase {
 								new String[] {}, new String[] {},
 								new String[] {}, new String[] {});
 						projectDetailForm.setVisible(true);
+						SelectionModel selectionModel = new SelectionModel();
+						selectionModel.project = project;
+						projectSelectionForm.setModelObject(selectionModel);
 					} catch (IOException e) {
 						error("Project repository path not found " + ":"
 								+ ExceptionUtils.getRootCauseMessage(e));

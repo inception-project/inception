@@ -79,9 +79,9 @@ import eu.clarin.weblicht.wlfxb.io.WLFormatException;
 
 /**
  * A Panel used to add Project Guidelines in a selected {@link Project}
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 @SuppressWarnings("deprecation")
 public class ProjectExportPanel extends Panel {
@@ -378,14 +378,11 @@ public class ProjectExportPanel extends Panel {
 
 		exportProjectSettings(aProjectModel.getObject(), projectSettings,
 				exportTempDir);
+		progress = 9;
 		exportSourceDocuments(aProjectModel.getObject(), exportTempDir);
-		progress = 10;
 		exportAnnotationDocuments(aProjectModel.getObject(), exportTempDir);
-		progress = progress + 1;
 		exportProjectLog(aProjectModel.getObject(), exportTempDir);
-		progress = progress + 1;
 		exportGuideLine(aProjectModel.getObject(), exportTempDir);
-		progress = progress + 1;
 		exportProjectMetaInf(aProjectModel.getObject(), exportTempDir);
 		progress = 90;
 		exportCuratedDocuments(aProjectModel.getObject(), exportTempDir);
@@ -415,18 +412,20 @@ public class ProjectExportPanel extends Panel {
 		List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = repository
 				.listSourceDocuments(aProject);
 		documents.addAll(repository.listTabSepDocuments(aProject));
-
+		int i = 1;
 		for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
 			FileUtils.copyFileToDirectory(
 					repository.exportSourceDocument(sourceDocument),
 					sourceDocumentDir);
+			progress = (int) Math.ceil(((double) i)/documents.size()*10.0);
+			        i++;
 		}
 	}
 
 	/**
 	 * Copy, if exists, curation documents to a folder that will be exported as
 	 * Zip file
-	 * 
+	 *
 	 * @param aProject
 	 *            The {@link Project}
 	 * @param aCurationDocumentExist
@@ -443,6 +442,8 @@ public class ProjectExportPanel extends Panel {
 		List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = repository
 				.listSourceDocuments(aProject);
 
+		int initProgress = progress-1;
+		int i = 1;
 		for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
 
 			File curationCasDir = new File(aCopyDir
@@ -497,6 +498,8 @@ public class ProjectExportPanel extends Panel {
 					FileUtils.forceDelete(correctionFile);
 				}
 			}
+			progress = initProgress+ (int) Math.ceil(((double) i)/documents.size()*10.0);
+			i++;
 		}
 	}
 
@@ -550,7 +553,7 @@ public class ProjectExportPanel extends Panel {
 	/**
 	 * Copy annotation document as Serialized CAS from the file system of this
 	 * project to the export folder
-	 * 
+	 *
 	 * @throws ClassNotFoundException
 	 * @throws WLFormatException
 	 * @throws UIMAException
@@ -560,6 +563,8 @@ public class ProjectExportPanel extends Panel {
 			ClassNotFoundException {
 		List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = repository
 				.listSourceDocuments(aProject);
+		int i = 1;
+		int initProgress = progress;
 		for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
 			for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : repository
 					.listAnnotationDocuments(sourceDocument)) {
@@ -611,7 +616,8 @@ public class ProjectExportPanel extends Panel {
 					}
 				}
 			}
-			progress = progress + 1;
+			progress = initProgress + (int) Math.ceil(((double) i)/documents.size()*80.0);
+			i++;
 		}
 
 	}

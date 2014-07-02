@@ -92,7 +92,6 @@ import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
@@ -579,16 +578,26 @@ public class RepositoryServiceDbData
             throw new FileNotFoundException("Annotation file [" + serializedCaseFileName
                     + "] not found in [" + annotationFolder + "]");
         }
-        List<AnnotationLayer> layers = annotationService.listAnnotationLayer(aDocument.getProject());
+        List<AnnotationLayer> layers = annotationService
+                .listAnnotationLayer(aDocument.getProject());
         List<String> multipleSpans = new ArrayList<String>();
-        for(AnnotationLayer layer:layers){
-        	if(layer.isMultipleTokens())
-        	multipleSpans.add(layer.getName());
+        for (AnnotationLayer layer : layers) {
+            if (layer.isMultipleTokens()) {
+                multipleSpans.add(layer.getName());
+            }
         }
-        AnalysisEngineDescription writer = createPrimitiveDescription(aWriter,
-                JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
-                JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, true, "multipleSpans", multipleSpans);
-
+        AnalysisEngineDescription writer;
+        if (aWriter.getName().equals("de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoCustomTsvWriter")) {
+            writer = createPrimitiveDescription(aWriter,
+                    JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
+                    JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, true, "multipleSpans",
+                    multipleSpans);
+        }
+        else {
+            writer = createPrimitiveDescription(aWriter,
+                    JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
+                    JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, true);
+        }
         CAS cas = JCasFactory.createJCas().getCas();
         reader.getNext(cas);
         // Get the original TCF file and preserve it
@@ -2047,16 +2056,16 @@ public class RepositoryServiceDbData
 
         CAS cas = JCasFactory.createJCas(allTypes).getCas();
 
-/*        List<AnnotationLayer> layers = annotationService.listAnnotationLayer(aDocument.getProject());
-        List<String> multipleSpans = new ArrayList<String>();
-        for(AnnotationLayer layer:layers){
-        	if(layer.isMultipleTokens())
-        	multipleSpans.add(layer.getName());
-        }*/
+        /*
+         * List<AnnotationLayer> layers =
+         * annotationService.listAnnotationLayer(aDocument.getProject()); List<String> multipleSpans
+         * = new ArrayList<String>(); for(AnnotationLayer layer:layers){
+         * if(layer.isMultipleTokens()) multipleSpans.add(layer.getName()); }
+         */
         CollectionReader reader = CollectionReaderFactory.createCollectionReader(aReader,
                 ResourceCollectionReaderBase.PARAM_PATH, aFile.getParentFile().getAbsolutePath(),
                 ResourceCollectionReaderBase.PARAM_PATTERNS,
-                new String[] { "[+]" + aFile.getName() }/*, "multipleSpans", multipleSpans*/);
+                new String[] { "[+]" + aFile.getName() }/* , "multipleSpans", multipleSpans */);
         if (!reader.hasNext()) {
             throw new FileNotFoundException("Annotation file [" + aFile.getName()
                     + "] not found in [" + aFile.getPath() + "]");

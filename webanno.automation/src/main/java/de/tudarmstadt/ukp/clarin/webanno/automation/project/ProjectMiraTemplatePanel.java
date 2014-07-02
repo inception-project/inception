@@ -735,8 +735,6 @@ public class ProjectMiraTemplatePanel
                         automationStatus.setStatus(Status.PREDICTION);
                         AutomationUtil.predict(template, repository);
 
-                        System.gc();
-
                         template.setAutomationStarted(false);
                         automationStatus.setStatus(Status.COMPLETED);
                         automationStatus.setEndTime(new Timestamp(new Date().getTime()));

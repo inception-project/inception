@@ -43,6 +43,8 @@ import javax.persistence.NoResultException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.jcas.JCas;
@@ -84,11 +86,12 @@ public class AutomationUtil
     @Resource(name = "annotationService")
     private static AnnotationService annotationService;
 
+    private static Log LOG = LogFactory.getLog(AutomationUtil.class);
+
     public static void repeateAnnotation(BratAnnotatorModel aModel, RepositoryService aRepository,
             AnnotationService aAnnotationService, int aStart, int aEnd, AnnotationFeature aFeature)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
-
         SourceDocument sourceDocument = aModel.getDocument();
         JCas jCas = aRepository.getCorrectionDocumentContent(sourceDocument);
 
@@ -1230,6 +1233,7 @@ public class AutomationUtil
                 mira.maxPosteriors = maxPosteriors;
                 mira.test(input, stream);
 
+                LOG.info("Prediction is wrtten to a MIRA File. To be done is writing back to the CAS");
                 LineIterator it = IOUtils.lineIterator(new FileReader(predcitedFile));
                 List<String> annotations = new ArrayList<String>();
 
@@ -1241,17 +1245,13 @@ public class AutomationUtil
                     StringTokenizer st = new StringTokenizer(line, " ");
                     String tag = "";
                     while (st.hasMoreTokens()) {
-                        String value = st.nextToken();
-                        if (value.startsWith("B-") || value.startsWith("I-")) {
-                            tag = value;
-                            break;
-                        }
-                        tag = value;
+                        tag = st.nextToken();
 
                     }
                     annotations.add(tag);
                 }
 
+                LOG.info(annotations.size()+" Predictions found to be written to the CAS");
                 JCas jCas = null;
                 String username = SecurityContextHolder.getContext().getAuthentication().getName();
                 User user = aRepository.getUser(username);
@@ -1267,6 +1267,7 @@ public class AutomationUtil
                 TypeAdapter adapter = TypeUtil.getAdapter(layerFeature.getLayer(),
                         annotationService);
                 adapter.automate(jCas, layerFeature, annotations);
+                LOG.info("Predictions found are written to the CAS");
                 aRepository.createCorrectionDocumentContent(jCas, document, user);
                 document.setProcessed(true);
                 status.setAnnoDocs(status.getAnnoDocs() - 1);

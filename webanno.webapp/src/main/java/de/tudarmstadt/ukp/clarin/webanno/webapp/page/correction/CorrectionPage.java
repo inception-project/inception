@@ -415,10 +415,10 @@ public class CorrectionPage
         gotoPageTextField = (NumberTextField<Integer>) new NumberTextField<Integer>("gotoPageText",
                 new Model<Integer>(0));
         Form<Void> gotoPageTextFieldForm = new Form<Void>("gotoPageTextFieldForm");
-        gotoPageTextFieldForm.add(new AjaxFormValidatingBehavior(gotoPageTextFieldForm, "onsubmit") { 
+        gotoPageTextFieldForm.add(new AjaxFormValidatingBehavior(gotoPageTextFieldForm, "onsubmit") {
 			private static final long serialVersionUID = -4549805321484461545L;
-			@Override 
-            protected void onSubmit(AjaxRequestTarget aTarget) { 
+			@Override
+            protected void onSubmit(AjaxRequestTarget aTarget) {
 				 if (gotoPageAddress == 0) {
 	                    aTarget.appendJavaScript("alert('The sentence number entered is not valid')");
 	                    return;
@@ -458,16 +458,16 @@ public class CorrectionPage
 	                catch (BratAnnotationException e) {
 	                    error(e.getMessage());
 	                }
-            } 
-            @Override 
-            protected CharSequence getEventHandler() { 
-                AppendingStringBuffer handler = new AppendingStringBuffer(); 
-                handler.append(super.getEventHandler()); 
-                handler.append("; return false;"); 
-                return handler; 
-           } 
-        }); 
-        
+            }
+            @Override
+            protected CharSequence getEventHandler() {
+                AppendingStringBuffer handler = new AppendingStringBuffer();
+                handler.append(super.getEventHandler());
+                handler.append("; return false;");
+                return handler;
+           }
+        });
+
         gotoPageTextField.setType(Integer.class);
         gotoPageTextField.setMinimum(1);
         gotoPageTextField.setDefaultModelObject(1);
@@ -1161,7 +1161,7 @@ public class CorrectionPage
         JCas mergeJCas = null;
  		try {
  			mergeJCas = repository
- 			            .getCurationDocumentContent(bratAnnotatorModel
+ 			            .getCorrectionDocumentContent(bratAnnotatorModel
  			                    .getDocument());
  		} catch (UIMAException e) {
  			error(e.getMessage());

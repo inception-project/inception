@@ -108,6 +108,9 @@ public class WebannoCustomTsvReader
 
         while (lineIterator.hasNext()) {
             String line = lineIterator.next().trim();
+            if (line.trim().equals("") && sentenceStart == tokenStart) {
+                continue;
+            }
             if (line.trim().equals("")) {
                 text.replace(tokenStart - 1, tokenStart, "");
                 tokenStart = tokenStart - 1;
@@ -118,15 +121,26 @@ public class WebannoCustomTsvReader
                 text.append("\n");
                 continue;
             }
+            // sentence
             if (line.startsWith("#text=")) {
                 continue;
             }
             if (line.startsWith("#id=")) {
                 continue;// it is a comment line
             }
-
             if (line.startsWith("#")) {
                 columns = getLayerAndFeature(aJcas, columns, spanLayers, relationayers, line);
+                continue;
+            }
+            // some times, the sentence in #text= might have a new line which break this reader,
+            // so skip such lines
+            if(!Character.isDigit(line.split(" ")[0].charAt(0))){
+                continue;
+            }
+
+            // If we are still unulucky, the line starts with a number from the sentence but not
+            // a token number, check if it didn't in the format NUM-NUM
+            if(!Character.isDigit(line.split("-")[1].charAt(0))){
                 continue;
             }
 
@@ -152,12 +166,18 @@ public class WebannoCustomTsvReader
             tokenStart = tokenStart + tokenColumn.length() + 1;
             text.append(tokenColumn + " ");
         }
+        if (tokenStart > sentenceStart) {
+            Sentence sentence = new Sentence(aJcas, sentenceStart, tokenStart);
+            sentence.addToIndexes();
+            text.append("\n");
+        }
 
         createRelationLayer(aJcas, relationayers, tokenAnnotations, relationTargets);
     }
 
     private int getLayerAndFeature(JCas aJcas, int columns, Map<Type, Set<Feature>> spanLayers,
-            Map<Type, Type> relationayers, String line) throws IOException
+            Map<Type, Type> relationayers, String line)
+        throws IOException
     {
         StringTokenizer headerTk = new StringTokenizer(line, "#");
         while (headerTk.hasMoreTokens()) {
@@ -169,16 +189,16 @@ public class WebannoCustomTsvReader
 
             Iterator<Type> types = aJcas.getTypeSystem().getTypeIterator();
             boolean layerExists = false;
-            while(types.hasNext()){
+            while (types.hasNext()) {
 
-                if(types.next().getName().equals(layerName)){
+                if (types.next().getName().equals(layerName)) {
                     layerExists = true;
                     break;
                 }
             }
-            if(!layerExists){
+            if (!layerExists) {
                 throw new IOException(fileName + " This is not a valid TSV File. The layer "
-                        + layerName +" is not created in the project.");
+                        + layerName + " is not created in the project.");
             }
             Type layer = CasUtil.getType(aJcas.getCas(), layerName);
 
@@ -191,9 +211,9 @@ public class WebannoCustomTsvReader
                     continue;
                 }
                 Feature feature = layer.getFeatureByBaseName(ft);
-                if(feature == null){
+                if (feature == null) {
                     throw new IOException(fileName + " This is not a valid TSV File. The feature "
-                            + ft +" is not created for the layer "+ layerName);
+                            + ft + " is not created for the layer " + layerName);
                 }
                 features.add(feature);
                 columns++;
@@ -225,7 +245,7 @@ public class WebannoCustomTsvReader
             for (String dependnetId : tokenIdMaps.keySet()) {
                 int i = 0;
                 for (String governorId : tokenIdMaps.get(dependnetId)) {
-                    
+
                     AnnotationFS relationAnno = relationAnnos.get(dependnetId).get(i);
                     AnnotationFS dependentAnno = tokenAnnos.get(dependnetId).get(0);
                     AnnotationFS governorAnno = tokenAnnos.get(governorId).get(0);
@@ -284,13 +304,14 @@ public class WebannoCustomTsvReader
                     relationTargets = relationTargetNumbers.split("\\|");
                 }
                 for (String annotation : multipleAnnotations.split("\\|")) {
-                	// If annotation is not on multpile spans
-                	if(!(annotation.startsWith("B-")||annotation.startsWith("I-")||annotation.startsWith("O-") )&& !annotation.equals("_")){
-                		AnnotationFS newAnnotation = aJcas.getCas().createAnnotation(layer, aTokenStart,
-                                  aTokenStart + aToken.length());
+                    // If annotation is not on multpile spans
+                    if (!(annotation.startsWith("B-") || annotation.startsWith("I-") || annotation
+                            .startsWith("O-")) && !(annotation.equals("_")||annotation.equals("O"))) {
+                        AnnotationFS newAnnotation = aJcas.getCas().createAnnotation(layer,
+                                aTokenStart, aTokenStart + aToken.length());
                         newAnnotation.setFeatureValueFromString(feature, annotation);
                         aJcas.addFsToIndexes(newAnnotation);
-                        
+
                         if (aRelationayers.containsKey(layer)) {
                             Map<String, List<String>> targets = aRelationTargets.get(layer);
                             if (targets == null) {
@@ -315,20 +336,20 @@ public class WebannoCustomTsvReader
 
                         Map<String, List<AnnotationFS>> tokenAnnotations = aTokenAnnotations
                                 .get(layer);
-                            if (tokenAnnotations == null) {
-                                tokenAnnotations = new HashMap<String, List<AnnotationFS>>();
-                            }
-                            List<AnnotationFS> relAnnos = tokenAnnotations.get(aTokenNumberColumn);
-                            if (relAnnos == null) {
-                                relAnnos = new ArrayList<AnnotationFS>();
-                            }
-                            relAnnos.add(newAnnotation);
-                            tokenAnnotations.put(aTokenNumberColumn, relAnnos);
-                            aTokenAnnotations.put(layer, tokenAnnotations);
-                	}
+                        if (tokenAnnotations == null) {
+                            tokenAnnotations = new HashMap<String, List<AnnotationFS>>();
+                        }
+                        List<AnnotationFS> relAnnos = tokenAnnotations.get(aTokenNumberColumn);
+                        if (relAnnos == null) {
+                            relAnnos = new ArrayList<AnnotationFS>();
+                        }
+                        relAnnos.add(newAnnotation);
+                        tokenAnnotations.put(aTokenNumberColumn, relAnnos);
+                        aTokenAnnotations.put(layer, tokenAnnotations);
+                    }
                     // for annotations such as B_LOC|B-_|I_PER and the like
                     // O-_ is a position marker
-                	else if (annotation.equals("O-_") || annotation.equals("B-_")
+                    else if (annotation.equals("O-_") || annotation.equals("B-_")
                             || annotation.equals("I-_")) {
                         index++;
                     }
@@ -431,11 +452,11 @@ public class WebannoCustomTsvReader
                 lastIndex = index - 1;
             }
             // tokens annotated as B-X B-X, no I means it is end by itself
-            for(int i=1;i<=lastIndex;i++){
-            if (aBeginEndAnno.get(layer) != null && aBeginEndAnno.get(layer).get(i) != null
-                    && aBeginEndAnno.get(layer).get(i).equals("B-")) {
-                aBeginEndAnno.get(layer).put(i, "E-");
-            }
+            for (int i = 1; i <= lastIndex; i++) {
+                if (aBeginEndAnno.get(layer) != null && aBeginEndAnno.get(layer).get(i) != null
+                        && aBeginEndAnno.get(layer).get(i).equals("B-")) {
+                    aBeginEndAnno.get(layer).put(i, "E-");
+                }
             }
         }
     }
@@ -443,10 +464,13 @@ public class WebannoCustomTsvReader
     public static final String PARAM_ENCODING = ComponentParameters.PARAM_SOURCE_ENCODING;
     @ConfigurationParameter(name = PARAM_ENCODING, mandatory = true, defaultValue = "UTF-8")
     private String encoding;
-    
-/*    public static final String MULTIPLE_SPAN_ANNOTATIONS = "multipleSpans";
-    @ConfigurationParameter(name = MULTIPLE_SPAN_ANNOTATIONS, mandatory = true, defaultValue = {})
-    private List<String>multipleSpans;*/
+
+    /*
+     * public static final String MULTIPLE_SPAN_ANNOTATIONS = "multipleSpans";
+     *
+     * @ConfigurationParameter(name = MULTIPLE_SPAN_ANNOTATIONS, mandatory = true, defaultValue =
+     * {}) private List<String>multipleSpans;
+     */
 
     @Override
     public void getNext(JCas aJCas)

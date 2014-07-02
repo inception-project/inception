@@ -24,9 +24,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.REL
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -101,7 +101,7 @@ public class BratAjaxConfiguration
             AnnotationService aAnnotationService, boolean aStaticColor)
     {
         // Scan through the layers once to remember which layers attach to which layers
-        Map<AnnotationLayer, AnnotationLayer> attachingLayers = new HashMap<AnnotationLayer, AnnotationLayer>();
+        Map<AnnotationLayer, AnnotationLayer> attachingLayers = new LinkedHashMap<AnnotationLayer, AnnotationLayer>();
         for (AnnotationLayer layer : aLayers) {
             if (layer.getType().equals(CHAIN_TYPE)) {
                 attachingLayers.put(layer, layer);
@@ -113,7 +113,7 @@ public class BratAjaxConfiguration
         }
 
         // Now build the actual configuration
-        Set<EntityType> entityTypes = new HashSet<EntityType>();
+        Set<EntityType> entityTypes = new LinkedHashSet<EntityType>();
         int i = 0;
         for (AnnotationLayer layer : aLayers) {
             i = configCollection(aAnnotationService, aStaticColor, entityTypes, i, layer,

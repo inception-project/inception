@@ -474,8 +474,7 @@ public class SpanAdapter
         return annotations;
     }
 
-    public Map<Integer, String> getMultipleAnnotation(Sentence sentence,
-            AnnotationFeature aFeature)
+    public Map<Integer, String> getMultipleAnnotation(Sentence sentence, AnnotationFeature aFeature)
         throws CASException
     {
         Map<Integer, String> multAnno = new HashMap<Integer, String>();
@@ -575,17 +574,15 @@ public class SpanAdapter
             }
         }
         else {
+            Type theType = CasUtil.getType(aJcas.getCas(), attachType);
+            Feature attachFeature = theType.getFeatureByBaseName(attachFeatureName);
             for (Token token : select(aJcas, Token.class)) {
-
                 AnnotationFS newAnnotation = aJcas.getCas().createAnnotation(type,
                         token.getBegin(), token.getEnd());
                 newAnnotation.setFeatureValueFromString(feature, aLabelValues.get(i));
                 i++;
                 if (attachFeatureName != null) {
-                    Type theType = CasUtil.getType(aJcas.getCas(), attachType);
-                    Feature attachFeature = theType.getFeatureByBaseName(attachFeatureName);
-                    CasUtil.selectCovered(aJcas.getCas(), theType, token.getBegin(), token.getEnd())
-                            .get(0).setFeatureValue(attachFeature, newAnnotation);
+                    token.setFeatureValue(attachFeature, newAnnotation);
                 }
                 aJcas.getCas().addFsToIndexes(newAnnotation);
             }
@@ -600,7 +597,7 @@ public class SpanAdapter
     }
 
     @Override
-    public void updateFeature(JCas aJcas, AnnotationFeature aFeature,int aAddress, String aValue)
+    public void updateFeature(JCas aJcas, AnnotationFeature aFeature, int aAddress, String aValue)
     {
         Type type = CasUtil.getType(aJcas.getCas(), annotationTypeName);
         Feature feature = type.getFeatureByBaseName(aFeature.getName());
