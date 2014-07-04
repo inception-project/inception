@@ -612,7 +612,7 @@ public class SpanAnnotationModalWindowPage
     }
 
     public SpanAnnotationModalWindowPage(ModalWindow modalWindow,
-            BratAnnotatorModel aBratAnnotatorModel, int selectedSpanId)
+            BratAnnotatorModel aBratAnnotatorModel, int selectedSpanId, String aType)
     {
         this.selectedSpanId = selectedSpanId;
         this.bratAnnotatorModel = aBratAnnotatorModel;
@@ -644,6 +644,7 @@ public class SpanAnnotationModalWindowPage
         }
 
         this.selectedLayer = annotationService.getLayer(type, bratAnnotatorModel.getProject());
+        layersModel = new Model<AnnotationLayer>(selectedLayer);
 
         for (AnnotationFeature feature : annotationService.listAnnotationFeature(selectedLayer)) {
             if (feature.getName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
@@ -656,7 +657,7 @@ public class SpanAnnotationModalWindowPage
             }
 
         }
-        layersModel = new Model<AnnotationLayer>(selectedLayer);
+        this.selectedSpanType = aType.replaceAll("[0-9]+/*_", "");;
 
         this.annotationDialogForm = new AnnotationDialogForm("annotationDialogForm", modalWindow);
         add(annotationDialogForm);

@@ -562,7 +562,7 @@ public class ArcAnnotationModalWindowPanel
 
     public ArcAnnotationModalWindowPanel(String aId, final ModalWindow modalWindow,
             BratAnnotatorModel aBratAnnotatorModel, int aOriginSpanId, int aTargetSpanId,
-            int selectedArcId)
+            int selectedArcId, String aType)
     {
         super(aId);
         this.selectedArcId = selectedArcId;
@@ -581,7 +581,7 @@ public class ArcAnnotationModalWindowPanel
             error(e.getMessage());
         }
         AnnotationFS annoFs = BratAjaxCasUtil.selectByAddr(jCas, selectedArcId);
-        this.selectedArcType = annoFs.getCoveredText();
+        this.selectedArcType = aType.replaceAll("[0-9]+/*_", "");;
         this.originSpanId = aOriginSpanId;
         this.targetSpanId = aTargetSpanId;
         String type = annoFs.getType().getName();

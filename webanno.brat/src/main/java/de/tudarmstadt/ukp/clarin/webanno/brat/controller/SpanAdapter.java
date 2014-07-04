@@ -354,6 +354,11 @@ public class SpanAdapter
                     duplicate = true;
                     continue;
                 }
+                if(allowStacking && fs.getFeatureValueAsString(feature).equals(aValue)){
+                    fs.setFeatureValueFromString(feature, aValue);
+                    duplicate = true;
+                    continue;
+                }
                 if (!allowStacking) {
                     fs.setFeatureValueFromString(feature, aValue);
                     duplicate = true;

@@ -108,6 +108,7 @@ public class WebannoCustomTsvReader
 
         while (lineIterator.hasNext()) {
             String line = lineIterator.next().trim();
+            System.out.println(line);
             if (line.trim().equals("") && sentenceStart == tokenStart) {
                 continue;
             }
@@ -138,7 +139,7 @@ public class WebannoCustomTsvReader
                 continue;
             }
 
-            // If we are still unulucky, the line starts with a number from the sentence but not
+            // If we are still unlucky, the line starts with a number from the sentence but not
             // a token number, check if it didn't in the format NUM-NUM
             if(!Character.isDigit(line.split("-")[1].charAt(0))){
                 continue;

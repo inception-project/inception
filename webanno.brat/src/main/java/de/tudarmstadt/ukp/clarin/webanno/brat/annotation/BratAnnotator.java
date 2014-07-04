@@ -85,7 +85,7 @@ public class BratAnnotator
     private static final String PARAM_ARC_TYPE = "arcType";
     private static final String PARAM_ID = "id";
     private static final String PARAM_OFFSETS = "offsets";
-    private static final String PARAM_SPAN_TEXT = "spanText";
+    private static final String PARAM_SPAN_TYPE = "type";
     private static final String PARAM_TARGET_SPAN_ID = "targetSpanId";
     private static final String PARAM_TARGET_TYPE = "targetType";
     private static final String PARAM_ORIGIN_SPAN_ID = "originSpanId";
@@ -108,7 +108,7 @@ public class BratAnnotator
 
     private String collection = "";
 
-    private String selectedSpan, offsets, selectedArcType;
+    private String selectedSpanType, offsets, selectedArcType;
     private Integer selectedSpanID, selectedArcId;
 
     private Integer originSpanId, targetSpanId;
@@ -248,7 +248,7 @@ public class BratAnnotator
                             endOffset = fs.getEnd();
                         }
 
-                        selectedSpan = request.getParameterValue(PARAM_SPAN_TEXT).toString();
+                        selectedSpanType = request.getParameterValue(PARAM_SPAN_TYPE).toString();
                         /*
                          * selectedSpan = BratAjaxCasUtil .getSelectedText(jCas, beginOffset,
                          * endOffset);
@@ -366,13 +366,13 @@ public class BratAnnotator
                 if (selectedSpanID == -1) {// new annotation
                     openAnnotationDialog.setTitle("New Span Annotation");
                     return new SpanAnnotationModalWindowPage(openAnnotationDialog,
-                            getModelObject(), selectedSpan, aBeginOffset, aEndOffset);
+                            getModelObject(), selectedSpanType, aBeginOffset, aEndOffset);
                 }
                 else {
                     openAnnotationDialog.setTitle("Edit Span Annotation");
 
                     return new SpanAnnotationModalWindowPage(openAnnotationDialog,
-                            getModelObject(), selectedSpanID);
+                            getModelObject(), selectedSpanID, selectedSpanType);
                 }
             }
 
@@ -450,7 +450,7 @@ public class BratAnnotator
             openAnnotationDialog.setTitle("Edit Arc Annotation");
             openAnnotationDialog.setContent(new ArcAnnotationModalWindowPanel(openAnnotationDialog
                     .getContentId(), openAnnotationDialog, getModelObject(), originSpanId,
-                    targetSpanId, selectedArcId));
+                    targetSpanId, selectedArcId, selectedArcType));
         }
 
         openAnnotationDialog.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()

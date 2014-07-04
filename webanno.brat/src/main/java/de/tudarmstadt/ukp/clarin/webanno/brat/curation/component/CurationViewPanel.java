@@ -71,9 +71,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 /**
  * A {@link MarkupContainer} for either curation users' sentence annotation (for the lower panel) or
  * the automated annotations
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 public class CurationViewPanel
     extends WebMarkupContainer
@@ -283,6 +283,11 @@ public class CurationViewPanel
 
         StringTokenizer st = new StringTokenizer(type, "|");
         SpanAdapter adapter = (SpanAdapter) getAdapter(layer, annotationService);
+
+        adapter.setLockToTokenOffsets(layer.isLockToTokenOffset());
+        adapter.setAllowStacking(layer.isAllowSTacking());
+        adapter.setAllowMultipleToken(layer.isMultipleTokens());
+        adapter.setCrossMultipleSentence(layer.isCrossSentence());
         for (AnnotationFeature feature : annotationService.listAnnotationFeature(layer)) {
             adapter.add(aMergeJCas, fsClicked.getBegin(), fsClicked.getEnd(), feature, st
                     .nextToken().trim());
@@ -376,7 +381,8 @@ public class CurationViewPanel
 
             AnnotationLayer layer = annotationService.getLayer(layerId);
             ArcAdapter adapter = (ArcAdapter) getAdapter(layer, annotationService);
-
+            adapter.setAllowStacking(layer.isAllowSTacking());
+            adapter.setCrossMultipleSentence(layer.isCrossSentence());
             StringTokenizer st = new StringTokenizer(arcType.substring(arcType.indexOf("_") + 1),
                     "|");
             for (AnnotationFeature feature : annotationService.listAnnotationFeature(layer)) {
