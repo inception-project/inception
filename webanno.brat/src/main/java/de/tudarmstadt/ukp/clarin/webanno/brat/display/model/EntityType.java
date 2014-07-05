@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.display.model;
 
 import java.awt.Color;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,21 +60,32 @@ public class EntityType
     }
 
     // allow similar colors per layer
-    public static Map<String, Map<String, Color>> typeToColor =new HashMap<String, Map<String,Color>>();
+    // FIXME we must not have such global states (public static)
+    private static Map<String, Map<String, Color>> typeToColor = new HashMap<String, Map<String, Color>>();
 
+    public EntityType(String aName, String aType, String aFgColor,
+            String aBgColor, String aBorderColor,  boolean aStaticColor)
+    {
+        this(aName /* name */, aType /* type */, true /* unused */, "" /* hotkey */,
+                aFgColor /* fgColor */, aBgColor /* bgColor */, aBorderColor /* borderColor */,
+                Arrays.asList(aName) /* labels */, null /* children */, null /* attributes */, null /* arcs */,
+                aStaticColor);
+    }
+    
     public EntityType(String aName, String aType, boolean aUnused, String aHotkey, String aFgColor,
             String aBgColor, String aBorderColor, List<String> aLabels, List<EntityType> aChildren,
             List<String> aAttributes, List<RelationType> aArcs, boolean aStaticColor)
     {
         super();
+        
         if (!aStaticColor) {
-            String prefix = aType.contains("_")?aType.substring(0,aType.indexOf("_")):aType;
+            String prefix = aType.contains("_") ? aType.substring(0, aType.indexOf("_")) : aType;
             String colorType = aName;
             Color goodBgColor;
-            Map<String,Color> nameToColor = typeToColor.get(prefix);
-            if(nameToColor == null){
+            Map<String, Color> nameToColor = typeToColor.get(prefix);
+            if (nameToColor == null) {
                 nameToColor = new HashMap<String, Color>();
-                typeToColor.put(prefix,nameToColor);
+                typeToColor.put(prefix, nameToColor);
             }
 
             if (nameToColor.containsKey(colorType)) {
@@ -84,19 +96,18 @@ public class EntityType
                 nameToColor.put(colorType, goodBgColor);
             }
 
-            aBgColor = TagColor.encodeRGB(goodBgColor);
-            aFgColor = "black";
+            fgColor = TagColor.encodeRGB(goodBgColor);
+            bgColor = "black";
         }
         else {
             fgColor = aFgColor;
             bgColor = aBgColor;
         }
+        
         name = aName;
         type = aType;
         unused = aUnused;
         hotkey = aHotkey;
-        fgColor = aFgColor;
-        bgColor = aBgColor;
         borderColor = aBorderColor;
         labels = aLabels;
         children = aChildren;

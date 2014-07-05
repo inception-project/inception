@@ -169,7 +169,7 @@ public class ArcAdapter
             List<Argument> argumentList = getArgument(governorFs, dependentFs);
 
             String bratLabelText = getBratLabelText(this, fs, aFeatures);
-            String bratTypeName = getBratTypeName(this, fs, aFeatures);
+            String bratTypeName = getBratTypeName2(this, fs, aFeatures);
             aResponse.addRelation(new Relation(((FeatureStructureImpl) fs).getAddress(),
                     bratTypeName, argumentList, bratLabelText.toString()));
         }
@@ -460,35 +460,35 @@ public class ArcAdapter
     }
 
     // FIXME this is the version that treats each tag as a separate type in brat - should be removed
-    public static String getBratTypeName(TypeAdapter aAdapter, AnnotationFS aFs,
-            List<AnnotationFeature> aFeatures)
-    {
-        String annotations = "";
-        for (AnnotationFeature feature : aFeatures) {
-            if (!(feature.isEnabled() || feature.isEnabled())) {
-                continue;
-            }
-            Feature labelFeature = aFs.getType().getFeatureByBaseName(feature.getName());
-            if (annotations.equals("")) {
-                annotations = aAdapter.getTypeId()
-                        + "_"
-                        + (aFs.getFeatureValueAsString(labelFeature) == null ? " " : aFs
-                                .getFeatureValueAsString(labelFeature));
-            }
-            else {
-                annotations = annotations
-                        + " | "
-                        + (aFs.getFeatureValueAsString(labelFeature) == null ? " " : aFs
-                                .getFeatureValueAsString(labelFeature));
-            }
-        }
-        return annotations;
-    }
+//    public static String getBratTypeName(TypeAdapter aAdapter, AnnotationFS aFs,
+//            List<AnnotationFeature> aFeatures)
+//    {
+//        String annotations = "";
+//        for (AnnotationFeature feature : aFeatures) {
+//            if (!(feature.isEnabled() || feature.isEnabled())) {
+//                continue;
+//            }
+//            Feature labelFeature = aFs.getType().getFeatureByBaseName(feature.getName());
+//            if (annotations.equals("")) {
+//                annotations = aAdapter.getTypeId()
+//                        + "_"
+//                        + (aFs.getFeatureValueAsString(labelFeature) == null ? " " : aFs
+//                                .getFeatureValueAsString(labelFeature));
+//            }
+//            else {
+//                annotations = annotations
+//                        + " | "
+//                        + (aFs.getFeatureValueAsString(labelFeature) == null ? " " : aFs
+//                                .getFeatureValueAsString(labelFeature));
+//            }
+//        }
+//        return annotations;
+//    }
 
     // FIXME this is the method that should replace the method above. Every layer is treated as
     // as a type in brat
     // FIXME this method should be moved to a common base class for adapters or to a utility class
-    public static String getBratType2(TypeAdapter aAdapter, AnnotationFS aFs,
+    public static String getBratTypeName2(TypeAdapter aAdapter, AnnotationFS aFs,
             List<AnnotationFeature> aFeatures)
     {
         return aAdapter.getTypeId() + "_" + aAdapter.getAnnotationTypeName();
@@ -534,6 +534,5 @@ public class ArcAdapter
         Feature feature = type.getFeatureByBaseName(aFeature.getName());
         FeatureStructure fs = BratAjaxCasUtil.selectByAddr(aJcas, FeatureStructure.class, aAddress);
         fs.setFeatureValueFromString(feature, aValue);
-
     }
 }

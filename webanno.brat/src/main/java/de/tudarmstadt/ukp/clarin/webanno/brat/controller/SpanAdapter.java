@@ -206,7 +206,7 @@ public class SpanAdapter
         for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, firstSentence.getBegin(),
                 lastSentenceInPage.getEnd())) {
 
-            String bratTypeName = ArcAdapter.getBratTypeName(this, fs, aFeatures);
+            String bratTypeName = ArcAdapter.getBratTypeName2(this, fs, aFeatures);
             String bratLabelText = ArcAdapter.getBratLabelText(this, fs, aFeatures);
             Sentence beginSent = null, endSent = null;
             // check if annotation spans multiple sentence
