@@ -153,7 +153,7 @@ public class CurationBuilder
                 annotationOptions = CasDiff.doDiff(entryTypes, jCases, begin, end);
             }
             catch (Exception e) {
-                throw new CasDiffException(e.getMessage());
+                throw new CasDiffException(e.getMessage(), e);
             }
 
             Boolean hasDiff = false;

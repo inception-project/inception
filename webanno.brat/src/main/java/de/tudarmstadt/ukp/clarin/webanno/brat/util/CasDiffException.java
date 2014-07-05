@@ -32,4 +32,19 @@ public class CasDiffException
         super(message);
     }
 
+    public CasDiffException()
+    {
+        super();
+    }
+
+    public CasDiffException(String aMessage, Throwable aCause)
+    {
+        super(aMessage, aCause);
+    }
+
+    public CasDiffException(Throwable aCause)
+    {
+        super(aCause);
+    }
+    
 }
