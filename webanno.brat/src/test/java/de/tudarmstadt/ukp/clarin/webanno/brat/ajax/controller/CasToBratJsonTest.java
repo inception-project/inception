@@ -22,7 +22,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
 
 import javax.annotation.Resource;
@@ -32,7 +31,6 @@ import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.CollectionReaderFactory;
@@ -57,8 +55,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.tcf.TcfReader;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import eu.clarin.weblicht.wlfxb.io.WLFormatException;
-import eu.clarin.weblicht.wlfxb.tc.xb.TextCorpusLayerTag;
 
 /**
  * Test case for generating Brat Json data for getcollection and getcollection actions
@@ -153,24 +149,14 @@ public class CasToBratJsonTest
 
     /**
      * generate brat JSON data for the document
-     *
-     * @throws IOException
-     * @throws WLFormatException
-     * @throws UIMAException
      */
     @Test
     public void testGenerateBratJsonGetDocument()
-        throws IOException, WLFormatException, UIMAException
-
+        throws Exception
     {
         MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
         String jsonFilePath = "target/test-output/output_cas_to_json_document.json";
 
-        EnumSet<TextCorpusLayerTag> layersToRead = EnumSet.of(TextCorpusLayerTag.TEXT,
-                TextCorpusLayerTag.TOKENS, TextCorpusLayerTag.PARSING_DEPENDENCY,
-                TextCorpusLayerTag.SENTENCES, TextCorpusLayerTag.POSTAGS,
-                TextCorpusLayerTag.LEMMAS, TextCorpusLayerTag.NAMED_ENTITIES,
-                TextCorpusLayerTag.REFERENCES);
         InputStream is = null;
         JCas jCas = null;
         try {
@@ -179,8 +165,8 @@ public class CasToBratJsonTest
             String path = "src/test/resources/";
             String file = "tcf04-karin-wl.xml";
             CAS cas = JCasFactory.createJCas().getCas();
-            CollectionReader reader = CollectionReaderFactory.createCollectionReader(
-                    TcfReader.class, TcfReader.PARAM_PATH, path, TcfReader.PARAM_PATTERNS,
+            CollectionReader reader = CollectionReaderFactory.createReader(
+                    TcfReader.class, TcfReader.PARAM_SOURCE_LOCATION, path, TcfReader.PARAM_PATTERNS,
                     new String[] { "[+]" + file });
             if (!reader.hasNext()) {
                 throw new FileNotFoundException("Annotation file [" + file + "] not found in ["

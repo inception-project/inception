@@ -25,17 +25,109 @@
 	<artifactId>de.tudarmstadt.ukp.clarin.webanno.project</artifactId>
 	<packaging>jar</packaging>
 	<dependencies>
-
-
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>commons-logging</groupId>
+			<artifactId>commons-logging-api</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>commons-collections</groupId>
 			<artifactId>commons-collections</artifactId>
-			<version>3.2.1</version>
 		</dependency>
 
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.3.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpcore</artifactId>
+			<version>4.3.1</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.codehaus.jackson</groupId>
+			<artifactId>jackson-mapper-asl</artifactId>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.hibernate.javax.persistence</groupId>
+			<artifactId>hibernate-jpa-2.0-api</artifactId>
+		</dependency>
 
+		<dependency>
+			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+			<artifactId>de.tudarmstadt.ukp.clarin.webanno.api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+			<artifactId>de.tudarmstadt.ukp.clarin.webanno.model</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+			<artifactId>de.tudarmstadt.ukp.clarin.webanno.webapp.home</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+			<artifactId>de.tudarmstadt.ukp.clarin.webanno.automation</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+			<artifactId>de.tudarmstadt.ukp.clarin.webanno.brat</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+			<artifactId>de.tudarmstadt.ukp.clarin.webanno.api.dao</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+			<artifactId>de.tudarmstadt.ukp.clarin.webanno.support</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+			<artifactId>de.tudarmstadt.ukp.clarin.webanno.tcf</artifactId>
+		</dependency>
+
+		<!-- UIMA dependencies -->
+	
+		<dependency>
+			<groupId>org.apache.uima</groupId>
+			<artifactId>uimaj-core</artifactId>
+		</dependency>
+
+		<!-- DKPro Core dependencies -->
+		
+		<dependency>
+			<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+			<artifactId>de.tudarmstadt.ukp.dkpro.core.api.segmentation-asl</artifactId>
+		</dependency>
+
+		<!-- Spring dependencies -->
+
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-beans</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-web</artifactId>
+		</dependency>
 
 		<!-- SPRING SECURITY -->
+		
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-core</artifactId>
+		</dependency>
+
 		<!-- WICKET DEPENDENCIES -->
 		<dependency>
 			<groupId>org.apache.wicket</groupId>
@@ -47,47 +139,27 @@
 		</dependency>
 		<dependency>
 			<groupId>org.apache.wicket</groupId>
+			<artifactId>wicket-request</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.wicket</groupId>
+			<artifactId>wicket-auth-roles</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.wicket</groupId>
 			<artifactId>wicket-extensions</artifactId>
 		</dependency>
-
+		<dependency>
+			<groupId>org.wicketstuff</groupId>
+			<artifactId>wicketstuff-progressbar</artifactId>
+			<version>1.5.8.1</version>
+		</dependency>
 
 		<!-- JUNIT DEPENDENCY FOR TESTING -->
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
-		</dependency>
-
-
-
-
-
-
-		<dependency>
-			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>
-				de.tudarmstadt.ukp.clarin.webanno.model
-			</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>
-				de.tudarmstadt.ukp.clarin.webanno.webapp.home
-			</artifactId>
-			<version>2.0.0-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>
-				de.tudarmstadt.ukp.clarin.webanno.automation
-			</artifactId>
-			<version>2.0.0-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>
-				de.tudarmstadt.ukp.clarin.webanno.brat
-			</artifactId>
 		</dependency>
 	</dependencies>
 	<build>

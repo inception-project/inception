@@ -25,70 +25,45 @@
 	<artifactId>de.tudarmstadt.ukp.clarin.webanno.support</artifactId>
 	<dependencies>
 		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 			<artifactId>de.tudarmstadt.ukp.clarin.webanno.model</artifactId>
 		</dependency>
+
+		<!-- Spring dependencies -->
+		
 		<dependency>
-			<groupId>org.apache.uima</groupId>
-			<artifactId>uimaj-core</artifactId>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-core</artifactId>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-beans</artifactId>
+		</dependency>
+		
+		<!-- Wicket dependencies -->
+		
+		<dependency>
+			<groupId>org.apache.wicket</groupId>
+			<artifactId>wicket-core</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.wicket</groupId>
-			<artifactId>wicket-spring</artifactId>
+			<artifactId>wicket-util</artifactId>
+		</dependency>
+		
+		<!-- Hibernate dependencies -->
+		
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-core</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.uima</groupId>
-			<artifactId>uimafit-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>commons-collections</groupId>
-			<artifactId>commons-collections</artifactId>
-			<version>3.2.1</version>
-		</dependency>
-
-		<!-- LOGGING DEPENDENCIES - LOG4J -->
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-log4j12</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>log4j</groupId>
-			<artifactId>log4j</artifactId>
-		</dependency>
-
-
-		<dependency>
-			<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-			<artifactId>
-				de.tudarmstadt.ukp.dkpro.core.io.bincas-asl
-			</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>org.jfree</groupId>
-			<artifactId>jfreechart</artifactId>
-			<version>1.0.14</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.apache.wicket</groupId>
-			<artifactId>wicket-extensions</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>de.tudarmstadt.ukp.clarin.webanno.api</artifactId>
-		</dependency>
-
-
-		<dependency>
-			<groupId>de.tudarmstadt.ukp.dkpro.statistics</groupId>
-			<artifactId>de.tudarmstadt.ukp.dkpro.statistics</artifactId>
-			<version>1.0.0</version>
+			<groupId>org.hibernate.javax.persistence</groupId>
+			<artifactId>hibernate-jpa-2.0-api</artifactId>
 		</dependency>
 	</dependencies>
 </project>

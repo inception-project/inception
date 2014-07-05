@@ -25,10 +25,22 @@
 	<artifactId>de.tudarmstadt.ukp.clarin.webanno.automation</artifactId>
 	<packaging>jar</packaging>
 	<dependencies>
-
+		<dependency>
+			<groupId>commons-logging</groupId>
+			<artifactId>commons-logging-api</artifactId>
+		</dependency>
+	
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>de.tudarmstadt.ukp.clarin.webanno.tcf</artifactId>
+			<artifactId>de.tudarmstadt.ukp.clarin.webanno.model</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+			<artifactId>de.tudarmstadt.ukp.clarin.webanno.brat</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+			<artifactId>de.tudarmstadt.ukp.clarin.webanno.support</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
@@ -36,127 +48,23 @@
 		</dependency>
 
 		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>javax.servlet-api</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>org.hibernate.javax.persistence</groupId>
 			<artifactId>hibernate-jpa-2.0-api</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>commons-collections</groupId>
 			<artifactId>commons-collections</artifactId>
-			<version>3.2.1</version>
 		</dependency>
 		<dependency>
-			<groupId>commons-beanutils</groupId>
-			<artifactId>commons-beanutils</artifactId>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
 		</dependency>
 
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-web</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-webmvc</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-orm</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-oxm</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-jdbc</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-aop</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-expression</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-
-
-		<!-- SPRING SECURITY -->
-		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-config</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-web</artifactId>
-		</dependency>
-		<!-- WICKET DEPENDENCIES -->
-		<dependency>
-			<groupId>org.apache.wicket</groupId>
-			<artifactId>wicket-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.wicket</groupId>
-			<artifactId>wicket-spring</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.wicket</groupId>
-			<artifactId>wicket-auth-roles</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.wicket</groupId>
-			<artifactId>wicket-extensions</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>org.odlabs.wiquery</groupId>
-			<artifactId>wiquery-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.odlabs.wiquery</groupId>
-			<artifactId>wiquery-jquery-ui</artifactId>
-		</dependency>
-
-		<!-- JUNIT DEPENDENCY FOR TESTING -->
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-			<artifactId>
-				de.tudarmstadt.ukp.dkpro.core.io.text-asl
-			</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-			<artifactId>
-				de.tudarmstadt.ukp.dkpro.core.tokit-asl
-			</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>com.googlecode.wicket-jquery-ui</groupId>
-			<artifactId>jquery-ui-kendo</artifactId>
-			<version>1.4.1</version>
-		</dependency>
+		<!-- Mira dependencies -->
 
 		<dependency>
 			<groupId>de.tu-darmstadt.langtech.mira</groupId>
@@ -175,25 +83,61 @@
 			<version>2.1.0</version>
 		</dependency>
 
+		<!-- UIMA dependencies -->
+		
+		<dependency>
+			<groupId>org.apache.uima</groupId>
+			<artifactId>uimaj-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.uima</groupId>
+			<artifactId>uimafit-core</artifactId>
+		</dependency>
+		
+		<!-- DKPro Core dependencies -->
+		
+		<dependency>
+			<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+			<artifactId>de.tudarmstadt.ukp.dkpro.core.api.segmentation-asl</artifactId>
+		</dependency>
 
+		<!-- Spring dependencies -->
+		
 		<dependency>
-			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>
-				de.tudarmstadt.ukp.clarin.webanno.model
-			</artifactId>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-tx</artifactId>
+		</dependency>
+
+		<!-- Spring security dependencies -->
+		
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-core</artifactId>
+		</dependency>
+		
+		<!-- WICKET DEPENDENCIES -->
+		<dependency>
+			<groupId>org.apache.wicket</groupId>
+			<artifactId>wicket-core</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>
-				de.tudarmstadt.ukp.clarin.webanno.brat
-			</artifactId>
+			<groupId>org.apache.wicket</groupId>
+			<artifactId>wicket-spring</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>
-				de.tudarmstadt.ukp.clarin.webanno.support
-			</artifactId>
-			<version>2.0.0-SNAPSHOT</version>
+			<groupId>org.apache.wicket</groupId>
+			<artifactId>wicket-extensions</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.googlecode.wicket-jquery-ui</groupId>
+			<artifactId>jquery-ui-core</artifactId>
+		</dependency>
+
+		<!-- JUNIT DEPENDENCY FOR TESTING -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 	<build>

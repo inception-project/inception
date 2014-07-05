@@ -25,87 +25,36 @@
 	<artifactId>de.tudarmstadt.ukp.clarin.webanno.webapp.home</artifactId>
 	<packaging>jar</packaging>
 	<dependencies>
-
 		<dependency>
-			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>de.tudarmstadt.ukp.clarin.webanno.tcf</artifactId>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>commons-logging</groupId>
+			<artifactId>commons-logging-api</artifactId>
+		</dependency>
+
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 			<artifactId>de.tudarmstadt.ukp.clarin.webanno.api</artifactId>
 		</dependency>
 
-		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>javax.servlet-api</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.hibernate.javax.persistence</groupId>
-			<artifactId>hibernate-jpa-2.0-api</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>commons-collections</groupId>
-			<artifactId>commons-collections</artifactId>
-			<version>3.2.1</version>
-		</dependency>
-		<dependency>
-			<groupId>commons-beanutils</groupId>
-			<artifactId>commons-beanutils</artifactId>
-		</dependency>
-
+		<!-- Spring dependencies -->
+		
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-core</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-web</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-webmvc</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-orm</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-oxm</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-jdbc</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-aop</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-expression</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-test</artifactId>
-			<scope>test</scope>
-		</dependency>
 
-
-		<!-- SPRING SECURITY -->
+		<!-- Spring security dependencies -->
+		
 		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-core</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-config</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-web</artifactId>
-		</dependency>
-		<!-- WICKET DEPENDENCIES -->
+		
+		<!-- Wicket dependencies -->
+		
 		<dependency>
 			<groupId>org.apache.wicket</groupId>
 			<artifactId>wicket-core</artifactId>
@@ -120,7 +69,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.apache.wicket</groupId>
-			<artifactId>wicket-extensions</artifactId>
+			<artifactId>wicket-request</artifactId>
 		</dependency>
 
 		<dependency>
@@ -137,74 +86,6 @@
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-			<artifactId>
-				de.tudarmstadt.ukp.dkpro.core.io.text-asl
-			</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-			<artifactId>
-				de.tudarmstadt.ukp.dkpro.core.tokit-asl
-			</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>com.googlecode.wicket-jquery-ui</groupId>
-			<artifactId>jquery-ui-kendo</artifactId>
-			<version>1.4.1</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.wicketstuff</groupId>
-			<artifactId>wicketstuff-progressbar-spring</artifactId>
-			<version>1.5.7</version>
-		</dependency>
-
-
-		<dependency>
-			<groupId>org.wicketstuff</groupId>
-			<artifactId>wicketstuff-input-events</artifactId>
-			<version>1.5.8.1</version>
-		</dependency>
-
-		<dependency>
-			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>
-				de.tudarmstadt.ukp.clarin.webanno.model
-			</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>
-				de.tudarmstadt.ukp.clarin.webanno.brat
-			</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>
-				de.tudarmstadt.ukp.clarin.webanno.api.dao
-			</artifactId>
-			<version>2.0.0-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>commons-httpclient</groupId>
-			<artifactId>commons-httpclient</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpmime</artifactId>
-			<version>4.3-beta1</version>
-		</dependency>
-		<dependency>
-			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>
-				de.tudarmstadt.ukp.clarin.webanno.support
-			</artifactId>
-			<version>2.0.0-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 	<build>

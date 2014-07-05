@@ -25,53 +25,120 @@
 	<artifactId>de.tudarmstadt.ukp.clarin.webanno.api.dao</artifactId>
 	<dependencies>
 		<dependency>
-			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>de.tudarmstadt.ukp.clarin.webanno.model</artifactId>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.uima</groupId>
-			<artifactId>uimaj-core</artifactId>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-core</artifactId>
-		</dependency>
+
 		<dependency>
 			<groupId>org.apache.wicket</groupId>
 			<artifactId>wicket-spring</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.apache.uima</groupId>
-			<artifactId>uimafit-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>commons-collections</groupId>
-			<artifactId>commons-collections</artifactId>
-			<version>3.2.1</version>
-		</dependency>
 
-		<!-- LOGGING DEPENDENCIES - LOG4J -->
 		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-log4j12</artifactId>
+			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+			<artifactId>de.tudarmstadt.ukp.clarin.webanno.model</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+			<artifactId>de.tudarmstadt.ukp.clarin.webanno.brat</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+			<artifactId>de.tudarmstadt.ukp.clarin.webanno.api</artifactId>
+		</dependency>
+		
+		<!-- LOGGING DEPENDENCIES - LOG4J -->
+		
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
 		</dependency>
 
+		<!-- Spring dependencies -->
+		
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-tx</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-beans</artifactId>
+		</dependency>
+
+		<!-- Spring security dependencies -->
+		
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-core</artifactId>
+		</dependency>
+
+		<!-- Hibernate dependencies -->
+		
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.hibernate.javax.persistence</groupId>
+			<artifactId>hibernate-jpa-2.0-api</artifactId>
+		</dependency>
+
+		<!-- UIMA dependencies -->
+		
+		<dependency>
+			<groupId>org.apache.uima</groupId>
+			<artifactId>uimaj-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.uima</groupId>
+			<artifactId>uimafit-core</artifactId>
+		</dependency>
+
+		<!-- DKPro Core dependencies -->
 
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-			<artifactId>
-				de.tudarmstadt.ukp.dkpro.core.io.bincas-asl
-			</artifactId>
+			<artifactId>de.tudarmstadt.ukp.dkpro.core.api.syntax-asl</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>
-				de.tudarmstadt.ukp.clarin.webanno.brat
-			</artifactId>
+			<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+			<artifactId>de.tudarmstadt.ukp.dkpro.core.api.metadata-asl</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+			<artifactId>de.tudarmstadt.ukp.dkpro.core.api.resources-asl</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+			<artifactId>de.tudarmstadt.ukp.dkpro.core.api.segmentation-asl</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+			<artifactId>de.tudarmstadt.ukp.dkpro.core.api.lexmorph-asl</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+			<artifactId>de.tudarmstadt.ukp.dkpro.core.api.ner-asl</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+			<artifactId>de.tudarmstadt.ukp.dkpro.core.api.io-asl</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+			<artifactId>de.tudarmstadt.ukp.dkpro.core.io.bincas-asl</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+			<artifactId>de.tudarmstadt.ukp.dkpro.core.tokit-asl</artifactId>
 		</dependency>
 	</dependencies>
 </project>

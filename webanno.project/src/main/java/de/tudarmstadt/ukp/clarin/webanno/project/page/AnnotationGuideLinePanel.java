@@ -95,7 +95,6 @@ public class AnnotationGuideLinePanel
 
                     try {
                         File tempFile = guidelineFile.writeToTempFile();
-                        // String text = IOUtils.toString(tcfInputStream, "UTF-8");
                         String fileName = guidelineFile.getClientFileName();
                         String username = SecurityContextHolder.getContext().getAuthentication()
                                 .getName();

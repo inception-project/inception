@@ -27,7 +27,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>org.apache.uima</groupId>
-			<artifactId>uimafit-core</artifactId>
+			<artifactId>uimaj-core</artifactId>
 		</dependency>
 	</dependencies>
 </project>

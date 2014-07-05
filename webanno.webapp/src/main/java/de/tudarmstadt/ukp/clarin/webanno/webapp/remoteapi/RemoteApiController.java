@@ -50,7 +50,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
-import eu.clarin.weblicht.wlfxb.io.WLFormatException;
 
 /**
  * Expose some functions of WebAnno via a RESTful remote API.
@@ -187,7 +186,7 @@ public class RemoteApiController
 
     private void uploadSourceDocument(ZipFile zip, ZipEntry entry, Project project, User user,
             String aFileType)
-        throws IOException, UIMAException, WLFormatException
+        throws IOException, UIMAException
     {
         String fileName = FilenameUtils.getName(entry.toString());
 

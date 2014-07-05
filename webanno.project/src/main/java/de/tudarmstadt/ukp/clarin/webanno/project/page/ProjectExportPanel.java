@@ -75,7 +75,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.export.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.export.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
 import de.tudarmstadt.ukp.clarin.webanno.tcf.TcfWriter;
-import eu.clarin.weblicht.wlfxb.io.WLFormatException;
 
 /**
  * A Panel used to add Project Guidelines in a selected {@link Project}
@@ -359,7 +358,7 @@ public class ProjectExportPanel extends Panel {
 
 	public File generateZipFile(final Model<Project> aProjectModel,
 			AjaxRequestTarget target) throws IOException, UIMAException,
-			ClassNotFoundException, WLFormatException, ZippingException,
+			ClassNotFoundException, ZippingException,
 			InterruptedException, ProjectExportException {
 		File exportTempDir = null;
 		// all metadata and project settings data from the database as JSON file
@@ -436,7 +435,7 @@ public class ProjectExportPanel extends Panel {
 	 */
 	private void exportCuratedDocuments(Project aProject, File aCopyDir)
 			throws FileNotFoundException, UIMAException, IOException,
-			WLFormatException, ClassNotFoundException {
+			ClassNotFoundException {
 
 		// Get all the source documents from the project
 		List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = repository
@@ -555,11 +554,10 @@ public class ProjectExportPanel extends Panel {
 	 * project to the export folder
 	 *
 	 * @throws ClassNotFoundException
-	 * @throws WLFormatException
 	 * @throws UIMAException
 	 */
 	private void exportAnnotationDocuments(Project aProject, File aCopyDir)
-			throws IOException, UIMAException, WLFormatException,
+			throws IOException, UIMAException,
 			ClassNotFoundException {
 		List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = repository
 				.listSourceDocuments(aProject);
