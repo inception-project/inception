@@ -448,7 +448,7 @@ public class CuratorUtil
             String label = relation.getType().replace(WebAnnoConst.DEP_PREFIX, "")
                     .replace(WebAnnoConst.COREFERENCE_PREFIX, "");
             relation.setType(type);
-            return getRelation(type, label, newState, Arrays.asList(new String[] { arcTarget }));
+            return getRelation(type, label, newState, Arrays.asList(arcTarget));
         }
         return new ArrayList<RelationType>();
     }
