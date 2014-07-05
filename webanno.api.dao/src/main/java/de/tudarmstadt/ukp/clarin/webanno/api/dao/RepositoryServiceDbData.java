@@ -1831,9 +1831,8 @@ public class RepositoryServiceDbData
 
                 CAS cas = JCasFactory.createJCas(allTypes).getCas();
 
-                // CAS cas = JCasFactory.createJCas().getCas();
-                CollectionReader reader = CollectionReaderFactory.createCollectionReader(
-                        SerializedCasReader.class, SerializedCasReader.PARAM_PATH,
+                CollectionReader reader = CollectionReaderFactory.createReader(
+                        SerializedCasReader.class, SerializedCasReader.PARAM_SOURCE_LOCATION,
                         annotationFolder, SerializedCasReader.PARAM_PATTERNS, new String[] { "[+]"
                                 + file });
                 if (!reader.hasNext()) {
