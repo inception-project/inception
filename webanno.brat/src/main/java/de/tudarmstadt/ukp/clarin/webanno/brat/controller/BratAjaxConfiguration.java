@@ -32,8 +32,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.EntityType;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.RelationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
-import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;

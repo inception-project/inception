@@ -40,10 +40,6 @@
 
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>de.tudarmstadt.ukp.clarin.webanno.tcf</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 			<artifactId>de.tudarmstadt.ukp.clarin.webanno.api</artifactId>
 		</dependency>
 		<dependency>
@@ -62,10 +58,7 @@
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 			<artifactId>de.tudarmstadt.ukp.clarin.webanno.model</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>de.tudarmstadt.ukp.clarin.webanno.tei</artifactId>
-		</dependency>
+
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 			<artifactId>de.tudarmstadt.ukp.clarin.webanno.project</artifactId>
@@ -302,18 +295,6 @@
 			<groupId>net.bull.javamelody</groupId>
 			<artifactId>javamelody-core</artifactId>
 			<version>1.39.0</version>
-		</dependency>
-		<dependency>
-			<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-			<artifactId>de.tudarmstadt.ukp.dkpro.core.io.bincas-asl</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-			<artifactId>de.tudarmstadt.ukp.dkpro.core.io.xmi-asl</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>de.tudarmstadt.ukp.clarin.webanno.tsv</artifactId>
 		</dependency>
 
 		<dependency>
