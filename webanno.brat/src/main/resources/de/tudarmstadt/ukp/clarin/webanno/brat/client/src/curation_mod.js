@@ -9,12 +9,14 @@ var CurationMod = (function($, window, undefined) {
 			if (type = target.attr('data-arc-role')) {
 		          var originSpanId = target.attr('data-arc-origin');
 		          var targetSpanId = target.attr('data-arc-target');
+		          var arcId = target.attr('data-arc-ed');
 		          //var originSpan = data.spans[originSpanId];
 		          //var targetSpan = data.spans[targetSpanId];
 					dispatcher.post('ajax', [ {
 						action: 'selectArcForMerge',
 						originSpanId: originSpanId,
 						targetSpanId: targetSpanId,
+						arcId:arcId,
 						type: type
 					}, 'serverResult']);
 			}
