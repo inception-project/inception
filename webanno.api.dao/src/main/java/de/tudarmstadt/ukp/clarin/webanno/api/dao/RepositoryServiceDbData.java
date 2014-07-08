@@ -584,7 +584,8 @@ public class RepositoryServiceDbData
             }
         }
         AnalysisEngineDescription writer;
-        if (aWriter.getName().equals("de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoCustomTsvWriter")) {
+        if (aWriter.getName()
+                .equals("de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoCustomTsvWriter")) {
             writer = createPrimitiveDescription(aWriter,
                     JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
                     JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, true, "multipleSpans",
@@ -1259,9 +1260,10 @@ public class RepositoryServiceDbData
     public void removeCurationDocumentContent(SourceDocument aSourceDocument, String aUsername)
         throws IOException
     {
-        if (new File(getAnnotationFolder(aSourceDocument), WebAnnoConst.CURATION_USER + ".ser").exists()) {
-            FileUtils.forceDelete(new File(getAnnotationFolder(aSourceDocument), WebAnnoConst.CURATION_USER
-                    + ".ser"));
+        if (new File(getAnnotationFolder(aSourceDocument), WebAnnoConst.CURATION_USER + ".ser")
+                .exists()) {
+            FileUtils.forceDelete(new File(getAnnotationFolder(aSourceDocument),
+                    WebAnnoConst.CURATION_USER + ".ser"));
 
             createLog(aSourceDocument.getProject(), aUsername).info(
                     " Removed Curated document from  project [" + aSourceDocument.getProject()
@@ -2040,7 +2042,11 @@ public class RepositoryServiceDbData
         catch (ClassNotFoundException e) {
             throw new IOException(e);
         }
-
+        catch (Exception e) {
+            throw new IOException(e.getMessage() != null ? e.getMessage()
+                    : "This is an invalid file. The reader for the document " + aDocument.getName()
+                            + " can't read this " + aDocument.getFormat() + " file type");
+        }
         createAnnotationDocumentContent(jCas, aDocument, aUser);
         return jCas;
     }

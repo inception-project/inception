@@ -296,6 +296,9 @@ public class TeiReader
         catch (SAXException e) {
             throw new IOException(e);
         }
+        catch (Exception e) {
+            throw new IOException("This is not a valid WebAnno CPH TEI file");
+        }
         finally {
             closeQuietly(is);
         }
