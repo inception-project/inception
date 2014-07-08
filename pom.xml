@@ -21,6 +21,8 @@
 	<url>http://code.google.com/p/webanno/</url>
 	<inceptionYear>2012</inceptionYear>
 	<properties>
+		<maven.compiler.target>1.6</maven.compiler.target>
+		<maven.compiler.source>1.6</maven.compiler.source>
 		<jackson.version>1.9.6</jackson.version>
 		<uima.version>2.6.0</uima.version>
 		<uimafit.version>2.1.0</uimafit.version>
