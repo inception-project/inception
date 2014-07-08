@@ -80,7 +80,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
  * This is the main class for the curation page. It contains an interface which displays differences
  * between user annotations for a specific document. The interface provides a tool for merging these
  * annotations and storing them as a new annotation.
- * 
+ *
  * @author Andreas Straninger
  * @author Seid Muhie Yimam
  */
@@ -472,10 +472,10 @@ public class CurationPage
         gotoPageTextField = (NumberTextField<Integer>) new NumberTextField<Integer>("gotoPageText",
                 new Model<Integer>(0));
         Form<Void> gotoPageTextFieldForm = new Form<Void>("gotoPageTextFieldForm");
-        gotoPageTextFieldForm.add(new AjaxFormValidatingBehavior(gotoPageTextFieldForm, "onsubmit") { 
+        gotoPageTextFieldForm.add(new AjaxFormValidatingBehavior(gotoPageTextFieldForm, "onsubmit") {
 			private static final long serialVersionUID = -4549805321484461545L;
-			@Override 
-            protected void onSubmit(AjaxRequestTarget aTarget) { 
+			@Override
+            protected void onSubmit(AjaxRequestTarget aTarget) {
 				 if (gotoPageAddress == 0) {
 	                    aTarget.appendJavaScript("alert('The sentence number entered is not valid')");
 	                    return;
@@ -514,16 +514,16 @@ public class CurationPage
 	                catch (BratAnnotationException e) {
 	                    error(e.getMessage());
 	                }
-            } 
-            @Override 
-            protected CharSequence getEventHandler() { 
-                AppendingStringBuffer handler = new AppendingStringBuffer(); 
-                handler.append(super.getEventHandler()); 
-                handler.append("; return false;"); 
-                return handler; 
-           } 
-        }); 
-        
+            }
+            @Override
+            protected CharSequence getEventHandler() {
+                AppendingStringBuffer handler = new AppendingStringBuffer();
+                handler.append(super.getEventHandler());
+                handler.append("; return false;");
+                return handler;
+           }
+        });
+
         gotoPageTextField.setType(Integer.class);
         gotoPageTextField.setMinimum(1);
         gotoPageTextField.setDefaultModelObject(1);
@@ -1063,10 +1063,11 @@ public class CurationPage
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User userLoggedIn = repository.getUser(SecurityContextHolder.getContext()
                 .getAuthentication().getName());
+        bratAnnotatorModel.setUser(userLoggedIn);
         ProjectUtil.setAnnotationPreference(username, repository, annotationService,
                 bratAnnotatorModel, Mode.CURATION);
         Map<String, JCas> jCases = cb.listJcasesforCuration(finishedAnnotationDocuments,
-                randomAnnotationDocument);
+                randomAnnotationDocument, Mode.CURATION);
         JCas mergeJCas = cb.getMergeCas(bratAnnotatorModel, bratAnnotatorModel.getDocument(),
                 jCases, randomAnnotationDocument);
 
@@ -1094,8 +1095,6 @@ public class CurationPage
                 throw e;
             }
         }
-
-        bratAnnotatorModel.setUser(userLoggedIn);
 
         currentprojectId = bratAnnotatorModel.getProject().getId();
         currentDocumentId = bratAnnotatorModel.getDocument().getId();

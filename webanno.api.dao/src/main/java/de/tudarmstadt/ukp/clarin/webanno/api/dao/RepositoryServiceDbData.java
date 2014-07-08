@@ -181,9 +181,6 @@ public class RepositoryServiceDbData
 
     private static final String TEMPLATE = "/crowdtemplates/";
 
-    private static final String CURATION_USER = "CURATION_USER";
-    private static final String CORRECTION_USER = "CORRECTION_USER";
-
     private static final String HELP_FILE = "/help.properties";
 
     @PersistenceContext
@@ -567,7 +564,7 @@ public class RepositoryServiceDbData
         }
         // The merge result will be exported
         else {
-            serializedCaseFileName = CURATION_USER + ".ser";
+            serializedCaseFileName = WebAnnoConst.CURATION_USER + ".ser";
         }
 
         CollectionReader reader = CollectionReaderFactory
@@ -1262,8 +1259,8 @@ public class RepositoryServiceDbData
     public void removeCurationDocumentContent(SourceDocument aSourceDocument, String aUsername)
         throws IOException
     {
-        if (new File(getAnnotationFolder(aSourceDocument), CURATION_USER + ".ser").exists()) {
-            FileUtils.forceDelete(new File(getAnnotationFolder(aSourceDocument), CURATION_USER
+        if (new File(getAnnotationFolder(aSourceDocument), WebAnnoConst.CURATION_USER + ".ser").exists()) {
+            FileUtils.forceDelete(new File(getAnnotationFolder(aSourceDocument), WebAnnoConst.CURATION_USER
                     + ".ser"));
 
             createLog(aSourceDocument.getProject(), aUsername).info(
@@ -1618,7 +1615,7 @@ public class RepositoryServiceDbData
     public void createCorrectionDocumentContent(JCas aJcas, SourceDocument aDocument, User aUser)
         throws IOException
     {
-        createAnnotationContent(aDocument, aJcas, CORRECTION_USER, aUser);
+        createAnnotationContent(aDocument, aJcas, WebAnnoConst.CORRECTION_USER, aUser);
     }
 
     @Override
@@ -1626,14 +1623,14 @@ public class RepositoryServiceDbData
     public void createCurationDocumentContent(JCas aJcas, SourceDocument aDocument, User aUser)
         throws IOException
     {
-        createAnnotationContent(aDocument, aJcas, CURATION_USER, aUser);
+        createAnnotationContent(aDocument, aJcas, WebAnnoConst.CURATION_USER, aUser);
     }
 
     @Override
     public JCas getCorrectionDocumentContent(SourceDocument aDocument)
         throws UIMAException, IOException, ClassNotFoundException
     {
-        return getAnnotationContent(aDocument, CORRECTION_USER);
+        return getAnnotationContent(aDocument, WebAnnoConst.CORRECTION_USER);
     }
 
     @Override
@@ -1641,7 +1638,7 @@ public class RepositoryServiceDbData
         throws UIMAException, IOException, ClassNotFoundException
     {
 
-        return getAnnotationContent(aDocument, CURATION_USER);
+        return getAnnotationContent(aDocument, WebAnnoConst.CURATION_USER);
     }
 
     /**
@@ -1904,14 +1901,20 @@ public class RepositoryServiceDbData
                     upgrade(cas, aDocument.getProject());
                     createAnnotationDocumentContent(cas.getJCas(),
                             annotationDocument.getDocument(), user);
+
                     CAS corrCas = getCorrectionDocumentContent(aDocument).getCas();
                     upgrade(corrCas, aDocument.getProject());
                     createCorrectionDocumentContent(corrCas.getJCas(), aDocument, user);
                 }
                 else {
-                    CAS cas = getCurationDocumentContent(aDocument).getCas();
+                    CAS cas = getAnnotationDocumentContent(annotationDocument).getCas();
                     upgrade(cas, aDocument.getProject());
-                    createCurationDocumentContent(cas.getJCas(), aDocument, user);
+                    createAnnotationDocumentContent(cas.getJCas(),
+                            annotationDocument.getDocument(), user);
+
+                    CAS curCas = getCurationDocumentContent(aDocument).getCas();
+                    upgrade(curCas, aDocument.getProject());
+                    createCurationDocumentContent(curCas.getJCas(), aDocument, user);
                 }
 
             }
