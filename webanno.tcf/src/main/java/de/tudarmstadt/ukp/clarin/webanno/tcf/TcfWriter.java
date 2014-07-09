@@ -75,6 +75,7 @@ public class TcfWriter
     extends JCasFileWriter_ImplBase
 {
     private static final String REL_TYPE_EXPLETIVE = "expletive";
+    
     /**
      * Specify the suffix of output files. Default value <code>.tcf</code>. If the suffix is not
      * needed, provide an empty string as value.
@@ -91,6 +92,14 @@ public class TcfWriter
     public static final String PARAM_PRESERVE_IF_EMPTY = "preserveIfEmpty";
     @ConfigurationParameter(name = PARAM_PRESERVE_IF_EMPTY, mandatory = true, defaultValue = "false")
     private boolean preserveIfEmpty;
+    
+    /**
+     * Merge with source TCF file if one is available.<br>
+     * Default: {@code true}
+     */
+    public static final String PARAM_MERGE = "merge";
+    @ConfigurationParameter(name = PARAM_MERGE, mandatory = true, defaultValue = "true")
+    private boolean merge;
 
     @Override
     public void process(JCas aJCas)
@@ -101,20 +110,38 @@ public class TcfWriter
         try {
             docOS = getOutputStream(aJCas, filenameSuffix);
 
-            // Get the original TCF file and preserve it
-            DocumentMetaData documentMetadata = DocumentMetaData.get(aJCas);
-            /*
-             * docIS = new
-             * FileInputStream(StringUtils.removeStart(documentMetadata.getDocumentUri(), "file:"));
-             */
-            URL filePathUrl = new URL(documentMetadata.getDocumentUri());
-            docIS = filePathUrl.openStream();
-            try {
-                getLogger().debug("Merging with [" + documentMetadata.getDocumentUri() + "]");
-                casToTcfWriter(docIS, aJCas, docOS);
+            boolean writeWithoutMerging = true;
+            if (merge) {
+                // Get the original TCF file and preserve it
+                DocumentMetaData documentMetadata = DocumentMetaData.get(aJCas);
+                URL filePathUrl = new URL(documentMetadata.getDocumentUri());
+                try {
+                    docIS = filePathUrl.openStream();
+                    
+                    try {
+                        getLogger().debug("Merging with [" + documentMetadata.getDocumentUri() + "]");
+                        casToTcfWriter(docIS, aJCas, docOS);
+                        writeWithoutMerging = false;
+                    }
+                    // See https://github.com/weblicht/wlfxb/issues/7
+//                    catch (WLFormatException ex) {
+//                        getLogger().debug("No source file to merge with: " + ex.getMessage());
+//                    }
+                    // Workaround: catch all exceptions
+                    catch (Exception ex) {
+                        getLogger().debug("Source file is not TCF: " + ex.getMessage());
+                    }
+                }
+                catch (IOException e) {
+                    getLogger().debug("Cannot open source file to merge with: " + e.getMessage());
+                }
             }
-            catch (WLFormatException ex) {
-                getLogger().debug("No source file to merge with: " + ex.getMessage());
+            else {
+                getLogger().debug("Merging disabled");
+            }
+            
+            // If merging failed or is disabled, go on without merging
+            if (writeWithoutMerging) {
                 casToTcfWriter(aJCas, docOS);
             }
         }
