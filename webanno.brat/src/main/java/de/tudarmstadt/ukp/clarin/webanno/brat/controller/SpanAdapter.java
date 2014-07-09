@@ -17,7 +17,6 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
-import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import static org.apache.uima.fit.util.JCasUtil.select;
@@ -206,8 +205,8 @@ public class SpanAdapter
         for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, firstSentence.getBegin(),
                 lastSentenceInPage.getEnd())) {
 
-            String bratTypeName = ArcAdapter.getBratTypeName2(this, fs, aFeatures);
-            String bratLabelText = ArcAdapter.getBratLabelText(this, fs, aFeatures);
+            String bratTypeName = TypeUtil.getBratTypeName(this);
+            String bratLabelText = TypeUtil.getBratLabelText(this, fs, aFeatures);
             Sentence beginSent = null, endSent = null;
             // check if annotation spans multiple sentence
             for (Sentence sentence : selectCovered(aJcas, Sentence.class, firstSentence.getBegin(),
@@ -247,8 +246,8 @@ public class SpanAdapter
             }
             else {
                 aResponse.addEntity(new Entity(((FeatureStructureImpl) fs).getAddress(),
-                        bratTypeName, asList(new Offsets(fs.getBegin() - aFirstSentenceOffset, fs
-                                .getEnd() - aFirstSentenceOffset)), bratLabelText.toString()));
+                        bratTypeName, new Offsets(fs.getBegin() - aFirstSentenceOffset, fs
+                                .getEnd() - aFirstSentenceOffset), bratLabelText.toString()));
             }
         }
     }

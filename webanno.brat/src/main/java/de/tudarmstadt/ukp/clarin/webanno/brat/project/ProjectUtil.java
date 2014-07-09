@@ -342,7 +342,7 @@ public class ProjectUtil
              * List<TagSet> corefTagSets = new ArrayList<TagSet>(); List<TagSet> noFeatureTagSet =
              * new ArrayList<TagSet>(); for (TagSet tagSet : tagSets) { if (tagSet.getLayer() ==
              * null || tagSet.getFeature() == null) { noFeatureTagSet.add(tagSet); } else if
-             * (tagSet.getLayer().getType().equals("chain")) { corefTagSets.add(tagSet); } }
+             * (tagSet.getLayer().getType().equals(ChainAdapter.CHAIN)) { corefTagSets.add(tagSet); } }
              *
              * if (aMode.equals(Mode.CORRECTION) || aMode.equals(Mode.AUTOMATION) ||
              * aMode.equals(Mode.CURATION)) { tagSets.removeAll(corefTagSets); }

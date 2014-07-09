@@ -488,7 +488,7 @@ public class SpanAnnotationModalWindowPage
                         if (adapter instanceof ChainAdapter) {
 
                             TypeAdapter chainAdapter = new ChainAdapter(selectedLayer.getId(),
-                                    selectedLayer.getName() + "Chain", selectedLayer.getName(),
+                                    selectedLayer.getName() + ChainAdapter.CHAIN, selectedLayer.getName(),
                                     "first", "next");
                             ((ChainAdapter) adapter).updateCasBeforeDelete(jCas, selectedSpanId);
                             ((ChainAdapter) chainAdapter).delete(jCas, selectedSpanId);
@@ -636,10 +636,10 @@ public class SpanAnnotationModalWindowPage
 
         String type = annoFs.getType().getName();
 
-        if (type.endsWith("Chain")) {
+        if (type.endsWith(ChainAdapter.CHAIN)) {
             type = type.substring(0, type.length() - 5);
         }
-        else if (type.endsWith("Link")) {
+        else if (type.endsWith(ChainAdapter.LINK)) {
             type = type.substring(0, type.length() - 4);
         }
 

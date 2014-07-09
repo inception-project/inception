@@ -17,8 +17,15 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
+import static org.apache.uima.fit.util.CasUtil.getType;
+
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -58,7 +65,7 @@ public final class TypeUtil {
 			// default is chain (based on operation, change to CoreferenceLinK)
 		} else if (aLayer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
 			ChainAdapter adapter = new ChainAdapter(aLayer.getId(),
-					aLayer.getName() + "Chain", aLayer.getName(), "first",
+					aLayer.getName() + ChainAdapter.CHAIN, aLayer.getName(), "first",
 					"next");
 			adapter.setChain(true);
 			return adapter;
@@ -148,4 +155,48 @@ public final class TypeUtil {
 		}
 		return layer;
 	}
+
+    /**
+     * Construct the label text used in the brat user interface.
+     */
+    public static String getBratLabelText(TypeAdapter aAdapter, AnnotationFS aFs,
+            List<AnnotationFeature> aFeatures)
+    {
+        StringBuilder bratLabelText = new StringBuilder();
+        for (AnnotationFeature feature : aFeatures) {
+            if (!(feature.isEnabled() || feature.isVisible())) {
+                continue;
+            }
+
+            Feature labelFeature = aFs.getType().getFeatureByBaseName(feature.getName());
+
+            if (bratLabelText.length() > 0) {
+                bratLabelText.append(TypeAdapter.FEATURE_SEPARATOR);
+            }
+
+            bratLabelText.append(StringUtils.defaultString(aFs
+                    .getFeatureValueAsString(labelFeature)));
+        }
+        
+        if (bratLabelText.length() > 0) {
+            return bratLabelText.toString();
+        }
+        else {
+            // If there are no label features at all, then use the simple type name
+            // FIXME: we use the CAS type name here - actually we should use the name configured in the
+            // WebAnno layer configuration.
+            Type type = getType(aFs.getCAS(), aAdapter.getAnnotationTypeName());
+            return "(" + type.getShortName() + ")";
+        }
+    }
+
+    public static String getBratTypeName(TypeAdapter aAdapter)
+    {
+        return aAdapter.getTypeId() + "_" + aAdapter.getAnnotationTypeName();
+    }
+    
+    public static String getBratTypeName(AnnotationLayer aLayer)
+    {
+        return aLayer.getId() + "_" + aLayer.getName();
+    }
 }

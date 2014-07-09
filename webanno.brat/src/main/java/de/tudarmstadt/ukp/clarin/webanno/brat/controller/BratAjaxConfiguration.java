@@ -260,7 +260,7 @@ public class BratAjaxConfiguration
 //                String arcLabels = arcTypesResultIterator.next();
 //
 //                // 12 classes of colors to differentiate Co-reference chains
-//                if (aLayer.getType().equals("chain")) {
+//                if (aLayer.getType().equals(ChainAdapter.CHAIN)) {
 //
 //                    String[] colors = new String[] { "#00FF00", "#0000A0", "#FF0000", "#800080 ",
 //                            "#F000FF", "#00FFFF ", "#FF00FF ", "#8D38C9", "#8D38C9", "#736AFF",
@@ -348,7 +348,15 @@ public class BratAjaxConfiguration
         // }
         // }
 
-        String bratTypeName = aLayer.getId() + "_" + aLayer.getName();
+        String bratTypeName = TypeUtil.getBratTypeName(aLayer);
+        
+        // FIXME this is a hack because the chain layer consists of two UIMA types, a "Chain"
+        // and a "Link" type. ChainAdapter always seems to use "Chain" but some places also
+        // still use "Link" - this should be cleaned up so that knowledge about "Chain" and
+        // "Link" types is local to the ChainAdapter and not known outside it!
+        if (aLayer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
+            bratTypeName += ChainAdapter.CHAIN;
+        }
 
         EntityType entityType;
         if (aLayer.isBuiltIn() && aLayer.getName().equals(POS.class.getName())) {
@@ -372,8 +380,14 @@ public class BratAjaxConfiguration
         }
 
         if (aAttachingLayer != null) {
-            String attachingLayerBratTypeName = aAttachingLayer.getId() + "_"
-                    + aAttachingLayer.getName();
+            String attachingLayerBratTypeName = TypeUtil.getBratTypeName(aAttachingLayer);
+            // FIXME this is a hack because the chain layer consists of two UIMA types, a "Chain"
+            // and a "Link" type. ChainAdapter always seems to use "Chain" but some places also
+            // still use "Link" - this should be cleaned up so that knowledge about "Chain" and
+            // "Link" types is local to the ChainAdapter and not known outside it!
+            if (aLayer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
+                attachingLayerBratTypeName += ChainAdapter.CHAIN;
+            }
             
             RelationType arc = new RelationType(aAttachingLayer.getName(),
                     attachingLayerBratTypeName, bratTypeName, bDColors.get(i));

@@ -586,10 +586,10 @@ public class ArcAnnotationModalWindowPanel
         this.targetSpanId = aTargetSpanId;
         String type = annoFs.getType().getName();
 
-        if (type.endsWith("Chain")) {
+        if (type.endsWith(ChainAdapter.CHAIN)) {
             type = type.substring(0, type.length() - 5);
         }
-        else if (type.endsWith("Link")) {
+        else if (type.endsWith(ChainAdapter.LINK)) {
             type = type.substring(0, type.length() - 4);
         }
         this.selectedLayer = annotationService.getLayer(type, bratAnnotatorModel.getProject());

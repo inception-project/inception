@@ -53,8 +53,10 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 public class ChainAdapter
     implements TypeAdapter
 {
-
     public static final String EXPLETIVE = "expletive";
+    
+    public static final String CHAIN = "Chain";
+    public static final String LINK = "Link";
 
     /**
      * Prefix of the label value for Brat to make sure that different annotation types can use the
@@ -156,10 +158,10 @@ public class ChainAdapter
                     Sentence sentence = (Sentence) BratAjaxCasUtil.selectByAddr(aJcas,
                             FeatureStructure.class, i);
                     if (isChain) {
-                        renderChains(sentence, aResponse, feature, windowBegin, windowEnd);
+                        renderArcs(sentence, aResponse, feature, windowBegin, windowEnd);
                     }
                     else {
-                        renderLinks(sentence, aResponse, feature, windowBegin);
+                        renderSpans(sentence, aResponse, feature, windowBegin);
                     }
                     break;
                 }
@@ -167,10 +169,10 @@ public class ChainAdapter
                     Sentence sentence = (Sentence) BratAjaxCasUtil.selectByAddr(aJcas,
                             FeatureStructure.class, i);
                     if (isChain) {
-                        renderChains(sentence, aResponse, feature, windowBegin, windowEnd);
+                        renderArcs(sentence, aResponse, feature, windowBegin, windowEnd);
                     }
                     else {
-                        renderLinks(sentence, aResponse, feature, windowBegin);
+                        renderSpans(sentence, aResponse, feature, windowBegin);
                     }
                     i = BratAjaxCasUtil.getFollowingSentenceAddress(aJcas, i);
                 }
@@ -192,16 +194,18 @@ public class ChainAdapter
      *            be <b>X-Y</b>, where <b>X</b> is the offset of the annotated span and <b>Y</b> is
      *            aFirstSentenceOffset
      */
-    private void renderLinks(Sentence aSentence, GetDocumentResponse aResponse,
+    private void renderSpans(Sentence aSentence, GetDocumentResponse aResponse,
             AnnotationFeature aFeature, int aFirstSentenceOffset)
     {
-        Type type = CasUtil.getType(aSentence.getCAS(), aFeature.getLayer().getName()+"Link");
-        Feature labelFeature = type.getFeatureByBaseName(aFeature.getName());
+        Type type = CasUtil.getType(aSentence.getCAS(), aFeature.getLayer().getName() + LINK);
         for (AnnotationFS fs : CasUtil.selectCovered(type, aSentence)) {
-            aResponse.addEntity(new Entity(((FeatureStructureImpl) fs).getAddress() ,
-                    layerId + "_" + fs.getStringValue(labelFeature),
-                    asList(new Offsets(fs.getBegin() - aFirstSentenceOffset, fs.getEnd()
-                            - aFirstSentenceOffset))));
+            String bratTypeName = TypeUtil.getBratTypeName(this);
+            String bratLabelText = TypeUtil.getBratLabelText(this, fs, asList(aFeature));
+            Offsets offsets = new Offsets(fs.getBegin() - aFirstSentenceOffset, fs.getEnd()
+                    - aFirstSentenceOffset);
+
+            aResponse.addEntity(new Entity(((FeatureStructureImpl) fs).getAddress(),
+                    bratTypeName, offsets, bratLabelText.toString()));
         }
     }
 
@@ -214,15 +218,13 @@ public class ChainAdapter
      * @param aWindowEnd
      *            end of the render window The offset of the last sentence in the current display
      *            window
-     * @param aReverse
      */
-    private void renderChains(Sentence aSentence, GetDocumentResponse aResponse,
+    private void renderArcs(Sentence aSentence, GetDocumentResponse aResponse,
             AnnotationFeature aFeature, int aWindowBegin, int aWindowEnd)
     {
-        Type type = CasUtil.getType(aSentence.getCAS(), annotationTypeName);
+        Type type =  getAnnotationType(aSentence.getCAS());
         Feature first = type.getFeatureByBaseName(chainFirstFeatureName);
 
-        int i = 1;// used for different display colors of chains
         for (FeatureStructure fs : CasUtil.selectFS(aSentence.getCAS(), type)) {
             // The first link in the
             AnnotationFS linkFs = (AnnotationFS) fs.getFeatureValue(first);
@@ -233,21 +235,17 @@ public class ChainAdapter
                 // Render only links within the render window
                 if (aWindowBegin <= linkFs.getBegin() && aWindowEnd >= linkFs.getEnd()) {
                     if (EXPLETIVE.equals(linkFs.getStringValue(labelFeature))) {
-                        aResponse.addRelation(createLink(linkFs, linkFs,aFeature, i));
+                        aResponse.addRelation(createArc(linkFs, linkFs, aFeature));
                         linkFs = (AnnotationFS) linkFs.getFeatureValue(next);
                         continue;
                     }
                     AnnotationFS nextLink = (AnnotationFS) linkFs.getFeatureValue(next);
 
                     if (nextLink != null) {
-                        aResponse.addRelation(createLink(linkFs, nextLink,aFeature, i));
+                        aResponse.addRelation(createArc(linkFs, nextLink, aFeature));
                     }
                 }
                 linkFs = (AnnotationFS) linkFs.getFeatureValue(next);
-            }
-            i++;
-            if (i > 12) {
-                i = 1;
             }
         }
     }
@@ -259,16 +257,15 @@ public class ChainAdapter
      *            source span
      * @param aTo
      *            target span
-     * @param aColorIndex
-     *            used for different display colors of chains
      */
-    private Relation createLink(AnnotationFS aFrom,  AnnotationFS aTo,AnnotationFeature aFeature,
-            int aColorIndex)
+    private Relation createArc(AnnotationFS aFrom, AnnotationFS aTo, AnnotationFeature aFeature)
     {
-        Feature labelFeature = aFrom.getType().getFeatureByBaseName(aFeature.getName());
+        String bratTypeName = TypeUtil.getBratTypeName(this);
+        String bratLabelText = TypeUtil.getBratLabelText(this, aTo, asList(aFeature));
         List<Argument> argumentList = getArgument(aFrom, aTo);
-        return new Relation(((FeatureStructureImpl) aFrom).getAddress(), aColorIndex + "_"
-                + layerId + "_" + aFrom.getStringValue(labelFeature), argumentList);
+
+        return new Relation(((FeatureStructureImpl) aTo).getAddress(),
+                bratTypeName, argumentList, bratLabelText.toString());
     }
 
     /**
@@ -294,12 +291,13 @@ public class ChainAdapter
             AnnotationFS aTargetFs, AnnotationFeature aFeature)
         throws BratAnnotationException
     {
-    	 isChain = aFeature.getName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE);
+        isChain = aFeature.getName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE);
         if (isChain) {
             updateCoreferenceChainCas(aJCas, aOriginFs, aTargetFs, aLabelValue, aFeature);
         }
         else {
-        	annotationTypeName = aFeature.getLayer().getName()+"Link";
+            // FIXME annotationTypeName should not be reset
+            annotationTypeName = aFeature.getLayer().getName() + LINK;
             List<Token> tokens = BratAjaxCasUtil
                     .selectOverlapping(aJCas, Token.class, aBegin, aEnd);
             if (!BratAjaxCasUtil.isSameSentence(aJCas, aBegin, aEnd)) {
@@ -324,8 +322,9 @@ public class ChainAdapter
     {
 
         boolean duplicate = false;
-        Type type = CasUtil.getType(aCas, annotationTypeName);
+        Type type = getAnnotationType(aCas);
         Feature feature = type.getFeatureByBaseName(aFeature.getName());
+        // FIXME duplicate is always false?!
         if (!duplicate) {
             AnnotationFS newAnnotation = aCas.createAnnotation(type, aBegin, aEnd);
             newAnnotation.setFeatureValueFromString(feature, aValue);
@@ -349,7 +348,8 @@ public class ChainAdapter
             AnnotationFS aTargetFs, String aValue, AnnotationFeature aFeature)
     {
         boolean modify = false;
-        annotationTypeName = aFeature.getLayer().getName()+"Chain";
+        // FIXME annotationTypeName should not be reset
+        annotationTypeName = aFeature.getLayer().getName()+CHAIN;
         // Variables used for swapping
         AnnotationFS originLink = aOriginFs;
         AnnotationFS targetLink = aTargetFs;
@@ -371,7 +371,7 @@ public class ChainAdapter
 
         if (!merge) {
 
-            Type type = CasUtil.getType(aJcas.getCas(), annotationTypeName);
+            Type type = getAnnotationType(aJcas.getCas());
             Feature first = type.getFeatureByBaseName(chainFirstFeatureName);
             Feature next = targetLink.getType().getFeatureByBaseName(linkNextFeatureName);
             Feature labelFeature = targetLink.getType().getFeatureByBaseName(aFeature.getName());
@@ -504,7 +504,7 @@ public class ChainAdapter
         FeatureStructure thatChain = null;
         FeatureStructure thisChain = null;
 
-        Type type = CasUtil.getType(aJcas.getCas(), annotationTypeName);
+        Type type = getAnnotationType(aJcas.getCas());
         Feature first = type.getFeatureByBaseName(chainFirstFeatureName);
         Feature next = aOrigin.getType().getFeatureByBaseName(linkNextFeatureName);
         Feature labelFeature = aOrigin.getType().getFeatureByBaseName(aFeature.getName());
@@ -614,7 +614,7 @@ public class ChainAdapter
         FeatureStructure fsToRemove = BratAjaxCasUtil.selectByAddr(aJCas, FeatureStructure.class,
                 aRef);
 
-        Type type = CasUtil.getType(aJCas.getCas(), annotationTypeName);
+        Type type = getAnnotationType(aJCas.getCas());
         Feature first = type.getFeatureByBaseName(chainFirstFeatureName);
         boolean found = false;
         AnnotationFS nextLink = null;
@@ -661,7 +661,7 @@ public class ChainAdapter
     public void delete(JCas aJCas, int aAddress)
     {
         if (isChain) {
-            Type type = CasUtil.getType(aJCas.getCas(), annotationTypeName);
+            Type type = getAnnotationType(aJCas.getCas());
             Feature first = type.getFeatureByBaseName(chainFirstFeatureName);
 
             FeatureStructure newChain = aJCas.getCas().createFS(type);
@@ -712,7 +712,7 @@ public class ChainAdapter
     {
         // clean unconnected coreference chains
         List<FeatureStructure> orphanChains = new ArrayList<FeatureStructure>();
-        Type type = CasUtil.getType(aCas, annotationTypeName);
+        Type type = getAnnotationType(aCas);
         Feature first = type.getFeatureByBaseName(chainFirstFeatureName);
         for (FeatureStructure fs : CasUtil.selectFS(aCas, type)) {
             AnnotationFS linkFs = (AnnotationFS) fs.getFeatureValue(first);
@@ -800,7 +800,7 @@ public class ChainAdapter
     @Override
     public void updateFeature(JCas aJcas, AnnotationFeature aFeature,int aAddress, String aValue)
     {
-        Type type = CasUtil.getType(aJcas.getCas(), aFeature.getLayer().getName()+"Link");
+        Type type = CasUtil.getType(aJcas.getCas(), aFeature.getLayer().getName()+LINK);
         Feature feature = type.getFeatureByBaseName(aFeature.getName());
         FeatureStructure fs = BratAjaxCasUtil.selectByAddr(aJcas, FeatureStructure.class, aAddress);
         fs.setFeatureValueFromString(feature, aValue);

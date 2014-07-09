@@ -17,6 +17,8 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.display.model;
 
+import static java.util.Arrays.asList;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,6 +54,11 @@ public class Entity
     public Entity(int aId, String aType, List<Offsets> aOffsets)
     {
         this(aId, aType, aOffsets, null);
+    }
+
+    public Entity(int aId, String aType, Offsets aOffsets, String aLabelText)
+    {
+        this(aId, aType, asList(aOffsets), aLabelText);
     }
 
     public Entity(int aId, String aType, List<Offsets> aOffsets, String aLabelText)
