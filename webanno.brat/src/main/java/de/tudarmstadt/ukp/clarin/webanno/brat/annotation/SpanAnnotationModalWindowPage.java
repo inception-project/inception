@@ -486,13 +486,10 @@ public class SpanAnnotationModalWindowPage
                             }
                         }
                         if (adapter instanceof ChainAdapter) {
-
                             TypeAdapter chainAdapter = new ChainAdapter(selectedLayer.getId(),
                                     selectedLayer.getName() + ChainAdapter.CHAIN, selectedLayer.getName(),
                                     "first", "next");
-                            ((ChainAdapter) adapter).updateCasBeforeDelete(jCas, selectedSpanId);
-                            ((ChainAdapter) chainAdapter).delete(jCas, selectedSpanId);
-                            ((ChainAdapter) adapter).removeInvalidChain(jCas.getCas());
+                            chainAdapter.delete(jCas, selectedSpanId);
                         }
                         else {
                             adapter.delete(jCas, selectedSpanId);

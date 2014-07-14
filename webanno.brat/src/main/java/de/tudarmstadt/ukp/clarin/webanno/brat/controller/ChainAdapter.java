@@ -660,46 +660,85 @@ public class ChainAdapter
     @Override
     public void delete(JCas aJCas, int aAddress)
     {
-        if (isChain) {
-            Type type = getAnnotationType(aJCas.getCas());
-            Feature first = type.getFeatureByBaseName(chainFirstFeatureName);
+        Type chainType = getAnnotationType(aJCas.getCas());
+        Feature chainFirst = chainType.getFeatureByBaseName(chainFirstFeatureName);
 
-            FeatureStructure newChain = aJCas.getCas().createFS(type);
-            boolean found = false;
-
-            AnnotationFS originCorefType = (AnnotationFS) BratAjaxCasUtil.selectByAddr(aJCas,
-                    FeatureStructure.class, aAddress);
-            for (FeatureStructure fs : CasUtil.selectFS(aJCas.getCas(), type)) {
-                AnnotationFS linkFs = (AnnotationFS) fs.getFeatureValue(first);
+        // Get the selected link. Since the rendered span and arc both refer to the same CAS
+        // address, we do not have to handle deletes of spans or arcs differently here.
+        AnnotationFS linkToDelete = (AnnotationFS) BratAjaxCasUtil.selectByAddr(aJCas,
+                FeatureStructure.class, aAddress);
+        
+        // case 1 "removing first link": we keep the existing chain head and just remove the
+        // first element
+        //
+        // case 2 "removing middle link": the new chain consists of the rest, the old chain head
+        // remains
+        //
+        // case 3 "removing the last link": the old chain head remains and the last element of the
+        // chain is removed.
+        
+        // To know which case we have, we first need to find the chain containing the element to
+        // be deleted.
+        FeatureStructure oldChainFs = null;
+        FeatureStructure prevLinkFs = null;
+        boolean found = false;
+        chainLoop: for (FeatureStructure chainFs : CasUtil.selectFS(aJCas.getCas(), chainType)) {
+            AnnotationFS linkFs = (AnnotationFS) chainFs.getFeatureValue(chainFirst);
+            
+            // Now we seek the link within the current chain
+            while (linkFs != null) {
                 Feature next = linkFs.getType().getFeatureByBaseName(linkNextFeatureName);
-                if (found) {
-                    break;
+                if (((FeatureStructureImpl) linkFs).getAddress() == ((FeatureStructureImpl) linkToDelete)
+                        .getAddress()) {
+                    oldChainFs = chainFs;
+                    break chainLoop;
                 }
-                while (linkFs != null && !found) {
-                    if (((FeatureStructureImpl) linkFs).getAddress() == ((FeatureStructureImpl) originCorefType)
-                            .getAddress()) {
-                        newChain.setFeatureValue(first, linkFs.getFeatureValue(next));
-                        linkFs.setFeatureValue(next, null);
-                        found = true;
-                        break;
-                    }
-                    linkFs = (AnnotationFS) linkFs.getFeatureValue(next);
-                }
+                prevLinkFs = linkFs;
+                linkFs = (AnnotationFS) linkFs.getFeatureValue(next);
             }
-            aJCas.addFsToIndexes(newChain);
+        }
+        
+        // Did we find the chain?!
+        if (oldChainFs == null) {
+            throw new IllegalArgumentException("Chain link with address [" + aAddress
+                    + "] not found in any chain!");
+        }
 
-            removeInvalidChain(aJCas.getCas());
+        FeatureStructure followingLinkToDelete = linkToDelete.getFeatureValue(linkToDelete
+                .getType().getFeatureByBaseName(linkNextFeatureName));
+
+        if (prevLinkFs == null) {
+            // case 1: first element removed
+            oldChainFs.setFeatureValue(chainFirst, followingLinkToDelete);
+            aJCas.removeFsFromIndexes(linkToDelete);
+            
+            // removed last element form chain?
+            if (followingLinkToDelete == null) {
+                aJCas.removeFsFromIndexes(oldChainFs);
+            }
+        }
+        else if (followingLinkToDelete == null) {
+            // case 3: removing the last link (but not leaving the chain empty)
+            prevLinkFs.setFeatureValue(
+                    prevLinkFs.getType().getFeatureByBaseName(linkNextFeatureName), null);
+            
+            aJCas.removeFsFromIndexes(linkToDelete);
+        }
+        else if (prevLinkFs != null && followingLinkToDelete != null) {
+            // case 2: removing a middle link
+            
+            // Set up new chain for rest
+            FeatureStructure newChain = aJCas.getCas().createFS(chainType);
+            newChain.setFeatureValue(chainFirst, followingLinkToDelete);
+            aJCas.addFsToIndexes(newChain);
+            
+            // Cut off from old chain
+            prevLinkFs.setFeatureValue(
+                    prevLinkFs.getType().getFeatureByBaseName(linkNextFeatureName), null);
         }
         else {
-
-            /* updateCasBeforeDelete(aJCas, aAddress); */
-
-            FeatureStructure fsToRemove = BratAjaxCasUtil.selectByAddr(aJCas,
-                    FeatureStructure.class, aAddress);
-
-            aJCas.removeFsFromIndexes(fsToRemove);
-
-            /* removeInvalidChain(aJCas.getCas()); */
+            throw new IllegalStateException(
+                    "Unexpected situation while removing link. Please contact developers.");
         }
     }
 
