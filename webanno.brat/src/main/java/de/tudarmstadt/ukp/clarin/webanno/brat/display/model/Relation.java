@@ -34,7 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.BeanAsArraySerializer;
  *
  */
 @JsonSerialize(using = BeanAsArraySerializer.class)
-@JsonPropertyOrder(value = { "id", "type", "arguments", "labelText" })
+@JsonPropertyOrder(value = { "id", "type", "arguments", "labelText", "color" })
 public class Relation
 {
     private int id;
@@ -51,6 +51,7 @@ public class Relation
 
     // WEBANNO EXTENSION BEGIN
     private String labelText;
+    private String color;
     // WEBANNO EXTENSION END
     
     public Relation()
@@ -58,18 +59,15 @@ public class Relation
         // Nothing to do
     }
 
-    public Relation(int aId, String aType, List<Argument> aArguments)
-    {
-        this(aId, aType, aArguments, null);
-    }
-
-    public Relation(int aId, String aType, List<Argument> aArguments, String aLabelText)
+    public Relation(int aId, String aType, List<Argument> aArguments, String aLabelText,
+            String aColor)
     {
         super();
         id = aId;
         type = aType;
         arguments = aArguments;
         labelText = aLabelText;
+        color = aColor;
     }
 
     public int getId()
@@ -102,7 +100,6 @@ public class Relation
         arguments = aArguments;
     }
 
-
     public void setLabelText(String aLabelText)
     {
         labelText = aLabelText;
@@ -111,5 +108,15 @@ public class Relation
     public String getLabelText()
     {
         return labelText;
+    }
+
+    public String getColor()
+    {
+        return color;
+    }
+
+    public void setColor(String aColor)
+    {
+        color = aColor;
     }
 }

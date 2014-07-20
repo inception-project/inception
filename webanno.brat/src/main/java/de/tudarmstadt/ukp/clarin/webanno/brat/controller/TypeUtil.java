@@ -48,14 +48,9 @@ public final class TypeUtil {
 	public static TypeAdapter getAdapter(AnnotationLayer aLayer,
 			AnnotationService aAnnotationService) {
 		if (aLayer.getType().equals(WebAnnoConst.SPAN_TYPE)) {
-			TypeAdapter adapter = new SpanAdapter(aLayer.getId(),
-					aLayer.getName(), aLayer.getAttachFeature() == null ? null
-							: aLayer.getAttachFeature().getName(),
-					aLayer.getAttachType() == null ? null : aLayer
-							.getAttachType().getName());
+			TypeAdapter adapter = new SpanAdapter(aLayer);
 			return adapter;
 		} else if (aLayer.getType().equals(WebAnnoConst.RELATION_TYPE)) {
-
 			TypeAdapter adapter = new ArcAdapter(aLayer.getId(),
 					aLayer.getName(), "Dependent", "Governor",
 					aLayer.getAttachFeature() == null ? null : aLayer
@@ -67,7 +62,6 @@ public final class TypeUtil {
 			ChainAdapter adapter = new ChainAdapter(aLayer.getId(),
 					aLayer.getName() + ChainAdapter.CHAIN, aLayer.getName(), "first",
 					"next");
-			adapter.setChain(true);
 			return adapter;
 
 		}
@@ -189,7 +183,7 @@ public final class TypeUtil {
             return "(" + type.getShortName() + ")";
         }
     }
-
+    
     public static String getBratTypeName(TypeAdapter aAdapter)
     {
         return aAdapter.getTypeId() + "_" + aAdapter.getAnnotationTypeName();

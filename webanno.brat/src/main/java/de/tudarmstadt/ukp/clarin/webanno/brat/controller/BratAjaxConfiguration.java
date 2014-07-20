@@ -91,7 +91,7 @@ public class BratAjaxConfiguration
      * @return {@link Set<{@link EntityType }>}
      */
     public Set<EntityType> buildEntityTypes(List<AnnotationLayer> aLayers,
-            AnnotationService aAnnotationService, boolean aStaticColor)
+            AnnotationService aAnnotationService)
     {
         // Scan through the layers once to remember which layers attach to which layers
         Map<AnnotationLayer, AnnotationLayer> attachingLayers = new LinkedHashMap<AnnotationLayer, AnnotationLayer>();
@@ -109,7 +109,7 @@ public class BratAjaxConfiguration
         Set<EntityType> entityTypes = new LinkedHashSet<EntityType>();
         int i = 0;
         for (AnnotationLayer layer : aLayers) {
-            i = configCollection2(aAnnotationService, aStaticColor, entityTypes, i, layer,
+            i = configCollection2(aAnnotationService, entityTypes, i, layer,
                     attachingLayers.get(layer));
         }
 
@@ -316,7 +316,7 @@ public class BratAjaxConfiguration
 //    }
 
     
-    private int configCollection2(AnnotationService aAnnotationService, boolean aStaticColor,
+    private int configCollection2(AnnotationService aAnnotationService,
             Set<EntityType> aEntityTypes, int i, AnnotationLayer aLayer,
             AnnotationLayer aAttachingLayer)
     {
@@ -360,22 +360,20 @@ public class BratAjaxConfiguration
 
         EntityType entityType;
         if (aLayer.isBuiltIn() && aLayer.getName().equals(POS.class.getName())) {
-            entityType = new EntityType(aLayer.getName(), bratTypeName, RED, BLUE, BLUE,
-                    aStaticColor);
+            entityType = new EntityType(aLayer.getName(), bratTypeName, RED, BLUE, BLUE);
         }
         else if (aLayer.isBuiltIn() && aLayer.getName().equals(NamedEntity.class.getName())) {
-            entityType = new EntityType(aLayer.getName(), bratTypeName, BLACK, CYAN, GREEN,
-                    aStaticColor);
+            entityType = new EntityType(aLayer.getName(), bratTypeName, BLACK, CYAN, GREEN);
         }
         else if (aLayer.isBuiltIn() && aLayer.getName().equals(Lemma.class.getName())) {
             entityType = new EntityType(aLayer.getName(), bratTypeName, NO_COLOR, NO_COLOR,
-                    NO_COLOR, aStaticColor);
+                    NO_COLOR);
         }
 
         // custom layers
         else {
             entityType = new EntityType(aLayer.getName(), bratTypeName, fGColors.get(i),
-                    bGColors.get(i), bDColors.get(i), aStaticColor);
+                    bGColors.get(i), bDColors.get(i));
             i++;
         }
 

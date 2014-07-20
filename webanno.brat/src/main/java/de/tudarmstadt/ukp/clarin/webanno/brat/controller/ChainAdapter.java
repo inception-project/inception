@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
 import static java.util.Arrays.asList;
+import static org.apache.uima.fit.util.CasUtil.selectFS;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -40,6 +41,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Argument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Relation;
+import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.TagColor;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -84,8 +86,6 @@ public class ChainAdapter
 
     // private boolean singleTokenBehavior = false;
 
-    private boolean isChain = false;
-
     private boolean deletable;
 
     public ChainAdapter(long aLayerId, String aTypeName, String aLabelFeatureName,
@@ -98,24 +98,6 @@ public class ChainAdapter
     }
 
     /**
-     *
-     * @see #setChain(boolean)
-     */
-    public boolean isChain()
-    {
-        return isChain;
-    }
-
-    /**
-     * If true, It is drawing of arcs for coreference chains, otherwise it is a span annotation for
-     * coreference links
-     */
-    public void setChain(boolean aIsChain)
-    {
-        isChain = aIsChain;
-    }
-
-    /**
      * Add annotations from the CAS, which is controlled by the window size, to the brat response
      * {@link GetDocumentResponse}
      *
@@ -125,173 +107,113 @@ public class ChainAdapter
      *            A brat response containing annotations in brat protocol
      * @param aBratAnnotatorModel
      *            Data model for brat annotations
+     * @param aPreferredColor
+     *            the preferred color to render this layer
      */
     @Override
     public void render(JCas aJcas, List<AnnotationFeature> aFeatures,
-            GetDocumentResponse aResponse, BratAnnotatorModel aBratAnnotatorModel)
+            GetDocumentResponse aResponse, BratAnnotatorModel aBratAnnotatorModel,
+            String aPreferredColor)
     {
-        // The first sentence address in the display window!
-        Sentence firstSentence = (Sentence) BratAjaxCasUtil.selectByAddr(aJcas,
-                FeatureStructure.class, aBratAnnotatorModel.getSentenceAddress());
-
-        // The last sentence address in the display window!
-        Sentence lastSentence = (Sentence) BratAjaxCasUtil.selectByAddr(
-                aJcas,
-                FeatureStructure.class,
+        // Get begin and end offsets of window content
+        int windowBegin = BratAjaxCasUtil.selectByAddr(aJcas,
+                Sentence.class, aBratAnnotatorModel.getSentenceAddress()).getBegin();
+        int windowEnd = BratAjaxCasUtil.selectByAddr(aJcas, Sentence.class,
                 BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(aJcas,
                         aBratAnnotatorModel.getSentenceAddress(),
-                        aBratAnnotatorModel.getWindowSize()));
+                        aBratAnnotatorModel.getWindowSize())).getEnd();
 
-        int windowBegin = firstSentence.getBegin();
-        int windowEnd = lastSentence.getEnd();
-
-        // Loop based on window size
-        // j, controlling variable to display sentences based on window size
-        // i, address of each sentences
-
-        for (AnnotationFeature feature : aFeatures) {
-            isChain = feature.getName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE);
-            int j = 1;
-            int i = aBratAnnotatorModel.getSentenceAddress();
-            while (j <= aBratAnnotatorModel.getWindowSize()) {
-                if (i >= aBratAnnotatorModel.getLastSentenceAddress()) {
-                    Sentence sentence = (Sentence) BratAjaxCasUtil.selectByAddr(aJcas,
-                            FeatureStructure.class, i);
-                    if (isChain) {
-                        renderArcs(sentence, aResponse, feature, windowBegin, windowEnd);
-                    }
-                    else {
-                        renderSpans(sentence, aResponse, feature, windowBegin);
-                    }
-                    break;
-                }
-                else {
-                    Sentence sentence = (Sentence) BratAjaxCasUtil.selectByAddr(aJcas,
-                            FeatureStructure.class, i);
-                    if (isChain) {
-                        renderArcs(sentence, aResponse, feature, windowBegin, windowEnd);
-                    }
-                    else {
-                        renderSpans(sentence, aResponse, feature, windowBegin);
-                    }
-                    i = BratAjaxCasUtil.getFollowingSentenceAddress(aJcas, i);
-                }
-                j++;
+        // Find the features for the arc and span labels
+        AnnotationFeature spanLabelFeature = null;
+        AnnotationFeature arcLabelFeature = null;
+        for (AnnotationFeature f : aFeatures) {
+            if (WebAnnoConst.COREFERENCE_TYPE_FEATURE.equals(f.getName())) {
+                spanLabelFeature = f;
+            }
+            if (WebAnnoConst.COREFERENCE_RELATION_FEATURE.equals(f.getName())) {
+                arcLabelFeature = f;
             }
         }
-    }
+        // At this point arc and span feature labels must have been found! If not, the later code
+        // will crash.
+        
+        Type chainType = getAnnotationType(aJcas.getCas());
+        Feature chainFirst = chainType.getFeatureByBaseName(chainFirstFeatureName);
+        
+        int colorIndex = 0;
+        // Iterate over the chains
+        for (FeatureStructure chainFs : selectFS(aJcas.getCas(), chainType)) {
+            AnnotationFS linkFs = (AnnotationFS) chainFs.getFeatureValue(chainFirst);
+            AnnotationFS prevLinkFs = null;
+            
+            // Every chain is supposed to have a different color
+            String color = TagColor.PALETTE_NORMAL[colorIndex % TagColor.PALETTE_NORMAL.length];
+            // The color index is updated even for chains that have no visible links in the current
+            // window because we would like the chain color to be independent of visibility. In
+            // particular the color of a chain should not change when switching pages/scrolling.
+            colorIndex++;
 
-    /**
-     * a helper method to the
-     * {@link #renderAnnotation(JCas, GetDocumentResponse, BratAnnotatorModel)}
-     *
-     * @param aSentence
-     *            The current sentence in the CAS annotation, with annotations
-     * @param aResponse
-     *            The {@link GetDocumentResponse} object with the annotation from CAS annotation
-     * @param aFirstSentenceOffset
-     *            The first sentence offset. The actual offset in the brat visualization window will
-     *            be <b>X-Y</b>, where <b>X</b> is the offset of the annotated span and <b>Y</b> is
-     *            aFirstSentenceOffset
-     */
-    private void renderSpans(Sentence aSentence, GetDocumentResponse aResponse,
-            AnnotationFeature aFeature, int aFirstSentenceOffset)
-    {
-        Type type = CasUtil.getType(aSentence.getCAS(), aFeature.getLayer().getName() + LINK);
-        for (AnnotationFS fs : CasUtil.selectCovered(type, aSentence)) {
-            String bratTypeName = TypeUtil.getBratTypeName(this);
-            String bratLabelText = TypeUtil.getBratLabelText(this, fs, asList(aFeature));
-            Offsets offsets = new Offsets(fs.getBegin() - aFirstSentenceOffset, fs.getEnd()
-                    - aFirstSentenceOffset);
-
-            aResponse.addEntity(new Entity(((FeatureStructureImpl) fs).getAddress(),
-                    bratTypeName, offsets, bratLabelText.toString()));
-        }
-    }
-
-    /**
-     *
-     * @param aSentence
-     * @param aResponse
-     * @param aWindowBegin
-     *            begin of the render window
-     * @param aWindowEnd
-     *            end of the render window The offset of the last sentence in the current display
-     *            window
-     */
-    private void renderArcs(Sentence aSentence, GetDocumentResponse aResponse,
-            AnnotationFeature aFeature, int aWindowBegin, int aWindowEnd)
-    {
-        Type type =  getAnnotationType(aSentence.getCAS());
-        Feature first = type.getFeatureByBaseName(chainFirstFeatureName);
-
-        for (FeatureStructure fs : CasUtil.selectFS(aSentence.getCAS(), type)) {
-            // The first link in the
-            AnnotationFS linkFs = (AnnotationFS) fs.getFeatureValue(first);
-
-            Feature next = linkFs.getType().getFeatureByBaseName(linkNextFeatureName);
-            Feature labelFeature = linkFs.getType().getFeatureByBaseName(aFeature.getName());
+            // Iterate over the links of the chain
             while (linkFs != null) {
-                // Render only links within the render window
-                if (aWindowBegin <= linkFs.getBegin() && aWindowEnd >= linkFs.getEnd()) {
-                    if (EXPLETIVE.equals(linkFs.getStringValue(labelFeature))) {
-                        aResponse.addRelation(createArc(linkFs, linkFs, aFeature));
-                        linkFs = (AnnotationFS) linkFs.getFeatureValue(next);
-                        continue;
-                    }
-                    AnnotationFS nextLink = (AnnotationFS) linkFs.getFeatureValue(next);
-
-                    if (nextLink != null) {
-                        aResponse.addRelation(createArc(linkFs, nextLink, aFeature));
-                    }
+                Feature linkNext = linkFs.getType().getFeatureByBaseName(linkNextFeatureName);
+                AnnotationFS nextLinkFs = (AnnotationFS) linkFs.getFeatureValue(linkNext);
+                
+                // Is link after window? If yes, we can skip the rest of the chain
+                if (linkFs.getBegin() >= windowEnd) {
+                    break; // Go to next chain
                 }
-                linkFs = (AnnotationFS) linkFs.getFeatureValue(next);
+
+                // Is link before window? We only need links that being within the window and that
+                // end within the window
+                if (!(linkFs.getBegin() >= windowBegin) && (linkFs.getEnd() <= windowEnd)) {
+                    // prevLinkFs remains null until we enter the window
+                    linkFs = nextLinkFs;
+                    continue; // Go to next link
+                }
+                
+                String bratTypeName = TypeUtil.getBratTypeName(this);
+
+                // Render span
+                {
+                    String bratLabelText = TypeUtil.getBratLabelText(this, linkFs,
+                            asList(spanLabelFeature));
+                    Offsets offsets = new Offsets(linkFs.getBegin() - windowBegin, 
+                            linkFs.getEnd() - windowBegin);
+    
+                    aResponse.addEntity(new Entity(((FeatureStructureImpl) linkFs).getAddress(),
+                            bratTypeName, offsets, bratLabelText, color));
+                }
+                
+                // Render arc (we do this on prevLinkFs because then we easily know that the current
+                // and last link are within the window ;)
+                if (prevLinkFs != null) {
+                    String bratLabelText = TypeUtil.getBratLabelText(this, prevLinkFs,
+                            asList(arcLabelFeature));
+                    List<Argument> argumentList = asList(
+                            new Argument("Arg1", ((FeatureStructureImpl) prevLinkFs).getAddress()), 
+                            new Argument("Arg2", ((FeatureStructureImpl) linkFs).getAddress()));
+
+                    aResponse.addRelation(new Relation(((FeatureStructureImpl) prevLinkFs).getAddress(),
+                            bratTypeName, argumentList, bratLabelText, color));
+                }
+
+                prevLinkFs = linkFs;
+                linkFs = nextLinkFs;
             }
-        }
+        }        
     }
-
-    /**
-     * Create a link relation.
-     *
-     * @param aFrom
-     *            source span
-     * @param aTo
-     *            target span
-     */
-    private Relation createArc(AnnotationFS aFrom, AnnotationFS aTo, AnnotationFeature aFeature)
-    {
-        String bratTypeName = TypeUtil.getBratTypeName(this);
-        String bratLabelText = TypeUtil.getBratLabelText(this, aTo, asList(aFeature));
-        List<Argument> argumentList = getArgument(aFrom, aTo);
-
-        return new Relation(((FeatureStructureImpl) aTo).getAddress(),
-                bratTypeName, argumentList, bratLabelText.toString());
-    }
-
-    /**
-     * Argument lists for the chain annotation
-     *
-     * @return
-     */
-    private static List<Argument> getArgument(FeatureStructure aOriginFs, FeatureStructure aTargetFs)
-    {
-        return asList(new Argument("Arg1", ((FeatureStructureImpl) aOriginFs).getAddress()),
-                new Argument("Arg2", ((FeatureStructureImpl) aTargetFs).getAddress()));
-    }
-
+        
     /**
      * Update the CAS with new/modification of span annotations from brat
      *
      * @param aLabelValue
      *            the value of the annotation for the span
-     * @throws MultipleSentenceCoveredException
-     * @throws SubTokenSelectedException
      */
     public void add(String aLabelValue, JCas aJCas, int aBegin, int aEnd, AnnotationFS aOriginFs,
             AnnotationFS aTargetFs, AnnotationFeature aFeature)
-        throws BratAnnotationException
+        throws MultipleSentenceCoveredException
     {
-        isChain = aFeature.getName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE);
+        boolean isChain = aFeature.getName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE);
         if (isChain) {
             updateCoreferenceChainCas(aJCas, aOriginFs, aTargetFs, aLabelValue, aFeature);
         }
@@ -318,7 +240,8 @@ public class ChainAdapter
     /**
      * A Helper method to {@link #add(String, BratAnnotatorUIData)}
      */
-    private void updateCoreferenceLinkCas(CAS aCas, int aBegin, int aEnd, String aValue, AnnotationFeature aFeature)
+    private void updateCoreferenceLinkCas(CAS aCas, int aBegin, int aEnd, String aValue,
+            AnnotationFeature aFeature)
     {
 
         boolean duplicate = false;
@@ -375,7 +298,7 @@ public class ChainAdapter
             Feature first = type.getFeatureByBaseName(chainFirstFeatureName);
             Feature next = targetLink.getType().getFeatureByBaseName(linkNextFeatureName);
             Feature labelFeature = targetLink.getType().getFeatureByBaseName(aFeature.getName());
-            for (FeatureStructure fs : CasUtil.selectFS(aJcas.getCas(), type)) {
+            for (FeatureStructure fs : selectFS(aJcas.getCas(), type)) {
 
                 AnnotationFS linkFs = (AnnotationFS) fs.getFeatureValue(first);
 
@@ -497,7 +420,8 @@ public class ChainAdapter
         removeInvalidChain(aJcas.getCas());
     }
 
-    private boolean mergeChain(JCas aJcas, AnnotationFS aOrigin, AnnotationFS aTarget, String aValue, AnnotationFeature aFeature)
+    private boolean mergeChain(JCas aJcas, AnnotationFS aOrigin, AnnotationFS aTarget,
+            String aValue, AnnotationFeature aFeature)
     {
         boolean inThisChain = false;
         boolean inThatChain = false;
@@ -509,7 +433,7 @@ public class ChainAdapter
         Feature next = aOrigin.getType().getFeatureByBaseName(linkNextFeatureName);
         Feature labelFeature = aOrigin.getType().getFeatureByBaseName(aFeature.getName());
 
-        for (FeatureStructure fs : CasUtil.selectFS(aJcas.getCas(), type)) {
+        for (FeatureStructure fs : selectFS(aJcas.getCas(), type)) {
             AnnotationFS linkFs = (AnnotationFS) fs.getFeatureValue(first);
             boolean tempInThisChain = false;
             if (linkFs.getFeatureValue(next) != null) {
@@ -619,7 +543,7 @@ public class ChainAdapter
         boolean found = false;
         AnnotationFS nextLink = null;
         FeatureStructure previousFS = null;
-        for (FeatureStructure fs : CasUtil.selectFS(aJCas.getCas(), type)) {
+        for (FeatureStructure fs : selectFS(aJCas.getCas(), type)) {
             if (found) {
                 break;
             }
@@ -682,7 +606,7 @@ public class ChainAdapter
         FeatureStructure oldChainFs = null;
         FeatureStructure prevLinkFs = null;
         boolean found = false;
-        chainLoop: for (FeatureStructure chainFs : CasUtil.selectFS(aJCas.getCas(), chainType)) {
+        chainLoop: for (FeatureStructure chainFs : selectFS(aJCas.getCas(), chainType)) {
             AnnotationFS linkFs = (AnnotationFS) chainFs.getFeatureValue(chainFirst);
             
             // Now we seek the link within the current chain
@@ -753,7 +677,7 @@ public class ChainAdapter
         List<FeatureStructure> orphanChains = new ArrayList<FeatureStructure>();
         Type type = getAnnotationType(aCas);
         Feature first = type.getFeatureByBaseName(chainFirstFeatureName);
-        for (FeatureStructure fs : CasUtil.selectFS(aCas, type)) {
+        for (FeatureStructure fs : selectFS(aCas, type)) {
             AnnotationFS linkFs = (AnnotationFS) fs.getFeatureValue(first);
             Feature next = linkFs.getType().getFeatureByBaseName(linkNextFeatureName);
 

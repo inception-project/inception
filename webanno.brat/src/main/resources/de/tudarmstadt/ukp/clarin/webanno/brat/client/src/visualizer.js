@@ -140,6 +140,7 @@ var Visualizer = (function($, window, undefined) {
       // this.annotatorNotes = undefined;
       // WEBANNO EXTENSION BEGIN
       // this.labelText = undefined;
+      // this.color = undefined
       // WEBANNO EXTENSION END
     };
 
@@ -552,6 +553,9 @@ var Visualizer = (function($, window, undefined) {
           if (entity[3]) {
         	  span.labelText = entity[3];
           }
+          if (entity[4]) {
+        	  span.color = entity[4];
+          }
           // WEBANNO EXTENSION END
           span.splitMultilineOffsets(data.text);
           data.spans[entity[0]] = span;
@@ -657,6 +661,9 @@ var Visualizer = (function($, window, undefined) {
           // WEBANNO EXTENSION BEGIN
           if (rel[3]) {
         	  data.eventDescs[rel[0]].labelText = rel[3];
+          }
+          if (rel[4]) {
+        	  data.eventDescs[rel[0]].color = rel[4];
           }
           // WEBANNO EXTENSION END
         });
@@ -1569,12 +1576,20 @@ Util.profileStart('chunks');
                                (spanTypes.SPAN_DEFAULT &&
                                 spanTypes.SPAN_DEFAULT.borderColor) || '#000000');
 
+            // WEBANNO EXTENSION BEGIN
+            if (span.color) {
+            	bgColor = span.color;
+            	fgColor = bgToFgColor(bgColor);
+            	borderColor = 'darken';
+            }
+            // WEBANNO EXTENSION END
+
             // special case: if the border 'color' value is 'darken',
             // then just darken the BG color a bit for the border.
             if (borderColor == 'darken') {
                 borderColor = Util.adjustColorLightness(bgColor, -0.6);
             }
-
+            
             fragment.group = svg.group(chunk.group, {
               'class': 'span',
             });
@@ -1712,6 +1727,11 @@ Util.profileStart('chunks');
                                (spanTypes.SPAN_DEFAULT &&
                                 spanTypes.SPAN_DEFAULT.fgColor) ||
                                '#000000');
+                // WEBANNO EXTENSION BEGIN
+                if (span.color) {
+                	bgColor = span.color;
+                }
+                // WEBANNO EXTENSION END
                 curlyColor = Util.adjustColorLightness(bgColor, -0.6);
               }
 
@@ -2110,6 +2130,15 @@ Util.profileStart('arcs');
           var color = ((arcDesc && arcDesc.color) ||
                        (spanTypes.ARC_DEFAULT && spanTypes.ARC_DEFAULT.color) ||
                        '#000000');
+          
+          // WEBANNO EXTENSION BEGIN
+          if (arc.eventDescId && data.eventDescs[arc.eventDescId]) {
+            if (data.eventDescs[arc.eventDescId].color) {
+              color = [data.eventDescs[arc.eventDescId].color];
+            }
+          }
+          // WEBANNO EXTENSION END
+          
           var symmetric = arcDesc && arcDesc.properties && arcDesc.properties.symmetric;
           var dashArray = arcDesc && arcDesc.dashArray;
           var arrowHead = ((arcDesc && arcDesc.arrowHead) ||
@@ -2749,7 +2778,12 @@ Util.profileStart('chunkFinish');
               var bgColor = ((spanDesc && spanDesc.bgColor) ||
                              (spanTypes.SPAN_DEFAULT && spanTypes.SPAN_DEFAULT.bgColor) ||
                              '#ffffff');
-
+              // WEBANNO EXTENSION BEGIN
+              if (fragment.span.color) {
+              	bgColor = fragment.span.color;
+              }
+              // WEBANNO EXTENSION END
+              
               // Tweak for nesting depth/height. Recognize just three
               // levels for now: normal, nested, and nesting, where
               // nested+nesting yields normal. (Currently testing
@@ -2957,6 +2991,12 @@ Util.profileStart('before render');
           var bgColor = ((spanDesc && spanDesc.bgColor) ||
                          (spanTypes.SPAN_DEFAULT && spanTypes.SPAN_DEFAULT.bgColor) ||
                          '#ffffff');
+          // WEBANNO EXTENSION BEGIN
+          if (span.color) {
+          	bgColor = span.color;
+          }
+          // WEBANNO EXTENSION END
+          
           highlight = [];
           $.each(span.fragments, function(fragmentNo, fragment) {
             highlight.push(svg.rect(highlightGroup,
@@ -3313,5 +3353,17 @@ Util.profileStart('before render');
       Dispatcher.post('triggerRender');
     };
 
+    // WEBANNO EXTENSION BEGIN
+    // http://24ways.org/2010/calculating-color-contrast/
+    // http://stackoverflow.com/questions/11867545/change-text-color-based-on-brightness-of-the-covered-background-area
+    var bgToFgColor = function(hexcolor) {
+      var r = parseInt(hexcolor.substr(1,2),16);
+      var g = parseInt(hexcolor.substr(3,2),16);
+      var b = parseInt(hexcolor.substr(5,2),16);
+      var yiq = ((r*299)+(g*587)+(b*114))/1000;
+      return (yiq >= 128) ? '#000000' : '#ffffff';
+    }    
+    // WEBANNO EXTENSION END
+    
     return Visualizer;
 })(jQuery, window);

@@ -53,6 +53,10 @@ public class RelationType
     // FIXME we must not have such global states (public static)
     // public static HashMap<String, Color> typeToColor = new HashMap<String, Color>();
 
+    public RelationType(String aName, String aType, String aTarget)
+    {
+        this(aName, aType, aTarget, null, "triangle,5");
+    }
     
     public RelationType(String aName, String aType, String aTarget, String aColor)
     {
@@ -66,25 +70,9 @@ public class RelationType
     }
     
     public RelationType(String aColor, String aArrowHead, List<String> aLabels, String aType,
-            List<String> aTargets, String aDashArray/*, boolean aStaticColor*/)
+            List<String> aTargets, String aDashArray)
     {
         super();
-
-      /*  if(!aStaticColor){
-        Color goodBgColor;
-        if (typeToColor.containsKey(aType)) {
-            goodBgColor = typeToColor.get(aType);
-        }
-        else {
-            goodBgColor = TagColor.generateDifferingPastelColor(typeToColor.values());
-            typeToColor.put(aType, goodBgColor);
-        }
-
-        color =  TagColor.encodeRGB(goodBgColor);
-        }
-        else{
-            color = aColor;
-        }*/
         color = aColor;
         arrowHead = aArrowHead;
         labels = aLabels;

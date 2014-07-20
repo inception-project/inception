@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.display.model.TagColor.PALETTE_PASTEL;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -72,7 +73,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  */
 public class BratAjaxCasController
 {
-
     public static final String MIME_TYPE_XML = "application/xml";
     public static final String PRODUCES_JSON = "application/json";
     public static final String PRODUCES_XML = "application/xml";
@@ -194,7 +194,7 @@ public class BratAjaxCasController
      * @see <a href="http://brat.nlplab.org/index.html">Brat</a>
      */
     public GetCollectionInformationResponse getCollectionInformation(String aCollection,
-            HashSet<AnnotationLayer> aAnnotationLayers, boolean aStaticColor)
+            HashSet<AnnotationLayer> aAnnotationLayers)
     {
         LOG.info("AJAX-RPC: getCollectionInformation");
 
@@ -227,7 +227,7 @@ public class BratAjaxCasController
             }
         });
 
-        info.setEntityTypes(configuration.buildEntityTypes(layers, annotationService, aStaticColor));
+        info.setEntityTypes(configuration.buildEntityTypes(layers, annotationService));
 
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = repository.getUser(username);
@@ -301,16 +301,15 @@ public class BratAjaxCasController
         }
         SpanAdapter.renderTokenAndSentence(aJCas, aResponse, aBratAnnotatorModel);
 
+        int i = 0;
         for (AnnotationLayer layer : aBratAnnotatorModel.getAnnotationLayers()) {
-            /*
-             * if (layer.getLayer() == null || layer.getFeature() == null) { continue; }
-             */
             if (layer.getName().equals(Token.class.getName())) {
                 continue;
             }
             List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
             getAdapter(layer, annotationService).render(aJCas, features, aResponse,
-                    aBratAnnotatorModel);
+                    aBratAnnotatorModel, PALETTE_PASTEL[i % PALETTE_PASTEL.length]);
+            i++;
         }
     }
 }

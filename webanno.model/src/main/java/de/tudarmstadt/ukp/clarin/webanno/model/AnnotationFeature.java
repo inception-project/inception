@@ -70,7 +70,7 @@ public class AnnotationFeature
     @ManyToOne
     @ForeignKey(name = "none")
     @JoinColumn(name = "tag_set")
-    TagSet tagset;
+    private TagSet tagset;
 
     @Column(nullable = false)
     private String uiName;

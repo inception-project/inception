@@ -127,10 +127,13 @@ public class ArcAdapter
      *            A brat response containing annotations in brat protocol
      * @param aBratAnnotatorModel
      *            Data model for brat annotations
+     * @param aPreferredColor
+     *            the preferred color to render this layer
      */
     @Override
     public void render(JCas aJcas, List<AnnotationFeature> aFeatures,
-            GetDocumentResponse aResponse, BratAnnotatorModel aBratAnnotatorModel)
+            GetDocumentResponse aResponse, BratAnnotatorModel aBratAnnotatorModel,
+            String aPreferredColor)
     {
         // The first sentence address in the display window!
         Sentence firstSentence = BratAjaxCasUtil.selectSentenceAt(aJcas,
@@ -170,7 +173,7 @@ public class ArcAdapter
             String bratLabelText = TypeUtil.getBratLabelText(this, fs, aFeatures);
             String bratTypeName = TypeUtil.getBratTypeName(this);
             aResponse.addRelation(new Relation(((FeatureStructureImpl) fs).getAddress(),
-                    bratTypeName, argumentList, bratLabelText.toString()));
+                    bratTypeName, argumentList, bratLabelText, aPreferredColor));
         }
     }
 

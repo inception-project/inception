@@ -27,7 +27,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.BeanAsArraySerializer;
  * to denote a given arc annotation such as dependency parsing and coreference resolution
  *
  * @author Seid Muhie Yimam
- *
  */
 @JsonSerialize(using = BeanAsArraySerializer.class)
 @JsonPropertyOrder(value = { "argument", "token" })
@@ -37,6 +36,7 @@ public class Argument
      * Arg1 or Arg2
      */
     private String argument;
+    
     /**
      * the intial/target tokens (Span annotations)
      */

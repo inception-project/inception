@@ -33,10 +33,9 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.BeanAsArraySerializer;
  * = 1128
  *
  * @author Seid Muhie Yimam
- *
  */
 @JsonSerialize(using = BeanAsArraySerializer.class)
-@JsonPropertyOrder(value = { "id", "type", "offsets", "labelText" })
+@JsonPropertyOrder(value = { "id", "type", "offsets", "labelText", "color" })
 public class Entity
 {
     private int id;
@@ -44,6 +43,7 @@ public class Entity
     private List<Offsets> offsets = new ArrayList<Offsets>();
     // WEBANNO EXTENSION BEGIN
     private String labelText;
+    private String color;
     // WEBANNO EXTENSION END
 
     public Entity()
@@ -51,23 +51,19 @@ public class Entity
         // Nothing to do
     }
 
-    public Entity(int aId, String aType, List<Offsets> aOffsets)
+    public Entity(int aId, String aType, Offsets aOffsets, String aLabelText, String aColor)
     {
-        this(aId, aType, aOffsets, null);
+        this(aId, aType, asList(aOffsets), aLabelText, aColor);
     }
 
-    public Entity(int aId, String aType, Offsets aOffsets, String aLabelText)
-    {
-        this(aId, aType, asList(aOffsets), aLabelText);
-    }
-
-    public Entity(int aId, String aType, List<Offsets> aOffsets, String aLabelText)
+    public Entity(int aId, String aType, List<Offsets> aOffsets, String aLabelText, String aColor)
     {
         super();
         id = aId;
         type = aType;
         offsets = aOffsets;
         labelText = aLabelText;
+        color = aColor;
     }
 
     public int getId()
@@ -108,5 +104,15 @@ public class Entity
     public String getLabelText()
     {
         return labelText;
+    }
+
+    public String getColor()
+    {
+        return color;
+    }
+
+    public void setColor(String aColor)
+    {
+        color = aColor;
     }
 }

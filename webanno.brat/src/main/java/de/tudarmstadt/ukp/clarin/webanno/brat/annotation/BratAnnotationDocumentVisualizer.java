@@ -18,9 +18,11 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.display.model.TagColor.PALETTE_PASTEL;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.List;
 
 import javax.annotation.Resource;
 
@@ -38,7 +40,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * Displays a BRAT visualisation and fills it with data from an {@link AnnotationDocument}. We do
@@ -151,10 +155,15 @@ public class BratAnnotationDocumentVisualizer
 
         SpanAdapter.renderTokenAndSentence(jCas, response, bratAnnotatorDataModel);
 
+        int i = 0;
         for (AnnotationLayer layer : bratAnnotatorDataModel.getAnnotationLayers()) {
-            getAdapter(layer, annotationService).render(jCas,
-                    annotationService.listAnnotationFeature(layer), response,
-                    bratAnnotatorDataModel);
+            if (layer.getName().equals(Token.class.getName())) {
+                continue;
+            }
+            List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
+            getAdapter(layer, annotationService).render(jCas, features, response,
+                    bratAnnotatorDataModel, PALETTE_PASTEL[i % PALETTE_PASTEL.length]);
+            i++;
         }
 
         // Serialize BRAT object model to JSON

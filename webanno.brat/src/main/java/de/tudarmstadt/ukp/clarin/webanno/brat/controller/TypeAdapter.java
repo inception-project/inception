@@ -70,9 +70,11 @@ public interface TypeAdapter
      *            A brat response containing annotations in brat protocol
      * @param aBratAnnotatorModel
      *            Data model for brat annotations
+     * @param aPreferredColor
+     *            the preferred color to render this layer
      */
     void render(JCas aJcas, List<AnnotationFeature> features, GetDocumentResponse aResponse,
-            BratAnnotatorModel aBratAnnotatorModel);
+            BratAnnotatorModel aBratAnnotatorModel, String aPreferredColor);
 
     /**
      * Prefix of the label value for Brat to make sure that different annotation types can use the
@@ -98,7 +100,6 @@ public interface TypeAdapter
     /**
      * determine the type of Span annotation to be used to have arc annotations (as Origin and
      * target)
-     *
      */
     String getAttachFeatureName();
 

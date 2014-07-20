@@ -41,9 +41,11 @@ import org.apache.uima.jcas.JCas;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Offsets;
+import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.TagColor;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -57,35 +59,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 public class SpanAdapter
     implements TypeAdapter
 {
-    /**
-     * Prefix of the label value for Brat to make sure that different annotation types can use the
-     * same label, e.g. a POS tag "N" and a named entity type "N".
-     *
-     * This is used to differentiate the different types in the brat annotation/visualization. The
-     * prefix will not stored in the CAS (striped away at {@link BratAjaxCasController#getType} )
-     *
-     * It is a short unique numeric identifier for the type (primary key in the DB). This identifier
-     * is only transiently used when communicating with the UI. It is not persisted long term other
-     * than in the type registry (e.g. in the database).
-     */
-    private final long typeId;
-
-    /**
-     * A field that takes the name of the feature which should be set, e.e. "pos" or "lemma".
-     */
-    private final String attachFeatureName;
-
-    /**
-     * A field that takes the name of the annotation to attach to, e.g.
-     * "de.tudarmstadt...type.Token" (Token.class.getName())
-     */
-    private final String attachType;
-
-    /**
-     * The UIMA type name.
-     */
-    private final String annotationTypeName;
-
     /**
      * The minimum offset of the annotation is on token, and the annotation can't span multiple
      * tokens too
@@ -105,15 +78,13 @@ public class SpanAdapter
 
     private boolean crossMultipleSentence;
 
-    boolean deletable;
-
-    public SpanAdapter(long aTypeId, String aTypeName, String aAttachFeature, String aAttachType)
+    private boolean deletable;
+    
+    private AnnotationLayer layer;
+    
+    public SpanAdapter(AnnotationLayer aLayer)
     {
-
-        typeId = aTypeId;
-        annotationTypeName = aTypeName;
-        attachFeatureName = aAttachFeature;
-        attachType = aAttachType;
+        layer = aLayer;
     }
 
     /**
@@ -175,12 +146,14 @@ public class SpanAdapter
      *            A brat response containing annotations in brat protocol
      * @param aBratAnnotatorModel
      *            Data model for brat annotations
+     * @param aPreferredColor
+     *            the preferred color to render this layer
      */
     @Override
     public void render(JCas aJcas, List<AnnotationFeature> aFeatures,
-            GetDocumentResponse aResponse, BratAnnotatorModel aBratAnnotatorModel)
+            GetDocumentResponse aResponse, BratAnnotatorModel aBratAnnotatorModel,
+            String aPreferredColor)
     {
-
         // The first sentence address in the display window!
         Sentence firstSentence = BratAjaxCasUtil.selectSentenceAt(aJcas,
                 aBratAnnotatorModel.getSentenceBeginOffset(),
@@ -199,14 +172,32 @@ public class SpanAdapter
                     FeatureStructure.class, lastAddressInPage);
         }
 
-        Type type = getType(aJcas.getCas(), annotationTypeName);
+        Type type = getType(aJcas.getCas(), getAnnotationTypeName());
         int aFirstSentenceOffset = firstSentence.getBegin();
 
         for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, firstSentence.getBegin(),
                 lastSentenceInPage.getEnd())) {
-
             String bratTypeName = TypeUtil.getBratTypeName(this);
             String bratLabelText = TypeUtil.getBratLabelText(this, fs, aFeatures);
+            
+            // If each tag should get a separate color, we currently have no chance other than to 
+            // derive the color from the actual label text because at this point, we cannot access
+            // the tagset information. If we could do that, we could calculate a position within
+            // the tag space - at least for those layers that have *only* features with tagsets.
+            // For layers that have features without tagsets, again, we can only use the actual
+            // label value...
+            String color;
+            if (aBratAnnotatorModel.isStaticColor()) {
+                int colorIndex = Math.abs(bratLabelText.hashCode());
+                if (colorIndex == Integer.MIN_VALUE) {
+                    colorIndex = 0;
+                }
+                color = TagColor.PALETTE_NORMAL[colorIndex % TagColor.PALETTE_NORMAL.length];
+            }
+            else {
+                color = aPreferredColor;
+            }
+            
             Sentence beginSent = null, endSent = null;
             // check if annotation spans multiple sentence
             for (Sentence sentence : selectCovered(aJcas, Sentence.class, firstSentence.getBegin(),
@@ -242,12 +233,12 @@ public class SpanAdapter
                     }
                 }
                 aResponse.addEntity(new Entity(((FeatureStructureImpl) fs).getAddress(),
-                        bratTypeName, offsets, bratLabelText.toString()));
+                        bratTypeName, offsets, bratLabelText, color));
             }
             else {
                 aResponse.addEntity(new Entity(((FeatureStructureImpl) fs).getAddress(),
                         bratTypeName, new Offsets(fs.getBegin() - aFirstSentenceOffset, fs
-                                .getEnd() - aFirstSentenceOffset), bratLabelText.toString()));
+                                .getEnd() - aFirstSentenceOffset), bratLabelText, color));
             }
         }
     }
@@ -342,7 +333,7 @@ public class SpanAdapter
     private void updateCas(CAS aCas, int aBegin, int aEnd, AnnotationFeature aFeature, String aValue)
     {
         boolean duplicate = false;
-        Type type = CasUtil.getType(aCas, annotationTypeName);
+        Type type = CasUtil.getType(aCas, getAnnotationTypeName());
 
         Feature feature = type.getFeatureByBaseName(aFeature.getName());
         for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
@@ -369,9 +360,9 @@ public class SpanAdapter
             AnnotationFS newAnnotation = aCas.createAnnotation(type, aBegin, aEnd);
             newAnnotation.setFeatureValueFromString(feature, aValue);
 
-            if (attachFeatureName != null) {
-                Type theType = CasUtil.getType(aCas, attachType);
-                Feature attachFeature = theType.getFeatureByBaseName(attachFeatureName);
+            if (getAttachFeatureName() != null) {
+                Type theType = CasUtil.getType(aCas, getAttachTypeName());
+                Feature attachFeature = theType.getFeatureByBaseName(getAttachFeatureName());
                 // if the attache type feature structure is not in place
                 // (for
                 // custom annotation),
@@ -396,11 +387,11 @@ public class SpanAdapter
         aJCas.removeFsFromIndexes(fs);
 
         // delete associated attachFeature
-        if (attachType == null) {
+        if (getAttachTypeName() == null) {
             return;
         }
-        Type theType = CasUtil.getType(aJCas.getCas(), attachType);
-        Feature attachFeature = theType.getFeatureByBaseName(attachFeatureName);
+        Type theType = CasUtil.getType(aJCas.getCas(), getAttachTypeName());
+        Feature attachFeature = theType.getFeatureByBaseName(getAttachFeatureName());
         if (attachFeature == null) {
             return;
         }
@@ -412,7 +403,7 @@ public class SpanAdapter
     @Override
     public void delete(JCas aJCas, AnnotationFeature aFeature, int aBegin, int aEnd, String aValue)
     {
-        Type type = CasUtil.getType(aJCas.getCas(), annotationTypeName);
+        Type type = CasUtil.getType(aJCas.getCas(), getAnnotationTypeName());
         Feature feature = type.getFeatureByBaseName(aFeature.getName());
         for (AnnotationFS fs : CasUtil.selectCovered(aJCas.getCas(), type, aBegin, aEnd)) {
 
@@ -425,22 +416,36 @@ public class SpanAdapter
         }
     }
 
+    /**
+     * Prefix of the label value for Brat to make sure that different annotation types can use the
+     * same label, e.g. a POS tag "N" and a named entity type "N".
+     *
+     * This is used to differentiate the different types in the brat annotation/visualization. The
+     * prefix will not stored in the CAS (striped away at {@link BratAjaxCasController#getType} )
+     *
+     * It is a short unique numeric identifier for the type (primary key in the DB). This identifier
+     * is only transiently used when communicating with the UI. It is not persisted long term other
+     * than in the type registry (e.g. in the database).
+     */
     @Override
     public long getTypeId()
     {
-        return typeId;
+        return layer.getId();
     }
 
     @Override
     public Type getAnnotationType(CAS cas)
     {
-        return CasUtil.getType(cas, annotationTypeName);
+        return CasUtil.getType(cas, getAnnotationTypeName());
     }
 
+    /**
+     * The UIMA type name.
+     */
     @Override
     public String getAnnotationTypeName()
     {
-        return annotationTypeName;
+        return layer.getName();
     }
 
     public void setDeletable(boolean aDeletable)
@@ -457,7 +462,7 @@ public class SpanAdapter
     @Override
     public String getAttachFeatureName()
     {
-        return attachFeatureName;
+        return layer.getAttachFeature() == null ? null : layer.getAttachFeature().getName();
     }
 
     @Override
@@ -469,7 +474,7 @@ public class SpanAdapter
     @Override
     public List<String> getAnnotation(JCas aJcas, AnnotationFeature aFeature, int begin, int end)
     {
-        Type type = getType(aJcas.getCas(), annotationTypeName);
+        Type type = getType(aJcas.getCas(), getAnnotationTypeName());
         List<String> annotations = new ArrayList<String>();
         for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, begin, end)) {
             Feature labelFeature = fs.getType().getFeatureByBaseName(aFeature.getName());
@@ -482,7 +487,7 @@ public class SpanAdapter
         throws CASException
     {
         Map<Integer, String> multAnno = new HashMap<Integer, String>();
-        Type type = getType(sentence.getCAS(), annotationTypeName);
+        Type type = getType(sentence.getCAS(), getAnnotationTypeName());
         for (AnnotationFS fs : selectCovered(sentence.getCAS(), type, sentence.getBegin(),
                 sentence.getEnd())) {
             boolean isBegin = true;
@@ -510,7 +515,7 @@ public class SpanAdapter
         throws BratAnnotationException, IOException
     {
 
-        Type type = CasUtil.getType(aJcas.getCas(), annotationTypeName);
+        Type type = CasUtil.getType(aJcas.getCas(), getAnnotationTypeName());
         Feature feature = type.getFeatureByBaseName(aFeature.getName());
 
         int i = 0;
@@ -578,14 +583,14 @@ public class SpanAdapter
             }
         }
         else {
-            Type theType = CasUtil.getType(aJcas.getCas(), attachType);
-            Feature attachFeature = theType.getFeatureByBaseName(attachFeatureName);
+            Type theType = CasUtil.getType(aJcas.getCas(), getAttachTypeName());
+            Feature attachFeature = theType.getFeatureByBaseName(getAttachFeatureName());
             for (Token token : select(aJcas, Token.class)) {
                 AnnotationFS newAnnotation = aJcas.getCas().createAnnotation(type,
                         token.getBegin(), token.getEnd());
                 newAnnotation.setFeatureValueFromString(feature, aLabelValues.get(i));
                 i++;
-                if (attachFeatureName != null) {
+                if (getAttachFeatureName() != null) {
                     token.setFeatureValue(attachFeature, newAnnotation);
                 }
                 aJcas.getCas().addFsToIndexes(newAnnotation);
@@ -593,17 +598,20 @@ public class SpanAdapter
         }
     }
 
+    /**
+     * A field that takes the name of the annotation to attach to, e.g.
+     * "de.tudarmstadt...type.Token" (Token.class.getName())
+     */
     @Override
     public String getAttachTypeName()
     {
-        // TODO Auto-generated method stub
-        return null;
+        return layer.getAttachType() == null ? null : layer.getAttachType().getName();
     }
 
     @Override
     public void updateFeature(JCas aJcas, AnnotationFeature aFeature, int aAddress, String aValue)
     {
-        Type type = CasUtil.getType(aJcas.getCas(), annotationTypeName);
+        Type type = CasUtil.getType(aJcas.getCas(), getAnnotationTypeName());
         Feature feature = type.getFeatureByBaseName(aFeature.getName());
         FeatureStructure fs = BratAjaxCasUtil.selectByAddr(aJcas, FeatureStructure.class, aAddress);
         fs.setFeatureValueFromString(feature, aValue);

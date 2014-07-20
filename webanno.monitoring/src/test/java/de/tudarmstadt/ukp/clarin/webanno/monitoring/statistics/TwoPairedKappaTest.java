@@ -35,6 +35,7 @@ import org.junit.Test;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.monitoring.page.MonitoringPage;
@@ -104,7 +105,10 @@ public class TwoPairedKappaTest
     {
         init();
         double[][] results = new double[2][2];
-        TypeAdapter adapter = new SpanAdapter(0, POS.class.getName(), null, null);
+        AnnotationLayer layer = new AnnotationLayer();
+        layer.setId(0);
+        layer.setName(POS.class.getName());
+        TypeAdapter adapter = new SpanAdapter(layer);
         Map<User, List<SourceDocument>> userDocs = new HashMap<User, List<SourceDocument>>();
         userDocs.put(user1, Arrays.asList(new SourceDocument[] { document }));
         userDocs.put(user2, Arrays.asList(new SourceDocument[] { document }));
@@ -145,7 +149,10 @@ public class TwoPairedKappaTest
     {
         init();
         double[][] results = new double[2][2];
-        TypeAdapter adapter = new SpanAdapter(0, POS.class.getName(), null, null);
+        AnnotationLayer layer = new AnnotationLayer();
+        layer.setId(0);
+        layer.setName(POS.class.getName());
+        TypeAdapter adapter = new SpanAdapter(layer);
         Map<User, List<SourceDocument>> userDocs = new HashMap<User, List<SourceDocument>>();
         userDocs.put(user1, Arrays.asList(new SourceDocument[] { document }));
         userDocs.put(user2, Arrays.asList(new SourceDocument[] { document }));

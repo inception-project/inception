@@ -17,11 +17,8 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.display.model;
 
-import java.awt.Color;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Different attributes of an Entity used for its visualisation formats. It looks like
@@ -37,7 +34,6 @@ import java.util.Map;
  */
 public class EntityType
 {
-
     private String name;
     private String type;
     private boolean unused;
@@ -59,56 +55,35 @@ public class EntityType
         // Nothing to do
     }
 
-    // allow similar colors per layer
-    // FIXME we must not have such global states (public static)
-    private static Map<String, Map<String, Color>> typeToColor = new HashMap<String, Map<String, Color>>();
-
-    public EntityType(String aName, String aType, String aFgColor,
-            String aBgColor, String aBorderColor,  boolean aStaticColor)
+    public EntityType(String aName, String aType)
+    {
+        this(aName /* name */, aType /* type */, true /* unused */, "" /* hotkey */,
+                null /* fgColor */, null /* bgColor */, null /* borderColor */,
+                Arrays.asList(aName) /* labels */, null /* children */, null /* attributes */, 
+                null /* arcs */);
+    }
+    
+    public EntityType(String aName, String aType, String aFgColor, String aBgColor,
+            String aBorderColor)
     {
         this(aName /* name */, aType /* type */, true /* unused */, "" /* hotkey */,
                 aFgColor /* fgColor */, aBgColor /* bgColor */, aBorderColor /* borderColor */,
-                Arrays.asList(aName) /* labels */, null /* children */, null /* attributes */, null /* arcs */,
-                aStaticColor);
+                Arrays.asList(aName) /* labels */, null /* children */, null /* attributes */, 
+                null /* arcs */);
     }
     
     public EntityType(String aName, String aType, boolean aUnused, String aHotkey, String aFgColor,
             String aBgColor, String aBorderColor, List<String> aLabels, List<EntityType> aChildren,
-            List<String> aAttributes, List<RelationType> aArcs, boolean aStaticColor)
+            List<String> aAttributes, List<RelationType> aArcs)
     {
         super();
-        
-        if (!aStaticColor) {
-            String prefix = aType.contains("_") ? aType.substring(0, aType.indexOf("_")) : aType;
-            String colorType = aName;
-            Color goodBgColor;
-            Map<String, Color> nameToColor = typeToColor.get(prefix);
-            if (nameToColor == null) {
-                nameToColor = new HashMap<String, Color>();
-                typeToColor.put(prefix, nameToColor);
-            }
-
-            if (nameToColor.containsKey(colorType)) {
-                goodBgColor = nameToColor.get(colorType);
-            }
-            else {
-                goodBgColor = TagColor.generateDifferingPastelColor(nameToColor.values());
-                nameToColor.put(colorType, goodBgColor);
-            }
-
-            fgColor = TagColor.encodeRGB(goodBgColor);
-            bgColor = "black";
-        }
-        else {
-            fgColor = aFgColor;
-            bgColor = aBgColor;
-        }
-        
         name = aName;
         type = aType;
         unused = aUnused;
         hotkey = aHotkey;
         borderColor = aBorderColor;
+        fgColor = aFgColor;
+        bgColor = aBgColor;
         labels = aLabels;
         children = aChildren;
         attributes = aAttributes;
