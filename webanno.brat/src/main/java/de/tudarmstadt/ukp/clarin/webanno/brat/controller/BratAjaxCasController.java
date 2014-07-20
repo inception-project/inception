@@ -280,7 +280,7 @@ public class BratAjaxCasController
         LOG.info("Collection: " + aBratAnnotatorModel.getDocument().getName());
 
         GetDocumentResponse response = new GetDocumentResponse();
-        addBratResponses(response, aBratAnnotatorModel, aAnnotationOffsetStart, aJCas,
+        render(response, aBratAnnotatorModel, aAnnotationOffsetStart, aJCas,
                 aIsGetDocument);
 
         return response;
@@ -289,7 +289,7 @@ public class BratAjaxCasController
     /**
      * wrap JSON responses to BRAT visualizer
      */
-    public static void addBratResponses(GetDocumentResponse aResponse,
+    public static void render(GetDocumentResponse aResponse,
             BratAnnotatorModel aBratAnnotatorModel, int aAnnotationOffsetStart, JCas aJCas,
             boolean aIsGetDocument)
     {

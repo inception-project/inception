@@ -227,8 +227,7 @@ public class CuratorUtil
 
                 GetDocumentResponse response = new GetDocumentResponse();
 
-                BratAjaxCasController
-                        .addBratResponses(response, aBratAnnotatorModel, 0, jCas, true);
+                BratAjaxCasController.render(response, aBratAnnotatorModel, 0, jCas, true);
 
                 CurationUserSegmentForAnnotationDocument curationUserSegment2 = new CurationUserSegmentForAnnotationDocument();
                 curationUserSegment2.setCollectionData(getStringCollectionData(response, jCas,
@@ -359,22 +358,22 @@ public class CuratorUtil
                     if (argument.getToken() == entity.getId()) {// has outgoing
                                                                 // arc
                         hasArc = true;
-                        List<RelationType> relations = getRelationTypes(response,
+                        List<RelationType> relationTypes = getRelationTypes(response,
                                 annotationSelectionByAddress, numUsers, relation,
                                 targetAnnotations.get(relation.getArguments().get(1).getToken()),
                                 aAnnotationOptions, aMode, entity);
-                        Map<String, Object> enityTypeWithArcs = CuratorUtil.getEntity(type,
+                        Map<String, Object> enityTypeWithArcs = CuratorUtil.getEntityType(type,
                                 label, newState);
                         if (entityTypes.get(type) == null
                                 || (entityTypes.get(type) != null && entityTypes.get(type).get(
                                         "arcs") == null)) {
-                            enityTypeWithArcs.put("arcs", relations);
+                            enityTypeWithArcs.put("arcs", relationTypes);
                             entityTypes.put(type, enityTypeWithArcs);
                         }
                         else {
                             List<RelationType> enityTypeWithArcsOld = (List<RelationType>) entityTypes
                                     .get(type).get("arcs");
-                            enityTypeWithArcsOld.addAll(relations);
+                            enityTypeWithArcsOld.addAll(relationTypes);
                             enityTypeWithArcs.put("arcs", enityTypeWithArcsOld);
                             entityTypes.put(type, enityTypeWithArcs);
                         }
@@ -384,7 +383,7 @@ public class CuratorUtil
                 if (!hasArc) {
                     if (entityTypes.get(type) == null
                             || (entityTypes.get(type) != null && entityTypes.get(type).get("arcs") == null)) {
-                        entityTypes.put(type, CuratorUtil.getEntity(type, label, newState));
+                        entityTypes.put(type, CuratorUtil.getEntityType(type, label, newState));
                     }
                 }
             }
@@ -448,12 +447,12 @@ public class CuratorUtil
             String label = relation.getType().replace(WebAnnoConst.DEP_PREFIX, "")
                     .replace(WebAnnoConst.COREFERENCE_PREFIX, "");
             relation.setType(type);
-            return getRelation(type, label, newState, Arrays.asList(arcTarget));
+            return getRelationTypes(type, label, newState, Arrays.asList(arcTarget));
         }
         return new ArrayList<RelationType>();
     }
 
-    public static Map<String, Object> getEntity(String type, String label,
+    public static Map<String, Object> getEntityType(String type, String label,
             AnnotationState annotationState)
     {
         Map<String, Object> entityType = new HashMap<String, Object>();
@@ -465,7 +464,7 @@ public class CuratorUtil
         return entityType;
     }
 
-    public static List<RelationType> getRelation(String type, String label,
+    public static List<RelationType> getRelationTypes(String type, String label,
             AnnotationState annotationState, List<String> arcTargets)
     {
         List<RelationType> arcs = new ArrayList<RelationType>();
@@ -473,9 +472,9 @@ public class CuratorUtil
         if (annotationState.equals(AnnotationState.AGREE)) {
             annotationState = AnnotationState.AGREE_ARC;
         }
-        RelationType arc = new RelationType(annotationState.getColorCode(), "triangle,5",
+        RelationType relType = new RelationType(annotationState.getColorCode(), "triangle,5",
                 Arrays.asList(label), type, arcTargets, "");
-        arcs.add(arc);
+        arcs.add(relType);
         return arcs;
     }
 
