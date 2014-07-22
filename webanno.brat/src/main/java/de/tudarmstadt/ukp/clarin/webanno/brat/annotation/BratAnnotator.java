@@ -295,8 +295,8 @@ public class BratAnnotator
                     }
                     else if (action.equals(ACTION_GET_COLLECTION_INFORMATION)
                             && getModelObject().getProject() != null) {
-                        result = controller.getCollectionInformation(getModelObject().getProject()
-                                .getName(), getModelObject().getAnnotationLayers());
+                        result = controller.getCollectionInformation(getModelObject()
+                                .getAnnotationLayers());
 
                     }
                     else if (action.equals(ACTION_GET_DOCUMENT)) {

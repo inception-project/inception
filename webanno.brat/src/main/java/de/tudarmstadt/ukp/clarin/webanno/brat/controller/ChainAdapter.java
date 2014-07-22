@@ -40,7 +40,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Argument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Relation;
-import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.TagColor;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -54,8 +53,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 public class ChainAdapter
     implements TypeAdapter
 {
-    public static final String EXPLETIVE = "expletive";
-    
     public static final String CHAIN = "Chain";
     public static final String LINK = "Link";
 
@@ -106,13 +103,13 @@ public class ChainAdapter
      *            A brat response containing annotations in brat protocol
      * @param aBratAnnotatorModel
      *            Data model for brat annotations
-     * @param aPreferredColor
-     *            the preferred color to render this layer
+     * @param aColoringStrategy
+     *            the coloring strategy to render this layer (ignored)
      */
     @Override
     public void render(JCas aJcas, List<AnnotationFeature> aFeatures,
             GetDocumentResponse aResponse, BratAnnotatorModel aBratAnnotatorModel,
-            String aPreferredColor)
+            ColoringStrategy aColoringStrategy)
     {
         // Get begin and end offsets of window content
         int windowBegin = BratAjaxCasUtil.selectByAddr(aJcas,
@@ -146,7 +143,8 @@ public class ChainAdapter
             AnnotationFS prevLinkFs = null;
             
             // Every chain is supposed to have a different color
-            String color = TagColor.PALETTE_NORMAL[colorIndex % TagColor.PALETTE_NORMAL.length];
+            String color = ColoringStrategy.PALETTE_NORMAL_FILTERED[colorIndex
+                    % ColoringStrategy.PALETTE_NORMAL_FILTERED.length];
             // The color index is updated even for chains that have no visible links in the current
             // window because we would like the chain color to be independent of visibility. In
             // particular the color of a chain should not change when switching pages/scrolling.

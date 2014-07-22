@@ -18,14 +18,10 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.display.model.TagColor.PALETTE_PASTEL;
-
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -48,16 +44,15 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.ImportDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.LoadConfResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.StoreSvgResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.WhoamiResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
+import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
@@ -193,71 +188,17 @@ public class BratAjaxCasController
      *
      * @see <a href="http://brat.nlplab.org/index.html">Brat</a>
      */
-    public GetCollectionInformationResponse getCollectionInformation(String aCollection,
-            HashSet<AnnotationLayer> aAnnotationLayers)
+    public GetCollectionInformationResponse getCollectionInformation(
+            Set<AnnotationLayer> aAnnotationLayers)
     {
-        LOG.info("AJAX-RPC: getCollectionInformation");
-
-        LOG.info("Collection: " + aCollection);
-
-        Project project = new Project();
-        if (!aCollection.equals("/")) {
-            project = repository.getProject(aCollection.replace("/", ""));
-        }
-        // Get list of TagSets configured in BRAT UI
-
-        // Get The tags of the tagset
-        // merge all of them
-        /*
-         * List<Tag> tagLists = new ArrayList<Tag>();
-         *
-         * List<String> tagSetNames = new ArrayList<String>(); for (TagSet tagSet :
-         * aAnnotationLayers) { List<Tag> tag = annotationService.listTags(tagSet);
-         * tagLists.addAll(tag); tagSetNames.add(tagSet.getType().getName()); }
-         */
         GetCollectionInformationResponse info = new GetCollectionInformationResponse();
-        BratAjaxConfiguration configuration = new BratAjaxConfiguration();
-        ArrayList<AnnotationLayer> layers = new ArrayList<AnnotationLayer>(aAnnotationLayers);
-        Collections.sort(layers, new Comparator<AnnotationLayer>()
-        {
-            @Override
-            public int compare(AnnotationLayer o1, AnnotationLayer o2)
-            {
-                return o1.getName().compareTo(o2.getName());
-            }
-        });
-
-        info.setEntityTypes(configuration.buildEntityTypes(layers, annotationService));
-
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = repository.getUser(username);
-        if (aCollection.equals("/")) {
-            for (Project projects : repository.listProjects()) {
-                if (ProjectUtil.isMember(projects, repository, user)) {
-                    info.addCollection(projects.getName());
-                }
-            }
-        }
-        else {
-            project = repository.getProject(aCollection.replace("/", ""));
-
-            for (SourceDocument document : repository.listSourceDocuments(project)) {
-                info.addDocument(document.getName());
-            }
-            info.addCollection("../");
-        }
-        // FIXME: The norm_search_dialog seems required in the annotation page.
-        // This will be removed when our own open dialog is implemented
-        info.setSearchConfig(new ArrayList<String[]>());
-
-        LOG.info("Done.");
+        info.setEntityTypes(BratAjaxConfiguration.buildEntityTypes(aAnnotationLayers, annotationService));
         return info;
     }
 
     public GetDocumentTimestampResponse getDocumentTimestamp(String aCollection, String aDocument)
     {
         LOG.info("AJAX-RPC: getDocumentTimestamp");
-
         LOG.info("Collection: " + aCollection);
         LOG.info("Document: " + aDocument);
 
@@ -267,8 +208,6 @@ public class BratAjaxCasController
 
     /**
      * Returns the JSON representation of the document for brat visualizer
-     *
-     * @throws ClassNotFoundException
      */
 
     public GetDocumentResponse getDocumentResponse(BratAnnotatorModel aBratAnnotatorModel,
@@ -293,22 +232,44 @@ public class BratAjaxCasController
             BratAnnotatorModel aBratAnnotatorModel, int aAnnotationOffsetStart, JCas aJCas,
             boolean aIsGetDocument)
     {
+        // Maybe this section should be moved elsewehere and the aIsGetDocument parameter should
+        // be removed, so that this method really only renders and does not additionally update
+        // the BratAnnotatorModel state? -- REC
         if (aBratAnnotatorModel.isScrollPage() && !aIsGetDocument) {
             aBratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(aJCas,
                     aBratAnnotatorModel.getSentenceAddress(), aAnnotationOffsetStart,
                     aBratAnnotatorModel.getProject(), aBratAnnotatorModel.getDocument(),
                     aBratAnnotatorModel.getWindowSize()));
         }
+        
+        render(aResponse, aBratAnnotatorModel, aJCas);
+    }
+    
+    /**
+     * wrap JSON responses to BRAT visualizer
+     */
+    public static void render(GetDocumentResponse aResponse,
+            BratAnnotatorModel aBratAnnotatorModel, JCas aJCas)
+    {
+        // Render invisible baseline annotations (sentence, tokens)
         SpanAdapter.renderTokenAndSentence(aJCas, aResponse, aBratAnnotatorModel);
 
+        // Render visible (custom) layers
         int i = 0;
         for (AnnotationLayer layer : aBratAnnotatorModel.getAnnotationLayers()) {
-            if (layer.getName().equals(Token.class.getName())) {
+            if (
+                    layer.getName().equals(Token.class.getName()) || 
+                    layer.getName().equals(Sentence.class.getName())
+            ) {
                 continue;
             }
+            
+            ColoringStrategy coloringStrategy = ColoringStrategy.getBestStrategy(layer,
+                    aBratAnnotatorModel, i);
+            
             List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
-            getAdapter(layer, annotationService).render(aJCas, features, aResponse,
-                    aBratAnnotatorModel, PALETTE_PASTEL[i % PALETTE_PASTEL.length]);
+            TypeAdapter adapter = getAdapter(layer, annotationService);
+            adapter.render(aJCas, features, aResponse, aBratAnnotatorModel, coloringStrategy);
             i++;
         }
     }

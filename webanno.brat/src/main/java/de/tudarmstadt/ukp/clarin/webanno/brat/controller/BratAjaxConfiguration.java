@@ -21,6 +21,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.CHA
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.RELATION_TYPE;
 import static java.util.Arrays.asList;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -46,16 +49,27 @@ public class BratAjaxConfiguration
     /**
      * Generates brat type definitions from the WebAnno layer definitions.
      * 
-     * @param aLayers the layers
+     * @param aAnnotationLayers the layers
      * @param aAnnotationService the annotation service
      * @return the brat type definitions
      */
-    public Set<EntityType> buildEntityTypes(List<AnnotationLayer> aLayers,
+    public static Set<EntityType> buildEntityTypes(Set<AnnotationLayer> aAnnotationLayers,
             AnnotationService aAnnotationService)
     {
+        // Sort layers
+        List<AnnotationLayer> layers = new ArrayList<AnnotationLayer>(aAnnotationLayers);
+        Collections.sort(layers, new Comparator<AnnotationLayer>()
+        {
+            @Override
+            public int compare(AnnotationLayer o1, AnnotationLayer o2)
+            {
+                return o1.getName().compareTo(o2.getName());
+            }
+        });
+        
         // Scan through the layers once to remember which layers attach to which layers
         Map<AnnotationLayer, AnnotationLayer> attachingLayers = new LinkedHashMap<AnnotationLayer, AnnotationLayer>();
-        for (AnnotationLayer layer : aLayers) {
+        for (AnnotationLayer layer : layers) {
             if (layer.getType().equals(CHAIN_TYPE)) {
                 attachingLayers.put(layer, layer);
             }
@@ -67,7 +81,7 @@ public class BratAjaxConfiguration
 
         // Now build the actual configuration
         Set<EntityType> entityTypes = new LinkedHashSet<EntityType>();
-        for (AnnotationLayer layer : aLayers) {
+        for (AnnotationLayer layer : layers) {
             configureLayer(aAnnotationService, entityTypes, layer,
                     attachingLayers.get(layer));
         }
@@ -75,7 +89,7 @@ public class BratAjaxConfiguration
         return entityTypes;
     }
     
-    private void configureLayer(AnnotationService aAnnotationService,
+    private static void configureLayer(AnnotationService aAnnotationService,
             Set<EntityType> aEntityTypes, AnnotationLayer aLayer,
             AnnotationLayer aAttachingLayer)
     {

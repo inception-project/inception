@@ -42,7 +42,6 @@ import org.springframework.http.converter.json.MappingJacksonHttpMessageConverte
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
@@ -92,8 +91,6 @@ public class CasToBratJsonTest
 
         GetCollectionInformationResponse collectionInformation = new GetCollectionInformationResponse();
 
-        BratAjaxConfiguration configuration = new BratAjaxConfiguration();
-
         List<AnnotationLayer> layerList = new ArrayList<AnnotationLayer>();
 
         AnnotationLayer layer = new AnnotationLayer();
@@ -113,9 +110,6 @@ public class CasToBratJsonTest
 
         layerList.add(layer);
 
-    /*    collectionInformation.setEntityTypes(configuration.configureVisualizationAndAnnotation(
-                layerList, null, true));
-*/
         collectionInformation.addCollection("/Collection1/");
         collectionInformation.addCollection("/Collection2/");
         collectionInformation.addCollection("/Collection3/");

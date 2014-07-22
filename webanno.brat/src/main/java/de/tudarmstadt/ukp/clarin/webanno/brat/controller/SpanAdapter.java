@@ -41,7 +41,6 @@ import org.apache.uima.jcas.JCas;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Offsets;
-import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.TagColor;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -146,13 +145,13 @@ public class SpanAdapter
      *            A brat response containing annotations in brat protocol
      * @param aBratAnnotatorModel
      *            Data model for brat annotations
-     * @param aPreferredColor
-     *            the preferred color to render this layer
+     * @param aColoringStrategy
+     *            the coloring strategy to render this layer
      */
     @Override
     public void render(JCas aJcas, List<AnnotationFeature> aFeatures,
             GetDocumentResponse aResponse, BratAnnotatorModel aBratAnnotatorModel,
-            String aPreferredColor)
+            ColoringStrategy aColoringStrategy)
     {
         // The first sentence address in the display window!
         Sentence firstSentence = BratAjaxCasUtil.selectSentenceAt(aJcas,
@@ -179,24 +178,7 @@ public class SpanAdapter
                 lastSentenceInPage.getEnd())) {
             String bratTypeName = TypeUtil.getBratTypeName(this);
             String bratLabelText = TypeUtil.getBratLabelText(this, fs, aFeatures);
-            
-            // If each tag should get a separate color, we currently have no chance other than to 
-            // derive the color from the actual label text because at this point, we cannot access
-            // the tagset information. If we could do that, we could calculate a position within
-            // the tag space - at least for those layers that have *only* features with tagsets.
-            // For layers that have features without tagsets, again, we can only use the actual
-            // label value...
-            String color;
-            if (aBratAnnotatorModel.isStaticColor()) {
-                int colorIndex = Math.abs(bratLabelText.hashCode());
-                if (colorIndex == Integer.MIN_VALUE) {
-                    colorIndex = 0;
-                }
-                color = TagColor.PALETTE_NORMAL[colorIndex % TagColor.PALETTE_NORMAL.length];
-            }
-            else {
-                color = aPreferredColor;
-            }
+            String color = aColoringStrategy.getColor(fs, bratLabelText);
             
             Sentence beginSent = null, endSent = null;
             // check if annotation spans multiple sentence
@@ -246,7 +228,6 @@ public class SpanAdapter
     public static void renderTokenAndSentence(JCas aJcas, GetDocumentResponse aResponse,
             BratAnnotatorModel aBratAnnotatorModel)
     {
-
         // The first sentence address in the display window!
         Sentence firstSentence = BratAjaxCasUtil.selectSentenceAt(aJcas,
                 aBratAnnotatorModel.getSentenceBeginOffset(),
@@ -286,7 +267,6 @@ public class SpanAdapter
             aResponse.addSentence(fs.getBegin() - aFirstSentenceOffset, fs.getEnd()
                     - aFirstSentenceOffset);
         }
-
     }
 
     /**
@@ -617,5 +597,4 @@ public class SpanAdapter
         fs.setFeatureValueFromString(feature, aValue);
 
     }
-
 }

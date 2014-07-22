@@ -18,8 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.display.model.TagColor.PALETTE_PASTEL;
-
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.List;
@@ -37,6 +35,7 @@ import org.springframework.http.converter.json.MappingJacksonHttpMessageConverte
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -144,25 +143,21 @@ public class BratAnnotationDocumentVisualizer
         GetDocumentResponse response = new GetDocumentResponse();
         response.setText(jCas.getDocumentText());
 
-        // THE BratSession is deleted. modify BratViualizer to include windowSize in its state.
-        // HttpSession session = BratSession.session();
-        // Project project = (Project) session.getAttribute("project");
-        // SourceDocument document = (SourceDocument) session.getAttribute("document");
-        // int windowSize = (Integer)session.getAttribute("windowSize-" + project.getName()
-        // +"-"+document.getName());
-        // If this Classe is used somewhere, get BratAnnotatorModel populated somewhere
-        BratAnnotatorModel bratAnnotatorDataModel = new BratAnnotatorModel();
-
-        SpanAdapter.renderTokenAndSentence(jCas, response, bratAnnotatorDataModel);
+        BratAnnotatorModel bratAnnotatorModel = new BratAnnotatorModel();
+        SpanAdapter.renderTokenAndSentence(jCas, response, bratAnnotatorModel);
 
         int i = 0;
-        for (AnnotationLayer layer : bratAnnotatorDataModel.getAnnotationLayers()) {
+        for (AnnotationLayer layer : bratAnnotatorModel.getAnnotationLayers()) {
             if (layer.getName().equals(Token.class.getName())) {
                 continue;
             }
             List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
+
+            ColoringStrategy coloringStrategy = ColoringStrategy.getBestStrategy(layer, 
+                    bratAnnotatorModel, i);
+
             getAdapter(layer, annotationService).render(jCas, features, response,
-                    bratAnnotatorDataModel, PALETTE_PASTEL[i % PALETTE_PASTEL.length]);
+                    bratAnnotatorModel, coloringStrategy);
             i++;
         }
 

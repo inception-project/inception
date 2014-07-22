@@ -34,7 +34,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
  *
  * @author Richard Eckart de Castilho
  * @author Seid Muhie Yimam
- *
  */
 public interface TypeAdapter
 {
@@ -44,13 +43,6 @@ public interface TypeAdapter
      * Add new annotation to the CAS using the MIRA prediction. This is different from the add
      * methods in the {@link TypeAdapter}s in such a way that the begin and end offsets are always
      * exact so that no need to re-compute
-     *
-     * @param aJcas
-     * @param aBegin
-     * @param aEnd
-     * @param aLabelValue
-     * @throws BratAnnotationException
-     * @throws IOException
      */
     void automate(JCas aJcas, AnnotationFeature feature, List<String> labelValues)
         throws BratAnnotationException, IOException;
@@ -70,12 +62,12 @@ public interface TypeAdapter
      *            A brat response containing annotations in brat protocol
      * @param aBratAnnotatorModel
      *            Data model for brat annotations
-     * @param aPreferredColor
-     *            the preferred color to render this layer
+     * @param aColoringStrategy
+     *            the  coloring strategy to render this layer
      */
     void render(JCas aJcas, List<AnnotationFeature> features, GetDocumentResponse aResponse,
-            BratAnnotatorModel aBratAnnotatorModel, String aPreferredColor);
-
+            BratAnnotatorModel aBratAnnotatorModel, ColoringStrategy aColoringStrategy);
+    
     /**
      * Prefix of the label value for Brat to make sure that different annotation types can use the
      * same label, e.g. a POS tag "N" and a named entity type "N".
@@ -110,14 +102,10 @@ public interface TypeAdapter
      */
     String getAttachTypeName();
 
-    // /**
-    // * Update the CAS with new/modification of span annotations from brat
-    // *
-    // * @param aLabelValue
-    // * the value of the annotation for the span
-    // */
-    // void add(String aLabelValue, JCas aJcas, int aAnnotationOffsetStart, int
-    // aAnnotationOffsetEnd);
+    /**
+     * check if the annotation type is deletable
+     */
+    boolean isDeletable();
 
     /**
      * Delete a annotation from CAS.
@@ -127,11 +115,6 @@ public interface TypeAdapter
      * @param aAddress
      *            the low-level address of the span annotation.
      */
-    /**
-     * check if the annotation type is deletable
-     */
-    boolean isDeletable();
-
     public void delete(JCas aJCas, int aAddress);
 
     // delete based on the begin,end, and type of annotation
