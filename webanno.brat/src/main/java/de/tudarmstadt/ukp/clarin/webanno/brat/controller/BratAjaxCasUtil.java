@@ -30,6 +30,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
+import org.apache.uima.cas.impl.FeatureStructureImpl;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
@@ -59,9 +60,9 @@ public class BratAjaxCasUtil
      * @param b
      * @return
      */
-    public static boolean isSame(Annotation a, Annotation b)
+    public static boolean isSame(FeatureStructure a, FeatureStructure b)
     {
-        return a.getAddress() == b.getAddress();
+        return getAddr(a) == getAddr(b);
     }
 
     /**
@@ -109,6 +110,11 @@ public class BratAjaxCasUtil
      * }
      */
 
+    public static int getAddr(FeatureStructure aFS)
+    {
+        return ((FeatureStructureImpl) aFS).getAddress();
+    }
+    
     public static AnnotationFS selectByAddr(JCas aJCas, int aAddress)
     {
         return selectByAddr(aJCas, AnnotationFS.class, aAddress);
