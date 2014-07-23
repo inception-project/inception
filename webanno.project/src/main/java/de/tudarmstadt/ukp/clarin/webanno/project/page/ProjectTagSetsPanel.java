@@ -35,8 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.persistence.NoResultException;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -612,12 +610,12 @@ public class ProjectTagSetsPanel
                     }
                     if (tag.getId() == 0) {
                         tag.setTagSet(tagSetDetailForm.getModelObject());
-                        try {
-                            annotationService.getTag(tag.getName(),
-                                    tagSetDetailForm.getModelObject());
+
+                        if (annotationService.existsTag(tag.getName(),
+                                tagSetDetailForm.getModelObject())) {
                             error("This tag is already added for this tagset!");
                         }
-                        catch (NoResultException ex) {
+                        else {
 
                             String username = SecurityContextHolder.getContext()
                                     .getAuthentication().getName();

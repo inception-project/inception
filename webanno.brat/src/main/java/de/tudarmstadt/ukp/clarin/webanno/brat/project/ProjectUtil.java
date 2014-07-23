@@ -342,7 +342,8 @@ public class ProjectUtil
              * List<TagSet> corefTagSets = new ArrayList<TagSet>(); List<TagSet> noFeatureTagSet =
              * new ArrayList<TagSet>(); for (TagSet tagSet : tagSets) { if (tagSet.getLayer() ==
              * null || tagSet.getFeature() == null) { noFeatureTagSet.add(tagSet); } else if
-             * (tagSet.getLayer().getType().equals(ChainAdapter.CHAIN)) { corefTagSets.add(tagSet); } }
+             * (tagSet.getLayer().getType().equals(ChainAdapter.CHAIN)) { corefTagSets.add(tagSet);
+             * } }
              *
              * if (aMode.equals(Mode.CORRECTION) || aMode.equals(Mode.AUTOMATION) ||
              * aMode.equals(Mode.CURATION)) { tagSets.removeAll(corefTagSets); }
@@ -602,6 +603,10 @@ public class ProjectUtil
         aAnnotationService.createTagSet(aTagSet, aUser);
 
         for (de.tudarmstadt.ukp.clarin.webanno.model.export.Tag exTag : aExTagSet.getTags()) {
+            // du not duplicate tag
+            if (aAnnotationService.existsTag(exTag.getName(), aTagSet)) {
+                continue;
+            }
             Tag tag = new Tag();
             tag.setDescription(exTag.getDescription());
             tag.setTagSet(aTagSet);
