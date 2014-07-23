@@ -101,7 +101,7 @@ public class ArcAdapter
      * Allow multiple annotations of the same layer (only when the type value is different)
      */
     private boolean allowStacking;
-    
+
     private boolean crossMultipleSentence;
 
     public ArcAdapter(long aTypeId, String aTypeName, String aTargetFeatureName,
@@ -174,7 +174,7 @@ public class ArcAdapter
             String bratLabelText = TypeUtil.getBratLabelText(this, fs, aFeatures);
             String bratTypeName = TypeUtil.getBratTypeName(this);
             String color = aColoringStrategy.getColor(fs, bratLabelText);
-            
+
             aResponse.addRelation(new Relation(((FeatureStructureImpl) fs).getAddress(),
                     bratTypeName, argumentList, bratLabelText, color));
         }
@@ -229,10 +229,8 @@ public class ArcAdapter
         Type spanType = getType(aJCas.getCas(), attachType);
         Feature arcSpanFeature = spanType.getFeatureByBaseName(attacheFeatureName);
 
-        Type tokenType = getType(aJCas.getCas(), attachType);
-
-        FeatureStructure dependentFs;
-        FeatureStructure governorFs;
+        AnnotationFS dependentFs = null;
+        AnnotationFS governorFs = null;
         // List all sentence in this display window
         List<Sentence> sentences = selectCovered(aJCas, Sentence.class, aBegin, aEnd);
         for (Sentence sentence : sentences) {
@@ -241,14 +239,14 @@ public class ArcAdapter
                     sentence.getEnd())) {
 
                 if (attacheFeatureName != null) {
-                    dependentFs = fs.getFeatureValue(dependentFeature).getFeatureValue(
+                    dependentFs = (AnnotationFS) fs.getFeatureValue(dependentFeature).getFeatureValue(
                             arcSpanFeature);
-                    governorFs = fs.getFeatureValue(governorFeature)
+                    governorFs = (AnnotationFS) fs.getFeatureValue(governorFeature)
                             .getFeatureValue(arcSpanFeature);
                 }
                 else {
-                    dependentFs = fs.getFeatureValue(dependentFeature);
-                    governorFs = fs.getFeatureValue(governorFeature);
+                    dependentFs = (AnnotationFS) fs.getFeatureValue(dependentFeature);
+                    governorFs = (AnnotationFS) fs.getFeatureValue(governorFeature);
                 }
 
                 if (isDuplicate((AnnotationFS) governorFs, aOriginFs, (AnnotationFS) dependentFs,
@@ -270,44 +268,36 @@ public class ArcAdapter
         }
         // It is new ARC annotation, create it
         if (!duplicate) {
-            AnnotationFS dependentFS;
-            AnnotationFS governorFS;
             if (aValue.equals("ROOT")) {
-                governorFS = (AnnotationFS) BratAjaxCasUtil.selectByAddr(aJCas,
+                governorFs = (AnnotationFS) BratAjaxCasUtil.selectByAddr(aJCas,
                         FeatureStructure.class, ((FeatureStructureImpl) aOriginFs).getAddress());
-                dependentFS = governorFS;
+                dependentFs = governorFs;
             }
             else {
-                dependentFS = (AnnotationFS) BratAjaxCasUtil.selectByAddr(aJCas,
+                dependentFs = (AnnotationFS) BratAjaxCasUtil.selectByAddr(aJCas,
                         FeatureStructure.class, ((FeatureStructureImpl) aTargetFs).getAddress());
-                governorFS = (AnnotationFS) BratAjaxCasUtil.selectByAddr(aJCas,
+                governorFs = (AnnotationFS) BratAjaxCasUtil.selectByAddr(aJCas,
                         FeatureStructure.class, ((FeatureStructureImpl) aOriginFs).getAddress());
             }
             // if span A has (start,end)= (20, 26) and B has (start,end)= (30, 36)
             // arc drawn from A to B, dependency will have (start, end) = (20, 36)
             // arc drawn from B to A, still dependency will have (start, end) = (20, 36)
             AnnotationFS newAnnotation;
-            if (dependentFS.getEnd() <= governorFS.getEnd()) {
-                newAnnotation = aJCas.getCas().createAnnotation(type, dependentFS.getBegin(),
-                        governorFS.getEnd());
+            if (dependentFs.getEnd() <= governorFs.getEnd()) {
+                newAnnotation = aJCas.getCas().createAnnotation(type, dependentFs.getBegin(),
+                        governorFs.getEnd());
                 newAnnotation.setFeatureValueFromString(feature, aValue);
             }
             else {
-                newAnnotation = aJCas.getCas().createAnnotation(type, governorFS.getBegin(),
-                        dependentFS.getEnd());
+                newAnnotation = aJCas.getCas().createAnnotation(type, governorFs.getBegin(),
+                        dependentFs.getEnd());
                 newAnnotation.setFeatureValueFromString(feature, aValue);
             }
             // If origin and target spans are multiple tokens, dependentFS.getBegin will be the
             // the begin position of the first token and dependentFS.getEnd will be the End
             // position of the last token.
-            newAnnotation.setFeatureValue(
-                    dependentFeature,
-                    selectCovered(aJCas.getCas(), tokenType, dependentFS.getBegin(),
-                            dependentFS.getEnd()).get(0));
-            newAnnotation.setFeatureValue(
-                    governorFeature,
-                    selectCovered(aJCas.getCas(), tokenType, governorFS.getBegin(),
-                            governorFS.getEnd()).get(0));
+            newAnnotation.setFeatureValue(dependentFeature, dependentFs);
+            newAnnotation.setFeatureValue(governorFeature, governorFs);
             aJCas.addFsToIndexes(newAnnotation);
         }
     }
@@ -334,8 +324,8 @@ public class ArcAdapter
         for (AnnotationFS fs : selectCovered(aJCas.getCas(), type, aBegin, aEnd)) {
 
             if (attacheFeatureName != null) {
-                FeatureStructure dependentFs = fs.getFeatureValue(targetFeature)
-                        .getFeatureValue(arcSpanFeature);
+                FeatureStructure dependentFs = fs.getFeatureValue(targetFeature).getFeatureValue(
+                        arcSpanFeature);
                 if (((FeatureStructureImpl) afs).getAddress() == ((FeatureStructureImpl) dependentFs)
                         .getAddress()) {
                     fsToDelete.add(fs);
@@ -453,7 +443,6 @@ public class ArcAdapter
         this.crossMultipleSentence = crossMultipleSentence;
     }
 
-
     public boolean isAllowStacking()
     {
         return allowStacking;
@@ -465,30 +454,30 @@ public class ArcAdapter
     }
 
     // FIXME this is the version that treats each tag as a separate type in brat - should be removed
-//    public static String getBratTypeName(TypeAdapter aAdapter, AnnotationFS aFs,
-//            List<AnnotationFeature> aFeatures)
-//    {
-//        String annotations = "";
-//        for (AnnotationFeature feature : aFeatures) {
-//            if (!(feature.isEnabled() || feature.isEnabled())) {
-//                continue;
-//            }
-//            Feature labelFeature = aFs.getType().getFeatureByBaseName(feature.getName());
-//            if (annotations.equals("")) {
-//                annotations = aAdapter.getTypeId()
-//                        + "_"
-//                        + (aFs.getFeatureValueAsString(labelFeature) == null ? " " : aFs
-//                                .getFeatureValueAsString(labelFeature));
-//            }
-//            else {
-//                annotations = annotations
-//                        + " | "
-//                        + (aFs.getFeatureValueAsString(labelFeature) == null ? " " : aFs
-//                                .getFeatureValueAsString(labelFeature));
-//            }
-//        }
-//        return annotations;
-//    }
+    // public static String getBratTypeName(TypeAdapter aAdapter, AnnotationFS aFs,
+    // List<AnnotationFeature> aFeatures)
+    // {
+    // String annotations = "";
+    // for (AnnotationFeature feature : aFeatures) {
+    // if (!(feature.isEnabled() || feature.isEnabled())) {
+    // continue;
+    // }
+    // Feature labelFeature = aFs.getType().getFeatureByBaseName(feature.getName());
+    // if (annotations.equals("")) {
+    // annotations = aAdapter.getTypeId()
+    // + "_"
+    // + (aFs.getFeatureValueAsString(labelFeature) == null ? " " : aFs
+    // .getFeatureValueAsString(labelFeature));
+    // }
+    // else {
+    // annotations = annotations
+    // + " | "
+    // + (aFs.getFeatureValueAsString(labelFeature) == null ? " " : aFs
+    // .getFeatureValueAsString(labelFeature));
+    // }
+    // }
+    // return annotations;
+    // }
 
     @Override
     public String getAttachTypeName()
