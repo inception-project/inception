@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.automation.util;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getQualifiedLabel;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
@@ -173,8 +172,10 @@ public class AutomationUtil
                     + selectedText.length()) {
                 if (selectCovered(jCas, Token.class, sentence.getBegin() + i,
                         sentence.getBegin() + i + selectedText.length()).size() > 0) {
+
+                    String value = aModel.getRememberedSpanFeatures().get(aFeature);
                     adapter.delete(jCas, aFeature, sentence.getBegin() + i, sentence.getBegin() + i
-                            + selectedText.length() - 1, getQualifiedLabel(aFeature));
+                            + selectedText.length() - 1, value);
                 }
             }
         }

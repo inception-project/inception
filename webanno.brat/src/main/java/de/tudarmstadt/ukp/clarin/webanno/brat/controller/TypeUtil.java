@@ -69,39 +69,6 @@ public final class TypeUtil
                     + "]");
         }
     }
-
-	    /**
-     * Get the annotation type the way it is used in Brat visualization page (PREFIX+Type), such as
-     * (POS_+NN)
-     * 
-     * @deprecated an alternative to calling this method should be used, e.g. resolving the address
-     *             of a feature structure and getting its type.
-     */
-    @Deprecated
-	public static String getQualifiedLabel(AnnotationFeature aSelectedTag) {
-		String annotationType = "";
-		if (aSelectedTag.getLayer().getName()
-				.equals(WebAnnoConst.POS)) {
-			annotationType = WebAnnoConst.POS_PREFIX + aSelectedTag.getName();
-		} else if (aSelectedTag.getLayer().getName()
-				.equals(WebAnnoConst.DEPENDENCY)) {
-			annotationType = WebAnnoConst.DEP_PREFIX + aSelectedTag.getName();
-		} else if (aSelectedTag.getLayer().getName()
-				.equals(WebAnnoConst.NAMEDENTITY)) {
-			annotationType = WebAnnoConst.NAMEDENTITY_PREFIX
-					+ aSelectedTag.getName();
-		} else if (aSelectedTag.getLayer().getName()
-				.equals(WebAnnoConst.COREFRELTYPE)) {
-			annotationType = WebAnnoConst.COREFRELTYPE_PREFIX
-					+ aSelectedTag.getName();
-		} else if (aSelectedTag.getLayer().getName()
-				.equals(WebAnnoConst.COREFERENCE)) {
-			annotationType = WebAnnoConst.COREFERENCE_PREFIX
-					+ aSelectedTag.getName();
-		}
-		return annotationType;
-	}
-
     /**
      * Construct the label text used in the brat user interface.
      */
@@ -123,7 +90,7 @@ public final class TypeUtil
             bratLabelText.append(StringUtils.defaultString(aFs
                     .getFeatureValueAsString(labelFeature)));
         }
-        
+
         if (bratLabelText.length() > 0) {
             return bratLabelText.toString();
         }
@@ -135,12 +102,12 @@ public final class TypeUtil
             return "(" + type.getShortName() + ")";
         }
     }
-    
+
     public static String getBratTypeName(TypeAdapter aAdapter)
     {
         return aAdapter.getTypeId() + "_" + aAdapter.getAnnotationTypeName();
     }
-    
+
     public static String getBratTypeName(AnnotationLayer aLayer)
     {
         return aLayer.getId() + "_" + aLayer.getName();

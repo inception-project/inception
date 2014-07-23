@@ -115,7 +115,6 @@ public class SpanAnnotationModalWindowPage
     private final int endOffset;
     private String selectedText = null;
     int selectedSpanId = -1;
-    String selectedSpanType;
 
     List<AnnotationLayer> spanLayers = new ArrayList<AnnotationLayer>();
 
@@ -510,11 +509,25 @@ public class SpanAnnotationModalWindowPage
 
                         bratAnnotatorModel.setRememberedSpanLayer(selectedLayer);
                         bratAnnotatorModel.setAnnotate(false);
-                        bratAnnotatorModel.setMessage("The span annotation [" + selectedSpanType
+                        StringBuffer deletedAnnoSb = new StringBuffer();
+
+                        // store latest annotations
+                        for (IModel<String> model : tagModels) {
+                            deletedAnnoSb.append(model.getObject()+" ");
+                            AnnotationFeature feature = featureModels.get(tagModels.indexOf(model))
+                                    .getObject().feature;
+                            selectedLayer = feature.getLayer();
+                            selectedFeatureValues.put(feature, model.getObject());
+                        }
+
+                        bratAnnotatorModel.setMessage("The span annotation [" + deletedAnnoSb
                                 + "] is deleted");
 
                         // A hack to rememeber the Visural DropDown display
                         // value
+                        bratAnnotatorModel.setRememberedSpanLayer(selectedLayer);
+                        bratAnnotatorModel.setRememberedSpanFeatures(selectedFeatureValues);
+
                         HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())
                                 .getContainerRequest().getSession();
                         session.setAttribute("model", bratAnnotatorModel);
@@ -654,7 +667,6 @@ public class SpanAnnotationModalWindowPage
             }
 
         }
-        this.selectedSpanType = aType.replaceAll("[0-9]+/*_", "");;
 
         this.annotationDialogForm = new AnnotationDialogForm("annotationDialogForm", modalWindow);
         add(annotationDialogForm);
