@@ -82,7 +82,6 @@ public class BratAnnotator
 
     private static final String PARAM_ACTION = "action";
     private static final String PARAM_ARC_ID = "arcId";
-    private static final String PARAM_ARC_TYPE = "arcType";
     private static final String PARAM_ID = "id";
     private static final String PARAM_OFFSETS = "offsets";
     private static final String PARAM_SPAN_TYPE = "type";
@@ -108,7 +107,7 @@ public class BratAnnotator
 
     private String collection = "";
 
-    private String selectedSpanType, offsets, selectedArcType;
+    private String selectedSpanType, offsets;
     private Integer selectedSpanID, selectedArcId;
 
     private Integer originSpanId, targetSpanId;
@@ -269,7 +268,6 @@ public class BratAnnotator
                         Session.get().getFeedbackMessages().clear();
                         originSpanType = request.getParameterValue(PARAM_ORIGIN_TYPE).toString();
                         originSpanId = request.getParameterValue(PARAM_ORIGIN_SPAN_ID).toInteger();
-                        selectedArcType = request.getParameterValue(PARAM_ARC_TYPE).toString();
                         targetSpanType = request.getParameterValue(PARAM_TARGET_TYPE).toString();
                         targetSpanId = request.getParameterValue(PARAM_TARGET_SPAN_ID).toInteger();
 
@@ -449,7 +447,7 @@ public class BratAnnotator
             openAnnotationDialog.setTitle("Edit Arc Annotation");
             openAnnotationDialog.setContent(new ArcAnnotationModalWindowPanel(openAnnotationDialog
                     .getContentId(), openAnnotationDialog, getModelObject(), originSpanId,
-                    targetSpanId, selectedArcId, selectedArcType));
+                    targetSpanId, selectedArcId));
         }
 
         openAnnotationDialog.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()

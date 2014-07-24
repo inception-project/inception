@@ -114,7 +114,6 @@ public class ArcAnnotationModalWindowPanel
 
     private int selectedArcId = -1;
     private int originSpanId, targetSpanId;
-    private String selectedArcType;
     private int beginOffset;
 
     List<AnnotationFeature> spanFeatures = new ArrayList<AnnotationFeature>();
@@ -373,7 +372,19 @@ public class ArcAnnotationModalWindowPanel
                             int start = originFs.getBegin();
                             updateSentenceAddressAndOffsets(jCas, start);
                         }
-                        bratAnnotatorModel.setMessage("The arc annotation [" + selectedArcType
+
+                        StringBuffer deletedAnnoSb = new StringBuffer();
+
+                        // store latest annotations
+                        for (IModel<String> model : tagModels) {
+                            deletedAnnoSb.append(model.getObject()+" ");
+                            AnnotationFeature feature = featureModels.get(tagModels.indexOf(model))
+                                    .getObject().feature;
+                            selectedLayer = feature.getLayer();
+                            selectedFeatureValues.put(feature, model.getObject());
+                        }
+
+                        bratAnnotatorModel.setMessage("The arc annotation [" + deletedAnnoSb
                                 + "] is deleted");
 
                     }
@@ -446,7 +457,18 @@ public class ArcAnnotationModalWindowPanel
                             updateSentenceAddressAndOffsets(jCas, start);
                         }
 
-                        bratAnnotatorModel.setMessage("The arc annotation  [" + selectedArcType
+                        StringBuffer deletedAnnoSb = new StringBuffer();
+
+                        // store latest annotations
+                        for (IModel<String> model : tagModels) {
+                            deletedAnnoSb.append(model.getObject()+" ");
+                            AnnotationFeature feature = featureModels.get(tagModels.indexOf(model))
+                                    .getObject().feature;
+                            selectedLayer = feature.getLayer();
+                            selectedFeatureValues.put(feature, model.getObject());
+                        }
+
+                        bratAnnotatorModel.setMessage("The arc annotation  [" + deletedAnnoSb
                                 + "] is reversed");
 
                     }
@@ -562,7 +584,7 @@ public class ArcAnnotationModalWindowPanel
 
     public ArcAnnotationModalWindowPanel(String aId, final ModalWindow modalWindow,
             BratAnnotatorModel aBratAnnotatorModel, int aOriginSpanId, int aTargetSpanId,
-            int selectedArcId, String aType)
+            int selectedArcId)
     {
         super(aId);
         this.selectedArcId = selectedArcId;
@@ -581,7 +603,6 @@ public class ArcAnnotationModalWindowPanel
             error(e.getMessage());
         }
         AnnotationFS annoFs = BratAjaxCasUtil.selectByAddr(jCas, selectedArcId);
-        this.selectedArcType = aType.replaceAll("[0-9]+/*_", "");;
         this.originSpanId = aOriginSpanId;
         this.targetSpanId = aTargetSpanId;
         String type = annoFs.getType().getName();
