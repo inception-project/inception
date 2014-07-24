@@ -229,6 +229,8 @@ public class ArcAdapter
         Type spanType = getType(aJCas.getCas(), attachType);
         Feature arcSpanFeature = spanType.getFeatureByBaseName(attacheFeatureName);
 
+        Type tokenType = getType(aJCas.getCas(), attachType);
+
         AnnotationFS dependentFs = null;
         AnnotationFS governorFs = null;
         // List all sentence in this display window
@@ -239,8 +241,8 @@ public class ArcAdapter
                     sentence.getEnd())) {
 
                 if (attacheFeatureName != null) {
-                    dependentFs = (AnnotationFS) fs.getFeatureValue(dependentFeature).getFeatureValue(
-                            arcSpanFeature);
+                    dependentFs = (AnnotationFS) fs.getFeatureValue(dependentFeature)
+                            .getFeatureValue(arcSpanFeature);
                     governorFs = (AnnotationFS) fs.getFeatureValue(governorFeature)
                             .getFeatureValue(arcSpanFeature);
                 }
@@ -269,16 +271,21 @@ public class ArcAdapter
         // It is new ARC annotation, create it
         if (!duplicate) {
             if (aValue.equals("ROOT")) {
-                governorFs = (AnnotationFS) BratAjaxCasUtil.selectByAddr(aJCas,
-                        FeatureStructure.class, ((FeatureStructureImpl) aOriginFs).getAddress());
+                governorFs = aOriginFs;
                 dependentFs = governorFs;
             }
             else {
-                dependentFs = (AnnotationFS) BratAjaxCasUtil.selectByAddr(aJCas,
-                        FeatureStructure.class, ((FeatureStructureImpl) aTargetFs).getAddress());
-                governorFs = (AnnotationFS) BratAjaxCasUtil.selectByAddr(aJCas,
-                        FeatureStructure.class, ((FeatureStructureImpl) aOriginFs).getAddress());
+                dependentFs = aTargetFs;
+                governorFs = aOriginFs;
             }
+            // for POS annotation, since custom span layers do not have attach feature
+            if (attacheFeatureName != null) {
+                dependentFs = selectCovered(aJCas.getCas(), tokenType, dependentFs.getBegin(),
+                        dependentFs.getEnd()).get(0);
+                governorFs = selectCovered(aJCas.getCas(), tokenType, governorFs.getBegin(),
+                        governorFs.getEnd()).get(0);
+            }
+
             // if span A has (start,end)= (20, 26) and B has (start,end)= (30, 36)
             // arc drawn from A to B, dependency will have (start, end) = (20, 36)
             // arc drawn from B to A, still dependency will have (start, end) = (20, 36)
