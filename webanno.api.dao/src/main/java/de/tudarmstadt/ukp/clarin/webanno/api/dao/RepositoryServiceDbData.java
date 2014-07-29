@@ -1422,6 +1422,14 @@ public class RepositoryServiceDbData
     public void uploadSourceDocument(File aFile, SourceDocument aDocument, User aUser)
         throws IOException
     {
+        try {
+            getJCasFromFile(aFile,  getReadableFormats().get(aDocument.getFormat()), aDocument);
+        }
+        catch (Exception e) {
+            removeSourceDocument(aDocument, aUser);
+          throw new IOException(e.getMessage());
+        }
+
         String path = dir.getAbsolutePath() + PROJECT + aDocument.getProject().getId() + DOCUMENT
                 + aDocument.getId() + SOURCE;
         FileUtils.forceMkdir(new File(path));

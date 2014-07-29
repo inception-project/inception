@@ -58,7 +58,7 @@ public class ProjectDocumentsPanel
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
     @SpringBean(name = "documentRepository")
-    private RepositoryService projectRepository;
+    private RepositoryService repository;
 
     private ArrayList<String> documents = new ArrayList<String>();
     private ArrayList<String> selectedDocuments = new ArrayList<String>();
@@ -77,7 +77,7 @@ public class ProjectDocumentsPanel
         super(id);
         this.selectedProjectModel = aProjectModel;
         try {
-            readableFormats = new ArrayList<String>(projectRepository.getReadableFormatLabels());
+            readableFormats = new ArrayList<String>(repository.getReadableFormatLabels());
             selectedFormat = readableFormats.get(0);
         }
         catch (IOException e) {
@@ -114,7 +114,7 @@ public class ProjectDocumentsPanel
                 for (FileUpload documentToUpload : uploadedFiles) {
                     String fileName = documentToUpload.getClientFileName();
 
-                    if (projectRepository.existsSourceDocument(project, fileName)) {
+                    if (repository.existsSourceDocument(project, fileName)) {
                         error("Document " + fileName + " already uploaded ! Delete "
                                 + "the document if you want to upload again");
                         continue;
@@ -125,17 +125,17 @@ public class ProjectDocumentsPanel
 
                         String username = SecurityContextHolder.getContext().getAuthentication()
                                 .getName();
-                        User user = projectRepository.getUser(username);
+                        User user = repository.getUser(username);
 
                         SourceDocument document = new SourceDocument();
                         document.setName(fileName);
                         document.setProject(project);
 
-                        String reader = projectRepository.getReadableFormatId(readableFormatsChoice
+                        String reader = repository.getReadableFormatId(readableFormatsChoice
                                 .getModelObject());
                         document.setFormat(reader);
-                        projectRepository.createSourceDocument(document, user);
-                        projectRepository.uploadSourceDocument(uploadFile, document, user);
+                        repository.createSourceDocument(document, user);
+                        repository.uploadSourceDocument(uploadFile, document, user);
                         info("File [" + fileName + "] has been imported successfully!");
                     }
                     catch (ClassNotFoundException e) {
@@ -167,7 +167,7 @@ public class ProjectDocumentsPanel
                         Project project = selectedProjectModel.getObject();
                         documents.clear();
                         if (project.getId() != 0) {
-                            for (SourceDocument document : projectRepository
+                            for (SourceDocument document : repository
                                     .listSourceDocuments(project)) {
                                 if (!document.isTrainingDocument()) {
                                     documents.add(document.getName());
@@ -192,9 +192,9 @@ public class ProjectDocumentsPanel
                     try {
                         String username = SecurityContextHolder.getContext().getAuthentication()
                                 .getName();
-                        User user = projectRepository.getUser(username);
-                        projectRepository.removeSourceDocument(
-                                projectRepository.getSourceDocument(project, document), user);
+                        User user = repository.getUser(username);
+                        repository.removeSourceDocument(
+                                repository.getSourceDocument(project, document), user);
                     }
                     catch (IOException e) {
                         error("Error while removing a document document "
