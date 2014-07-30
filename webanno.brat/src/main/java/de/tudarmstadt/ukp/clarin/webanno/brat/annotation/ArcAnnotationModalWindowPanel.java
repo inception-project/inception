@@ -355,6 +355,11 @@ public class ArcAnnotationModalWindowPanel
                     try {
                         jCas = getCas(bratAnnotatorModel);
                         TypeAdapter adapter = getAdapter(selectedLayer, annotationService);
+                        // BEGIN HACK - Issue 933
+                        if (adapter instanceof ChainAdapter) {
+                            ((ChainAdapter) adapter).setArc(true);
+                        }
+                        // END HACK - Issue 933
                         adapter.delete(jCas, selectedArcId);
                         repository.updateJCas(bratAnnotatorModel.getMode(),
                                 bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),

@@ -309,12 +309,36 @@ public class ChainAdapter
     @Override
     public void delete(JCas aJCas, int aAddress)
     {
+        // BEGIN HACK - ISSUE 933
+        if (isArc) {
+            deleteArc(aJCas, aAddress);
+        }
+        else {
+            deleteSpan(aJCas, aAddress);
+        }
+        // END HACK - ISSUE 933
+    }
+    
+    public void deleteArc(JCas aJCas, int aAddress)
+    {
+        AnnotationFS linkToDelete = BratAjaxCasUtil.selectByAddr(aJCas, AnnotationFS.class,
+                aAddress);        
+        
+        // Create the tail chain
+        FeatureStructure tailChain = newChain(aJCas);
+        // We know that there must be a next link, otherwise no arc would have been rendered!
+        setFirstLink(tailChain, getNextLink(linkToDelete));
+        
+        // Disconnect the tail from the head
+        setNextLink(linkToDelete, null);
+    }
+    
+    public void deleteSpan(JCas aJCas, int aAddress)
+    {
         Type chainType = getAnnotationType(aJCas.getCas());
 
-        // Get the selected link. Since the rendered span and arc both refer to the same CAS
-        // address, we do not have to handle deletes of spans or arcs differently here.
-        AnnotationFS linkToDelete = (AnnotationFS) BratAjaxCasUtil.selectByAddr(aJCas,
-                FeatureStructure.class, aAddress);
+        AnnotationFS linkToDelete = BratAjaxCasUtil.selectByAddr(aJCas, AnnotationFS.class,
+                aAddress);
         
         // case 1 "removing first link": we keep the existing chain head and just remove the
         // first element
@@ -539,4 +563,13 @@ public class ChainAdapter
         Feature labelFeature = aLink.getType().getFeatureByBaseName(aFeature.getName());
         aLink.setStringValue(labelFeature, aValue);
     }
+    
+    // BEGIN HACK - ISSUE 933
+    private boolean isArc = false;
+    
+    public void setArc(boolean aIsArc)
+    {
+        isArc = aIsArc;
+    }
+    // END HACK - ISSUE 933
 }
