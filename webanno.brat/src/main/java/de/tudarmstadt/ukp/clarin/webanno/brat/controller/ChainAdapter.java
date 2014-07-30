@@ -21,10 +21,7 @@ import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -33,7 +30,6 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
-import org.apache.uima.jcas.tcas.Annotation;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Argument;
@@ -53,16 +49,11 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 public class ChainAdapter
     implements TypeAdapter
 {
+//    private final Log log = LogFactory.getLog(getClass());
+    
     public static final String CHAIN = "Chain";
     public static final String LINK = "Link";
 
-    /**
-     * Prefix of the label value for Brat to make sure that different annotation types can use the
-     * same label, e.g. a POS tag "N" and a named entity type "N".
-     *
-     * This is used to differentiate the different types in the brat annotation/visualization. The
-     * prefix will not stored in the CAS(striped away at {@link BratAjaxCasController#getType} )
-     */
     private final long layerId;
 
     /**
@@ -194,6 +185,11 @@ public class ChainAdapter
                             bratTypeName, argumentList, bratLabelText, color));
                 }
 
+//                if (BratAjaxCasUtil.isSame(linkFs, nextLinkFs)) {
+//                    log.error("Loop in CAS detected, aborting rendering of chains");
+//                    break;
+//                }
+
                 prevLinkFs = linkFs;
                 linkFs = nextLinkFs;
             }
@@ -253,325 +249,60 @@ public class ChainAdapter
         }
     }
 
-    /**
-     * A Helper method to {@link #add(String, BratAnnotatorUIData)}
-     */
-    // Updating a coreference.
-    // CASE 1: Chain does not exist yet
-    // CASE 2: Add to the beginning of an existing chain
-    // CASE 3: Add to the end of an existing chain
-    // CASE 4: Replace a link in an existing chain
-    // CASE 4a: we replace the link to the last link -> delete last link
-    // CASE 4b: we replace the link to an intermediate link -> chain is cut in two,
-    // create new CorefChain pointing to the first link in new chain
-    // CASE 5: Add link at the same position as existing -> just update type
-    private void connectLinks(JCas aJcas, AnnotationFS aOriginFs,
+    private void connectLinks(JCas aJCas, AnnotationFS aOriginFs,
             AnnotationFS aTargetFs, String aValue, AnnotationFeature aFeature)
     {
-        boolean modify = false;
-        // FIXME annotationTypeName should not be reset
-        annotationTypeName = aFeature.getLayer().getName()+CHAIN;
-        // Variables used for swapping
-        AnnotationFS originLink = aOriginFs;
-        AnnotationFS targetLink = aTargetFs;
+        // Determine if the links are adjacent. If so, just update the arc label
+        AnnotationFS originNext = getNextLink(aOriginFs);
+        AnnotationFS targetNext = getNextLink(aTargetFs);
 
-        // Currently support only anaphoric relation
-        // Inverse direction
-        if (originLink.getBegin() > targetLink.getBegin()) {
-            AnnotationFS temp = originLink;
-            originLink = targetLink;
-            targetLink = temp;
+        // origin links to target
+        if (BratAjaxCasUtil.isSame(originNext, aTargetFs)) {
+            setLabel(aOriginFs, aFeature, aValue);
         }
-
-        AnnotationFS existingChain = null;
-        boolean chainExist = false;
-        boolean found = false;
-
-        // If the two links are in different chain, merge them!!!
-        boolean merge = mergeChain(aJcas, originLink, targetLink, aValue, aFeature);
-
-        if (!merge) {
-
-            Type type = getAnnotationType(aJcas.getCas());
-            Feature first = type.getFeatureByBaseName(chainFirstFeatureName);
-            Feature next = targetLink.getType().getFeatureByBaseName(linkNextFeatureName);
-            Feature labelFeature = targetLink.getType().getFeatureByBaseName(aFeature.getName());
-            for (FeatureStructure fs : selectFS(aJcas.getCas(), type)) {
-
-                AnnotationFS linkFs = (AnnotationFS) fs.getFeatureValue(first);
-
-                // CASE 2
-                if (fs.getFeatureValue(first) != null
-                        && !found
-                        && BratAjaxCasUtil.isSame(fs.getFeatureValue(first), targetLink)) {
-                    fs.setFeatureValue(first, originLink);
-
-                    originLink.setFeatureValue(next, targetLink);
-                    originLink.setFeatureValueFromString(labelFeature, aValue);
-                    found = true;
-                    break;
-                }
-
-                AnnotationFS lastLink = linkFs;
-
-                while (linkFs != null && !found) {
-                    // a-> c, b->c = a->b->c
-                    if (linkFs.getFeatureValue(next) != null
-                            && BratAjaxCasUtil.isSame((Annotation) linkFs.getFeatureValue(next),
-                                    (Annotation) targetLink)) {
-                        if (linkFs.getBegin() > originLink.getBegin()) {
-                            originLink.setFeatureValue(next, linkFs);
-
-                            if (lastLink == (AnnotationFS) fs.getFeatureValue(first)) {
-                                fs.setFeatureValue(first, originLink);
-                            }
-                            else {
-                                lastLink.setFeatureValue(next, originLink);
-                            }
-                        }
-                        else {
-                            linkFs.setFeatureValue(next, originLink);
-                            originLink.setFeatureValue(next, targetLink);
-                        }
-                        originLink.setFeatureValueFromString(labelFeature, aValue);
-                        chainExist = true;
-                        found = true;
-                        break;
-                    }
-                    // CASE 4a/b
-                    if (BratAjaxCasUtil.isSame((Annotation) linkFs, (Annotation) originLink)
-                            && linkFs.getFeatureValue(next) != null
-                            && !BratAjaxCasUtil.isSame((Annotation) linkFs.getFeatureValue(next),
-                                    (Annotation) targetLink)
-                            && targetLink.getBegin() < ((AnnotationFS) linkFs.getFeatureValue(next))
-                                    .getBegin()) {
-                        AnnotationFS tmpLink = (AnnotationFS) linkFs.getFeatureValue(next);
-                        String tmpRel = linkFs.getStringValue(labelFeature);
-                        linkFs.setFeatureValue(next, targetLink);
-                        linkFs.setFeatureValueFromString(labelFeature, aValue);
-                        targetLink.setFeatureValue(next, tmpLink);
-                        targetLink.setFeatureValueFromString(labelFeature, tmpRel);
-                        chainExist = true;
-                        found = true;
-                        break;
-                    }
-                    else if (BratAjaxCasUtil.isSame((Annotation) linkFs, (Annotation) originLink)
-                            && linkFs.getFeatureValue(next) != null
-                            && !BratAjaxCasUtil.isSame((Annotation) linkFs.getFeatureValue(next),
-                                    (Annotation) targetLink)) {
-                        linkFs = (AnnotationFS) linkFs.getFeatureValue(next);
-                        originLink = linkFs;
-                        continue;
-                    }
-                    else if (BratAjaxCasUtil.isSame((Annotation) linkFs, (Annotation) originLink)
-                            && linkFs.getFeatureValue(next) == null) {
-                        linkFs.setFeatureValue(next, targetLink);
-                        linkFs.setFeatureValueFromString(labelFeature, aValue);
-                        chainExist = true;
-                        found = true;
-                        break;
-                    }
-                    if (BratAjaxCasUtil.isSame((Annotation) linkFs, (Annotation) originLink)
-                            && linkFs.getFeatureValue(next) != null
-                            && BratAjaxCasUtil.isSame((Annotation) linkFs.getFeatureValue(next),
-                                    (Annotation) targetLink)) {
-                        modify = !linkFs.getStringValue(labelFeature).equals(aValue);
-                        existingChain = linkFs;
-                        chainExist = true;
-                        break;
-                    }
-
-                    lastLink = linkFs;
-                    linkFs = (AnnotationFS) linkFs.getFeatureValue(next);
-                }
-
-                lastLink = linkFs;
-                // CASE 3
-                if (lastLink != null && lastLink.getBegin() == originLink.getBegin()) {
-                    lastLink.setFeatureValue(next, targetLink);
-                    lastLink.setFeatureValueFromString(labelFeature, aValue);
-                    chainExist = true;
-                    break;
-                }
-            }
-
-            if (existingChain == null) {
-
-                // CASE 1
-                if (!chainExist) {
-                    FeatureStructure newChainFs = aJcas.getCas().createFS(type);
-                    newChainFs.setFeatureValue(first, originLink);
-                    originLink.setFeatureValue(next, targetLink);
-                    originLink.setFeatureValueFromString(labelFeature, aValue);
-                    aJcas.addFsToIndexes(newChainFs);
-                    aJcas.addFsToIndexes(originLink);
-                }
-            }
-            // CASE 4: only change the relation type, everything same!!!
-            else if (modify) {
-                existingChain.setFeatureValueFromString(labelFeature, aValue);
-                aJcas.addFsToIndexes(existingChain);
-            }
+        // target links to origin
+        else if (BratAjaxCasUtil.isSame(targetNext, aOriginFs)) {
+            setLabel(aTargetFs, aFeature, aValue);
         }
-        // clean unconnected coreference chains
-        removeInvalidChain(aJcas.getCas());
-    }
+        // if origin and target are not adjacent
+        else {
+            FeatureStructure originChain = getChainForLink(aJCas, aOriginFs);
+            FeatureStructure targetChain = getChainForLink(aJCas, aTargetFs);
 
-    private boolean mergeChain(JCas aJcas, AnnotationFS aOrigin, AnnotationFS aTarget,
-            String aValue, AnnotationFeature aFeature)
-    {
-        boolean inThisChain = false;
-        boolean inThatChain = false;
-        FeatureStructure thatChain = null;
-        FeatureStructure thisChain = null;
+            AnnotationFS targetPrev = getPrevLink(targetChain, aTargetFs);
 
-        Type type = getAnnotationType(aJcas.getCas());
-        Feature first = type.getFeatureByBaseName(chainFirstFeatureName);
-        Feature next = aOrigin.getType().getFeatureByBaseName(linkNextFeatureName);
-        Feature labelFeature = aOrigin.getType().getFeatureByBaseName(aFeature.getName());
+            if (!BratAjaxCasUtil.isSame(originChain, targetChain)) {
+                // if the two links are in different chains then split the chains up at the
+                // origin point and target point and create a new link betweek origin and target
+                // the tail of the origin chain becomes a new chain
+                
 
-        for (FeatureStructure fs : selectFS(aJcas.getCas(), type)) {
-            AnnotationFS linkFs = (AnnotationFS) fs.getFeatureValue(first);
-            boolean tempInThisChain = false;
-            if (linkFs.getFeatureValue(next) != null) {
-                while (linkFs != null) {
-                    if (inThisChain) {
-                        thatChain = fs;
-                        if (BratAjaxCasUtil.isSame((Annotation) linkFs, (Annotation) aOrigin)) {
-                            inThatChain = true;
-                            linkFs = (AnnotationFS) linkFs.getFeatureValue(next);
-
-                        }
-                        else if (BratAjaxCasUtil.isSame((Annotation) linkFs, (Annotation) aTarget)) {
-                            inThatChain = true;
-                            linkFs = (AnnotationFS) linkFs.getFeatureValue(next);
-
-                        }
-                        else {
-                            linkFs = (AnnotationFS) linkFs.getFeatureValue(next);
-                        }
-                    }
-                    else {
-                        thisChain = fs;
-                        if (BratAjaxCasUtil.isSame((Annotation) linkFs, (Annotation) aOrigin)) {
-                            tempInThisChain = true;
-                            linkFs = (AnnotationFS) linkFs.getFeatureValue(next);
-                        }
-                        else if (BratAjaxCasUtil.isSame((Annotation) linkFs, (Annotation) aTarget)) {
-                            tempInThisChain = true;
-                            linkFs = (AnnotationFS) linkFs.getFeatureValue(next);
-                        }
-                        else {
-                            linkFs = (AnnotationFS) linkFs.getFeatureValue(next);
-                        }
-                    }
+                // if originFs has a next, then split of the origin chain up
+                // the rest becomes its own chain
+                if (originNext != null) {
+                    FeatureStructure originRestChain = newChain(aJCas);
+                    setFirstLink(originRestChain, originNext);
+                    // we set originNext below
+                    // we set the arc label below
                 }
-            }
-            if (tempInThisChain) {
-                inThisChain = true;
-            }
-        }
-        if (inThatChain) {
-
-            // |----------|
-            // |---------------|
-
-            // |----------------------------|
-            // |------------|
-            // OR
-            // |-------|
-            // |-------| ...
-            // else{
-            Map<Integer, AnnotationFS> beginRelationMaps = new TreeMap<Integer, AnnotationFS>();
-
-            // All links in the first chain
-            AnnotationFS linkFs = (AnnotationFS) thisChain.getFeatureValue(first);
-            while (linkFs != null) {
-                beginRelationMaps.put(linkFs.getBegin(), linkFs);
-                linkFs = (AnnotationFS) linkFs.getFeatureValue(next);
-            }
-
-            linkFs = (AnnotationFS) thatChain.getFeatureValue(first);
-            while (linkFs != null) {
-                beginRelationMaps.put(linkFs.getBegin(), linkFs);
-                linkFs = (AnnotationFS) linkFs.getFeatureValue(next);
-            }
-
-            aOrigin.setFeatureValueFromString(labelFeature, aValue);
-            beginRelationMaps.put(aOrigin.getBegin(), aOrigin);// update the relation
-
-            Iterator<Integer> it = beginRelationMaps.keySet().iterator();
-
-            FeatureStructure newChain = aJcas.getCas().createFS(type);
-            newChain.setFeatureValue(first, beginRelationMaps.get(it.next()));
-            AnnotationFS newLink = (AnnotationFS) newChain.getFeatureValue(first);
-
-            while (it.hasNext()) {
-                AnnotationFS link = beginRelationMaps.get(it.next());
-                link.setFeatureValue(next, null);
-                newLink.setFeatureValue(next, link);
-                newLink.setFeatureValueFromString(
-                        labelFeature,
-                        newLink.getStringValue(labelFeature) == null ? aValue : newLink
-                                .getStringValue(labelFeature));
-                newLink = (AnnotationFS) newLink.getFeatureValue(next);
-            }
-
-            aJcas.addFsToIndexes(newChain);
-
-            aJcas.removeFsFromIndexes(thisChain);
-            aJcas.removeFsFromIndexes(thatChain);
-        }
-        return inThatChain;
-    }
-
-    /**
-     * Update the Cas before deleting a link. This way, if a link is deleted at the middle, The
-     * chain will be splitted into two. If the first link is deleted, the <b>First</b> link will be
-     * shifted to the next one.
-     */
-    public void updateCasBeforeDelete(JCas aJCas, int aRef)
-    {
-        FeatureStructure fsToRemove = BratAjaxCasUtil.selectByAddr(aJCas, FeatureStructure.class,
-                aRef);
-
-        Type type = getAnnotationType(aJCas.getCas());
-        Feature first = type.getFeatureByBaseName(chainFirstFeatureName);
-        boolean found = false;
-        AnnotationFS nextLink = null;
-        FeatureStructure previousFS = null;
-        for (FeatureStructure fs : selectFS(aJCas.getCas(), type)) {
-            if (found) {
-                break;
-            }
-
-            AnnotationFS linkFs = (AnnotationFS) fs.getFeatureValue(first);
-            Feature next = linkFs.getType().getFeatureByBaseName(linkNextFeatureName);
-
-            if (BratAjaxCasUtil.isSame(fsToRemove, linkFs)) {
-                // move first of the chain to the next one
-                nextLink = (AnnotationFS) linkFs.getFeatureValue(next);
-                linkFs.setFeatureValue(next, null);
-                break;
-            }
-
-            while (linkFs != null) {
-                if (BratAjaxCasUtil.isSame(fsToRemove, linkFs)) {
-
-                    nextLink = (AnnotationFS) linkFs.getFeatureValue(next);
-                    found = true;
-                    linkFs.setFeatureValue(next, null);
-                    previousFS.setFeatureValue(next, null);
-                    break;
+                
+                // if targetFs has a prev, then split it off
+                if (targetPrev != null) {
+                    setNextLink(targetPrev, null);
                 }
-                previousFS = linkFs;
-                linkFs = (AnnotationFS) linkFs.getFeatureValue(next);
+                // if it has no prev then we fully append the target chain to the origin chain
+                // and we can remove the target chain head
+                else {
+                    aJCas.removeFsFromIndexes(targetChain);
+                }
+                
+                // connect the rest of the target chain to the origin chain
+                setNextLink(aOriginFs, aTargetFs);
+                setLabel(aOriginFs, aFeature, aValue);
             }
-        }
-        if (nextLink != null) {
-            FeatureStructure newChainFs = aJCas.getCas().createFS(type);
-            newChainFs.setFeatureValue(first, nextLink);
-            aJCas.addFsToIndexes(newChainFs);
+            else {
+                // if the two links are in the same chain, we just ignore the action
+            }
         }
     }
 
@@ -579,7 +310,6 @@ public class ChainAdapter
     public void delete(JCas aJCas, int aAddress)
     {
         Type chainType = getAnnotationType(aJCas.getCas());
-        Feature chainFirst = chainType.getFeatureByBaseName(chainFirstFeatureName);
 
         // Get the selected link. Since the rendered span and arc both refer to the same CAS
         // address, we do not have to handle deletes of spans or arcs differently here.
@@ -598,20 +328,19 @@ public class ChainAdapter
         // To know which case we have, we first need to find the chain containing the element to
         // be deleted.
         FeatureStructure oldChainFs = null;
-        FeatureStructure prevLinkFs = null;
+        AnnotationFS prevLinkFs = null;
         chainLoop: for (FeatureStructure chainFs : selectFS(aJCas.getCas(), chainType)) {
-            AnnotationFS linkFs = (AnnotationFS) chainFs.getFeatureValue(chainFirst);
+            AnnotationFS linkFs = getFirstLink(chainFs);
             prevLinkFs = null; // Reset when entering new chain!
             
             // Now we seek the link within the current chain
             while (linkFs != null) {
-                Feature next = linkFs.getType().getFeatureByBaseName(linkNextFeatureName);
                 if (BratAjaxCasUtil.isSame(linkFs, linkToDelete)) {
                     oldChainFs = chainFs;
                     break chainLoop;
                 }
                 prevLinkFs = linkFs;
-                linkFs = (AnnotationFS) linkFs.getFeatureValue(next);
+                linkFs = getNextLink(linkFs);
             }
         }
         
@@ -621,12 +350,11 @@ public class ChainAdapter
                     + "] not found in any chain!");
         }
 
-        FeatureStructure followingLinkToDelete = linkToDelete.getFeatureValue(linkToDelete
-                .getType().getFeatureByBaseName(linkNextFeatureName));
+        AnnotationFS followingLinkToDelete = getNextLink(linkToDelete);
 
         if (prevLinkFs == null) {
             // case 1: first element removed
-            oldChainFs.setFeatureValue(chainFirst, followingLinkToDelete);
+            setFirstLink(oldChainFs, followingLinkToDelete);
             aJCas.removeFsFromIndexes(linkToDelete);
             
             // removed last element form chain?
@@ -636,9 +364,7 @@ public class ChainAdapter
         }
         else if (followingLinkToDelete == null) {
             // case 3: removing the last link (but not leaving the chain empty)
-            prevLinkFs.setFeatureValue(
-                    prevLinkFs.getType().getFeatureByBaseName(linkNextFeatureName), null);
-            
+            setNextLink(prevLinkFs, null);
             aJCas.removeFsFromIndexes(linkToDelete);
         }
         else if (prevLinkFs != null && followingLinkToDelete != null) {
@@ -646,40 +372,15 @@ public class ChainAdapter
             
             // Set up new chain for rest
             FeatureStructure newChain = aJCas.getCas().createFS(chainType);
-            newChain.setFeatureValue(chainFirst, followingLinkToDelete);
+            setFirstLink(newChain, followingLinkToDelete);
             aJCas.addFsToIndexes(newChain);
             
             // Cut off from old chain
-            prevLinkFs.setFeatureValue(
-                    prevLinkFs.getType().getFeatureByBaseName(linkNextFeatureName), null);
+            setNextLink(prevLinkFs, null);
         }
         else {
             throw new IllegalStateException(
                     "Unexpected situation while removing link. Please contact developers.");
-        }
-    }
-
-    /**
-     * Remove an invalid chain. A chain is invalid when its next link is null
-     *
-     * @param aCas
-     */
-    public void removeInvalidChain(CAS aCas)
-    {
-        // clean unconnected coreference chains
-        List<FeatureStructure> orphanChains = new ArrayList<FeatureStructure>();
-        Type type = getAnnotationType(aCas);
-        Feature first = type.getFeatureByBaseName(chainFirstFeatureName);
-        for (FeatureStructure fs : selectFS(aCas, type)) {
-            AnnotationFS linkFs = (AnnotationFS) fs.getFeatureValue(first);
-            Feature next = linkFs.getType().getFeatureByBaseName(linkNextFeatureName);
-
-            if (linkFs.getFeatureValue(next) == null) {
-                orphanChains.add(fs);
-            }
-        }
-        for (FeatureStructure chain : orphanChains) {
-            aCas.removeFsFromIndexes(chain);
         }
     }
 
@@ -760,6 +461,82 @@ public class ChainAdapter
         Feature feature = type.getFeatureByBaseName(aFeature.getName());
         FeatureStructure fs = BratAjaxCasUtil.selectByAddr(aJcas, FeatureStructure.class, aAddress);
         fs.setFeatureValueFromString(feature, aValue);
+    }
+    
+    /**
+     * Find the chain head for the given link.
+     * 
+     * @param aJCas the CAS.
+     * @param aLink the link to search the chain for.
+     * @return the chain.
+     */
+    private FeatureStructure getChainForLink(JCas aJCas, AnnotationFS aLink)
+    {
+        Type chainType = getAnnotationType(aJCas.getCas());
+        
+        for (FeatureStructure chainFs : selectFS(aJCas.getCas(), chainType)) {
+            AnnotationFS linkFs = getFirstLink(chainFs);
+            
+            // Now we seek the link within the current chain
+            while (linkFs != null) {
+                if (BratAjaxCasUtil.isSame(linkFs, aLink)) {
+                    return chainFs;
+                }
+                linkFs = getNextLink(linkFs);
+            }
+        }
+        
+        // This should never happen unless the data in the CAS has been created erratically
+        throw new IllegalArgumentException("Link not part of any chain");
+    }
+    
+    private FeatureStructure newChain(JCas aJCas)
+    {
+        FeatureStructure newChain = aJCas.getCas().createFS(getAnnotationType(aJCas.getCas()));
+        aJCas.addFsToIndexes(newChain);
+        return newChain;
+    }
+    
+    private void setFirstLink(FeatureStructure aChain, AnnotationFS aLink)
+    {
+        aChain.setFeatureValue(aChain.getType().getFeatureByBaseName(chainFirstFeatureName), aLink);
+    }
+    
+    private AnnotationFS getFirstLink(FeatureStructure aChain)
+    {
+        return (AnnotationFS) aChain.getFeatureValue(aChain.getType().getFeatureByBaseName(
+                chainFirstFeatureName));
+    }
 
+    private AnnotationFS getPrevLink(FeatureStructure aChain, AnnotationFS aLink)
+    {
+        AnnotationFS prevLink = null;
+        AnnotationFS curLink = getFirstLink(aChain);
+        while (curLink != null) {
+            if (BratAjaxCasUtil.isSame(curLink, aLink)) {
+                break;
+            }
+            prevLink = curLink;
+            curLink = getNextLink(curLink);
+        }
+        return prevLink;
+    }
+
+    private void setNextLink(AnnotationFS aLink, AnnotationFS aNext)
+    {
+        aLink.setFeatureValue(
+                aLink.getType().getFeatureByBaseName(linkNextFeatureName), aNext);
+    }
+    
+    private AnnotationFS getNextLink(AnnotationFS aLink)
+    {
+        return (AnnotationFS) aLink.getFeatureValue(aLink.getType().getFeatureByBaseName(
+                linkNextFeatureName));
+    }
+
+    private void setLabel(AnnotationFS aLink, AnnotationFeature aFeature, String aValue)
+    {
+        Feature labelFeature = aLink.getType().getFeatureByBaseName(aFeature.getName());
+        aLink.setStringValue(labelFeature, aValue);
     }
 }

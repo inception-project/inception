@@ -62,6 +62,10 @@ public class BratAjaxCasUtil
      */
     public static boolean isSame(FeatureStructure a, FeatureStructure b)
     {
+        if (a == null || b == null) {
+            return false;
+        }
+        
         return getAddr(a) == getAddr(b);
     }
 
