@@ -118,8 +118,11 @@ public class TcfReader
         StringBuilder text = new StringBuilder();
 
         for (int i = 0; i < aCorpusData.getTokensLayer().size(); i++) {
+            if (i > 0) {
+                text.append(" ");
+            }
             eu.clarin.weblicht.wlfxb.tc.api.Token token = aCorpusData.getTokensLayer().getToken(i);
-            text.append(token.getString() + " ");
+            text.append(token.getString());
         }
         aJCas.setDocumentText(text.toString());
         aJCas.setDocumentLanguage(aCorpusData.getLanguage());

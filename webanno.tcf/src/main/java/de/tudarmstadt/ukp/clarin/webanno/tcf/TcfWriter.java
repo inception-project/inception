@@ -105,35 +105,41 @@ public class TcfWriter
     public void process(JCas aJCas)
         throws AnalysisEngineProcessException
     {
-        OutputStream docOS = null;
         InputStream docIS = null;
         try {
-            docOS = getOutputStream(aJCas, filenameSuffix);
-
             boolean writeWithoutMerging = true;
             if (merge) {
-                // Get the original TCF file and preserve it
-                DocumentMetaData documentMetadata = DocumentMetaData.get(aJCas);
-                URL filePathUrl = new URL(documentMetadata.getDocumentUri());
+                OutputStream docOS = null;
                 try {
-                    docIS = filePathUrl.openStream();
-                    
+                    docOS = getOutputStream(aJCas, filenameSuffix);
+                    // Get the original TCF file and preserve it
+                    DocumentMetaData documentMetadata = DocumentMetaData.get(aJCas);
+                    URL filePathUrl = new URL(documentMetadata.getDocumentUri());
                     try {
-                        getLogger().debug("Merging with [" + documentMetadata.getDocumentUri() + "]");
-                        casToTcfWriter(docIS, aJCas, docOS);
-                        writeWithoutMerging = false;
+                        docIS = filePathUrl.openStream();
+
+                        try {
+                            getLogger().debug(
+                                    "Merging with [" + documentMetadata.getDocumentUri() + "]");
+                            casToTcfWriter(docIS, aJCas, docOS);
+                            writeWithoutMerging = false;
+                        }
+                        // See https://github.com/weblicht/wlfxb/issues/7
+                        // catch (WLFormatException ex) {
+                        // getLogger().debug("No source file to merge with: " + ex.getMessage());
+                        // }
+                        // Workaround: catch all exceptions
+                        catch (Exception ex) {
+                            getLogger().debug("Source file is not TCF: " + ex.getMessage());
+                        }
                     }
-                    // See https://github.com/weblicht/wlfxb/issues/7
-//                    catch (WLFormatException ex) {
-//                        getLogger().debug("No source file to merge with: " + ex.getMessage());
-//                    }
-                    // Workaround: catch all exceptions
-                    catch (Exception ex) {
-                        getLogger().debug("Source file is not TCF: " + ex.getMessage());
+                    catch (IOException e) {
+                        getLogger().debug(
+                                "Cannot open source file to merge with: " + e.getMessage());
                     }
                 }
-                catch (IOException e) {
-                    getLogger().debug("Cannot open source file to merge with: " + e.getMessage());
+                finally {
+                    closeQuietly(docOS);
                 }
             }
             else {
@@ -142,14 +148,20 @@ public class TcfWriter
             
             // If merging failed or is disabled, go on without merging
             if (writeWithoutMerging) {
-                casToTcfWriter(aJCas, docOS);
+                OutputStream docOS = null;
+                try {
+                    docOS = getOutputStream(aJCas, filenameSuffix);
+                    casToTcfWriter(aJCas, docOS);
+                }
+                finally {
+                    closeQuietly(docOS);
+                }
             }
         }
         catch (Exception e) {
             throw new AnalysisEngineProcessException(e);
         }
         finally {
-            closeQuietly(docOS);
             closeQuietly(docIS);
         }
     }
