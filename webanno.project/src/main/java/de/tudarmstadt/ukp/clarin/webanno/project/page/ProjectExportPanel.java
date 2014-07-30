@@ -74,7 +74,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.export.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.export.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
-import de.tudarmstadt.ukp.clarin.webanno.tcf.TcfWriter;
+import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoCustomTsvWriter;
 
 /**
  * A Panel used to add Project Guidelines in a selected {@link Project}
@@ -464,7 +464,7 @@ public class ProjectExportPanel extends Panel {
 				File curationFile = null;
 				if (CurationFileAsSerialisedCas.exists()) {
 					curationFile = repository.exportAnnotationDocument(
-							sourceDocument, CURATION_USER, TcfWriter.class,
+							sourceDocument, CURATION_USER, WebannoCustomTsvWriter.class,
 							sourceDocument.getName(), Mode.CURATION);
 				}
 				// in Case they didn't exist
@@ -486,7 +486,7 @@ public class ProjectExportPanel extends Panel {
 				File correctionFile = null;
 				if (CorrectionFileAsSerialisedCas.exists()) {
 					correctionFile = repository.exportAnnotationDocument(
-							sourceDocument, CORRECTION_USER, TcfWriter.class,
+							sourceDocument, CORRECTION_USER, WebannoCustomTsvWriter.class,
 							sourceDocument.getName(), Mode.CORRECTION);
 				}
 				// in Case they didn't exist

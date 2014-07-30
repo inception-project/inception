@@ -93,7 +93,7 @@
 		</dependency>
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>de.tudarmstadt.ukp.clarin.webanno.tcf</artifactId>
+			<artifactId>de.tudarmstadt.ukp.clarin.webanno.tsv</artifactId>
 		</dependency>
 
 		<!-- UIMA dependencies -->

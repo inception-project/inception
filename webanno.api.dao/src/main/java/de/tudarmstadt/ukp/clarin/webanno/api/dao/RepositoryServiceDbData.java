@@ -34,6 +34,7 @@ import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -59,6 +60,7 @@ import javax.persistence.PersistenceContext;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.LineIterator;
 import org.apache.commons.io.comparator.LastModifiedFileComparator;
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.Level;
@@ -1423,11 +1425,20 @@ public class RepositoryServiceDbData
         throws IOException
     {
         try {
-            getJCasFromFile(aFile,  getReadableFormats().get(aDocument.getFormat()), aDocument);
+            if (aDocument.getFormat().equals(WebAnnoConst.TAB_SEP)) {
+                if (!isTabSepFileFormatCorrect(aFile)) {
+                    removeSourceDocument(aDocument, aUser);
+                    throw new IOException(
+                            "This TAB-SEP file is not in correct format. It should have two columns separated by TAB!");
+                }
+            }
+            else {
+                getJCasFromFile(aFile, getReadableFormats().get(aDocument.getFormat()), aDocument);
+            }
         }
         catch (Exception e) {
             removeSourceDocument(aDocument, aUser);
-          throw new IOException(e.getMessage());
+            throw new IOException(e.getMessage());
         }
 
         String path = dir.getAbsolutePath() + PROJECT + aDocument.getProject().getId() + DOCUMENT
@@ -2309,5 +2320,28 @@ public class RepositoryServiceDbData
                         AutomationStatus.class).setParameter("template", aTemplate)
                 .getSingleResult();
 
+    }
+
+    /**
+     * Check if a TAB-Sep training file is in correct format before importing
+     */
+    private boolean isTabSepFileFormatCorrect(File aFile)
+    {
+        try {
+            LineIterator it = new LineIterator(new FileReader(aFile));
+            while (it.hasNext()) {
+                String line = it.next();
+                if(line.trim().length()==0) {
+                    continue;
+                }
+                if (line.split("\t").length != 2) {
+                    return false;
+                }
+            }
+        }
+        catch (Exception e) {
+            return false;
+        }
+        return true;
     }
 }

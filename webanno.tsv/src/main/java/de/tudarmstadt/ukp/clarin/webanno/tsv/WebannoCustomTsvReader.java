@@ -108,7 +108,6 @@ public class WebannoCustomTsvReader
 
         while (lineIterator.hasNext()) {
             String line = lineIterator.next().trim();
-            System.out.println(line);
             if (line.trim().equals("") && sentenceStart == tokenStart) {
                 continue;
             }
