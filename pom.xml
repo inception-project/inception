@@ -334,9 +334,9 @@
 		<module>webanno.monitoring</module>
 	</modules>
 	<scm>
-		<developerConnection>scm:svn:https://webanno.googlecode.com/svn/branches/2.0.x</developerConnection>
-		<connection>scm:svn:https://webanno.googlecode.com/svn/branches/2.0.x</connection>
-		<url>https://webanno.googlecode.com/svn/branches/2.0.x</url>
+		<developerConnection>scm:svn:https://webanno.googlecode.com/svn/trunk</developerConnection>
+		<connection>scm:svn:https://webanno.googlecode.com/svn/trunk</connection>
+		<url>https://webanno.googlecode.com/svn/trunk</url>
 	</scm>
 	<build>
 		<extensions>
