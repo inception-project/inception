@@ -133,14 +133,15 @@ public class BratAjaxConfiguration
             // and a "Link" type. ChainAdapter always seems to use "Chain" but some places also
             // still use "Link" - this should be cleaned up so that knowledge about "Chain" and
             // "Link" types is local to the ChainAdapter and not known outside it!
-            String arrowHead;
-            if (aLayer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
-                attachingLayerBratTypeName += ChainAdapter.CHAIN;
-                arrowHead = "none";
-            }
-            else {
-                arrowHead = "triangle,5";
-            }
+            String arrowHead = "triangle,5";
+            // Conflicting issues: 935 <-> 859
+//            if (aLayer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
+//                attachingLayerBratTypeName += ChainAdapter.CHAIN;
+//                arrowHead = "none";
+//            }
+//            else {
+//                arrowHead = "triangle,5";
+//            }
             
             RelationType arc = new RelationType(aAttachingLayer.getName(),
                     attachingLayerBratTypeName, bratTypeName, null, arrowHead);
