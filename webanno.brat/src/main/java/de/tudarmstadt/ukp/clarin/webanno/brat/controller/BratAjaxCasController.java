@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +47,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.StoreSvgResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.WhoamiResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
@@ -249,27 +251,31 @@ public class BratAjaxCasController
      * wrap JSON responses to BRAT visualizer
      */
     public static void render(GetDocumentResponse aResponse,
-            BratAnnotatorModel aBratAnnotatorModel, JCas aJCas)
+            BratAnnotatorModel aBModel, JCas aJCas)
     {
         // Render invisible baseline annotations (sentence, tokens)
-        SpanAdapter.renderTokenAndSentence(aJCas, aResponse, aBratAnnotatorModel);
+        SpanAdapter.renderTokenAndSentence(aJCas, aResponse, aBModel);
 
         // Render visible (custom) layers
         int i = 0;
-        for (AnnotationLayer layer : aBratAnnotatorModel.getAnnotationLayers()) {
+        for (AnnotationLayer layer : aBModel.getAnnotationLayers()) {
             if (
                     layer.getName().equals(Token.class.getName()) || 
-                    layer.getName().equals(Sentence.class.getName())
+                    layer.getName().equals(Sentence.class.getName())||
+                    (layer.getType().equals(WebAnnoConst.CHAIN_TYPE) && 
+                    		(aBModel.getProject().getMode().equals(Mode.AUTOMATION)||
+                    		 aBModel.getProject().getMode().equals(Mode.CORRECTION)||
+                    		 aBModel.getProject().getMode().equals(Mode.CURATION)))
             ) {
                 continue;
             }
             
             ColoringStrategy coloringStrategy = ColoringStrategy.getBestStrategy(layer,
-                    aBratAnnotatorModel, i);
+                    aBModel, i);
             
             List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
             TypeAdapter adapter = getAdapter(layer, annotationService);
-            adapter.render(aJCas, features, aResponse, aBratAnnotatorModel, coloringStrategy);
+            adapter.render(aJCas, features, aResponse, aBModel, coloringStrategy);
             i++;
         }
     }
