@@ -1029,8 +1029,8 @@ public class CorrectionPage
                     annotationDocument.setProject(bratAnnotatorModel.getProject());
                 }
 
-                BratAnnotatorUtility.clearJcasAnnotations(jCas, bratAnnotatorModel.getDocument(),
-                        logedInUser, repository);
+                jCas = BratAnnotatorUtility.clearJcasAnnotations(jCas,
+                        bratAnnotatorModel.getDocument(), logedInUser, repository);
             }
             else {
                 jCas = repository.readJCas(bratAnnotatorModel.getDocument(), bratAnnotatorModel
@@ -1039,8 +1039,8 @@ public class CorrectionPage
                 repository.createCorrectionDocumentContent(jCas, bratAnnotatorModel.getDocument(),
                         logedInUser);
                 // remove all annotation so that the user can correct from the auto annotation
-                BratAnnotatorUtility.clearJcasAnnotations(jCas, bratAnnotatorModel.getDocument(),
-                        logedInUser, repository);
+                jCas = BratAnnotatorUtility.clearJcasAnnotations(jCas,
+                        bratAnnotatorModel.getDocument(), logedInUser, repository);
             }
         }
         catch (NoResultException e) {
@@ -1064,8 +1064,8 @@ public class CorrectionPage
                     annotationDocument.setProject(bratAnnotatorModel.getProject());
                 }
 
-                BratAnnotatorUtility.clearJcasAnnotations(jCas, bratAnnotatorModel.getDocument(),
-                        logedInUser, repository);
+                jCas = BratAnnotatorUtility.clearJcasAnnotations(jCas,
+                        bratAnnotatorModel.getDocument(), logedInUser, repository);
             }
             else {
                 jCas = repository.readJCas(bratAnnotatorModel.getDocument(), bratAnnotatorModel
@@ -1074,8 +1074,8 @@ public class CorrectionPage
                 repository.createCorrectionDocumentContent(jCas, bratAnnotatorModel.getDocument(),
                         logedInUser);
                 // remove all annotation so that the user can correct from the auto annotation
-                BratAnnotatorUtility.clearJcasAnnotations(jCas, bratAnnotatorModel.getDocument(),
-                        logedInUser, repository);
+                jCas = BratAnnotatorUtility.clearJcasAnnotations(jCas,
+                        bratAnnotatorModel.getDocument(), logedInUser, repository);
             }
         }
 
