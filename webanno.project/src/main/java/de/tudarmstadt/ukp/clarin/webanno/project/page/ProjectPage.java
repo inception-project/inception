@@ -140,7 +140,7 @@ public class ProjectPage
                 {
                     projectDetailForm.setModelObject(new Project());
                     projectDetailForm.setVisible(true);
-                    ProjectSelectionForm.this.setModelObject(null);
+                    ProjectSelectionForm.this.setModelObject(new SelectionModel());
                     if (projectType != null) {
                         projectType.setEnabled(true);
                     }
