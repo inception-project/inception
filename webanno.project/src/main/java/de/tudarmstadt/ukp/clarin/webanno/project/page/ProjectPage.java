@@ -474,7 +474,7 @@ public class ProjectPage extends SettingsPageBase {
 				public boolean isVisible() {
 					return project.getObject().getId() != 0
 							&& project.getObject().getMode()
-									.equals(Mode.AUTOMATION);
+									.equals(Mode.AUTOMATION) && visible;
 
 				}
 			});
