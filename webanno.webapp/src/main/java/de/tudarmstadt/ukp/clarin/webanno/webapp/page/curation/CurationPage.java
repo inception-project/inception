@@ -248,9 +248,11 @@ public class CurationPage
                             CurationBuilder builder = new CurationBuilder(repository);
                             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                             curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
-                            updatePanel(curationContainer);
 
+                            updatePanel(curationContainer, target);
+                            target.add(numberOfPages);
                             target.add(finish.setOutputMarkupId(true));
+
                             target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
 
                         }
@@ -296,7 +298,9 @@ public class CurationPage
                     aTarget.add(getFeedbackPanel());
                     curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                     curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
-                    updatePanel(curationContainer);
+
+                    updatePanel(curationContainer, aTarget);
+                    aTarget.add(numberOfPages);
                     aTarget.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
 
                 }
@@ -365,8 +369,9 @@ public class CurationPage
                         CurationBuilder builder = new CurationBuilder(repository);
                         curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                         curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
-                        updatePanel(curationContainer);
 
+                        updatePanel(curationContainer, aTarget);
+                        aTarget.add(numberOfPages);
                         aTarget.add(finish.setOutputMarkupId(true));
                         aTarget.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
 
@@ -441,7 +446,9 @@ public class CurationPage
                         CurationBuilder builder = new CurationBuilder(repository);
                         curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                         curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
-                        updatePanel(curationContainer);
+
+                        updatePanel(curationContainer, aTarget);
+                        aTarget.add(numberOfPages);
                         aTarget.add(finish.setOutputMarkupId(true));
                         aTarget.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
 
@@ -498,7 +505,9 @@ public class CurationPage
                         CurationBuilder builder = new CurationBuilder(repository);
                         curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                         curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
-                        updatePanel(curationContainer);
+
+                        updatePanel(curationContainer, aTarget);
+                        aTarget.add(numberOfPages);
                         aTarget.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
                     }
                     else {
@@ -594,7 +603,9 @@ public class CurationPage
                         CurationBuilder builder = new CurationBuilder(repository);
                         curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                         curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
-                        updatePanel(curationContainer);
+
+                        updatePanel(curationContainer, aTarget);
+                        aTarget.add(numberOfPages);
                         aTarget.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
                     }
                     else {
@@ -732,7 +743,9 @@ public class CurationPage
                                 curationContainer = builder
                                         .buildCurationContainer(bratAnnotatorModel);
                                 curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
-                                updatePanel(curationContainer);
+
+                                updatePanel(curationContainer, aTarget);
+                                aTarget.add(numberOfPages);
                                 aTarget.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
                                 aTarget.appendJavaScript("alert('remerege finished!')");
                             }
@@ -800,7 +813,9 @@ public class CurationPage
                             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
 
                             curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
-                            updatePanel(curationContainer);
+
+                            updatePanel(curationContainer, aTarget);
+                            aTarget.add(numberOfPages);
                             aTarget.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
                         }
 
@@ -857,7 +872,9 @@ public class CurationPage
                             CurationBuilder builder = new CurationBuilder(repository);
                             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                             curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
-                            updatePanel(curationContainer);
+
+                            updatePanel(curationContainer, aTarget);
+                            aTarget.add(numberOfPages);
                             aTarget.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
                         }
                         else {
@@ -913,7 +930,9 @@ public class CurationPage
                             CurationBuilder builder = new CurationBuilder(repository);
                             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                             curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
-                            updatePanel(curationContainer);
+
+                            updatePanel(curationContainer, aTarget);
+                            aTarget.add(numberOfPages);
                             aTarget.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
 
                         }
@@ -969,7 +988,9 @@ public class CurationPage
                             CurationBuilder builder = new CurationBuilder(repository);
                             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                             curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
-                            updatePanel(curationContainer);
+
+                            updatePanel(curationContainer, aTarget);
+                            aTarget.add(numberOfPages);
                             aTarget.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
 
                         }
@@ -999,8 +1020,21 @@ public class CurationPage
 
     // Update the curation panel.
 
-    private void updatePanel(CurationContainer aCurationContainer)
+    private void updatePanel(CurationContainer aCurationContainer, AjaxRequestTarget aTarget)
     {
+        JCas mergeJCas = null;
+        try {
+            mergeJCas = repository.getCurationDocumentContent(bratAnnotatorModel.getDocument());
+        }
+        catch (UIMAException e) {
+            error(e.getMessage());
+        }
+        catch (ClassNotFoundException e) {
+            error(e.getMessage());
+        }
+        catch (IOException e) {
+            error(e.getMessage());
+        }
         // remove old panel, create new one, add it
         remove(curationPanel);
         curationPanel = new CurationPanel("curationPanel", aCurationContainer)
@@ -1010,7 +1044,6 @@ public class CurationPage
             @Override
             protected void onChange(AjaxRequestTarget aTarget)
             {
-                aTarget.add(numberOfPages);
                 JCas mergeJCas = null;
                 try {
                     mergeJCas = repository.getCurationDocumentContent(bratAnnotatorModel
@@ -1025,12 +1058,21 @@ public class CurationPage
                 catch (IOException e) {
                     error(e.getMessage());
                 }
+                aTarget.add(numberOfPages);
                 gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(mergeJCas,
                         bratAnnotatorModel.getSentenceAddress()) + 1);
+                gotoPageAddress = BratAjaxCasUtil.getSentenceAddress(mergeJCas,
+                        gotoPageTextField.getModelObject());
                 aTarget.add(gotoPageTextField);
             }
         };
+
+        gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(mergeJCas,
+                bratAnnotatorModel.getSentenceAddress()) + 1);
+        gotoPageAddress = BratAjaxCasUtil.getSentenceAddress(mergeJCas,
+                gotoPageTextField.getModelObject());
         curationPanel.setOutputMarkupId(true);
+        aTarget.add(gotoPageTextField);
         add(curationPanel);
     }
 

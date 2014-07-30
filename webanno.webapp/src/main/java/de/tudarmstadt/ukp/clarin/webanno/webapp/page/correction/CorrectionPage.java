@@ -186,6 +186,7 @@ public class CorrectionPage
                 }
                 mergeVisualizer.reloadContent(aTarget);
                 aTarget.add(numberOfPages);
+                update(aTarget);
             }
         };
 
@@ -229,6 +230,7 @@ public class CorrectionPage
                 catch (BratAnnotationException e) {
                     error(e.getMessage());
                 }
+                update(aTarget);
             }
         };
         // reset sentenceAddress and lastSentenceAddress to the orginal once
@@ -1173,6 +1175,8 @@ public class CorrectionPage
 
          gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(mergeJCas,
                  bratAnnotatorModel.getSentenceAddress())+1);
+         gotoPageAddress = BratAjaxCasUtil.getSentenceAddress(mergeJCas,
+                 gotoPageTextField.getModelObject());
          target.add(gotoPageTextField);
     }
 

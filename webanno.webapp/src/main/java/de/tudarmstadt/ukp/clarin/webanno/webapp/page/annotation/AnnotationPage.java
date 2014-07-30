@@ -493,6 +493,7 @@ public class AnnotationPage
                         aTarget.add(numberOfPages);
                         gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(jCas,
                                 bratAnnotatorModel.getSentenceAddress())+1);
+                        updateSentenceAddress();
                         aTarget.add(gotoPageTextField);
                     }
 
@@ -535,6 +536,7 @@ public class AnnotationPage
                         aTarget.add(numberOfPages);
                         gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(jCas,
                                 bratAnnotatorModel.getSentenceAddress())+1);
+                        updateSentenceAddress();
                         aTarget.add(gotoPageTextField);
                     }
                     else {
@@ -574,6 +576,7 @@ public class AnnotationPage
                         aTarget.add(numberOfPages);
                         gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(jCas,
                                 bratAnnotatorModel.getSentenceAddress())+1);
+                        updateSentenceAddress();
                         aTarget.add(gotoPageTextField);
                     }
                     else {
@@ -617,6 +620,7 @@ public class AnnotationPage
                         aTarget.add(numberOfPages);
                         gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(jCas,
                                 bratAnnotatorModel.getSentenceAddress())+1);
+                        updateSentenceAddress();
                         aTarget.add(gotoPageTextField);
                     }
                     else {
@@ -635,10 +639,10 @@ public class AnnotationPage
         gotoPageTextField = (NumberTextField<Integer>) new NumberTextField<Integer>("gotoPageText",
                 new Model<Integer>(0));
         Form<Void> gotoPageTextFieldForm = new Form<Void>("gotoPageTextFieldForm");
-        gotoPageTextFieldForm.add(new AjaxFormValidatingBehavior(gotoPageTextFieldForm, "onsubmit") { 
+        gotoPageTextFieldForm.add(new AjaxFormValidatingBehavior(gotoPageTextFieldForm, "onsubmit") {
 			private static final long serialVersionUID = -4549805321484461545L;
-			@Override 
-            protected void onSubmit(AjaxRequestTarget aTarget) { 
+			@Override
+            protected void onSubmit(AjaxRequestTarget aTarget) {
 				 if (gotoPageAddress == 0) {
 	                    aTarget.appendJavaScript("alert('The sentence number entered is not valid')");
 	                    return;
@@ -663,20 +667,20 @@ public class AnnotationPage
                 else {
                     aTarget.appendJavaScript("alert('This sentence is on the same page!')");
                 }
-            } 
-            @Override 
-            protected CharSequence getEventHandler() { 
-                AppendingStringBuffer handler = new AppendingStringBuffer(); 
-                handler.append(super.getEventHandler()); 
-                handler.append("; return false;"); 
-                return handler; 
-           } 
-        }); 
+            }
+            @Override
+            protected CharSequence getEventHandler() {
+                AppendingStringBuffer handler = new AppendingStringBuffer();
+                handler.append(super.getEventHandler());
+                handler.append("; return false;");
+                return handler;
+           }
+        });
         gotoPageTextField.setType(Integer.class);
         gotoPageTextField.setMinimum(1);
         gotoPageTextField.setDefaultModelObject(1);
         add(gotoPageTextFieldForm.add(gotoPageTextField));
-        
+
         gotoPageTextField.add(new AjaxFormComponentUpdatingBehavior("onchange")
         {
             private static final long serialVersionUID = 56637289242712170L;
@@ -693,7 +697,7 @@ public class AnnotationPage
 
             }
         });
-        
+
         add(new AjaxLink<Void>("gotoPageLink")
         {
             private static final long serialVersionUID = 7496156015186497496L;

@@ -190,6 +190,7 @@ public class AutomationPage
                 }
                 mergeVisualizer.reloadContent(aTarget);
                 aTarget.add(numberOfPages);
+                update(aTarget);
             }
         };
 
@@ -233,6 +234,7 @@ public class AutomationPage
                 catch (BratAnnotationException e) {
                     error(e.getMessage());
                 }
+                update(aTarget);
             }
 
             @Override
@@ -1231,6 +1233,8 @@ public class AutomationPage
 
         gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(mergeJCas,
                 bratAnnotatorModel.getSentenceAddress()) + 1);
+        gotoPageAddress = BratAjaxCasUtil.getSentenceAddress(mergeJCas,
+                gotoPageTextField.getModelObject());
         target.add(gotoPageTextField);
     }
 }
