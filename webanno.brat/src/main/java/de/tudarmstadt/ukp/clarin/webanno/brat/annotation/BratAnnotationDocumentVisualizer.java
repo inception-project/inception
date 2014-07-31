@@ -18,8 +18,10 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
+
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Resource;
@@ -152,8 +154,15 @@ public class BratAnnotationDocumentVisualizer
                 continue;
             }
             List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
+            List<AnnotationFeature> invisibleFeatures = new ArrayList<AnnotationFeature>();
+            for (AnnotationFeature feature : features) {
+                if (!feature.isVisible()) {
+                    invisibleFeatures.add(feature);
+                }
+            }
+            features.removeAll(invisibleFeatures);
 
-            ColoringStrategy coloringStrategy = ColoringStrategy.getBestStrategy(layer, 
+            ColoringStrategy coloringStrategy = ColoringStrategy.getBestStrategy(layer,
                     bratAnnotatorModel, i);
 
             getAdapter(layer, annotationService).render(jCas, features, response,

@@ -156,7 +156,7 @@ public class ArcAnnotationModalWindowPanel
             featureModels = new ArrayList<IModel<FeatureValue>>();
             tagModels = new ArrayList<IModel<String>>();
             for (AnnotationFeature feature : annotationService.listAnnotationFeature(selectedLayer)) {
-                if (!feature.isVisible() || !feature.isEnabled()) {
+                if (!feature.isEnabled()) {
                     continue;
                 }
                 if (selectedLayer.getType().equals(WebAnnoConst.CHAIN_TYPE)
@@ -651,7 +651,7 @@ public class ArcAnnotationModalWindowPanel
             if (feature.getName().equals(WebAnnoConst.COREFERENCE_TYPE_FEATURE)) {
                 continue;
             }
-            if (feature.isEnabled() || feature.isVisible()) {
+            if (feature.isEnabled()) {
                 Feature annoFeature = annoFs.getType().getFeatureByBaseName(feature.getName());
                 this.selectedFeatureValues
                         .put(feature, annoFs.getFeatureValueAsString(annoFeature));

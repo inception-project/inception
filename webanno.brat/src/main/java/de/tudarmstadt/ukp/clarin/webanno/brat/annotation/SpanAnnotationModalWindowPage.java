@@ -187,7 +187,7 @@ public class SpanAnnotationModalWindowPage
                                         WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
                             continue;
                         }
-                        if (!feature.isVisible() || !feature.isEnabled()) {
+                        if (!feature.isEnabled()) {
                             continue;
                         }
                         IModel<FeatureValue> featureModel = new Model<SpanAnnotationModalWindowPage.FeatureValue>();
@@ -230,7 +230,7 @@ public class SpanAnnotationModalWindowPage
             tagModels = new ArrayList<IModel<String>>();
 
             for (AnnotationFeature feature : annotationService.listAnnotationFeature(selectedLayer)) {
-                if (!feature.isVisible() || !feature.isEnabled()) {
+                if (!feature.isEnabled()) {
                     continue;
                 }
 
@@ -686,7 +686,7 @@ public class SpanAnnotationModalWindowPage
             if (feature.getName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
                 continue;
             }
-            if (feature.isEnabled() || feature.isVisible()) {
+            if (feature.isEnabled()) {
                 Feature annoFeature = annoFs.getType().getFeatureByBaseName(feature.getName());
                 this.selectedFeatureValues
                         .put(feature, annoFs.getFeatureValueAsString(annoFeature));

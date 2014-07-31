@@ -194,7 +194,8 @@ public class BratAjaxCasController
             Set<AnnotationLayer> aAnnotationLayers)
     {
         GetCollectionInformationResponse info = new GetCollectionInformationResponse();
-        info.setEntityTypes(BratAjaxConfiguration.buildEntityTypes(aAnnotationLayers, annotationService));
+        info.setEntityTypes(BratAjaxConfiguration.buildEntityTypes(aAnnotationLayers,
+                annotationService));
         return info;
     }
 
@@ -221,8 +222,7 @@ public class BratAjaxCasController
         LOG.info("Collection: " + aBratAnnotatorModel.getDocument().getName());
 
         GetDocumentResponse response = new GetDocumentResponse();
-        render(response, aBratAnnotatorModel, aAnnotationOffsetStart, aJCas,
-                aIsGetDocument);
+        render(response, aBratAnnotatorModel, aAnnotationOffsetStart, aJCas, aIsGetDocument);
 
         return response;
     }
@@ -243,15 +243,14 @@ public class BratAjaxCasController
                     aBratAnnotatorModel.getProject(), aBratAnnotatorModel.getDocument(),
                     aBratAnnotatorModel.getWindowSize()));
         }
-        
+
         render(aResponse, aBratAnnotatorModel, aJCas);
     }
-    
+
     /**
      * wrap JSON responses to BRAT visualizer
      */
-    public static void render(GetDocumentResponse aResponse,
-            BratAnnotatorModel aBModel, JCas aJCas)
+    public static void render(GetDocumentResponse aResponse, BratAnnotatorModel aBModel, JCas aJCas)
     {
         // Render invisible baseline annotations (sentence, tokens)
         SpanAdapter.renderTokenAndSentence(aJCas, aResponse, aBModel);
@@ -259,21 +258,25 @@ public class BratAjaxCasController
         // Render visible (custom) layers
         int i = 0;
         for (AnnotationLayer layer : aBModel.getAnnotationLayers()) {
-            if (
-                    layer.getName().equals(Token.class.getName()) || 
-                    layer.getName().equals(Sentence.class.getName())||
-                    (layer.getType().equals(WebAnnoConst.CHAIN_TYPE) && 
-                    		(aBModel.getProject().getMode().equals(Mode.AUTOMATION)||
-                    		 aBModel.getProject().getMode().equals(Mode.CORRECTION)||
-                    		 aBModel.getProject().getMode().equals(Mode.CURATION)))
-            ) {
+            if (layer.getName().equals(Token.class.getName())
+                    || layer.getName().equals(Sentence.class.getName())
+                    || (layer.getType().equals(WebAnnoConst.CHAIN_TYPE) && (aBModel.getProject()
+                            .getMode().equals(Mode.AUTOMATION)
+                            || aBModel.getProject().getMode().equals(Mode.CORRECTION) || aBModel
+                            .getProject().getMode().equals(Mode.CURATION)))) {
                 continue;
             }
-            
-            ColoringStrategy coloringStrategy = ColoringStrategy.getBestStrategy(layer,
-                    aBModel, i);
-            
+
+            ColoringStrategy coloringStrategy = ColoringStrategy.getBestStrategy(layer, aBModel, i);
+
             List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
+            List<AnnotationFeature> invisibleFeatures = new ArrayList<AnnotationFeature>();
+            for (AnnotationFeature feature : features) {
+                if (!feature.isVisible()) {
+                    invisibleFeatures.add(feature);
+                }
+            }
+            features.removeAll(invisibleFeatures);
             TypeAdapter adapter = getAdapter(layer, annotationService);
             adapter.render(aJCas, features, aResponse, aBModel, coloringStrategy);
             i++;

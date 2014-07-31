@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.util;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -174,15 +175,15 @@ public class CuratorUtil
         List<String> usernamesSorted = new ArrayList<String>(aJCases.keySet());
         Collections.sort(usernamesSorted);
         final int numUsers = usernamesSorted.size();
-        
+
         final Mode mode = aBratAnnotatorModel.getMode();
         boolean isAutomationMode = mode.equals(Mode.AUTOMATION);
         boolean isCorrectionMode = mode.equals(Mode.CORRECTION);
         boolean isCurationMode = mode.equals(Mode.CURATION);
-        
+
         for (String username : usernamesSorted) {
             if (
-                    (!username.equals(CURATION_USER) && isCurationMode) || 
+                    (!username.equals(CURATION_USER) && isCurationMode) ||
                     (username.equals(CURATION_USER) && (isAutomationMode || isCorrectionMode))
             ) {
                 // WTF?
@@ -212,7 +213,7 @@ public class CuratorUtil
                 // Save window location (WTF?!)
                 int sentenceAddress = aBratAnnotatorModel.getSentenceAddress();
                 int lastSentenceAddress = aBratAnnotatorModel.getLastSentenceAddress();
-                 
+
                 // Override window location
                 aBratAnnotatorModel.setSentenceAddress(getSentenceAddress(aBratAnnotatorModel,
                         jCas, userJCas));
@@ -235,11 +236,11 @@ public class CuratorUtil
                           else {
                               newState = getCurationState(numUsers, annotationSelection);
                           }
-                        
+
                         return newState.getColorCode();
                     }
                 };
-                
+
                 // Create curation view for the current user
                 CurationUserSegmentForAnnotationDocument curationUserSegment2 = new CurationUserSegmentForAnnotationDocument();
                 curationUserSegment2.setCollectionData(getCollectionInformation(aJsonConverter,
@@ -251,7 +252,7 @@ public class CuratorUtil
                 curationUserSegment2
                         .setAnnotationSelectionByUsernameAndAddress(aAnnotationSelectionByUsernameAndAddress);
                 aSentences.add(curationUserSegment2);
-                
+
                 // Restore window location
                 aBratAnnotatorModel.setSentenceAddress(sentenceAddress);
                 aBratAnnotatorModel.setLastSentenceAddress(lastSentenceAddress);
@@ -285,32 +286,39 @@ public class CuratorUtil
     }
 
     private static String render(JCas aJcas,
-            AnnotationService aAnnotationService, 
+            AnnotationService aAnnotationService,
             BratAnnotatorModel aBratAnnotatorModel,
             MappingJacksonHttpMessageConverter aJsonConverter,
             ColoringStrategy aCurationColoringStrategy)
         throws IOException
     {
         GetDocumentResponse response = new GetDocumentResponse();
-        
+
         // Render invisible baseline annotations (sentence, tokens)
         SpanAdapter.renderTokenAndSentence(aJcas, response, aBratAnnotatorModel);
-        
+
         // Render visible (custom) layers
         for (AnnotationLayer layer : aBratAnnotatorModel.getAnnotationLayers()) {
             if (
-                    layer.getName().equals(Token.class.getName()) || 
+                    layer.getName().equals(Token.class.getName()) ||
                     layer.getName().equals(Sentence.class.getName())
             ) {
                 continue;
             }
-            
+
             List<AnnotationFeature> features = aAnnotationService.listAnnotationFeature(layer);
+            List<AnnotationFeature> invisibleFeatures = new ArrayList<AnnotationFeature>();
+            for(AnnotationFeature feature:features){
+                if(!feature.isVisible()){
+                    invisibleFeatures.add(feature);
+                }
+            }
+            features.removeAll(invisibleFeatures);
             TypeAdapter adapter = getAdapter(layer, aAnnotationService);
             adapter.render(aJcas, features, response, aBratAnnotatorModel,
                     aCurationColoringStrategy);
         }
-        
+
         StringWriter out = new StringWriter();
         JsonGenerator jsonGenerator = aJsonConverter.getObjectMapper().getJsonFactory()
                 .createJsonGenerator(out);
@@ -369,7 +377,7 @@ public class CuratorUtil
         }
         return newState;
     }
-    
+
     private static AnnotationState getCorrectionState(AnnotationSelection annotationSelection,
             List<AnnotationOption> aAnnotationOptions, int numUsers, int address)
     {

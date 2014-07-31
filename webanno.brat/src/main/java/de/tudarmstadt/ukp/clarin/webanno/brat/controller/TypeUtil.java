@@ -77,7 +77,8 @@ public final class TypeUtil
     {
         StringBuilder bratLabelText = new StringBuilder();
         for (AnnotationFeature feature : aFeatures) {
-            if (!(feature.isEnabled() || feature.isVisible())) {
+
+            if (!(feature.isEnabled()) && !(feature.isVisible())) {
                 continue;
             }
 

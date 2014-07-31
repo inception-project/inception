@@ -46,8 +46,6 @@ import org.apache.wicket.util.string.StringValue;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import com.ibm.icu.util.StringTokenizer;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
@@ -75,9 +73,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 /**
  * A {@link MarkupContainer} for either curation users' sentence annotation (for
  * the lower panel) or the automated annotations
- * 
+ *
  * @author Seid Muhie Yimam
- * 
+ *
  */
 public class CurationViewPanel extends WebMarkupContainer {
 	private static final long serialVersionUID = 8736268179612831795L;
@@ -305,7 +303,7 @@ public class CurationViewPanel extends WebMarkupContainer {
 					WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
 				continue;
 			}
-			if (feature.isEnabled() || feature.isVisible()) {
+			if (feature.isEnabled() && feature.isVisible()) {
 				Feature annoFeature = fsClicked.getType().getFeatureByBaseName(
 						feature.getName());
 				featureValues.put(feature,
@@ -427,7 +425,7 @@ public class CurationViewPanel extends WebMarkupContainer {
 					annotationService);
 			adapter.setAllowStacking(layer.isAllowSTacking());
 			adapter.setCrossMultipleSentence(layer.isCrossSentence());
-			
+
 			// Store annotation lables of features in a map
 			Map<AnnotationFeature, String> featureValues = new HashMap<AnnotationFeature, String>();
 			for (AnnotationFeature feature : annotationService
@@ -436,14 +434,14 @@ public class CurationViewPanel extends WebMarkupContainer {
 						WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
 					continue;
 				}
-				if (feature.isEnabled() || feature.isVisible()) {
+				if (feature.isEnabled() && feature.isVisible()) {
 					Feature annoFeature = fsClicked.getType().getFeatureByBaseName(
 							feature.getName());
 					featureValues.put(feature,
 							fsClicked.getFeatureValueAsString(annoFeature));
 				}
 			}
-			
+
 			for (AnnotationFeature feature : annotationService
 					.listAnnotationFeature(layer)) {
 				adapter.add(featureValues.get(feature), originFs, targetFs, aJcas,
