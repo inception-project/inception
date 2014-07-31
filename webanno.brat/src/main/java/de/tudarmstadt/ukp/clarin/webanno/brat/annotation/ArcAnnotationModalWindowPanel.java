@@ -199,7 +199,18 @@ public class ArcAnnotationModalWindowPanel
                                     .getModelObject().feature.getTagset() != null) ? annotationService
                                     .listTags(item.getModelObject().feature.getTagset())
                                     : new ArrayList<Tag>(), new ComboBoxRenderer<Tag>("name",
-                                    "name")));
+                                    "name")).add(new Behavior()
+                    {
+                        private static final long serialVersionUID = -3612493911620740735L;
+
+                        @Override
+                        public void renderHead(Component component, IHeaderResponse response)
+                        {
+                            super.renderHead(component, response);
+                            response.renderOnLoadJavaScript("$('#" + component.getMarkupId()
+                                    + "').focus();");
+                        }
+                    }));
                 }
 
                 @Override
@@ -331,18 +342,7 @@ public class ArcAnnotationModalWindowPanel
                     }
 
                 }
-            }.add(new Behavior()
-            {
-                private static final long serialVersionUID = -3612493911620740735L;
-
-                @Override
-                public void renderHead(Component component, IHeaderResponse response)
-                {
-                    super.renderHead(component, response);
-                    response.renderOnLoadJavaScript("$('#" + component.getMarkupId()
-                            + "').focus();");
-                }
-            }));
+            });
 
             add(new AjaxSubmitLink("delete")
             {
@@ -382,7 +382,7 @@ public class ArcAnnotationModalWindowPanel
 
                         // store latest annotations
                         for (IModel<String> model : tagModels) {
-                            deletedAnnoSb.append(model.getObject()+" ");
+                            deletedAnnoSb.append(model.getObject() + " ");
                             AnnotationFeature feature = featureModels.get(tagModels.indexOf(model))
                                     .getObject().feature;
                             selectedLayer = feature.getLayer();
@@ -466,7 +466,7 @@ public class ArcAnnotationModalWindowPanel
 
                         // store latest annotations
                         for (IModel<String> model : tagModels) {
-                            deletedAnnoSb.append(model.getObject()+" ");
+                            deletedAnnoSb.append(model.getObject() + " ");
                             AnnotationFeature feature = featureModels.get(tagModels.indexOf(model))
                                     .getObject().feature;
                             selectedLayer = feature.getLayer();
