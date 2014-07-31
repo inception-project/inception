@@ -793,7 +793,7 @@ public class MonitoringPage
                 protected String load()
                 {
                     MiraTemplate template = selectedTemplate.getModelObject();
-                    if (template != null) {
+                    if (template != null && repository.existsAutomationStatus(template)) {
                         return repository.getAutomationStatus(template).getAnnoDocs() + "";
                     }
                     else {
@@ -811,7 +811,7 @@ public class MonitoringPage
                 protected String load()
                 {
                     MiraTemplate template = selectedTemplate.getModelObject();
-                    if (template != null) {
+                    if (template != null && repository.existsAutomationStatus(template)) {
                         return repository.getAutomationStatus(template).getTrainDocs() + "";
                     }
                     else {
@@ -829,7 +829,7 @@ public class MonitoringPage
                 protected String load()
                 {
                     MiraTemplate template = selectedTemplate.getModelObject();
-                    if (template != null) {
+                    if (template != null && repository.existsAutomationStatus(template)) {
                         return repository.getAutomationStatus(template).getTotalDocs() + "";
                     }
                     else {
@@ -847,7 +847,7 @@ public class MonitoringPage
                 protected String load()
                 {
                     MiraTemplate template = selectedTemplate.getModelObject();
-                    if (template != null) {
+                    if (template != null && repository.existsAutomationStatus(template)) {
                         return repository.getAutomationStatus(template).getStartime().toString();
                     }
                     else {
@@ -865,7 +865,7 @@ public class MonitoringPage
                 protected String load()
                 {
                     MiraTemplate template = selectedTemplate.getModelObject();
-                    if (template != null) {
+                    if (template != null && repository.existsAutomationStatus(template)) {
                         if (repository.getAutomationStatus(template).getEndTime()
                                 .equals(repository.getAutomationStatus(template).getStartime())) {
                             return "---";
@@ -887,7 +887,7 @@ public class MonitoringPage
                 protected String load()
                 {
                     MiraTemplate template = selectedTemplate.getModelObject();
-                    if (template != null) {
+                    if (template != null && repository.existsAutomationStatus(template)) {
                         return repository.getAutomationStatus(template).getStatus().getName();
                     }
                     else {
