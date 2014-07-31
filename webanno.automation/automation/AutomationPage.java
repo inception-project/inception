@@ -511,9 +511,6 @@ public class AutomationPage
                         update(aTarget);
                         mergeVisualizer.reloadContent(aTarget);
                     }
-                    else {
-                        aTarget.appendJavaScript("alert('This sentence is on the same page!')");
-                    }
                 }
                 catch (UIMAException e) {
                     error(ExceptionUtils.getRootCause(e));

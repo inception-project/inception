@@ -444,9 +444,6 @@ public class CorrectionPage
 	                        update(aTarget);
 	                        mergeVisualizer.reloadContent(aTarget);
 	                    }
-	                    else {
-	                        aTarget.appendJavaScript("alert('This sentence is on the same page!')");
-	                    }
 	                }
 	                catch (UIMAException e) {
 	                    error(ExceptionUtils.getRootCause(e));
@@ -535,9 +532,6 @@ public class CorrectionPage
                         curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
                         update(aTarget);
                         mergeVisualizer.reloadContent(aTarget);
-                    }
-                    else {
-                        aTarget.appendJavaScript("alert('This sentence is on the same page!')");
                     }
                 }
                 catch (UIMAException e) {

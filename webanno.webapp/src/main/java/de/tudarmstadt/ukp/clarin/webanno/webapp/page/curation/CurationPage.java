@@ -510,9 +510,6 @@ public class CurationPage
                         aTarget.add(numberOfPages);
                         aTarget.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
                     }
-                    else {
-                        aTarget.appendJavaScript("alert('This sentence is on the same page!')");
-                    }
                 }
                 catch (UIMAException e) {
                     error(ExceptionUtils.getRootCauseMessage(e));
@@ -607,9 +604,6 @@ public class CurationPage
                         updatePanel(curationContainer, aTarget);
                         aTarget.add(numberOfPages);
                         aTarget.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
-                    }
-                    else {
-                        aTarget.appendJavaScript("alert('This sentence is on the same page!')");
                     }
                 }
                 catch (UIMAException e) {

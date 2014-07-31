@@ -664,9 +664,6 @@ public class AnnotationPage
                             bratAnnotatorModel.getSentenceAddress())+1);
                     aTarget.add(gotoPageTextField);
                 }
-                else {
-                    aTarget.appendJavaScript("alert('This sentence is on the same page!')");
-                }
             }
             @Override
             protected CharSequence getEventHandler() {
@@ -729,9 +726,6 @@ public class AnnotationPage
                     gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(jCas,
                             bratAnnotatorModel.getSentenceAddress())+1);
                     aTarget.add(gotoPageTextField);
-                }
-                else {
-                    aTarget.appendJavaScript("alert('This sentence is on the same page!')");
                 }
             }
         });
