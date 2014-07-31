@@ -41,12 +41,15 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.collection.CollectionException;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.fit.util.CasUtil;
+import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
 
 import de.tudarmstadt.ukp.dkpro.core.api.io.JCasResourceCollectionReader_ImplBase;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.parameter.ComponentParameters;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
@@ -66,6 +69,7 @@ public class WebannoCustomTsvReader
 {
 
     private String fileName;
+    Map<String, Token> indexedTokens;
 
     public void convertToCas(JCas aJCas, InputStream aIs, String aEncoding)
         throws IOException
@@ -106,6 +110,10 @@ public class WebannoCustomTsvReader
         // store target token ids used for a relation
         Map<Type, Map<String, List<String>>> relationTargets = new LinkedHashMap<Type, Map<String, List<String>>>();
 
+        // store tokens indexing with the concat of itsbegin-end so that lemma and pos annotation
+        // can be attached, if exists, later
+        indexedTokens = new HashMap<String, Token>();
+
         while (lineIterator.hasNext()) {
             String line = lineIterator.next().trim();
             if (line.trim().equals("") && sentenceStart == tokenStart) {
@@ -134,13 +142,13 @@ public class WebannoCustomTsvReader
             }
             // some times, the sentence in #text= might have a new line which break this reader,
             // so skip such lines
-            if(!Character.isDigit(line.split(" ")[0].charAt(0))){
+            if (!Character.isDigit(line.split(" ")[0].charAt(0))) {
                 continue;
             }
 
             // If we are still unlucky, the line starts with a number from the sentence but not
             // a token number, check if it didn't in the format NUM-NUM
-            if(!Character.isDigit(line.split("-")[1].charAt(0))){
+            if (!Character.isDigit(line.split("-")[1].charAt(0))) {
                 continue;
             }
 
@@ -157,6 +165,11 @@ public class WebannoCustomTsvReader
             String tokenColumn = lineTk.nextToken();
             Token token = new Token(aJcas, tokenStart, tokenStart + tokenColumn.length());
             token.addToIndexes();
+            Type posType = JCasUtil.getType(aJcas, POS.class);
+            Type lemmaType = JCasUtil.getType(aJcas, Lemma.class);
+            if (spanLayers.containsKey(posType) || spanLayers.containsKey(lemmaType)) {
+                indexedTokens.put(tokenStart + "-" + tokenStart + tokenColumn.length(), token);
+            }
 
             // adding the annotations
             createSpanAnnotation(aJcas, tokenStart, spanLayers, relationayers, annotations,
@@ -291,6 +304,9 @@ public class WebannoCustomTsvReader
     {
         for (Type layer : aLayers.keySet()) {
             int lastIndex = 1;
+            // if a layer is bound to a single token but has multiple feature
+            // annotation is created once and feature values be appended
+            Map<Integer, AnnotationFS> singleTokenMultiFeature = new HashMap<Integer, AnnotationFS>();
             for (Feature feature : aLayers.get(layer)) {
                 int index = 1;
                 String multipleAnnotations = lineTk.nextToken();
@@ -306,11 +322,33 @@ public class WebannoCustomTsvReader
                 for (String annotation : multipleAnnotations.split("\\|")) {
                     // If annotation is not on multpile spans
                     if (!(annotation.startsWith("B-") || annotation.startsWith("I-") || annotation
-                            .startsWith("O-")) && !(annotation.equals("_")||annotation.equals("O"))) {
-                        AnnotationFS newAnnotation = aJcas.getCas().createAnnotation(layer,
-                                aTokenStart, aTokenStart + aToken.length());
+                            .startsWith("O-"))
+                            && !(annotation.equals("_") || annotation.equals("O"))) {
+
+                        AnnotationFS newAnnotation;
+                        // if the layer has multiple features, create new annotation only once
+                        if (singleTokenMultiFeature.get(index) == null) {
+                            newAnnotation = aJcas.getCas().createAnnotation(layer, aTokenStart,
+                                    aTokenStart + aToken.length());
+                            singleTokenMultiFeature.put(index, newAnnotation);
+                        }
+                        else {
+                            newAnnotation = singleTokenMultiFeature.get(index);
+                        }
                         newAnnotation.setFeatureValueFromString(feature, annotation);
                         aJcas.addFsToIndexes(newAnnotation);
+
+                        // Set the POS to the token
+                        if (layer.getName().equals(POS.class.getName())) {
+                            indexedTokens.get(aTokenStart + "-" + aTokenStart + aToken.length())
+                                    .setPos((POS) newAnnotation);
+                        }
+
+                        // Set the Lemma to the token
+                        if (layer.getName().equals(Lemma.class.getName())) {
+                            indexedTokens.get(aTokenStart + "-" + aTokenStart + aToken.length())
+                                    .setLemma((Lemma) newAnnotation);
+                        }
 
                         if (aRelationayers.containsKey(layer)) {
                             Map<String, List<String>> targets = aRelationTargets.get(layer);
@@ -346,6 +384,7 @@ public class WebannoCustomTsvReader
                         relAnnos.add(newAnnotation);
                         tokenAnnotations.put(aTokenNumberColumn, relAnnos);
                         aTokenAnnotations.put(layer, tokenAnnotations);
+                        index++;
                     }
                     // for annotations such as B_LOC|B-_|I_PER and the like
                     // O-_ is a position marker
@@ -451,7 +490,7 @@ public class WebannoCustomTsvReader
                 }
                 lastIndex = index - 1;
             }
-            // tokens annotated as B-X B-X, no I means it is end by itself
+            // tokens annotated as B-X B-X, no B-I means it is end by itself
             for (int i = 1; i <= lastIndex; i++) {
                 if (aBeginEndAnno.get(layer) != null && aBeginEndAnno.get(layer).get(i) != null
                         && aBeginEndAnno.get(layer).get(i).equals("B-")) {
