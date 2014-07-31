@@ -31,6 +31,7 @@ import java.util.Map;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
@@ -227,6 +228,35 @@ public class ArcAnnotationModalWindowPanel
                 @Override
                 public void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
                 {
+
+                    aTarget.add(feedbackPanel);
+                    // check type of a feature
+                    for (IModel<String> model : tagModels) {
+                        AnnotationFeature feature = featureModels.get(tagModels.indexOf(model))
+                                .getObject().feature;
+                        try {
+
+                            if (feature.getType().equals(CAS.TYPE_NAME_INTEGER)
+                                    && !( (Integer)Integer.parseInt(model.getObject()) instanceof Integer)) {
+                                error(model.getObject() + " is not an integer value");
+                                return;
+                            }
+                            if (feature.getType().equals(CAS.TYPE_NAME_FLOAT)
+                                    && !((Float)Float.parseFloat(model.getObject()) instanceof Float)) {
+                                error(model.getObject() + " is not an integer value");
+                                return;
+                            }
+                            if (feature.getType().equals(CAS.TYPE_NAME_BOOLEAN)
+                                    && !((Boolean)Boolean.parseBoolean(model.getObject()) instanceof Boolean)) {
+                                error(model.getObject() + " is not an integer value");
+                                return;
+                            }
+                        }
+                        catch (Exception e) {
+                            error(model.getObject() + " should be of type " + feature.getType());
+                        }
+                    }
+
                     // check if at least one feature have an annotation
                     boolean existsAnnotation = false;
                     for (IModel<String> model : tagModels) {
@@ -236,7 +266,6 @@ public class ArcAnnotationModalWindowPanel
                         }
                     }
                     if (!existsAnnotation) {
-                        aTarget.add(feedbackPanel);
                         error("No Tag is selected!");
                         return;
                     }
@@ -266,7 +295,6 @@ public class ArcAnnotationModalWindowPanel
                             }
                             else if (!annotationService.existsTag(model.getObject(),
                                     feature.getTagset())) {
-                                aTarget.add(feedbackPanel);
                                 error(model.getObject()
                                         + " is not in the tag list. Please choose form the existing tags");
                                 return;
@@ -337,7 +365,6 @@ public class ArcAnnotationModalWindowPanel
                         error(e.getMessage());
                     }
                     catch (BratAnnotationException e) {
-                        aTarget.add(feedbackPanel);
                         error(e.getMessage());
                     }
 

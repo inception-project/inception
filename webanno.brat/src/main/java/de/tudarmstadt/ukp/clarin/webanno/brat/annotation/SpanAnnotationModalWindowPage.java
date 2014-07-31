@@ -36,6 +36,7 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
@@ -301,8 +302,39 @@ public class SpanAnnotationModalWindowPage
                 @Override
                 protected void onSubmit(AjaxRequestTarget aTarget, Form<?> form)
                 {
+                    aTarget.add(feedbackPanel);
+                    // check type of a feature
+
+                    for (IModel<String> model : tagModels) {
+                        AnnotationFeature feature = featureModels.get(tagModels.indexOf(model))
+                                .getObject().feature;
+                        try {
+
+                            if (feature.getType().equals(CAS.TYPE_NAME_INTEGER)
+                                    && !( (Integer)Integer.parseInt(model.getObject()) instanceof Integer)) {
+                                error(model.getObject() + " is not an integer value");
+                                return;
+                            }
+                            if (feature.getType().equals(CAS.TYPE_NAME_FLOAT)
+                                    && !((Float)Float.parseFloat(model.getObject()) instanceof Float)) {
+                                error(model.getObject() + " is not an integer value");
+                                return;
+                            }
+                            if (feature.getType().equals(CAS.TYPE_NAME_BOOLEAN)
+                                    && !((Boolean)Boolean.parseBoolean(model.getObject()) instanceof Boolean)) {
+                                error(model.getObject() + " is not an integer value");
+                                return;
+                            }
+                        }
+                        catch (Exception e) {
+                            error(model.getObject() + " should be of type " + feature.getType());
+                            return;
+                        }
+                    }
+
                     // check if at least one feature have an annotation
                     boolean existsAnnotation = false;
+
                     for (IModel<String> model : tagModels) {
                         if (model.getObject() != null) {
                             existsAnnotation = true;
@@ -311,7 +343,6 @@ public class SpanAnnotationModalWindowPage
                     }
 
                     if (!existsAnnotation) {
-                        aTarget.add(feedbackPanel);
                         error("No Tag is selected!");
                         return;
                     }
@@ -345,7 +376,6 @@ public class SpanAnnotationModalWindowPage
                             }
                             else if (!annotationService.existsTag(model.getObject(),
                                     feature.getTagset())) {
-                                aTarget.add(feedbackPanel);
                                 error(model.getObject()
                                         + " is not in the tag list. Please choose form the existing tags");
                                 return;
@@ -415,19 +445,15 @@ public class SpanAnnotationModalWindowPage
                         aModalWindow.close(aTarget);
                     }
                     catch (UIMAException e) {
-                        aTarget.add(feedbackPanel);
                         error(ExceptionUtils.getRootCauseMessage(e));
                     }
                     catch (ClassNotFoundException e) {
-                        aTarget.add(feedbackPanel);
                         error(e.getMessage());
                     }
                     catch (IOException e) {
-                        aTarget.add(feedbackPanel);
                         error(e.getMessage());
                     }
                     catch (BratAnnotationException e) {
-                        aTarget.add(feedbackPanel);
                         error(e.getMessage());
                     }
                 }
