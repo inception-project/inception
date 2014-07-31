@@ -78,9 +78,9 @@ public class SpanAdapter
     private boolean crossMultipleSentence;
 
     private boolean deletable;
-    
+
     private AnnotationLayer layer;
-    
+
     public SpanAdapter(AnnotationLayer aLayer)
     {
         layer = aLayer;
@@ -179,7 +179,7 @@ public class SpanAdapter
             String bratTypeName = TypeUtil.getBratTypeName(this);
             String bratLabelText = TypeUtil.getBratLabelText(this, fs, aFeatures);
             String color = aColoringStrategy.getColor(fs, bratLabelText);
-            
+
             Sentence beginSent = null, endSent = null;
             // check if annotation spans multiple sentence
             for (Sentence sentence : selectCovered(aJcas, Sentence.class, firstSentence.getBegin(),
@@ -319,9 +319,7 @@ public class SpanAdapter
         for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
 
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
-                if (fs.getFeatureValueAsString(feature) == null) {// new feature value
-                    fs.setFeatureValueFromString(feature, aValue);
-                    duplicate = true;
+                if (fs.getFeatureValueAsString(feature) == null) {
                     continue;
                 }
                 if(allowStacking && fs.getFeatureValueAsString(feature).equals(aValue)){
