@@ -351,12 +351,6 @@
         <tc:dependency func="--" depIDs="t_5" govIDs="t_4"></tc:dependency>
       </tc:parse>
       <tc:parse>
-        <tc:dependency func="SB" depIDs="t_0" govIDs="t_1"></tc:dependency>
-        <tc:dependency func="ROOT" depIDs="t_1" govIDs="t_1"></tc:dependency>
-        <tc:dependency func="MO" depIDs="t_2" govIDs="t_1"></tc:dependency>
-        <tc:dependency func="PNC" depIDs="t_3" govIDs="t_4"></tc:dependency>
-        <tc:dependency func="NK" depIDs="t_4" govIDs="t_2"></tc:dependency>
-        <tc:dependency func="--" depIDs="t_5" govIDs="t_4"></tc:dependency>
         <tc:dependency func="SB" depIDs="t_6" govIDs="t_7"></tc:dependency>
         <tc:dependency func="ROOT" depIDs="t_7" govIDs="t_7"></tc:dependency>
         <tc:dependency func="MO" depIDs="t_8" govIDs="t_10"></tc:dependency>
