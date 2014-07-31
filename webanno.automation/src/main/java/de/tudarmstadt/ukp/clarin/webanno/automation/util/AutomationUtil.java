@@ -115,7 +115,7 @@ public class AutomationUtil
         int beginOffset = aModel.getSentenceBeginOffset();
 
         int endOffset = BratAjaxCasUtil.selectByAddr(annoCas, aModel.getLastSentenceAddress())
-                    .getEnd();
+                .getEnd();
         for (Sentence sentence : selectCovered(jCas, Sentence.class, beginOffset, endOffset)) {
             String sentenceText = sentence.getCoveredText().toLowerCase();
             for (int i = -1; (i = sentenceText.indexOf(selectedText.toLowerCase(), i)) != -1; i = i
@@ -125,6 +125,10 @@ public class AutomationUtil
 
                     SpanAdapter adapter = (SpanAdapter) getAdapter(aFeature.getLayer(),
                             aAnnotationService);
+                    adapter.setLockToTokenOffsets(aFeature.getLayer().isLockToTokenOffset());
+                    adapter.setAllowStacking(aFeature.getLayer().isAllowSTacking());
+                    adapter.setAllowMultipleToken(aFeature.getLayer().isMultipleTokens());
+                    adapter.setCrossMultipleSentence(aFeature.getLayer().isCrossSentence());
                     String value = aModel.getRememberedSpanFeatures().get(aFeature);
                     adapter.add(jCas, sentence.getBegin() + i, sentence.getBegin() + i
                             + selectedText.length() - 1, aFeature, value);
@@ -164,7 +168,7 @@ public class AutomationUtil
         int beginOffset = aModel.getSentenceBeginOffset();
 
         int endOffset = BratAjaxCasUtil.selectByAddr(annoCas, aModel.getLastSentenceAddress())
-                    .getEnd();
+                .getEnd();
 
         for (Sentence sentence : selectCovered(jCas, Sentence.class, beginOffset, endOffset)) {
             String sentenceText = sentence.getCoveredText().toLowerCase();
@@ -1252,7 +1256,7 @@ public class AutomationUtil
                     annotations.add(tag);
                 }
 
-                LOG.info(annotations.size()+" Predictions found to be written to the CAS");
+                LOG.info(annotations.size() + " Predictions found to be written to the CAS");
                 JCas jCas = null;
                 String username = SecurityContextHolder.getContext().getAuthentication().getName();
                 User user = aRepository.getUser(username);
