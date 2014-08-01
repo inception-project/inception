@@ -237,10 +237,12 @@ public interface RepositoryService
 
     /**
      * Return list of training documents that are in the TOKEN TAB FEAURE formats
+     *
      * @param aProject
      * @return
      */
     List<SourceDocument> listTabSepDocuments(Project aProject);
+
     /**
      * ROLE_ADMINs or Projetc admins can remove source documents from a project. removing a a source
      * document also removes an annotation document related to that document
@@ -267,11 +269,15 @@ public interface RepositoryService
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER','ROLE_REMOTE')")
     void uploadSourceDocument(InputStream file, SourceDocument document, User user)
         throws IOException, UIMAException;
+
     /**
      * Get the directory of this {@link SourceDocument} usually to read the content of the document
+     *
      * @throws IOException
      */
-    File getDocumentFolder(SourceDocument aDocument) throws IOException;
+    File getDocumentFolder(SourceDocument aDocument)
+        throws IOException;
+
     // --------------------------------------------------------------------------------------------
     // Methods related to AnnotationDocuments
     // --------------------------------------------------------------------------------------------
@@ -688,8 +694,6 @@ public interface RepositoryService
 
     List<CrowdJob> listCrowdJobs(Project project);
 
-
-
     /**
      * remove a crowd project
      *
@@ -911,6 +915,8 @@ public interface RepositoryService
     List<MiraTemplate> listMiraTemplates(Project project);
 
     void removeMiraTemplate(MiraTemplate template);
+
+    void removeAutomationStatus(AutomationStatus status);
 
     void createAutomationStatus(AutomationStatus status);
 

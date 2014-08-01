@@ -1436,9 +1436,17 @@ public class RepositoryServiceDbData
                 getJCasFromFile(aFile, getReadableFormats().get(aDocument.getFormat()), aDocument);
             }
         }
-        catch (Exception e) {
+        catch (IOException e) {
             removeSourceDocument(aDocument, aUser);
             throw new IOException(e.getMessage());
+        }
+        catch (UIMAException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        catch (ClassNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
 
         String path = dir.getAbsolutePath() + PROJECT + aDocument.getProject().getId() + DOCUMENT
@@ -2234,7 +2242,21 @@ public class RepositoryServiceDbData
     @Transactional
     public void removeMiraTemplate(MiraTemplate aTemplate)
     {
+        try {
+            removeAutomationStatus(getAutomationStatus(aTemplate));
+        }
+        catch (NoResultException e) {
+            // do nothing - automation was not started and no status created for this template
+        }
         entityManager.remove(aTemplate);
+    }
+
+    @Override
+    @Transactional
+    public void removeAutomationStatus(AutomationStatus aStstus)
+    {
+
+        entityManager.remove(aStstus);
     }
 
     List<TypeSystemDescription> getProjectTypes(Project aProject)
@@ -2331,7 +2353,7 @@ public class RepositoryServiceDbData
             LineIterator it = new LineIterator(new FileReader(aFile));
             while (it.hasNext()) {
                 String line = it.next();
-                if(line.trim().length()==0) {
+                if (line.trim().length() == 0) {
                     continue;
                 }
                 if (line.split("\t").length != 2) {
