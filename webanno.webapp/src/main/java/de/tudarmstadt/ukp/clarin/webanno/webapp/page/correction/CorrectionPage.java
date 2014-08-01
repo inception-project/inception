@@ -360,19 +360,19 @@ public class CorrectionPage
 
                         }
                         catch (UIMAException e) {
-                            target.appendJavaScript(e.getMessage());
+                            target.appendJavaScript("alert('"+e.getMessage()+"')");
                             setResponsePage(WelcomePage.class);
                         }
                         catch (ClassNotFoundException e) {
-                            target.appendJavaScript(e.getMessage());
+                            target.appendJavaScript("alert('"+e.getMessage()+"')");
                             setResponsePage(WelcomePage.class);
                         }
                         catch (IOException e) {
-                            target.appendJavaScript(e.getMessage());
+                            target.appendJavaScript("alert('"+e.getMessage()+"')");
                             setResponsePage(WelcomePage.class);
                         }
                         catch (BratAnnotationException e) {
-                            target.appendJavaScript(e.getMessage());
+                            target.appendJavaScript("alert('"+e.getMessage()+"')");
                             setResponsePage(WelcomePage.class);
                         }
                         finish.setModelObject(bratAnnotatorModel);
@@ -711,6 +711,10 @@ public class CorrectionPage
                     target.add(feedbackPanel);
                     error(e.getMessage());
                 }
+                catch (Exception e) {
+                    target.add(feedbackPanel);
+                    error(e.getMessage());
+                }
 
                 finish.setModelObject(bratAnnotatorModel);
                 target.add(finish.setOutputMarkupId(true));
@@ -764,15 +768,23 @@ public class CorrectionPage
                         }
                     }
                     catch (UIMAException e) {
+                        aTarget.add(feedbackPanel);
                         error(ExceptionUtils.getRootCause(e));
                     }
                     catch (ClassNotFoundException e) {
+                        aTarget.add(feedbackPanel);
                         error(e.getMessage());
                     }
                     catch (IOException e) {
+                        aTarget.add(feedbackPanel);
                         error(e.getMessage());
                     }
                     catch (BratAnnotationException e) {
+                        aTarget.add(feedbackPanel);
+                        error(e.getMessage());
+                    }
+                    catch (Exception e) {
+                        aTarget.add(feedbackPanel);
                         error(e.getMessage());
                     }
                 }
@@ -822,16 +834,23 @@ public class CorrectionPage
                         }
                     }
                     catch (UIMAException e) {
+                        aTarget.add(feedbackPanel);
                         error(ExceptionUtils.getRootCause(e));
                     }
                     catch (ClassNotFoundException e) {
+                        aTarget.add(feedbackPanel);
                         error(e.getMessage());
                     }
                     catch (IOException e) {
-                        ;
+                        aTarget.add(feedbackPanel);
                         error(e.getMessage());
                     }
                     catch (BratAnnotationException e) {
+                        aTarget.add(feedbackPanel);
+                        error(e.getMessage());
+                    }
+                    catch (Exception e) {
+                        aTarget.add(feedbackPanel);
                         error(e.getMessage());
                     }
                 }
@@ -880,15 +899,23 @@ public class CorrectionPage
                         }
                     }
                     catch (UIMAException e) {
+                        aTarget.add(feedbackPanel);
                         error(ExceptionUtils.getRootCause(e));
                     }
                     catch (ClassNotFoundException e) {
+                        aTarget.add(feedbackPanel);
                         error(e.getMessage());
                     }
                     catch (IOException e) {
+                        aTarget.add(feedbackPanel);
                         error(e.getMessage());
                     }
                     catch (BratAnnotationException e) {
+                        aTarget.add(feedbackPanel);
+                        error(e.getMessage());
+                    }
+                    catch (Exception e) {
+                        aTarget.add(feedbackPanel);
                         error(e.getMessage());
                     }
                 }
@@ -937,15 +964,23 @@ public class CorrectionPage
                         }
                     }
                     catch (UIMAException e) {
+                        aTarget.add(feedbackPanel);
                         error(ExceptionUtils.getRootCause(e));
                     }
                     catch (ClassNotFoundException e) {
+                        aTarget.add(feedbackPanel);
                         error(e.getMessage());
                     }
                     catch (IOException e) {
+                        aTarget.add(feedbackPanel);
                         error(e.getMessage());
                     }
                     catch (BratAnnotationException e) {
+                        aTarget.add(feedbackPanel);
+                        error(e.getMessage());
+                    }
+                    catch (Exception e) {
+                        aTarget.add(feedbackPanel);
                         error(e.getMessage());
                     }
                 }
