@@ -196,11 +196,11 @@ public class ProjectPage
                 {
                     if (aNewSelection != null) {
                         projectDetailForm.setModelObject(aNewSelection);
+                        projectDetailForm.projectModel.setObject(aNewSelection);
                         projectDetailForm.setVisible(true);
 
                         projectDetailForm.allTabs.setSelectedTab(0);
                         RequestCycle.get().setResponsePage(getPage());
-
                         ProjectSelectionForm.this.setVisible(true);
                     }
                     if (projectType != null) {
@@ -261,6 +261,7 @@ public class ProjectPage
                         error("Please choose appropriate project/s in zip format");
                         return;
                     }
+                    Project importedProject = new Project();
                     // import multiple projects!
                     for (FileUpload exportedProject : exportedProjects) {
                         InputStream tagInputStream;
@@ -297,7 +298,7 @@ public class ProjectPage
                                             text,
                                             de.tudarmstadt.ukp.clarin.webanno.model.export.Project.class);
 
-                            Project importedProject = ProjectUtil.createProject(
+                            importedProject = ProjectUtil.createProject(
                                     importedProjectSetting, repository);
 
                             Map<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature, AnnotationFeature> featuresMap = ProjectUtil
@@ -340,6 +341,12 @@ public class ProjectPage
                                     + ExceptionUtils.getRootCauseMessage(e));
                         }
                     }
+                    projectDetailForm.setModelObject(importedProject);
+                    SelectionModel selectedProjectModel = new SelectionModel();
+                    selectedProjectModel.project = importedProject;
+                    projectSelectionForm.setModelObject(selectedProjectModel);
+                    projectDetailForm.setVisible(true);
+                    RequestCycle.get().setResponsePage(getPage());
                 }
             });
         }
@@ -387,13 +394,13 @@ public class ProjectPage
                 @Override
                 public Panel getPanel(String panelId)
                 {
-                    return new ProjectUsersPanel(panelId, project);
+                    return new ProjectUsersPanel(panelId, projectModel);
                 }
 
                 @Override
                 public boolean isVisible()
                 {
-                    return project.getObject().getId() != 0 && visible;
+                    return projectModel.getObject().getId() != 0 && visible;
                 }
             });
 
@@ -404,13 +411,13 @@ public class ProjectPage
                 @Override
                 public Panel getPanel(String panelId)
                 {
-                    return new ProjectDocumentsPanel(panelId, project);
+                    return new ProjectDocumentsPanel(panelId, projectModel);
                 }
 
                 @Override
                 public boolean isVisible()
                 {
-                    return project.getObject().getId() != 0 && visible;
+                    return projectModel.getObject().getId() != 0 && visible;
                 }
             });
 
@@ -421,13 +428,13 @@ public class ProjectPage
                 @Override
                 public Panel getPanel(String panelId)
                 {
-                    return new ProjectLayersPanel(panelId, project);
+                    return new ProjectLayersPanel(panelId, projectModel);
                 }
 
                 @Override
                 public boolean isVisible()
                 {
-                    return project.getObject().getId() != 0 && visible;
+                    return projectModel.getObject().getId() != 0 && visible;
                 }
             });
 
@@ -438,13 +445,13 @@ public class ProjectPage
                 @Override
                 public Panel getPanel(String panelId)
                 {
-                    return new ProjectTagSetsPanel(panelId, project);
+                    return new ProjectTagSetsPanel(panelId, projectModel);
                 }
 
                 @Override
                 public boolean isVisible()
                 {
-                    return project.getObject().getId() != 0 && visible;
+                    return projectModel.getObject().getId() != 0 && visible;
                 }
             });
 
@@ -455,13 +462,13 @@ public class ProjectPage
                 @Override
                 public Panel getPanel(String panelId)
                 {
-                    return new AnnotationGuideLinePanel(panelId, project);
+                    return new AnnotationGuideLinePanel(panelId, projectModel);
                 }
 
                 @Override
                 public boolean isVisible()
                 {
-                    return project.getObject().getId() != 0 && visible;
+                    return projectModel.getObject().getId() != 0 && visible;
                 }
             });
 
@@ -473,13 +480,13 @@ public class ProjectPage
                 @Override
                 public Panel getPanel(String panelId)
                 {
-                    return new ProjectExportPanel(panelId, project);
+                    return new ProjectExportPanel(panelId, projectModel);
                 }
 
                 @Override
                 public boolean isVisible()
                 {
-                    return project.getObject().getId() != 0;
+                    return projectModel.getObject().getId() != 0;
 
                 }
             });
@@ -492,14 +499,14 @@ public class ProjectPage
                 @Override
                 public Panel getPanel(String panelId)
                 {
-                    return new ProjectMiraTemplatePanel(panelId, project);
+                    return new ProjectMiraTemplatePanel(panelId, projectModel);
                 }
 
                 @Override
                 public boolean isVisible()
                 {
-                    return project.getObject().getId() != 0
-                            && project.getObject().getMode().equals(Mode.AUTOMATION) && visible;
+                    return projectModel.getObject().getId() != 0
+                            && projectModel.getObject().getMode().equals(Mode.AUTOMATION) && visible;
 
                 }
             });
@@ -511,7 +518,7 @@ public class ProjectPage
         // Update the project mode, that will be shared among TABS
         // Better way of sharing data
         // http://stackoverflow.com/questions/6532178/wicket-persistent-object-between-panels
-        Model<Project> project = new Model<Project>()
+        Model<Project> projectModel = new Model<Project>()
         {
             private static final long serialVersionUID = -6394439155356911110L;
 
