@@ -360,16 +360,20 @@ public class CorrectionPage
 
                         }
                         catch (UIMAException e) {
-                            error(ExceptionUtils.getRootCause(e));
+                            target.appendJavaScript(e.getMessage());
+                            setResponsePage(WelcomePage.class);
                         }
                         catch (ClassNotFoundException e) {
-                            error(e.getMessage());
+                            target.appendJavaScript(e.getMessage());
+                            setResponsePage(WelcomePage.class);
                         }
                         catch (IOException e) {
-                            error(e.getMessage());
+                            target.appendJavaScript(e.getMessage());
+                            setResponsePage(WelcomePage.class);
                         }
                         catch (BratAnnotationException e) {
-                            error(e.getMessage());
+                            target.appendJavaScript(e.getMessage());
+                            setResponsePage(WelcomePage.class);
                         }
                         finish.setModelObject(bratAnnotatorModel);
                         target.add(finish.setOutputMarkupId(true));
