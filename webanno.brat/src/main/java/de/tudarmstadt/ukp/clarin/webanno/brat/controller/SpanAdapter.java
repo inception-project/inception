@@ -219,8 +219,8 @@ public class SpanAdapter
             }
             else {
                 aResponse.addEntity(new Entity(((FeatureStructureImpl) fs).getAddress(),
-                        bratTypeName, new Offsets(fs.getBegin() - aFirstSentenceOffset, fs
-                                .getEnd() - aFirstSentenceOffset), bratLabelText, color));
+                        bratTypeName, new Offsets(fs.getBegin() - aFirstSentenceOffset, fs.getEnd()
+                                - aFirstSentenceOffset), bratLabelText, color));
             }
         }
     }
@@ -270,14 +270,14 @@ public class SpanAdapter
     }
 
     /**
-     * Update the CAS with new/modification of span annotations from brat
+     * Add new span annotation into the CAS and return the the id of the span annotation
      *
      * @param aLabelValue
      *            the value of the annotation for the span
      * @throws BratAnnotationException
      */
 
-    public void add(JCas aJcas, int aBegin, int aEnd, AnnotationFeature aFeature, String aValue)
+    public Integer add(JCas aJcas, int aBegin, int aEnd, AnnotationFeature aFeature, String aValue)
         throws BratAnnotationException
     {
         if (crossMultipleSentence || BratAjaxCasUtil.isSameSentence(aJcas, aBegin, aEnd)) {
@@ -286,7 +286,8 @@ public class SpanAdapter
                         aEnd);
 
                 for (Token token : tokens) {
-                    updateCas(aJcas.getCas(), token.getBegin(), token.getEnd(), aFeature, aValue);
+                    return updateCas(aJcas.getCas(), token.getBegin(), token.getEnd(), aFeature,
+                            aValue);
                 }
             }
             else if (allowMultipleToken) {
@@ -295,42 +296,35 @@ public class SpanAdapter
                 // update the begin and ends (no sub token selection
                 aBegin = tokens.get(0).getBegin();
                 aEnd = tokens.get(tokens.size() - 1).getEnd();
-                updateCas(aJcas.getCas(), aBegin, aEnd, aFeature, aValue);
+                return updateCas(aJcas.getCas(), aBegin, aEnd, aFeature, aValue);
             }
             else {
-                updateCas(aJcas.getCas(), aBegin, aEnd, aFeature, aValue);
+                return updateCas(aJcas.getCas(), aBegin, aEnd, aFeature, aValue);
             }
         }
         else {
             throw new MultipleSentenceCoveredException("Annotation coveres multiple sentences, "
                     + "limit your annotation to single sentence!");
         }
+        return -1;
     }
 
     /**
      * A Helper method to add annotation to CAS
      */
-    private void updateCas(CAS aCas, int aBegin, int aEnd, AnnotationFeature aFeature, String aValue)
+    private Integer updateCas(CAS aCas, int aBegin, int aEnd, AnnotationFeature aFeature,
+            String aValue)
     {
         boolean duplicate = false;
         Type type = CasUtil.getType(aCas, getAnnotationTypeName());
-
         Feature feature = type.getFeatureByBaseName(aFeature.getName());
         for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
 
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
-                if (fs.getFeatureValueAsString(feature) == null) {
-                    continue;
-                }
-                if(allowStacking && fs.getFeatureValueAsString(feature).equals(aValue)){
-                    fs.setFeatureValueFromString(feature, aValue);
-                    duplicate = true;
-                    continue;
-                }
                 if (!allowStacking) {
                     fs.setFeatureValueFromString(feature, aValue);
                     duplicate = true;
-                    continue;
+                    break;
                 }
             }
         }
@@ -355,7 +349,9 @@ public class SpanAdapter
                         .setFeatureValue(attachFeature, newAnnotation);
             }
             aCas.addFsToIndexes(newAnnotation);
+            return ((FeatureStructureImpl) newAnnotation).getAddress();
         }
+        return -1;
     }
 
     @Override

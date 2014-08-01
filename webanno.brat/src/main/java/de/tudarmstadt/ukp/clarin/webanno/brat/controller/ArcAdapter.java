@@ -189,8 +189,8 @@ public class ArcAdapter
      *            If arc direction are in reverse direction, from Dependent to Governor
      * @throws BratAnnotationException
      */
-    public void add(String aLabelValue, AnnotationFS aOriginFs, AnnotationFS aTargetFs, JCas aJCas,
-            BratAnnotatorModel aBratAnnotatorModel, AnnotationFeature aFeature)
+    public Integer add(String aLabelValue, AnnotationFS aOriginFs, AnnotationFS aTargetFs,
+            JCas aJCas, BratAnnotatorModel aBratAnnotatorModel, AnnotationFeature aFeature)
         throws BratAnnotationException
     {
         Sentence sentence = BratAjaxCasUtil.selectSentenceAt(aJCas,
@@ -205,7 +205,8 @@ public class ArcAdapter
                         aBratAnnotatorModel.getWindowSize())).getEnd();
         if (crossMultipleSentence
                 || BratAjaxCasUtil.isSameSentence(aJCas, aOriginFs.getBegin(), aTargetFs.getEnd())) {
-            updateCas(aJCas, beginOffset, endOffset, aOriginFs, aTargetFs, aLabelValue, aFeature);
+            return updateCas(aJCas, beginOffset, endOffset, aOriginFs, aTargetFs, aLabelValue,
+                    aFeature);
         }
         else {
             throw new ArcCrossedMultipleSentenceException(
@@ -216,7 +217,7 @@ public class ArcAdapter
     /**
      * A Helper method to {@link #addToCas(String, BratAnnotatorUIData)}
      */
-    private void updateCas(JCas aJCas, int aBegin, int aEnd, AnnotationFS aOriginFs,
+    private Integer updateCas(JCas aJCas, int aBegin, int aEnd, AnnotationFS aOriginFs,
             AnnotationFS aTargetFs, String aValue, AnnotationFeature aFeature)
     {
         boolean duplicate = false;
@@ -255,11 +256,6 @@ public class ArcAdapter
                         aTargetFs, fs.getFeatureValueAsString(feature), aValue)
                         && !aValue.equals(WebAnnoConst.ROOT)) {
 
-                    if (fs.getFeatureValueAsString(feature) == null) {
-                        fs.setFeatureValueFromString(feature, aValue);
-                        duplicate = true;
-                        break;
-                    }
                     if (!allowStacking) {
                         fs.setFeatureValueFromString(feature, aValue);
                         duplicate = true;
@@ -306,7 +302,9 @@ public class ArcAdapter
             newAnnotation.setFeatureValue(dependentFeature, dependentFs);
             newAnnotation.setFeatureValue(governorFeature, governorFs);
             aJCas.addFsToIndexes(newAnnotation);
+            return ((FeatureStructureImpl) newAnnotation).getAddress();
         }
+        return -1;
     }
 
     @Override

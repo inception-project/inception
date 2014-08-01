@@ -311,17 +311,17 @@ public class SpanAnnotationModalWindowPage
                         try {
 
                             if (feature.getType().equals(CAS.TYPE_NAME_INTEGER)
-                                    && !( (Integer)Integer.parseInt(model.getObject()) instanceof Integer)) {
+                                    && !((Integer) Integer.parseInt(model.getObject()) instanceof Integer)) {
                                 error(model.getObject() + " is not an integer value");
                                 return;
                             }
                             if (feature.getType().equals(CAS.TYPE_NAME_FLOAT)
-                                    && !((Float)Float.parseFloat(model.getObject()) instanceof Float)) {
+                                    && !((Float) Float.parseFloat(model.getObject()) instanceof Float)) {
                                 error(model.getObject() + " is not an integer value");
                                 return;
                             }
                             if (feature.getType().equals(CAS.TYPE_NAME_BOOLEAN)
-                                    && !((Boolean)Boolean.parseBoolean(model.getObject()) instanceof Boolean)) {
+                                    && !((Boolean) Boolean.parseBoolean(model.getObject()) instanceof Boolean)) {
                                 error(model.getObject() + " is not an integer value");
                                 return;
                             }
@@ -399,7 +399,7 @@ public class SpanAnnotationModalWindowPage
                                         .isMultipleTokens());
                                 ((SpanAdapter) adapter).setCrossMultipleSentence(selectedLayer
                                         .isCrossSentence());
-                                ((SpanAdapter) adapter).add(jCas, beginOffset, endOffset, feature,
+                                selectedSpanId = ((SpanAdapter) adapter).add(jCas, beginOffset, endOffset, feature,
                                         selectedTag.getName());
 
                             }

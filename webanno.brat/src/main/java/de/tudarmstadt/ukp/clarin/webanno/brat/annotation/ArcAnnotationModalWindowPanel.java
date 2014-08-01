@@ -318,7 +318,7 @@ public class ArcAnnotationModalWindowPanel
                                 ((ArcAdapter) adapter).setAllowStacking(selectedLayer
                                         .isAllowSTacking());
 
-                                ((ArcAdapter) adapter).add(selectedTag.getName(), originFs,
+                                selectedArcId = ((ArcAdapter) adapter).add(selectedTag.getName(), originFs,
                                         targetFs, jCas, bratAnnotatorModel, feature);
                             }
                             else {
