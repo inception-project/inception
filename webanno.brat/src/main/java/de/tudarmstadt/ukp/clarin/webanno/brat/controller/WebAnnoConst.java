@@ -33,20 +33,6 @@ public class WebAnnoConst
     public static final String COREFRELTYPE = "coreference type";
     public static final String LEMMA = "lemma";
 
-
-    public static final String POS_PREFIX = "POS_";
-    public static final String DEP_PREFIX = "DEP_";
-    public static final String NAMEDENTITY_PREFIX = "Named Entity_";
-    public static final String COREFERENCE_PREFIX = "COREF_";
-    public static final String COREFRELTYPE_PREFIX = "COREFT_";
-
-    public static final String PREFIX_SEPARATOR = "_";
-
-
-    public static final String POS_PARENT = "POS";
-    public static final String NAMEDENTITY_PARENT = "Named Entity";
-    public static final String COREFERENCE_PARENT = "COREF";
-
     public static final String ROOT = "ROOT";
 
     public static final String SPAN_TYPE = "span";
@@ -61,6 +47,4 @@ public class WebAnnoConst
 
     public static final String CURATION_USER = "CURATION_USER";
     public static final String CORRECTION_USER = "CORRECTION_USER";
-
-
 }

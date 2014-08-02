@@ -52,11 +52,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 public class ArcAdapter
     implements TypeAdapter
 {
-    /**
-     * Prefix of the label value for Brat to make sure that different annotation types can use the
-     * same label, e.g. a POS tag "N" and a named entity type "N".
-     *
-     */
     private final long typeId;
 
     /**

@@ -390,17 +390,6 @@ public class SpanAdapter
         }
     }
 
-    /**
-     * Prefix of the label value for Brat to make sure that different annotation types can use the
-     * same label, e.g. a POS tag "N" and a named entity type "N".
-     *
-     * This is used to differentiate the different types in the brat annotation/visualization. The
-     * prefix will not stored in the CAS (striped away at {@link BratAjaxCasController#getType} )
-     *
-     * It is a short unique numeric identifier for the type (primary key in the DB). This identifier
-     * is only transiently used when communicating with the UI. It is not persisted long term other
-     * than in the type registry (e.g. in the database).
-     */
     @Override
     public long getTypeId()
     {
