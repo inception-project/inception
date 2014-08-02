@@ -237,23 +237,24 @@ public class ArcAnnotationModalWindowPanel
                         try {
 
                             if (feature.getType().equals(CAS.TYPE_NAME_INTEGER)
-                                    && !( (Integer)Integer.parseInt(model.getObject()) instanceof Integer)) {
+                                    && !((Integer) Integer.parseInt(model.getObject()) instanceof Integer)) {
                                 error(model.getObject() + " is not an integer value");
                                 return;
                             }
                             if (feature.getType().equals(CAS.TYPE_NAME_FLOAT)
-                                    && !((Float)Float.parseFloat(model.getObject()) instanceof Float)) {
-                                error(model.getObject() + " is not an integer value");
+                                    && !((Float) Float.parseFloat(model.getObject()) instanceof Float)) {
+                                error(model.getObject() + " is not a float value");
                                 return;
                             }
                             if (feature.getType().equals(CAS.TYPE_NAME_BOOLEAN)
-                                    && !((Boolean)Boolean.parseBoolean(model.getObject()) instanceof Boolean)) {
-                                error(model.getObject() + " is not an integer value");
+                                    && !((Boolean) Boolean.parseBoolean(model.getObject()) instanceof Boolean)) {
+                                error(model.getObject() + " is not a boolean value");
                                 return;
                             }
                         }
                         catch (Exception e) {
                             error(model.getObject() + " should be of type " + feature.getType());
+                            return;
                         }
                     }
 
