@@ -675,9 +675,6 @@ public class SpanAnnotationModalWindowPage
         if (type.endsWith(ChainAdapter.CHAIN)) {
             type = type.substring(0, type.length() - 5);
         }
-        else if (type.endsWith(ChainAdapter.LINK)) {
-            type = type.substring(0, type.length() - 4);
-        }
 
         this.selectedLayer = annotationService.getLayer(type, bratAnnotatorModel.getProject());
         layersModel = new Model<AnnotationLayer>(selectedLayer);

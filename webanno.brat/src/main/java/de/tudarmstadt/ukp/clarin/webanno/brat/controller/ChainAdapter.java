@@ -23,6 +23,7 @@ import static org.apache.uima.fit.util.CasUtil.selectFS;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
@@ -52,7 +53,7 @@ public class ChainAdapter
 //    private final Log log = LogFactory.getLog(getClass());
     
     public static final String CHAIN = "Chain";
-    public static final String LINK = "Link";
+    private static final String LINK = "Link";
 
     private final long layerId;
 
@@ -234,18 +235,10 @@ public class ChainAdapter
         // FIXME duplicate is always false?!
         if (!duplicate) {
             // Add the link annotation on the span
-            Type linkType = CasUtil.getType(aJCas.getCas(), aFeature.getLayer().getName() + LINK);
-            Feature linkLabelFeature = linkType.getFeatureByBaseName(aFeature.getName());
-            AnnotationFS newLink = aJCas.getCas().createAnnotation(linkType, begin, end);
-            newLink.setFeatureValueFromString(linkLabelFeature, aLabelValue);
-            aJCas.getCas().addFsToIndexes(newLink);
+            AnnotationFS newLink = newLink(aJCas, begin, end, aFeature, aLabelValue);
             
             // The added link is a new chain on its own - add the chain head FS
-            Type chainType = getAnnotationType(aJCas.getCas());
-            Feature chainFirst = chainType.getFeatureByBaseName(chainFirstFeatureName);
-            FeatureStructure newChain = aJCas.getCas().createFS(chainType);
-            newChain.setFeatureValue(chainFirst, newLink);
-            aJCas.getCas().addFsToIndexes(newChain);
+            newChain(aJCas, newLink);
         }
     }
 
@@ -276,12 +269,10 @@ public class ChainAdapter
                 // origin point and target point and create a new link betweek origin and target
                 // the tail of the origin chain becomes a new chain
                 
-
                 // if originFs has a next, then split of the origin chain up
                 // the rest becomes its own chain
                 if (originNext != null) {
-                    FeatureStructure originRestChain = newChain(aJCas);
-                    setFirstLink(originRestChain, originNext);
+                    newChain(aJCas, originNext);
                     // we set originNext below
                     // we set the arc label below
                 }
@@ -325,9 +316,8 @@ public class ChainAdapter
                 aAddress);        
         
         // Create the tail chain
-        FeatureStructure tailChain = newChain(aJCas);
         // We know that there must be a next link, otherwise no arc would have been rendered!
-        setFirstLink(tailChain, getNextLink(linkToDelete));
+        newChain(aJCas, getNextLink(linkToDelete));
         
         // Disconnect the tail from the head
         setNextLink(linkToDelete, null);
@@ -395,9 +385,7 @@ public class ChainAdapter
             // case 2: removing a middle link
             
             // Set up new chain for rest
-            FeatureStructure newChain = aJCas.getCas().createFS(chainType);
-            setFirstLink(newChain, followingLinkToDelete);
-            aJCas.addFsToIndexes(newChain);
+            newChain(aJCas, followingLinkToDelete);
             
             // Cut off from old chain
             setNextLink(prevLinkFs, null);
@@ -514,24 +502,61 @@ public class ChainAdapter
         throw new IllegalArgumentException("Link not part of any chain");
     }
     
-    private FeatureStructure newChain(JCas aJCas)
+    /**
+     * Create a new chain head feature structure. Already adds the chain to the CAS.
+     */
+    private FeatureStructure newChain(JCas aJCas, AnnotationFS aFirstLink)
     {
-        FeatureStructure newChain = aJCas.getCas().createFS(getAnnotationType(aJCas.getCas()));
+        Type chainType = getAnnotationType(aJCas.getCas());
+        FeatureStructure newChain = aJCas.getCas().createFS(chainType);
+        newChain.setFeatureValue(chainType.getFeatureByBaseName(chainFirstFeatureName), aFirstLink);
         aJCas.addFsToIndexes(newChain);
         return newChain;
     }
+
+    /**
+     * Create a new link annotation. Already adds the chain to the CAS.
+     */
+    private AnnotationFS newLink(JCas aJCas, int aBegin, int aEnd, AnnotationFeature aFeature,
+            String aLabelValue)
+    {
+        String baseName = StringUtils.substringBeforeLast(getAnnotationTypeName(), CHAIN) + LINK;
+        Type linkType = CasUtil.getType(aJCas.getCas(), baseName);
+        AnnotationFS newLink = aJCas.getCas().createAnnotation(linkType, aBegin, aEnd);
+        Feature linkLabelFeature = linkType.getFeatureByBaseName(aFeature.getName());
+        newLink.setFeatureValueFromString(linkLabelFeature, aLabelValue);
+        aJCas.getCas().addFsToIndexes(newLink);
+        return newLink;
+    }
     
+    /**
+     * Set the first link of a chain in the chain head feature structure.
+     */
     private void setFirstLink(FeatureStructure aChain, AnnotationFS aLink)
     {
         aChain.setFeatureValue(aChain.getType().getFeatureByBaseName(chainFirstFeatureName), aLink);
     }
     
+    /**
+     * Get the first link of a chain from the chain head feature structure.
+     */
     private AnnotationFS getFirstLink(FeatureStructure aChain)
     {
         return (AnnotationFS) aChain.getFeatureValue(aChain.getType().getFeatureByBaseName(
                 chainFirstFeatureName));
     }
 
+    /**
+     * Get the chain link before the given link within the given chain. The given link must be part
+     * of the given chain.
+     * 
+     * @param aChain
+     *            a chain head feature structure.
+     * @param aLink
+     *            a link.
+     * @return the link before the given link or null if the given link is the first link of the
+     *         chain.
+     */
     private AnnotationFS getPrevLink(FeatureStructure aChain, AnnotationFS aLink)
     {
         AnnotationFS prevLink = null;
@@ -546,22 +571,35 @@ public class ChainAdapter
         return prevLink;
     }
 
+    /**
+     * Set the link following the current link.
+     */
     private void setNextLink(AnnotationFS aLink, AnnotationFS aNext)
     {
         aLink.setFeatureValue(
                 aLink.getType().getFeatureByBaseName(linkNextFeatureName), aNext);
     }
     
+    /**
+     * Get the link following the current link.
+     */
     private AnnotationFS getNextLink(AnnotationFS aLink)
     {
         return (AnnotationFS) aLink.getFeatureValue(aLink.getType().getFeatureByBaseName(
                 linkNextFeatureName));
     }
 
+    /**
+     * Set a feature of a link.
+     * 
+     * @param aLink the link.
+     * @param aFeature the feature within the link whose value to set.
+     * @param aValue the feature value.
+     */
     private void setLabel(AnnotationFS aLink, AnnotationFeature aFeature, String aValue)
     {
         Feature labelFeature = aLink.getType().getFeatureByBaseName(aFeature.getName());
-        aLink.setStringValue(labelFeature, aValue);
+        aLink.setFeatureValueFromString(labelFeature, aValue);
     }
     
     // BEGIN HACK - ISSUE 933
