@@ -1095,6 +1095,7 @@ public class CorrectionPage
                     annotationDocument.setName(bratAnnotatorModel.getDocument().getName());
                     annotationDocument.setUser(logedInUser.getUsername());
                     annotationDocument.setProject(bratAnnotatorModel.getProject());
+                    repository.createAnnotationDocument(annotationDocument);
                 }
 
                 jCas = BratAnnotatorUtility.clearJcasAnnotations(jCas,
