@@ -256,7 +256,13 @@ public class ChainAdapter
         }
         // adjacent - target links to origin
         else if (BratAjaxCasUtil.isSame(targetNext, aOriginFs)) {
-            BratAjaxCasUtil.setFeature(aTargetFs, aFeature, aValue);
+            if (linkedListBehavior) {
+                throw new IllegalStateException("Cannot change direction of a link within a chain");
+//              BratAjaxCasUtil.setFeature(aTargetFs, aFeature, aValue);
+            }
+            else {
+                // in set mode there are no arc labels anyway
+            }
         }
         // if origin and target are not adjacent
         else {
@@ -326,6 +332,10 @@ public class ChainAdapter
             }
             else {
                 // if the two links are in the same chain, we just ignore the action
+                if (linkedListBehavior) {
+                    throw new IllegalStateException(
+                            "Cannot connect two spans that are already part of the same chain");
+                }
             }
         }
         
