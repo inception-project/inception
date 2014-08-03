@@ -21,7 +21,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -207,7 +206,7 @@ public class AnnotationPreferenceModalPanel
         public int numberOfSentences;
         public boolean scrollPage;
         public boolean staticColor;
-        public HashSet<AnnotationLayer> annotationLayers = new HashSet<AnnotationLayer>();
+        public List<AnnotationLayer> annotationLayers = new ArrayList<AnnotationLayer>();
     }
 
     public AnnotationPreferenceModalPanel(String aId, final ModalWindow modalWindow,
