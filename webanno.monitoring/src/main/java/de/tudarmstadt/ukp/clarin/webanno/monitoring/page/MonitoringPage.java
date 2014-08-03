@@ -497,8 +497,7 @@ public class MonitoringPage
                         @Override
                         public Object getDisplayValue(AnnotationFeature aObject)
                         {
-                            return aObject.getTagset() == null ? aObject.getUiName() : aObject
-                                    .getTagset().getName();
+                            return aObject.getLayer().getUiName()+" : " + aObject.getUiName();
                         }
                     });
                     setNullValid(false);

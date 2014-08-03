@@ -645,7 +645,8 @@ public class AnnotationServiceImpl
     public List<AnnotationFeature> listAnnotationFeature(Project aProject)
     {
         return entityManager
-                .createQuery("FROM AnnotationFeature  WHERE project =:project",
+                .createQuery(
+                        "FROM AnnotationFeature f WHERE project =:project ORDER BY f.layer.uiName, f.uiName",
                         AnnotationFeature.class).setParameter("project", aProject).getResultList();
     }
 
