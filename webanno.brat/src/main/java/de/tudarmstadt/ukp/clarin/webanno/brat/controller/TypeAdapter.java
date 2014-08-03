@@ -28,6 +28,7 @@ import org.apache.uima.jcas.JCas;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 /**
  * Type Adapters for span, arc, and chain annotations
@@ -117,4 +118,6 @@ public interface TypeAdapter
     void deleteBySpan(JCas aJCas, AnnotationFS fs, int aBegin, int aEnd);
 
     List<String> getAnnotation(JCas aJcas, AnnotationFeature feature, int begin, int end);
+    
+    AnnotationLayer getLayer();
 }

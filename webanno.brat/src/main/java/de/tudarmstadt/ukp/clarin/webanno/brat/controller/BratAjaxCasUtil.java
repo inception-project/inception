@@ -36,6 +36,7 @@ import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.TagsetDescription;
@@ -571,5 +572,24 @@ public class BratAjaxCasUtil
             seletedTextSb.append(token.getCoveredText() + " ");
         }
         return seletedTextSb.toString();
+    }
+    
+    /**
+     * Set a feature value.
+     * 
+     * @param aFS
+     *            the feature structure.
+     * @param aFeature
+     *            the feature within the annotation whose value to set. If this parameter is
+     *            {@code null} then nothing happens.
+     * @param aValue
+     *            the feature value.
+     */
+   public static void setFeature(FeatureStructure aFS, AnnotationFeature aFeature, String aValue)
+    {
+        if (aFeature != null) {
+            Feature labelFeature = aFS.getType().getFeatureByBaseName(aFeature.getName());
+            aFS.setFeatureValueFromString(labelFeature, aValue);
+        }
     }
 }

@@ -123,12 +123,7 @@ public class AutomationUtil
                 if (selectCovered(jCas, Token.class, sentence.getBegin() + i,
                         sentence.getBegin() + i + selectedText.length()).size() > 0) {
 
-                    SpanAdapter adapter = (SpanAdapter) getAdapter(aFeature.getLayer(),
-                            aAnnotationService);
-                    adapter.setLockToTokenOffsets(aFeature.getLayer().isLockToTokenOffset());
-                    adapter.setAllowStacking(aFeature.getLayer().isAllowSTacking());
-                    adapter.setAllowMultipleToken(aFeature.getLayer().isMultipleTokens());
-                    adapter.setCrossMultipleSentence(aFeature.getLayer().isCrossSentence());
+                    SpanAdapter adapter = (SpanAdapter) getAdapter(aFeature.getLayer());
                     String value = aModel.getRememberedSpanFeatures().get(aFeature);
                     adapter.add(jCas, sentence.getBegin() + i, sentence.getBegin() + i
                             + selectedText.length() - 1, aFeature, value);
@@ -153,7 +148,7 @@ public class AutomationUtil
         // get selected text, concatenations of tokens
         String selectedText = BratAjaxCasUtil.getSelectedText(annoCas, aStart, aEnd);
 
-        TypeAdapter adapter = getAdapter(aFeature.getLayer(), annotationService);
+        TypeAdapter adapter = getAdapter(aFeature.getLayer());
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = aRepository.getUser(username);
 
@@ -215,7 +210,7 @@ public class AutomationUtil
             }
 
             BufferedWriter trainOut = new BufferedWriter(new FileWriter(trainFile));
-            TypeAdapter adapter = TypeUtil.getAdapter(feature.getLayer(), annotationService);
+            TypeAdapter adapter = TypeUtil.getAdapter(feature.getLayer());
             for (SourceDocument sourceDocument : aRepository.listSourceDocuments(feature
                     .getProject())) {
                 if ((sourceDocument.isTrainingDocument() && sourceDocument.getFeature() != null && sourceDocument
@@ -353,7 +348,7 @@ public class AutomationUtil
         AutomationStatus status = aRepository.getAutomationStatus(aTemplate);
 
         BufferedWriter trainOut = new BufferedWriter(new FileWriter(trainFile));
-        TypeAdapter adapter = TypeUtil.getAdapter(feature.getLayer(), annotationService);
+        TypeAdapter adapter = TypeUtil.getAdapter(feature.getLayer());
         // Training documents (Curated or webanno-compatible imported ones - read using UIMA)
         for (SourceDocument sourceDocument : aRepository.listSourceDocuments(feature.getProject())) {
             if ((sourceDocument.isTrainingDocument() && sourceDocument.getFeature() != null && sourceDocument
@@ -440,7 +435,7 @@ public class AutomationUtil
         if (!documentChanged) {
             return;
         }
-        TypeAdapter adapter = TypeUtil.getAdapter(feature.getLayer(), annotationService);
+        TypeAdapter adapter = TypeUtil.getAdapter(feature.getLayer());
         for (SourceDocument document : aRepository.listSourceDocuments(feature.getProject())) {
             if (!document.isProcessed() && !document.isTrainingDocument()) {
                 File predFile = new File(miraDir, document.getId() + ".pred.ft");
@@ -1269,8 +1264,7 @@ public class AutomationUtil
 
                 }
 
-                TypeAdapter adapter = TypeUtil.getAdapter(layerFeature.getLayer(),
-                        annotationService);
+                TypeAdapter adapter = TypeUtil.getAdapter(layerFeature.getLayer());
                 adapter.automate(jCas, layerFeature, annotations);
                 LOG.info("Predictions found are written to the CAS");
                 aRepository.createCorrectionDocumentContent(jCas, document, user);

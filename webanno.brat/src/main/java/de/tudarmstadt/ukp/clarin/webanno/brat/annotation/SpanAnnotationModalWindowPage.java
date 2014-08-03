@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.RELATION_TYPE;
 
 import java.io.IOException;
@@ -146,13 +145,6 @@ public class SpanAnnotationModalWindowPage
                 if (features.size() == 0) {
                     continue;
                 }
-                if (layer.getType().equals(CHAIN_TYPE)) {
-                    for (AnnotationFeature feature : features) {
-                        if (feature.getTagset() == null) {
-                            continue addSpanLayers;
-                        }
-                    }
-                }
                 if (!layer.getType().equals(RELATION_TYPE)) {
                     spanLayers.add(layer);
                 }
@@ -179,6 +171,7 @@ public class SpanAnnotationModalWindowPage
                 {
                     featureModels = new ArrayList<IModel<FeatureValue>>();
                     tagModels = new ArrayList<IModel<String>>();
+                    selectedLayer = aNewSelection;
                     for (AnnotationFeature feature : annotationService
                             .listAnnotationFeature(aNewSelection)) {
 
@@ -332,32 +325,47 @@ public class SpanAnnotationModalWindowPage
                         }
                     }
 
-                    // check if at least one feature have an annotation
-                    boolean existsAnnotation = false;
-
-                    for (IModel<String> model : tagModels) {
-                        if (model.getObject() != null) {
-                            existsAnnotation = true;
-                            break;
-                        }
-                    }
-
-                    if (!existsAnnotation) {
-                        error("No Tag is selected!");
-                        return;
-                    }
                     try {
+                        // Verify if input is valid
+                        for (IModel<String> model : tagModels) {
+                            AnnotationFeature feature = featureModels.get(tagModels.indexOf(model))
+                                    .getObject().feature;
+                            // Check if tag is necessary, set, and correct
+                            if (feature.getTagset() != null
+                                    && !feature.getTagset().isCreateTag()
+                                    && !annotationService.existsTag(model.getObject(),
+                                            feature.getTagset())) {
+                                error(model.getObject()
+                                        + " is not in the tag list. Please choose form the existing tags");
+                                return;
+                            }
+                        }                      
+
+                        // If there is no annotation yet, create one. During creation, the adapter
+                        // may notice that it would create a duplicate and return the address of
+                        // an existing annotation instead of a new one.
                         JCas jCas = getCas(bratAnnotatorModel);
+                        TypeAdapter adapter = getAdapter(selectedLayer);
+                        
+                        if (selectedSpanId == -1) {
+                            if (adapter instanceof SpanAdapter) {
+                                selectedSpanId = ((SpanAdapter) adapter).add(jCas, beginOffset,
+                                        endOffset, null, null);
+                            }
+                            else {
+                                selectedSpanId = ((ChainAdapter) adapter).addSpan(null, jCas,
+                                        beginOffset, endOffset, null);
+                            }                        }
+
+                        // Set feature values
                         String tag = "";
                         for (IModel<String> model : tagModels) {
-
                             if (model.getObject() == null) {
                                 continue;
                             }
 
                             AnnotationFeature feature = featureModels.get(tagModels.indexOf(model))
                                     .getObject().feature;
-                            selectedLayer = feature.getLayer();
 
                             Tag selectedTag;
                             if (feature.getTagset() == null) {
@@ -374,43 +382,13 @@ public class SpanAnnotationModalWindowPage
                                 annotationService.createTag(selectedTag,
                                         bratAnnotatorModel.getUser());
                             }
-                            else if (!annotationService.existsTag(model.getObject(),
-                                    feature.getTagset())) {
-                                error(model.getObject()
-                                        + " is not in the tag list. Please choose form the existing tags");
-                                return;
-                            }
                             else {
                                 selectedTag = annotationService.getTag(model.getObject(),
                                         feature.getTagset());
                             }
 
-                            TypeAdapter adapter = getAdapter(selectedLayer, annotationService);
-                            if (selectedSpanId != -1) {
-                                adapter.updateFeature(jCas, feature, selectedSpanId,
-                                        selectedTag.getName());
-                            }
-                            else if (adapter instanceof SpanAdapter) {
-                                ((SpanAdapter) adapter).setLockToTokenOffsets(selectedLayer
-                                        .isLockToTokenOffset());
-                                ((SpanAdapter) adapter).setAllowStacking(selectedLayer
-                                        .isAllowSTacking());
-                                ((SpanAdapter) adapter).setAllowMultipleToken(selectedLayer
-                                        .isMultipleTokens());
-                                ((SpanAdapter) adapter).setCrossMultipleSentence(selectedLayer
-                                        .isCrossSentence());
-                                selectedSpanId = ((SpanAdapter) adapter).add(jCas, beginOffset, endOffset, feature,
-                                        selectedTag.getName());
-
-                            }
-                            else {
-
-                                ((ChainAdapter) adapter).add(selectedTag.getName(), jCas,
-                                        beginOffset, endOffset, null, null, feature);
-                            }
-                            repository.updateJCas(bratAnnotatorModel.getMode(),
-                                    bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
-                                    jCas);
+                            adapter.updateFeature(jCas, feature, selectedSpanId,
+                                    selectedTag.getName());
                             if (tag.equals("")) {
                                 tag = selectedTag.getName();
                             }
@@ -420,11 +398,17 @@ public class SpanAnnotationModalWindowPage
                             selectedFeatureValues.put(feature, model.getObject());
 
                         }
+                        
                         // update timestamp now
                         int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas, beginOffset);
                         bratAnnotatorModel.getDocument().setSentenceAccessed(sentenceNumber);
                         repository.updateTimeStamp(bratAnnotatorModel.getDocument(),
                                 bratAnnotatorModel.getUser(), bratAnnotatorModel.getMode());
+
+                        // persist changes
+                        repository.updateJCas(bratAnnotatorModel.getMode(),
+                                bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
+                                jCas);
 
                         if (bratAnnotatorModel.isScrollPage()) {
                             updateSentenceAddressAndOffsets(jCas, beginOffset);
@@ -436,8 +420,7 @@ public class SpanAnnotationModalWindowPage
                         bratAnnotatorModel.setAnnotate(true);
                         bratAnnotatorModel.setMessage("The span annotation [" + tag + "] is added");
 
-                        // A hack to rememeber the Visural DropDown display //
-                        // value
+                        // A hack to remember the drop-down display value
                         HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())
                                 .getContainerRequest().getSession();
                         session.setAttribute("model", bratAnnotatorModel);
@@ -470,7 +453,7 @@ public class SpanAnnotationModalWindowPage
                     try {
                         JCas jCas = getCas(bratAnnotatorModel);
                         AnnotationFS fs = selectByAddr(jCas, selectedSpanId);
-                        TypeAdapter adapter = getAdapter(selectedLayer, annotationService);
+                        TypeAdapter adapter = getAdapter(selectedLayer);
                         String attachFeatureName = adapter.getAttachFeatureName();
                         String attachTypeName = adapter.getAnnotationTypeName();
 
@@ -479,7 +462,7 @@ public class SpanAnnotationModalWindowPage
                         for (AnnotationLayer layer : annotationService
                                 .listAnnotationLayer(bratAnnotatorModel.getProject())) {
 
-                            typeAdapters.add(getAdapter(layer, annotationService));
+                            typeAdapters.add(getAdapter(layer));
                         }
                         // delete associated relation annotation
                         for (TypeAdapter ad : typeAdapters) {
@@ -510,15 +493,12 @@ public class SpanAnnotationModalWindowPage
                                 break;
                             }
                         }
+                        // BEGIN HACK - Issue 933
                         if (adapter instanceof ChainAdapter) {
-                            TypeAdapter chainAdapter = new ChainAdapter(selectedLayer.getId(),
-                                    selectedLayer.getName() + ChainAdapter.CHAIN,
-                                    selectedLayer.getName(), "first", "next");
-                            chainAdapter.delete(jCas, selectedSpanId);
+                            ((ChainAdapter) adapter).setArc(false);
                         }
-                        else {
-                            adapter.delete(jCas, selectedSpanId);
-                        }
+                        // END HACK - Issue 933
+                        adapter.delete(jCas, selectedSpanId);
 
                         repository.updateJCas(bratAnnotatorModel.getMode(),
                                 bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
@@ -673,7 +653,10 @@ public class SpanAnnotationModalWindowPage
         String type = annoFs.getType().getName();
 
         if (type.endsWith(ChainAdapter.CHAIN)) {
-            type = type.substring(0, type.length() - 5);
+            type = type.substring(0, type.length() - ChainAdapter.CHAIN.length());
+        }
+        else if (type.endsWith(ChainAdapter.LINK)) {
+            type = type.substring(0, type.length() - ChainAdapter.LINK.length());
         }
 
         this.selectedLayer = annotationService.getLayer(type, bratAnnotatorModel.getProject());

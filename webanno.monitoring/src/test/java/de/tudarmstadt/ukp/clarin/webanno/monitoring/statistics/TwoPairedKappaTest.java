@@ -128,7 +128,7 @@ public class TwoPairedKappaTest
     {
         init();
         double[][] results = new double[2][2];
-        TypeAdapter adapter = new ArcAdapter(0, Dependency.class.getName(), "Dependent",
+        TypeAdapter adapter = new ArcAdapter(null, 0, Dependency.class.getName(), "Dependent",
                 "Governor", "pos", Token.class.getName());
         Map<User, List<SourceDocument>> userDocs = new HashMap<User, List<SourceDocument>>();
         userDocs.put(user1, Arrays.asList(new SourceDocument[] { document }));
@@ -172,7 +172,7 @@ public class TwoPairedKappaTest
     {
         init();
         double[][] results = new double[2][2];
-        TypeAdapter adapter = new ArcAdapter(0, Dependency.class.getName(), "Dependent",
+        TypeAdapter adapter = new ArcAdapter(null, 0, Dependency.class.getName(), "Dependent",
                 "Governor", "pos", Token.class.getName());
         Map<User, List<SourceDocument>> userDocs = new HashMap<User, List<SourceDocument>>();
         userDocs.put(user1, Arrays.asList(new SourceDocument[] { document }));
@@ -193,7 +193,7 @@ public class TwoPairedKappaTest
     {
         init();
         double[][] results = new double[2][2];
-        TypeAdapter adapter = new ArcAdapter(0, Dependency.class.getName(), "Dependent",
+        TypeAdapter adapter = new ArcAdapter(null, 0, Dependency.class.getName(), "Dependent",
                 "Governor", "pos", Token.class.getName());
         Map<User, List<SourceDocument>> userDocs = new HashMap<User, List<SourceDocument>>();
         userDocs.put(user1, Arrays.asList(new SourceDocument[] { document }));

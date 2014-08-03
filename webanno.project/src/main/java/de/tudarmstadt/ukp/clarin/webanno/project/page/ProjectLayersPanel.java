@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.COR
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.SPAN_TYPE;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
+import static org.apache.commons.lang.StringUtils.isBlank;
 
 import java.io.File;
 import java.io.IOException;
@@ -480,7 +481,7 @@ public class ProjectLayersPanel
                 protected void onUpdate(AjaxRequestTarget target)
                 {
                     layerType = getModelObject().getType();
-                    target.add(attachTypes);
+                    target.add(LayerDetailForm.this);
                 }
             });
             add(new AjaxLink<Void>("showLayerTechnicalPropertyModal")
@@ -570,50 +571,6 @@ public class ProjectLayersPanel
             }.setOutputMarkupPlaceholderTag(true));
 
             // behaviours of layers
-            add(new Label("lockToTokenOffsetLabel", "Lock to token offsets:")
-            {
-                private static final long serialVersionUID = -1290883833837327207L;
-
-                @Override
-                protected void onConfigure()
-                {
-                    super.onConfigure();
-                    if (LayerDetailForm.this.getModelObject().getId() != 0
-                            && LayerDetailForm.this.getModelObject().getType()
-                                    .equals(RELATION_TYPE)) {
-                        this.setVisible(false);
-                    }
-                    else if (LayerDetailForm.this.getModelObject().getId() != 0
-                            && LayerDetailForm.this.getModelObject().getAttachFeature() != null) {
-                        this.setVisible(false);
-                    }
-                    else {
-                        this.setVisible(true);
-                    }
-                }
-            });
-            add(new CheckBox("lockToTokenOffset")
-            {
-                private static final long serialVersionUID = -4934708834659137207L;
-
-                @Override
-                protected void onConfigure()
-                {
-                    super.onConfigure();
-                    if (LayerDetailForm.this.getModelObject().getId() != 0
-                            && LayerDetailForm.this.getModelObject().getAttachFeature() != null) {
-                        this.setVisible(false);
-                    }
-                    else if (LayerDetailForm.this.getModelObject().getId() != 0
-                            && LayerDetailForm.this.getModelObject().getType()
-                                    .equals(RELATION_TYPE)) {
-                        this.setVisible(false);
-                    }
-                    else {
-                        this.setVisible(true);
-                    }
-                }
-            });
             add(new AjaxLink<Void>("showlayerBehaviorModal")
             {
                 private static final long serialVersionUID = 7496156015186497496L;
@@ -624,8 +581,39 @@ public class ProjectLayersPanel
                     openHelpDialog(openHelpDialog, target, "layerBehavior");
                 }
             });
+            
+            add(new Label("lockToTokenOffsetLabel", "Lock to token offsets:")
+            {
+                private static final long serialVersionUID = -1290883833837327207L;
 
-            add(new Label("allowSTackingLabel", "Allow stacking:")
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    AnnotationLayer layer = LayerDetailForm.this.getModelObject();
+                    // Makes no sense for relation layers or layers that attach to tokens
+                    setVisible(!isBlank(layer.getType()) && !RELATION_TYPE.equals(layer.getType())
+                            && !CHAIN_TYPE.equals(layer.getType())
+                            && layer.getAttachFeature() == null);
+                }
+            });
+            add(new CheckBox("lockToTokenOffset")
+            {
+                private static final long serialVersionUID = -4934708834659137207L;
+
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    AnnotationLayer layer = LayerDetailForm.this.getModelObject();
+                    // Makes no sense for relation layers or layers that attach to tokens
+                    setVisible(!isBlank(layer.getType()) && !RELATION_TYPE.equals(layer.getType())
+                            && !CHAIN_TYPE.equals(layer.getType())
+                            && layer.getAttachFeature() == null);
+                }
+            });
+
+            add(new Label("allowStackingLabel", "Allow stacking:")
             {
                 private static final long serialVersionUID = -5354062154610496880L;
 
@@ -633,16 +621,13 @@ public class ProjectLayersPanel
                 protected void onConfigure()
                 {
                     super.onConfigure();
-                    if (LayerDetailForm.this.getModelObject().getId() != 0
-                            && LayerDetailForm.this.getModelObject().getAttachFeature() != null) {
-                        this.setVisible(false);
-                    }
-                    else {
-                        this.setVisible(true);
-                    }
+                    AnnotationLayer layer = LayerDetailForm.this.getModelObject();
+                    // Makes no sense for layers that attach to tokens
+                    setVisible(!isBlank(layer.getType()) && layer.getAttachFeature() == null
+                            && !CHAIN_TYPE.equals(layer.getType()));
                 }
             });
-            add(new CheckBox("allowSTacking")
+            add(new CheckBox("allowStacking")
             {
                 private static final long serialVersionUID = 7800627916287273008L;
 
@@ -650,13 +635,10 @@ public class ProjectLayersPanel
                 protected void onConfigure()
                 {
                     super.onConfigure();
-                    if (LayerDetailForm.this.getModelObject().getId() != 0
-                            && LayerDetailForm.this.getModelObject().getAttachFeature() != null) {
-                        this.setVisible(false);
-                    }
-                    else {
-                        this.setVisible(true);
-                    }
+                    AnnotationLayer layer = LayerDetailForm.this.getModelObject();
+                    // Makes no sense for layers that attach to tokens
+                    setVisible(!isBlank(layer.getType()) && layer.getAttachFeature() == null
+                            && !CHAIN_TYPE.equals(layer.getType()));
                 }
             });
 
@@ -668,13 +650,10 @@ public class ProjectLayersPanel
                 protected void onConfigure()
                 {
                     super.onConfigure();
-                    if (LayerDetailForm.this.getModelObject().getId() != 0
-                            && LayerDetailForm.this.getModelObject().getAttachFeature() != null) {
-                        this.setVisible(false);
-                    }
-                    else {
-                        this.setVisible(true);
-                    }
+                    AnnotationLayer layer = LayerDetailForm.this.getModelObject();
+                    // Makes no sense for layers that attach to tokens
+                    setVisible(!isBlank(layer.getType()) && layer.getAttachFeature() == null
+                            && !CHAIN_TYPE.equals(layer.getType()));
                 }
             });
             add(new CheckBox("crossSentence")
@@ -685,13 +664,10 @@ public class ProjectLayersPanel
                 protected void onConfigure()
                 {
                     super.onConfigure();
-                    if (LayerDetailForm.this.getModelObject().getId() != 0
-                            && LayerDetailForm.this.getModelObject().getAttachFeature() != null) {
-                        this.setVisible(false);
-                    }
-                    else {
-                        this.setVisible(true);
-                    }
+                    AnnotationLayer layer = LayerDetailForm.this.getModelObject();
+                    // Makes no sense for layers that attach to tokens
+                    setVisible(!isBlank(layer.getType()) && layer.getAttachFeature() == null
+                            && !CHAIN_TYPE.equals(layer.getType()));
                 }
             });
 
@@ -703,18 +679,11 @@ public class ProjectLayersPanel
                 protected void onConfigure()
                 {
                     super.onConfigure();
-                    if (LayerDetailForm.this.getModelObject().getId() != 0
-                            && LayerDetailForm.this.getModelObject().getAttachFeature() != null) {
-                        this.setVisible(false);
-                    }
-                    else if (LayerDetailForm.this.getModelObject().getId() != 0
-                            && LayerDetailForm.this.getModelObject().getType()
-                                    .equals(RELATION_TYPE)) {
-                        this.setVisible(false);
-                    }
-                    else {
-                        this.setVisible(true);
-                    }
+                    AnnotationLayer layer = LayerDetailForm.this.getModelObject();
+                    // Makes no sense for relation layers or layers that attach to tokens
+                    setVisible(!isBlank(layer.getType()) && !RELATION_TYPE.equals(layer.getType())
+                            && !CHAIN_TYPE.equals(layer.getType())
+                            && layer.getAttachFeature() == null);
                 }
             });
             add(new CheckBox("multipleTokens")
@@ -725,20 +694,52 @@ public class ProjectLayersPanel
                 protected void onConfigure()
                 {
                     super.onConfigure();
-                    if (LayerDetailForm.this.getModelObject().getId() != 0
-                            && LayerDetailForm.this.getModelObject().getAttachFeature() != null) {
-                        this.setVisible(false);
-                    }
-                    else if (LayerDetailForm.this.getModelObject().getId() != 0
-                            && LayerDetailForm.this.getModelObject().getType()
-                                    .equals(RELATION_TYPE)) {
-                        this.setVisible(false);
-                    }
-                    else {
-                        this.setVisible(true);
-                    }
+                    AnnotationLayer layer = LayerDetailForm.this.getModelObject();
+                    // Makes no sense for relation layers or layers that attach to tokens
+                    setVisible(!isBlank(layer.getType()) && !RELATION_TYPE.equals(layer.getType())
+                            && !CHAIN_TYPE.equals(layer.getType())
+                            && layer.getAttachFeature() == null);
                 }
             });
+            
+            add(new Label("linkedListBehaviorLabel", "Behave like a linked list:")
+            {
+                private static final long serialVersionUID = -5354062154610496880L;
+
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    AnnotationLayer layer = LayerDetailForm.this.getModelObject();
+                    setVisible(!isBlank(layer.getType()) && CHAIN_TYPE.equals(layer.getType()));
+                }
+            });
+            CheckBox linkedListBehavior = new CheckBox("linkedListBehavior")
+            {
+                private static final long serialVersionUID = 1319818165277559402L;
+
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    AnnotationLayer layer = LayerDetailForm.this.getModelObject();
+                    setVisible(!isBlank(layer.getType()) && CHAIN_TYPE.equals(layer.getType()));
+                }
+            };
+            add(linkedListBehavior);
+            linkedListBehavior.add(new AjaxFormComponentUpdatingBehavior("onChange")
+            {
+                private static final long serialVersionUID = -2904306846882446294L;
+
+                @Override
+                protected void onUpdate(AjaxRequestTarget aTarget)
+                {
+                    featureSelectionForm.updateChoices();
+                    aTarget.add(featureSelectionForm);
+                    aTarget.add(featureDetailForm);
+                }
+            });
+
             add(new Button("save", new ResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;
@@ -1019,26 +1020,17 @@ public class ProjectLayersPanel
     {
         private static final long serialVersionUID = -1L;
 
+        private ListChoice<AnnotationFeature> feature;
+        
         public FeatureSelectionForm(String id)
         {
             super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
 
-            add(new ListChoice<AnnotationFeature>("feature")
+            add(feature = new ListChoice<AnnotationFeature>("feature")
             {
                 private static final long serialVersionUID = 1L;
-
                 {
-                    setChoices(new LoadableDetachableModel<List<AnnotationFeature>>()
-                    {
-                        private static final long serialVersionUID = 1L;
-
-                        @Override
-                        protected List<AnnotationFeature> load()
-                        {
-                            return annotationService.listAnnotationFeature(layerDetailForm
-                                    .getModelObject());
-                        }
-                    });
+                    setChoices(regenerateModel());
                     setChoiceRenderer(new ChoiceRenderer<AnnotationFeature>()
                     {
                         private static final long serialVersionUID = 4610648616450168333L;
@@ -1046,11 +1038,10 @@ public class ProjectLayersPanel
                         @Override
                         public Object getDisplayValue(AnnotationFeature aObject)
                         {
-                            return "[ " + aObject.getUiName() + "] [ " + aObject.getType() + " ]";
+                            return aObject.getUiName() + " : [" + aObject.getType() + "]";
                         }
                     });
                     setNullValid(false);
-
                 }
 
                 @Override
@@ -1095,6 +1086,39 @@ public class ProjectLayersPanel
                             && !layerDetailForm.getModelObject().getType().equals(CHAIN_TYPE);
                 }
             });
+        }
+        
+        private LoadableDetachableModel<List<AnnotationFeature>> regenerateModel()
+        {
+            return new LoadableDetachableModel<List<AnnotationFeature>>()
+                    {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                protected List<AnnotationFeature> load()
+                {
+                    List<AnnotationFeature> features = annotationService
+                            .listAnnotationFeature(layerDetailForm.getModelObject());
+                    if (CHAIN_TYPE.equals(layerDetailForm.getModelObject().getType())
+                            && !layerDetailForm.getModelObject().isLinkedListBehavior()) {
+                        List<AnnotationFeature> filtered = new ArrayList<AnnotationFeature>();
+                        for (AnnotationFeature f : features) {
+                            if (!WebAnnoConst.COREFERENCE_RELATION_FEATURE.equals(f.getName())) {
+                                filtered.add(f);
+                            }
+                        }
+                        return filtered;
+                    }
+                    else {
+                        return features;
+                    }
+                }
+            };
+        }
+        
+        public void updateChoices()
+        {
+            feature.setChoices(regenerateModel());
         }
     }
 

@@ -44,7 +44,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -121,14 +120,6 @@ public class AnnotationPreferenceModalPanel
                                 if(!layer.isEnabled()){
                                     noFeature.add(layer);
                                     continue;
-                                }
-                                if(layer.getType().equals(WebAnnoConst.CHAIN_TYPE)){
-                                    for(AnnotationFeature feature:annotationService.listAnnotationFeature(layer)){
-                                        if(feature.getTagset() == null){
-                                            noFeature.add(layer);
-                                            break;
-                                        }
-                                    }
                                 }
                                 if (annotationService.listAnnotationFeature(layer).size() == 0
                                         || layer.getName().equals(Token.class.getName())) {

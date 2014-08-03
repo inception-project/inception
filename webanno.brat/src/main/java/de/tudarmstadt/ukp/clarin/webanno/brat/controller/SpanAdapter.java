@@ -62,7 +62,7 @@ public class SpanAdapter
      * The minimum offset of the annotation is on token, and the annotation can't span multiple
      * tokens too
      */
-    private boolean lockeToTokenOffsets;
+    private boolean lockToTokenOffsets;
 
     /**
      * The minimum offset of the annotation is on token, and the annotation can span multiple token
@@ -94,7 +94,7 @@ public class SpanAdapter
      */
     public void setLockToTokenOffsets(boolean aSingleTokenBehavior)
     {
-        lockeToTokenOffsets = aSingleTokenBehavior;
+        lockToTokenOffsets = aSingleTokenBehavior;
     }
 
     /**
@@ -102,7 +102,7 @@ public class SpanAdapter
      */
     public boolean isLockToTokenOffsets()
     {
-        return lockeToTokenOffsets;
+        return lockToTokenOffsets;
     }
 
     public boolean isAllowMultipleToken()
@@ -272,16 +272,14 @@ public class SpanAdapter
     /**
      * Add new span annotation into the CAS and return the the id of the span annotation
      *
-     * @param aLabelValue
+     * @param aValue
      *            the value of the annotation for the span
-     * @throws BratAnnotationException
      */
-
     public Integer add(JCas aJcas, int aBegin, int aEnd, AnnotationFeature aFeature, String aValue)
         throws BratAnnotationException
     {
         if (crossMultipleSentence || BratAjaxCasUtil.isSameSentence(aJcas, aBegin, aEnd)) {
-            if (lockeToTokenOffsets) {
+            if (lockToTokenOffsets) {
                 List<Token> tokens = BratAjaxCasUtil.selectOverlapping(aJcas, Token.class, aBegin,
                         aEnd);
 
@@ -317,12 +315,11 @@ public class SpanAdapter
     {
         boolean duplicate = false;
         Type type = CasUtil.getType(aCas, getAnnotationTypeName());
-        Feature feature = type.getFeatureByBaseName(aFeature.getName());
         for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
 
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
                 if (!allowStacking) {
-                    fs.setFeatureValueFromString(feature, aValue);
+                    BratAjaxCasUtil.setFeature(fs, aFeature, aValue);
                     duplicate = true;
                     break;
                 }
@@ -330,15 +327,13 @@ public class SpanAdapter
         }
         if (!duplicate) {
             AnnotationFS newAnnotation = aCas.createAnnotation(type, aBegin, aEnd);
-            newAnnotation.setFeatureValueFromString(feature, aValue);
+            BratAjaxCasUtil.setFeature(newAnnotation, aFeature, aValue);
 
             if (getAttachFeatureName() != null) {
                 Type theType = CasUtil.getType(aCas, getAttachTypeName());
                 Feature attachFeature = theType.getFeatureByBaseName(getAttachFeatureName());
                 // if the attache type feature structure is not in place
-                // (for
-                // custom annotation),
-                // create it
+                // (for custom annotation), create it
                 if (CasUtil.selectCovered(aCas, theType, aBegin, aEnd).size() == 0) {
                     AnnotationFS attachTypeAnnotation = aCas
                             .createAnnotation(theType, aBegin, aEnd);
@@ -574,10 +569,13 @@ public class SpanAdapter
     @Override
     public void updateFeature(JCas aJcas, AnnotationFeature aFeature, int aAddress, String aValue)
     {
-        Type type = CasUtil.getType(aJcas.getCas(), getAnnotationTypeName());
-        Feature feature = type.getFeatureByBaseName(aFeature.getName());
         FeatureStructure fs = BratAjaxCasUtil.selectByAddr(aJcas, FeatureStructure.class, aAddress);
-        fs.setFeatureValueFromString(feature, aValue);
-
+        BratAjaxCasUtil.setFeature(fs, aFeature, aValue);
+    }
+    
+    @Override
+    public AnnotationLayer getLayer()
+    {
+        return layer;
     }
 }

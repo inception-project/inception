@@ -17,8 +17,6 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
-import static org.apache.uima.fit.util.CasUtil.getType;
-
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
@@ -27,7 +25,6 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
@@ -44,23 +41,33 @@ public final class TypeUtil
 		// No instances
 	}
 
-    public static TypeAdapter getAdapter(AnnotationLayer aLayer,
-            AnnotationService aAnnotationService)
+    public static TypeAdapter getAdapter(AnnotationLayer aLayer)
     {
         if (aLayer.getType().equals(WebAnnoConst.SPAN_TYPE)) {
-            TypeAdapter adapter = new SpanAdapter(aLayer);
+            SpanAdapter adapter = new SpanAdapter(aLayer);
+            adapter.setLockToTokenOffsets(aLayer.isLockToTokenOffset());
+            adapter.setAllowStacking(aLayer.isAllowStacking());
+            adapter.setAllowMultipleToken(aLayer.isMultipleTokens());
+            adapter.setCrossMultipleSentence(aLayer.isCrossSentence());
             return adapter;
         }
         else if (aLayer.getType().equals(WebAnnoConst.RELATION_TYPE)) {
-            TypeAdapter adapter = new ArcAdapter(aLayer.getId(), aLayer.getName(), "Dependent",
+            ArcAdapter adapter = new ArcAdapter(aLayer, aLayer.getId(), aLayer.getName(), "Dependent",
                     "Governor", aLayer.getAttachFeature() == null ? null : aLayer
                             .getAttachFeature().getName(), aLayer.getAttachType().getName());
+
+            adapter.setCrossMultipleSentence(aLayer.isCrossSentence());
+            adapter.setAllowStacking(aLayer.isAllowStacking());
+            
             return adapter;
             // default is chain (based on operation, change to CoreferenceLinK)
         }
         else if (aLayer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
-            ChainAdapter adapter = new ChainAdapter(aLayer.getId(), aLayer.getName()
+            ChainAdapter adapter = new ChainAdapter(aLayer, aLayer.getId(), aLayer.getName()
                     + ChainAdapter.CHAIN, aLayer.getName(), "first", "next");
+            
+            adapter.setLinkedListBehavior(aLayer.isLinkedListBehavior());
+            
             return adapter;
 
         }
@@ -96,11 +103,8 @@ public final class TypeUtil
             return bratLabelText.toString();
         }
         else {
-            // If there are no label features at all, then use the simple type name
-            // FIXME: we use the CAS type name here - actually we should use the name configured in the
-            // WebAnno layer configuration.
-            Type type = getType(aFs.getCAS(), aAdapter.getAnnotationTypeName());
-            return "(" + type.getShortName() + ")";
+            // If there are no label features at all, then use the layer UI name
+            return "(" + aAdapter.getLayer().getUiName() + ")";
         }
     }
 

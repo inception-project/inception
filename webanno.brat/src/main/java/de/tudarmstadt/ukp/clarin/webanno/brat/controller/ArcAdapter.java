@@ -41,6 +41,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Argument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Relation;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
@@ -99,10 +100,13 @@ public class ArcAdapter
 
     private boolean crossMultipleSentence;
 
-    public ArcAdapter(long aTypeId, String aTypeName, String aTargetFeatureName,
-            String aSourceFeatureName, /* String aArcSpanType, */
+    private AnnotationLayer layer;
+
+    public ArcAdapter(AnnotationLayer aLayer, long aTypeId, String aTypeName,
+            String aTargetFeatureName, String aSourceFeatureName, /* String aArcSpanType, */
             String aAttacheFeatureName, String aAttachType)
     {
+        layer = aLayer;
         typeId = aTypeId;
         annotationTypeName = aTypeName;
         sourceFeatureName = aSourceFeatureName;
@@ -218,7 +222,6 @@ public class ArcAdapter
         boolean duplicate = false;
 
         Type type = getType(aJCas.getCas(), annotationTypeName);
-        Feature feature = type.getFeatureByBaseName(aFeature.getName());
         Feature dependentFeature = type.getFeatureByBaseName(targetFeatureName);
         Feature governorFeature = type.getFeatureByBaseName(sourceFeatureName);
 
@@ -248,11 +251,13 @@ public class ArcAdapter
                 }
 
                 if (isDuplicate((AnnotationFS) governorFs, aOriginFs, (AnnotationFS) dependentFs,
-                        aTargetFs, fs.getFeatureValueAsString(feature), aValue)
-                        && !aValue.equals(WebAnnoConst.ROOT)) {
+                        aTargetFs) && !aValue.equals(WebAnnoConst.ROOT)) {
 
                     if (!allowStacking) {
-                        fs.setFeatureValueFromString(feature, aValue);
+                        if (aFeature != null) {
+                            Feature feature = type.getFeatureByBaseName(aFeature.getName());
+                            fs.setFeatureValueFromString(feature, aValue);
+                        }
                         duplicate = true;
                         break;
                     }
@@ -284,12 +289,18 @@ public class ArcAdapter
             if (dependentFs.getEnd() <= governorFs.getEnd()) {
                 newAnnotation = aJCas.getCas().createAnnotation(type, dependentFs.getBegin(),
                         governorFs.getEnd());
-                newAnnotation.setFeatureValueFromString(feature, aValue);
+                if (aFeature != null) {
+                    Feature feature = type.getFeatureByBaseName(aFeature.getName());
+                    newAnnotation.setFeatureValueFromString(feature, aValue);
+                }
             }
             else {
                 newAnnotation = aJCas.getCas().createAnnotation(type, governorFs.getBegin(),
                         dependentFs.getEnd());
-                newAnnotation.setFeatureValueFromString(feature, aValue);
+                if (aFeature != null) {
+                    Feature feature = type.getFeatureByBaseName(aFeature.getName());
+                    newAnnotation.setFeatureValueFromString(feature, aValue);
+                }
             }
             // If origin and target spans are multiple tokens, dependentFS.getBegin will be the
             // the begin position of the first token and dependentFS.getEnd will be the End
@@ -369,7 +380,7 @@ public class ArcAdapter
 
     private boolean isDuplicate(AnnotationFS aAnnotationFSOldOrigin,
             AnnotationFS aAnnotationFSNewOrigin, AnnotationFS aAnnotationFSOldTarget,
-            AnnotationFS aAnnotationFSNewTarget, String aTypeOld, String aTypeNew)
+            AnnotationFS aAnnotationFSNewTarget)
     {
         if (aAnnotationFSOldOrigin.getBegin() == aAnnotationFSNewOrigin.getBegin()
                 && aAnnotationFSOldOrigin.getEnd() == aAnnotationFSNewOrigin.getEnd()
@@ -488,9 +499,13 @@ public class ArcAdapter
     @Override
     public void updateFeature(JCas aJcas, AnnotationFeature aFeature, int aAddress, String aValue)
     {
-        Type type = CasUtil.getType(aJcas.getCas(), annotationTypeName);
-        Feature feature = type.getFeatureByBaseName(aFeature.getName());
         FeatureStructure fs = BratAjaxCasUtil.selectByAddr(aJcas, FeatureStructure.class, aAddress);
-        fs.setFeatureValueFromString(feature, aValue);
+        BratAjaxCasUtil.setFeature(fs, aFeature, aValue);
+    }
+    
+    @Override
+    public AnnotationLayer getLayer()
+    {
+        return layer;
     }
 }

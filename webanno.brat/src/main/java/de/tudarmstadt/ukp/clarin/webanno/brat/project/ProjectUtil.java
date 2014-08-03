@@ -620,13 +620,14 @@ public class ProjectUtil
             Project aProject, User aUser)
         throws IOException
     {
-        aLayer.setAllowSTacking(aExLayer.isAllowSTacking());
+        aLayer.setAllowStacking(aExLayer.isAllowStacking());
         aLayer.setBuiltIn(aExLayer.isBuiltIn());
         aLayer.setCrossSentence(aExLayer.isCrossSentence());
         aLayer.setDescription(aExLayer.getDescription());
         aLayer.setEnabled(aExLayer.isEnabled());
         aLayer.setLockToTokenOffset(aExLayer.isLockToTokenOffset());
         aLayer.setMultipleTokens(aExLayer.isMultipleTokens());
+        aLayer.setLinkedListBehavior(aExLayer.isLinkedListBehavior());
         aLayer.setUiName(aExLayer.getUiName());
         aLayer.setName(aExLayer.getName());
         aLayer.setProject(aProject);
@@ -1011,13 +1012,14 @@ public class ProjectUtil
             AnnotationLayer aLayer, AnnotationService aAnnotationService)
     {
         de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer exLayer = new de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer();
-        exLayer.setAllowSTacking(aLayer.isAllowSTacking());
+        exLayer.setAllowStacking(aLayer.isAllowStacking());
         exLayer.setBuiltIn(aLayer.isBuiltIn());
         exLayer.setCrossSentence(aLayer.isCrossSentence());
         exLayer.setDescription(aLayer.getDescription());
         exLayer.setEnabled(aLayer.isEnabled());
         exLayer.setLockToTokenOffset(aLayer.isLockToTokenOffset());
         exLayer.setMultipleTokens(aLayer.isMultipleTokens());
+        exLayer.setLinkedListBehavior(aLayer.isLinkedListBehavior());
         exLayer.setName(aLayer.getName());
         exLayer.setProjectName(aLayer.getProject().getName());
         exLayer.setType(aLayer.getType());

@@ -63,7 +63,7 @@ public class AnnotationLayer
     private boolean lockToTokenOffset = true;
 
     @JsonProperty("allow_stacking")
-    private boolean allowSTacking;
+    private boolean allowStacking;
 
     @JsonProperty("cross_sentence")
     private boolean crossSentence;
@@ -73,6 +73,9 @@ public class AnnotationLayer
     
     @JsonProperty("project_name")
     private String projectName;
+
+    @JsonProperty("linked_list_behavior")
+    private boolean linkedListBehavior;
 
     public String getName()
     {
@@ -164,14 +167,14 @@ public class AnnotationLayer
         this.lockToTokenOffset = lockToTokenOffset;
     }
 
-    public boolean isAllowSTacking()
+    public boolean isAllowStacking()
     {
-        return allowSTacking;
+        return allowStacking;
     }
 
-    public void setAllowSTacking(boolean allowSTacking)
+    public void setAllowStacking(boolean allowStacking)
     {
-        this.allowSTacking = allowSTacking;
+        this.allowStacking = allowStacking;
     }
 
     public boolean isCrossSentence()
@@ -212,7 +215,17 @@ public class AnnotationLayer
 		this.projectName = projectName;
 	}
 
-	@Override
+	public boolean isLinkedListBehavior()
+    {
+        return linkedListBehavior;
+    }
+
+    public void setLinkedListBehavior(boolean aLinkedListBehavior)
+    {
+        linkedListBehavior = aLinkedListBehavior;
+    }
+
+    @Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
@@ -245,6 +258,4 @@ public class AnnotationLayer
 			return false;
 		return true;
 	}
-
-
 }

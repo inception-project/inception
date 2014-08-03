@@ -75,7 +75,6 @@ public class AnnotationLayer
     private String name;
 
     @ManyToOne
-
    // @ForeignKey(ConstraintMode.NO_CONSTRAINT)
     @ForeignKey(name = "none")
     @JoinColumn(name = "annotation_type")
@@ -90,15 +89,17 @@ public class AnnotationLayer
     @JoinColumn(name = "project")
     private Project project;
 
-
     private boolean lockToTokenOffset = true;
 
-    private boolean allowSTacking;
+    // There wase a type in the code which unfortunately made it into databases...
+    @Column(name="allowSTacking")
+    private boolean allowStacking;
 
     private boolean crossSentence;
 
     private boolean multipleTokens;
-
+    
+    private boolean linkedListBehavior;
 
     /**
      *
@@ -356,14 +357,14 @@ public class AnnotationLayer
         this.lockToTokenOffset = lockToTokenOffset;
     }
 
-    public boolean isAllowSTacking()
+    public boolean isAllowStacking()
     {
-        return allowSTacking;
+        return allowStacking;
     }
 
-    public void setAllowSTacking(boolean allowSTacking)
+    public void setAllowStacking(boolean allowStacking)
     {
-        this.allowSTacking = allowSTacking;
+        this.allowStacking = allowStacking;
     }
 
     public boolean isCrossSentence()
@@ -384,5 +385,15 @@ public class AnnotationLayer
     public void setMultipleTokens(boolean multipleTokens)
     {
         this.multipleTokens = multipleTokens;
+    }
+
+    public boolean isLinkedListBehavior()
+    {
+        return linkedListBehavior;
+    }
+
+    public void setLinkedListBehavior(boolean aLinkedListBehavior)
+    {
+        linkedListBehavior = aLinkedListBehavior;
     }
 }

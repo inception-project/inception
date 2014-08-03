@@ -316,8 +316,7 @@ public class CurationBuilder
             if (layer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
                 continue;
             }
-            entryTypes.add(getAdapter(layer, annotationService).getAnnotationType(
-                    mergeJCas.getCas()));
+            entryTypes.add(getAdapter(layer).getAnnotationType(mergeJCas.getCas()));
         }
         return entryTypes;
     }

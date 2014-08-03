@@ -397,7 +397,7 @@ public class AnnotationServiceImpl
         AnnotationLayer base = setLayer("de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference",
                 "coreference", "Coreference", CHAIN_TYPE, aProject);
         base.setCrossSentence(true);
-        base.setAllowSTacking(true);
+        base.setAllowStacking(true);
         base.setMultipleTokens(true);
         base.setLockToTokenOffset(false);
 
@@ -433,7 +433,7 @@ public class AnnotationServiceImpl
 
         AnnotationLayer neLayer = setLayer(NamedEntity.class.getName(), "value", "Named Entity",
                 SPAN_TYPE, aProject);
-        neLayer.setAllowSTacking(true);
+        neLayer.setAllowStacking(true);
         neLayer.setMultipleTokens(true);
         neLayer.setLockToTokenOffset(false);
         createLayer(neLayer, aUser);

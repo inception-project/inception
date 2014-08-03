@@ -78,444 +78,435 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
  *
  */
 public class CurationViewPanel extends WebMarkupContainer {
-	private static final long serialVersionUID = 8736268179612831795L;
-	private final ListView<CurationUserSegmentForAnnotationDocument> sentenceListView;
-	@SpringBean(name = "documentRepository")
-	private RepositoryService repository;
+    private static final long serialVersionUID = 8736268179612831795L;
+    private final ListView<CurationUserSegmentForAnnotationDocument> sentenceListView;
+    @SpringBean(name = "documentRepository")
+    private RepositoryService repository;
 
-	@SpringBean(name = "annotationService")
-	private AnnotationService annotationService;
+    @SpringBean(name = "annotationService")
+    private AnnotationService annotationService;
 
-	/**
-	 * Data models for {@link BratAnnotator}
-	 */
-	public void setModel(
-			IModel<LinkedList<CurationUserSegmentForAnnotationDocument>> aModel) {
-		setDefaultModel(aModel);
-	}
+    /**
+     * Data models for {@link BratAnnotator}
+     */
+    public void setModel(
+            IModel<LinkedList<CurationUserSegmentForAnnotationDocument>> aModel) {
+        setDefaultModel(aModel);
+    }
 
-	public void setModelObject(
-			LinkedList<CurationUserSegmentForAnnotationDocument> aModel) {
-		setDefaultModelObject(aModel);
-	}
+    public void setModelObject(
+            LinkedList<CurationUserSegmentForAnnotationDocument> aModel) {
+        setDefaultModelObject(aModel);
+    }
 
-	@SuppressWarnings("unchecked")
-	public IModel<LinkedList<CurationUserSegmentForAnnotationDocument>> getModel() {
-		return (IModel<LinkedList<CurationUserSegmentForAnnotationDocument>>) getDefaultModel();
-	}
+    @SuppressWarnings("unchecked")
+    public IModel<LinkedList<CurationUserSegmentForAnnotationDocument>> getModel() {
+        return (IModel<LinkedList<CurationUserSegmentForAnnotationDocument>>) getDefaultModel();
+    }
 
-	@SuppressWarnings("unchecked")
-	public LinkedList<CurationUserSegmentForAnnotationDocument> getModelObject() {
-		return (LinkedList<CurationUserSegmentForAnnotationDocument>) getDefaultModelObject();
-	}
+    @SuppressWarnings("unchecked")
+    public LinkedList<CurationUserSegmentForAnnotationDocument> getModelObject() {
+        return (LinkedList<CurationUserSegmentForAnnotationDocument>) getDefaultModelObject();
+    }
 
-	public CurationViewPanel(String id,
-			IModel<LinkedList<CurationUserSegmentForAnnotationDocument>> aModel) {
-		super(id, aModel);
+    public CurationViewPanel(String id,
+            IModel<LinkedList<CurationUserSegmentForAnnotationDocument>> aModel) {
+        super(id, aModel);
 
-		final FeedbackPanel feedbackPanel = new FeedbackPanel("feedbackPanel");
-		feedbackPanel.setOutputMarkupId(true);
-		feedbackPanel.add(new AttributeModifier("class", "info"));
-		feedbackPanel.add(new AttributeModifier("class", "error"));
-		add(feedbackPanel);
+        final FeedbackPanel feedbackPanel = new FeedbackPanel("feedbackPanel");
+        feedbackPanel.setOutputMarkupId(true);
+        feedbackPanel.add(new AttributeModifier("class", "info"));
+        feedbackPanel.add(new AttributeModifier("class", "error"));
+        add(feedbackPanel);
 
-		// update list of brat embeddings
-		sentenceListView = new ListView<CurationUserSegmentForAnnotationDocument>(
-				"sentenceListView", aModel) {
-			private static final long serialVersionUID = -5389636445364196097L;
+        // update list of brat embeddings
+        sentenceListView = new ListView<CurationUserSegmentForAnnotationDocument>(
+                "sentenceListView", aModel) {
+            private static final long serialVersionUID = -5389636445364196097L;
 
-			@Override
-			protected void populateItem(
-					ListItem<CurationUserSegmentForAnnotationDocument> item2) {
-				final CurationUserSegmentForAnnotationDocument curationUserSegment = item2
-						.getModelObject();
-				BratCurationVisualizer curationVisualizer = new BratCurationVisualizer(
-						"sentence",
-						new Model<CurationUserSegmentForAnnotationDocument>(
-								curationUserSegment)) {
-					private static final long serialVersionUID = -1205541428144070566L;
+            @Override
+            protected void populateItem(
+                    ListItem<CurationUserSegmentForAnnotationDocument> item2) {
+                final CurationUserSegmentForAnnotationDocument curationUserSegment = item2
+                        .getModelObject();
+                BratCurationVisualizer curationVisualizer = new BratCurationVisualizer(
+                        "sentence",
+                        new Model<CurationUserSegmentForAnnotationDocument>(
+                                curationUserSegment)) {
+                    private static final long serialVersionUID = -1205541428144070566L;
 
-					/**
-					 * Method is called, if user has clicked on a span or an arc
-					 * in the sentence panel. The span or arc respectively is
-					 * identified and copied to the merge cas.
-					 */
-					@Override
-					protected void onSelectAnnotationForMerge(
-							AjaxRequestTarget aTarget) {
-						// TODO: chain the error from this component up in the
-						// CurationPage
-						// or CorrectionPage
-						if (BratAnnotatorUtility.isDocumentFinished(repository,
-								curationUserSegment.getBratAnnotatorModel())) {
-							// aTarget.add(feedbackPanel);
-							aTarget.appendJavaScript("alert('This document is already closed."
-									+ " Please ask admin to re-open')");
-						} else {
-							try {
-								final IRequestParameters request = getRequest()
-										.getPostParameters();
-								String username = SecurityContextHolder
-										.getContext().getAuthentication()
-										.getName();
+                    /**
+                     * Method is called, if user has clicked on a span or an arc
+                     * in the sentence panel. The span or arc respectively is
+                     * identified and copied to the merge cas.
+                     */
+                    @Override
+                    protected void onSelectAnnotationForMerge(
+                            AjaxRequestTarget aTarget) {
+                        // TODO: chain the error from this component up in the
+                        // CurationPage
+                        // or CorrectionPage
+                        if (BratAnnotatorUtility.isDocumentFinished(repository,
+                                curationUserSegment.getBratAnnotatorModel())) {
+                            // aTarget.add(feedbackPanel);
+                            aTarget.appendJavaScript("alert('This document is already closed."
+                                    + " Please ask admin to re-open')");
+                        } else {
+                            try {
+                                final IRequestParameters request = getRequest()
+                                        .getPostParameters();
+                                String username = SecurityContextHolder
+                                        .getContext().getAuthentication()
+                                        .getName();
 
-								User user = repository.getUser(username);
+                                User user = repository.getUser(username);
 
-								SourceDocument sourceDocument = curationUserSegment
-										.getBratAnnotatorModel().getDocument();
-								JCas annotationJCas = null;
+                                SourceDocument sourceDocument = curationUserSegment
+                                        .getBratAnnotatorModel().getDocument();
+                                JCas annotationJCas = null;
 
-								annotationJCas = (curationUserSegment
-										.getBratAnnotatorModel().getMode()
-										.equals(Mode.AUTOMATION) || curationUserSegment
-										.getBratAnnotatorModel().getMode()
-										.equals(Mode.CORRECTION)) ? repository
-										.getAnnotationDocumentContent(repository
-												.getAnnotationDocument(
-														sourceDocument, user))
-										: repository
-												.getCurationDocumentContent(sourceDocument);
-								StringValue action = request
-										.getParameterValue("action");
-								// check if clicked on a span
-								if (!action.isEmpty()
-										&& action.toString().equals(
-												"selectSpanForMerge")) {
-									mergeSpan(request, curationUserSegment,
-											annotationJCas, repository,
-											annotationService);
-								}
-								// check if clicked on an arc
-								else if (!action.isEmpty()
-										&& action.toString().equals(
-												"selectArcForMerge")) {
-									// add span for merge
-									// get information of the span clicked
-									mergeArc(request, curationUserSegment,
-											annotationJCas, repository,
-											annotationService);
-								}
-								onChange(aTarget);
-							} catch (UIMAException e) {
-								// aTarget.add(feedbackPanel);
-								// error(ExceptionUtils.getRootCauseMessage(e));
-								aTarget.appendJavaScript(ExceptionUtils
-										.getRootCauseMessage(e));
-							} catch (ClassNotFoundException e) {
-								// aTarget.add(feedbackPanel);
-								// error(e.getMessage());
-								aTarget.appendJavaScript(e.getMessage());
-							} catch (DataRetrievalFailureException e) {
-								aTarget.appendJavaScript(e.getCause()
-										.getMessage());
-							} catch (IOException e) {
-								// aTarget.add(feedbackPanel);
-								// error(e.getMessage());
-								aTarget.appendJavaScript(e.getMessage());
-							} catch (BratAnnotationException e) {
-								// aTarget.add(feedbackPanel);
-								// error(e.getMessage());
-								aTarget.appendJavaScript(e.getMessage());
-							}
+                                annotationJCas = (curationUserSegment
+                                        .getBratAnnotatorModel().getMode()
+                                        .equals(Mode.AUTOMATION) || curationUserSegment
+                                        .getBratAnnotatorModel().getMode()
+                                        .equals(Mode.CORRECTION)) ? repository
+                                        .getAnnotationDocumentContent(repository
+                                                .getAnnotationDocument(
+                                                        sourceDocument, user))
+                                        : repository
+                                                .getCurationDocumentContent(sourceDocument);
+                                StringValue action = request
+                                        .getParameterValue("action");
+                                // check if clicked on a span
+                                if (!action.isEmpty()
+                                        && action.toString().equals(
+                                                "selectSpanForMerge")) {
+                                    mergeSpan(request, curationUserSegment,
+                                            annotationJCas, repository,
+                                            annotationService);
+                                }
+                                // check if clicked on an arc
+                                else if (!action.isEmpty()
+                                        && action.toString().equals(
+                                                "selectArcForMerge")) {
+                                    // add span for merge
+                                    // get information of the span clicked
+                                    mergeArc(request, curationUserSegment,
+                                            annotationJCas, repository,
+                                            annotationService);
+                                }
+                                onChange(aTarget);
+                            } catch (UIMAException e) {
+                                // aTarget.add(feedbackPanel);
+                                // error(ExceptionUtils.getRootCauseMessage(e));
+                                aTarget.appendJavaScript(ExceptionUtils
+                                        .getRootCauseMessage(e));
+                            } catch (ClassNotFoundException e) {
+                                // aTarget.add(feedbackPanel);
+                                // error(e.getMessage());
+                                aTarget.appendJavaScript(e.getMessage());
+                            } catch (DataRetrievalFailureException e) {
+                                aTarget.appendJavaScript(e.getCause()
+                                        .getMessage());
+                            } catch (IOException e) {
+                                // aTarget.add(feedbackPanel);
+                                // error(e.getMessage());
+                                aTarget.appendJavaScript(e.getMessage());
+                            } catch (BratAnnotationException e) {
+                                // aTarget.add(feedbackPanel);
+                                // error(e.getMessage());
+                                aTarget.appendJavaScript(e.getMessage());
+                            }
 
-						}
-						// aTarget.add(feedbackPanel);
-					}
-				};
-				curationVisualizer.setOutputMarkupId(true);
-				item2.add(curationVisualizer);
-			}
-		};
-		sentenceListView.setOutputMarkupId(true);
-		add(sentenceListView);
-	}
+                        }
+                        // aTarget.add(feedbackPanel);
+                    }
+                };
+                curationVisualizer.setOutputMarkupId(true);
+                item2.add(curationVisualizer);
+            }
+        };
+        sentenceListView.setOutputMarkupId(true);
+        add(sentenceListView);
+    }
 
-	protected void onChange(AjaxRequestTarget aTarget) {
-		// Overriden in curationPanel
-	}
+    protected void onChange(AjaxRequestTarget aTarget) {
+        // Overriden in curationPanel
+    }
 
-	protected void isCorrection(AjaxRequestTarget aTarget) {
-		// Overriden in curationPanel
-	}
+    protected void isCorrection(AjaxRequestTarget aTarget) {
+        // Overriden in curationPanel
+    }
 
-	private void mergeSpan(IRequestParameters aRequest,
-			CurationUserSegmentForAnnotationDocument aCurationUserSegment,
-			JCas aJcas, RepositoryService aRepository,
-			AnnotationService aAnnotationService)
-			throws BratAnnotationException, UIMAException,
-			ClassNotFoundException, IOException {
-		Integer address = aRequest.getParameterValue("id").toInteger();
-		String spanType = removePrefix(aRequest.getParameterValue("type")
-				.toString());
+    private void mergeSpan(IRequestParameters aRequest,
+            CurationUserSegmentForAnnotationDocument aCurationUserSegment,
+            JCas aJcas, RepositoryService aRepository,
+            AnnotationService aAnnotationService)
+            throws BratAnnotationException, UIMAException,
+            ClassNotFoundException, IOException {
+        Integer address = aRequest.getParameterValue("id").toInteger();
+        String spanType = removePrefix(aRequest.getParameterValue("type")
+                .toString());
 
-		String username = aCurationUserSegment.getUsername();
-		AnnotationSelection annotationSelection = aCurationUserSegment
-				.getAnnotationSelectionByUsernameAndAddress().get(username)
-				.get(address);
+        String username = aCurationUserSegment.getUsername();
+        AnnotationSelection annotationSelection = aCurationUserSegment
+                .getAnnotationSelectionByUsernameAndAddress().get(username)
+                .get(address);
 
-		if (annotationSelection == null) {
-			return;
-		}
+        if (annotationSelection == null) {
+            return;
+        }
 
-		SourceDocument sourceDocument = aCurationUserSegment
-				.getBratAnnotatorModel().getDocument();
+        SourceDocument sourceDocument = aCurationUserSegment
+                .getBratAnnotatorModel().getDocument();
 
-		AnnotationDocument clickedAnnotationDocument = null;
-		List<AnnotationDocument> annotationDocuments = aRepository
-				.listAnnotationDocuments(sourceDocument);
-		for (AnnotationDocument annotationDocument : annotationDocuments) {
-			if (annotationDocument.getUser().equals(username)) {
-				clickedAnnotationDocument = annotationDocument;
-				break;
-			}
-		}
+        AnnotationDocument clickedAnnotationDocument = null;
+        List<AnnotationDocument> annotationDocuments = aRepository
+                .listAnnotationDocuments(sourceDocument);
+        for (AnnotationDocument annotationDocument : annotationDocuments) {
+            if (annotationDocument.getUser().equals(username)) {
+                clickedAnnotationDocument = annotationDocument;
+                break;
+            }
+        }
 
-		createSpan(spanType, aCurationUserSegment.getBratAnnotatorModel(),
-				aJcas, clickedAnnotationDocument, address, aRepository,
-				aAnnotationService);
-	}
+        createSpan(spanType, aCurationUserSegment.getBratAnnotatorModel(),
+                aJcas, clickedAnnotationDocument, address, aRepository,
+                aAnnotationService);
+    }
 
-	private void createSpan(String spanType,
-			BratAnnotatorModel aBratAnnotatorModel, JCas aMergeJCas,
-			AnnotationDocument aAnnotationDocument, int aAddress,
-			RepositoryService aRepository, AnnotationService aAnnotationService)
-			throws IOException, UIMAException, ClassNotFoundException,
-			BratAnnotationException {
-		JCas clickedJCas = getJCas(aBratAnnotatorModel, aAnnotationDocument);
+    private void createSpan(String spanType,
+            BratAnnotatorModel aBratAnnotatorModel, JCas aMergeJCas,
+            AnnotationDocument aAnnotationDocument, int aAddress,
+            RepositoryService aRepository, AnnotationService aAnnotationService)
+            throws IOException, UIMAException, ClassNotFoundException,
+            BratAnnotationException {
+        JCas clickedJCas = getJCas(aBratAnnotatorModel, aAnnotationDocument);
 
-		AnnotationFS fsClicked = selectByAddr(clickedJCas, aAddress);
+        AnnotationFS fsClicked = selectByAddr(clickedJCas, aAddress);
 
-		long layerId = Integer.parseInt(spanType.substring(0,
-				spanType.indexOf("_")));
+        long layerId = Integer.parseInt(spanType.substring(0,
+                spanType.indexOf("_")));
 
-		AnnotationLayer layer = annotationService.getLayer(layerId);
-		SpanAdapter adapter = (SpanAdapter) getAdapter(layer, annotationService);
-		adapter.setLockToTokenOffsets(layer.isLockToTokenOffset());
-		adapter.setAllowStacking(layer.isAllowSTacking());
-		adapter.setAllowMultipleToken(layer.isMultipleTokens());
-		adapter.setCrossMultipleSentence(layer.isCrossSentence());
+        AnnotationLayer layer = annotationService.getLayer(layerId);
+        SpanAdapter adapter = (SpanAdapter) getAdapter(layer);
 
-		// Store annotation lables of features in a map
-		Map<AnnotationFeature, String> featureValues = new HashMap<AnnotationFeature, String>();
-		for (AnnotationFeature feature : annotationService
-				.listAnnotationFeature(layer)) {
-			if (feature.getName().equals(
-					WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
-				continue;
-			}
-			if (feature.isEnabled() && feature.isVisible()) {
-				Feature annoFeature = fsClicked.getType().getFeatureByBaseName(
-						feature.getName());
-				featureValues.put(feature,
-						fsClicked.getFeatureValueAsString(annoFeature));
-			}
-		}
-		for (AnnotationFeature feature : annotationService
-				.listAnnotationFeature(layer)) {
-			adapter.add(aMergeJCas, fsClicked.getBegin(), fsClicked.getEnd(),
-					feature, featureValues.get(feature));
-		}
-		repository.updateJCas(aBratAnnotatorModel.getMode(),
-				aBratAnnotatorModel.getDocument(),
-				aBratAnnotatorModel.getUser(), aMergeJCas);
+        // Store annotation lables of features in a map
+        Map<AnnotationFeature, String> featureValues = new HashMap<AnnotationFeature, String>();
+        for (AnnotationFeature feature : annotationService.listAnnotationFeature(layer)) {
+            if (feature.getName().equals(
+                    WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
+                continue;
+            }
+            if (feature.isEnabled() && feature.isVisible()) {
+                Feature annoFeature = fsClicked.getType().getFeatureByBaseName(
+                        feature.getName());
+                featureValues.put(feature,
+                        fsClicked.getFeatureValueAsString(annoFeature));
+            }
+        }
+        for (AnnotationFeature feature : annotationService.listAnnotationFeature(layer)) {
+            adapter.add(aMergeJCas, fsClicked.getBegin(), fsClicked.getEnd(),
+                    feature, featureValues.get(feature));
+        }
+        repository.updateJCas(aBratAnnotatorModel.getMode(),
+                aBratAnnotatorModel.getDocument(),
+                aBratAnnotatorModel.getUser(), aMergeJCas);
 
-		// update timestamp
-		int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(clickedJCas,
-				fsClicked.getBegin());
-		aBratAnnotatorModel.getDocument().setSentenceAccessed(sentenceNumber);
-		repository.updateTimeStamp(aBratAnnotatorModel.getDocument(),
-				aBratAnnotatorModel.getUser(), aBratAnnotatorModel.getMode());
+        // update timestamp
+        int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(clickedJCas,
+                fsClicked.getBegin());
+        aBratAnnotatorModel.getDocument().setSentenceAccessed(sentenceNumber);
+        repository.updateTimeStamp(aBratAnnotatorModel.getDocument(),
+                aBratAnnotatorModel.getUser(), aBratAnnotatorModel.getMode());
 
-		if (aBratAnnotatorModel.isScrollPage()) {
-			int address = BratAjaxCasUtil.selectSentenceAt(clickedJCas,
-					aBratAnnotatorModel.getSentenceBeginOffset(),
-					aBratAnnotatorModel.getSentenceEndOffset()).getAddress();
-			aBratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil
-					.getSentenceBeginAddress(clickedJCas, address,
-							fsClicked.getBegin(),
-							aBratAnnotatorModel.getProject(),
-							aBratAnnotatorModel.getDocument(),
-							aBratAnnotatorModel.getWindowSize()));
+        if (aBratAnnotatorModel.isScrollPage()) {
+            int address = BratAjaxCasUtil.selectSentenceAt(clickedJCas,
+                    aBratAnnotatorModel.getSentenceBeginOffset(),
+                    aBratAnnotatorModel.getSentenceEndOffset()).getAddress();
+            aBratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil
+                    .getSentenceBeginAddress(clickedJCas, address,
+                            fsClicked.getBegin(),
+                            aBratAnnotatorModel.getProject(),
+                            aBratAnnotatorModel.getDocument(),
+                            aBratAnnotatorModel.getWindowSize()));
 
-			Sentence sentence = selectByAddr(clickedJCas, Sentence.class,
-					aBratAnnotatorModel.getSentenceAddress());
-			aBratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
-			aBratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
-		}
-	}
+            Sentence sentence = selectByAddr(clickedJCas, Sentence.class,
+                    aBratAnnotatorModel.getSentenceAddress());
+            aBratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
+            aBratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
+        }
+    }
 
-	private void mergeArc(IRequestParameters aRequest,
-			CurationUserSegmentForAnnotationDocument aCurationUserSegment,
-			JCas aJcas, RepositoryService repository,
-			AnnotationService annotationService)
-			throws NoOriginOrTargetAnnotationSelectedException,
-			ArcCrossedMultipleSentenceException, BratAnnotationException,
-			IOException {
-		Integer addressOriginClicked = aRequest.getParameterValue(
-				"originSpanId").toInteger();
-		Integer addressTargetClicked = aRequest.getParameterValue(
-				"targetSpanId").toInteger();
-		String arcType = removePrefix(aRequest.getParameterValue("type")
-				.toString());
-		Integer fsArcaddress = aRequest.getParameterValue(
-				"arcId").toInteger();
+    private void mergeArc(IRequestParameters aRequest,
+            CurationUserSegmentForAnnotationDocument aCurationUserSegment,
+            JCas aJcas, RepositoryService repository,
+            AnnotationService annotationService)
+            throws NoOriginOrTargetAnnotationSelectedException,
+            ArcCrossedMultipleSentenceException, BratAnnotationException,
+            IOException {
+        Integer addressOriginClicked = aRequest.getParameterValue(
+                "originSpanId").toInteger();
+        Integer addressTargetClicked = aRequest.getParameterValue(
+                "targetSpanId").toInteger();
+        String arcType = removePrefix(aRequest.getParameterValue("type")
+                .toString());
+        Integer fsArcaddress = aRequest.getParameterValue(
+                "arcId").toInteger();
 
-		// add span for merge
-		// get information of the span clicked
-		String username = aCurationUserSegment.getUsername();
-		SourceDocument sourceDocument = aCurationUserSegment
-				.getBratAnnotatorModel().getDocument();
+        // add span for merge
+        // get information of the span clicked
+        String username = aCurationUserSegment.getUsername();
+        SourceDocument sourceDocument = aCurationUserSegment
+                .getBratAnnotatorModel().getDocument();
 
-		AnnotationSelection annotationSelectionOrigin = aCurationUserSegment
-				.getAnnotationSelectionByUsernameAndAddress().get(username)
-				.get(addressOriginClicked);
-		AnnotationSelection annotationSelectionTarget = aCurationUserSegment
-				.getAnnotationSelectionByUsernameAndAddress().get(username)
-				.get(addressTargetClicked);
+        AnnotationSelection annotationSelectionOrigin = aCurationUserSegment
+                .getAnnotationSelectionByUsernameAndAddress().get(username)
+                .get(addressOriginClicked);
+        AnnotationSelection annotationSelectionTarget = aCurationUserSegment
+                .getAnnotationSelectionByUsernameAndAddress().get(username)
+                .get(addressTargetClicked);
 
-		Integer addressOrigin = annotationSelectionOrigin
-				.getAddressByUsername().get(username);
-		Integer addressTarget = annotationSelectionTarget
-				.getAddressByUsername().get(username);
+        Integer addressOrigin = annotationSelectionOrigin
+                .getAddressByUsername().get(username);
+        Integer addressTarget = annotationSelectionTarget
+                .getAddressByUsername().get(username);
 
-		if (annotationSelectionOrigin == null
-				|| annotationSelectionTarget == null) {
-			return;
-		}
+        if (annotationSelectionOrigin == null
+                || annotationSelectionTarget == null) {
+            return;
+        }
 
-		AnnotationDocument clickedAnnotationDocument = null;
-		List<AnnotationDocument> annotationDocuments = repository
-				.listAnnotationDocuments(sourceDocument);
-		for (AnnotationDocument annotationDocument : annotationDocuments) {
-			if (annotationDocument.getUser().equals(username)) {
-				clickedAnnotationDocument = annotationDocument;
-				break;
-			}
-		}
+        AnnotationDocument clickedAnnotationDocument = null;
+        List<AnnotationDocument> annotationDocuments = repository
+                .listAnnotationDocuments(sourceDocument);
+        for (AnnotationDocument annotationDocument : annotationDocuments) {
+            if (annotationDocument.getUser().equals(username)) {
+                clickedAnnotationDocument = annotationDocument;
+                break;
+            }
+        }
 
-		JCas clickedJCas = null;
-		try {
-			clickedJCas = getJCas(aCurationUserSegment.getBratAnnotatorModel(),
-					clickedAnnotationDocument);
-		} catch (IOException e1) {
-			throw new IOException();
-		}
-		AnnotationFS originFsClicked = selectByAddr(clickedJCas, addressOrigin);
-		AnnotationFS targetFsClicked = selectByAddr(clickedJCas, addressTarget);
+        JCas clickedJCas = null;
+        try {
+            clickedJCas = getJCas(aCurationUserSegment.getBratAnnotatorModel(),
+                    clickedAnnotationDocument);
+        } catch (IOException e1) {
+            throw new IOException();
+        }
+        AnnotationFS originFsClicked = selectByAddr(clickedJCas, addressOrigin);
+        AnnotationFS targetFsClicked = selectByAddr(clickedJCas, addressTarget);
 
-		AnnotationFS originFs = BratAjaxCasUtil.selectSingleFsAt(aJcas,
-				originFsClicked.getType(), originFsClicked.getBegin(),
-				originFsClicked.getEnd());
+        AnnotationFS originFs = BratAjaxCasUtil.selectSingleFsAt(aJcas,
+                originFsClicked.getType(), originFsClicked.getBegin(),
+                originFsClicked.getEnd());
 
-		AnnotationFS targetFs = BratAjaxCasUtil.selectSingleFsAt(aJcas,
-				targetFsClicked.getType(), targetFsClicked.getBegin(),
-				targetFsClicked.getEnd());
-		try {
-			if (originFs == null | targetFs == null) {
-				throw new NoOriginOrTargetAnnotationSelectedException(
-						"Either origin or target annotations not selected");
-			}
+        AnnotationFS targetFs = BratAjaxCasUtil.selectSingleFsAt(aJcas,
+                targetFsClicked.getType(), targetFsClicked.getBegin(),
+                targetFsClicked.getEnd());
+        try {
+            if (originFs == null | targetFs == null) {
+                throw new NoOriginOrTargetAnnotationSelectedException(
+                        "Either origin or target annotations not selected");
+            }
 
-			long layerId = Integer.parseInt(arcType.substring(0,
-					arcType.indexOf("_")));
+            long layerId = Integer.parseInt(arcType.substring(0,
+                    arcType.indexOf("_")));
 
-			AnnotationLayer layer = annotationService.getLayer(layerId);
-			AnnotationFS fsClicked = selectByAddr(clickedJCas, fsArcaddress);
-			ArcAdapter adapter = (ArcAdapter) getAdapter(layer,
-					annotationService);
-			adapter.setAllowStacking(layer.isAllowSTacking());
-			adapter.setCrossMultipleSentence(layer.isCrossSentence());
+            AnnotationLayer layer = annotationService.getLayer(layerId);
+            AnnotationFS fsClicked = selectByAddr(clickedJCas, fsArcaddress);
+            ArcAdapter adapter = (ArcAdapter) getAdapter(layer);
 
-			// Store annotation lables of features in a map
-			Map<AnnotationFeature, String> featureValues = new HashMap<AnnotationFeature, String>();
-			for (AnnotationFeature feature : annotationService
-					.listAnnotationFeature(layer)) {
-				if (feature.getName().equals(
-						WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
-					continue;
-				}
-				if (feature.isEnabled() && feature.isVisible()) {
-					Feature annoFeature = fsClicked.getType().getFeatureByBaseName(
-							feature.getName());
-					featureValues.put(feature,
-							fsClicked.getFeatureValueAsString(annoFeature));
-				}
-			}
+            // Store annotation lables of features in a map
+            Map<AnnotationFeature, String> featureValues = new HashMap<AnnotationFeature, String>();
+            for (AnnotationFeature feature : annotationService
+                    .listAnnotationFeature(layer)) {
+                if (feature.getName().equals(
+                        WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
+                    continue;
+                }
+                if (feature.isEnabled() && feature.isVisible()) {
+                    Feature annoFeature = fsClicked.getType().getFeatureByBaseName(
+                            feature.getName());
+                    featureValues.put(feature,
+                            fsClicked.getFeatureValueAsString(annoFeature));
+                }
+            }
 
-			for (AnnotationFeature feature : annotationService
-					.listAnnotationFeature(layer)) {
-				adapter.add(featureValues.get(feature), originFs, targetFs, aJcas,
-						aCurationUserSegment.getBratAnnotatorModel(), feature);
-			}
+            for (AnnotationFeature feature : annotationService
+                    .listAnnotationFeature(layer)) {
+                adapter.add(featureValues.get(feature), originFs, targetFs, aJcas,
+                        aCurationUserSegment.getBratAnnotatorModel(), feature);
+            }
 
-			repository.updateJCas(aCurationUserSegment.getBratAnnotatorModel()
-					.getMode(), aCurationUserSegment.getBratAnnotatorModel()
-					.getDocument(), aCurationUserSegment
-					.getBratAnnotatorModel().getUser(), aJcas);
+            repository.updateJCas(aCurationUserSegment.getBratAnnotatorModel()
+                    .getMode(), aCurationUserSegment.getBratAnnotatorModel()
+                    .getDocument(), aCurationUserSegment
+                    .getBratAnnotatorModel().getUser(), aJcas);
 
-			// update timestamp
-			int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(clickedJCas,
-					originFs.getBegin());
-			aCurationUserSegment.getBratAnnotatorModel().getDocument()
-					.setSentenceAccessed(sentenceNumber);
-			repository.updateTimeStamp(aCurationUserSegment
-					.getBratAnnotatorModel().getDocument(),
-					aCurationUserSegment.getBratAnnotatorModel().getUser(),
-					aCurationUserSegment.getBratAnnotatorModel().getMode());
-		} catch (IOException e) {
-			throw new IOException();
-		}
+            // update timestamp
+            int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(clickedJCas,
+                    originFs.getBegin());
+            aCurationUserSegment.getBratAnnotatorModel().getDocument()
+                    .setSentenceAccessed(sentenceNumber);
+            repository.updateTimeStamp(aCurationUserSegment
+                    .getBratAnnotatorModel().getDocument(),
+                    aCurationUserSegment.getBratAnnotatorModel().getUser(),
+                    aCurationUserSegment.getBratAnnotatorModel().getMode());
+        } catch (IOException e) {
+            throw new IOException();
+        }
 
-		if (aCurationUserSegment.getBratAnnotatorModel().isScrollPage()) {
-			int address = BratAjaxCasUtil.selectSentenceAt(
-					aJcas,
-					aCurationUserSegment.getBratAnnotatorModel()
-							.getSentenceBeginOffset(),
-					aCurationUserSegment.getBratAnnotatorModel()
-							.getSentenceEndOffset()).getAddress();
-			aCurationUserSegment.getBratAnnotatorModel().setSentenceAddress(
-					BratAjaxCasUtil.getSentenceBeginAddress(aJcas, address,
-							originFs.getBegin(), aCurationUserSegment
-									.getBratAnnotatorModel().getProject(),
-							aCurationUserSegment.getBratAnnotatorModel()
-									.getDocument(), aCurationUserSegment
-									.getBratAnnotatorModel().getWindowSize()));
-			Sentence sentence = selectByAddr(aJcas, Sentence.class,
-					aCurationUserSegment.getBratAnnotatorModel()
-							.getSentenceAddress());
-			aCurationUserSegment.getBratAnnotatorModel()
-					.setSentenceBeginOffset(sentence.getBegin());
-			aCurationUserSegment.getBratAnnotatorModel().setSentenceEndOffset(
-					sentence.getEnd());
-		}
-	}
+        if (aCurationUserSegment.getBratAnnotatorModel().isScrollPage()) {
+            int address = BratAjaxCasUtil.selectSentenceAt(
+                    aJcas,
+                    aCurationUserSegment.getBratAnnotatorModel()
+                            .getSentenceBeginOffset(),
+                    aCurationUserSegment.getBratAnnotatorModel()
+                            .getSentenceEndOffset()).getAddress();
+            aCurationUserSegment.getBratAnnotatorModel().setSentenceAddress(
+                    BratAjaxCasUtil.getSentenceBeginAddress(aJcas, address,
+                            originFs.getBegin(), aCurationUserSegment
+                                    .getBratAnnotatorModel().getProject(),
+                            aCurationUserSegment.getBratAnnotatorModel()
+                                    .getDocument(), aCurationUserSegment
+                                    .getBratAnnotatorModel().getWindowSize()));
+            Sentence sentence = selectByAddr(aJcas, Sentence.class,
+                    aCurationUserSegment.getBratAnnotatorModel()
+                            .getSentenceAddress());
+            aCurationUserSegment.getBratAnnotatorModel()
+                    .setSentenceBeginOffset(sentence.getBegin());
+            aCurationUserSegment.getBratAnnotatorModel().setSentenceEndOffset(
+                    sentence.getEnd());
+        }
+    }
 
-	private JCas getJCas(BratAnnotatorModel aModel, AnnotationDocument aDocument)
-			throws IOException {
-		try {
-			if (aModel.getMode().equals(Mode.AUTOMATION)
-					|| aModel.getMode().equals(Mode.CORRECTION)) {
-				return repository.getCorrectionDocumentContent(aModel
-						.getDocument());
-			} else {
-				return repository.getAnnotationDocumentContent(aDocument);
-			}
-		} catch (UIMAException e) {
-			throw new IOException(e);
-		} catch (ClassNotFoundException e) {
-			throw new IOException(e);
-		}
-	}
+    private JCas getJCas(BratAnnotatorModel aModel, AnnotationDocument aDocument)
+            throws IOException {
+        try {
+            if (aModel.getMode().equals(Mode.AUTOMATION)
+                    || aModel.getMode().equals(Mode.CORRECTION)) {
+                return repository.getCorrectionDocumentContent(aModel
+                        .getDocument());
+            } else {
+                return repository.getAnnotationDocumentContent(aDocument);
+            }
+        } catch (UIMAException e) {
+            throw new IOException(e);
+        } catch (ClassNotFoundException e) {
+            throw new IOException(e);
+        }
+    }
 
-	/**
-	 * Removes a prefix that is added to brat visualization for different color
-	 * coded purpose.
-	 */
-	private static String removePrefix(String aType) {
-		return aType.replace("_(" + AnnotationState.AGREE.name() + ")", "")
-				.replace("_(" + AnnotationState.USE.name() + ")", "")
-				.replace("_(" + AnnotationState.DISAGREE.name() + ")", "")
-				.replace("_(" + AnnotationState.DO_NOT_USE.name() + ")", "")
-				.replace("_(" + AnnotationState.NOT_SUPPORTED.name() + ")", "");
-	}
+    /**
+     * Removes a prefix that is added to brat visualization for different color
+     * coded purpose.
+     */
+    private static String removePrefix(String aType) {
+        return aType.replace("_(" + AnnotationState.AGREE.name() + ")", "")
+                .replace("_(" + AnnotationState.USE.name() + ")", "")
+                .replace("_(" + AnnotationState.DISAGREE.name() + ")", "")
+                .replace("_(" + AnnotationState.DO_NOT_USE.name() + ")", "")
+                .replace("_(" + AnnotationState.NOT_SUPPORTED.name() + ")", "");
+    }
 }

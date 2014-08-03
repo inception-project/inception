@@ -1197,7 +1197,7 @@ var AnnotatorUI = (function($, window, undefined) {
               append($collapsible);
             var $collapser = $('<div class="collapser open"/>');
             var $div = $('<div class="item"/>');
-            if (type.children.length) {
+            if (type.children && type.children.length) {
               $div.append($collapser)
             }
             $div.append($content);
@@ -1395,7 +1395,7 @@ var AnnotatorUI = (function($, window, undefined) {
             // spacer, no-op
           } else {
             normDbsByType[type.type] = type.normalizations || [];
-            if (type.children.length) {
+            if (type.children && type.children.length) {
               rememberNormDbsForType(type.children);
             }
           }

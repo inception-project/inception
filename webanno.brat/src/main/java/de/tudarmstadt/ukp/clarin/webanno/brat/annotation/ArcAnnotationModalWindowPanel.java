@@ -258,20 +258,43 @@ public class ArcAnnotationModalWindowPanel
                         }
                     }
 
-                    // check if at least one feature have an annotation
-                    boolean existsAnnotation = false;
-                    for (IModel<String> model : tagModels) {
-                        if (model.getObject() != null) {
-                            existsAnnotation = true;
-                            break;
-                        }
-                    }
-                    if (!existsAnnotation) {
-                        error("No Tag is selected!");
-                        return;
-                    }
                     try {
+                        // Verify if input is valid
+                        for (IModel<String> model : tagModels) {
+                            AnnotationFeature feature = featureModels.get(tagModels.indexOf(model))
+                                    .getObject().feature;
+                            // Check if tag is necessary, set, and correct
+                            if (feature.getTagset() != null
+                                    && !feature.getTagset().isCreateTag()
+                                    && !annotationService.existsTag(model.getObject(),
+                                            feature.getTagset())) {
+                                error(model.getObject()
+                                        + " is not in the tag list. Please choose form the existing tags");
+                                return;
+                            }
+                        }                        
+                        
+                        // If there is no annotation yet, create one. During creation, the adapter
+                        // may notice that it would create a duplicate and return the address of
+                        // an existing annotation instead of a new one.
                         JCas jCas = getCas(bratAnnotatorModel);
+                        AnnotationFS originFs = selectByAddr(jCas, originSpanId);
+                        AnnotationFS targetFs = selectByAddr(jCas, targetSpanId);
+
+                        TypeAdapter adapter = getAdapter(selectedLayer);
+                        
+                        if (selectedArcId == -1) {
+                            if (adapter instanceof ArcAdapter) {
+                                selectedArcId = ((ArcAdapter) adapter).add(null, originFs,
+                                        targetFs, jCas, bratAnnotatorModel, null);
+                            }
+                            else {
+                                selectedArcId = ((ChainAdapter) adapter).addArc(jCas, originFs,
+                                        targetFs, null, null);
+                            }
+                        }
+                        
+                        // Set feature values
                         String tag = "";
                         for (IModel<String> model : tagModels) {
                             if (model.getObject() == null) {
@@ -294,39 +317,14 @@ public class ArcAnnotationModalWindowPanel
                                 annotationService.createTag(selectedTag,
                                         bratAnnotatorModel.getUser());
                             }
-                            else if (!annotationService.existsTag(model.getObject(),
-                                    feature.getTagset())) {
-                                error(model.getObject()
-                                        + " is not in the tag list. Please choose form the existing tags");
-                                return;
-                            }
                             else {
                                 selectedTag = annotationService.getTag(model.getObject(),
                                         feature.getTagset());
                             }
 
-                            AnnotationFS originFs = selectByAddr(jCas, originSpanId);
-                            AnnotationFS targetFs = selectByAddr(jCas, targetSpanId);
-
-                            TypeAdapter adapter = getAdapter(selectedLayer, annotationService);
-                            if (selectedArcId != -1) {
-                                adapter.updateFeature(jCas, feature, selectedArcId,
-                                        selectedTag.getName());
-                            }
-                            else if (adapter instanceof ArcAdapter) {
-                                ((ArcAdapter) adapter).setCrossMultipleSentence(selectedLayer
-                                        .isCrossSentence());
-                                ((ArcAdapter) adapter).setAllowStacking(selectedLayer
-                                        .isAllowSTacking());
-
-                                selectedArcId = ((ArcAdapter) adapter).add(selectedTag.getName(), originFs,
-                                        targetFs, jCas, bratAnnotatorModel, feature);
-                            }
-                            else {
-                                ((ChainAdapter) adapter).add(selectedTag.getName(), jCas,
-                                        originFs.getBegin(), targetFs.getEnd(), originFs, targetFs,
-                                        feature);
-                            }
+                            adapter.updateFeature(jCas, feature, selectedArcId,
+                                    selectedTag.getName());
+                            
                             if (tag.equals("")) {
                                 tag = selectedTag.getName();
                             }
@@ -336,6 +334,7 @@ public class ArcAnnotationModalWindowPanel
                             selectedFeatureValues.put(feature, model.getObject());
                             beginOffset = originFs.getBegin();
                         }
+                        
                         // update timestamp now
                         int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas, beginOffset);
                         bratAnnotatorModel.setRememberedArcLayer(selectedLayer);
@@ -344,6 +343,7 @@ public class ArcAnnotationModalWindowPanel
                         repository.updateTimeStamp(bratAnnotatorModel.getDocument(),
                                 bratAnnotatorModel.getUser(), bratAnnotatorModel.getMode());
 
+                        // persist changes
                         repository.updateJCas(bratAnnotatorModel.getMode(),
                                 bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
                                 jCas);
@@ -382,7 +382,7 @@ public class ArcAnnotationModalWindowPanel
                     JCas jCas;
                     try {
                         jCas = getCas(bratAnnotatorModel);
-                        TypeAdapter adapter = getAdapter(selectedLayer, annotationService);
+                        TypeAdapter adapter = getAdapter(selectedLayer);
                         // BEGIN HACK - Issue 933
                         if (adapter instanceof ChainAdapter) {
                             ((ChainAdapter) adapter).setArc(true);
@@ -462,7 +462,7 @@ public class ArcAnnotationModalWindowPanel
                         AnnotationFS originFs = selectByAddr(jCas, originSpanId);
                         AnnotationFS targetFs = selectByAddr(jCas, targetSpanId);
 
-                        TypeAdapter adapter = getAdapter(selectedLayer, annotationService);
+                        TypeAdapter adapter = getAdapter(selectedLayer);
                         if (adapter instanceof ArcAdapter) {
                             for (IModel<String> model : tagModels) {
                                 AnnotationFeature feature = featureModels.get(
@@ -476,6 +476,7 @@ public class ArcAnnotationModalWindowPanel
                             return;
                         }
 
+                        // persist changes
                         repository.updateJCas(bratAnnotatorModel.getMode(),
                                 bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
                                 jCas);
@@ -641,8 +642,12 @@ public class ArcAnnotationModalWindowPanel
         String type = annoFs.getType().getName();
 
         if (type.endsWith(ChainAdapter.CHAIN)) {
-            type = type.substring(0, type.length() - 5);
+            type = type.substring(0, type.length() - ChainAdapter.CHAIN.length());
         }
+        else if (type.endsWith(ChainAdapter.LINK)) {
+            type = type.substring(0, type.length() - ChainAdapter.LINK.length());
+        }
+
         
         this.selectedLayer = annotationService.getLayer(type, bratAnnotatorModel.getProject());
         layersModel = new Model<AnnotationLayer>(selectedLayer);

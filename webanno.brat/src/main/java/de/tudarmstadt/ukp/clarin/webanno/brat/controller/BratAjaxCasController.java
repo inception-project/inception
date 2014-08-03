@@ -277,7 +277,7 @@ public class BratAjaxCasController
                 }
             }
             features.removeAll(invisibleFeatures);
-            TypeAdapter adapter = getAdapter(layer, annotationService);
+            TypeAdapter adapter = getAdapter(layer);
             adapter.render(aJCas, features, aResponse, aBModel, coloringStrategy);
             i++;
         }

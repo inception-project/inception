@@ -314,7 +314,7 @@ public class CuratorUtil
                 }
             }
             features.removeAll(invisibleFeatures);
-            TypeAdapter adapter = getAdapter(layer, aAnnotationService);
+            TypeAdapter adapter = getAdapter(layer);
             adapter.render(aJcas, features, response, aBratAnnotatorModel,
                     aCurationColoringStrategy);
         }
