@@ -272,6 +272,11 @@ public class SpanAnnotationModalWindowPage
                         tags.addAll(annotationService.listTags(item.getModelObject().feature
                                 .getTagset()));
                     }
+                    if(tags.size() == 0){
+                    	Tag tag = new Tag();
+                    	tag.setName(selectedText);
+                    	tags.add(tag);
+                    }
                     item.add(new ComboBox<Tag>("tag", tagModels.get(item.getIndex()), tags,
                             new ComboBoxRenderer<Tag>("name", "name")).add(new Behavior()
                     {
@@ -626,7 +631,7 @@ public class SpanAnnotationModalWindowPage
     }
 
     public SpanAnnotationModalWindowPage(ModalWindow modalWindow,
-            BratAnnotatorModel aBratAnnotatorModel, int selectedSpanId, String aType)
+            BratAnnotatorModel aBratAnnotatorModel, int selectedSpanId)
     {
         this.selectedSpanId = selectedSpanId;
         this.bratAnnotatorModel = aBratAnnotatorModel;

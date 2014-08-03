@@ -84,7 +84,7 @@ public class BratAnnotator
     private static final String PARAM_ARC_ID = "arcId";
     private static final String PARAM_ID = "id";
     private static final String PARAM_OFFSETS = "offsets";
-    private static final String PARAM_SPAN_TYPE = "type";
+    private static final String PARAM_SPAN_TEXT = "spanText";
     private static final String PARAM_TARGET_SPAN_ID = "targetSpanId";
     private static final String PARAM_TARGET_TYPE = "targetType";
     private static final String PARAM_ORIGIN_SPAN_ID = "originSpanId";
@@ -107,7 +107,7 @@ public class BratAnnotator
 
     private String collection = "";
 
-    private String selectedSpanType, offsets;
+    private String selectedSpanText, offsets;
     private Integer selectedSpanID, selectedArcId;
 
     private Integer originSpanId, targetSpanId;
@@ -247,7 +247,7 @@ public class BratAnnotator
                             endOffset = fs.getEnd();
                         }
 
-                        selectedSpanType = request.getParameterValue(PARAM_SPAN_TYPE).toString();
+                        selectedSpanText = request.getParameterValue(PARAM_SPAN_TEXT).toString();
                         /*
                          * selectedSpan = BratAjaxCasUtil .getSelectedText(jCas, beginOffset,
                          * endOffset);
@@ -363,13 +363,13 @@ public class BratAnnotator
                 if (selectedSpanID == -1) {// new annotation
                     openAnnotationDialog.setTitle("New Span Annotation");
                     return new SpanAnnotationModalWindowPage(openAnnotationDialog,
-                            getModelObject(), selectedSpanType, aBeginOffset, aEndOffset);
+                            getModelObject(), selectedSpanText, aBeginOffset, aEndOffset);
                 }
                 else {
                     openAnnotationDialog.setTitle("Edit Span Annotation");
 
                     return new SpanAnnotationModalWindowPage(openAnnotationDialog,
-                            getModelObject(), selectedSpanID, selectedSpanType);
+                            getModelObject(), selectedSpanID);
                 }
             }
 
