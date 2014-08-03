@@ -444,7 +444,7 @@ public class BratAnnotator
             @Override
             public Page createPage()
             {
-                if (selectedSpanID == -1) {// new annotation
+                if (selectedArcId == -1) {// new annotation
                     openAnnotationDialog.setTitle("New Arc Annotation");
                     return new ArcAnnotationModalWindowPanel(openAnnotationDialog,
                             getModelObject(), originSpanId, originSpanType, targetSpanId,
