@@ -51,6 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationOption;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff;
@@ -301,7 +302,8 @@ public class CuratorUtil
         for (AnnotationLayer layer : aBratAnnotatorModel.getAnnotationLayers()) {
             if (
                     layer.getName().equals(Token.class.getName()) ||
-                    layer.getName().equals(Sentence.class.getName())
+                    layer.getName().equals(Sentence.class.getName()) ||
+                    WebAnnoConst.CHAIN_TYPE.equals(layer.getType())
             ) {
                 continue;
             }
