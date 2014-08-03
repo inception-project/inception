@@ -320,6 +320,7 @@ public class WebannoCustomTsvReader
                     relationTargets = relationTargetNumbers.split("\\|");
                 }
                 for (String annotation : multipleAnnotations.split("\\|")) {
+                	
                     // If annotation is not on multpile spans
                     if (!(annotation.startsWith("B-") || annotation.startsWith("I-") || annotation
                             .startsWith("O-"))
@@ -335,6 +336,11 @@ public class WebannoCustomTsvReader
                         else {
                             newAnnotation = singleTokenMultiFeature.get(index);
                         }
+                    	// annotations without feature value set, those with the layer name prefix, should be
+                    	// stripped out - make it null
+                    	if(annotation.startsWith(layer.getName())){
+                    		annotation = null;
+                    	}
                         newAnnotation.setFeatureValueFromString(feature, annotation);
                         aJcas.addFsToIndexes(newAnnotation);
 
@@ -423,7 +429,12 @@ public class WebannoCustomTsvReader
                             isNewAnnotation = false;
                         }
                         // remove prefixes such as B-/I- before creating the annotation
-                        newAnnotation.setFeatureValueFromString(feature, (annotation.substring(2)));
+                        annotation =  (annotation.substring(2));
+                    	if(annotation.startsWith(layer.getName())){
+                    		annotation = null;
+                    	}
+                    	
+                        newAnnotation.setFeatureValueFromString(feature, annotation);
                         aJcas.addFsToIndexes(newAnnotation);
                         indexedAnnos.put(index, newAnnotation);
                         indexedBeginEndAnnos.put(index, "B-");

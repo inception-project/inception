@@ -362,7 +362,7 @@ public class WebannoCustomTsvWriter
                 if (annoFs.getBegin() <= token.getBegin() && annoFs.getEnd() >= token.getEnd()) {
                     String annotation = annoFs.getFeatureValueAsString(aFeature);
                     if (annotation == null) {
-                        annotation = "_";
+                        annotation = aType.getName()+"_";
                     }
                     if (aTokenAnnoMap.get(token.getAddress()) == null) {
                         if (previous) {
