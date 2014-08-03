@@ -60,6 +60,20 @@
 			<td style="vertical-align: top" width="40%">
 				<form wicket:id="layerDetailForm">
 					<fieldset class="ui-widget-content ui-corner-all labels-left">
+						<legend>Technical Properties <a wicket:id="showLayerTechnicalPropertyModal"
+									title="Show details">?</a></legend>
+						<table class="hfill">
+							<tr>
+								<td style="color:red" >Type:</td>
+								<td><select wicket:id="type" ></select></td>
+							</tr>
+							<tr>
+								<td>Attach to layer:</td>
+								<td><select wicket:id="attachType"></select></td>
+							</tr>
+						</table>
+					</fieldset>
+					<fieldset class="ui-widget-content ui-corner-all labels-left">
 						<legend>Properties <a wicket:id="showLayerPropertyModal"
 									title="Show details">?</a></legend>
 						<table class="hfill">
@@ -74,20 +88,6 @@
 							<tr>
 								<td style="vertical-align: top;">Enabled:</td>
 								<td><input type="checkbox" wicket:id="enabled" /></td>
-							</tr>
-						</table>
-					</fieldset>
-					<fieldset class="ui-widget-content ui-corner-all labels-left">
-						<legend>Technical Properties <a wicket:id="showLayerTechnicalPropertyModal"
-									title="Show details">?</a></legend>
-						<table class="hfill">
-							<tr>
-								<td style="color:red" >Type:</td>
-								<td><select wicket:id="type" ></select></td>
-							</tr>
-							<tr>
-								<td>Attach to layer:</td>
-								<td><select wicket:id="attachType"></select></td>
 							</tr>
 						</table>
 					</fieldset>
