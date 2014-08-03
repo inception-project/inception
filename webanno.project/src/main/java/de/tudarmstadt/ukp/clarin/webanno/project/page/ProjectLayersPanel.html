@@ -60,12 +60,9 @@
 			<td style="vertical-align: top" width="40%">
 				<form wicket:id="layerDetailForm">
 					<fieldset class="ui-widget-content ui-corner-all labels-left">
-						<legend>Properties</legend>
+						<legend>Properties <a wicket:id="showLayerPropertyModal"
+									title="Show details">?</a></legend>
 						<table class="hfill">
-							<tr>
-								<td><a wicket:id="showLayerPropertyModal"
-									title="Show details">? </a></td>
-							</tr>
 							<tr>
 								<td style="color:red">Layer name:</td>
 								<td><input class="hfill" type="text" wicket:id="uiName" /></td>
@@ -81,13 +78,9 @@
 						</table>
 					</fieldset>
 					<fieldset class="ui-widget-content ui-corner-all labels-left">
-						<legend>Technical Properties</legend>
+						<legend>Technical Properties <a wicket:id="showLayerTechnicalPropertyModal"
+									title="Show details">?</a></legend>
 						<table class="hfill">
-							<tr>
-								<td></td>
-								<a wicket:id="showLayerTechnicalPropertyModal"
-									title="Show details">? </a>
-							</tr>
 							<tr>
 								<td style="color:red" >Type:</td>
 								<td><select wicket:id="type" ></select></td>
@@ -99,12 +92,9 @@
 						</table>
 					</fieldset>
 					<fieldset class="ui-widget-content ui-corner-all labels-left">
-						<legend>Behaviors</legend>
+						<legend>Behaviors <a wicket:id="showlayerBehaviorModal"
+									title="Show details">?</a></legend>
 						<table>
-							<tr>
-								<td><a wicket:id="showlayerBehaviorModal"
-									title="Show details">? </a></td>
-							</tr>
 							<tr>
 								<td style="vertical-align: top;"><span
 									wicket:id="lockToTokenOffsetLabel"></span></td>
@@ -154,12 +144,9 @@
 				</form>
 				<form wicket:id="featureDetailForm">
 					<fieldset class="ui-widget-content ui-corner-all labels-left">
-						<legend>Feature details</legend>
+						<legend>Feature details <a wicket:id="showfeatureDetailModal"
+									title="Show details">?</a></legend>
 						<table class="hfill">
-							<tr>
-								<td><a wicket:id="showfeatureDetailModal"
-									title="Show details">? </a></td>
-							</tr>
 							<tr>
 								<td style="color:red" >Type:</td>
 								<td><select wicket:id="type"></select></td>
