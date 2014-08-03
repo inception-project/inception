@@ -1038,7 +1038,8 @@ public class ProjectLayersPanel
                         @Override
                         public Object getDisplayValue(AnnotationFeature aObject)
                         {
-                            return aObject.getUiName() + " : [" + aObject.getType() + "]";
+                            return aObject.getUiName() + " : ["
+                                    + StringUtils.substringAfterLast(aObject.getType(), ".") + "]";
                         }
                     });
                     setNullValid(false);
