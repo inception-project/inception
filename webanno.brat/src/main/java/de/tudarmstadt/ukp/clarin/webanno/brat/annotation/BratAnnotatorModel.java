@@ -18,8 +18,9 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
@@ -39,13 +40,16 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
  * @author Seid Muhie Yimam
  *
  */
-public class BratAnnotatorModel implements Serializable {
-	private static final long serialVersionUID = 1078613192789450714L;
+public class BratAnnotatorModel
+    implements Serializable
+{
+    private static final long serialVersionUID = 1078613192789450714L;
 
 	/**
 	 * The Project the annotator working on
 	 */
 	private Project project;
+	
 	/**
 	 * The source document the to be annotated
 	 */
@@ -55,15 +59,18 @@ public class BratAnnotatorModel implements Serializable {
 	 * The current user annotating the document
 	 */
 	private User user;
+	
 	/**
 	 * The sentence address where the display window starts with, in its UIMA
 	 * annotation
 	 */
 	private int displayWindowStartSentenceAddress = -1;
+	
 	/**
 	 * The very last sentence address in its UIMA annotation
 	 */
 	private int lastSentenceAddress;
+	
 	/**
 	 * The very first sentence address in its UIMA annotation
 	 */
@@ -73,17 +80,20 @@ public class BratAnnotatorModel implements Serializable {
 	 * The begin offset of a sentence
 	 */
 	private int sentenceBeginOffset;
+	
 	/**
 	 * The end offset of a sentence
 	 */
 	private int sentenceEndOffset;
+	
 	// Annotation preferences, to be saved in a file system
 	/**
 	 * The annotation layers available in the current project.
 	 */
-	private HashSet<AnnotationLayer> annotationLayers = new HashSet<AnnotationLayer>();
+	private List<AnnotationLayer> annotationLayers = new ArrayList<AnnotationLayer>();
+	
 	/**
-	 * The number of sentences to be dispalyed at atime
+	 * The number of sentences to be displayed at a time
 	 */
 	private int windowSize = 5;
 
@@ -91,12 +101,14 @@ public class BratAnnotatorModel implements Serializable {
 	 * Used to enable/disable auto-scrolling while annotation
 	 */
 	private boolean scrollPage = true;
+	
 	/**
 	 * If the document is opened through the next/previous buttons on the
 	 * annotation page, not with the open dialog method, used to change
 	 * {@link #document}
 	 */
 	private String documentName;
+	
 	/**
 	 * The Mode of the current operations as either {@link Mode#ANNOTATION} or
 	 * as {@link Mode#CURATION}
@@ -107,122 +119,140 @@ public class BratAnnotatorModel implements Serializable {
 	 * The previously selected {@link TagSet} and {@link Tag} for a span/Arc
 	 * annotation so as toz pre-fill the type in the span/arc annotation dialog
 	 * (only for new span/arc annotations)
-	 *
-	 * @return
 	 */
 	private AnnotationLayer rememberedSpanLayer;
 	private AnnotationLayer rememberedArcLayer;
 
     private Map<AnnotationFeature, String> rememberedSpanFeatures = new HashMap<AnnotationFeature, String>();
-    private  Map<AnnotationFeature, String> rememberedArcFeatures =new  HashMap<AnnotationFeature, String>();
-
+    private Map<AnnotationFeature, String> rememberedArcFeatures = new HashMap<AnnotationFeature, String>();
 
 	/**
 	 * Specific message to be sent from the annotation dialog to the
 	 * {@link BratAnnotator} so that it can be displayed in the
 	 * {@link FeedbackPanel}
 	 */
-	private String message = "";
+    private String message = "";
 
-	private boolean annotationCleared = false;
+    private boolean annotationCleared = false;
 
-	// determine if static color for annotations will be used or we shall
-	// dynamically generate one
-	private boolean staticColor = true;
+    // determine if static color for annotations will be used or we shall
+    // dynamically generate one
+    private boolean staticColor = true;
 
-	// if it is annotation or delete operation
-	private boolean isAnnotate;
+    // if it is annotation or delete operation
+    private boolean isAnnotate;
 
-	public Project getProject() {
-		return project;
-	}
+    public Project getProject()
+    {
+        return project;
+    }
 
-	public void setProject(Project aProject) {
-		project = aProject;
-	}
+    public void setProject(Project aProject)
+    {
+        project = aProject;
+    }
 
-	public SourceDocument getDocument() {
-		return document;
-	}
+    public SourceDocument getDocument()
+    {
+        return document;
+    }
 
-	public void setDocument(SourceDocument aDocument) {
-		document = aDocument;
-	}
+    public void setDocument(SourceDocument aDocument)
+    {
+        document = aDocument;
+    }
 
-	public User getUser() {
-		return user;
-	}
+    public User getUser()
+    {
+        return user;
+    }
 
-	public void setUser(User aUser) {
-		user = aUser;
-	}
+    public void setUser(User aUser)
+    {
+        user = aUser;
+    }
 
-	public int getSentenceAddress() {
-		return displayWindowStartSentenceAddress;
-	}
+    public int getSentenceAddress()
+    {
+        return displayWindowStartSentenceAddress;
+    }
 
-	public void setSentenceAddress(int aSentenceAddress) {
-		displayWindowStartSentenceAddress = aSentenceAddress;
-	}
+    public void setSentenceAddress(int aSentenceAddress)
+    {
+        displayWindowStartSentenceAddress = aSentenceAddress;
+    }
 
-	public int getLastSentenceAddress() {
-		return lastSentenceAddress;
-	}
+    public int getLastSentenceAddress()
+    {
+        return lastSentenceAddress;
+    }
 
-	public void setLastSentenceAddress(int aLastSentenceAddress) {
-		lastSentenceAddress = aLastSentenceAddress;
-	}
+    public void setLastSentenceAddress(int aLastSentenceAddress)
+    {
+        lastSentenceAddress = aLastSentenceAddress;
+    }
 
-	public int getFirstSentenceAddress() {
-		return firstSentenceAddress;
-	}
+    public int getFirstSentenceAddress()
+    {
+        return firstSentenceAddress;
+    }
 
-	public void setFirstSentenceAddress(int aFirstSentenceAddress) {
-		firstSentenceAddress = aFirstSentenceAddress;
-	}
+    public void setFirstSentenceAddress(int aFirstSentenceAddress)
+    {
+        firstSentenceAddress = aFirstSentenceAddress;
+    }
 
-	public HashSet<AnnotationLayer> getAnnotationLayers() {
-		return annotationLayers;
-	}
+    public List<AnnotationLayer> getAnnotationLayers()
+    {
+        return annotationLayers;
+    }
 
-	public void setAnnotationLayers(HashSet<AnnotationLayer> aAnnotationLayers) {
-		annotationLayers = aAnnotationLayers;
-	}
+    public void setAnnotationLayers(List<AnnotationLayer> aAnnotationLayers)
+    {
+        annotationLayers = aAnnotationLayers;
+    }
 
-	public int getWindowSize() {
-		return windowSize;
-	}
+    public int getWindowSize()
+    {
+        return windowSize;
+    }
 
-	public void setWindowSize(int aWindowSize) {
-		windowSize = aWindowSize;
-	}
+    public void setWindowSize(int aWindowSize)
+    {
+        windowSize = aWindowSize;
+    }
 
-	public boolean isScrollPage() {
-		return scrollPage;
-	}
+    public boolean isScrollPage()
+    {
+        return scrollPage;
+    }
 
-	public void setScrollPage(boolean aScrollPage) {
-		scrollPage = aScrollPage;
-	}
+    public void setScrollPage(boolean aScrollPage)
+    {
+        scrollPage = aScrollPage;
+    }
 
-	public String getDocumentName() {
-		return documentName;
-	}
+    public String getDocumentName()
+    {
+        return documentName;
+    }
 
-	public void setDocumentName(String documentName) {
-		this.documentName = documentName;
-	}
+    public void setDocumentName(String documentName)
+    {
+        this.documentName = documentName;
+    }
 
-	public Mode getMode() {
-		return mode;
-	}
+    public Mode getMode()
+    {
+        return mode;
+    }
 
-	public void setMode(Mode mode) {
-		this.mode = mode;
-	}
+    public void setMode(Mode mode)
+    {
+        this.mode = mode;
+    }
 
-
-	public AnnotationLayer getRememberedSpanLayer()
+    public AnnotationLayer getRememberedSpanLayer()
     {
         return rememberedSpanLayer;
     }
@@ -261,52 +291,64 @@ public class BratAnnotatorModel implements Serializable {
     {
         this.rememberedArcFeatures = rememberedArcFeature;
     }
-	public int getSentenceBeginOffset() {
-		return sentenceBeginOffset;
-	}
 
-	public void setSentenceBeginOffset(int sentenceBeginOffset) {
-		this.sentenceBeginOffset = sentenceBeginOffset;
-	}
+    public int getSentenceBeginOffset()
+    {
+        return sentenceBeginOffset;
+    }
 
-	public int getSentenceEndOffset() {
-		return sentenceEndOffset;
-	}
+    public void setSentenceBeginOffset(int sentenceBeginOffset)
+    {
+        this.sentenceBeginOffset = sentenceBeginOffset;
+    }
 
-	public void setSentenceEndOffset(int sentenceEndOffset) {
-		this.sentenceEndOffset = sentenceEndOffset;
-	}
+    public int getSentenceEndOffset()
+    {
+        return sentenceEndOffset;
+    }
 
-	public String getMessage() {
-		return message;
-	}
+    public void setSentenceEndOffset(int sentenceEndOffset)
+    {
+        this.sentenceEndOffset = sentenceEndOffset;
+    }
 
-	public void setMessage(String message) {
-		this.message = message;
-	}
+    public String getMessage()
+    {
+        return message;
+    }
 
-	public boolean isAnnotationCleared() {
-		return annotationCleared;
-	}
+    public void setMessage(String message)
+    {
+        this.message = message;
+    }
 
-	public void setAnnotationCleared(boolean annotationCleared) {
-		this.annotationCleared = annotationCleared;
-	}
+    public boolean isAnnotationCleared()
+    {
+        return annotationCleared;
+    }
 
-	public boolean isStaticColor() {
-		return staticColor;
-	}
+    public void setAnnotationCleared(boolean annotationCleared)
+    {
+        this.annotationCleared = annotationCleared;
+    }
 
-	public void setStaticColor(boolean staticColor) {
-		this.staticColor = staticColor;
-	}
+    public boolean isStaticColor()
+    {
+        return staticColor;
+    }
 
-	public boolean isAnnotate() {
-		return isAnnotate;
-	}
+    public void setStaticColor(boolean staticColor)
+    {
+        this.staticColor = staticColor;
+    }
 
-	public void setAnnotate(boolean isAnnotate) {
-		this.isAnnotate = isAnnotate;
-	}
+    public boolean isAnnotate()
+    {
+        return isAnnotate;
+    }
 
+    public void setAnnotate(boolean isAnnotate)
+    {
+        this.isAnnotate = isAnnotate;
+    }
 }

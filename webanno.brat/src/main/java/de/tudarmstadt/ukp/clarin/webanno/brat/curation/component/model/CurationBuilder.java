@@ -27,8 +27,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
 import javax.annotation.Resource;
 
 import org.apache.uima.UIMAException;
@@ -305,7 +303,7 @@ public class CurationBuilder
         }
     }
 
-    public static List<Type> getEntryTypes(JCas mergeJCas, Set<AnnotationLayer> aLayers)
+    public static List<Type> getEntryTypes(JCas mergeJCas, List<AnnotationLayer> aLayers)
     {
         List<Type> entryTypes = new LinkedList<Type>();
 
@@ -331,7 +329,7 @@ public class CurationBuilder
      * @throws BratAnnotationException
      */
     public JCas createMergeCas(JCas mergeJCas, AnnotationDocument randomAnnotationDocument,
-            Map<String, JCas> jCases, int aBegin, int aEnd, Set<AnnotationLayer> aAnnotationLayers)
+            Map<String, JCas> jCases, int aBegin, int aEnd, List<AnnotationLayer> aAnnotationLayers)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
         User userLoggedIn = repository.getUser(SecurityContextHolder.getContext()

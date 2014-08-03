@@ -22,8 +22,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdap
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
@@ -191,7 +189,7 @@ public class BratAjaxCasController
      * @see <a href="http://brat.nlplab.org/index.html">Brat</a>
      */
     public GetCollectionInformationResponse getCollectionInformation(
-            Set<AnnotationLayer> aAnnotationLayers)
+            List<AnnotationLayer> aAnnotationLayers)
     {
         GetCollectionInformationResponse info = new GetCollectionInformationResponse();
         info.setEntityTypes(BratAjaxConfiguration.buildEntityTypes(aAnnotationLayers,

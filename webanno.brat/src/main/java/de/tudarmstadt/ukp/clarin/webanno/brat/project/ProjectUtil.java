@@ -357,7 +357,7 @@ public class ProjectUtil
 
             List<AnnotationLayer> layers = aAnnotationService.listAnnotationLayer(aBModel
                     .getProject());
-            aBModel.setAnnotationLayers(new HashSet<AnnotationLayer>(layers));
+            aBModel.setAnnotationLayers(layers);
         }
     }
 

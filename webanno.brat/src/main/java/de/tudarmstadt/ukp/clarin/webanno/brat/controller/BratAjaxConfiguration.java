@@ -53,7 +53,7 @@ public class BratAjaxConfiguration
      * @param aAnnotationService the annotation service
      * @return the brat type definitions
      */
-    public static Set<EntityType> buildEntityTypes(Set<AnnotationLayer> aAnnotationLayers,
+    public static Set<EntityType> buildEntityTypes(List<AnnotationLayer> aAnnotationLayers,
             AnnotationService aAnnotationService)
     {
         // Sort layers
