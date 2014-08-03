@@ -592,4 +592,50 @@ public class BratAjaxCasUtil
             aFS.setFeatureValueFromString(labelFeature, aValue);
         }
     }
+   
+   /**
+    * Set a feature value.
+    * 
+    * @param aFS
+    *            the feature structure.
+    * @param aFeatureName
+    *            the feature within the annotation whose value to set.
+    * @param aValue
+    *            the feature value.
+    */
+  public static void setFeature(FeatureStructure aFS, String aFeatureName, String aValue)
+   {
+       Feature labelFeature = aFS.getType().getFeatureByBaseName(aFeatureName);
+       aFS.setFeatureValueFromString(labelFeature, aValue);
+   }
+  
+    /**
+     * Set a feature value.
+     * 
+     * @param aFS
+     *            the feature structure.
+     * @param aFeatureName
+     *            the feature within the annotation whose value to set.
+     * @param aValue
+     *            the feature value.
+     */
+    public static void setFeatureFS(FeatureStructure aFS, String aFeatureName,
+            FeatureStructure aValue)
+    {
+        Feature labelFeature = aFS.getType().getFeatureByBaseName(aFeatureName);
+        aFS.setFeatureValue(labelFeature, aValue);
+    }
+    
+    /**
+     * Get a feature value.
+     * 
+     * @param aFS
+     *            the feature structure.
+     * @param aFeatureName
+     *            the feature within the annotation whose value to set.
+     */
+    public static FeatureStructure getFeatureFS(FeatureStructure aFS, String aFeatureName)
+    {
+        return aFS.getFeatureValue(aFS.getType().getFeatureByBaseName(aFeatureName));
+    }
 }

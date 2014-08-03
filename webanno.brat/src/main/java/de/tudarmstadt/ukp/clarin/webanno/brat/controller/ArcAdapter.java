@@ -43,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
  * A class that is used to create Brat Arc to CAS relations and vice-versa
@@ -266,15 +267,8 @@ public class ArcAdapter
         }
         // It is new ARC annotation, create it
         if (!duplicate) {
-            // See issue 953
-//            if ("ROOT".equals(aValue)) {
-//                governorFs = aOriginFs;
-//                dependentFs = governorFs;
-//            }
-//            else {
-                dependentFs = aTargetFs;
-                governorFs = aOriginFs;
-//            }
+            dependentFs = aTargetFs;
+            governorFs = aOriginFs;
             // for POS annotation, since custom span layers do not have attach feature
             if (attacheFeatureName != null) {
                 dependentFs = selectCovered(aJCas.getCas(), tokenType, dependentFs.getBegin(),
@@ -496,6 +490,15 @@ public class ArcAdapter
     {
         FeatureStructure fs = BratAjaxCasUtil.selectByAddr(aJcas, FeatureStructure.class, aAddress);
         BratAjaxCasUtil.setFeature(fs, aFeature, aValue);
+        
+        // BEGIN HACK - ISSUE 953 - Special treatment for ROOT in DKPro Core dependency layer
+        // If the dependency type is set to "ROOT" the create a loop arc
+        if (Dependency.class.getName().equals(layer.getName())
+                && "DependencyType".equals(aFeature.getName()) && "ROOT".equals(aValue)) {
+            FeatureStructure source = BratAjaxCasUtil.getFeatureFS(fs, sourceFeatureName);
+            BratAjaxCasUtil.setFeatureFS(fs, targetFeatureName, source);
+        }
+        // END HACK - ISSUE 953 - Special treatment for ROOT in DKPro Core dependency layer
     }
     
     @Override
