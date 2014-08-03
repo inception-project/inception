@@ -76,6 +76,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -361,17 +362,15 @@ public class SpanAnnotationModalWindowPage
                             else {
                                 selectedSpanId = ((ChainAdapter) adapter).addSpan(null, jCas,
                                         beginOffset, endOffset, null);
-                            }                        }
+                            }
+                        }
 
                         // Set feature values
-                        String tag = "";
+                        List<AnnotationFeature> features = new ArrayList<AnnotationFeature>();
                         for (IModel<String> model : tagModels) {
-//                            if (model.getObject() == null) {
-//                                continue;
-//                            }
-
                             AnnotationFeature feature = featureModels.get(tagModels.indexOf(model))
                                     .getObject().feature;
+                            features.add(feature);
 
                             Tag selectedTag;
                             if (feature.getTagset() == null) {
@@ -398,12 +397,6 @@ public class SpanAnnotationModalWindowPage
 
                             adapter.updateFeature(jCas, feature, selectedSpanId,
                                     selectedTag.getName());
-                            if (tag.equals("")) {
-                                tag = selectedTag.getName();
-                            }
-                            else {
-                                tag = tag + "|" + selectedTag.getName();
-                            }
                             selectedFeatureValues.put(feature, model.getObject());
 
                         }
@@ -427,12 +420,10 @@ public class SpanAnnotationModalWindowPage
                         bratAnnotatorModel.setRememberedSpanFeatures(selectedFeatureValues);
 
                         bratAnnotatorModel.setAnnotate(true);
-                        String msg = "The [" + selectedLayer.getUiName()
-                                + "] annotation has been created/updated.";
-                        if (StringUtils.isNotBlank(tag)) {
-                            msg += "New label: [" + tag + "]";
-                        }
-                        bratAnnotatorModel.setMessage(msg);
+                        String bratLabelText = TypeUtil.getBratLabelText(adapter,
+                                BratAjaxCasUtil.selectByAddr(jCas, selectedSpanId), features);
+                        bratAnnotatorModel.setMessage(generateMessage(selectedLayer, bratLabelText,
+                                false));
 
                         // A hack to remember the drop-down display value
                         HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())
@@ -525,19 +516,16 @@ public class SpanAnnotationModalWindowPage
 
                         bratAnnotatorModel.setRememberedSpanLayer(selectedLayer);
                         bratAnnotatorModel.setAnnotate(false);
-                        StringBuffer deletedAnnoSb = new StringBuffer();
 
                         // store latest annotations
                         for (IModel<String> model : tagModels) {
-                            deletedAnnoSb.append(model.getObject() + " ");
                             AnnotationFeature feature = featureModels.get(tagModels.indexOf(model))
                                     .getObject().feature;
                             selectedLayer = feature.getLayer();
                             selectedFeatureValues.put(feature, model.getObject());
                         }
 
-                        bratAnnotatorModel.setMessage("The span annotation [" + deletedAnnoSb
-                                + "] is deleted");
+                        bratAnnotatorModel.setMessage(generateMessage(selectedLayer, null, true));
 
                         // A hack to rememeber the Visural DropDown display
                         // value
@@ -689,4 +677,15 @@ public class SpanAnnotationModalWindowPage
         this.isModify = true;
     }
 
+    
+    public static String generateMessage(AnnotationLayer aLayer, String aLabel, boolean aDeleted)
+    {
+        String action = aDeleted ? "deleted" : "created/updated";
+        
+        String msg = "The [" + aLayer.getUiName() + "] annotation has been " + action + ".";
+        if (StringUtils.isNotBlank(aLabel)) {
+            msg += " Label: [" + aLabel + "]";
+        }
+        return msg;
+    }
 }

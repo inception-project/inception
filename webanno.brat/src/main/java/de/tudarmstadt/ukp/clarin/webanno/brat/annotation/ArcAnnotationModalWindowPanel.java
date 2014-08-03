@@ -29,7 +29,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -69,6 +68,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -301,14 +301,11 @@ public class ArcAnnotationModalWindowPanel
                         }
                         
                         // Set feature values
-                        String tag = "";
+                        List<AnnotationFeature> features = new ArrayList<AnnotationFeature>();
                         for (IModel<String> model : tagModels) {
-//                            if (model.getObject() == null) {
-//                                continue;
-//                            }
-                            
                             AnnotationFeature feature = featureModels.get(tagModels.indexOf(model))
                                     .getObject().feature;
+                            features.add(feature);
                             Tag selectedTag;
                             if (feature.getTagset() == null) {
                                 selectedTag = new Tag();
@@ -335,12 +332,6 @@ public class ArcAnnotationModalWindowPanel
                             adapter.updateFeature(jCas, feature, selectedArcId,
                                     selectedTag.getName());
                             
-                            if (tag.equals("")) {
-                                tag = selectedTag.getName();
-                            }
-                            else {
-                                tag = tag + "|" + selectedTag.getName();
-                            }
                             selectedFeatureValues.put(feature, model.getObject());
                             beginOffset = originFs.getBegin();
                         }
@@ -362,13 +353,11 @@ public class ArcAnnotationModalWindowPanel
                             updateSentenceAddressAndOffsets(jCas, beginOffset);
                         }
                         
-                        String msg = "The [" + selectedLayer.getUiName()
-                                + "] annotation has been created/updated.";
-                        if (StringUtils.isNotBlank(tag)) {
-                            msg += "New label: [" + tag + "]";
-                        }
-                        bratAnnotatorModel.setMessage(msg);
-                        
+                        String bratLabelText = TypeUtil.getBratLabelText(adapter,
+                                BratAjaxCasUtil.selectByAddr(jCas, selectedArcId), features);
+                        bratAnnotatorModel.setMessage(SpanAnnotationModalWindowPage
+                                .generateMessage(selectedLayer, bratLabelText, false));
+                                                
                         aModalWindow.close(aTarget);
 
                     }
@@ -399,6 +388,7 @@ public class ArcAnnotationModalWindowPanel
                             ((ChainAdapter) adapter).setArc(true);
                         }
                         // END HACK - Issue 933
+                        
                         adapter.delete(jCas, selectedArcId);
                         repository.updateJCas(bratAnnotatorModel.getMode(),
                                 bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
@@ -417,20 +407,16 @@ public class ArcAnnotationModalWindowPanel
                             updateSentenceAddressAndOffsets(jCas, start);
                         }
 
-                        StringBuffer deletedAnnoSb = new StringBuffer();
-
-                        // store latest annotations
+                         // store latest annotations
                         for (IModel<String> model : tagModels) {
-                            deletedAnnoSb.append(model.getObject() + " ");
                             AnnotationFeature feature = featureModels.get(tagModels.indexOf(model))
                                     .getObject().feature;
                             selectedLayer = feature.getLayer();
                             selectedFeatureValues.put(feature, model.getObject());
                         }
 
-                        bratAnnotatorModel.setMessage("The arc annotation [" + deletedAnnoSb
-                                + "] is deleted");
-
+                        bratAnnotatorModel.setMessage(SpanAnnotationModalWindowPage
+                                .generateMessage(selectedLayer, null, true));
                     }
                     catch (UIMAException e) {
                         aTarget.add(feedbackPanel);
