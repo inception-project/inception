@@ -1703,7 +1703,7 @@ public class RepositoryServiceDbData
                 // CURATION_USER.ser
                 writeContent(aDocument, aJcas, aUserName);
                 createLog(aDocument.getProject(), aUser.getUsername()).info(
-                        " Updated annotation file [" + aDocument.getName() + "] " + "with ID ["
+                        "Updated annotation file [" + aDocument.getName() + "] " + "with ID ["
                                 + aDocument.getId() + "] in project ID ["
                                 + aDocument.getProject().getId() + "]");
                 createLog(aDocument.getProject(), aUser.getUsername()).removeAllAppenders();
@@ -1793,7 +1793,7 @@ public class RepositoryServiceDbData
                             FileUtils.forceDelete(file);
                             createLog(aDocument.getProject(), aUser.getUsername()).info(
                                     "Removed surplus history file [" + file.getName() + "] "
-                                            + " for document with ID [" + aDocument.getId()
+                                            + "for document with ID [" + aDocument.getId()
                                             + "] in project ID [" + aDocument.getProject().getId()
                                             + "]");
                             createLog(aDocument.getProject(), aUser.getUsername())
@@ -1953,7 +1953,7 @@ public class RepositoryServiceDbData
                 // exists to be upgraded while there are annotation documents
             }
             createLog(aDocument.getProject(), aUsername).info(
-                    " upgraded an annotation file [" + aDocument.getName() + "] " + "with ID ["
+                    "Upgraded an annotation file [" + aDocument.getName() + "] " + "with ID ["
                             + aDocument.getId() + "] in project ID ["
                             + aDocument.getProject().getId() + "]");
             createLog(aDocument.getProject(), aUsername).removeAllAppenders();
