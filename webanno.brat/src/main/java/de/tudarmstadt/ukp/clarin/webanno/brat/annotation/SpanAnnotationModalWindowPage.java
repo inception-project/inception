@@ -33,7 +33,10 @@ import java.util.Set;
 
 import javax.servlet.http.HttpSession;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -47,12 +50,12 @@ import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
 import org.apache.wicket.behavior.Behavior;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.IHeaderResponse;
-import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
+import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.RefreshingView;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -88,8 +91,10 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  *
  */
 public class SpanAnnotationModalWindowPage
-    extends WebPage
+    extends Panel
 {
+    private final static Log LOG = LogFactory.getLog(SpanAnnotationModalWindowPage.class);
+    
     private static final long serialVersionUID = -2102136855109258306L;
 
     @SpringBean(name = "documentRepository")
@@ -335,8 +340,9 @@ public class SpanAnnotationModalWindowPage
                                     && !feature.getTagset().isCreateTag()
                                     && !annotationService.existsTag(model.getObject(),
                                             feature.getTagset())) {
-                                error(model.getObject()
-                                        + " is not in the tag list. Please choose form the existing tags");
+                                error("["
+                                        + model.getObject()
+                                        + "] is not in the tag list. Please choose form the existing tags");
                                 return;
                             }
                         }                      
@@ -360,9 +366,9 @@ public class SpanAnnotationModalWindowPage
                         // Set feature values
                         String tag = "";
                         for (IModel<String> model : tagModels) {
-                            if (model.getObject() == null) {
-                                continue;
-                            }
+//                            if (model.getObject() == null) {
+//                                continue;
+//                            }
 
                             AnnotationFeature feature = featureModels.get(tagModels.indexOf(model))
                                     .getObject().feature;
@@ -379,8 +385,11 @@ public class SpanAnnotationModalWindowPage
                                 selectedTag = new Tag();
                                 selectedTag.setName(model.getObject());
                                 selectedTag.setTagSet(feature.getTagset());
-                                annotationService.createTag(selectedTag,
-                                        bratAnnotatorModel.getUser());
+                                if (model.getObject() != null) {
+                                    // Do not persist if we unset a feature value
+                                    annotationService.createTag(selectedTag,
+                                            bratAnnotatorModel.getUser());
+                                }
                             }
                             else {
                                 selectedTag = annotationService.getTag(model.getObject(),
@@ -418,7 +427,12 @@ public class SpanAnnotationModalWindowPage
                         bratAnnotatorModel.setRememberedSpanFeatures(selectedFeatureValues);
 
                         bratAnnotatorModel.setAnnotate(true);
-                        bratAnnotatorModel.setMessage("The span annotation [" + tag + "] is added");
+                        String msg = "The [" + selectedLayer.getUiName()
+                                + "] annotation has been created/updated.";
+                        if (StringUtils.isNotBlank(tag)) {
+                            msg += "New label: [" + tag + "]";
+                        }
+                        bratAnnotatorModel.setMessage(msg);
 
                         // A hack to remember the drop-down display value
                         HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())
@@ -427,17 +441,13 @@ public class SpanAnnotationModalWindowPage
 
                         aModalWindow.close(aTarget);
                     }
-                    catch (UIMAException e) {
-                        error(ExceptionUtils.getRootCauseMessage(e));
-                    }
-                    catch (ClassNotFoundException e) {
-                        error(e.getMessage());
-                    }
-                    catch (IOException e) {
-                        error(e.getMessage());
-                    }
                     catch (BratAnnotationException e) {
                         error(e.getMessage());
+                        LOG.error(ExceptionUtils.getRootCauseMessage(e), e);
+                    }
+                    catch (Exception e) {
+                        error(ExceptionUtils.getRootCauseMessage(e));
+                        LOG.error(ExceptionUtils.getRootCauseMessage(e), e);
                     }
                 }
 
@@ -613,10 +623,11 @@ public class SpanAnnotationModalWindowPage
         public String tag;
     }
 
-    public SpanAnnotationModalWindowPage(ModalWindow modalWindow,
+    public SpanAnnotationModalWindowPage(String aId, ModalWindow modalWindow,
             BratAnnotatorModel aBratAnnotatorModel, String aSelectedText, int aBeginOffset,
             int aEndOffset)
     {
+        super(aId);
         this.beginOffset = aBeginOffset;
         this.endOffset = aEndOffset;
 
@@ -627,9 +638,10 @@ public class SpanAnnotationModalWindowPage
         add(annotationDialogForm);
     }
 
-    public SpanAnnotationModalWindowPage(ModalWindow modalWindow,
+    public SpanAnnotationModalWindowPage(String aId, ModalWindow modalWindow,
             BratAnnotatorModel aBratAnnotatorModel, int selectedSpanId, String aType)
     {
+        super(aId);
         this.selectedSpanId = selectedSpanId;
         this.bratAnnotatorModel = aBratAnnotatorModel;
         JCas jCas = null;

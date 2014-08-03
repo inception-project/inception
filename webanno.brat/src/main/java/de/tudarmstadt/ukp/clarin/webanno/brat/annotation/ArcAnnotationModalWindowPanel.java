@@ -29,7 +29,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -84,6 +87,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 public class ArcAnnotationModalWindowPanel
     extends Panel
 {
+    private final static Log LOG = LogFactory.getLog(ArcAnnotationModalWindowPanel.class);
+    
     private static final long serialVersionUID = -2102136855109258306L;
 
     @SpringBean(name = "documentRepository")
@@ -268,8 +273,9 @@ public class ArcAnnotationModalWindowPanel
                                     && !feature.getTagset().isCreateTag()
                                     && !annotationService.existsTag(model.getObject(),
                                             feature.getTagset())) {
-                                error(model.getObject()
-                                        + " is not in the tag list. Please choose form the existing tags");
+                                error("["
+                                        + model.getObject()
+                                        + "] is not in the tag list. Please choose form the existing tags");
                                 return;
                             }
                         }                        
@@ -297,9 +303,10 @@ public class ArcAnnotationModalWindowPanel
                         // Set feature values
                         String tag = "";
                         for (IModel<String> model : tagModels) {
-                            if (model.getObject() == null) {
-                                continue;
-                            }
+//                            if (model.getObject() == null) {
+//                                continue;
+//                            }
+                            
                             AnnotationFeature feature = featureModels.get(tagModels.indexOf(model))
                                     .getObject().feature;
                             Tag selectedTag;
@@ -314,8 +321,11 @@ public class ArcAnnotationModalWindowPanel
                                 selectedTag = new Tag();
                                 selectedTag.setName(model.getObject());
                                 selectedTag.setTagSet(feature.getTagset());
-                                annotationService.createTag(selectedTag,
-                                        bratAnnotatorModel.getUser());
+                                if (model.getObject() != null) {
+                                    // Do not persist if we unset a feature value
+                                    annotationService.createTag(selectedTag,
+                                            bratAnnotatorModel.getUser());
+                                }
                             }
                             else {
                                 selectedTag = annotationService.getTag(model.getObject(),
@@ -351,24 +361,25 @@ public class ArcAnnotationModalWindowPanel
                         if (bratAnnotatorModel.isScrollPage()) {
                             updateSentenceAddressAndOffsets(jCas, beginOffset);
                         }
-                        bratAnnotatorModel.setMessage("The arc annotation [" + tag + "] is added");
-
+                        
+                        String msg = "The [" + selectedLayer.getUiName()
+                                + "] annotation has been created/updated.";
+                        if (StringUtils.isNotBlank(tag)) {
+                            msg += "New label: [" + tag + "]";
+                        }
+                        bratAnnotatorModel.setMessage(msg);
+                        
                         aModalWindow.close(aTarget);
 
                     }
-                    catch (UIMAException e) {
-                        error(ExceptionUtils.getRootCauseMessage(e));
-                    }
-                    catch (ClassNotFoundException e) {
-                        error(e.getMessage());
-                    }
-                    catch (IOException e) {
-                        error(e.getMessage());
-                    }
                     catch (BratAnnotationException e) {
                         error(e.getMessage());
+                        LOG.error(ExceptionUtils.getRootCauseMessage(e), e);
                     }
-
+                    catch (Exception e) {
+                        error(ExceptionUtils.getRootCauseMessage(e));
+                        LOG.error(ExceptionUtils.getRootCauseMessage(e), e);
+                    }
                 }
             });
 
