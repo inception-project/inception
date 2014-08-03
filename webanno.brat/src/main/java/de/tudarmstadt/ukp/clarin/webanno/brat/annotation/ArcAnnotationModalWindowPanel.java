@@ -660,8 +660,8 @@ public class ArcAnnotationModalWindowPanel
         add(annotationDialogForm);
         this.isModify = true;
 
-        if (selectedLayer.getType().equals(WebAnnoConst.RELATION_TYPE)) {
-            ischain = false;
+        if (!selectedLayer.getType().equals(WebAnnoConst.RELATION_TYPE)) {
+            ischain = true;
         }
 
     }
