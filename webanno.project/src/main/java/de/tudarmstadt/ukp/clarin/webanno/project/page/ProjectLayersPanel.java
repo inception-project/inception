@@ -105,7 +105,7 @@ public class ProjectLayersPanel
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
 
-    ModalWindow openHelpDialog;
+    private ModalWindow openHelpDialog;
 
     private final String DEPENDENT = "Dependent";
     private final String GOVERNOR = "Governor";
@@ -122,8 +122,8 @@ public class ProjectLayersPanel
     private final Model<Project> selectedProjectModel;
     private IModel<String> helpDataModel = new Model<String>();
 
-    List<String> types = new ArrayList<String>();
-    String layerType = WebAnnoConst.SPAN_TYPE;
+    private List<String> types = new ArrayList<String>();
+    private String layerType = WebAnnoConst.SPAN_TYPE;
     private List<FileUpload> uploadedFiles;
     private FileUploadField fileUpload;
 
@@ -424,11 +424,26 @@ public class ProjectLayersPanel
     {
         private static final long serialVersionUID = -1L;
 
-        TextField<String> uiName;
-        String prefix = "webanno.custom.";
-        String layerName;
-        DropDownChoice<String> layerTypes;
-        DropDownChoice<AnnotationLayer> attachTypes;
+        private TextField<String> uiName;
+        private String prefix = "webanno.custom.";
+        private String layerName;
+        private DropDownChoice<String> layerTypes;
+        private DropDownChoice<AnnotationLayer> attachTypes;
+        
+        private Label lockToTokenOffsetLabel;
+        private CheckBox lockToTokenOffset;
+        
+        private Label allowStackingLabel;
+        private CheckBox allowStacking;
+       
+        private Label crossSentenceLabel;
+        private CheckBox crossSentence;
+       
+        private Label multipleTokensLabel;
+        private CheckBox multipleTokens;
+       
+        private Label linkedListBehaviorLabel;
+        private CheckBox linkedListBehavior;
 
         @SuppressWarnings("unchecked")
         public LayerDetailForm(String id)
@@ -481,7 +496,20 @@ public class ProjectLayersPanel
                 protected void onUpdate(AjaxRequestTarget target)
                 {
                     layerType = getModelObject().getType();
-                    target.add(LayerDetailForm.this);
+                    target.add(lockToTokenOffsetLabel);
+                    target.add(lockToTokenOffset);
+                    
+                    target.add(allowStackingLabel);
+                    target.add(allowStacking);
+                   
+                    target.add(crossSentenceLabel);
+                    target.add(crossSentence);
+                   
+                    target.add(multipleTokensLabel);
+                    target.add(multipleTokens);
+                   
+                    target.add(linkedListBehaviorLabel);
+                    target.add(linkedListBehavior);                    
                 }
             });
             add(new AjaxLink<Void>("showLayerTechnicalPropertyModal")
@@ -501,7 +529,6 @@ public class ProjectLayersPanel
                 private static final long serialVersionUID = -6705445053442011120L;
 
                 {
-
                     setChoices(new LoadableDetachableModel<List<AnnotationLayer>>()
                     {
                         private static final long serialVersionUID = 1784646746122513331L;
@@ -582,10 +609,14 @@ public class ProjectLayersPanel
                 }
             });
             
-            add(new Label("lockToTokenOffsetLabel", "Lock to token offsets:")
+            add(lockToTokenOffsetLabel = new Label("lockToTokenOffsetLabel", "Lock to token offsets:")
             {
                 private static final long serialVersionUID = -1290883833837327207L;
 
+                {
+                    setOutputMarkupPlaceholderTag(true);
+                }
+                
                 @Override
                 protected void onConfigure()
                 {
@@ -597,10 +628,14 @@ public class ProjectLayersPanel
                             && layer.getAttachFeature() == null);
                 }
             });
-            add(new CheckBox("lockToTokenOffset")
+            add(lockToTokenOffset = new CheckBox("lockToTokenOffset")
             {
                 private static final long serialVersionUID = -4934708834659137207L;
 
+                {
+                    setOutputMarkupPlaceholderTag(true);
+                }
+                
                 @Override
                 protected void onConfigure()
                 {
@@ -613,10 +648,14 @@ public class ProjectLayersPanel
                 }
             });
 
-            add(new Label("allowStackingLabel", "Allow stacking:")
+            add(allowStackingLabel = new Label("allowStackingLabel", "Allow stacking:")
             {
                 private static final long serialVersionUID = -5354062154610496880L;
 
+                {
+                    setOutputMarkupPlaceholderTag(true);
+                }
+                
                 @Override
                 protected void onConfigure()
                 {
@@ -627,10 +666,14 @@ public class ProjectLayersPanel
                             && !CHAIN_TYPE.equals(layer.getType()));
                 }
             });
-            add(new CheckBox("allowStacking")
+            add(allowStacking = new CheckBox("allowStacking")
             {
                 private static final long serialVersionUID = 7800627916287273008L;
 
+                {
+                    setOutputMarkupPlaceholderTag(true);
+                }
+                
                 @Override
                 protected void onConfigure()
                 {
@@ -642,10 +685,14 @@ public class ProjectLayersPanel
                 }
             });
 
-            add(new Label("crossSentenceLabel", "Allow crossing sentence boundary:")
+            add(crossSentenceLabel = new Label("crossSentenceLabel", "Allow crossing sentence boundary:")
             {
                 private static final long serialVersionUID = -5354062154610496880L;
 
+                {
+                    setOutputMarkupPlaceholderTag(true);
+                }
+                
                 @Override
                 protected void onConfigure()
                 {
@@ -656,10 +703,14 @@ public class ProjectLayersPanel
                             && !CHAIN_TYPE.equals(layer.getType()));
                 }
             });
-            add(new CheckBox("crossSentence")
+            add(crossSentence = new CheckBox("crossSentence")
             {
                 private static final long serialVersionUID = -5986386642712152491L;
 
+                {
+                    setOutputMarkupPlaceholderTag(true);
+                }
+                
                 @Override
                 protected void onConfigure()
                 {
@@ -671,10 +722,14 @@ public class ProjectLayersPanel
                 }
             });
 
-            add(new Label("multipleTokensLabel", "Allow multiple tokens:")
+            add(multipleTokensLabel = new Label("multipleTokensLabel", "Allow multiple tokens:")
             {
                 private static final long serialVersionUID = -5354062154610496880L;
 
+                {
+                    setOutputMarkupPlaceholderTag(true);
+                }
+                
                 @Override
                 protected void onConfigure()
                 {
@@ -686,10 +741,14 @@ public class ProjectLayersPanel
                             && layer.getAttachFeature() == null);
                 }
             });
-            add(new CheckBox("multipleTokens")
+            add(multipleTokens = new CheckBox("multipleTokens")
             {
                 private static final long serialVersionUID = 1319818165277559402L;
 
+                {
+                    setOutputMarkupPlaceholderTag(true);
+                }
+                
                 @Override
                 protected void onConfigure()
                 {
@@ -702,10 +761,14 @@ public class ProjectLayersPanel
                 }
             });
             
-            add(new Label("linkedListBehaviorLabel", "Behave like a linked list:")
+            add(linkedListBehaviorLabel = new Label("linkedListBehaviorLabel", "Behave like a linked list:")
             {
                 private static final long serialVersionUID = -5354062154610496880L;
 
+                {
+                    setOutputMarkupPlaceholderTag(true);
+                }
+                
                 @Override
                 protected void onConfigure()
                 {
@@ -714,10 +777,14 @@ public class ProjectLayersPanel
                     setVisible(!isBlank(layer.getType()) && CHAIN_TYPE.equals(layer.getType()));
                 }
             });
-            CheckBox linkedListBehavior = new CheckBox("linkedListBehavior")
+            add(linkedListBehavior = new CheckBox("linkedListBehavior")
             {
                 private static final long serialVersionUID = 1319818165277559402L;
 
+                {
+                    setOutputMarkupPlaceholderTag(true);
+                }
+                
                 @Override
                 protected void onConfigure()
                 {
@@ -725,8 +792,7 @@ public class ProjectLayersPanel
                     AnnotationLayer layer = LayerDetailForm.this.getModelObject();
                     setVisible(!isBlank(layer.getType()) && CHAIN_TYPE.equals(layer.getType()));
                 }
-            };
-            add(linkedListBehavior);
+            });
             linkedListBehavior.add(new AjaxFormComponentUpdatingBehavior("onChange")
             {
                 private static final long serialVersionUID = -2904306846882446294L;
