@@ -28,6 +28,7 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.Page;
 import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -352,18 +353,27 @@ public class BratAnnotator
             AjaxRequestTarget aTarget, final int aBeginOffset, final int aEndOffset)
     {
         closeButtonClicked = false;
-        if (selectedSpanID == -1) {// new annotation
-            openAnnotationDialog.setTitle("New Span Annotation");
-            openAnnotationDialog.setContent(new SpanAnnotationModalWindowPage(openAnnotationDialog
-                    .getContentId(), openAnnotationDialog,
-                    getModelObject(), selectedSpanType, aBeginOffset, aEndOffset));
-        }
-        else {
-            openAnnotationDialog.setTitle("Edit Span Annotation");
-            openAnnotationDialog.setContent(new SpanAnnotationModalWindowPage(openAnnotationDialog
-                    .getContentId(), openAnnotationDialog,
-                    getModelObject(), selectedSpanID, selectedSpanType));
-        }
+        openAnnotationDialog.setPageCreator(new ModalWindow.PageCreator()
+        {
+            private static final long serialVersionUID = -2827824968207807739L;
+
+            @Override
+            public Page createPage()
+            {
+                if (selectedSpanID == -1) {// new annotation
+                    openAnnotationDialog.setTitle("New Span Annotation");
+                    return new SpanAnnotationModalWindowPage(openAnnotationDialog,
+                            getModelObject(), selectedSpanType, aBeginOffset, aEndOffset);
+                }
+                else {
+                    openAnnotationDialog.setTitle("Edit Span Annotation");
+
+                    return new SpanAnnotationModalWindowPage(openAnnotationDialog,
+                            getModelObject(), selectedSpanID, selectedSpanType);
+                }
+            }
+
+        });
 
         openAnnotationDialog.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
         {
@@ -427,19 +437,29 @@ public class BratAnnotator
     {
 
         closeButtonClicked = false;
-        if (selectedArcId == -1) {// new annotation
-            openAnnotationDialog.setTitle("New Arc Annotation");
-            openAnnotationDialog.setContent(new ArcAnnotationModalWindowPanel(openAnnotationDialog
-                    .getContentId(), openAnnotationDialog, getModelObject(), originSpanId,
-                    originSpanType, targetSpanId, targetSpanType));
-        }
-        else {
-            openAnnotationDialog.setTitle("Edit Arc Annotation");
-            openAnnotationDialog.setContent(new ArcAnnotationModalWindowPanel(openAnnotationDialog
-                    .getContentId(), openAnnotationDialog, getModelObject(), originSpanId,
-                    targetSpanId, selectedArcId));
-        }
+        openAnnotationDialog.setPageCreator(new ModalWindow.PageCreator()
+        {
+            private static final long serialVersionUID = -2827824968207807739L;
 
+            @Override
+            public Page createPage()
+            {
+                if (selectedSpanID == -1) {// new annotation
+                    openAnnotationDialog.setTitle("New Arc Annotation");
+                    return new ArcAnnotationModalWindowPanel(openAnnotationDialog,
+                            getModelObject(), originSpanId, originSpanType, targetSpanId,
+                            targetSpanType);
+                }
+                else {
+                    openAnnotationDialog.setTitle("Edit Arc Annotation");
+
+                    return new ArcAnnotationModalWindowPanel(openAnnotationDialog,
+                            getModelObject(), originSpanId, targetSpanId, selectedArcId);
+                }
+            }
+
+        });
+        
         openAnnotationDialog.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
         {
             private static final long serialVersionUID = -1746088901018629567L;

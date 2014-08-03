@@ -50,12 +50,12 @@ import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
 import org.apache.wicket.behavior.Behavior;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.IHeaderResponse;
+import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
-import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.RefreshingView;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -91,7 +91,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  *
  */
 public class SpanAnnotationModalWindowPage
-    extends Panel
+    extends WebPage
 {
     private final static Log LOG = LogFactory.getLog(SpanAnnotationModalWindowPage.class);
     
@@ -623,11 +623,10 @@ public class SpanAnnotationModalWindowPage
         public String tag;
     }
 
-    public SpanAnnotationModalWindowPage(String aId, ModalWindow modalWindow,
+    public SpanAnnotationModalWindowPage(ModalWindow modalWindow,
             BratAnnotatorModel aBratAnnotatorModel, String aSelectedText, int aBeginOffset,
             int aEndOffset)
     {
-        super(aId);
         this.beginOffset = aBeginOffset;
         this.endOffset = aEndOffset;
 
@@ -638,10 +637,9 @@ public class SpanAnnotationModalWindowPage
         add(annotationDialogForm);
     }
 
-    public SpanAnnotationModalWindowPage(String aId, ModalWindow modalWindow,
+    public SpanAnnotationModalWindowPage(ModalWindow modalWindow,
             BratAnnotatorModel aBratAnnotatorModel, int selectedSpanId, String aType)
     {
-        super(aId);
         this.selectedSpanId = selectedSpanId;
         this.bratAnnotatorModel = aBratAnnotatorModel;
         JCas jCas = null;

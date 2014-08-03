@@ -46,12 +46,12 @@ import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
 import org.apache.wicket.behavior.Behavior;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.IHeaderResponse;
+import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
-import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.RefreshingView;
 import org.apache.wicket.model.IModel;
@@ -85,7 +85,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  *
  */
 public class ArcAnnotationModalWindowPanel
-    extends Panel
+    extends WebPage
 {
     private final static Log LOG = LogFactory.getLog(ArcAnnotationModalWindowPanel.class);
     
@@ -592,12 +592,10 @@ public class ArcAnnotationModalWindowPanel
         public String tag;
     }
 
-    public ArcAnnotationModalWindowPanel(String aId, final ModalWindow modalWindow,
+    public ArcAnnotationModalWindowPanel(final ModalWindow modalWindow,
             BratAnnotatorModel aBratAnnotatorModel, int aOriginSpanId, String aOriginSpanType,
             int aTargetSpanId, String aTargetSpanType)
     {
-        super(aId);
-
         long layerId = Integer.parseInt(aOriginSpanType.substring(0, aOriginSpanType.indexOf("_")));
 
         AnnotationLayer spanLayer = annotationService.getLayer(layerId);
@@ -627,11 +625,10 @@ public class ArcAnnotationModalWindowPanel
         add(annotationDialogForm);
     }
 
-    public ArcAnnotationModalWindowPanel(String aId, final ModalWindow modalWindow,
+    public ArcAnnotationModalWindowPanel(final ModalWindow modalWindow,
             BratAnnotatorModel aBratAnnotatorModel, int aOriginSpanId, int aTargetSpanId,
             int selectedArcId)
     {
-        super(aId);
         this.selectedArcId = selectedArcId;
         this.bratAnnotatorModel = aBratAnnotatorModel;
         JCas jCas = null;
