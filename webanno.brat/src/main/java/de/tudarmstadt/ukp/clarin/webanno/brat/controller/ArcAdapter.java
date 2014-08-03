@@ -266,14 +266,15 @@ public class ArcAdapter
         }
         // It is new ARC annotation, create it
         if (!duplicate) {
-            if (aValue.equals("ROOT")) {
-                governorFs = aOriginFs;
-                dependentFs = governorFs;
-            }
-            else {
+            // See issue 953
+//            if ("ROOT".equals(aValue)) {
+//                governorFs = aOriginFs;
+//                dependentFs = governorFs;
+//            }
+//            else {
                 dependentFs = aTargetFs;
                 governorFs = aOriginFs;
-            }
+//            }
             // for POS annotation, since custom span layers do not have attach feature
             if (attacheFeatureName != null) {
                 dependentFs = selectCovered(aJCas.getCas(), tokenType, dependentFs.getBegin(),
@@ -289,24 +290,18 @@ public class ArcAdapter
             if (dependentFs.getEnd() <= governorFs.getEnd()) {
                 newAnnotation = aJCas.getCas().createAnnotation(type, dependentFs.getBegin(),
                         governorFs.getEnd());
-                if (aFeature != null) {
-                    Feature feature = type.getFeatureByBaseName(aFeature.getName());
-                    newAnnotation.setFeatureValueFromString(feature, aValue);
-                }
             }
             else {
                 newAnnotation = aJCas.getCas().createAnnotation(type, governorFs.getBegin(),
                         dependentFs.getEnd());
-                if (aFeature != null) {
-                    Feature feature = type.getFeatureByBaseName(aFeature.getName());
-                    newAnnotation.setFeatureValueFromString(feature, aValue);
-                }
             }
+            
             // If origin and target spans are multiple tokens, dependentFS.getBegin will be the
             // the begin position of the first token and dependentFS.getEnd will be the End
             // position of the last token.
             newAnnotation.setFeatureValue(dependentFeature, dependentFs);
             newAnnotation.setFeatureValue(governorFeature, governorFs);
+            BratAjaxCasUtil.setFeature(newAnnotation, aFeature, aValue);
             aJCas.addFsToIndexes(newAnnotation);
             return ((FeatureStructureImpl) newAnnotation).getAddress();
         }
