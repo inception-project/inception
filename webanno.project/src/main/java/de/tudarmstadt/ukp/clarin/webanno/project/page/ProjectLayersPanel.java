@@ -509,7 +509,9 @@ public class ProjectLayersPanel
                     target.add(multipleTokens);
                    
                     target.add(linkedListBehaviorLabel);
-                    target.add(linkedListBehavior);                    
+                    target.add(linkedListBehavior); 
+                    
+                    target.add(attachTypes);
                 }
             });
             add(new AjaxLink<Void>("showLayerTechnicalPropertyModal")
