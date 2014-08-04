@@ -29,6 +29,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.http.HttpSession;
+
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -55,6 +57,8 @@ import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.RefreshingView;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 
@@ -88,7 +92,7 @@ public class ArcAnnotationModalWindowPanel
     extends WebPage
 {
     private final static Log LOG = LogFactory.getLog(ArcAnnotationModalWindowPanel.class);
-    
+
     private static final long serialVersionUID = -2102136855109258306L;
 
     @SpringBean(name = "documentRepository")
@@ -180,7 +184,8 @@ public class ArcAnnotationModalWindowPanel
 
                     tagModel.setObject(selectedFeatureValues.get(feature));
                 }
-                else if (bratAnnotatorModel.getRememberedArcFeatures().get(feature) != null) {
+                else if (bratAnnotatorModel.getRememberedArcFeatures() != null
+                        && bratAnnotatorModel.getRememberedArcFeatures().get(feature) != null) {
                     tagModel.setObject(bratAnnotatorModel.getRememberedArcFeatures().get(feature));
                 }
                 tagModels.add(tagModel);
@@ -278,8 +283,8 @@ public class ArcAnnotationModalWindowPanel
                                         + "] is not in the tag list. Please choose form the existing tags");
                                 return;
                             }
-                        }                        
-                        
+                        }
+
                         // If there is no annotation yet, create one. During creation, the adapter
                         // may notice that it would create a duplicate and return the address of
                         // an existing annotation instead of a new one.
@@ -288,7 +293,7 @@ public class ArcAnnotationModalWindowPanel
                         AnnotationFS targetFs = selectByAddr(jCas, targetSpanId);
 
                         TypeAdapter adapter = getAdapter(selectedLayer);
-                        
+
                         if (selectedArcId == -1) {
                             if (adapter instanceof ArcAdapter) {
                                 selectedArcId = ((ArcAdapter) adapter).add(null, originFs,
@@ -299,7 +304,7 @@ public class ArcAnnotationModalWindowPanel
                                         targetFs, null, null);
                             }
                         }
-                        
+
                         // Set feature values
                         List<AnnotationFeature> features = new ArrayList<AnnotationFeature>();
                         for (IModel<String> model : tagModels) {
@@ -331,15 +336,14 @@ public class ArcAnnotationModalWindowPanel
 
                             adapter.updateFeature(jCas, feature, selectedArcId,
                                     selectedTag.getName());
-                            
+
                             selectedFeatureValues.put(feature, model.getObject());
                             beginOffset = originFs.getBegin();
                         }
-                        
+
                         // update timestamp now
                         int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas, beginOffset);
-                        bratAnnotatorModel.setRememberedArcLayer(selectedLayer);
-                        bratAnnotatorModel.setRememberedArcFeatures(selectedFeatureValues);
+
                         bratAnnotatorModel.getDocument().setSentenceAccessed(sentenceNumber);
                         repository.updateTimeStamp(bratAnnotatorModel.getDocument(),
                                 bratAnnotatorModel.getUser(), bratAnnotatorModel.getMode());
@@ -352,12 +356,18 @@ public class ArcAnnotationModalWindowPanel
                         if (bratAnnotatorModel.isScrollPage()) {
                             updateSentenceAddressAndOffsets(jCas, beginOffset);
                         }
-                        
+
                         String bratLabelText = TypeUtil.getBratLabelText(adapter,
                                 BratAjaxCasUtil.selectByAddr(jCas, selectedArcId), features);
+
                         bratAnnotatorModel.setMessage(SpanAnnotationModalWindowPage
                                 .generateMessage(selectedLayer, bratLabelText, false));
-                                                
+                        bratAnnotatorModel.setRememberedArcLayer(selectedLayer);
+                        bratAnnotatorModel.setRememberedArcFeatures(selectedFeatureValues);
+                        HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())
+                                .getContainerRequest().getSession();
+                        session.setAttribute("model", bratAnnotatorModel);
+
                         aModalWindow.close(aTarget);
 
                     }
@@ -388,7 +398,7 @@ public class ArcAnnotationModalWindowPanel
                             ((ChainAdapter) adapter).setArc(true);
                         }
                         // END HACK - Issue 933
-                        
+
                         adapter.delete(jCas, selectedArcId);
                         repository.updateJCas(bratAnnotatorModel.getMode(),
                                 bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
@@ -407,7 +417,7 @@ public class ArcAnnotationModalWindowPanel
                             updateSentenceAddressAndOffsets(jCas, start);
                         }
 
-                         // store latest annotations
+                        // store latest annotations
                         for (IModel<String> model : tagModels) {
                             AnnotationFeature feature = featureModels.get(tagModels.indexOf(model))
                                     .getObject().feature;
@@ -417,6 +427,12 @@ public class ArcAnnotationModalWindowPanel
 
                         bratAnnotatorModel.setMessage(SpanAnnotationModalWindowPage
                                 .generateMessage(selectedLayer, null, true));
+                        bratAnnotatorModel.setRememberedArcLayer(selectedLayer);
+                        bratAnnotatorModel.setRememberedArcFeatures(selectedFeatureValues);
+                        HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())
+                                .getContainerRequest().getSession();
+                        session.setAttribute("model", bratAnnotatorModel);
+
                     }
                     catch (UIMAException e) {
                         aTarget.add(feedbackPanel);
@@ -501,6 +517,11 @@ public class ArcAnnotationModalWindowPanel
 
                         bratAnnotatorModel.setMessage("The arc annotation  [" + deletedAnnoSb
                                 + "] is reversed");
+                        bratAnnotatorModel.setRememberedArcLayer(selectedLayer);
+                        bratAnnotatorModel.setRememberedArcFeatures(selectedFeatureValues);
+                        HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())
+                                .getContainerRequest().getSession();
+                        session.setAttribute("model", bratAnnotatorModel);
 
                     }
                     catch (UIMAException e) {
@@ -642,7 +663,6 @@ public class ArcAnnotationModalWindowPanel
             type = type.substring(0, type.length() - ChainAdapter.LINK.length());
         }
 
-        
         this.selectedLayer = annotationService.getLayer(type, bratAnnotatorModel.getProject());
         layersModel = new Model<AnnotationLayer>(selectedLayer);
         for (AnnotationFeature feature : annotationService.listAnnotationFeature(selectedLayer)) {

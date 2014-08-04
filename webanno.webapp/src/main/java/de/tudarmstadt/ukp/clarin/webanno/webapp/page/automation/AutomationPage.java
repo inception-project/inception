@@ -1162,6 +1162,14 @@ public class AutomationPage
         }
         bratAnnotatorModel.setUser(logedInUser);
 
+        // if project is changed, reset some project specific settings
+        if (currentprojectId != bratAnnotatorModel.getProject().getId()) {
+            bratAnnotatorModel.setRememberedArcFeatures(null);
+            bratAnnotatorModel.setRememberedArcLayer(null);
+            bratAnnotatorModel.setRememberedSpanFeatures(null);
+            bratAnnotatorModel.setRememberedSpanLayer(null);
+            bratAnnotatorModel.setMessage(null);
+        }
         currentprojectId = bratAnnotatorModel.getProject().getId();
         currentDocumentId = bratAnnotatorModel.getDocument().getId();
     }

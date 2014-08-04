@@ -95,7 +95,7 @@ public class SpanAnnotationModalWindowPage
     extends WebPage
 {
     private final static Log LOG = LogFactory.getLog(SpanAnnotationModalWindowPage.class);
-    
+
     private static final long serialVersionUID = -2102136855109258306L;
 
     @SpringBean(name = "documentRepository")
@@ -249,7 +249,8 @@ public class SpanAnnotationModalWindowPage
 
                     tagModel.setObject(selectedFeatureValues.get(feature));
                 }
-                else if (bratAnnotatorModel.getRememberedSpanFeatures().get(feature) != null) {
+                else if (bratAnnotatorModel.getRememberedSpanFeatures() != null
+                        && bratAnnotatorModel.getRememberedSpanFeatures().get(feature) != null) {
                     tagModel.setObject(bratAnnotatorModel.getRememberedSpanFeatures().get(feature));
                 }
                 tagModels.add(tagModel);
@@ -272,10 +273,10 @@ public class SpanAnnotationModalWindowPage
                         tags.addAll(annotationService.listTags(item.getModelObject().feature
                                 .getTagset()));
                     }
-                    if(tags.size() == 0){
-                    	Tag tag = new Tag();
-                    	tag.setName(selectedText);
-                    	tags.add(tag);
+                    if (tags.size() == 0) {
+                        Tag tag = new Tag();
+                        tag.setName(selectedText);
+                        tags.add(tag);
                     }
                     item.add(new ComboBox<Tag>("tag", tagModels.get(item.getIndex()), tags,
                             new ComboBoxRenderer<Tag>("name", "name")).add(new Behavior()
@@ -351,14 +352,14 @@ public class SpanAnnotationModalWindowPage
                                         + "] is not in the tag list. Please choose form the existing tags");
                                 return;
                             }
-                        }                      
+                        }
 
                         // If there is no annotation yet, create one. During creation, the adapter
                         // may notice that it would create a duplicate and return the address of
                         // an existing annotation instead of a new one.
                         JCas jCas = getCas(bratAnnotatorModel);
                         TypeAdapter adapter = getAdapter(selectedLayer);
-                        
+
                         if (selectedSpanId == -1) {
                             if (adapter instanceof SpanAdapter) {
                                 selectedSpanId = ((SpanAdapter) adapter).add(jCas, beginOffset,
@@ -405,7 +406,7 @@ public class SpanAnnotationModalWindowPage
                             selectedFeatureValues.put(feature, model.getObject());
 
                         }
-                        
+
                         // update timestamp now
                         int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas, beginOffset);
                         bratAnnotatorModel.getDocument().setSentenceAccessed(sentenceNumber);
@@ -682,11 +683,10 @@ public class SpanAnnotationModalWindowPage
         this.isModify = true;
     }
 
-    
     public static String generateMessage(AnnotationLayer aLayer, String aLabel, boolean aDeleted)
     {
         String action = aDeleted ? "deleted" : "created/updated";
-        
+
         String msg = "The [" + aLayer.getUiName() + "] annotation has been " + action + ".";
         if (StringUtils.isNotBlank(aLabel)) {
             msg += " Label: [" + aLabel + "]";

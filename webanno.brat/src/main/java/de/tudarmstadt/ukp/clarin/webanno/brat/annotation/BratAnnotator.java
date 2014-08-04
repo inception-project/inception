@@ -459,7 +459,7 @@ public class BratAnnotator
             }
 
         });
-        
+
         openAnnotationDialog.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
         {
             private static final long serialVersionUID = -1746088901018629567L;
@@ -467,6 +467,25 @@ public class BratAnnotator
             @Override
             public void onClose(AjaxRequestTarget aTarget)
             {
+
+             // A hack to remember the wicket combobox DropDown display value
+                HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())
+                        .getContainerRequest().getSession();
+                BratAnnotatorModel model = (BratAnnotatorModel) session.getAttribute("model");
+                if (model != null) {
+                    // setModelObject(model);
+                    getModelObject().setSentenceAddress(model.getSentenceAddress());
+
+                    getModelObject().setSentenceBeginOffset(model.getSentenceBeginOffset());
+                    getModelObject().setSentenceEndOffset(model.getSentenceEndOffset());
+
+                    getModelObject().setRememberedArcLayer(model.getRememberedArcLayer());
+                    getModelObject().setRememberedArcFeatures(model.getRememberedArcFeatures());
+
+                    getModelObject().setMessage(model.getMessage());
+
+                }
+
                 if (!closeButtonClicked) {
                     onChange(aTarget, getModelObject());
                     reloadContent(aTarget);
