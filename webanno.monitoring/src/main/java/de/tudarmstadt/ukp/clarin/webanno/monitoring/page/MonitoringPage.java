@@ -129,7 +129,7 @@ public class MonitoringPage
     private final Image annotatorsProgressImage;
     private final Image annotatorsProgressPercentageImage;
     private final Image overallProjectProgressImage;
-    private final TrainingResultForm trainingResultForm;
+    private  TrainingResultForm trainingResultForm;
 
     private Label overview;
     private DefaultDataTable<?> annotationDocumentStatusTable;
@@ -303,12 +303,7 @@ public class MonitoringPage
                     annotationTypeSelectionForm.setVisible(true);
                     monitoringDetailForm.setVisible(true);
 
-                    if (aNewSelection.getMode().equals(Mode.AUTOMATION)) {
-                        trainingResultForm.setVisible(true);
-                    }
-                    else {
-                        trainingResultForm.setVisible(false);
-                    }
+                    updateTrainingResultForm(aNewSelection);
                     result = "";
 
                     annotationTypeSelectionForm.setModelObject(new SelectionModel());
@@ -669,6 +664,15 @@ public class MonitoringPage
                 new Model<Project>());
         add(agreementForm);
         agreementForm.setVisible(true);
+    }
+    
+    private void updateTrainingResultForm(Project aProject)
+    {
+    	trainingResultForm.remove();
+    	 trainingResultForm = new TrainingResultForm("trainingResultForm");
+    	 add(trainingResultForm);
+         trainingResultForm.setVisible(aProject.getMode().equals(Mode.AUTOMATION));
+         
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
