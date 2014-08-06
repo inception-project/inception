@@ -218,8 +218,8 @@ public class ChainAdapter
         }        
     }
             
-    public int addSpan(String aLabelValue, JCas aJCas, int aBegin, int aEnd,
-            AnnotationFeature aFeature)
+    public int addSpan( JCas aJCas, int aBegin, int aEnd,
+            AnnotationFeature aFeature, String aLabelValue)
         throws MultipleSentenceCoveredException
     {
         List<Token> tokens = BratAjaxCasUtil.selectOverlapping(aJCas, Token.class, aBegin, aEnd);
@@ -244,7 +244,7 @@ public class ChainAdapter
     }
 
     public int addArc(JCas aJCas, AnnotationFS aOriginFs,
-            AnnotationFS aTargetFs, String aValue, AnnotationFeature aFeature)
+            AnnotationFS aTargetFs, AnnotationFeature aFeature, String aValue)
     {
         // Determine if the links are adjacent. If so, just update the arc label
         AnnotationFS originNext = getNextLink(aOriginFs);

@@ -189,8 +189,8 @@ public class ArcAdapter
      *            If arc direction are in reverse direction, from Dependent to Governor
      * @throws BratAnnotationException
      */
-    public Integer add(String aLabelValue, AnnotationFS aOriginFs, AnnotationFS aTargetFs,
-            JCas aJCas, BratAnnotatorModel aBratAnnotatorModel, AnnotationFeature aFeature)
+    public Integer add(AnnotationFS aOriginFs, AnnotationFS aTargetFs,
+            JCas aJCas, BratAnnotatorModel aBratAnnotatorModel, AnnotationFeature aFeature, String aLabelValue)
         throws BratAnnotationException
     {
         Sentence sentence = BratAjaxCasUtil.selectSentenceAt(aJCas,

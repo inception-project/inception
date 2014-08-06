@@ -29,8 +29,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpSession;
-
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -53,6 +51,7 @@ import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
+import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.RefreshingView;
 import org.apache.wicket.model.IModel;
@@ -89,7 +88,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  *
  */
 public class ArcAnnotationModalWindowPanel
-    extends WebPage
+    extends Panel
 {
     private final static Log LOG = LogFactory.getLog(ArcAnnotationModalWindowPanel.class);
 
@@ -292,18 +291,7 @@ public class ArcAnnotationModalWindowPanel
                         AnnotationFS originFs = selectByAddr(jCas, originSpanId);
                         AnnotationFS targetFs = selectByAddr(jCas, targetSpanId);
 
-                        TypeAdapter adapter = getAdapter(selectedLayer);
-
-                        if (selectedArcId == -1) {
-                            if (adapter instanceof ArcAdapter) {
-                                selectedArcId = ((ArcAdapter) adapter).add(null, originFs,
-                                        targetFs, jCas, bratAnnotatorModel, null);
-                            }
-                            else {
-                                selectedArcId = ((ChainAdapter) adapter).addArc(jCas, originFs,
-                                        targetFs, null, null);
-                            }
-                        }
+                        TypeAdapter adapter = getAdapter(selectedLayer);                 
 
                         // Set feature values
                         List<AnnotationFeature> features = new ArrayList<AnnotationFeature>();
@@ -311,6 +299,18 @@ public class ArcAnnotationModalWindowPanel
                             AnnotationFeature feature = featureModels.get(tagModels.indexOf(model))
                                     .getObject().feature;
                             features.add(feature);
+                            
+                            if (selectedArcId == -1) {
+                                if (adapter instanceof ArcAdapter) {
+                                    selectedArcId = ((ArcAdapter) adapter).add(originFs,
+                                            targetFs, jCas, bratAnnotatorModel, feature, model.getObject());
+                                }
+                                else {
+                                    selectedArcId = ((ChainAdapter) adapter).addArc(jCas, originFs,
+                                            targetFs, feature, model.getObject());
+                                }
+                            }
+                            
                             Tag selectedTag;
                             if (feature.getTagset() == null) {
                                 selectedTag = new Tag();
@@ -357,17 +357,19 @@ public class ArcAnnotationModalWindowPanel
                             updateSentenceAddressAndOffsets(jCas, beginOffset);
                         }
 
-                        String bratLabelText = TypeUtil.getBratLabelText(adapter,
-                                BratAjaxCasUtil.selectByAddr(jCas, selectedArcId), features);
+                        if(selectedArcId !=-1){
+	                        String bratLabelText = TypeUtil.getBratLabelText(adapter,
+	                                BratAjaxCasUtil.selectByAddr(jCas, selectedArcId), features);
+	                        bratAnnotatorModel.setMessage(SpanAnnotationModalWindowPage
+	                                .generateMessage(selectedLayer, bratLabelText, false));
+                        }
+                        else{
+                        	 bratAnnotatorModel.setMessage("");
+                        }
 
-                        bratAnnotatorModel.setMessage(SpanAnnotationModalWindowPage
-                                .generateMessage(selectedLayer, bratLabelText, false));
+
                         bratAnnotatorModel.setRememberedArcLayer(selectedLayer);
                         bratAnnotatorModel.setRememberedArcFeatures(selectedFeatureValues);
-                        HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())
-                                .getContainerRequest().getSession();
-                        session.setAttribute("model", bratAnnotatorModel);
-
                         aModalWindow.close(aTarget);
 
                     }
@@ -429,9 +431,6 @@ public class ArcAnnotationModalWindowPanel
                                 .generateMessage(selectedLayer, null, true));
                         bratAnnotatorModel.setRememberedArcLayer(selectedLayer);
                         bratAnnotatorModel.setRememberedArcFeatures(selectedFeatureValues);
-                        HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())
-                                .getContainerRequest().getSession();
-                        session.setAttribute("model", bratAnnotatorModel);
 
                     }
                     catch (UIMAException e) {
@@ -480,8 +479,8 @@ public class ArcAnnotationModalWindowPanel
                             for (IModel<String> model : tagModels) {
                                 AnnotationFeature feature = featureModels.get(
                                         tagModels.indexOf(model)).getObject().feature;
-                                ((ArcAdapter) adapter).add(model.getObject(), targetFs, originFs,
-                                        jCas, bratAnnotatorModel, feature);
+                                ((ArcAdapter) adapter).add( targetFs, originFs,
+                                        jCas, bratAnnotatorModel, feature, model.getObject());
                             }
                         }
                         else {
@@ -519,9 +518,6 @@ public class ArcAnnotationModalWindowPanel
                                 + "] is reversed");
                         bratAnnotatorModel.setRememberedArcLayer(selectedLayer);
                         bratAnnotatorModel.setRememberedArcFeatures(selectedFeatureValues);
-                        HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())
-                                .getContainerRequest().getSession();
-                        session.setAttribute("model", bratAnnotatorModel);
 
                     }
                     catch (UIMAException e) {
@@ -599,10 +595,11 @@ public class ArcAnnotationModalWindowPanel
         public String tag;
     }
 
-    public ArcAnnotationModalWindowPanel(final ModalWindow modalWindow,
+    public ArcAnnotationModalWindowPanel(String aId, final ModalWindow modalWindow,
             BratAnnotatorModel aBratAnnotatorModel, int aOriginSpanId, String aOriginSpanType,
             int aTargetSpanId, String aTargetSpanType)
     {
+    	super(aId);
         long layerId = Integer.parseInt(aOriginSpanType.substring(0, aOriginSpanType.indexOf("_")));
 
         AnnotationLayer spanLayer = annotationService.getLayer(layerId);
@@ -632,10 +629,11 @@ public class ArcAnnotationModalWindowPanel
         add(annotationDialogForm);
     }
 
-    public ArcAnnotationModalWindowPanel(final ModalWindow modalWindow,
+    public ArcAnnotationModalWindowPanel(String aId, final ModalWindow modalWindow,
             BratAnnotatorModel aBratAnnotatorModel, int aOriginSpanId, int aTargetSpanId,
             int selectedArcId)
     {
+    	super(aId);
         this.selectedArcId = selectedArcId;
         this.bratAnnotatorModel = aBratAnnotatorModel;
         JCas jCas = null;

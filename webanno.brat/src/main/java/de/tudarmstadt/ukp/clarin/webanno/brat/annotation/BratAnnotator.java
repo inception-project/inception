@@ -20,8 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 import java.io.IOException;
 import java.io.StringWriter;
 
-import javax.servlet.http.HttpSession;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
@@ -344,36 +342,27 @@ public class BratAnnotator
         add(controller);
 
     }
-
     /**
      * opens the {@link SpanAnnotationModalWindowPage} in a {@link ModalWindow}
-     */
-
+     */ 
+    
     private void openSpanAnnotationDialog(final ModalWindow openAnnotationDialog,
-            AjaxRequestTarget aTarget, final int aBeginOffset, final int aEndOffset)
+            AjaxRequestTarget aTarget,final int aBeginOffset, final int aEndOffset)
     {
+
         closeButtonClicked = false;
-        openAnnotationDialog.setPageCreator(new ModalWindow.PageCreator()
-        {
-            private static final long serialVersionUID = -2827824968207807739L;
-
-            @Override
-            public Page createPage()
-            {
-                if (selectedSpanID == -1) {// new annotation
-                    openAnnotationDialog.setTitle("New Span Annotation");
-                    return new SpanAnnotationModalWindowPage(openAnnotationDialog,
-                            getModelObject(), selectedSpanText, aBeginOffset, aEndOffset);
-                }
-                else {
-                    openAnnotationDialog.setTitle("Edit Span Annotation");
-
-                    return new SpanAnnotationModalWindowPage(openAnnotationDialog,
-                            getModelObject(), selectedSpanID);
-                }
-            }
-
-        });
+        if (selectedSpanID == -1) {// new annotation
+            openAnnotationDialog.setTitle("New Arc Annotation");
+            openAnnotationDialog.setContent(new  SpanAnnotationModalWindowPage(openAnnotationDialog
+                    .getContentId(),openAnnotationDialog,
+                    getModelObject(), selectedSpanText, aBeginOffset, aEndOffset));
+        }
+        else {
+            openAnnotationDialog.setTitle("Edit Arc Annotation");
+            openAnnotationDialog.setContent(new SpanAnnotationModalWindowPage(openAnnotationDialog
+                    .getContentId(), openAnnotationDialog,
+                    getModelObject(), selectedSpanID));
+        }
 
         openAnnotationDialog.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
         {
@@ -382,33 +371,7 @@ public class BratAnnotator
             @Override
             public void onClose(AjaxRequestTarget aTarget)
             {
-                // A hack to remember the wicket combobox DropDown display value
-                HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())
-                        .getContainerRequest().getSession();
-                BratAnnotatorModel model = (BratAnnotatorModel) session.getAttribute("model");
-                if (model != null) {
-                    // setModelObject(model);
-                    getModelObject().setSentenceAddress(model.getSentenceAddress());
-
-                    getModelObject().setSentenceBeginOffset(model.getSentenceBeginOffset());
-                    getModelObject().setSentenceEndOffset(model.getSentenceEndOffset());
-
-                    getModelObject().setRememberedSpanLayer(model.getRememberedSpanLayer());
-                    getModelObject().setRememberedSpanFeatures(model.getRememberedSpanFeatures());
-
-                    getModelObject().setAnnotate(model.isAnnotate());
-                    getModelObject().setMessage(model.getMessage());
-
-                }
-
                 if (!closeButtonClicked) {
-                    if (selectedSpanID == -1) {
-                        onAnnotate(getModelObject(), beginOffset, endOffset);
-                    }
-                    if (!getModelObject().isAnnotate()
-                            && getModelObject().getProject().getMode().equals(Mode.AUTOMATION)) {
-                        onDelete(getModelObject(), beginOffset, endOffset);
-                    }
                     onChange(aTarget, getModelObject());
                     reloadContent(aTarget);
                 }
@@ -419,7 +382,7 @@ public class BratAnnotator
         // span annotation layer (from the settings button) selected
         for (AnnotationLayer layer : getModelObject().getAnnotationLayers()) {
             /*
-             * if (layer.getFeature() == null || layer.getLayer() == null) { continue; }
+             * if (layer.getFeature() == null) { continue; }
              */
             if (layer.getType().equals(WebAnnoConst.SPAN_TYPE)
                     || layer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
@@ -437,28 +400,18 @@ public class BratAnnotator
     {
 
         closeButtonClicked = false;
-        openAnnotationDialog.setPageCreator(new ModalWindow.PageCreator()
-        {
-            private static final long serialVersionUID = -2827824968207807739L;
-
-            @Override
-            public Page createPage()
-            {
-                if (selectedArcId == -1) {// new annotation
-                    openAnnotationDialog.setTitle("New Arc Annotation");
-                    return new ArcAnnotationModalWindowPanel(openAnnotationDialog,
-                            getModelObject(), originSpanId, originSpanType, targetSpanId,
-                            targetSpanType);
-                }
-                else {
-                    openAnnotationDialog.setTitle("Edit Arc Annotation");
-
-                    return new ArcAnnotationModalWindowPanel(openAnnotationDialog,
-                            getModelObject(), originSpanId, targetSpanId, selectedArcId);
-                }
-            }
-
-        });
+        if (selectedArcId == -1) {// new annotation
+            openAnnotationDialog.setTitle("New Arc Annotation");
+            openAnnotationDialog.setContent(new ArcAnnotationModalWindowPanel(openAnnotationDialog
+                    .getContentId(), openAnnotationDialog, getModelObject(), originSpanId,
+                    originSpanType, targetSpanId, targetSpanType));
+        }
+        else {
+            openAnnotationDialog.setTitle("Edit Arc Annotation");
+            openAnnotationDialog.setContent(new ArcAnnotationModalWindowPanel(openAnnotationDialog
+                    .getContentId(), openAnnotationDialog, getModelObject(), originSpanId,
+                    targetSpanId, selectedArcId));
+        }
 
         openAnnotationDialog.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
         {
@@ -467,25 +420,6 @@ public class BratAnnotator
             @Override
             public void onClose(AjaxRequestTarget aTarget)
             {
-
-             // A hack to remember the wicket combobox DropDown display value
-                HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())
-                        .getContainerRequest().getSession();
-                BratAnnotatorModel model = (BratAnnotatorModel) session.getAttribute("model");
-                if (model != null) {
-                    // setModelObject(model);
-                    getModelObject().setSentenceAddress(model.getSentenceAddress());
-
-                    getModelObject().setSentenceBeginOffset(model.getSentenceBeginOffset());
-                    getModelObject().setSentenceEndOffset(model.getSentenceEndOffset());
-
-                    getModelObject().setRememberedArcLayer(model.getRememberedArcLayer());
-                    getModelObject().setRememberedArcFeatures(model.getRememberedArcFeatures());
-
-                    getModelObject().setMessage(model.getMessage());
-
-                }
-
                 if (!closeButtonClicked) {
                     onChange(aTarget, getModelObject());
                     reloadContent(aTarget);

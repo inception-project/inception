@@ -435,8 +435,8 @@ public class CurationViewPanel extends WebMarkupContainer {
 
             for (AnnotationFeature feature : annotationService
                     .listAnnotationFeature(layer)) {
-                adapter.add(featureValues.get(feature), originFs, targetFs, aJcas,
-                        aCurationUserSegment.getBratAnnotatorModel(), feature);
+                adapter.add( originFs, targetFs, aJcas,
+                        aCurationUserSegment.getBratAnnotatorModel(), feature, featureValues.get(feature));
             }
 
             repository.updateJCas(aCurationUserSegment.getBratAnnotatorModel()

@@ -31,8 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.servlet.http.HttpSession;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
@@ -45,17 +43,20 @@ import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
 import org.apache.wicket.behavior.Behavior;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.IHeaderResponse;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
+import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.RefreshingView;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -92,7 +93,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  *
  */
 public class SpanAnnotationModalWindowPage
-    extends WebPage
+    extends Panel
 {
     private final static Log LOG = LogFactory.getLog(SpanAnnotationModalWindowPage.class);
 
@@ -127,6 +128,7 @@ public class SpanAnnotationModalWindowPage
     List<IModel<FeatureValue>> featureModels;
     List<IModel<String>> tagModels;
     RefreshingView<FeatureValue> featureValues;
+    private WebMarkupContainer wmc ;
 
     private class AnnotationDialogForm
         extends Form<SelectionModel>
@@ -168,20 +170,40 @@ public class SpanAnnotationModalWindowPage
             }
 
             add(new Label("selectedText", selectedText));
-            add(new DropDownChoice<AnnotationLayer>("layers", layersModel, spanLayers)
+            @SuppressWarnings("unchecked")
+			DropDownChoice<AnnotationLayer> layer = (DropDownChoice<AnnotationLayer>) new DropDownChoice<AnnotationLayer>("layers", layersModel, spanLayers)
             {
                 private static final long serialVersionUID = -508831184292402704L;
 
                 @Override
-                protected void onSelectionChanged(AnnotationLayer aNewSelection)
+                protected CharSequence getDefaultChoice(String aSelectedValue)
                 {
-                    featureModels = new ArrayList<IModel<FeatureValue>>();
-                    tagModels = new ArrayList<IModel<String>>();
-                    selectedLayer = aNewSelection;
-                    for (AnnotationFeature feature : annotationService
-                            .listAnnotationFeature(aNewSelection)) {
+                    return "";
+                }
+            }.setChoiceRenderer(new ChoiceRenderer<AnnotationLayer>()
+            {
+                private static final long serialVersionUID = 1L;
 
-                        if (aNewSelection.getType().equals(WebAnnoConst.CHAIN_TYPE)
+                @Override
+                public Object getDisplayValue(AnnotationLayer aObject)
+                {
+                    return aObject.getUiName();
+                }
+            }).setOutputMarkupId(true);
+            
+            layer.add(new OnChangeAjaxBehavior() {
+
+				private static final long serialVersionUID = 5179816588460867471L;
+
+				@Override
+				protected void onUpdate(AjaxRequestTarget aTarget) {
+					featureModels = new ArrayList<IModel<FeatureValue>>();
+                    tagModels = new ArrayList<IModel<String>>();
+                    selectedLayer = layersModel.getObject();
+                    for (AnnotationFeature feature : annotationService
+                            .listAnnotationFeature(selectedLayer)) {
+
+                        if (selectedLayer.getType().equals(WebAnnoConst.CHAIN_TYPE)
                                 && feature.getName().equals(
                                         WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
                             continue;
@@ -201,30 +223,12 @@ public class SpanAnnotationModalWindowPage
                         }
                         tagModels.add(tagModel);
                     }
-                }
-
-                @Override
-                protected boolean wantOnSelectionChangedNotifications()
-                {
-                    return true;
-                }
-
-                @Override
-                protected CharSequence getDefaultChoice(String aSelectedValue)
-                {
-                    return "";
-                }
-            }.setChoiceRenderer(new ChoiceRenderer<AnnotationLayer>()
-            {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                public Object getDisplayValue(AnnotationLayer aObject)
-                {
-                    return aObject.getUiName();
-                }
-            }).setOutputMarkupId(true));
-
+                    aTarget.add(wmc);
+				}
+			});
+            
+            add (layer);
+            
             featureModels = new ArrayList<IModel<FeatureValue>>();
             tagModels = new ArrayList<IModel<String>>();
 
@@ -256,7 +260,8 @@ public class SpanAnnotationModalWindowPage
                 tagModels.add(tagModel);
             }
 
-            add(featureValues = new RefreshingView<FeatureValue>("featureValues")
+            wmc = new WebMarkupContainer("wmc");
+            add(wmc.add(featureValues = new RefreshingView<FeatureValue>("featureValues")
             {
                 private static final long serialVersionUID = -8359786805333207043L;
 
@@ -298,8 +303,9 @@ public class SpanAnnotationModalWindowPage
                 {
                     return featureModels.iterator();
                 }
-            });
-
+            }));
+            featureValues.setOutputMarkupId(true);
+            wmc.setOutputMarkupId(true);
             add(new AjaxButton("annotate")
             {
                 private static final long serialVersionUID = 980971048279862290L;
@@ -360,17 +366,6 @@ public class SpanAnnotationModalWindowPage
                         JCas jCas = getCas(bratAnnotatorModel);
                         TypeAdapter adapter = getAdapter(selectedLayer);
 
-                        if (selectedSpanId == -1) {
-                            if (adapter instanceof SpanAdapter) {
-                                selectedSpanId = ((SpanAdapter) adapter).add(jCas, beginOffset,
-                                        endOffset, null, null);
-                            }
-                            else {
-                                selectedSpanId = ((ChainAdapter) adapter).addSpan(null, jCas,
-                                        beginOffset, endOffset, null);
-                            }
-                        }
-
                         // Set feature values
                         List<AnnotationFeature> features = new ArrayList<AnnotationFeature>();
                         for (IModel<String> model : tagModels) {
@@ -378,6 +373,19 @@ public class SpanAnnotationModalWindowPage
                                     .getObject().feature;
                             features.add(feature);
 
+                            if (selectedSpanId == -1) {
+                                if (adapter instanceof SpanAdapter) {
+                                    selectedSpanId = ((SpanAdapter) adapter).add(jCas, beginOffset,
+                                            endOffset, feature, model.getObject());
+                                }
+                                else {
+                                    selectedSpanId = ((ChainAdapter) adapter).addSpan(jCas,
+                                            beginOffset, endOffset, feature, model.getObject());
+                                }
+                                continue;// next time, it will update features
+                            }
+                            
+                            
                             Tag selectedTag;
                             if (feature.getTagset() == null) {
                                 selectedTag = new Tag();
@@ -426,15 +434,15 @@ public class SpanAnnotationModalWindowPage
                         bratAnnotatorModel.setRememberedSpanFeatures(selectedFeatureValues);
 
                         bratAnnotatorModel.setAnnotate(true);
-                        String bratLabelText = TypeUtil.getBratLabelText(adapter,
-                                BratAjaxCasUtil.selectByAddr(jCas, selectedSpanId), features);
-                        bratAnnotatorModel.setMessage(generateMessage(selectedLayer, bratLabelText,
+                        if(selectedSpanId !=-1){
+	                        String bratLabelText = TypeUtil.getBratLabelText(adapter,
+	                                BratAjaxCasUtil.selectByAddr(jCas, selectedSpanId), features);
+	                        bratAnnotatorModel.setMessage(generateMessage(selectedLayer, bratLabelText,
                                 false));
-
-                        // A hack to remember the drop-down display value
-                        HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())
-                                .getContainerRequest().getSession();
-                        session.setAttribute("model", bratAnnotatorModel);
+                        }
+                        else{
+                        	 bratAnnotatorModel.setMessage("");
+                        }
 
                         aModalWindow.close(aTarget);
                     }
@@ -538,9 +546,6 @@ public class SpanAnnotationModalWindowPage
                         bratAnnotatorModel.setRememberedSpanLayer(selectedLayer);
                         bratAnnotatorModel.setRememberedSpanFeatures(selectedFeatureValues);
 
-                        HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())
-                                .getContainerRequest().getSession();
-                        session.setAttribute("model", bratAnnotatorModel);
                         aModalWindow.close(aTarget);
                     }
                     catch (UIMAException e) {
@@ -617,10 +622,11 @@ public class SpanAnnotationModalWindowPage
         public String tag;
     }
 
-    public SpanAnnotationModalWindowPage(ModalWindow modalWindow,
+    public SpanAnnotationModalWindowPage(String aId, ModalWindow modalWindow,
             BratAnnotatorModel aBratAnnotatorModel, String aSelectedText, int aBeginOffset,
             int aEndOffset)
     {
+    	super(aId);
         this.beginOffset = aBeginOffset;
         this.endOffset = aEndOffset;
 
@@ -631,9 +637,10 @@ public class SpanAnnotationModalWindowPage
         add(annotationDialogForm);
     }
 
-    public SpanAnnotationModalWindowPage(ModalWindow modalWindow,
+    public SpanAnnotationModalWindowPage(String aId, ModalWindow modalWindow,
             BratAnnotatorModel aBratAnnotatorModel, int selectedSpanId)
     {
+    	super(aId);
         this.selectedSpanId = selectedSpanId;
         this.bratAnnotatorModel = aBratAnnotatorModel;
         JCas jCas = null;
