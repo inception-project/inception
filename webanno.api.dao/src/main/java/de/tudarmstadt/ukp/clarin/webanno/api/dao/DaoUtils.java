@@ -17,13 +17,19 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
+import static org.apache.commons.io.IOUtils.closeQuietly;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Locale;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 
 /**
  * A utility class for {@link RepositoryServiceDbData} and {@link AnnotationServiceImpl} classes
@@ -40,48 +46,48 @@ public class DaoUtils
      * exported file do contain multiple file output
      */
     public static void zipFolder(File srcFolder, File destZipFile)
-        throws Exception
+        throws IOException
     {
-       srcPath = srcFolder.getName();
         ZipOutputStream zip = null;
-        FileOutputStream fileWriter = null;
-
-        fileWriter = new FileOutputStream(destZipFile);
-        zip = new ZipOutputStream(fileWriter);
-
-        addFolderToZip(new File(""), srcFolder, zip);
-        zip.flush();
-        zip.close();
+        try {
+            srcPath = srcFolder.getName();
+            zip = new ZipOutputStream(new FileOutputStream(destZipFile));
+    
+            addFolderToZip(new File(""), srcFolder, zip);
+            zip.flush();
+        }
+        finally {
+            closeQuietly(zip);
+        }
     }
 
     private static void addFileToZip(File path, File srcFile, ZipOutputStream zip)
-        throws Exception
+        throws IOException
     {
         if (srcFile.isDirectory()) {
+            // We don't need the folder name inside the zi[p
             addFolderToZip(path, srcFile, zip);
-           /* // We don't need the folder name inside the zi[p
-            if(path.getName().equals(srcPath)){
-                File subFolder = new File(srcFile.getAbsolutePath().replace(srcPath, ""));
-                addFolderToZip(path, subFolder, zip);
-            }
-            else {
-                addFolderToZip(path, srcFile, zip);
-            }*/
         }
         else {
-            FileInputStream in = new FileInputStream(srcFile);
-            if(path.getName().equals(srcPath)){
-                zip.putNextEntry(new ZipEntry("/" + srcFile.getName()));
+            FileInputStream in = null;
+            try {
+                in = new FileInputStream(srcFile);
+                if(path.getName().equals(srcPath)){
+                    zip.putNextEntry(new ZipEntry("/" + srcFile.getName()));
+                }
+                else {
+                    zip.putNextEntry(new ZipEntry(path + "/" + srcFile.getName()));
+                }
+                IOUtils.copy(in, zip);
             }
-            else {
-                zip.putNextEntry(new ZipEntry(path + "/" + srcFile.getName()));
+            finally {
+                closeQuietly(in);
             }
-            IOUtils.copy(in, zip);
         }
     }
 
     private static void addFolderToZip(File path, File srcFolder, ZipOutputStream zip)
-        throws Exception
+        throws IOException
     {
 
         for (String fileName : srcFolder.list()) {

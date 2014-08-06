@@ -22,8 +22,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.REL
 import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.commons.io.IOUtils.copyLarge;
 import static org.apache.commons.lang.StringUtils.isBlank;
-import static org.apache.uima.fit.factory.AnalysisEngineFactory.createPrimitive;
-import static org.apache.uima.fit.factory.AnalysisEngineFactory.createPrimitiveDescription;
+import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngine;
+import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
 import static org.apache.uima.fit.pipeline.SimplePipeline.runPipeline;
 
 import java.beans.PropertyDescriptor;
@@ -545,11 +545,6 @@ public class RepositoryServiceDbData
             String aFileName, Mode aMode)
         throws UIMAException, IOException, ClassNotFoundException
     {
-        File exportTempDir = File.createTempFile("webanno", "export");
-        File exportFile;
-        exportTempDir.delete();
-        exportTempDir.mkdirs();
-
         File annotationFolder = getAnnotationFolder(aDocument);
         String serializedCaseFileName;
         // for Correction, it will export the corrected document (of the logged
@@ -570,7 +565,7 @@ public class RepositoryServiceDbData
         }
 
         CollectionReader reader = CollectionReaderFactory
-                .createCollectionReader(SerializedCasReader.class, SerializedCasReader.PARAM_PATH,
+                .createReader(SerializedCasReader.class, SerializedCasReader.PARAM_SOURCE_LOCATION,
                         annotationFolder, SerializedCasReader.PARAM_PATTERNS, new String[] { "[+]"
                                 + serializedCaseFileName });
         if (!reader.hasNext()) {
@@ -585,16 +580,21 @@ public class RepositoryServiceDbData
                 multipleSpans.add(layer.getName());
             }
         }
+        
+        File exportTempDir = File.createTempFile("webanno", "export");
+        exportTempDir.delete();
+        exportTempDir.mkdirs();
+        
         AnalysisEngineDescription writer;
         if (aWriter.getName()
                 .equals("de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoCustomTsvWriter")) {
-            writer = createPrimitiveDescription(aWriter,
+            writer = createEngineDescription(aWriter,
                     JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
                     JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, true, "multipleSpans",
                     multipleSpans);
         }
         else {
-            writer = createPrimitiveDescription(aWriter,
+            writer = createEngineDescription(aWriter,
                     JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
                     JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, true);
         }
@@ -633,51 +633,31 @@ public class RepositoryServiceDbData
                 BratAjaxCasUtil.updateCasWithTagSet(cas, feature.getLayer().getName(),
                         tagSet.getName());
             }
-            /*
-             * if (feature.getName().equals(WebAnnoConst.NAMEDENTITY)) {
-             * BratAjaxCasUtil.updateCasWithTagSet(cas, NamedEntity.class.getName(),
-             * tagSet.getName()); } else if (feature.getName().equals(WebAnnoConst.POS)) {
-             * BratAjaxCasUtil.updateCasWithTagSet(cas, POS.class.getName(), tagSet.getName()); }
-             * else if (feature.getName().equals(WebAnnoConst.DEPENDENCY)) {
-             * BratAjaxCasUtil.updateCasWithTagSet(cas, Dependency.class.getName(),
-             * tagSet.getName()); }
-             */
-            /*
-             * else if (annotationType.getName().equals(AnnotationTypeConstant.COREFRELTYPE )) {
-             * BratAjaxCasUtil.updateCasWithTagSet(cas, CoreferenceLink.class.getName(),
-             * tagSet.getName()); } else if (annotationType
-             * .getName().equals(AnnotationTypeConstant.COREFERENCE)) {
-             * BratAjaxCasUtil.updateCasWithTagSet(cas, CoreferenceChain.class.getName(),
-             * tagSet.getName()); }
-             */
         }
 
         runPipeline(cas, writer);
 
         createLog(project, aUser).info(
                 " Exported file [" + aDocument.getName() + "] with ID [" + aDocument.getId()
-                        + "] from Project[" + project.getId() + "]");
+                        + "] from project [" + project.getId() + "]");
         createLog(project, aUser).removeAllAppenders();
 
+        File exportFile;
         if (exportTempDir.listFiles().length > 1) {
+            exportFile = new File(exportTempDir.getAbsolutePath() + ".zip");
             try {
-                DaoUtils.zipFolder(exportTempDir,
-                        new File(exportTempDir.getAbsolutePath() + ".zip"));
+                DaoUtils.zipFolder(exportTempDir, exportFile);
             }
             catch (Exception e) {
-                createLog(project, aUser).info("Unable to create Zip File");
+                createLog(project, aUser).info("Unable to create zip File");
             }
-            exportFile = new File(exportTempDir.getParent(), exportTempDir.getName() + ".zip");
-            FileUtils.forceDelete(exportTempDir);
-
-            return exportFile;
         }
-        exportFile = new File(exportTempDir.getParent(), exportTempDir.listFiles()[0].getName());
-        FileUtils.copyFile(exportTempDir.listFiles()[0], exportFile);
+        else {
+            exportFile = new File(exportTempDir.getParent(), exportTempDir.listFiles()[0].getName());
+            FileUtils.copyFile(exportTempDir.listFiles()[0], exportFile);
+        }
         FileUtils.forceDelete(exportTempDir);
-
         return exportFile;
-
     }
 
     @Override
@@ -1497,7 +1477,7 @@ public class RepositoryServiceDbData
     {
         try {
             File targetPath = getAnnotationFolder(aDocument);
-            AnalysisEngine writer = AnalysisEngineFactory.createPrimitive(
+            AnalysisEngine writer = AnalysisEngineFactory.createEngine(
                     SerializedCasWriter.class, SerializedCasWriter.PARAM_TARGET_LOCATION,
                     targetPath, SerializedCasWriter.PARAM_USE_DOCUMENT_ID, true);
             DocumentMetaData md;
@@ -2089,9 +2069,9 @@ public class RepositoryServiceDbData
          * = new ArrayList<String>(); for(AnnotationLayer layer:layers){
          * if(layer.isMultipleTokens()) multipleSpans.add(layer.getName()); }
          */
-        CollectionReader reader = CollectionReaderFactory.createCollectionReader(aReader,
-                ResourceCollectionReaderBase.PARAM_PATH, aFile.getParentFile().getAbsolutePath(),
-                ResourceCollectionReaderBase.PARAM_PATTERNS,
+        CollectionReader reader = CollectionReaderFactory.createReader(aReader,
+                ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION, aFile.getParentFile()
+                        .getAbsolutePath(), ResourceCollectionReaderBase.PARAM_PATTERNS,
                 new String[] { "[+]" + aFile.getName() }/* , "multipleSpans", multipleSpans */);
         if (!reader.hasNext()) {
             throw new FileNotFoundException("Annotation file [" + aFile.getName()
@@ -2102,7 +2082,7 @@ public class RepositoryServiceDbData
         boolean hasTokens = JCasUtil.exists(jCas, Token.class);
         boolean hasSentences = JCasUtil.exists(jCas, Sentence.class);
         if (!hasTokens || !hasSentences) {
-            AnalysisEngine pipeline = createPrimitive(createPrimitiveDescription(
+            AnalysisEngine pipeline = createEngine(createEngineDescription(
                     BreakIteratorSegmenter.class, BreakIteratorSegmenter.PARAM_CREATE_TOKENS,
                     !hasTokens, BreakIteratorSegmenter.PARAM_CREATE_SENTENCES, !hasSentences));
             pipeline.process(cas.getJCas());
