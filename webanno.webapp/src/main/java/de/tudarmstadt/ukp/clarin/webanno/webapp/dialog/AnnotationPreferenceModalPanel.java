@@ -114,15 +114,14 @@ public class AnnotationPreferenceModalPanel
                             List<AnnotationLayer> layers = annotationService
                                     .listAnnotationLayer(bModel.getProject());
                             List<AnnotationLayer> corefTagSets = new ArrayList<AnnotationLayer>();
-                            List<AnnotationLayer> noFeature = new ArrayList<AnnotationLayer>();
+                            List<AnnotationLayer> hideLayer = new ArrayList<AnnotationLayer>();
                             for (AnnotationLayer layer : layers) {
                                 if(!layer.isEnabled()){
-                                    noFeature.add(layer);
+                                    hideLayer.add(layer);
                                     continue;
                                 }
-                                if (annotationService.listAnnotationFeature(layer).size() == 0
-                                        || layer.getName().equals(Token.class.getName())) {
-                                    noFeature.add(layer);
+                                if (layer.getName().equals(Token.class.getName())) {
+                                    hideLayer.add(layer);
                                 }
                                 else if (layer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
                                     corefTagSets.add(layer);
@@ -133,7 +132,7 @@ public class AnnotationPreferenceModalPanel
                                     || bModel.getMode().equals(Mode.CURATION)) {
                                 layers.removeAll(corefTagSets);
                             }
-                            layers.removeAll(noFeature);
+                            layers.removeAll(hideLayer);
                             return layers;
                         }
                     });
