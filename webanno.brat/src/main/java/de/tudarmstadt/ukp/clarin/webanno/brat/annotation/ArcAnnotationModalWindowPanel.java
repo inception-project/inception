@@ -279,9 +279,9 @@ public class ArcAnnotationModalWindowPanel
 
                     try {
                         // Verify if input is valid
-                        for (IModel<String> model : tagModels) {
-                            AnnotationFeature feature = featureModels.get(tagModels.indexOf(model))
-                                    .getObject().feature;
+                        for (int i = 0; i < tagModels.size(); i++) {
+                            IModel<String> model = tagModels.get(i);
+                            AnnotationFeature feature = featureModels.get(i).getObject().feature;
                             // Check if tag is necessary, set, and correct
                             if (feature.getTagset() != null
                                     && !feature.getTagset().isCreateTag()
@@ -315,9 +315,9 @@ public class ArcAnnotationModalWindowPanel
                         }
                         // Set feature values
                         List<AnnotationFeature> features = new ArrayList<AnnotationFeature>();
-                        for (IModel<String> model : tagModels) {
-                            AnnotationFeature feature = featureModels.get(tagModels.indexOf(model))
-                                    .getObject().feature;
+                        for (int i = 0; i < tagModels.size(); i++) {
+                            IModel<String> model = tagModels.get(i);
+                            AnnotationFeature feature = featureModels.get(i).getObject().feature;
                             features.add(feature);
 
                             Tag selectedTag;
