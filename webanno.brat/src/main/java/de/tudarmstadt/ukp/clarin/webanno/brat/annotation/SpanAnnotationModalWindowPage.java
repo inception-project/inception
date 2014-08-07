@@ -142,7 +142,7 @@ public class SpanAnnotationModalWindowPage
             feedbackPanel.add(new AttributeModifier("class", "info"));
             feedbackPanel.add(new AttributeModifier("class", "error"));
 
-            addSpanLayers: for (AnnotationLayer layer : bratAnnotatorModel.getAnnotationLayers()) {
+            for (AnnotationLayer layer : bratAnnotatorModel.getAnnotationLayers()) {
                 if (!layer.isEnabled() || layer.getName().equals(Token.class.getName())) {
                     continue;
                 }
@@ -170,14 +170,23 @@ public class SpanAnnotationModalWindowPage
             @SuppressWarnings("unchecked")
 			DropDownChoice<AnnotationLayer> layer = (DropDownChoice<AnnotationLayer>) new DropDownChoice<AnnotationLayer>("layers", layersModel, spanLayers)
             {
-                private static final long serialVersionUID = -508831184292402704L;
+                private static final long serialVersionUID = -1L;
 
                 @Override
                 protected CharSequence getDefaultChoice(String aSelectedValue)
                 {
                     return "";
                 }
-            }.setChoiceRenderer(new ChoiceRenderer<AnnotationLayer>()
+                
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    setEnabled(selectedSpanId == -1);
+                }
+            };
+            layer.setOutputMarkupId(true);
+            layer.setChoiceRenderer(new ChoiceRenderer<AnnotationLayer>()
             {
                 private static final long serialVersionUID = 1L;
 
@@ -186,7 +195,7 @@ public class SpanAnnotationModalWindowPage
                 {
                     return aObject.getUiName();
                 }
-            }).setOutputMarkupId(true);
+            });
 
             layer.add(new OnChangeAjaxBehavior() {
 
@@ -223,8 +232,8 @@ public class SpanAnnotationModalWindowPage
                     aTarget.add(wmc);
 				}
 			});
-
-            add (layer);
+            
+            add(layer);
 
             featureModels = new ArrayList<IModel<FeatureValue>>();
             tagModels = new ArrayList<IModel<String>>();

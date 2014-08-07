@@ -145,19 +145,32 @@ public class ArcAnnotationModalWindowPanel
             feedbackPanel.add(new AttributeModifier("class", "info"));
             feedbackPanel.add(new AttributeModifier("class", "error"));
 
-            add(new DropDownChoice<AnnotationLayer>("layers", layersModel,
-                    Arrays.asList(new AnnotationLayer[] { selectedLayer })).setNullValid(false)
-                    .setChoiceRenderer(new ChoiceRenderer<AnnotationLayer>()
+            DropDownChoice<AnnotationLayer> layer = new DropDownChoice<AnnotationLayer>("layers",
+                    layersModel, Arrays.asList(new AnnotationLayer[] { selectedLayer }))
+            {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    setEnabled(selectedArcId == -1);
+                }
+            };
+            layer.setOutputMarkupId(true);
+            layer.setNullValid(false);
+            layer.setChoiceRenderer(new ChoiceRenderer<AnnotationLayer>()
                     {
-                        private static final long serialVersionUID = 1L;
+                private static final long serialVersionUID = 1L;
 
-                        @Override
-                        public Object getDisplayValue(AnnotationLayer aObject)
-                        {
-                            return aObject.getUiName();
-                        }
-                    }).setOutputMarkupId(true));
-
+                @Override
+                public Object getDisplayValue(AnnotationLayer aObject)
+                {
+                    return aObject.getUiName();
+                }
+            });
+            add(layer);
+            
             featureModels = new ArrayList<IModel<FeatureValue>>();
             tagModels = new ArrayList<IModel<String>>();
             for (AnnotationFeature feature : annotationService.listAnnotationFeature(selectedLayer)) {
