@@ -26,7 +26,6 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
-import org.apache.wicket.Page;
 import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -38,9 +37,7 @@ import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
 import org.apache.wicket.request.IRequestParameters;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.codehaus.jackson.JsonGenerator;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
@@ -344,21 +341,21 @@ public class BratAnnotator
     }
     /**
      * opens the {@link SpanAnnotationModalWindowPage} in a {@link ModalWindow}
-     */ 
-    
+     */
+
     private void openSpanAnnotationDialog(final ModalWindow openAnnotationDialog,
             AjaxRequestTarget aTarget,final int aBeginOffset, final int aEndOffset)
     {
 
         closeButtonClicked = false;
         if (selectedSpanID == -1) {// new annotation
-            openAnnotationDialog.setTitle("New Arc Annotation");
+            openAnnotationDialog.setTitle("New Span Annotation");
             openAnnotationDialog.setContent(new  SpanAnnotationModalWindowPage(openAnnotationDialog
                     .getContentId(),openAnnotationDialog,
                     getModelObject(), selectedSpanText, aBeginOffset, aEndOffset));
         }
         else {
-            openAnnotationDialog.setTitle("Edit Arc Annotation");
+            openAnnotationDialog.setTitle("Edit Span Annotation");
             openAnnotationDialog.setContent(new SpanAnnotationModalWindowPage(openAnnotationDialog
                     .getContentId(), openAnnotationDialog,
                     getModelObject(), selectedSpanID));
