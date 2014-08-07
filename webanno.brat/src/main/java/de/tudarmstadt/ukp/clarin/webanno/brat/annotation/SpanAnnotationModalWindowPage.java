@@ -50,7 +50,6 @@ import org.apache.wicket.behavior.Behavior;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -62,8 +61,6 @@ import org.apache.wicket.markup.repeater.RefreshingView;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 
@@ -190,7 +187,7 @@ public class SpanAnnotationModalWindowPage
                     return aObject.getUiName();
                 }
             }).setOutputMarkupId(true);
-            
+
             layer.add(new OnChangeAjaxBehavior() {
 
 				private static final long serialVersionUID = 5179816588460867471L;
@@ -226,9 +223,9 @@ public class SpanAnnotationModalWindowPage
                     aTarget.add(wmc);
 				}
 			});
-            
+
             add (layer);
-            
+
             featureModels = new ArrayList<IModel<FeatureValue>>();
             tagModels = new ArrayList<IModel<String>>();
 
@@ -360,11 +357,25 @@ public class SpanAnnotationModalWindowPage
                             }
                         }
 
+
+
                         // If there is no annotation yet, create one. During creation, the adapter
                         // may notice that it would create a duplicate and return the address of
                         // an existing annotation instead of a new one.
                         JCas jCas = getCas(bratAnnotatorModel);
                         TypeAdapter adapter = getAdapter(selectedLayer);
+
+                        if (selectedSpanId == -1) {
+                            if (adapter instanceof SpanAdapter) {
+                                selectedSpanId = ((SpanAdapter) adapter).add(jCas, beginOffset,
+                                        endOffset, null,null);
+                            }
+                            else {
+                                selectedSpanId = ((ChainAdapter) adapter).addSpan(jCas,
+                                        beginOffset, endOffset, null,null);
+                            }
+                          //  continue;// next time, it will update features
+                        }
 
                         // Set feature values
                         List<AnnotationFeature> features = new ArrayList<AnnotationFeature>();
@@ -373,19 +384,7 @@ public class SpanAnnotationModalWindowPage
                                     .getObject().feature;
                             features.add(feature);
 
-                            if (selectedSpanId == -1) {
-                                if (adapter instanceof SpanAdapter) {
-                                    selectedSpanId = ((SpanAdapter) adapter).add(jCas, beginOffset,
-                                            endOffset, feature, model.getObject());
-                                }
-                                else {
-                                    selectedSpanId = ((ChainAdapter) adapter).addSpan(jCas,
-                                            beginOffset, endOffset, feature, model.getObject());
-                                }
-                                continue;// next time, it will update features
-                            }
-                            
-                            
+
                             Tag selectedTag;
                             if (feature.getTagset() == null) {
                                 selectedTag = new Tag();

@@ -45,7 +45,6 @@ import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
 import org.apache.wicket.behavior.Behavior;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.IHeaderResponse;
-import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -56,8 +55,6 @@ import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.RefreshingView;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 
@@ -291,26 +288,25 @@ public class ArcAnnotationModalWindowPanel
                         AnnotationFS originFs = selectByAddr(jCas, originSpanId);
                         AnnotationFS targetFs = selectByAddr(jCas, targetSpanId);
 
-                        TypeAdapter adapter = getAdapter(selectedLayer);                 
+                        TypeAdapter adapter = getAdapter(selectedLayer);
 
+                        if (selectedArcId == -1) {
+                            if (adapter instanceof ArcAdapter) {
+                                selectedArcId = ((ArcAdapter) adapter).add(originFs, targetFs,
+                                        jCas, bratAnnotatorModel, null, null);
+                            }
+                            else {
+                                selectedArcId = ((ChainAdapter) adapter).addArc(jCas, originFs,
+                                        targetFs, null, null);
+                            }
+                        }
                         // Set feature values
                         List<AnnotationFeature> features = new ArrayList<AnnotationFeature>();
                         for (IModel<String> model : tagModels) {
                             AnnotationFeature feature = featureModels.get(tagModels.indexOf(model))
                                     .getObject().feature;
                             features.add(feature);
-                            
-                            if (selectedArcId == -1) {
-                                if (adapter instanceof ArcAdapter) {
-                                    selectedArcId = ((ArcAdapter) adapter).add(originFs,
-                                            targetFs, jCas, bratAnnotatorModel, feature, model.getObject());
-                                }
-                                else {
-                                    selectedArcId = ((ChainAdapter) adapter).addArc(jCas, originFs,
-                                            targetFs, feature, model.getObject());
-                                }
-                            }
-                            
+
                             Tag selectedTag;
                             if (feature.getTagset() == null) {
                                 selectedTag = new Tag();
@@ -357,16 +353,15 @@ public class ArcAnnotationModalWindowPanel
                             updateSentenceAddressAndOffsets(jCas, beginOffset);
                         }
 
-                        if(selectedArcId !=-1){
-	                        String bratLabelText = TypeUtil.getBratLabelText(adapter,
-	                                BratAjaxCasUtil.selectByAddr(jCas, selectedArcId), features);
-	                        bratAnnotatorModel.setMessage(SpanAnnotationModalWindowPage
-	                                .generateMessage(selectedLayer, bratLabelText, false));
+                        if (selectedArcId != -1) {
+                            String bratLabelText = TypeUtil.getBratLabelText(adapter,
+                                    BratAjaxCasUtil.selectByAddr(jCas, selectedArcId), features);
+                            bratAnnotatorModel.setMessage(SpanAnnotationModalWindowPage
+                                    .generateMessage(selectedLayer, bratLabelText, false));
                         }
-                        else{
-                        	 bratAnnotatorModel.setMessage("");
+                        else {
+                            bratAnnotatorModel.setMessage("");
                         }
-
 
                         bratAnnotatorModel.setRememberedArcLayer(selectedLayer);
                         bratAnnotatorModel.setRememberedArcFeatures(selectedFeatureValues);
@@ -479,8 +474,8 @@ public class ArcAnnotationModalWindowPanel
                             for (IModel<String> model : tagModels) {
                                 AnnotationFeature feature = featureModels.get(
                                         tagModels.indexOf(model)).getObject().feature;
-                                ((ArcAdapter) adapter).add( targetFs, originFs,
-                                        jCas, bratAnnotatorModel, feature, model.getObject());
+                                ((ArcAdapter) adapter).add(targetFs, originFs, jCas,
+                                        bratAnnotatorModel, feature, model.getObject());
                             }
                         }
                         else {
@@ -599,7 +594,7 @@ public class ArcAnnotationModalWindowPanel
             BratAnnotatorModel aBratAnnotatorModel, int aOriginSpanId, String aOriginSpanType,
             int aTargetSpanId, String aTargetSpanType)
     {
-    	super(aId);
+        super(aId);
         long layerId = Integer.parseInt(aOriginSpanType.substring(0, aOriginSpanType.indexOf("_")));
 
         AnnotationLayer spanLayer = annotationService.getLayer(layerId);
@@ -633,7 +628,7 @@ public class ArcAnnotationModalWindowPanel
             BratAnnotatorModel aBratAnnotatorModel, int aOriginSpanId, int aTargetSpanId,
             int selectedArcId)
     {
-    	super(aId);
+        super(aId);
         this.selectedArcId = selectedArcId;
         this.bratAnnotatorModel = aBratAnnotatorModel;
         JCas jCas = null;

@@ -283,10 +283,12 @@ public class SpanAdapter
                 List<Token> tokens = BratAjaxCasUtil.selectOverlapping(aJcas, Token.class, aBegin,
                         aEnd);
 
-                for (Token token : tokens) {
-                    return updateCas(aJcas.getCas(), token.getBegin(), token.getEnd(), aFeature,
-                            aValue);
+                if (tokens.isEmpty()) {
+                    throw new BratAnnotationException("No token is found to annotate");
                 }
+                return updateCas(aJcas.getCas(), tokens.get(0).getBegin(), tokens.get(0).getEnd(),
+                        aFeature, aValue);
+
             }
             else if (allowMultipleToken) {
                 List<Token> tokens = BratAjaxCasUtil.selectOverlapping(aJcas, Token.class, aBegin,
@@ -304,7 +306,6 @@ public class SpanAdapter
             throw new MultipleSentenceCoveredException("Annotation coveres multiple sentences, "
                     + "limit your annotation to single sentence!");
         }
-        return -1;
     }
 
     /**
@@ -313,40 +314,33 @@ public class SpanAdapter
     private Integer updateCas(CAS aCas, int aBegin, int aEnd, AnnotationFeature aFeature,
             String aValue)
     {
-        boolean duplicate = false;
         Type type = CasUtil.getType(aCas, getAnnotationTypeName());
         for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
-
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
                 if (!allowStacking) {
                     BratAjaxCasUtil.setFeature(fs, aFeature, aValue);
-                    duplicate = true;
-                    break;
+                    return ((FeatureStructureImpl) fs).getAddress();
                 }
             }
         }
-        if (!duplicate) {
-            AnnotationFS newAnnotation = aCas.createAnnotation(type, aBegin, aEnd);
-            BratAjaxCasUtil.setFeature(newAnnotation, aFeature, aValue);
+        AnnotationFS newAnnotation = aCas.createAnnotation(type, aBegin, aEnd);
+        BratAjaxCasUtil.setFeature(newAnnotation, aFeature, aValue);
 
-            if (getAttachFeatureName() != null) {
-                Type theType = CasUtil.getType(aCas, getAttachTypeName());
-                Feature attachFeature = theType.getFeatureByBaseName(getAttachFeatureName());
-                // if the attache type feature structure is not in place
-                // (for custom annotation), create it
-                if (CasUtil.selectCovered(aCas, theType, aBegin, aEnd).size() == 0) {
-                    AnnotationFS attachTypeAnnotation = aCas
-                            .createAnnotation(theType, aBegin, aEnd);
-                    aCas.addFsToIndexes(attachTypeAnnotation);
+        if (getAttachFeatureName() != null) {
+            Type theType = CasUtil.getType(aCas, getAttachTypeName());
+            Feature attachFeature = theType.getFeatureByBaseName(getAttachFeatureName());
+            // if the attache type feature structure is not in place
+            // (for custom annotation), create it
+            if (CasUtil.selectCovered(aCas, theType, aBegin, aEnd).size() == 0) {
+                AnnotationFS attachTypeAnnotation = aCas.createAnnotation(theType, aBegin, aEnd);
+                aCas.addFsToIndexes(attachTypeAnnotation);
 
-                }
-                CasUtil.selectCovered(aCas, theType, aBegin, aEnd).get(0)
-                        .setFeatureValue(attachFeature, newAnnotation);
             }
-            aCas.addFsToIndexes(newAnnotation);
-            return ((FeatureStructureImpl) newAnnotation).getAddress();
+            CasUtil.selectCovered(aCas, theType, aBegin, aEnd).get(0)
+                    .setFeatureValue(attachFeature, newAnnotation);
         }
-        return -1;
+        aCas.addFsToIndexes(newAnnotation);
+        return ((FeatureStructureImpl) newAnnotation).getAddress();
     }
 
     @Override
@@ -572,7 +566,7 @@ public class SpanAdapter
         FeatureStructure fs = BratAjaxCasUtil.selectByAddr(aJcas, FeatureStructure.class, aAddress);
         BratAjaxCasUtil.setFeature(fs, aFeature, aValue);
     }
-    
+
     @Override
     public AnnotationLayer getLayer()
     {

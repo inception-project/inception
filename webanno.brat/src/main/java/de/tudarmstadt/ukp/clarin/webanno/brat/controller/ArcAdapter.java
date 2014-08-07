@@ -252,24 +252,22 @@ public class ArcAdapter
                 }
 
                 if (isDuplicate((AnnotationFS) governorFs, aOriginFs, (AnnotationFS) dependentFs,
-                        aTargetFs) && !aValue.equals(WebAnnoConst.ROOT)) {
+                        aTargetFs) && (aValue == null || !aValue.equals(WebAnnoConst.ROOT))) {
 
                     if (!allowStacking) {
                         if (aFeature != null) {
                             Feature feature = type.getFeatureByBaseName(aFeature.getName());
                             fs.setFeatureValueFromString(feature, aValue);
                         }
-                        duplicate = true;
-                        break;
+                        return ((FeatureStructureImpl) fs).getAddress();
                     }
                 }
             }
         }
         // It is new ARC annotation, create it
-        if (!duplicate) {
             dependentFs = aTargetFs;
             governorFs = aOriginFs;
-            
+
             // for POS annotation, since custom span layers do not have attach feature
             if (attacheFeatureName != null) {
                 dependentFs = selectCovered(aJCas.getCas(), tokenType, dependentFs.getBegin(),
@@ -290,14 +288,14 @@ public class ArcAdapter
                 newAnnotation = aJCas.getCas().createAnnotation(type, governorFs.getBegin(),
                         dependentFs.getEnd());
             }
-            
+
             // If origin and target spans are multiple tokens, dependentFS.getBegin will be the
             // the begin position of the first token and dependentFS.getEnd will be the End
             // position of the last token.
             newAnnotation.setFeatureValue(dependentFeature, dependentFs);
             newAnnotation.setFeatureValue(governorFeature, governorFs);
             BratAjaxCasUtil.setFeature(newAnnotation, aFeature, aValue);
-            
+
             // BEGIN HACK - ISSUE 953 - Special treatment for ROOT in DKPro Core dependency layer
             // If the dependency type is set to "ROOT" the create a loop arc
             if (aFeature != null) {
@@ -309,11 +307,9 @@ public class ArcAdapter
                 }
             }
             // END HACK - ISSUE 953 - Special treatment for ROOT in DKPro Core dependency layer
-            
+
             aJCas.addFsToIndexes(newAnnotation);
             return ((FeatureStructureImpl) newAnnotation).getAddress();
-        }
-        return -1;
     }
 
     @Override
@@ -504,7 +500,7 @@ public class ArcAdapter
     {
         FeatureStructure fs = BratAjaxCasUtil.selectByAddr(aJcas, FeatureStructure.class, aAddress);
         BratAjaxCasUtil.setFeature(fs, aFeature, aValue);
-        
+
         // BEGIN HACK - ISSUE 953 - Special treatment for ROOT in DKPro Core dependency layer
         // If the dependency type is set to "ROOT" the create a loop arc
         if (Dependency.class.getName().equals(layer.getName())
@@ -514,7 +510,7 @@ public class ArcAdapter
         }
         // END HACK - ISSUE 953 - Special treatment for ROOT in DKPro Core dependency layer
     }
-    
+
     @Override
     public AnnotationLayer getLayer()
     {
