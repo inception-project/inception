@@ -452,7 +452,7 @@ public class WebannoCustomTsvWriter
                         }
                         else {
                             aRelAnnoMap.put(token.getAddress(), aRelAnnoMap.get(token.getAddress())
-                                    + "|" + annotation);
+                                    + "|" + (first ? "B-" : "I-") + annotation);
                             first = false;
                         }
 
