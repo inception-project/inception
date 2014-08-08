@@ -81,10 +81,7 @@ public class ExportModalPanel
                 else {
                     exportModal.show(target);
                 }
-
             }
         });
-
     }
-
 }
