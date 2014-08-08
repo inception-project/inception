@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -53,6 +55,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 public class ProjectDocumentsPanel
     extends Panel
 {
+    private final static Log LOG = LogFactory.getLog(ProjectDocumentsPanel.class);
+    
     private static final long serialVersionUID = 2116717853865353733L;
 
     @SpringBean(name = "annotationService")
@@ -140,12 +144,15 @@ public class ProjectDocumentsPanel
                     }
                     catch (ClassNotFoundException e) {
                         error(e.getMessage());
+                        LOG.error(e.getMessage(), e);
                     }
                     catch (IOException e) {
                         error("Error uploading document " + e.getMessage());
+                        LOG.error(e.getMessage(), e);
                     }
                     catch (UIMAException e) {
                         error("Error uploading document " + ExceptionUtils.getRootCauseMessage(e));
+                        LOG.error(e.getMessage(), e);
                     }
                 }
 

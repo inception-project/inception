@@ -1416,9 +1416,12 @@ public class RepositoryServiceDbData
                 getJCasFromFile(aFile, getReadableFormats().get(aDocument.getFormat()), aDocument);
             }
         }
+        catch (IOException e) {
+            throw e;
+        }
         catch (Exception e) {
             removeSourceDocument(aDocument, aUser);
-            throw new IOException(e.getMessage());
+            throw new IOException(e.getMessage(), e);
         }
 
         String path = dir.getAbsolutePath() + PROJECT + aDocument.getProject().getId() + DOCUMENT
