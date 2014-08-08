@@ -15,40 +15,39 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 -->
-<html xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-  <body>
-    <form wicket:id="exportForm">
-      <div wicket:id="feedbackPanel">
-      </div>
-      <table>
-      <tr>
-      <td>
-      <span wicket:id="automated"></span>
-      </td>
-      <td>
-      <select wicket:id="documentChoice"></select>
-      </td>
-      </tr>
-        <tr>
-          <td>
-            Writable Formats:
-            <select wicket:id="writeableFormats">
-            </select>
-          </td>
-          <td>
-            <input type="button" wicket:id="export" value="Export" />
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <a wicket:id="close">
-              <button>
-                Close
-              </button>
-            </a>
-          </td>
-        </tr>
-      </table>
-    </form>
-  </body>
+<html
+	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<head>
+<wicket:head>
+	<script type="text/javascript" src="client/lib/jquery.min.js"></script>
+	<link rel="stylesheet" type="text/css"
+		href="css/kendo/kendo.common.min.css" media="all" />
+	<link rel="stylesheet" type="text/css"
+		href="css/kendo/kendo.default.min.css" media="all" />
+	<link rel="stylesheet" href="css/style.css" type="text/css" />
+</wicket:head>
+</head>
+<body>
+	<form wicket:id="exportForm">
+		<div wicket:id="feedbackPanel"></div>
+		<table>
+			<tr>
+				<td><span wicket:id="automated"></span></td>
+				<td><select wicket:id="documentChoice"></select></td>
+			</tr>
+			<tr>
+				<td>Writable Formats: <select wicket:id="writeableFormats">
+				</select>
+				</td>
+				<td><input type="button" wicket:id="export" value="Export" />
+				</td>
+			</tr>
+			<tr>
+				<td><a wicket:id="close">
+						<button>Close</button>
+				</a></td>
+			</tr>
+		</table>
+	</form>
+</body>
 </html>
