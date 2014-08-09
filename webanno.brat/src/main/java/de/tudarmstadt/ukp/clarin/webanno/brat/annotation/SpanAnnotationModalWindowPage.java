@@ -274,23 +274,31 @@ public class SpanAnnotationModalWindowPage
                 @Override
                 protected void populateItem(final Item<FeatureValue> item)
                 {
-                    item.add(new Label("feature",
-                            item.getModelObject().feature.getTagset() == null ? item
-                                    .getModelObject().feature.getUiName()
-                                    : item.getModelObject().feature.getTagset().getName()));
-                    List<Tag> tags = new ArrayList<Tag>();
-                    if (item.getModelObject().feature.getTagset() != null
-                            && item.getModelObject().feature.getTagset() != null) {
-                        tags.addAll(annotationService.listTags(item.getModelObject().feature
-                                .getTagset()));
+                    FeatureValue featureValue = item.getModelObject();
+                    AnnotationFeature feature = featureValue.feature;
+
+                    String featureLabel = feature.getUiName();
+                    if (feature.getTagset() != null) {
+                        featureLabel += " (" + feature.getTagset().getName()+")";
                     }
-                    if (tags.size() == 0) {
+                    
+                    item.add(new Label("feature", featureLabel));
+
+                    List<Tag> tagset = new ArrayList<Tag>();
+                    if (feature.getTagset() != null) {
+                        tagset.addAll(annotationService.listTags(feature.getTagset()));
+                    }
+
+                    // If there are no tags in the tagset yet, use the selected text as tag value
+                    if (tagset.size() == 0) {
                         Tag tag = new Tag();
                         tag.setName(selectedText);
-                        tags.add(tag);
+                        tagset.add(tag);
                     }
-                    item.add(new ComboBox<Tag>("tag", tagModels.get(item.getIndex()), tags,
-                            new ComboBoxRenderer<Tag>("name", "name")).add(new Behavior()
+                    
+                    ComboBox<Tag> featureValueCombo = new ComboBox<Tag>("tag", tagModels.get(item
+                            .getIndex()), tagset, new ComboBoxRenderer<Tag>("name", "name"));
+                    featureValueCombo.add(new Behavior()
                     {
                         private static final long serialVersionUID = -3612493911620740735L;
 
@@ -301,7 +309,8 @@ public class SpanAnnotationModalWindowPage
                             response.renderOnLoadJavaScript("$('#" + component.getMarkupId()
                                     + "').focus();");
                         }
-                    }));
+                    });
+                    item.add(featureValueCombo);
                 }
 
                 @Override

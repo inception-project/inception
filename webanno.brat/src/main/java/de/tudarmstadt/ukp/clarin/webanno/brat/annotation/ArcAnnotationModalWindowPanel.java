@@ -207,19 +207,28 @@ public class ArcAnnotationModalWindowPanel
                 @Override
                 protected void populateItem(final Item<FeatureValue> item)
                 {
-                    item.add(new Label("feature",
-                            item.getModelObject().feature.getTagset() == null ? item
-                                    .getModelObject().feature.getUiName()
-                                    : item.getModelObject().feature.getTagset().getName()));
+                    FeatureValue featureValue = item.getModelObject();
+                    AnnotationFeature feature = featureValue.feature;
+                    
+                    String featureLabel = feature.getUiName();
+                    if (feature.getTagset() != null) {
+                        featureLabel += " (" + feature.getTagset().getName()+")";
+                    }
+                    
+                    item.add(new Label("feature", featureLabel));
 
-                    item.add(new ComboBox<Tag>(
-                            "tag",
-                            tagModels.get(item.getIndex()),
-                            (item.getModelObject().feature.getTagset() != null && item
-                                    .getModelObject().feature.getTagset() != null) ? annotationService
-                                    .listTags(item.getModelObject().feature.getTagset())
-                                    : new ArrayList<Tag>(), new ComboBoxRenderer<Tag>("name",
-                                    "name")).add(new Behavior()
+                    List<Tag> tagset; 
+                    if (item.getModelObject().feature.getTagset() != null) {
+                        tagset = annotationService
+                                .listTags(item.getModelObject().feature.getTagset());
+                    }
+                    else {
+                        tagset = new ArrayList<Tag>();
+                    }
+                    
+                    ComboBox<Tag> featureValueCombo = new ComboBox<Tag>("tag", tagModels.get(item
+                            .getIndex()), tagset, new ComboBoxRenderer<Tag>("name", "name"));
+                    featureValueCombo.add(new Behavior()
                     {
                         private static final long serialVersionUID = -3612493911620740735L;
 
@@ -230,7 +239,8 @@ public class ArcAnnotationModalWindowPanel
                             response.renderOnLoadJavaScript("$('#" + component.getMarkupId()
                                     + "').focus();");
                         }
-                    }));
+                    });
+                    item.add(featureValueCombo);
                 }
 
                 @Override
