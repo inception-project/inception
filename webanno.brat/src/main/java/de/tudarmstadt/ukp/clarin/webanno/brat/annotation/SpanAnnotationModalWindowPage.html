@@ -34,26 +34,25 @@
 		<fieldset>
 			<table>
 				<tr>
-					<td>Selected Text:</td>
+					<td>Selected text:</td>
 					<td><span wicket:id="selectedText" style="color: red"></span></td>
 				</tr>
 				<tr>
-					<td>Layers</td>
-					<td><select name="Layers" wicket:id="layers"
-						style="width: 150px"></select></td>
+					<td>Layer</td>
+					<td><select name="Layers" wicket:id="layers" style="width:100%"></select></td>
 				</tr>
 			</table>
 		</fieldset>
 		<fieldset>
 			<legend>Features</legend>
 			<div wicket:id="wmc">
-			<table>
-				<tr wicket:id="featureValues">
-					<td><span wicket:id="feature"></span></td>
-					<td><input wicket:id="tag"></input></td>
-				</tr>
-			</table>
-		</div>
+				<table class="hfill">
+					<tr wicket:id="featureValues">
+						<td><span wicket:id="feature"></span></td>
+						<td><input style="width:100%" wicket:id="tag"></input></td>
+					</tr>
+				</table>
+			</div>
 		</fieldset>
 		<table>
 			<tr>
