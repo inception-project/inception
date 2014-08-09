@@ -29,6 +29,10 @@
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 			<artifactId>de.tudarmstadt.ukp.clarin.webanno.model</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+			<artifactId>de.tudarmstadt.ukp.clarin.webanno.support</artifactId>
+		</dependency>
 
 		<dependency>
 			<groupId>javax.servlet</groupId>

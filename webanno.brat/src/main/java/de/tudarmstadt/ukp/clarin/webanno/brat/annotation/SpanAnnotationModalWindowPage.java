@@ -41,14 +41,11 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
-import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
-import org.apache.wicket.behavior.Behavior;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
-import org.apache.wicket.markup.html.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
@@ -80,6 +77,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.clarin.webanno.support.DefaultFocusBehavior;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
@@ -297,18 +295,10 @@ public class SpanAnnotationModalWindowPage
                     
                     ComboBox<Tag> featureValueCombo = new ComboBox<Tag>("tag", tagModels.get(item
                             .getIndex()), tagset, new ComboBoxRenderer<Tag>("name", "name"));
-                    featureValueCombo.add(new Behavior()
-                    {
-                        private static final long serialVersionUID = -3612493911620740735L;
-
-                        @Override
-                        public void renderHead(Component component, IHeaderResponse response)
-                        {
-                            super.renderHead(component, response);
-                            response.renderOnLoadJavaScript("$('#" + component.getMarkupId()
-                                    + "').focus();");
-                        }
-                    });
+                    if (item.getIndex() == 0) {
+                        // Put focus on first feature
+                        featureValueCombo.add(new DefaultFocusBehavior());
+                    }
                     item.add(featureValueCombo);
                 }
 
@@ -320,7 +310,8 @@ public class SpanAnnotationModalWindowPage
             }));
             featureValues.setOutputMarkupId(true);
             wmc.setOutputMarkupId(true);
-            add(new AjaxButton("annotate")
+            
+            AjaxButton annotateButton = new AjaxButton("annotate")
             {
                 private static final long serialVersionUID = 980971048279862290L;
 
@@ -329,6 +320,7 @@ public class SpanAnnotationModalWindowPage
                 {
                     aTarget.add(feedbackPanel);
                     aModalWindow.close(aTarget);
+                    
                     try {
                         actionAnnotate();
                     }
@@ -342,7 +334,13 @@ public class SpanAnnotationModalWindowPage
                     }
                 }
 
-            });
+            };
+            if (featureModels.isEmpty()) {
+                // Put focus on annotate button if there are no features
+                annotateButton.add(new DefaultFocusBehavior());
+            }
+            add(annotateButton);
+            setDefaultButton(annotateButton);
 
             add(new AjaxSubmitLink("delete")
             {
