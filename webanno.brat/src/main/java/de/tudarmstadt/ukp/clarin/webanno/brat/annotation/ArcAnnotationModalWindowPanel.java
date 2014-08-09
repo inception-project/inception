@@ -250,146 +250,17 @@ public class ArcAnnotationModalWindowPanel
                 }
             });
 
-            add(new AjaxButton("annotate")
+            AjaxButton annotateButton = new AjaxButton("annotate")
             {
                 private static final long serialVersionUID = 8922161039500097566L;
 
                 @Override
                 public void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
                 {
-
                     aTarget.add(feedbackPanel);
-                    // check type of a feature
-                    for (IModel<String> model : tagModels) {
-                        AnnotationFeature feature = featureModels.get(tagModels.indexOf(model))
-                                .getObject().feature;
-                        try {
-
-                            if (feature.getType().equals(CAS.TYPE_NAME_INTEGER)
-                                    && !((Integer) Integer.parseInt(model.getObject()) instanceof Integer)) {
-                                error(model.getObject() + " is not an integer value");
-                                return;
-                            }
-                            if (feature.getType().equals(CAS.TYPE_NAME_FLOAT)
-                                    && !((Float) Float.parseFloat(model.getObject()) instanceof Float)) {
-                                error(model.getObject() + " is not a float value");
-                                return;
-                            }
-                            if (feature.getType().equals(CAS.TYPE_NAME_BOOLEAN)
-                                    && !((Boolean) Boolean.parseBoolean(model.getObject()) instanceof Boolean)) {
-                                error(model.getObject() + " is not a boolean value");
-                                return;
-                            }
-                        }
-                        catch (Exception e) {
-                            error(model.getObject() + " should be of type " + feature.getType());
-                            return;
-                        }
-                    }
-
+                    aModalWindow.close(aTarget);
                     try {
-                        // Verify if input is valid
-                        for (int i = 0; i < tagModels.size(); i++) {
-                            IModel<String> model = tagModels.get(i);
-                            AnnotationFeature feature = featureModels.get(i).getObject().feature;
-                            // Check if tag is necessary, set, and correct
-                            if (feature.getTagset() != null
-                                    && !feature.getTagset().isCreateTag()
-                                    && !annotationService.existsTag(model.getObject(),
-                                            feature.getTagset())) {
-                                error("["
-                                        + model.getObject()
-                                        + "] is not in the tag list. Please choose form the existing tags");
-                                return;
-                            }
-                        }
-
-                        // If there is no annotation yet, create one. During creation, the adapter
-                        // may notice that it would create a duplicate and return the address of
-                        // an existing annotation instead of a new one.
-                        JCas jCas = getCas(bratAnnotatorModel);
-                        AnnotationFS originFs = selectByAddr(jCas, originSpanId);
-                        AnnotationFS targetFs = selectByAddr(jCas, targetSpanId);
-
-                        TypeAdapter adapter = getAdapter(selectedLayer);
-
-                        if (selectedArcId == -1) {
-                            if (adapter instanceof ArcAdapter) {
-                                selectedArcId = ((ArcAdapter) adapter).add(originFs, targetFs,
-                                        jCas, bratAnnotatorModel, null, null);
-                            }
-                            else {
-                                selectedArcId = ((ChainAdapter) adapter).addArc(jCas, originFs,
-                                        targetFs, null, null);
-                            }
-                        }
-                        // Set feature values
-                        List<AnnotationFeature> features = new ArrayList<AnnotationFeature>();
-                        for (int i = 0; i < tagModels.size(); i++) {
-                            IModel<String> model = tagModels.get(i);
-                            AnnotationFeature feature = featureModels.get(i).getObject().feature;
-                            features.add(feature);
-
-                            Tag selectedTag;
-                            if (feature.getTagset() == null) {
-                                selectedTag = new Tag();
-                                selectedTag.setName(model.getObject());
-                            }
-                            else if (feature.getTagset() != null
-                                    && feature.getTagset().isCreateTag()
-                                    && !annotationService.existsTag(model.getObject(),
-                                            feature.getTagset())) {
-                                selectedTag = new Tag();
-                                selectedTag.setName(model.getObject());
-                                selectedTag.setTagSet(feature.getTagset());
-                                if (model.getObject() != null) {
-                                    // Do not persist if we unset a feature value
-                                    annotationService.createTag(selectedTag,
-                                            bratAnnotatorModel.getUser());
-                                }
-                            }
-                            else {
-                                selectedTag = annotationService.getTag(model.getObject(),
-                                        feature.getTagset());
-                            }
-
-                            adapter.updateFeature(jCas, feature, selectedArcId,
-                                    selectedTag.getName());
-
-                            selectedFeatureValues.put(feature, model.getObject());
-                            beginOffset = originFs.getBegin();
-                        }
-
-                        // update timestamp now
-                        int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas, beginOffset);
-
-                        bratAnnotatorModel.getDocument().setSentenceAccessed(sentenceNumber);
-                        repository.updateTimeStamp(bratAnnotatorModel.getDocument(),
-                                bratAnnotatorModel.getUser(), bratAnnotatorModel.getMode());
-
-                        // persist changes
-                        repository.updateJCas(bratAnnotatorModel.getMode(),
-                                bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
-                                jCas);
-
-                        if (bratAnnotatorModel.isScrollPage()) {
-                            updateSentenceAddressAndOffsets(jCas, beginOffset);
-                        }
-
-                        if (selectedArcId != -1) {
-                            String bratLabelText = TypeUtil.getBratLabelText(adapter,
-                                    BratAjaxCasUtil.selectByAddr(jCas, selectedArcId), features);
-                            bratAnnotatorModel.setMessage(SpanAnnotationModalWindowPage
-                                    .generateMessage(selectedLayer, bratLabelText, false));
-                        }
-                        else {
-                            bratAnnotatorModel.setMessage("");
-                        }
-
-                        bratAnnotatorModel.setRememberedArcLayer(selectedLayer);
-                        bratAnnotatorModel.setRememberedArcFeatures(selectedFeatureValues);
-                        aModalWindow.close(aTarget);
-
+                        actionAnnotate(aTarget, aForm);
                     }
                     catch (BratAnnotationException e) {
                         error(e.getMessage());
@@ -398,78 +269,39 @@ public class ArcAnnotationModalWindowPanel
                     catch (Exception e) {
                         error(ExceptionUtils.getRootCauseMessage(e));
                         LOG.error(ExceptionUtils.getRootCauseMessage(e), e);
-                    }
+                    }        
                 }
-            });
+            };
+            add(annotateButton);
+            setDefaultButton(annotateButton);
 
             add(new AjaxSubmitLink("delete")
             {
                 private static final long serialVersionUID = 1L;
 
                 @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    setVisible(isModify);
+                }
+                
+                @Override
                 public void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
                 {
-                    JCas jCas;
+                    aTarget.add(feedbackPanel);
+                    aModalWindow.close(aTarget);
                     try {
-                        jCas = getCas(bratAnnotatorModel);
-                        TypeAdapter adapter = getAdapter(selectedLayer);
-                        // BEGIN HACK - Issue 933
-                        if (adapter instanceof ChainAdapter) {
-                            ((ChainAdapter) adapter).setArc(true);
-                        }
-                        // END HACK - Issue 933
-
-                        adapter.delete(jCas, selectedArcId);
-                        repository.updateJCas(bratAnnotatorModel.getMode(),
-                                bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
-                                jCas);
-
-                        // update timestamp now
-                        int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas,
-                                BratAjaxCasUtil.selectByAddr(jCas, selectedArcId).getBegin());
-                        bratAnnotatorModel.getDocument().setSentenceAccessed(sentenceNumber);
-                        repository.updateTimeStamp(bratAnnotatorModel.getDocument(),
-                                bratAnnotatorModel.getUser(), bratAnnotatorModel.getMode());
-
-                        if (bratAnnotatorModel.isScrollPage()) {
-                            AnnotationFS originFs = selectByAddr(jCas, originSpanId);
-                            int start = originFs.getBegin();
-                            updateSentenceAddressAndOffsets(jCas, start);
-                        }
-
-                        // store latest annotations
-                        for (IModel<String> model : tagModels) {
-                            AnnotationFeature feature = featureModels.get(tagModels.indexOf(model))
-                                    .getObject().feature;
-                            selectedLayer = feature.getLayer();
-                            selectedFeatureValues.put(feature, model.getObject());
-                        }
-
-                        bratAnnotatorModel.setMessage(SpanAnnotationModalWindowPage
-                                .generateMessage(selectedLayer, null, true));
-                        bratAnnotatorModel.setRememberedArcLayer(selectedLayer);
-                        bratAnnotatorModel.setRememberedArcFeatures(selectedFeatureValues);
-
+                        actionDelete();
                     }
                     catch (UIMAException e) {
-                        aTarget.add(feedbackPanel);
                         error(ExceptionUtils.getRootCauseMessage(e));
+                        LOG.error(ExceptionUtils.getRootCauseMessage(e), e);
                     }
-                    catch (ClassNotFoundException e) {
-                        aTarget.add(feedbackPanel);
+                    catch (Exception e) {
                         error(e.getMessage());
+                        LOG.error(e.getMessage(), e);
                     }
-                    catch (IOException e) {
-                        aTarget.add(feedbackPanel);
-                        error(e.getMessage());
-                    }
-                    aModalWindow.close(aTarget);
-                }
-
-                @Override
-                public boolean isVisible()
-                {
-                    return isModify;
                 }
             });
 
@@ -478,90 +310,270 @@ public class ArcAnnotationModalWindowPanel
                 private static final long serialVersionUID = 1L;
 
                 @Override
-                public void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
+                protected void onConfigure()
                 {
-                    aTarget.add(feedbackPanel);
-                    JCas jCas;
-                    try {
-                        jCas = getCas(bratAnnotatorModel);
-
-                        AnnotationFS idFs = selectByAddr(jCas, selectedArcId);
-
-                        jCas.removeFsFromIndexes(idFs);
-
-                        AnnotationFS originFs = selectByAddr(jCas, originSpanId);
-                        AnnotationFS targetFs = selectByAddr(jCas, targetSpanId);
-
-                        TypeAdapter adapter = getAdapter(selectedLayer);
-                        if (adapter instanceof ArcAdapter) {
-                            for (IModel<String> model : tagModels) {
-                                AnnotationFeature feature = featureModels.get(
-                                        tagModels.indexOf(model)).getObject().feature;
-                                ((ArcAdapter) adapter).add(targetFs, originFs, jCas,
-                                        bratAnnotatorModel, feature, model.getObject());
-                            }
-                        }
-                        else {
-                            error("chains cannot be reversed");
-                            return;
-                        }
-
-                        // persist changes
-                        repository.updateJCas(bratAnnotatorModel.getMode(),
-                                bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
-                                jCas);
-                        int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas,
-                                originFs.getBegin());
-                        bratAnnotatorModel.getDocument().setSentenceAccessed(sentenceNumber);
-                        repository.updateTimeStamp(bratAnnotatorModel.getDocument(),
-                                bratAnnotatorModel.getUser(), bratAnnotatorModel.getMode());
-
-                        if (bratAnnotatorModel.isScrollPage()) {
-                            int start = originFs.getBegin();
-                            updateSentenceAddressAndOffsets(jCas, start);
-                        }
-
-                        StringBuffer deletedAnnoSb = new StringBuffer();
-
-                        // store latest annotations
-                        for (IModel<String> model : tagModels) {
-                            deletedAnnoSb.append(model.getObject() + " ");
-                            AnnotationFeature feature = featureModels.get(tagModels.indexOf(model))
-                                    .getObject().feature;
-                            selectedLayer = feature.getLayer();
-                            selectedFeatureValues.put(feature, model.getObject());
-                        }
-
-                        bratAnnotatorModel.setMessage("The arc annotation  [" + deletedAnnoSb
-                                + "] is reversed");
-                        bratAnnotatorModel.setRememberedArcLayer(selectedLayer);
-                        bratAnnotatorModel.setRememberedArcFeatures(selectedFeatureValues);
-
-                    }
-                    catch (UIMAException e) {
-                        error(ExceptionUtils.getRootCauseMessage(e));
-                    }
-                    catch (ClassNotFoundException e) {
-                        error(e.getMessage());
-                    }
-                    catch (IOException e) {
-                        error(e.getMessage());
-                    }
-                    catch (BratAnnotationException e) {
-                        aTarget.prependJavaScript("alert('" + e.getMessage() + "')");
-                    }
-                    aModalWindow.close(aTarget);
+                    super.onConfigure();
+                    setVisible(isModify && !ischain);
                 }
 
                 @Override
-                public boolean isVisible()
+                public void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
                 {
-                    return isModify && !ischain;
+                    aTarget.add(feedbackPanel);
+                    aModalWindow.close(aTarget);
+                    try {
+                        actionReverse();
+                    }
+                    catch (BratAnnotationException e) {
+                        aTarget.prependJavaScript("alert('" + e.getMessage() + "')");
+                        LOG.error(ExceptionUtils.getRootCauseMessage(e), e);
+                    }
+                    catch (UIMAException e) {
+                        error(ExceptionUtils.getRootCauseMessage(e));
+                        LOG.error(ExceptionUtils.getRootCauseMessage(e), e);
+                    }
+                    catch (Exception e) {
+                        error(e.getMessage());
+                        LOG.error(e.getMessage(), e);
+                    }
                 }
             });
         }
     }
 
+    private void actionAnnotate(AjaxRequestTarget aTarget, Form<?> aForm)
+        throws IOException, BratAnnotationException, UIMAException, ClassNotFoundException
+    {
+        // check type of a feature
+        for (IModel<String> model : tagModels) {
+            AnnotationFeature feature = featureModels.get(tagModels.indexOf(model))
+                    .getObject().feature;
+            try {
+                if (feature.getType().equals(CAS.TYPE_NAME_INTEGER)
+                        && !((Integer) Integer.parseInt(model.getObject()) instanceof Integer)) {
+                    error(model.getObject() + " is not an integer value");
+                    return;
+                }
+                if (feature.getType().equals(CAS.TYPE_NAME_FLOAT)
+                        && !((Float) Float.parseFloat(model.getObject()) instanceof Float)) {
+                    error(model.getObject() + " is not a float value");
+                    return;
+                }
+                if (feature.getType().equals(CAS.TYPE_NAME_BOOLEAN)
+                        && !((Boolean) Boolean.parseBoolean(model.getObject()) instanceof Boolean)) {
+                    error(model.getObject() + " is not a boolean value");
+                    return;
+                }
+            }
+            catch (Exception e) {
+                error(model.getObject() + " should be of type " + feature.getType());
+                return;
+            }
+        }
+
+        // Verify if input is valid
+        for (int i = 0; i < tagModels.size(); i++) {
+            IModel<String> model = tagModels.get(i);
+            AnnotationFeature feature = featureModels.get(i).getObject().feature;
+            // Check if tag is necessary, set, and correct
+            if (feature.getTagset() != null
+                    && !feature.getTagset().isCreateTag()
+                    && !annotationService.existsTag(model.getObject(),
+                            feature.getTagset())) {
+                error("["
+                        + model.getObject()
+                        + "] is not in the tag list. Please choose form the existing tags");
+                return;
+            }
+        }
+
+        // If there is no annotation yet, create one. During creation, the adapter
+        // may notice that it would create a duplicate and return the address of
+        // an existing annotation instead of a new one.
+        JCas jCas = getCas(bratAnnotatorModel);
+        AnnotationFS originFs = selectByAddr(jCas, originSpanId);
+        AnnotationFS targetFs = selectByAddr(jCas, targetSpanId);
+
+        TypeAdapter adapter = getAdapter(selectedLayer);
+
+        if (selectedArcId == -1) {
+            if (adapter instanceof ArcAdapter) {
+                selectedArcId = ((ArcAdapter) adapter).add(originFs, targetFs,
+                        jCas, bratAnnotatorModel, null, null);
+            }
+            else {
+                selectedArcId = ((ChainAdapter) adapter).addArc(jCas, originFs,
+                        targetFs, null, null);
+            }
+        }
+        // Set feature values
+        List<AnnotationFeature> features = new ArrayList<AnnotationFeature>();
+        for (int i = 0; i < tagModels.size(); i++) {
+            IModel<String> model = tagModels.get(i);
+            AnnotationFeature feature = featureModels.get(i).getObject().feature;
+            features.add(feature);
+
+            Tag selectedTag;
+            if (feature.getTagset() == null) {
+                selectedTag = new Tag();
+                selectedTag.setName(model.getObject());
+            }
+            else if (feature.getTagset() != null
+                    && feature.getTagset().isCreateTag()
+                    && !annotationService.existsTag(model.getObject(),
+                            feature.getTagset())) {
+                selectedTag = new Tag();
+                selectedTag.setName(model.getObject());
+                selectedTag.setTagSet(feature.getTagset());
+                if (model.getObject() != null) {
+                    // Do not persist if we unset a feature value
+                    annotationService.createTag(selectedTag,
+                            bratAnnotatorModel.getUser());
+                }
+            }
+            else {
+                selectedTag = annotationService.getTag(model.getObject(),
+                        feature.getTagset());
+            }
+
+            adapter.updateFeature(jCas, feature, selectedArcId,
+                    selectedTag.getName());
+
+            selectedFeatureValues.put(feature, model.getObject());
+            beginOffset = originFs.getBegin();
+        }
+
+        // update timestamp now
+        int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas, beginOffset);
+
+        bratAnnotatorModel.getDocument().setSentenceAccessed(sentenceNumber);
+        repository.updateTimeStamp(bratAnnotatorModel.getDocument(),
+                bratAnnotatorModel.getUser(), bratAnnotatorModel.getMode());
+
+        // persist changes
+        repository.updateJCas(bratAnnotatorModel.getMode(),
+                bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
+                jCas);
+
+        if (bratAnnotatorModel.isScrollPage()) {
+            updateSentenceAddressAndOffsets(jCas, beginOffset);
+        }
+
+        if (selectedArcId != -1) {
+            String bratLabelText = TypeUtil.getBratLabelText(adapter,
+                    BratAjaxCasUtil.selectByAddr(jCas, selectedArcId), features);
+            bratAnnotatorModel.setMessage(SpanAnnotationModalWindowPage
+                    .generateMessage(selectedLayer, bratLabelText, false));
+        }
+        else {
+            bratAnnotatorModel.setMessage("");
+        }
+
+        bratAnnotatorModel.setRememberedArcLayer(selectedLayer);
+        bratAnnotatorModel.setRememberedArcFeatures(selectedFeatureValues);
+    }
+    
+    private void actionDelete()
+        throws UIMAException, ClassNotFoundException, IOException
+    {
+        JCas jCas;
+        jCas = getCas(bratAnnotatorModel);
+        TypeAdapter adapter = getAdapter(selectedLayer);
+        // BEGIN HACK - Issue 933
+        if (adapter instanceof ChainAdapter) {
+            ((ChainAdapter) adapter).setArc(true);
+        }
+        // END HACK - Issue 933
+
+        adapter.delete(jCas, selectedArcId);
+        repository.updateJCas(bratAnnotatorModel.getMode(), bratAnnotatorModel.getDocument(),
+                bratAnnotatorModel.getUser(), jCas);
+
+        // update timestamp now
+        int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas,
+                BratAjaxCasUtil.selectByAddr(jCas, selectedArcId).getBegin());
+        bratAnnotatorModel.getDocument().setSentenceAccessed(sentenceNumber);
+        repository.updateTimeStamp(bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
+                bratAnnotatorModel.getMode());
+
+        if (bratAnnotatorModel.isScrollPage()) {
+            AnnotationFS originFs = selectByAddr(jCas, originSpanId);
+            int start = originFs.getBegin();
+            updateSentenceAddressAndOffsets(jCas, start);
+        }
+
+        // store latest annotations
+        for (IModel<String> model : tagModels) {
+            AnnotationFeature feature = featureModels.get(tagModels.indexOf(model)).getObject().feature;
+            selectedLayer = feature.getLayer();
+            selectedFeatureValues.put(feature, model.getObject());
+        }
+
+        bratAnnotatorModel.setMessage(SpanAnnotationModalWindowPage.generateMessage(selectedLayer,
+                null, true));
+        bratAnnotatorModel.setRememberedArcLayer(selectedLayer);
+        bratAnnotatorModel.setRememberedArcFeatures(selectedFeatureValues);
+    }
+    
+    private void actionReverse()
+        throws IOException, UIMAException, ClassNotFoundException, BratAnnotationException
+    {
+        JCas jCas;
+        jCas = getCas(bratAnnotatorModel);
+
+        AnnotationFS idFs = selectByAddr(jCas, selectedArcId);
+
+        jCas.removeFsFromIndexes(idFs);
+
+        AnnotationFS originFs = selectByAddr(jCas, originSpanId);
+        AnnotationFS targetFs = selectByAddr(jCas, targetSpanId);
+
+        TypeAdapter adapter = getAdapter(selectedLayer);
+        if (adapter instanceof ArcAdapter) {
+            for (IModel<String> model : tagModels) {
+                AnnotationFeature feature = featureModels.get(
+                        tagModels.indexOf(model)).getObject().feature;
+                ((ArcAdapter) adapter).add(targetFs, originFs, jCas,
+                        bratAnnotatorModel, feature, model.getObject());
+            }
+        }
+        else {
+            error("chains cannot be reversed");
+            return;
+        }
+
+        // persist changes
+        repository.updateJCas(bratAnnotatorModel.getMode(),
+                bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
+                jCas);
+        int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas,
+                originFs.getBegin());
+        bratAnnotatorModel.getDocument().setSentenceAccessed(sentenceNumber);
+        repository.updateTimeStamp(bratAnnotatorModel.getDocument(),
+                bratAnnotatorModel.getUser(), bratAnnotatorModel.getMode());
+
+        if (bratAnnotatorModel.isScrollPage()) {
+            int start = originFs.getBegin();
+            updateSentenceAddressAndOffsets(jCas, start);
+        }
+
+        StringBuffer deletedAnnoSb = new StringBuffer();
+
+        // store latest annotations
+        for (IModel<String> model : tagModels) {
+            deletedAnnoSb.append(model.getObject() + " ");
+            AnnotationFeature feature = featureModels.get(tagModels.indexOf(model))
+                    .getObject().feature;
+            selectedLayer = feature.getLayer();
+            selectedFeatureValues.put(feature, model.getObject());
+        }
+
+        bratAnnotatorModel.setMessage("The arc annotation  [" + deletedAnnoSb
+                + "] is reversed");
+        bratAnnotatorModel.setRememberedArcLayer(selectedLayer);
+        bratAnnotatorModel.setRememberedArcFeatures(selectedFeatureValues);
+    }
+    
     private void updateSentenceAddressAndOffsets(JCas jCas, int start)
     {
         int address = BratAjaxCasUtil.selectSentenceAt(jCas,
