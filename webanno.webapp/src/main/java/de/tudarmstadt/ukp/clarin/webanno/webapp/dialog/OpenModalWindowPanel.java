@@ -324,10 +324,11 @@ public class OpenModalWindowPanel
                 @Override
                 protected void onEvent(final AjaxRequestTarget aTarget)
                 {
-                    bratAnnotatorModel.setProject(selectedProject);
-                    bratAnnotatorModel.setDocument(selectedDocument);
-                    modalWindow.close(aTarget);
-
+                    if (selectedProject != null && selectedDocument != null) {
+                        bratAnnotatorModel.setProject(selectedProject);
+                        bratAnnotatorModel.setDocument(selectedDocument);
+                        modalWindow.close(aTarget);
+                    }
                 }
             }).add(new ResizableBehavior());
         }
