@@ -44,13 +44,13 @@ public class DaoUtils
     public static void zipFolder(File srcFolder, File destZipFile)
         throws IOException
     {
-        String srcPath;
         ZipOutputStream zip = null;
         try {
-            srcPath = srcFolder.getName();
             zip = new ZipOutputStream(new FileOutputStream(destZipFile));
 
-            addFolderToZip(new File(""), srcFolder, zip, srcPath);
+            for (File file : srcFolder.getAbsoluteFile().listFiles()) {
+                addToZip(zip, srcFolder.getAbsoluteFile(), file);
+            }
             zip.flush();
         }
         finally {
@@ -58,46 +58,24 @@ public class DaoUtils
         }
     }
 
-    private static void addFileToZip(File path, File srcFile, ZipOutputStream zip, String aSrcPath)
+    private static void addToZip(ZipOutputStream zip, File aBasePath, File aPath)
         throws IOException
     {
-        if (srcFile.isDirectory()) {
-            // We don't need the folder name inside the zi[p
-            addFolderToZip(path, srcFile, zip, aSrcPath);
+        if (aPath.isDirectory()) {
+            for (File file : aPath.listFiles()) {
+                addToZip(zip, aBasePath, file);
+            }
         }
         else {
             FileInputStream in = null;
             try {
-                in = new FileInputStream(srcFile);
-                if (path.getName().equals(aSrcPath)) {
-                    zip.putNextEntry(new ZipEntry("/" + srcFile.getName()));
-                }
-                else {
-                    zip.putNextEntry(new ZipEntry(path + "/" + srcFile.getName()));
-                }
+                in = new FileInputStream(aPath);
+                String relativePath = aBasePath.toURI().relativize(aPath.toURI()).getPath();
+                zip.putNextEntry(new ZipEntry(relativePath));
                 IOUtils.copy(in, zip);
             }
             finally {
                 closeQuietly(in);
-            }
-        }
-    }
-
-    private static void addFolderToZip(File path, File srcFolder, ZipOutputStream zip,
-            String aSrcPath)
-        throws IOException
-    {
-
-        for (String fileName : srcFolder.list()) {
-            if (path.equals("")) {
-                addFileToZip(srcFolder, new File(srcFolder + "/" + fileName), zip, aSrcPath);
-            }
-            else {
-                if (path.getPath() != null && path.getName().equals(aSrcPath)) {
-                    path = new File("");
-                }
-                addFileToZip(new File(path + "/" + srcFolder.getName()), new File(srcFolder + "/"
-                        + fileName), zip, aSrcPath);
             }
         }
     }
