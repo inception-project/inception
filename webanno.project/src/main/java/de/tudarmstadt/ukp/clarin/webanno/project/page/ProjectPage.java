@@ -261,96 +261,11 @@ public class ProjectPage
                         error("Please choose appropriate project/s in zip format");
                         return;
                     }
-                    Project importedProject = new Project();
-                    // import multiple projects!
-                    for (FileUpload exportedProject : exportedProjects) {
-                        InputStream tagInputStream;
-                        try {
-                            tagInputStream = exportedProject.getInputStream();
-                            if (!ProjectUtil.isZipStream(tagInputStream)) {
-                                error("Invalid ZIP file");
-                                return;
-                            }
-                            File zipFfile = exportedProject.writeToTempFile();
-                            if (!ProjectUtil.isZipValidWebanno(zipFfile)) {
-                                error("Incompatible to webanno ZIP file");
-                            }
-                            ZipFile zip = new ZipFile(zipFfile);
-                            InputStream projectInputStream = null;
-                            for (Enumeration zipEnumerate = zip.entries(); zipEnumerate
-                                    .hasMoreElements();) {
-                                ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
-                                if (entry.toString().replace("/", "")
-                                        .startsWith(ProjectUtil.EXPORTED_PROJECT)
-                                        && entry.toString().replace("/", "").endsWith(".json")) {
-                                    projectInputStream = zip.getInputStream(entry);
-                                    break;
-                                }
-                            }
-
-                            // projectInputStream =
-                            // uploadedFile.getInputStream();
-                            String text = IOUtils.toString(projectInputStream, "UTF-8");
-                            MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
-                            de.tudarmstadt.ukp.clarin.webanno.model.export.Project importedProjectSetting = jsonConverter
-                                    .getObjectMapper()
-                                    .readValue(
-                                            text,
-                                            de.tudarmstadt.ukp.clarin.webanno.model.export.Project.class);
-
-                            importedProject = ProjectUtil.createProject(
-                                    importedProjectSetting, repository);
-
-                            Map<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature, AnnotationFeature> featuresMap = ProjectUtil
-                                    .createLayer(importedProject, importedProjectSetting,
-                                            repository, annotationService);
-                            ProjectUtil.createSourceDocument(importedProjectSetting,
-                                    importedProject, repository, featuresMap);
-                            ProjectUtil.createMiraTemplate(importedProjectSetting, repository,
-                                    featuresMap);
-                            ProjectUtil.createCrowdJob(importedProjectSetting, repository,
-                                    importedProject);
-
-                            ProjectUtil.createAnnotationDocument(importedProjectSetting,
-                                    importedProject, repository);
-                            ProjectUtil.createProjectPermission(importedProjectSetting,
-                                    importedProject, repository);
-                            /*
-                             * for (TagSet tagset : importedProjectSetting.getTagSets()) {
-                             * ProjectUtil.createTagset(importedProject, tagset, projectRepository,
-                             * annotationService); }
-                             */
-                            // add source document content
-                            ProjectUtil.createSourceDocumentContent(zip, importedProject,
-                                    repository);
-                            // add annotation document content
-                            ProjectUtil.createAnnotationDocumentContent(zip, importedProject,
-                                    repository);
-                            // create curation document content
-                            ProjectUtil.createCurationDocumentContent(zip, importedProject,
-                                    repository);
-                            // create project log
-                            ProjectUtil.createProjectLog(zip, importedProject, repository);
-                            // create project guideline
-                            ProjectUtil.createProjectGuideline(zip, importedProject, repository);
-                            // cretae project META-INF
-                            ProjectUtil.createProjectMetaInf(zip, importedProject, repository);
-                        }
-                        catch (IOException e) {
-                            error("Error Importing Project "
-                                    + ExceptionUtils.getRootCauseMessage(e));
-                        }
-                    }
-                    projectDetailForm.setModelObject(importedProject);
-                    SelectionModel selectedProjectModel = new SelectionModel();
-                    selectedProjectModel.project = importedProject;
-                    projectSelectionForm.setModelObject(selectedProjectModel);
-                    projectDetailForm.setVisible(true);
-                    RequestCycle.get().setResponsePage(getPage());
+                    
+                    actionImportProject(exportedProjects);
                 }
             });
         }
-
     }
 
     public class ProjectDetailForm
@@ -627,5 +542,84 @@ public class ProjectPage
                 }
             });
         }
+    }
+    
+    private void actionImportProject(List<FileUpload> exportedProjects)
+    {
+        Project importedProject = new Project();
+        // import multiple projects!
+        for (FileUpload exportedProject : exportedProjects) {
+            InputStream tagInputStream;
+            try {
+                tagInputStream = exportedProject.getInputStream();
+                if (!ProjectUtil.isZipStream(tagInputStream)) {
+                    error("Invalid ZIP file");
+                    return;
+                }
+                File zipFfile = exportedProject.writeToTempFile();
+                if (!ProjectUtil.isZipValidWebanno(zipFfile)) {
+                    error("Incompatible to webanno ZIP file");
+                }
+                ZipFile zip = new ZipFile(zipFfile);
+                InputStream projectInputStream = null;
+                for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
+                    ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
+                    if (entry.toString().replace("/", "").startsWith(ProjectUtil.EXPORTED_PROJECT)
+                            && entry.toString().replace("/", "").endsWith(".json")) {
+                        projectInputStream = zip.getInputStream(entry);
+                        break;
+                    }
+                }
+
+                // projectInputStream =
+                // uploadedFile.getInputStream();
+                String text = IOUtils.toString(projectInputStream, "UTF-8");
+                MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
+                de.tudarmstadt.ukp.clarin.webanno.model.export.Project importedProjectSetting = jsonConverter
+                        .getObjectMapper().readValue(text,
+                                de.tudarmstadt.ukp.clarin.webanno.model.export.Project.class);
+
+                importedProject = ProjectUtil.createProject(importedProjectSetting, repository);
+
+                Map<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature, AnnotationFeature> featuresMap = ProjectUtil
+                        .createLayer(importedProject, importedProjectSetting, repository,
+                                annotationService);
+                ProjectUtil.createSourceDocument(importedProjectSetting, importedProject,
+                        repository, featuresMap);
+                ProjectUtil.createMiraTemplate(importedProjectSetting, repository, featuresMap);
+                ProjectUtil.createCrowdJob(importedProjectSetting, repository, importedProject);
+
+                ProjectUtil.createAnnotationDocument(importedProjectSetting, importedProject,
+                        repository);
+                ProjectUtil.createProjectPermission(importedProjectSetting, importedProject,
+                        repository);
+                /*
+                 * for (TagSet tagset : importedProjectSetting.getTagSets()) {
+                 * ProjectUtil.createTagset(importedProject, tagset, projectRepository,
+                 * annotationService); }
+                 */
+                // add source document content
+                ProjectUtil.createSourceDocumentContent(zip, importedProject, repository);
+                // add annotation document content
+                ProjectUtil.createAnnotationDocumentContent(zip, importedProject, repository);
+                // create curation document content
+                ProjectUtil.createCurationDocumentContent(zip, importedProject, repository);
+                // create project log
+                ProjectUtil.createProjectLog(zip, importedProject, repository);
+                // create project guideline
+                ProjectUtil.createProjectGuideline(zip, importedProject, repository);
+                // cretae project META-INF
+                ProjectUtil.createProjectMetaInf(zip, importedProject, repository);
+            }
+            catch (IOException e) {
+                error("Error Importing Project " + ExceptionUtils.getRootCauseMessage(e));
+            }
+        }
+        projectDetailForm.setModelObject(importedProject);
+        SelectionModel selectedProjectModel = new SelectionModel();
+        selectedProjectModel.project = importedProject;
+        projectSelectionForm.setModelObject(selectedProjectModel);
+        projectDetailForm.setVisible(true);
+        RequestCycle.get().setResponsePage(getPage());
     }
 }

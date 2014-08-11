@@ -85,12 +85,12 @@ public class ProjectUtil
 
     private static MappingJacksonHttpMessageConverter jsonConverter;
 
-    private static final String META_INF = "/META-INF";
-    private static final String SOURCE = "/source";
-    private static final String ANNOTATION_AS_SERIALISED_CAS = "/annotation_ser/";
-    private static final String CURATION_AS_SERIALISED_CAS = "/curation_ser";
-    private static final String GUIDELINE = "/guideline";
-    private static final String LOG_DIR = "/log";
+    private static final String META_INF = "META-INF";
+    private static final String SOURCE = "source";
+    private static final String ANNOTATION_AS_SERIALISED_CAS = "annotation_ser/";
+    private static final String CURATION_AS_SERIALISED_CAS = "curation_ser";
+    private static final String GUIDELINE = "guideline";
+    private static final String LOG_DIR = "log";
     public static final String EXPORTED_PROJECT = "exportedproject";
 
     public static void setJsonConverter(MappingJacksonHttpMessageConverter aJsonConverter)
@@ -845,12 +845,20 @@ public class ProjectUtil
     {
         for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
             ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
-            if (entry.toString().startsWith(SOURCE)) {
-                String fileName = entry.toString().replace(SOURCE, "").replace("/", "");
+            
+            // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
+            String entryName = normalizeEntryName(entry);
+            
+            if (entryName.startsWith(SOURCE)) {
+                String fileName = FilenameUtils.getName(entryName);
                 de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument = aRepository
                         .getSourceDocument(aProject, fileName);
                 File sourceFilePath = aRepository.exportSourceDocument(sourceDocument);
                 FileUtils.copyInputStreamToFile(zip.getInputStream(entry), sourceFilePath);
+                
+                LOG.info("Imported source document content for source document ["
+                        + sourceDocument.getId() + "] in project [" + aProject.getName()
+                        + "] with id [" + aProject.getId() + "]");
             }
         }
     }
@@ -865,8 +873,12 @@ public class ProjectUtil
     {
         for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
             ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
-            if (entry.toString().startsWith(ANNOTATION_AS_SERIALISED_CAS)) {
-                String fileName = entry.toString().replace(ANNOTATION_AS_SERIALISED_CAS, "");
+
+            // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
+            String entryName = normalizeEntryName(entry);
+            
+            if (entryName.startsWith(ANNOTATION_AS_SERIALISED_CAS)) {
+                String fileName = entryName.replace(ANNOTATION_AS_SERIALISED_CAS, "");
 
                 // the user annotated the document is file name minus extension
                 // (anno1.ser)
@@ -879,6 +891,10 @@ public class ProjectUtil
                 File annotationFilePath = aRepository.exportserializedCas(sourceDocument, username);
 
                 FileUtils.copyInputStreamToFile(zip.getInputStream(entry), annotationFilePath);
+                
+                LOG.info("Imported annotation document content for user [" + username
+                        + "] for source document [" + sourceDocument.getId() + "] in project ["
+                        + aProject.getName() + "] with id [" + aProject.getId() + "]");
             }
         }
     }
@@ -893,8 +909,12 @@ public class ProjectUtil
     {
         for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
             ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
-            if (entry.toString().startsWith(CURATION_AS_SERIALISED_CAS)) {
-                String fileName = entry.toString().replace(CURATION_AS_SERIALISED_CAS, "");
+
+            // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
+            String entryName = normalizeEntryName(entry);
+            
+            if (entryName.startsWith(CURATION_AS_SERIALISED_CAS)) {
+                String fileName = entryName.replace(CURATION_AS_SERIALISED_CAS, "");
 
                 // the user annotated the document is file name minus extension
                 // (anno1.ser)
@@ -907,6 +927,10 @@ public class ProjectUtil
                 File annotationFilePath = aRepository.exportserializedCas(sourceDocument, username);
 
                 FileUtils.copyInputStreamToFile(zip.getInputStream(entry), annotationFilePath);
+                
+                LOG.info("Imported curation document content for user [" + username
+                        + "] for source document [" + sourceDocument.getId() + "] in project ["
+                        + aProject.getName() + "] with id [" + aProject.getId() + "]");
             }
         }
     }
@@ -921,11 +945,19 @@ public class ProjectUtil
     {
         for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
             ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
-            if (entry.toString().startsWith(GUIDELINE)) {
+            
+            // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
+            String entryName = normalizeEntryName(entry);
+            
+            if (entryName.startsWith(GUIDELINE)) {
+                String filename = FilenameUtils.getName(entry.getName());
                 File guidelineDir = aRepository.exportGuidelines(aProject);
                 FileUtils.forceMkdir(guidelineDir);
                 FileUtils.copyInputStreamToFile(zip.getInputStream(entry), new File(guidelineDir,
-                        FilenameUtils.getName(entry.getName())));
+                        filename));
+                
+                LOG.info("Imported guideline [" + filename + "] for project [" + aProject.getName()
+                        + "] with id [" + aProject.getId() + "]");
             }
         }
     }
@@ -940,13 +972,20 @@ public class ProjectUtil
     {
         for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
             ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
-            if (entry.toString().startsWith(META_INF)) {
+
+            // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
+            String entryName = normalizeEntryName(entry);
+
+            if (entryName.startsWith(META_INF)) {
                 File metaInfDir = new File(aRepository.exportProjectMetaInf(aProject),
                         FilenameUtils.getPath(entry.getName().replace(META_INF, "")));
                 // where the file reside in the META-INF/... directory
                 FileUtils.forceMkdir(metaInfDir);
                 FileUtils.copyInputStreamToFile(zip.getInputStream(entry), new File(metaInfDir,
                         FilenameUtils.getName(entry.getName())));
+                
+                LOG.info("Imported META-INF for project [" + aProject.getName() + "] with id ["
+                        + aProject.getId() + "]");
             }
         }
     }
@@ -960,9 +999,15 @@ public class ProjectUtil
     {
         for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
             ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
-            if (entry.toString().startsWith(LOG_DIR)) {
+
+            // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
+            String entryName = normalizeEntryName(entry);
+            
+            if (entryName.startsWith(LOG_DIR)) {
                 FileUtils.copyInputStreamToFile(zip.getInputStream(entry),
                         aRepository.exportProjectLog(aProject));
+                LOG.info("Imported log for project [" + aProject.getName() + "] with id ["
+                        + aProject.getId() + "]");
             }
         }
     }
@@ -1067,4 +1112,14 @@ public class ProjectUtil
         return exLayer;
     }
 
+    private static String normalizeEntryName(ZipEntry aEntry)
+    {
+        // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
+        String entryName = aEntry.toString();
+        if (entryName.startsWith("/")) {
+            entryName = entryName.substring(1);
+        }
+       
+        return entryName;
+    }
 }
