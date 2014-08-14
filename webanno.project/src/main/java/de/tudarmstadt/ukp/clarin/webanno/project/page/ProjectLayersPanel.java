@@ -445,7 +445,6 @@ public class ProjectLayersPanel
         private Label linkedListBehaviorLabel;
         private CheckBox linkedListBehavior;
 
-        @SuppressWarnings("unchecked")
         public LayerDetailForm(String id)
         {
             super(id, new CompoundPropertyModel<AnnotationLayer>(new EntityModel<AnnotationLayer>(
@@ -460,7 +459,7 @@ public class ProjectLayersPanel
                 @Override
                 protected void onUpdate(AjaxRequestTarget target)
                 {
-                    String modelValue = StringUtils.capitalise(getModelObject().getUiName());
+                    String modelValue = StringUtils.capitalize(getModelObject().getUiName());
                     layerName = modelValue;
                 }
             });
@@ -525,7 +524,7 @@ public class ProjectLayersPanel
                 }
             });
 
-            add(attachTypes = (DropDownChoice<AnnotationLayer>) new DropDownChoice<AnnotationLayer>(
+            attachTypes = (DropDownChoice<AnnotationLayer>) new DropDownChoice<AnnotationLayer>(
                     "attachType")
             {
                 private static final long serialVersionUID = -6705445053442011120L;
@@ -577,29 +576,16 @@ public class ProjectLayersPanel
                 }
 
                 @Override
-                public boolean isNullValid()
+                protected void onConfigure()
                 {
-                    return isVisible();
-                }
+                    setEnabled(LayerDetailForm.this.getModelObject().getId() == 0);
+                    setNullValid(isVisible());
+                };
+            };
+            attachTypes.setOutputMarkupPlaceholderTag(true);
+            add(attachTypes);
 
-                @Override
-                public boolean isEnabled()
-                {
-                    if (LayerDetailForm.this.getModelObject().getId() != 0) {
-                        return false;
-                    }
-                    return true;
-                }
-
-                @Override
-                protected boolean wantOnSelectionChangedNotifications()
-                {
-                    return true;
-                }
-
-            }.setOutputMarkupPlaceholderTag(true));
-
-            // behaviours of layers
+            // Behaviors of layers
             add(new AjaxLink<Void>("showlayerBehaviorModal")
             {
                 private static final long serialVersionUID = 7496156015186497496L;
