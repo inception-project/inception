@@ -45,12 +45,14 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
+import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
@@ -121,7 +123,7 @@ public class SpanAnnotationModalWindowPage
     List<AnnotationLayer> spanLayers = new ArrayList<AnnotationLayer>();
 
     List<IModel<FeatureValue>> featureModels;
-    List<IModel<String>> tagModels;
+    List<IModel<String>> featureValueModels;
     RefreshingView<FeatureValue> featureValues;
     private WebMarkupContainer wmc ;
 
@@ -201,7 +203,7 @@ public class SpanAnnotationModalWindowPage
 				@Override
 				protected void onUpdate(AjaxRequestTarget aTarget) {
 					featureModels = new ArrayList<IModel<FeatureValue>>();
-                    tagModels = new ArrayList<IModel<String>>();
+                    featureValueModels = new ArrayList<IModel<String>>();
                     selectedLayer = layersModel.getObject();
                     for (AnnotationFeature feature : annotationService
                             .listAnnotationFeature(selectedLayer)) {
@@ -224,7 +226,7 @@ public class SpanAnnotationModalWindowPage
                         if (feature.equals(selectedFeatureValues)) {
                             tagModel.setObject(selectedTagModel.getObject());
                         }
-                        tagModels.add(tagModel);
+                        featureValueModels.add(tagModel);
                     }
                     aTarget.add(wmc);
 				}
@@ -233,7 +235,7 @@ public class SpanAnnotationModalWindowPage
             add(layer);
 
             featureModels = new ArrayList<IModel<FeatureValue>>();
-            tagModels = new ArrayList<IModel<String>>();
+            featureValueModels = new ArrayList<IModel<String>>();
 
             for (AnnotationFeature feature : annotationService.listAnnotationFeature(selectedLayer)) {
                 if (!feature.isEnabled()) {
@@ -260,7 +262,7 @@ public class SpanAnnotationModalWindowPage
                         && bratAnnotatorModel.getRememberedSpanFeatures().get(feature) != null) {
                     tagModel.setObject(bratAnnotatorModel.getRememberedSpanFeatures().get(feature));
                 }
-                tagModels.add(tagModel);
+                featureValueModels.add(tagModel);
             }
 
             wmc = new WebMarkupContainer("wmc");
@@ -281,25 +283,31 @@ public class SpanAnnotationModalWindowPage
                     
                     item.add(new Label("feature", featureLabel));
 
-                    List<Tag> tagset = new ArrayList<Tag>();
                     if (feature.getTagset() != null) {
-                        tagset.addAll(annotationService.listTags(feature.getTagset()));
-                    }
+                        List<Tag> tagset = new ArrayList<Tag>();
+                        if (feature.getTagset() != null) {
+                            tagset.addAll(annotationService.listTags(feature.getTagset()));
+                        }
 
-                    // If there are no tags in the tagset yet, use the selected text as tag value
-                    if (tagset.size() == 0) {
-                        Tag tag = new Tag();
-                        tag.setName(selectedText);
-                        tagset.add(tag);
+                        ComboBox<Tag> featureValueCombo = new ComboBox<Tag>("tag",
+                                featureValueModels.get(item.getIndex()), tagset,
+                                new ComboBoxRenderer<Tag>("name", "name"));
+                        if (item.getIndex() == 0) {
+                            // Put focus on first feature
+                            featureValueCombo.add(new DefaultFocusBehavior());
+                        }
+                        item.add(featureValueCombo);
                     }
-                    
-                    ComboBox<Tag> featureValueCombo = new ComboBox<Tag>("tag", tagModels.get(item
-                            .getIndex()), tagset, new ComboBoxRenderer<Tag>("name", "name"));
-                    if (item.getIndex() == 0) {
-                        // Put focus on first feature
-                        featureValueCombo.add(new DefaultFocusBehavior());
+                    else {
+                        TextField<String> featureTextField = new TextField<String>("tag",
+                                featureValueModels.get(item.getIndex()));
+                        featureTextField.add(new AttributeAppender("class", "k-textbox"));
+                        item.add(featureTextField);
+                        if (item.getIndex() == 0) {
+                            // Put focus on first feature
+                            featureTextField.add(new DefaultFocusBehavior());
+                        }
                     }
-                    item.add(featureValueCombo);
                 }
 
                 @Override
@@ -394,8 +402,8 @@ public class SpanAnnotationModalWindowPage
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
         // check type of a feature
-        for (IModel<String> model : tagModels) {
-            AnnotationFeature feature = featureModels.get(tagModels.indexOf(model))
+        for (IModel<String> model : featureValueModels) {
+            AnnotationFeature feature = featureModels.get(featureValueModels.indexOf(model))
                     .getObject().feature;
             try {
 
@@ -422,8 +430,8 @@ public class SpanAnnotationModalWindowPage
         }
 
         // Verify if input is valid
-        for (int i = 0; i < tagModels.size(); i++) {
-            IModel<String> model = tagModels.get(i);
+        for (int i = 0; i < featureValueModels.size(); i++) {
+            IModel<String> model = featureValueModels.get(i);
             AnnotationFeature feature = featureModels.get(i).getObject().feature;
             // Check if tag is necessary, set, and correct
             if (feature.getTagset() != null
@@ -457,10 +465,11 @@ public class SpanAnnotationModalWindowPage
 
         // Set feature values
         List<AnnotationFeature> features = new ArrayList<AnnotationFeature>();
-        for (int i = 0; i < tagModels.size(); i++) {
-            IModel<String> model = tagModels.get(i);
+        for (int i = 0; i < featureValueModels.size(); i++) {
+            IModel<String> model = featureValueModels.get(i);
             AnnotationFeature feature = featureModels.get(i).getObject().feature;
-
+            features.add(feature);
+            
             Tag selectedTag;
             if (feature.getTagset() == null) {
                 selectedTag = new Tag();
@@ -487,7 +496,6 @@ public class SpanAnnotationModalWindowPage
             adapter.updateFeature(jCas, feature, selectedSpanId,
                     selectedTag.getName());
             selectedFeatureValues.put(feature, model.getObject());
-
         }
 
         // update timestamp now
@@ -589,8 +597,8 @@ public class SpanAnnotationModalWindowPage
         bratAnnotatorModel.setAnnotate(false);
 
         // store latest annotations
-        for (IModel<String> model : tagModels) {
-            AnnotationFeature feature = featureModels.get(tagModels.indexOf(model))
+        for (IModel<String> model : featureValueModels) {
+            AnnotationFeature feature = featureModels.get(featureValueModels.indexOf(model))
                     .getObject().feature;
             selectedLayer = feature.getLayer();
             selectedFeatureValues.put(feature, model.getObject());

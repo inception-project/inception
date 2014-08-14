@@ -41,11 +41,13 @@ import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
+import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
@@ -123,7 +125,7 @@ public class ArcAnnotationModalWindowPanel
     List<AnnotationFeature> spanFeatures = new ArrayList<AnnotationFeature>();
 
     List<IModel<FeatureValue>> featureModels;
-    List<IModel<String>> tagModels;
+    List<IModel<String>> featureValueModels;
     RefreshingView<FeatureValue> featureValues;
 
     Model<String> selectedTagModel;
@@ -170,7 +172,7 @@ public class ArcAnnotationModalWindowPanel
             add(layer);
             
             featureModels = new ArrayList<IModel<FeatureValue>>();
-            tagModels = new ArrayList<IModel<String>>();
+            featureValueModels = new ArrayList<IModel<String>>();
             for (AnnotationFeature feature : annotationService.listAnnotationFeature(selectedLayer)) {
                 if (!feature.isEnabled()) {
                     continue;
@@ -195,7 +197,7 @@ public class ArcAnnotationModalWindowPanel
                         && bratAnnotatorModel.getRememberedArcFeatures().get(feature) != null) {
                     tagModel.setObject(bratAnnotatorModel.getRememberedArcFeatures().get(feature));
                 }
-                tagModels.add(tagModel);
+                featureValueModels.add(tagModel);
             }
 
             add(featureValues = new RefreshingView<FeatureValue>("featureValues")
@@ -215,22 +217,31 @@ public class ArcAnnotationModalWindowPanel
                     
                     item.add(new Label("feature", featureLabel));
 
-                    List<Tag> tagset; 
-                    if (item.getModelObject().feature.getTagset() != null) {
-                        tagset = annotationService
-                                .listTags(item.getModelObject().feature.getTagset());
+                    if (feature.getTagset() != null) {
+                        List<Tag> tagset = new ArrayList<Tag>();
+                        if (feature.getTagset() != null) {
+                            tagset.addAll(annotationService.listTags(feature.getTagset()));
+                        }
+
+                        ComboBox<Tag> featureValueCombo = new ComboBox<Tag>("tag",
+                                featureValueModels.get(item.getIndex()), tagset,
+                                new ComboBoxRenderer<Tag>("name", "name"));
+                        if (item.getIndex() == 0) {
+                            // Put focus on first feature
+                            featureValueCombo.add(new DefaultFocusBehavior());
+                        }
+                        item.add(featureValueCombo);
                     }
                     else {
-                        tagset = new ArrayList<Tag>();
+                        TextField<String> featureTextField = new TextField<String>("tag",
+                                featureValueModels.get(item.getIndex()));
+                        featureTextField.add(new AttributeAppender("class", "k-textbox"));
+                        item.add(featureTextField);
+                        if (item.getIndex() == 0) {
+                            // Put focus on first feature
+                            featureTextField.add(new DefaultFocusBehavior());
+                        }
                     }
-                    
-                    ComboBox<Tag> featureValueCombo = new ComboBox<Tag>("tag", tagModels.get(item
-                            .getIndex()), tagset, new ComboBoxRenderer<Tag>("name", "name"));
-                    if (item.getIndex() == 0) {
-                        // Put focus on first feature
-                        featureValueCombo.add(new DefaultFocusBehavior());
-                    }
-                    item.add(featureValueCombo);
                 }
 
                 @Override
@@ -339,8 +350,8 @@ public class ArcAnnotationModalWindowPanel
         throws IOException, BratAnnotationException, UIMAException, ClassNotFoundException
     {
         // check type of a feature
-        for (IModel<String> model : tagModels) {
-            AnnotationFeature feature = featureModels.get(tagModels.indexOf(model))
+        for (IModel<String> model : featureValueModels) {
+            AnnotationFeature feature = featureModels.get(featureValueModels.indexOf(model))
                     .getObject().feature;
             try {
                 if (feature.getType().equals(CAS.TYPE_NAME_INTEGER)
@@ -366,8 +377,8 @@ public class ArcAnnotationModalWindowPanel
         }
 
         // Verify if input is valid
-        for (int i = 0; i < tagModels.size(); i++) {
-            IModel<String> model = tagModels.get(i);
+        for (int i = 0; i < featureValueModels.size(); i++) {
+            IModel<String> model = featureValueModels.get(i);
             AnnotationFeature feature = featureModels.get(i).getObject().feature;
             // Check if tag is necessary, set, and correct
             if (feature.getTagset() != null
@@ -402,8 +413,8 @@ public class ArcAnnotationModalWindowPanel
         }
         // Set feature values
         List<AnnotationFeature> features = new ArrayList<AnnotationFeature>();
-        for (int i = 0; i < tagModels.size(); i++) {
-            IModel<String> model = tagModels.get(i);
+        for (int i = 0; i < featureValueModels.size(); i++) {
+            IModel<String> model = featureValueModels.get(i);
             AnnotationFeature feature = featureModels.get(i).getObject().feature;
             features.add(feature);
 
@@ -497,8 +508,8 @@ public class ArcAnnotationModalWindowPanel
         }
 
         // store latest annotations
-        for (IModel<String> model : tagModels) {
-            AnnotationFeature feature = featureModels.get(tagModels.indexOf(model)).getObject().feature;
+        for (IModel<String> model : featureValueModels) {
+            AnnotationFeature feature = featureModels.get(featureValueModels.indexOf(model)).getObject().feature;
             selectedLayer = feature.getLayer();
             selectedFeatureValues.put(feature, model.getObject());
         }
@@ -524,9 +535,9 @@ public class ArcAnnotationModalWindowPanel
 
         TypeAdapter adapter = getAdapter(selectedLayer);
         if (adapter instanceof ArcAdapter) {
-            for (IModel<String> model : tagModels) {
+            for (IModel<String> model : featureValueModels) {
                 AnnotationFeature feature = featureModels.get(
-                        tagModels.indexOf(model)).getObject().feature;
+                        featureValueModels.indexOf(model)).getObject().feature;
                 ((ArcAdapter) adapter).add(targetFs, originFs, jCas,
                         bratAnnotatorModel, feature, model.getObject());
             }
@@ -554,9 +565,9 @@ public class ArcAnnotationModalWindowPanel
         StringBuffer deletedAnnoSb = new StringBuffer();
 
         // store latest annotations
-        for (IModel<String> model : tagModels) {
+        for (IModel<String> model : featureValueModels) {
             deletedAnnoSb.append(model.getObject() + " ");
-            AnnotationFeature feature = featureModels.get(tagModels.indexOf(model))
+            AnnotationFeature feature = featureModels.get(featureValueModels.indexOf(model))
                     .getObject().feature;
             selectedLayer = feature.getLayer();
             selectedFeatureValues.put(feature, model.getObject());
