@@ -29,7 +29,7 @@
 			<props>
 				<prop key="database.dialect">org.hibernate.dialect.HSQLDialect</prop>
 				<prop key="database.driver">org.hsqldb.jdbc.JDBCDriver</prop>
-				<prop key="database.url">jdbc:hsqldb:file:${webanno.home}/db/webanno;hsqldb.default_table_type=cached</prop>
+				<prop key="database.url">jdbc:hsqldb:file:#{systemProperties['webanno.home'] ?: systemProperties['user.home'].concat('/.webanno') }/db/webanno;hsqldb.default_table_type=cached</prop>
 				<prop key="database.username">sa</prop>
 				<prop key="database.password"></prop>
 				<prop key="database.initial-pool-size">4</prop>
@@ -41,7 +41,7 @@
 		<property name="locations">
 			<list>
 				<!-- <value>classpath:META-INF/settings.properties</value> -->
-				<value>file:${webanno.home}/settings.properties</value>
+				<value>file:#{systemProperties['webanno.home'] ?: systemProperties['user.home'].concat('/.webanno') }/settings.properties</value>
 			</list>
 		</property>
 	</bean>

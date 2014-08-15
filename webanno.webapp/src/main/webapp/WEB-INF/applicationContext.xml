@@ -36,7 +36,7 @@
 		<property name="locations">
 			<list>
 				<value>classpath:META-INF/formats.properties</value>
-				<value>file:${webanno.home}/formats.properties</value>
+				<value>file:#{systemProperties['webanno.home'] ?: systemProperties['user.home'].concat('/.webanno') }/formats.properties</value>
 			</list>
 		</property>
 	</bean> 
@@ -49,7 +49,7 @@
 		<property name="locations">
 			<list>
 				<value>classpath:META-INF/help.properties</value>
-				<value>file:${webanno.home}/help.properties</value>
+				<value>file:#{systemProperties['webanno.home'] ?: systemProperties['user.home'].concat('/.webanno') }/help.properties</value>
 			</list>
 		</property>
 	</bean>		
@@ -69,7 +69,7 @@
 		<property name="locations">
 			<list>
 				<!-- <value>classpath:META-INF/settings.properties</value> -->
-				<value>file:${webanno.home}/settings.properties</value>
+				<value>file:#{systemProperties['webanno.home'] ?: systemProperties['user.home'].concat('/.webanno') }/settings.properties</value>
 			</list>
 		</property>
 	</bean>
@@ -80,10 +80,14 @@
 
 	<bean id="documentRepository"
 		class="de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryServiceDbData">
-		<property name="dir" value="${webanno.home}/repository/" />
+		<property name="dir" value="#{systemProperties['webanno.home'] ?: systemProperties['user.home'].concat('/.webanno') }/repository/" />
 		<property name="annotationPreferencePropertiesFileName" value="annotation.properties" />
 	</bean>
 
 	<bean id="applicationContextProvider"
 		class="de.tudarmstadt.ukp.clarin.webanno.model.support.spring.ApplicationContextProvider"></bean>
+
+	<bean id="standaloneShutdownDialog"
+		class="de.tudarmstadt.ukp.clarin.webanno.webapp.standalone.StandaloneShutdownDialog"
+		lazy-init="false"></bean>
 </beans>
