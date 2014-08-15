@@ -13,25 +13,19 @@ help.png
 home_page.png
 setting_tools.png
 statistics.png
-ukp-logo.png
 user_go.png
-
 
 The following files are under the the MIT license (licences/MIT.txt)
 These files are originally from the BRAT project
 
 src/main/webapp/static/style.css
-
-src/main/webapp/fonts/Astloch-Bold.ttf
-src/main/webapp/fonts/Liberation_Sans-Regular.ttf
-src/main/webapp/fonts/PT_Sans-Caption-Web-Regular.ttf
-
-
+Astloch-Bold.ttf
+Liberation_Sans-Regular.ttf
+PT_Sans-Caption-Web-Regular.ttf
 
 The following files are under the Creative Commons Attribution 2.5 licnse (licences/CC_BY_2_5.txt)
 
 src/main/webapp/js/css_browser_selector.js
 
-
-
-ukp-logo.png
+ServerDetector.java
+Copyright (c) 2000-2008 Liferay, Inc. All rights reserved.
