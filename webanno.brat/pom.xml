@@ -165,7 +165,6 @@
 		<dependency>
 			<groupId>com.googlecode.wicket-jquery-ui</groupId>
 			<artifactId>jquery-ui-kendo</artifactId>
-			<version>1.4.1</version>
 		</dependency>
 
 		<!-- JUNIT DEPENDENCY FOR TESTING -->
