@@ -29,6 +29,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.monitoring.page.MonitoringPage;
@@ -54,21 +55,22 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.security.page.ManageUsersPage;
 public class WelcomePage
     extends ApplicationPageBase
 {
+    private static final long serialVersionUID = -2487663821276301436L;
+
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
 
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
 
-
-    AjaxLink<Void> projectSettings;
-    AjaxLink<Void> curation;
-    AjaxLink<Void> annotation;
-    AjaxLink<Void> monitoring;
-    AjaxLink<Void> usremanagement;
-    AjaxLink<Void> crowdSource;
-    AjaxLink<Void> correction;
-    AjaxLink<Void> automation;
+    private AjaxLink<Void> projectSettings;
+    private AjaxLink<Void> curation;
+    private AjaxLink<Void> annotation;
+    private AjaxLink<Void> monitoring;
+    private AjaxLink<Void> userManagement;
+    private AjaxLink<Void> crowdSource;
+    private AjaxLink<Void> correction;
+    private AjaxLink<Void> automation;
 
     public WelcomePage()
     {
@@ -78,17 +80,16 @@ public class WelcomePage
         // This causes a problem, if the data base is re-created while user's session not expired OR
         // the user is deleted while the session is not expired
         User user = null;
-        try{
-         user = repository.getUser(username);
+        try {
+            user = repository.getUser(username);
         }
         // redirect to login page (if no usr is found, admin/admin will be created)
-        catch (NoResultException e){
+        catch (NoResultException e) {
             setResponsePage(LoginPage.class);
         }
 
         // Add Project Setting Link
         // Only Super Admin or Project admins can see this link
-        boolean projectSettingAdded = false;
         projectSettings = new AjaxLink<Void>("projectSettings")
         {
             private static final long serialVersionUID = 7496156015186497496L;
@@ -99,30 +100,14 @@ public class WelcomePage
                 setResponsePage(ProjectPage.class);
             }
         };
-        for (Project project : repository.listProjects()) {
-
-            if (ProjectUtil.isProjectAdmin(project, repository, user)) {
-                add(projectSettings);
-                projectSettingAdded = true;
-                break;
-            }
-        }
-        if (ProjectUtil.isSuperAdmin(repository, user) && !projectSettingAdded) {
-            add(projectSettings);
-        }
-        else if (!projectSettingAdded) {
-
-            add(projectSettings);
-            projectSettings.setVisible(false);
-
-        }
+        add(projectSettings);
+        projectSettings.setVisible(projectSettingsEnabeled(user));
 
         // Add curation Link
-        // Only Admins or curators can see this link
-        boolean curatorAdded = false;
+        // Only project admins or curators can see this link
         curation = new AjaxLink<Void>("curation")
         {
-            private static final long serialVersionUID = 7496156015186497496L;
+            private static final long serialVersionUID = 3681686831639096179L;
 
             @Override
             public void onClick(AjaxRequestTarget target)
@@ -130,28 +115,14 @@ public class WelcomePage
                 setResponsePage(CurationPage.class);
             }
         };
-        for (Project project : repository.listProjects()) {
-
-            if (ProjectUtil.isCurator(project, repository, user)) {
-                add(curation);
-                curatorAdded = true;
-                break;
-            }
-
-        }
-        if (ProjectUtil.isSuperAdmin(repository, user) && !projectSettingAdded) {
-            add(curation);
-        }
-        else if (!curatorAdded) {
-            add(curation);
-            curation.setVisible(false);
-        }
+        add(curation);
+        curation.setVisible(curationEnabeled(user));
 
         // Add annotation link
-        // Only Admins or annotators can see this link
+        // Only project admins and annotators can see this link
         annotation = new AjaxLink<Void>("annotation")
         {
-            private static final long serialVersionUID = 7496156015186497496L;
+            private static final long serialVersionUID = -845758775690774624L;
 
             @Override
             public void onClick(AjaxRequestTarget target)
@@ -159,88 +130,47 @@ public class WelcomePage
                 setResponsePage(AnnotationPage.class);
             }
         };
-
-        boolean memberAdded = false;
-        for (Project project : repository.listProjects()) {
-
-            if (ProjectUtil.isMember(project, repository, user)) {
-                add(annotation);
-                memberAdded = true;
-                break;
-            }
-        }
-        if (ProjectUtil.isSuperAdmin(repository, user) && !projectSettingAdded) {
-            add(annotation);
-        }
-        else if (!memberAdded) {
-            add(annotation);
-            annotation.setVisible(false);
-        }
+        add(annotation);
+        annotation.setVisible(annotationEnabeled(user, Mode.ANNOTATION));
 
         // if not either a curator or annotator, display warning message
-        if(!memberAdded && !curatorAdded){
+        if (!annotation.isVisible() && !curation.isVisible()) {
             info("You are not member of any projects to annotate or curate");
         }
+        
         // Add monitoring link
-        // Only Admins can see this link
-
-        boolean monitoringAdded = false;
+        // Only project admins and curators can see this link
         monitoring = new AjaxLink<Void>("monitoring")
         {
-            private static final long serialVersionUID = 7496156015186497496L;
+            private static final long serialVersionUID = 545914367958126874L;
 
             @Override
             public void onClick(AjaxRequestTarget target)
             {
-            	if(repository.listProjects().size() ==0){
-            		error("No project is created yet.");
-            		return;
-            	}
                 setResponsePage(MonitoringPage.class);
             }
         };
+        add(monitoring);
+        monitoring.setVisible(monitoringEnabeled(user));
 
-        for (Project project : repository.listProjects()) {
+        userManagement = new AjaxLink<Void>("userManagement")
+        {
+            private static final long serialVersionUID = -4722275335074746935L;
 
-            if (ProjectUtil.isProjectAdmin(project, repository, user)
-                    || ProjectUtil.isCurator(project, repository, user)) {
-                add(monitoring);
-                monitoringAdded = true;
-                break;
+            @Override
+            public void onClick(AjaxRequestTarget target)
+            {
+                setResponsePage(ManageUsersPage.class);
             }
-        }
-        if (ProjectUtil.isSuperAdmin(repository, user) && !monitoringAdded) {
-            add(monitoring);
-        }
-        else if (!monitoringAdded) {
-
-            add(monitoring);
-            monitoring.setVisible(false);
-
-        }
-
-
-        usremanagement = new AjaxLink<Void>("usremanagement")
-                {
-                    private static final long serialVersionUID = 7496156015186497496L;
-
-                    @Override
-                    public void onClick(AjaxRequestTarget target)
-                    {
-                        setResponsePage(ManageUsersPage.class);
-                    }
-                };
-        MetaDataRoleAuthorizationStrategy.authorize(usremanagement, Component.RENDER, "ROLE_ADMIN");
-        add(usremanagement);
-
+        };
+        MetaDataRoleAuthorizationStrategy.authorize(userManagement, Component.RENDER, "ROLE_ADMIN");
+        add(userManagement);
 
         // Add crowdsource link
-        // Only Admins can see this link
-
-        boolean crowdSourceAdded = false;
+        // Only project admins can see this link
         crowdSource = new AjaxLink<Void>("crowdSource")
         {
-            private static final long serialVersionUID = 7496156015186497496L;
+            private static final long serialVersionUID = -3083016378064313844L;
 
             @Override
             public void onClick(AjaxRequestTarget target)
@@ -248,33 +178,15 @@ public class WelcomePage
                 setResponsePage(CrowdSourcePage.class);
             }
         };
-
-        for (Project project : repository.listProjects()) {
-
-            if (ProjectUtil.isProjectAdmin(project, repository, user)
-                    || ProjectUtil.isCurator(project, repository, user)) {
-                add(crowdSource);
-                crowdSourceAdded = true;
-                break;
-            }
-        }
-        if (ProjectUtil.isSuperAdmin(repository, user) && !crowdSourceAdded) {
-            add(crowdSource);
-        }
-        else if (!crowdSourceAdded) {
-            add(crowdSource);
-            crowdSource.setVisible(false);
-        }
-        if(repository.isCrowdSourceEnabled()==0){
-            crowdSource.setVisible(false);
-        }
+        add(crowdSource);
+        crowdSource.setVisible(projectSettingsEnabeled(user)
+                && repository.isCrowdSourceEnabled() != 0);
 
         // Add correction Link
-        // Only Admins or curators can see this link
-        boolean correctionAdded = false;
+        // Only project admins and annotators can see this link
         correction = new AjaxLink<Void>("correction")
         {
-            private static final long serialVersionUID = 7496156015186497496L;
+            private static final long serialVersionUID = -3113946217791583714L;
 
             @Override
             public void onClick(AjaxRequestTarget target)
@@ -282,56 +194,83 @@ public class WelcomePage
                 setResponsePage(CorrectionPage.class);
             }
         };
-        for (Project project : repository.listProjects()) {
+        add(correction);
+        correction.setVisible(annotationEnabeled(user, Mode.CORRECTION));
 
-            if (ProjectUtil.isCurator(project, repository, user)) {
-                add(correction);
-                correctionAdded = true;
-                break;
-            }
-
-        }
-        if (ProjectUtil.isSuperAdmin(repository, user) && !projectSettingAdded) {
-            add(correction);
-        }
-        else if (!correctionAdded) {
-            add(correction);
-            correction.setVisible(false);
-        }
-
-
-    // Add automation Link
-    // Only Admins or users can see this link
-    boolean automationAdded = false;
-    automation = new AjaxLink<Void>("automation")
-    {
-
-        private static final long serialVersionUID = 1L;
-
-        @Override
-        public void onClick(AjaxRequestTarget target)
+        // Add automation Link
+        // Only project admins and annotators can see this link
+        automation = new AjaxLink<Void>("automation")
         {
-            setResponsePage(AutomationPage.class);
-        }
-    };
-    for (Project project : repository.listProjects()) {
+            private static final long serialVersionUID = -6527983833667707141L;
 
-        if (ProjectUtil.isMember(project, repository, user)) {
-            add(automation);
-            automationAdded = true;
-            break;
-        }
-
-    }
-    if (ProjectUtil.isSuperAdmin(repository, user) && !projectSettingAdded) {
+            @Override
+            public void onClick(AjaxRequestTarget target)
+            {
+                setResponsePage(AutomationPage.class);
+            }
+        };
         add(automation);
-    }
-    else if (!automationAdded) {
-        add(automation);
-        automation.setVisible(false);
+        automation.setVisible(annotationEnabeled(user, Mode.AUTOMATION));
     }
 
-}
+    private boolean projectSettingsEnabeled(User user)
+    {
+        if (ProjectUtil.isSuperAdmin(repository, user)) {
+            return true;
+        }
+        
+        for (Project project : repository.listProjects()) {
+            if (ProjectUtil.isProjectAdmin(project, repository, user)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
 
-    private static final long serialVersionUID = -530084892002620197L;
-}
+    private boolean curationEnabeled(User user)
+    {
+        if (ProjectUtil.isSuperAdmin(repository, user)) {
+            return true;
+        }
+        
+        for (Project project : repository.listProjects()) {
+            if (ProjectUtil.isCurator(project, repository, user)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    private boolean annotationEnabeled(User user, Mode mode)
+    {
+        if (ProjectUtil.isSuperAdmin(repository, user)) {
+            return true;
+        }
+        
+        for (Project project : repository.listProjects()) {
+            if (ProjectUtil.isMember(project, repository, user)
+                    && mode.equals(project.getMode())) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    private boolean monitoringEnabeled(User user)
+    {
+        if (ProjectUtil.isSuperAdmin(repository, user)) {
+            return true;
+        }
+        
+        for (Project project : repository.listProjects()) {
+            if (ProjectUtil.isCurator(project, repository, user)
+                    || ProjectUtil.isProjectAdmin(project, repository, user)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }}
