@@ -27,7 +27,7 @@ public enum AnnotationState
 	/**
 	 * All annotators and the curated document have the same annotation.
 	 */
-	AGREE("#eeeeee"),
+	AGREE("#bbbbbb"),
 	/**
 	 * color for the arc annotation that is in agreement
 	 */
