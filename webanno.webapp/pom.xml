@@ -320,7 +320,7 @@
 		<dependency>
 			<groupId>net.bull.javamelody</groupId>
 			<artifactId>javamelody-core</artifactId>
-			<version>1.39.0</version>
+			<version>1.52.0</version>
 		</dependency>
 
 		<dependency>

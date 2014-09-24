@@ -37,6 +37,8 @@
 			access="IS_AUTHENTICATED_ANONYMOUSLY" />
 		<security:intercept-url pattern="/css/**"
 			access="IS_AUTHENTICATED_ANONYMOUSLY" />
+		<security:intercept-url pattern="/admin/**"
+			access="ROLE_ADMIN" />
 		<security:intercept-url pattern="/**"
 			access="ROLE_ADMIN, ROLE_USER" />
 		<security:form-login login-page='/login.html' />
@@ -47,8 +49,8 @@
 
 	<security:authentication-manager>
 		<security:authentication-provider>
-		<security:jdbc-user-service data-source-ref="dataSource" />
-		<security:password-encoder ref="passwordEncoder" />
+			<security:jdbc-user-service data-source-ref="dataSource" />
+			<security:password-encoder ref="passwordEncoder" />
 		</security:authentication-provider>
 	</security:authentication-manager>
 </beans>

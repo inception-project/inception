@@ -32,6 +32,23 @@
 		</param-value>
 	</context-param>
 
+	<!--  
+		Disable JavaMelody by default. Can be enabled by setting the system property
+		"javamelody.disabled" to "false" when starting the servlet container
+	-->
+	<context-param>
+		<param-name>javamelody.disabled</param-name>
+		<param-value>true</param-value>
+	</context-param>
+
+	<!--  
+		Configure JavaMelody URL
+	-->
+	<context-param>
+		<param-name>javamelody.monitoring-path</param-name>
+		<param-value>/admin/monitoring</param-value>
+	</context-param>
+		
 	<!--
 		- Listeners react to servlet content events and initialize resources.
 	-->
@@ -46,9 +63,8 @@
 	</listener>
 
 	<!--
-		- Filters are applied for each web request in the order they are defined
-		here. This order
-		- mandatory for the application to function correctly.
+		Filters are applied for each web request in the order they are defined
+		here. This order mandatory for the application to function correctly.
 	-->
 	<!-- 1) Firewall: check if request is permitted, otherwise ask for authentication -->
 	<filter>
@@ -57,9 +73,8 @@
 	</filter>
 
 	<!--
-		- 2) Handle access to the monitoring URL - after the security check so
-		only authenticated users
-		- can access this URL.
+		2) Handle access to the monitoring URL - after the security check so
+		only authenticated users can access this URL.
 	-->
 	<filter>
 		<filter-name>monitoring</filter-name>
@@ -67,9 +82,8 @@
 	</filter>
 
 	<!--
-		- 3) Make sure we have one JPA session/transaction per request. Closes
-		session at the end,
-		- without this, changed data may not be automatically saved to the DB.
+		3) Make sure we have one JPA session/transaction per request. Closes
+		session at the end, without this, changed data may not be automatically saved to the DB.
 	-->
 	<filter>
 		<filter-name>opensessioninview</filter-name>
@@ -77,7 +91,7 @@
 	</filter>
 
 	<!--
-		- 4) Pass control to Wicket
+		4) Pass control to Wicket
 	-->
 	<filter>
 		<filter-name>wicket.filter</filter-name>
