@@ -108,6 +108,14 @@ public final class TypeUtil
         }
     }
 
+    /**
+     * @see #getBratTypeName
+     */
+    public static long getLayerId(String aBratTypeName)
+    {
+        return Long.parseLong(aBratTypeName.substring(0, aBratTypeName.indexOf("_")));
+    }
+    
     public static String getBratTypeName(TypeAdapter aAdapter)
     {
         return aAdapter.getTypeId() + "_" + aAdapter.getAnnotationTypeName();

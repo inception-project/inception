@@ -635,7 +635,7 @@ public class ArcAnnotationModalWindowPanel
             int aTargetSpanId, String aTargetSpanType)
     {
         super(aId);
-        long layerId = Integer.parseInt(aOriginSpanType.substring(0, aOriginSpanType.indexOf("_")));
+        long layerId = TypeUtil.getLayerId(aOriginSpanType);
 
         AnnotationLayer spanLayer = annotationService.getLayer(layerId);
         if (spanLayer.isBuiltIn() && spanLayer.getName().equals(POS.class.getName())) {

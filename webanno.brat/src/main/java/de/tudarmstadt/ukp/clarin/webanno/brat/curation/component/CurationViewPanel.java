@@ -21,11 +21,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.Feature;
@@ -55,6 +52,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcCrossedMultipleSente
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.AnnotationState;
@@ -275,39 +273,33 @@ public class CurationViewPanel extends WebMarkupContainer {
                 aAnnotationService);
     }
 
-    private void createSpan(String spanType,
-            BratAnnotatorModel aBratAnnotatorModel, JCas aMergeJCas,
-            AnnotationDocument aAnnotationDocument, int aAddress,
+    private void createSpan(String spanType, BratAnnotatorModel aBratAnnotatorModel,
+            JCas aMergeJCas, AnnotationDocument aAnnotationDocument, int aAddress,
             RepositoryService aRepository, AnnotationService aAnnotationService)
-            throws IOException, UIMAException, ClassNotFoundException,
-            BratAnnotationException {
+        throws IOException, UIMAException, ClassNotFoundException, BratAnnotationException
+    {
         JCas clickedJCas = getJCas(aBratAnnotatorModel, aAnnotationDocument);
 
         AnnotationFS fsClicked = selectByAddr(clickedJCas, aAddress);
 
-        long layerId = Integer.parseInt(spanType.substring(0,
-                spanType.indexOf("_")));
-
+        long layerId = TypeUtil.getLayerId(spanType);
         AnnotationLayer layer = annotationService.getLayer(layerId);
         SpanAdapter adapter = (SpanAdapter) getAdapter(layer);
 
-        // Store annotation lables of features in a map
-        Map<AnnotationFeature, String> featureValues = new HashMap<AnnotationFeature, String>();
+        // Add annotation - we set no feature values yet.
+        int selectedSpanId = adapter.add(aMergeJCas, fsClicked.getBegin(), fsClicked.getEnd(),
+                null, null);
+        
+        // Set the feature values
         for (AnnotationFeature feature : annotationService.listAnnotationFeature(layer)) {
-            if (feature.getName().equals(
-                    WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
+            if (feature.getName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
                 continue;
             }
-            if (feature.isEnabled() && feature.isVisible()) {
-                Feature annoFeature = fsClicked.getType().getFeatureByBaseName(
-                        feature.getName());
-                featureValues.put(feature,
-                        fsClicked.getFeatureValueAsString(annoFeature));
+            if (feature.isEnabled()) {
+                Feature uimaFeature = fsClicked.getType().getFeatureByBaseName(feature.getName());
+                adapter.updateFeature(aMergeJCas, feature, selectedSpanId,
+                        fsClicked.getFeatureValueAsString(uimaFeature));
             }
-        }
-        for (AnnotationFeature feature : annotationService.listAnnotationFeature(layer)) {
-            adapter.add(aMergeJCas, fsClicked.getBegin(), fsClicked.getEnd(),
-                    feature, featureValues.get(feature));
         }
         repository.updateJCas(aBratAnnotatorModel.getMode(),
                 aBratAnnotatorModel.getDocument(),
@@ -410,33 +402,26 @@ public class CurationViewPanel extends WebMarkupContainer {
                         "Either origin or target annotations not selected");
             }
 
-            long layerId = Integer.parseInt(arcType.substring(0,
-                    arcType.indexOf("_")));
+            long layerId = TypeUtil.getLayerId(arcType);
 
             AnnotationLayer layer = annotationService.getLayer(layerId);
             AnnotationFS fsClicked = selectByAddr(clickedJCas, fsArcaddress);
             ArcAdapter adapter = (ArcAdapter) getAdapter(layer);
 
-            // Store annotation lables of features in a map
-            Map<AnnotationFeature, String> featureValues = new HashMap<AnnotationFeature, String>();
-            for (AnnotationFeature feature : annotationService
-                    .listAnnotationFeature(layer)) {
-                if (feature.getName().equals(
-                        WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
+            // Add annotation - we set no feature values yet.
+            int selectedSpanId = adapter.add(originFs, targetFs, aJcas,
+                    aCurationUserSegment.getBratAnnotatorModel(), null, null);
+            
+            // Set the feature values
+            for (AnnotationFeature feature : annotationService.listAnnotationFeature(layer)) {
+                if (feature.getName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
                     continue;
                 }
-                if (feature.isEnabled() && feature.isVisible()) {
-                    Feature annoFeature = fsClicked.getType().getFeatureByBaseName(
-                            feature.getName());
-                    featureValues.put(feature,
-                            fsClicked.getFeatureValueAsString(annoFeature));
+                if (feature.isEnabled()) {
+                    Feature uimaFeature = fsClicked.getType().getFeatureByBaseName(feature.getName());
+                    adapter.updateFeature(aJcas, feature, selectedSpanId,
+                            fsClicked.getFeatureValueAsString(uimaFeature));
                 }
-            }
-
-            for (AnnotationFeature feature : annotationService
-                    .listAnnotationFeature(layer)) {
-                adapter.add( originFs, targetFs, aJcas,
-                        aCurationUserSegment.getBratAnnotatorModel(), feature, featureValues.get(feature));
             }
 
             repository.updateJCas(aCurationUserSegment.getBratAnnotatorModel()
