@@ -211,47 +211,96 @@ public class CasDiff {
             if (feature.getRange().isPrimitive()) {
 
                 // check int Values
-                if (feature.getRange().getName().equals("uima.cas.Integer")) {
+                if (feature.getRange().getName().equals(CAS.TYPE_NAME_INTEGER)) {
                     if (!(fsNew.getIntValue(feature) == fsOld.getIntValue(olFeature))) {
-                        //disagree
+                        // disagree
                         agreeOnSubfeatures = false;
-                    } else {
+                    }
+                    else {
                         // agree
                     }
-                } else if (feature.getRange().getName()
-                        .equals("uima.cas.String")) {
+                }
+                else if (feature.getRange().getName().equals(CAS.TYPE_NAME_LONG)) {
+                    if (!(fsNew.getLongValue(feature) == fsOld.getLongValue(olFeature))) {
+                        // disagree
+                        agreeOnSubfeatures = false;
+                    }
+                    else {
+                        // agree
+                    }
+                }
+                else if (feature.getRange().getName().equals(CAS.TYPE_NAME_BYTE)) {
+                    if (!(fsNew.getByteValue(feature) == fsOld.getByteValue(olFeature))) {
+                        // disagree
+                        agreeOnSubfeatures = false;
+                    }
+                    else {
+                        // agree
+                    }
+                }
+                else if (feature.getRange().getName().equals(CAS.TYPE_NAME_FLOAT)) {
+                    if (!(fsNew.getFloatValue(feature) == fsOld.getFloatValue(olFeature))) {
+                        // disagree
+                        agreeOnSubfeatures = false;
+                    }
+                    else {
+                        // agree
+                    }
+                }
+                else if (feature.getRange().getName().equals(CAS.TYPE_NAME_DOUBLE)) {
+                    if (!(fsNew.getDoubleValue(feature) == fsOld.getDoubleValue(olFeature))) {
+                        // disagree
+                        agreeOnSubfeatures = false;
+                    }
+                    else {
+                        // agree
+                    }
+                }
+                else if (feature.getRange().getName().equals(CAS.TYPE_NAME_BOOLEAN)) {
+                    if (!(fsNew.getBooleanValue(feature) == fsOld.getBooleanValue(olFeature))) {
+                        // disagree
+                        agreeOnSubfeatures = false;
+                    }
+                    else {
+                        // agree
+                    }
+                }
+                else if (feature.getRange().getName().equals(CAS.TYPE_NAME_STRING)) {
                     String stringValue1 = fsNew.getStringValue(feature);
                     String stringValue2 = fsNew.getStringValue(feature);
                     if (stringValue1 == null && stringValue2 == null) {
                         // agree
                         // Do nothing, null == null
-                    } else if (stringValue1 == null
+                    }
+                    else if (stringValue1 == null
                             || stringValue2 == null
-                            || !(fsNew.getStringValue(feature).equals(
-                                    fsOld.getStringValue(olFeature)))) {
+                            || !(fsNew.getStringValue(feature).equals(fsOld
+                                    .getStringValue(olFeature)))) {
                         // stringValue1 differs from stringValue2
 
                         // disagree
                         agreeOnSubfeatures = false;
-                        //compareResult.getDiffs().put(fs1, fs2);
-                    } else {
-                        // agree
-                        //compareResult.getAgreements().put(fs1, fs2);
-                        //diffFS1.remove(fs1);
+                        // compareResult.getDiffs().put(fs1, fs2);
                     }
-                } else {
+                    else {
+                        // agree
+                        // compareResult.getAgreements().put(fs1, fs2);
+                        // diffFS1.remove(fs1);
+                    }
+                }
+                else {
                     throw new RangeNameNotCheckedException(feature.getRange().getName()
-                            + " not yet checkd!");
+                            + " not yet supported!");
                 }
 
                 // check other Values
-            } else if(feature.toString().equals("uima.cas.AnnotationBase:sofa")) {
+            }
+            else if (feature.toString().equals("uima.cas.AnnotationBase:sofa")) {
                 continue;
             }
             else {
                 // compare composite types
-                // assumtion: if feature is not primitive, it is a
-                // composite feature
+                // assumption: if feature is not primitive, it is a composite feature
                 FeatureStructure featureValue1 = fsNew.getFeatureValue(feature);
                 FeatureStructure featureValue2 = fsOld.getFeatureValue(olFeature);
                 if(((AnnotationFS)featureValue1).getBegin()!=((AnnotationFS)featureValue2).getBegin()
