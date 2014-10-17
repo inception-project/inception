@@ -592,14 +592,18 @@ public class ProjectExportPanel extends Panel {
 									annotationDocument.getUser());
 
 					File annotationFile = null;
-					Class<?> writer = repository.getWritableFormats().get(
-							sourceDocument.getFormat());
-					if (annotationFileAsSerialisedCas.exists()
-							&& writer != null) {
+                    Class<?> writer = repository.getWritableFormats().get(
+                            sourceDocument.getFormat());
+                    if (writer == null) {
+                        warn("No writer found for source document format ["
+                                + sourceDocument.getFormat()
+                                + "] - export will only contain serialized CAS files.");
+                    }
+                    if (annotationFileAsSerialisedCas.exists() && writer != null) {
 						annotationFile = repository.exportAnnotationDocument(
 								sourceDocument, annotationDocument.getUser(),
-								writer, sourceDocument.getName(),
-								Mode.ANNOTATION);
+								writer, annotationDocument.getUser(),
+								Mode.ANNOTATION, false);
 					}
 					if (annotationFileAsSerialisedCas.exists()) {
 						FileUtils.copyFileToDirectory(
@@ -617,7 +621,6 @@ public class ProjectExportPanel extends Panel {
 			progress = initProgress + (int) Math.ceil(((double) i)/documents.size()*80.0);
 			i++;
 		}
-
 	}
 
 	private boolean existsCurationDocument(Project aProject) {

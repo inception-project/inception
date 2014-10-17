@@ -537,12 +537,26 @@ public class RepositoryServiceDbData
      * directory. This is useful as the written file can have multiple extensions based on the
      * Writer class used.
      */
-
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     @Transactional
     public File exportAnnotationDocument(SourceDocument aDocument, String aUser, Class aWriter,
             String aFileName, Mode aMode)
+        throws UIMAException, IOException, ClassNotFoundException
+    {
+        return exportAnnotationDocument(aDocument, aUser, aWriter, aFileName, aMode, true);
+    }
+
+    /**
+     * A new directory is created using UUID so that every exported file will reside in its own
+     * directory. This is useful as the written file can have multiple extensions based on the
+     * Writer class used.
+     */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Override
+    @Transactional
+    public File exportAnnotationDocument(SourceDocument aDocument, String aUser, Class aWriter,
+            String aFileName, Mode aMode, boolean aStripExtension)
         throws UIMAException, IOException, ClassNotFoundException
     {
         File annotationFolder = getAnnotationFolder(aDocument);
@@ -590,13 +604,13 @@ public class RepositoryServiceDbData
                 .equals("de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoCustomTsvWriter")) {
             writer = createEngineDescription(aWriter,
                     JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
-                    JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, true, "multipleSpans",
+                    JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension, "multipleSpans",
                     multipleSpans);
         }
         else {
             writer = createEngineDescription(aWriter,
                     JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
-                    JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, true);
+                    JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension);
         }
         CAS cas = JCasFactory.createJCas().getCas();
         reader.getNext(cas);

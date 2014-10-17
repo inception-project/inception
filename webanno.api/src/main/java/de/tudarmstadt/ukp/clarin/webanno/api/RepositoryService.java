@@ -352,6 +352,11 @@ public interface RepositoryService
             String fileName, Mode mode)
         throws FileNotFoundException, UIMAException, IOException, ClassNotFoundException;
 
+    @SuppressWarnings("rawtypes")
+    File exportAnnotationDocument(SourceDocument document, String user, Class writer,
+            String fileName, Mode mode, boolean stripExtension)
+        throws FileNotFoundException, UIMAException, IOException, ClassNotFoundException;
+
     /**
      * Export a Serialized CAS annotation document from the file system
      */
