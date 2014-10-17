@@ -217,7 +217,9 @@ var AnnotatorUI = (function($, window, undefined) {
             type: editedSpan.type,
             id: id,
           };
+// WEBANNO EXTENSION BEGIN
           fillSpanTypesAndDisplayForm(evt, offsets,editedSpan.text, editedSpan, id);
+// WEBANNO EXTENSION END
           // for precise timing, log annotation display to user.
           dispatcher.post('logAction', ['spanEditSelected']);
         }
@@ -582,6 +584,7 @@ var AnnotatorUI = (function($, window, undefined) {
         $textspan.html(($input[0].checked ? '&#x2611; ' : '&#x2610; ') + $widget.attr('data-bare'));
       };
       
+// WEBANNO EXTENSION BEGIN
       var fillSpanTypesAndDisplayForm =function(evt, offsets, spanText, span, id) {
     	  
        if(id) {
@@ -601,7 +604,8 @@ var AnnotatorUI = (function($, window, undefined) {
   		}, 'serverResult']);  
 	  
       }
-        };
+    };
+// WEBANNO EXTENSION END
         
         
       var submitReselect = function() {
@@ -775,6 +779,9 @@ var AnnotatorUI = (function($, window, undefined) {
       // nice-looking select for normalization
       $('#span_norm_db').addClass('ui-widget ui-state-default ui-button-text');
 
+// WEBANNO EXTENSION BEGIN
+// Removed normSearchDialog
+// WEBANNO EXTENSION END
 
       var normSubmit = function(selectedId, selectedTxt) {
         // we got a value; act if it was a submit
@@ -803,6 +810,7 @@ var AnnotatorUI = (function($, window, undefined) {
         return false;
       };
 
+// WEBANNO EXTENSION BEGIN
       var fillArcTypesAndDisplayForm = function(evt, originSpanId, originType, targetSpanId, targetType, arcType, arcId) {
     	  
     	    if(arcId) {
@@ -828,6 +836,7 @@ var AnnotatorUI = (function($, window, undefined) {
     		  
     	      }
       };
+// WEBANNO EXTENSION END
 
       var reverseArc = function(evt) {
         var eventDataId = $(evt.target).attr('data-arc-ed');
@@ -839,9 +848,11 @@ var AnnotatorUI = (function($, window, undefined) {
       };
 
       var deleteArc = function(evt) {
+// WEBANNO EXTENSION BEGIN
    /*     if (Configuration.confirmModeOn && !confirm("Are you sure you want to delete this annotation?")) {
           return;
         }*/
+// WEBANNO EXTENSION END
         var eventDataId = $(evt.target).attr('data-arc-ed');
         dispatcher.post('hideForm');
         arcOptions.action = 'deleteArc';
@@ -1076,7 +1087,9 @@ var AnnotatorUI = (function($, window, undefined) {
               // normal span select in standard annotation mode
               // or reselect: show selector
               var spanText = data.text.substring(selectedFrom, selectedTo);
+// WEBANNO EXTENSION BEGIN
               fillSpanTypesAndDisplayForm(evt, spanOptions.offsets, spanText, reselectedSpan);
+// WEBANNO EXTENSION END
               // for precise timing, log annotation display to user.
               dispatcher.post('logAction', ['spanSelected']);
             } else {
@@ -1197,7 +1210,9 @@ var AnnotatorUI = (function($, window, undefined) {
               append($collapsible);
             var $collapser = $('<div class="collapser open"/>');
             var $div = $('<div class="item"/>');
+// WEBANNO EXTENSION BEGIN
             if (type.children && type.children.length) {
+// WEBANNO EXTENSION END
               $div.append($collapser)
             }
             $div.append($content);
@@ -1292,7 +1307,7 @@ var AnnotatorUI = (function($, window, undefined) {
           var $toCheck = $('#span_form input[category="' + category + '"]:first');
           // so weird, attr('checked', 'checked') fails sometimes, so
           // replaced with more "metal" version
-          $toCheck[0].checked = true
+          $toCheck[0].checked = true;
         }
       }
 
@@ -1395,7 +1410,9 @@ var AnnotatorUI = (function($, window, undefined) {
             // spacer, no-op
           } else {
             normDbsByType[type.type] = type.normalizations || [];
+// WEBANNO EXTENSION BEGIN
             if (type.children && type.children.length) {
+// WEBANNO EXTENSION END
               rememberNormDbsForType(type.children);
             }
           }
@@ -1602,9 +1619,11 @@ var AnnotatorUI = (function($, window, undefined) {
       var rapidSpanForm = $('#rapid_span_form');
     
       var deleteSpan = function() {
+// WEBANNO EXTENSION BEGIN
     /*    if (Configuration.confirmModeOn && !confirm("Are you sure you want to delete this annotation?")) {
           return;
         }*/
+// WEBANNO EXTENSION END
         $.extend(spanOptions, {
           action: 'deleteSpan',
           collection: coll,
@@ -1829,13 +1848,17 @@ var AnnotatorUI = (function($, window, undefined) {
       var importForm = $('#import_form');
       var importFormSubmit = function(evt) {
         var _docid = $('#import_docid').val();
+// WEBANNO EXTENSION BEGIN
         var _doctitle = $('#import_title').val();
+// WEBANNO EXTENSION END
         var _doctext = $('#import_text').val();
         var opts = {
           action : 'importDocument',
           collection : coll,
           docid  : _docid,
+// WEBANNO EXTENSION BEGIN
           title : _doctitle,
+// WEBANNO EXTENSION END
           text  : _doctext,
         };
         dispatcher.post('ajax', [opts, function(response) {

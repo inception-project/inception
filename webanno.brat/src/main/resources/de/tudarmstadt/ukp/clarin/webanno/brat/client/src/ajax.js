@@ -25,6 +25,7 @@ var Ajax = (function($, window, undefined) {
           data['protocol'] = 1;
         }
 
+// WEBANNO EXTENSION BEGIN
         wicketAjaxPost(
           dispatcher.ajaxUrl, 
           $.param(data), 
@@ -32,6 +33,7 @@ var Ajax = (function($, window, undefined) {
           function() {
           var response = Wicket.$(dispatcher.wicketId).temp;
           delete Wicket.$(dispatcher.wicketId).temp;
+// WEBANNO EXTENSION END
             pending--;
             // If no exception is set, verify the server results
             if (response.exception == undefined && response.action !== data.action) {
@@ -80,6 +82,7 @@ var Ajax = (function($, window, undefined) {
               }
             }
             dispatcher.post('unspin');
+// WEBANNO EXTENSION BEGIN
           }.bind(this),
           // error
           function() {
@@ -93,6 +96,7 @@ var Ajax = (function($, window, undefined) {
           }.bind(this),
           null, 
           null);
+// WEBANNO EXTENSION END
         return id;
       };
 

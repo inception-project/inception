@@ -64,7 +64,8 @@ var VisualizerUI = (function($, window, undefined) {
                             var timer = null;
                             try {
                                 element = $('<div class="' + msg[1] + '">' + msg[0] + '</div>');
-                            } catch (x) {
+                            }
+                            catch(x) {
                                 escaped = msg[0].replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
                                 element = $('<div class="error"><b>[ERROR: could not display the following message normally due to malformed XML:]</b><br/>' + escaped + '</div>');
                             }
@@ -134,10 +135,7 @@ var VisualizerUI = (function($, window, undefined) {
 
             var adjustToCursor = function(evt, element, offset, top, right) {
                     // get the real width, without wrapping
-                    element.css({
-                        left: 0,
-                        top: 0
-                    });
+        			element.css({ left: 0, top: 0 });
                     var screenHeight = $(window).height();
                     var screenWidth = $(window).width();
                     // FIXME why the hell is this 22 necessary?!?
@@ -161,10 +159,7 @@ var VisualizerUI = (function($, window, undefined) {
                     }
                     if (y < 0) y = 0;
                     if (x < 0) x = 0;
-                    element.css({
-                        top: y,
-                        left: x
-                    });
+        			element.css({ top: y, left: x });
                 };
 
             var commentPopup = $('#commentpopup');
@@ -364,9 +359,7 @@ var VisualizerUI = (function($, window, undefined) {
                     buttons.push({
                         id: formId + "-ok",
                         text: "OK",
-                        click: function() {
-                            form.submit();
-                        }
+              			click: function() { form.submit(); }
                     });
                 }
                 if (opts.no_cancel) {
@@ -375,9 +368,7 @@ var VisualizerUI = (function($, window, undefined) {
                     buttons.push({
                         id: formId + "-cancel",
                         text: "Cancel",
-                        click: function() {
-                            form.dialog('close');
-                        }
+			            click: function() { form.dialog('close'); }
                     });
                 }
                 delete opts.buttons;
@@ -492,12 +483,7 @@ var VisualizerUI = (function($, window, undefined) {
                         var $inFocus = $('#svg animate[data-type="focus"]:first').parent();
                         if ($inFocus.length) {
                             $('html,body').
-                            animate({
-                                scrollTop: $inFocus.offset().top - svgtop - window.innerHeight / 2
-                            }, {
-                                duration: 'slow',
-                                easing: 'swing'
-                            });
+                				animate({ scrollTop: $inFocus.offset().top - svgtop - window.innerHeight / 2 }, { duration: 'slow', easing: 'swing'});
                         }
                     }
                     dispatcher.post('allowReloadByURL');
@@ -542,30 +528,23 @@ var VisualizerUI = (function($, window, undefined) {
                     if (!height) {
                         height = el.show().height();
                         el.data('cachedHeight', height);
-                        if (!visible) el.hide().css({
-                            height: 0
-                        });
+          				if (!visible) el.hide().css({ height: 0 });
                     }
 
                     if (show) {
-                        el.show().animate({
-                            height: height
-                        }, {
+          					el.show().animate({ height: height }, {
                             duration: 150,
                             complete: function() {
                                 if (autoHeight) {
                                     el.height('auto');
                                 }
                             },
-                            step: bottom ?
-                            function(now, fx) {
+            				step: bottom ? function(now, fx) {
                                 fx.elem.scrollTop = fx.elem.scrollHeight;
                             } : undefined
                         });
                     } else {
-                        el.animate({
-                            height: 0
-                        }, {
+          				el.animate({ height: 0 }, {
                             duration: 300,
                             complete: function() {
                                 el.hide();
@@ -582,10 +561,7 @@ var VisualizerUI = (function($, window, undefined) {
                     var elementWidth = element.width();
                     var y = Math.min(evt.clientY, screenHeight - elementHeight);
                     var x = Math.min(evt.clientX, screenWidth - elementWidth);
-                    element.css({
-                        top: y,
-                        left: x
-                    });
+        			element.css({ top: y, left: x });
                 };
             var viewspanForm = $('#viewspan_form');
             var onDblClick = function(evt) {
@@ -597,9 +573,7 @@ var VisualizerUI = (function($, window, undefined) {
                         var span = data.spans[id];
 
                         var urlHash = URLHash.parse(window.location.hash);
-                        urlHash.setArgument('focus', [
-                            [span.id]
-                        ]);
+          				urlHash.setArgument('focus', [[span.id]]);
                         $('#viewspan_highlight_link').show().attr('href', urlHash.getHash());
 
                         $('#viewspan_selected').text(span.text);
@@ -642,11 +616,7 @@ var VisualizerUI = (function($, window, undefined) {
                     }, function(response) {
                         if (response.user) {
                             user = response.user;
-                            dispatcher.post('messages', [
-                                [
-                                    ['Welcome back, user "' + user + '"', 'comment']
-                                ]
-                            ]);
+              				dispatcher.post('messages', [[['Welcome back, user "' + user + '"', 'comment']]]);
                             dispatcher.post('user', [user]);
                         } else {
                             user = null;
@@ -654,9 +624,9 @@ var VisualizerUI = (function($, window, undefined) {
 
                             // don't show tutorial if there's a specific document (annoyance)
                         }
-                    }, {
-                        keep: true
-                    }]);
+                    }, 
+                    { keep: true }
+                  ]);
                 };
             var spanAndAttributeTypesLoaded = function(_spanTypes, _entityAttributeTypes, _eventAttributeTypes, _relationTypesHash) {
                     spanTypes = _spanTypes;

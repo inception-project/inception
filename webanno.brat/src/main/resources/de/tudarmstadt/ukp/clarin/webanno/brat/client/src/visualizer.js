@@ -1418,7 +1418,9 @@ Util.profileStart('chunks');
         var rows = [];
         var fragmentHeights = [];
         var sentenceToggle = 0;
+        // WEBANNO EXTENSION BEGIN
         var sentenceNumber = sourceData.sentence_number_offset;
+        // WEBANNO EXTENSION END
         var row = new Row(svg);
         row.sentence = ++sentenceNumber;
         row.backgroundIndex = sentenceToggle;
