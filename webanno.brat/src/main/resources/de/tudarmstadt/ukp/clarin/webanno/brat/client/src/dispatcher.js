@@ -8,7 +8,9 @@ var Dispatcher = (function($, window, undefined) {
 
       var table = {};
       
+// WEBANNO EXTENSION BEGIN
       var ajaxUrl = 'ajax.cgi';
+// WEBANNO EXTENSION END
 
       var on = function(message, host, handler) {
         if (handler === undefined) {
