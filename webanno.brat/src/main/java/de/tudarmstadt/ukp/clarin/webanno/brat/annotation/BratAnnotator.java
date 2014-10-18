@@ -443,46 +443,30 @@ public class BratAnnotator
     {
         super.renderHead(aResponse);
 
-        String[] annotatorScript = new String[] { "dispatcher = new Dispatcher();"
-                // Each visualizer talks to its own Wicket component instance
-                + "dispatcher.ajaxUrl = '"
-                + controller.getCallbackUrl()
-                + "'; "
-                // We attach the JSON send back from the server to this HTML element
-                // because we cannot directly pass it from Wicket to the caller in ajax.js.
-                + "dispatcher.wicketId = '" + vis.getMarkupId() + "'; "
-                + "var urlMonitor = new URLMonitor(dispatcher); "
-                + "var ajax = new Ajax(dispatcher);" + "var ajax_" + vis.getMarkupId() + " = ajax;"
-                + "var visualizer = new Visualizer(dispatcher, '" + vis.getMarkupId() + "');"
-                + "var visualizerUI = new VisualizerUI(dispatcher, visualizer.svg);"
-                + "var annotatorUI = new AnnotatorUI(dispatcher, visualizer.svg);"
-                + "var spinner = new Spinner(dispatcher, '#spinner');"
-                + "var logger = new AnnotationLog(dispatcher);" + "dispatcher.post('init');" };
-
-        String[] curatorScript = new String[] { "dispatcher = new Dispatcher();"
-                // Each visualizer talks to its own Wicket component instance
-                + "dispatcher.ajaxUrl = '"
-                + controller.getCallbackUrl()
-                + "'; "
-                // We attach the JSON send back from the server to this HTML element
-                // because we cannot directly pass it from Wicket to the caller in ajax.js.
-                + "dispatcher.wicketId = '"
-                + vis.getMarkupId()
-                + "'; "
-                // + "var urlMonitor = new URLMonitor(dispatcher); "
-                + "var ajax = new Ajax(dispatcher);" + "var ajax_" + vis.getMarkupId() + " = ajax;"
-                + "var visualizer = new Visualizer(dispatcher, '" + vis.getMarkupId() + "');"
-                + "var visualizerUI = new VisualizerUI(dispatcher, visualizer.svg);"
-                + "var annotatorUI = new AnnotatorUI(dispatcher, visualizer.svg);"
-                + "var spinner = new Spinner(dispatcher, '#spinner');"
-                + "var logger = new AnnotationLog(dispatcher);" + "dispatcher.post('init');" };
-
+        StringBuilder script = new StringBuilder();
+        // REC 2014-10-18 - For a reason that I do not understand, the dispatcher cannot be a local
+        // variable. If I put a "var" here, then communication fails with messages such as
+        // "action 'openSpanDialog' returned result of action 'loadConf'" in the browsers's JS 
+        // console.
+        script.append("dispatcher = new Dispatcher();");
+        // Each visualizer talks to its own Wicket component instance
+        script.append("dispatcher.ajaxUrl = '" + controller.getCallbackUrl() + "'; ");
+        // We attach the JSON send back from the server to this HTML element
+        // because we cannot directly pass it from Wicket to the caller in ajax.js.
+        script.append("dispatcher.wicketId = '" + vis.getMarkupId() + "'; ");
         if (getModelObject().getMode().equals(Mode.ANNOTATION)) { // works with the URLMonitor
-            aResponse.renderOnLoadJavaScript("\n" + StringUtils.join(annotatorScript, "\n"));
+            script.append("var urlMonitor = new URLMonitor(dispatcher); ");
         }
-        else {
-            aResponse.renderOnLoadJavaScript("\n" + StringUtils.join(curatorScript, "\n"));
-        }
+        script.append("var ajax = new Ajax(dispatcher);");
+        script.append("var ajax_" + vis.getMarkupId() + " = ajax;");
+        script.append("var visualizer = new Visualizer(dispatcher, '" + vis.getMarkupId() + "');");
+        script.append("var visualizerUI = new VisualizerUI(dispatcher, visualizer.svg);");
+        script.append("var annotatorUI = new AnnotatorUI(dispatcher, visualizer.svg);");
+        script.append("var spinner = new Spinner(dispatcher, '#spinner');");
+        script.append("var logger = new AnnotationLog(dispatcher);");
+        script.append("dispatcher.post('init');");
+
+        aResponse.renderOnLoadJavaScript("\n" + script.toString());
     }
 
     /**
