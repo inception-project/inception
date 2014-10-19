@@ -25,8 +25,6 @@ import java.util.List;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -79,8 +77,6 @@ public class BratAjaxCasController
     @Resource(name = "annotationService")
     private static AnnotationService annotationService;
 
-    private Log LOG = LogFactory.getLog(getClass());
-
     public BratAjaxCasController()
     {
 
@@ -96,12 +92,10 @@ public class BratAjaxCasController
      * This Method, a generic Ajax call serves the purpose of returning expected export file types.
      * This only will be called for Larger annotation documents
      *
-     * @param aParameters
      * @return export file type once in a while!!!
      */
     public StoreSvgResponse ajaxCall(MultiValueMap<String, String> aParameters)
     {
-        LOG.info("AJAX-RPC: storeSVG");
         StoreSvgResponse storeSvgResponse = new StoreSvgResponse();
         ArrayList<Stored> storedList = new ArrayList<Stored>();
         Stored stored = new Stored();
@@ -112,35 +106,24 @@ public class BratAjaxCasController
 
         storeSvgResponse.setStored(storedList);
 
-        LOG.info("Done.");
         return storeSvgResponse;
     }
 
     /**
      * a protocol which returns the logged in user
-     *
-     * @param aParameters
-     * @return
      */
     public WhoamiResponse whoami()
     {
-        LOG.info("AJAX-RPC: whoami");
-
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-
-        LOG.info("Done.");
         return new WhoamiResponse(username);
     }
 
     /**
      * a protocol to retunr the expected file type for annotation document exporting . Currently, it
      * returns only tcf file type where in the future svg and pdf types are to be supported
-     *
-     * @return
      */
     public StoreSvgResponse storeSVG()
     {
-        LOG.info("AJAX-RPC: storeSVG");
         StoreSvgResponse storeSvgResponse = new StoreSvgResponse();
         ArrayList<Stored> storedList = new ArrayList<Stored>();
         Stored stored = new Stored();
@@ -151,32 +134,22 @@ public class BratAjaxCasController
 
         storeSvgResponse.setStored(storedList);
 
-        LOG.info("Done.");
         return storeSvgResponse;
     }
 
     public ImportDocumentResponse importDocument(String aCollection, String aDocId, String aText,
             String aTitle, HttpServletRequest aRequest)
     {
-        LOG.info("AJAX-RPC: importDocument");
         ImportDocumentResponse importDocument = new ImportDocumentResponse();
         importDocument.setDocument(aDocId);
-        LOG.info("Done.");
         return importDocument;
     }
 
     /**
      * some BRAT UI global configurations such as {@code textBackgrounds}
-     *
-     * @param aParameters
-     * @return
      */
-
     public LoadConfResponse loadConf()
     {
-        LOG.info("AJAX-RPC: loadConf");
-
-        LOG.info("Done.");
         return new LoadConfResponse();
     }
 
@@ -199,11 +172,6 @@ public class BratAjaxCasController
 
     public GetDocumentTimestampResponse getDocumentTimestamp(String aCollection, String aDocument)
     {
-        LOG.info("AJAX-RPC: getDocumentTimestamp");
-        LOG.info("Collection: " + aCollection);
-        LOG.info("Document: " + aDocument);
-
-        LOG.info("Done.");
         return new GetDocumentTimestampResponse();
     }
 
@@ -215,10 +183,6 @@ public class BratAjaxCasController
             int aAnnotationOffsetStart, JCas aJCas, boolean aIsGetDocument)
         throws UIMAException, IOException, ClassNotFoundException
     {
-        LOG.info("AJAX-RPC: getDocument");
-
-        LOG.info("Collection: " + aBratAnnotatorModel.getDocument().getName());
-
         GetDocumentResponse response = new GetDocumentResponse();
         render(response, aBratAnnotatorModel, aAnnotationOffsetStart, aJCas, aIsGetDocument);
 
