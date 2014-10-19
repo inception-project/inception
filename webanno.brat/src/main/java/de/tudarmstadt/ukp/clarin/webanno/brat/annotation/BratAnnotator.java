@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 import java.io.IOException;
 import java.io.StringWriter;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -50,10 +49,10 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.OffsetsList;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcOpenDialogResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.LoadConfResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcOpenDialogResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanOpenDialogResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.StoreSvgResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.WhoamiResponse;
@@ -443,23 +442,27 @@ public class BratAnnotator
         aResponse.renderOnLoadJavaScript("\n" + script.toString());
     }
 
+    private String reloadScript()
+    {
+        StringBuilder script = new StringBuilder();
+        // This triggers the loading of the metadata (colors, types, etc.)
+        // Cf. BratAjaxConfiguration.buildEntityTypes(List<AnnotationLayer>, AnnotationService)
+        script.append("dispatcher.post('ajax', [{action: 'getCollectionInformation',collection: '"
+                + getCollection() + "'}, 'collectionLoaded', {collection: '" + getCollection()
+                + "',keep: true}]);");
+
+        // This one triggers the loading of the actual document data
+        script.append("dispatcher.post('current', ['" + getCollection() + "', '1234', {}, true]);");
+        return script.toString();
+    }
+    
     /**
      * Reload {@link BratAnnotator} when the Correction/Curation page is opened
      */
     public void reloadContent(IHeaderResponse aResponse)
     {
-        String[] script = new String[] { "dispatcher.post('clearSVG', []);"
-                + "dispatcher.post('current', ['"
-                + getCollection()
-                + "', '1234', {}, true]);"
-                // start ajax call, which requests the collection (and the document) from the server
-                // and renders the svg
-                + "dispatcher.post('ajax', [{action: 'getCollectionInformation',collection: '"
-                + getCollection() + "'}, 'collectionLoaded', {collection: '" + getCollection()
-                + "',keep: true}]);"
-        // + "dispatcher.post('collectionChanged');"
-        };
-        aResponse.renderOnLoadJavaScript("\n" + StringUtils.join(script, "\n"));
+        debug("Requesting reload of brat annotator with id ["+vis.getOutputMarkupId()+"]");
+        aResponse.renderOnLoadJavaScript(reloadScript());
     }
 
     /**
@@ -467,18 +470,7 @@ public class BratAnnotator
      */
     public void reloadContent(AjaxRequestTarget aTarget)
     {
-        String[] script = new String[] { "dispatcher.post('clearSVG', []);"
-                + "dispatcher.post('current', ['"
-                + getCollection()
-                + "', '1234', {}, true]);"
-                // start ajax call, which requests the collection (and the document) from the server
-                // and renders the svg
-                + "dispatcher.post('ajax', [{action: 'getCollectionInformation',collection: '"
-                + getCollection() + "'}, 'collectionLoaded', {collection: '" + getCollection()
-                + "',keep: true}]);"
-        // + "dispatcher.post('collectionChanged');"
-        };
-        aTarget.appendJavaScript("\n" + StringUtils.join(script, "\n"));
+        aTarget.appendJavaScript(reloadScript());
     }
 
     @Override

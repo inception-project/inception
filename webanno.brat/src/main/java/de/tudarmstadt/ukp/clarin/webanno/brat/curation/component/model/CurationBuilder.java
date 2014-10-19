@@ -201,7 +201,10 @@ public class CurationBuilder
                 .getName());
         randomAnnotationDocument = repository.getAnnotationDocument(aDocument, user);
 
-        repository.upgradeCasAndSave(aDocument, aMode, user.getUsername());
+        // Upgrading should be an explicit action during the opening of a document at the end
+        // of the open dialog - it must not happen during editing because the CAS addresses
+        // are used as IDs in the UI
+        //repository.upgradeCasAndSave(aDocument, aMode, user.getUsername());
         JCas jCas = repository.getAnnotationDocumentContent(randomAnnotationDocument);
         jCases.put(user.getUsername(), jCas);
         return jCases;
@@ -222,13 +225,21 @@ public class CurationBuilder
             if (randomAnnotationDocument == null) {
                 randomAnnotationDocument = annotationDocument;
             }
-            repository.upgradeCasAndSave(annotationDocument.getDocument(), aMode, username);
+            
+            // Upgrading should be an explicit action during the opening of a document at the end
+            // of the open dialog - it must not happen during editing because the CAS addresses
+            // are used as IDs in the UI
+            // repository.upgradeCasAndSave(annotationDocument.getDocument(), aMode, username);
             JCas jCas = repository.getAnnotationDocumentContent(annotationDocument);
             jCases.put(username, jCas);
         }
         return jCases;
     }
 
+    /**
+     * Fetches the CAS that the user will be able to edit. In AUTOMATION/CORRECTION mode, this is 
+     * the CAS for the CORRECTION_USER and in CURATION mode it is the CAS for the CURATION user.
+     */
     public JCas getMergeCas(BratAnnotatorModel aBratAnnotatorModel, SourceDocument aDocument,
             Map<String, JCas> jCases, AnnotationDocument randomAnnotationDocument)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
@@ -237,13 +248,19 @@ public class CurationBuilder
         try {
             if (aBratAnnotatorModel.getMode().equals(Mode.AUTOMATION)
                     || aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)) {
-                repository.upgradeCasAndSave(aDocument, aBratAnnotatorModel.getMode(),
-                        aBratAnnotatorModel.getUser().getUsername());
+                // Upgrading should be an explicit action during the opening of a document at the end
+                // of the open dialog - it must not happen during editing because the CAS addresses
+                // are used as IDs in the UI
+//                repository.upgradeCasAndSave(aDocument, aBratAnnotatorModel.getMode(),
+//                        aBratAnnotatorModel.getUser().getUsername());
                 mergeJCas = repository.getCorrectionDocumentContent(aDocument);
             }
             else {
-                repository.upgradeCasAndSave(aDocument, aBratAnnotatorModel.getMode(),
-                        aBratAnnotatorModel.getUser().getUsername());
+                // Upgrading should be an explicit action during the opening of a document at the end
+                // of the open dialog - it must not happen during editing because the CAS addresses
+                // are used as IDs in the UI
+//                repository.upgradeCasAndSave(aDocument, aBratAnnotatorModel.getMode(),
+//                        aBratAnnotatorModel.getUser().getUsername());
                 mergeJCas = repository.getCurationDocumentContent(aDocument);
             }
         }
@@ -256,7 +273,7 @@ public class CurationBuilder
                         randomAnnotationDocument);
             }
             else {
-                mergeJCas = createMergeCas(mergeJCas, randomAnnotationDocument, jCases, -1, -1,
+                mergeJCas = createCurationCas(mergeJCas, randomAnnotationDocument, jCases, -1, -1,
                         aBratAnnotatorModel.getAnnotationLayers());
             }
         }
@@ -328,7 +345,7 @@ public class CurationBuilder
      * @throws UIMAException
      * @throws BratAnnotationException
      */
-    public JCas createMergeCas(JCas mergeJCas, AnnotationDocument randomAnnotationDocument,
+    public JCas createCurationCas(JCas mergeJCas, AnnotationDocument randomAnnotationDocument,
             Map<String, JCas> jCases, int aBegin, int aEnd, List<AnnotationLayer> aAnnotationLayers)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
