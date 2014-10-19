@@ -30,6 +30,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
@@ -81,6 +83,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  */
 public class CuratorUtil
 {
+    private static final Log LOG = LogFactory.getLog(CuratorUtil.class);
+    
     public final static String CURATION_USER = "CURATION_USER";
 
     /**
@@ -133,6 +137,12 @@ public class CuratorUtil
         bratAnnotatorModel.setMode(Mode.CURATION);
         ProjectUtil.setAnnotationPreference(userLoggedIn.getUsername(), aRepository,
                 aAnnotationService, bratAnnotatorModel, Mode.CURATION);
+        
+        LOG.debug("Configured BratAnnotatorModel for user [" + userLoggedIn + "] f:["
+                + bratAnnotatorModel.getFirstSentenceAddress() + "] l:["
+                + bratAnnotatorModel.getLastSentenceAddress() + "] s:["
+                + bratAnnotatorModel.getSentenceAddress() + "]");
+        
         return bratAnnotatorModel;
     }
 
@@ -182,6 +192,23 @@ public class CuratorUtil
         boolean isCorrectionMode = mode.equals(Mode.CORRECTION);
         boolean isCurationMode = mode.equals(Mode.CURATION);
 
+        String annotatorCasUser;
+        switch (mode) {
+        case AUTOMATION: // fall-through
+        case CORRECTION:
+            annotatorCasUser = SecurityContextHolder.getContext().getAuthentication().getName();
+            break;
+        case CURATION:
+            annotatorCasUser = CURATION_USER;
+            break;
+        default:
+            throw new IllegalStateException("Illegal mode [" + mode + "]");
+        }
+        
+        LOG.debug("mode = ["+mode+"]");
+        LOG.debug("all users is  " + usernamesSorted);
+        LOG.debug("annotator CAS is for user ["+annotatorCasUser+"]");
+        
         for (String username : usernamesSorted) {
             if (
                     (!username.equals(CURATION_USER) && isCurationMode) ||
@@ -200,26 +227,29 @@ public class CuratorUtil
                     }
                 }
 
+                LOG.debug("suggestion CAS is for user ["+username+"]");
                 JCas jCas = aJCases.get(username);
-
-                JCas userJCas = null;
-                if (isAutomationMode || isCorrectionMode) {
-                    userJCas = aJCases.get(SecurityContextHolder.getContext().getAuthentication()
-                            .getName());
-                }
-                else if (isCurationMode) {
-                    userJCas = aJCases.get(CURATION_USER);
-                }
+                JCas userJCas = aJCases.get(annotatorCasUser);
 
                 // Save window location (WTF?!)
                 int sentenceAddress = aBratAnnotatorModel.getSentenceAddress();
                 int lastSentenceAddress = aBratAnnotatorModel.getLastSentenceAddress();
 
                 // Override window location
+                LOG.debug("Temporarily reconfiguring BratAnnotatorModel for user [" + username + "] currently is still f:["
+                        + aBratAnnotatorModel.getFirstSentenceAddress() + "] l:["
+                        + aBratAnnotatorModel.getLastSentenceAddress() + "] s:["
+                        + aBratAnnotatorModel.getSentenceAddress() + "]");
+                
                 aBratAnnotatorModel.setSentenceAddress(getSentenceAddress(aBratAnnotatorModel,
                         jCas, userJCas));
                 aBratAnnotatorModel.setLastSentenceAddress(getLastSentenceAddress(
                         aBratAnnotatorModel, jCas, userJCas));
+
+                LOG.debug("Temporarily reconfigured BratAnnotatorModel as user [" + username + "] f:["
+                        + aBratAnnotatorModel.getFirstSentenceAddress() + "] l:["
+                        + aBratAnnotatorModel.getLastSentenceAddress() + "] s:["
+                        + aBratAnnotatorModel.getSentenceAddress() + "]");
 
                 // Set up coloring strategy
                 ColoringStrategy curationColoringStrategy = new ColoringStrategy()
@@ -257,6 +287,11 @@ public class CuratorUtil
                 // Restore window location
                 aBratAnnotatorModel.setSentenceAddress(sentenceAddress);
                 aBratAnnotatorModel.setLastSentenceAddress(lastSentenceAddress);
+                
+                LOG.debug("Restoring BratAnnotatorModel for user [??? maybe " + annotatorCasUser + "] f:["
+                        + aBratAnnotatorModel.getFirstSentenceAddress() + "] l:["
+                        + aBratAnnotatorModel.getLastSentenceAddress() + "] s:["
+                        + aBratAnnotatorModel.getSentenceAddress() + "]");
             }
         }
     }
