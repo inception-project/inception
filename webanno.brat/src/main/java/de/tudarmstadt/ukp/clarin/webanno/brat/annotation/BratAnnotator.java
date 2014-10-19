@@ -48,6 +48,13 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.OffsetsList;
+import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcOpenDialogResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.message.LoadConfResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanOpenDialogResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.message.StoreSvgResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.message.WhoamiResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -67,14 +74,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 public class BratAnnotator
     extends Panel
 {
-    private static final String ACTION_ARC_OPEN_DIALOG = "arcOpenDialog";
-    private static final String ACTION_GET_COLLECTION_INFORMATION = "getCollectionInformation";
-    private static final String ACTION_GET_DOCUMENT = "getDocument";
-    private static final String ACTION_LOAD_CONF = "loadConf";
-    private static final String ACTION_SPAN_OPEN_DIALOG = "spanOpenDialog";
-    private static final String ACTION_STORE_SVG = "storeSVG";
-    private static final String ACTION_WHOAMI = "whoami";
-
     private static final String PARAM_ACTION = "action";
     private static final String PARAM_ARC_ID = "arcId";
     private static final String PARAM_ID = "id";
@@ -208,13 +207,13 @@ public class BratAnnotator
                 try {
                     final String action = request.getParameterValue(PARAM_ACTION).toString();
 
-                    if (action.equals(ACTION_WHOAMI)) {
+                    if (action.equals(WhoamiResponse.COMMAND)) {
                         result = controller.whoami();
                     }
-                    else if (action.equals(ACTION_STORE_SVG)) {
+                    else if (action.equals(StoreSvgResponse.COMMAND)) {
                         result = controller.storeSVG();
                     }
-                    else if (action.equals(ACTION_SPAN_OPEN_DIALOG)) {
+                    else if (action.equals(SpanOpenDialogResponse.COMMAND)) {
                         if (request.getParameterValue(PARAM_ID).toString() == null) {
                             selectedSpanID = -1;
                         }
@@ -255,10 +254,10 @@ public class BratAnnotator
                             openSpanAnnotationDialog(openAnnotationDialog, aTarget, beginOffset,
                                     endOffset);
                         }
-                        result = controller.loadConf();
+                        result = new SpanOpenDialogResponse();
                     }
 
-                    else if (action.equals(ACTION_ARC_OPEN_DIALOG)) {
+                    else if (action.equals(ArcOpenDialogResponse.COMMAND)) {
 
                         Session.get().getFeedbackMessages().clear();
                         originSpanType = request.getParameterValue(PARAM_ORIGIN_TYPE).toString();
@@ -281,18 +280,18 @@ public class BratAnnotator
                             openArcAnnotationDialog(openAnnotationDialog, aTarget);
                         }
 
+                        result = new ArcOpenDialogResponse();
+                    }
+                    else if (action.equals(LoadConfResponse.COMMAND)) {
                         result = controller.loadConf();
                     }
-                    else if (action.equals(ACTION_LOAD_CONF)) {
-                        result = controller.loadConf();
-                    }
-                    else if (action.equals(ACTION_GET_COLLECTION_INFORMATION)
+                    else if (action.equals(GetCollectionInformationResponse.COMMAND)
                             && getModelObject().getProject() != null) {
                         result = controller.getCollectionInformation(getModelObject()
                                 .getAnnotationLayers());
 
                     }
-                    else if (action.equals(ACTION_GET_DOCUMENT)) {
+                    else if (action.equals(GetDocumentResponse.COMMAND)) {
                         result = controller.getDocumentResponse(getModelObject(), 0, jCas, true);
                     }
                 }
