@@ -106,7 +106,7 @@ public class BratAnnotator
     private String collection = "";
 
     private String selectedSpanText, offsets;
-    private Integer selectedSpanID, selectedArcId;
+    private Integer selectedArcId;
 
     private Integer originSpanId, targetSpanId;
     private boolean closeButtonClicked;// check if the annotation dialog has a change
@@ -146,7 +146,6 @@ public class BratAnnotator
 
         if (getModelObject().getDocument() != null) {
             collection = "#" + getModelObject().getProject().getName() + "/";
-
         }
 
         vis = new WebMarkupContainer("vis");
@@ -220,6 +219,7 @@ public class BratAnnotator
                         result = controller.storeSVG();
                     }
                     else if (action.equals(SpanOpenDialogResponse.COMMAND)) {
+                        int selectedSpanID;
                         if (request.getParameterValue(PARAM_ID).toString() == null) {
                             selectedSpanID = -1;
                         }
@@ -258,11 +258,10 @@ public class BratAnnotator
                         }
                         else {
                             openSpanAnnotationDialog(openAnnotationDialog, aTarget, beginOffset,
-                                    endOffset);
+                                    endOffset, selectedSpanID);
                         }
                         result = new SpanOpenDialogResponse();
                     }
-
                     else if (action.equals(ArcOpenDialogResponse.COMMAND)) {
 
                         Session.get().getFeedbackMessages().clear();
@@ -334,11 +333,11 @@ public class BratAnnotator
      */
 
     private void openSpanAnnotationDialog(final ModalWindow openAnnotationDialog,
-            AjaxRequestTarget aTarget,final int aBeginOffset, final int aEndOffset)
+            AjaxRequestTarget aTarget, final int aBeginOffset, final int aEndOffset,
+            int aSelectedSpanId)
     {
-
         closeButtonClicked = false;
-        if (selectedSpanID == -1) {// new annotation
+        if (aSelectedSpanId == -1) {// new annotation
             openAnnotationDialog.setTitle("New Span Annotation");
             openAnnotationDialog.setContent(new  SpanAnnotationModalWindowPage(openAnnotationDialog
                     .getContentId(),openAnnotationDialog,
@@ -348,7 +347,7 @@ public class BratAnnotator
             openAnnotationDialog.setTitle("Edit Span Annotation");
             openAnnotationDialog.setContent(new SpanAnnotationModalWindowPage(openAnnotationDialog
                     .getContentId(), openAnnotationDialog,
-                    getModelObject(), selectedSpanID));
+                    getModelObject(), aSelectedSpanId));
         }
 
         openAnnotationDialog.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
