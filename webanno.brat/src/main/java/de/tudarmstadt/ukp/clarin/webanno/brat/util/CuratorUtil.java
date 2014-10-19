@@ -414,7 +414,11 @@ public class CuratorUtil
         return newState;
     }
 
-    public static void updatePanel(
+    /**
+     * @return the correction document in automation/correction mode and the curation document in
+     * curation mode.
+     */
+    public static JCas updatePanel(
             AjaxRequestTarget aTarget,
             CurationViewPanel aParent,
             CurationContainer aCurationContainer,
@@ -426,18 +430,23 @@ public class CuratorUtil
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
         SourceDocument sourceDocument = aCurationContainer.getBratAnnotatorModel().getDocument();
-        List<AnnotationDocument> annotationDocuments = aRepository
-                .listAnnotationDocuments(sourceDocument);
         Map<String, JCas> jCases = new HashMap<String, JCas>();
+        
+        // This is the CAS that the user can actively edit
         JCas annotatorCas = null;
-        // this is a CORRECTION project
+        
         if (aCurationContainer.getBratAnnotatorModel().getMode().equals(Mode.AUTOMATION)
                 || aCurationContainer.getBratAnnotatorModel().getMode().equals(Mode.CORRECTION)) {
+            // If this is a CORRECTION or AUTOMATION project, then we get the CORRECTION document
+            // and put it in as the single document to compare with. Basically what we do is that
+            // we treat consider this scenario as a curation scenario where the CORRECTION document
+            // is the only document we compare with.
+            
+            // The CAS the user can edit is the one from the virtual CORRECTION USER
             annotatorCas = aRepository.getCorrectionDocumentContent(sourceDocument);
 
-            String username = SecurityContextHolder.getContext().getAuthentication().getName();
-
-            User user = aRepository.getUser(username);
+            User user = aRepository.getUser(SecurityContextHolder.getContext().getAuthentication()
+                    .getName());
             AnnotationDocument annotationDocument = aRepository.getAnnotationDocument(
                     sourceDocument, user);
             jCases.put(user.getUsername(),
@@ -446,12 +455,30 @@ public class CuratorUtil
                     new HashMap<Integer, AnnotationSelection>());
         }
         else {
+            // If this is a true CURATION then we get all the annotation documents from all the
+            // active users.
+            
+            // The CAS the user can edit is the one from the virtual CURATION USER
             annotatorCas = aRepository.getCurationDocumentContent(sourceDocument);
-            // get cases from repository
-            CuratorUtil.getCases(jCases, annotationDocuments, aRepository,
-                    aAnnotationSelectionByUsernameAndAddress);
+            
+            // Now we get all the other CASes from the repository
+            List<AnnotationDocument> annotationDocuments = aRepository
+                    .listAnnotationDocuments(sourceDocument);
+            for (AnnotationDocument annotationDocument : annotationDocuments) {
+                String username = annotationDocument.getUser();
+                if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)
+                        || username.equals(CuratorUtil.CURATION_USER)) {
+                    JCas jCas = aRepository.getAnnotationDocumentContent(annotationDocument);
+                    jCases.put(username, jCas);
+
+                    // cleanup annotationSelections
+                    aAnnotationSelectionByUsernameAndAddress.put(username,
+                            new HashMap<Integer, AnnotationSelection>());
+                }
+            }
         }
-        // add mergeJCas separately
+        
+        // We store the CAS that the user will edit as the "CURATION USER"
         jCases.put(CURATION_USER, annotatorCas);
 
         // get differing feature structures
@@ -485,7 +512,9 @@ public class CuratorUtil
         }
 
         CuratorUtil.populateCurationSentences(jCases, sentences, bratAnnotatorModel,
-                annotationOptions, aAnnotationSelectionByUsernameAndAddress, aJsonConverter, aAnnotationService, aCurationContainer);
+                annotationOptions, aAnnotationSelectionByUsernameAndAddress, aJsonConverter,
+                aAnnotationService, aCurationContainer);
+        
         // update sentence list on the right side
         aParent.setModelObject(sentences);
         if (aCurationContainer.getBratAnnotatorModel().getMode().equals(Mode.CURATION)) {
@@ -493,5 +522,7 @@ public class CuratorUtil
             aMergeVisualizer.reloadContent(aTarget);
         }
         aTarget.add(aParent);
+        
+        return annotatorCas;
     }
 }

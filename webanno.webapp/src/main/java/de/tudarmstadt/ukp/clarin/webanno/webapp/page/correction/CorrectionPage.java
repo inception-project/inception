@@ -1172,10 +1172,11 @@ public class CorrectionPage
 
     private void update(AjaxRequestTarget target)
     {
+        JCas correctionDocument = null;
         try {
-            CuratorUtil.updatePanel(target, automateView, curationContainer, mergeVisualizer,
-                    repository, annotationSelectionByUsernameAndAddress, curationSegment,
-                    annotationService, jsonConverter);
+            correctionDocument = CuratorUtil.updatePanel(target, automateView, curationContainer,
+                    mergeVisualizer, repository, annotationSelectionByUsernameAndAddress,
+                    curationSegment, annotationService, jsonConverter);
         }
         catch (UIMAException e) {
             error(ExceptionUtils.getRootCauseMessage(e));
@@ -1189,26 +1190,15 @@ public class CorrectionPage
         catch (BratAnnotationException e) {
             error(e.getMessage());
         }
+
+        gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(correctionDocument,
+                bratAnnotatorModel.getSentenceAddress()) + 1);
+        gotoPageAddress = BratAjaxCasUtil.getSentenceAddress(correctionDocument,
+                gotoPageTextField.getModelObject());
+
+        target.add(gotoPageTextField);
         target.add(automateView);
         target.add(numberOfPages);
-        JCas mergeJCas = null;
-        try {
-            mergeJCas = repository
-                        .getCorrectionDocumentContent(bratAnnotatorModel
-                                .getDocument());
-        } catch (UIMAException e) {
-            error(e.getMessage());
-        } catch (ClassNotFoundException e) {
-            error(e.getMessage());
-        } catch (IOException e) {
-            error(e.getMessage());
-        }
-
-         gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(mergeJCas,
-                 bratAnnotatorModel.getSentenceAddress())+1);
-         gotoPageAddress = BratAjaxCasUtil.getSentenceAddress(mergeJCas,
-                 gotoPageTextField.getModelObject());
-         target.add(gotoPageTextField);
     }
 
 }

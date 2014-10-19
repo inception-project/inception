@@ -32,6 +32,8 @@ import java.util.Set;
 import javax.persistence.NoResultException;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
@@ -99,7 +101,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
  */
 public class AutomationPage
     extends SettingsPageBase
-{
+{    
+    private static final Log LOG = LogFactory.getLog(AutomationPage.class);    
+
     private static final long serialVersionUID = 1378872465851908515L;
 
     @SpringBean(name = "jsonConverter")
@@ -1146,6 +1150,11 @@ public class AutomationPage
 
                 ProjectUtil.setAnnotationPreference(username, repository, annotationService,
                         bratAnnotatorModel, Mode.AUTOMATION);
+                
+                LOG.debug("Configured BratAnnotatorModel for user [" + logedInUser.getUsername()
+                        + "] f:[" + bratAnnotatorModel.getFirstSentenceAddress() + "] l:["
+                        + bratAnnotatorModel.getLastSentenceAddress() + "] s:["
+                        + bratAnnotatorModel.getSentenceAddress() + "]");
             }
             catch (DataRetrievalFailureException ex) {
                 throw ex;
@@ -1198,10 +1207,11 @@ public class AutomationPage
 
     private void update(AjaxRequestTarget target)
     {
+        JCas correctionDocument = null;
         try {
-            CuratorUtil.updatePanel(target, automateView, curationContainer, mergeVisualizer,
-                    repository, annotationSelectionByUsernameAndAddress, curationSegment,
-                    annotationService, jsonConverter);
+            correctionDocument = CuratorUtil.updatePanel(target, automateView, curationContainer,
+                    mergeVisualizer, repository, annotationSelectionByUsernameAndAddress,
+                    curationSegment, annotationService, jsonConverter);
         }
         catch (UIMAException e) {
             error(ExceptionUtils.getRootCauseMessage(e));
@@ -1215,28 +1225,14 @@ public class AutomationPage
         catch (BratAnnotationException e) {
             error(e.getMessage());
         }
+        
+        gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(correctionDocument,
+                bratAnnotatorModel.getSentenceAddress()) + 1);
+        gotoPageAddress = BratAjaxCasUtil.getSentenceAddress(correctionDocument,
+                gotoPageTextField.getModelObject());
+        
+        target.add(gotoPageTextField);
         target.add(automateView);
         target.add(numberOfPages);
-        JCas mergeJCas = null;
-        try {
-
-            mergeJCas = repository.getCorrectionDocumentContent(bratAnnotatorModel.getDocument());
-
-        }
-        catch (UIMAException e) {
-            error(e.getMessage());
-        }
-        catch (ClassNotFoundException e) {
-            error(e.getMessage());
-        }
-        catch (IOException e) {
-            error(e.getMessage());
-        }
-
-        gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(mergeJCas,
-                bratAnnotatorModel.getSentenceAddress()) + 1);
-        gotoPageAddress = BratAjaxCasUtil.getSentenceAddress(mergeJCas,
-                gotoPageTextField.getModelObject());
-        target.add(gotoPageTextField);
     }
 }
