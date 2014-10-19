@@ -1115,25 +1115,16 @@ public class CurationPage
                 || bratAnnotatorModel.getDocument().getId() != currentDocumentId
                 || bratAnnotatorModel.getProject().getId() != currentprojectId) {
 
-            try {
-                bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil
-                        .getFirstSentenceAddress(mergeJCas));
-                bratAnnotatorModel.setLastSentenceAddress(BratAjaxCasUtil
-                        .getLastSentenceAddress(mergeJCas));
-                bratAnnotatorModel.setFirstSentenceAddress(bratAnnotatorModel.getSentenceAddress());
+            bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil
+                    .getFirstSentenceAddress(mergeJCas));
+            bratAnnotatorModel.setLastSentenceAddress(BratAjaxCasUtil
+                    .getLastSentenceAddress(mergeJCas));
+            bratAnnotatorModel.setFirstSentenceAddress(bratAnnotatorModel.getSentenceAddress());
 
-                Sentence sentence = selectByAddr(mergeJCas, Sentence.class,
-                        bratAnnotatorModel.getSentenceAddress());
-                bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
-                bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
-
-            }
-            catch (DataRetrievalFailureException ex) {
-                throw ex;
-            }
-            catch (BeansException e) {
-                throw e;
-            }
+            Sentence sentence = selectByAddr(mergeJCas, Sentence.class,
+                    bratAnnotatorModel.getSentenceAddress());
+            bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
+            bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
         }
         // if project is changed, reset some project specific settings
         if (currentprojectId != bratAnnotatorModel.getProject().getId()) {
