@@ -312,32 +312,15 @@ public class BratAnnotator
                 catch (IOException e) {
                     error(e.getMessage());
                 }
-                StringWriter out = new StringWriter();
-                JsonGenerator jsonGenerator = null;
-                try {
-                    jsonGenerator = jsonConverter.getObjectMapper().getJsonFactory()
-                            .createJsonGenerator(out);
-                    if (result == null) {
-                        result = "test";
-                    }
 
-                    jsonGenerator.writeObject(result);
-                }
-                catch (IOException e) {
-                    error("Unable to produce JSON response " + ":"
-                            + ExceptionUtils.getRootCauseMessage(e));
-                }
+                // Serialize updated document to JSON
+                String json = toJson(result);
 
                 // Since we cannot pass the JSON directly to Brat, we attach it to the HTML element
                 // into which BRAT renders the SVG. In our modified ajax.js, we pick it up from
                 // there and then pass it on to BRAT to do the rendering.
-                aTarget.prependJavaScript("Wicket.$('" + vis.getMarkupId() + "').temp = "
-                        + out.toString() + ";");
-                // getRequestCycle().scheduleRequestHandlerAfterCurrent(
-                // new TextRequestHandler("application/json", "UTF-8", out.toString()));
-                /*
-                 * if (hasChanged) { onChange(aTarget); }
-                 */
+                aTarget.prependJavaScript("Wicket.$('" + vis.getMarkupId() + "').temp = " + json
+                        + ";");
                 aTarget.add(feedbackPanel);
             }
         };
@@ -557,5 +540,25 @@ public class BratAnnotator
     protected void onDelete(BratAnnotatorModel aModel, int aStart, int aEnd)
     {
         // Overriden in AutomationPage
+    }
+    
+    private String toJson(Object result)
+    {
+        StringWriter out = new StringWriter();
+        JsonGenerator jsonGenerator = null;
+        try {
+            jsonGenerator = jsonConverter.getObjectMapper().getJsonFactory()
+                    .createJsonGenerator(out);
+            if (result == null) {
+                result = "test";
+            }
+
+            jsonGenerator.writeObject(result);
+        }
+        catch (IOException e) {
+            error("Unable to produce JSON response " + ":"
+                    + ExceptionUtils.getRootCauseMessage(e));
+        }     
+        return out.toString();
     }
 }
