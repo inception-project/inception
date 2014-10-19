@@ -184,23 +184,6 @@ public class BratAnnotator
             @Override
             protected void respond(AjaxRequestTarget aTarget)
             {
-                JCas jCas = null;
-                if (getModelObject().getDocument() != null) {
-                    try {
-                        jCas = getCas(getModelObject().getProject(), getModelObject().getUser(),
-                                getModelObject().getDocument(), getModelObject().getMode());
-                    }
-                    catch (UIMAException e1) {
-                        error(ExceptionUtils.getRootCause(e1));
-                    }
-                    catch (IOException e1) {
-                        error(ExceptionUtils.getRootCause(e1));
-                    }
-                    catch (ClassNotFoundException e1) {
-                        error(ExceptionUtils.getRootCause(e1));
-                    }
-                }
-
                 final IRequestParameters request = getRequest().getPostParameters();
 
                 Object result = null;
@@ -231,6 +214,7 @@ public class BratAnnotator
                         OffsetsList offsetLists = jsonConverter.getObjectMapper().readValue(
                                 offsets, OffsetsList.class);
 
+                        JCas jCas = getJCas();
                         if (selectedSpanID == -1) {
                             Sentence sentence = BratAjaxCasUtil.selectSentenceAt(jCas,
                                     getModelObject().getSentenceBeginOffset(), getModelObject()
@@ -297,7 +281,8 @@ public class BratAnnotator
 
                     }
                     else if (action.equals(GetDocumentResponse.COMMAND)) {
-                        result = controller.getDocumentResponse(getModelObject(), 0, jCas, true);
+                        result = controller.getDocumentResponse(getModelObject(), 0, getJCas(),
+                                true);
                     }
                     
                     LOG.info("AJAX-RPC DONE: [" + action + "]");
@@ -559,5 +544,26 @@ public class BratAnnotator
                     + ExceptionUtils.getRootCauseMessage(e));
         }     
         return out.toString();
+    }
+    
+    private JCas getJCas()
+    {
+        JCas jCas = null;
+        if (getModelObject().getDocument() != null) {
+            try {
+                jCas = getCas(getModelObject().getProject(), getModelObject().getUser(),
+                        getModelObject().getDocument(), getModelObject().getMode());
+            }
+            catch (UIMAException e1) {
+                error(ExceptionUtils.getRootCause(e1));
+            }
+            catch (IOException e1) {
+                error(ExceptionUtils.getRootCause(e1));
+            }
+            catch (ClassNotFoundException e1) {
+                error(ExceptionUtils.getRootCause(e1));
+            }
+        }
+        return jCas;
     }
 }
