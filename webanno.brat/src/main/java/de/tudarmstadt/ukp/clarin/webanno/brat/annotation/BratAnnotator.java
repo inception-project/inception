@@ -22,6 +22,8 @@ import java.io.StringWriter;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
@@ -74,6 +76,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 public class BratAnnotator
     extends Panel
 {
+    private static final Log LOG = LogFactory.getLog(BratAnnotator.class);
+    
     private static final String PARAM_ACTION = "action";
     private static final String PARAM_ARC_ID = "arcId";
     private static final String PARAM_ID = "id";
@@ -206,7 +210,9 @@ public class BratAnnotator
 
                 try {
                     final String action = request.getParameterValue(PARAM_ACTION).toString();
-
+                    
+                    LOG.info("AJAX-RPC CALLED: [" + action + "]");
+                    
                     if (action.equals(WhoamiResponse.COMMAND)) {
                         result = controller.whoami();
                     }
@@ -294,6 +300,8 @@ public class BratAnnotator
                     else if (action.equals(GetDocumentResponse.COMMAND)) {
                         result = controller.getDocumentResponse(getModelObject(), 0, jCas, true);
                     }
+                    
+                    LOG.info("AJAX-RPC DONE: [" + action + "]");
                 }
                 catch (ClassNotFoundException e) {
                     error("Invalid reader: " + e.getMessage());
