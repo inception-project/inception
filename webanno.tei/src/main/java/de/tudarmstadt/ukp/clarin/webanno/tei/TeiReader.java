@@ -152,6 +152,11 @@ public class TeiReader
 
     private static final String TAG_LANG = "language";
 
+    private static final String SPACE_CHAR = " ";
+    private static final String ANA = "ana";
+    private static final String FROM = "from";
+    private static final String INDENT = "ident";
+
     /**
      * (word) represents a grammatical (not necessarily orthographic) word.
      */
@@ -406,17 +411,17 @@ public class TeiReader
                 sentenceStart = getBuffer().length();
             }
             else if (TAG_SPAN_GRP.equals(aName)) {
-                if (aAttributes.getValue("ana").equals("#ePOSlemmatizer")) {
+                if (aAttributes.getValue(ANA).equals("#ePOSlemmatizer")) {
                     addLemma = true;
                     addPos = false;
                     addNe = false;
                 }
-                else if (aAttributes.getValue("ana").equals("#ePOStagger")) {
+                else if (aAttributes.getValue(ANA).equals("#ePOStagger")) {
                     addLemma = false;
                     addPos = true;
                     addNe = false;
                 }
-                else if (aAttributes.getValue("ana").equals("#automatic-supersense-from-dannet")) {
+                else if (aAttributes.getValue(ANA).equals("#automatic-supersense-from-dannet")) {
                     addLemma = false;
                     addPos = false;
                     addNe = true;
@@ -425,11 +430,11 @@ public class TeiReader
             }
             else if (TAG_SPAN.equals(aName)) {
                 captureText = true;
-                tokenId = aAttributes.getValue("from");
+                tokenId = aAttributes.getValue(FROM);
             }
             else if (TAG_LANG.equals(aName)) {
                 captureText = false;
-                language = aAttributes.getValue("ident");
+                language = aAttributes.getValue(INDENT);
             }
             else {
                 captureText = false;
@@ -531,8 +536,8 @@ public class TeiReader
             StringBuffer sb = new StringBuffer();
             sb.append(aCh, aStart, aLength);
             if (captureText) {
-                if (isSpaceChar) {
-                    buffer.append(" ");
+                if (isSpaceChar && !buffer.toString().isEmpty()) {
+                    buffer.append(SPACE_CHAR);
                 }
                 else if (addLemma) {
                     lemma = sb.toString().trim();
