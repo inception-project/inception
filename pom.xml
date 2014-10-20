@@ -37,7 +37,8 @@
 		<spring.security.version>3.1.4.RELEASE</spring.security.version>
 		<slf4j.version>1.6.4</slf4j.version>
 		<log4j.version>1.2.16</log4j.version>
-		<wicket.version>1.5.8</wicket.version>
+		<wicket.version>1.5.10</wicket.version>
+		<wicket.odlabs.version>1.5.8</wicket.odlabs.version>
 		<hibernate.version>4.1.4.Final</hibernate.version>
 		<timestamp>${maven.build.timestamp}</timestamp>
 		<maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
@@ -168,7 +169,7 @@
 			<dependency>
 				<groupId>org.odlabs.wiquery</groupId>
 				<artifactId>wiquery-parent</artifactId>
-				<version>${wicket.version}</version>
+				<version>${wicket.odlabs.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
