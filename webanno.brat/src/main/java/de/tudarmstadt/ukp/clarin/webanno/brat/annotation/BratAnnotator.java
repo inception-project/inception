@@ -427,9 +427,6 @@ public class BratAnnotator
         // We attach the JSON send back from the server to this HTML element
         // because we cannot directly pass it from Wicket to the caller in ajax.js.
         script.append("dispatcher.wicketId = '" + vis.getMarkupId() + "'; ");
-        if (getModelObject().getMode().equals(Mode.ANNOTATION)) { // works with the URLMonitor
-            script.append("var urlMonitor = new URLMonitor(dispatcher); ");
-        }
         script.append("var ajax = new Ajax(dispatcher);");
         script.append("var ajax_" + vis.getMarkupId() + " = ajax;");
         script.append("var visualizer = new Visualizer(dispatcher, '" + vis.getMarkupId() + "');");
@@ -438,6 +435,13 @@ public class BratAnnotator
         script.append("var spinner = new Spinner(dispatcher, '#spinner');");
         script.append("var logger = new AnnotationLog(dispatcher);");
         script.append("dispatcher.post('init');");
+        
+        // Trigger immediate reload in ANNOTATION mode to avoid using url_monitor.js which causes
+        // timing problems on Chrome (sometimes not loading the content). However, in the other
+        // modes, we do not auto-load to avoid displaying stale information.
+        if (getModelObject().getMode().equals(Mode.ANNOTATION)) { // works with the URLMonitor
+            script.append(reloadScript());
+        }
 
         aResponse.renderOnLoadJavaScript("\n" + script.toString());
     }
