@@ -317,6 +317,7 @@ var Visualizer = (function($, window, undefined) {
         '\u00a0': 4,
         '\u200b': 0,
         '\u3000': 8,
+        '\t': 12,
         '\n': 4
       };
       var coloredCurlies = true; // color curlies by box BG
@@ -324,7 +325,7 @@ var Visualizer = (function($, window, undefined) {
       var minArcSlant = 8;
       var arcHorizontalSpacing = 10; // min space boxes with connecting arc
       var rowSpacing = -5;          // for some funny reason approx. -10 gives "tight" packing.
-      var sentNumMargin = 40;
+      var sentNumMargin = 20;
       var smoothArcCurves = true;   // whether to use curves (vs lines) in arcs
       var smoothArcSteepness = 0.5; // steepness of smooth curves (control point)
       var reverseArcControlx = 5;   // control point distance for "UFO catchers"
@@ -830,6 +831,7 @@ var Visualizer = (function($, window, undefined) {
           if (chunk) chunk.nextSpace = space;
           //               (index,     text, from,      to, space) {
           chunk = new Chunk(chunkNo++, text, firstFrom, to, space);
+          chunk.lastSpace = space;
           data.chunks.push(chunk);
           lastTo = to;
           firstFrom = null;
@@ -1064,9 +1066,11 @@ var Visualizer = (function($, window, undefined) {
               if (val.glyph) {
                 if (val.position == "left") {
                   prefix = val.glyph + prefix;
-                  var css = 'glyph';
-                  if (attr.css) css += ' glyph_' + Util.escapeQuotes(attr.css);
-                  svgtext.span(val.glyph, { 'class': css });
+                  var tspan_attrs = { 'class' : 'glyph' };
+                  if (val.glyphColor) {
+                    tspan_attrs.fill = val.glyphColor;
+                  }
+                  svgtext.span(val.glyph, tspan_attrs);
                 } else { // XXX right is implied - maybe change
                   postfixArray.push([attr, val]);
                   postfix += val.glyph;
@@ -1083,9 +1087,11 @@ var Visualizer = (function($, window, undefined) {
               text += ' ' + postfix;
               svgtext.string(' ');
               $.each(postfixArray, function(elNo, el) {
-                var css = 'glyph';
-                if (el[0].css) css += ' glyph_' + Util.escapeQuotes(el[0].css);
-                svgtext.span(el[1].glyph, { 'class': css });
+                var tspan_attrs = { 'class' : 'glyph' };
+                if (el[1].glyphColor) {
+                  tspan_attrs.fill = el[1].glyphColor;
+                }
+                svgtext.span(el[1].glyph, tspan_attrs);
               });
             }
             if (warning) {
@@ -1214,7 +1220,7 @@ var Visualizer = (function($, window, undefined) {
         var chunkTexts = {}; // set of span texts
         $.each(data.chunks, function(chunkNo, chunk) {
           chunk.row = undefined; // reset
-          if (!(chunk.text in chunkTexts)) chunkTexts[chunk.text] = []
+          if (!chunkTexts.hasOwnProperty(chunk.text)) chunkTexts[chunk.text] = []
           var chunkText = chunkTexts[chunk.text];
 
           // here we also need all the spans that are contained in
@@ -1245,9 +1251,23 @@ var Visualizer = (function($, window, undefined) {
                   'space characters'
                   , 'warning', 15]]]);
               }
-              var startPos = text.getStartPositionOfChar(firstChar).x;
               var lastChar = fragment.to - fragment.chunk.from - 1;
-              var endPos = (lastChar < 0)
+
+              // Adjust for XML whitespace (#832, #1009)
+              var textUpToFirstChar = fragment.chunk.text.substring(0, firstChar);
+              var textUpToLastChar = fragment.chunk.text.substring(0, lastChar);
+              var textUpToFirstCharUnspaced = textUpToFirstChar.replace(/\s\s+/g, ' ');
+              var textUpToLastCharUnspaced = textUpToLastChar.replace(/\s\s+/g, ' ');
+              firstChar -= textUpToFirstChar.length - textUpToFirstCharUnspaced.length;
+              lastChar -= textUpToLastChar.length - textUpToLastCharUnspaced.length;
+
+              var startPos, endPos;
+              if (firstChar < fragment.chunk.text.length) {
+                startPos = text.getStartPositionOfChar(firstChar).x;
+              } else {
+                startPos = text.getComputedTextLength();
+              }
+              endPos = (lastChar < firstChar)
                 ? startPos
                 : text.getEndPositionOfChar(lastChar).x;
               fragment.curly = {
@@ -1442,6 +1462,14 @@ Util.profileStart('chunks');
 
         $.each(data.spanDrawOrderPermutation, function(spanIdNo, spanId) {
           var span = data.spans[spanId];
+          var spanDesc = spanTypes[span.type];
+          var bgColor = ((spanDesc && spanDesc.bgColor) ||
+                          (spanTypes.SPAN_DEFAULT &&
+                          spanTypes.SPAN_DEFAULT.bgColor) || '#ffffff');
+          if (bgColor == "hidden") {
+            span.hidden = true;
+            return;
+          }
 
           var f1 = span.fragments[0];
           var f2 = span.fragments[span.fragments.length - 1];
@@ -1550,7 +1578,22 @@ Util.profileStart('chunks');
         });
 
         $.each(data.chunks, function(chunkNo, chunk) {
-          reservations = new Array();
+          var spaceWidth = 0;
+          if (chunk.lastSpace) {
+            var spaceLen = chunk.lastSpace.length || 0;
+            var spacePos = chunk.lastSpace.lastIndexOf("\n") + 1;
+            if (spacePos || !chunkNo || !chunk.sentence) {
+              // indent if
+              // * non-first paragraph first word
+              // * first paragraph first word
+              // * non-first word in a line
+              // don't indent if
+              // * the first word in a non-paragraph line
+              for (var i = spacePos; i < spaceLen; i++) spaceWidth += spaceWidths[chunk.lastSpace[i]] || 0;
+              currentX += spaceWidth;
+            }
+          }
+          
           chunk.group = svg.group(row.group);
           chunk.highlightGroup = svg.group(chunk.group);
 
@@ -1571,6 +1614,7 @@ Util.profileStart('chunks');
             var bgColor = ((spanDesc && spanDesc.bgColor) ||
                            (spanTypes.SPAN_DEFAULT &&
                             spanTypes.SPAN_DEFAULT.bgColor) || '#ffffff');
+            if (span.hidden) return;
             var fgColor = ((spanDesc && spanDesc.fgColor) ||
                            (spanTypes.SPAN_DEFAULT &&
                             spanTypes.SPAN_DEFAULT.fgColor) || '#000000');
@@ -1880,7 +1924,8 @@ Util.profileStart('chunks');
             // TODO: related to issue #571
             // replace arcHorizontalSpacing with a calculated value
             currentX = Configuration.visual.margin.x + sentNumMargin + rowPadding +
-                (hasLeftArcs ? arcHorizontalSpacing : (hasInternalArcs ? arcSlant : 0));
+                (hasLeftArcs ? arcHorizontalSpacing : (hasInternalArcs ? arcSlant : 0)) +
+                spaceWidth;
             if (hasLeftArcs) {
               var adjustedCurTextWidth = sizes.texts.widths[chunk.text] + arcHorizontalSpacing;
               if (adjustedCurTextWidth > maxTextWidth) {
@@ -1948,13 +1993,17 @@ Util.profileStart('chunks');
             // if we added a gap, center the intervening elements
             spacing /= 2;
             var firstChunkInRow = row.chunks[row.chunks.length - 1];
-            if (spacingChunkId < firstChunkInRow.index) {
-              spacingChunkId = firstChunkInRow.index + 1;
-            }
-            for (var chunkIndex = spacingChunkId; chunkIndex < chunk.index; chunkIndex++) {
-              var movedChunk = data.chunks[chunkIndex];
-              translate(movedChunk, movedChunk.translation.x + spacing, 0);
-              movedChunk.textX += spacing;
+            if (firstChunkInRow === undefined) {
+              console.log('warning: firstChunkInRow undefined, chunk:', chunk);
+            } else { // valid firstChunkInRow
+              if (spacingChunkId < firstChunkInRow.index) {
+                spacingChunkId = firstChunkInRow.index + 1;
+              }
+              for (var chunkIndex = spacingChunkId; chunkIndex < chunk.index; chunkIndex++) {
+                var movedChunk = data.chunks[chunkIndex];
+                translate(movedChunk, movedChunk.translation.x + spacing, 0);
+                movedChunk.textX += spacing;
+              }
             }
           }
 
@@ -1964,10 +2013,7 @@ Util.profileStart('chunks');
           translate(chunk, currentX + boxX, 0);
           chunk.textX = currentX + boxX;
 
-          var spaceWidth = 0;
-          var spaceLen = chunk.nextSpace && chunk.nextSpace.length || 0;
-          for (var i = 0; i < spaceLen; i++) spaceWidth += spaceWidths[chunk.nextSpace[i]] || 0;
-          currentX += spaceWidth + boxWidth;
+          currentX += boxWidth;
         }); // chunks
 
         // finish the last row
@@ -1993,6 +2039,10 @@ Util.profileStart('arcsPrep');
           arc.jumpHeight = 0;
           var fromFragment = data.spans[arc.origin].headFragment;
           var toFragment = data.spans[arc.target].headFragment;
+          if (fromFragment.span.hidden || toFragment.span.hidden) {
+            arc.hidden = true;
+            return;
+          }
           if (fromFragment.towerId > toFragment.towerId) {
             var tmp = fromFragment; fromFragment = toFragment; toFragment = tmp;
           }
@@ -2080,6 +2130,7 @@ Util.profileStart('arcs');
         var arcCache = {};
         // add the arcs
         $.each(data.arcs, function(arcNo, arc) {
+          if (arc.hidden) return;
           // separate out possible numeric suffix from type
           var noNumArcType;
           var splitArcType;
@@ -2132,6 +2183,7 @@ Util.profileStart('arcs');
           var color = ((arcDesc && arcDesc.color) ||
                        (spanTypes.ARC_DEFAULT && spanTypes.ARC_DEFAULT.color) ||
                        '#000000');
+          if (color == 'hidden') return;
           
           // WEBANNO EXTENSION BEGIN
           if (arc.eventDescId && data.eventDescs[arc.eventDescId]) {
@@ -2780,6 +2832,8 @@ Util.profileStart('chunkFinish');
               var bgColor = ((spanDesc && spanDesc.bgColor) ||
                              (spanTypes.SPAN_DEFAULT && spanTypes.SPAN_DEFAULT.bgColor) ||
                              '#ffffff');
+              if (fragment.span.hidden) continue;
+                             
               // WEBANNO EXTENSION BEGIN
               if (fragment.span.color) {
               	bgColor = fragment.span.color;
@@ -2863,6 +2917,7 @@ Util.profileStart('finish');
 
         $svg.width(canvasWidth);
         $svg.height(y);
+        $svg.attr("viewBox", "0 0 " + canvasWidth + " " + y);
         $svgDiv.height(y);
 
 Util.profileEnd('finish');
@@ -2993,6 +3048,7 @@ Util.profileStart('before render');
           var bgColor = ((spanDesc && spanDesc.bgColor) ||
                          (spanTypes.SPAN_DEFAULT && spanTypes.SPAN_DEFAULT.bgColor) ||
                          '#ffffff');
+          if (span.hidden) return;
           // WEBANNO EXTENSION BEGIN
           if (span.color) {
           	bgColor = span.color;
@@ -3013,18 +3069,39 @@ Util.profileStart('before render');
           if (that.arcDragOrigin) {
             target.parent().addClass('highlight');
           } else {
-            highlightArcs = $svg.
-                find('g[data-from="' + id + '"], g[data-to="' + id + '"]').
-                addClass('highlight');
+            var equivs = {};
             var spans = {};
             spans[id] = true;
             var spanIds = [];
-            $.each(span.incoming, function(arcNo, arc) {
+            // find all arcs, normal and equiv. Equivs need to go far (#1023)
+            var addArcAndSpan = function(arc, span) {
+              if (arc.equiv) {
+                equivs[arc.eventDescId.substr(0, arc.eventDescId.indexOf('*', 2) + 1)] = true;
+                var eventDesc = data.eventDescs[arc.eventDescId];
+                $.each(eventDesc.leftSpans.concat(eventDesc.rightSpans), function(ospanId, ospan) {
+                  spans[ospan] = true;
+                });
+              } else {
                 spans[arc.origin] = true;
+              }
+            }
+            $.each(span.incoming, function(arcNo, arc) {
+                addArcAndSpan(arc, arc.origin);
             });
             $.each(span.outgoing, function(arcNo, arc) {
-                spans[arc.target] = true;
+                addArcAndSpan(arc, arc.target);
             });
+            var equivSelector = [];
+            $.each(equivs, function(equiv, dummy) {
+              equivSelector.push('[data-arc-ed^="' + equiv + '"]');
+            });
+
+            highlightArcs = $svg.
+                find(equivSelector.join(', ')).
+                parent().
+                add('g[data-from="' + id + '"], g[data-to="' + id + '"]' + equivSelector).
+                addClass('highlight');
+
             $.each(spans, function(spanId, dummy) {
                 spanIds.push('rect[data-span-id="' + spanId + '"]');
             });
