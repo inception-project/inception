@@ -75,7 +75,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 /**
  * This is the main page for Project Settings. The Page has Four Panels. The
  * {@link AnnotationGuideLinePanel} is used to update documents to a project. The
- * {@link ProjectDetailsPanel} used for updating Project deatils such as descriptions of a project
+ * {@code ProjectDetailsPanel} used for updating Project deatils such as descriptions of a project
  * and name of the Project The {@link ProjectTagSetsPanel} is used to add {@link TagSet} and
  * {@link Tag} details to a Project as well as updating them The {@link ProjectUsersPanel} is used
  * to update {@link User} to a Project

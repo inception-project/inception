@@ -30,8 +30,8 @@ import org.springframework.http.converter.json.MappingJacksonHttpMessageConverte
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 
 /**
- * Base class for displaying a BRAT visualization. Override methods {@link #getCollectionData()}
- * and {@link #getDocumentData()} to provide the actual data.
+ * Base class for displaying a BRAT visualization. Override methods {@code #getCollectionData()}
+ * and {@code #getDocumentData()} to provide the actual data.
  *
  * @author Richard Eckart de Castilho
  */
