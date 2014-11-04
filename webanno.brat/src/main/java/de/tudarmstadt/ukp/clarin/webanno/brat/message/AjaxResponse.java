@@ -49,6 +49,8 @@ public class AjaxResponse
 
     /**
      * Get the action command for which this is a response.
+     * 
+     * @return the action.
      */
     public String getAction()
     {
@@ -57,6 +59,9 @@ public class AjaxResponse
 
     /**
      * Set the action command for which this is a response.
+     * 
+     * @param aAction
+     *            the action.
      */
     public void setAction(String aAction)
     {
@@ -65,6 +70,8 @@ public class AjaxResponse
 
     /**
      * Get feedback messages to be displayed to the user, e.g. success or failure messages.
+     * 
+     * @return the messages.
      */
     public List<String> getMessages()
     {
@@ -73,6 +80,9 @@ public class AjaxResponse
 
     /**
      * Set feedback messages to be displayed to the user, e.g. success or failure messages.
+     * 
+     * @param aMessages
+     *            the messages.
      */
     public void setMessages(List<String> aMessages)
     {

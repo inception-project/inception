@@ -60,7 +60,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  * Export annotations in TAB separated format. Header includes information about the UIMA type and
  * features The number of columns are depend on the number of types/features exist. All the spans
  * will be written first and subsequently all the relations. relation is given in the form of
- * Source-->Target and the RelationType is added to the Target token. The next column indicates the
+ * Source--&gt;Target and the RelationType is added to the Target token. The next column indicates the
  * source of the relation (the source of the arc drown)
  *
  * @author Seid Muhie Yimam

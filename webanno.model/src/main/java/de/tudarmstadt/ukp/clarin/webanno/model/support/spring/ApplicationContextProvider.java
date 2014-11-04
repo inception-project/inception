@@ -25,7 +25,7 @@ import org.springframework.context.ApplicationContextAware;
 /**
  * Permits access to the Spring context anywhere in the application. If any other means of accessing
  * the Spring context exist, these should be used. This class is mainly meant to be used by the
- * {@link EntityModel}.
+ * {@code EntityModel}.
  *
  * @author Richard Eckart de Castilho
  */

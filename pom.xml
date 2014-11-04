@@ -368,6 +368,35 @@
 				<version>1.0-beta-2</version>
 			</extension>
 		</extensions>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<!-- version>2.10.2-SNAPSHOT</version -->
+				<configuration>
+					<notimestamp>true</notimestamp>
+					<!-- Exclude UIMA types and internal API -->
+					<excludePackageNames>*.type:*.internal.*</excludePackageNames>
+					<sourceFileExcludes>
+						<exclude>**/*_Type.java</exclude>
+					</sourceFileExcludes>
+					<tags>
+						<tag>
+							<name>generated</name>
+							<placement>X</placement>
+						</tag>
+						<tag>
+							<name>ordered</name>
+							<placement>X</placement>
+						</tag>
+						<tag>
+							<name>modifiable</name>
+							<placement>X</placement>
+						</tag>
+					</tags>
+               	</configuration>
+			</plugin>
+		</plugins>
 	</build>
 	<distributionManagement>
 		<repository>

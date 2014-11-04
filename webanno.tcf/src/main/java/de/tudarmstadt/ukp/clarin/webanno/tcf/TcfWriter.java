@@ -34,10 +34,9 @@ import java.util.Map;
 
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
+import org.apache.uima.fit.descriptor.TypeCapability;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
-import org.apache.uima.resource.ResourceInitializationException;
-
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
 import de.tudarmstadt.ukp.dkpro.core.api.io.JCasFileWriter_ImplBase;
@@ -71,6 +70,16 @@ import eu.clarin.weblicht.wlfxb.xb.WLData;
  * @author Seid Muhie Yimam
  * @author Richard Eckart de Castilho
  */
+@TypeCapability(inputs = { 
+        "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData",
+        "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence",
+        "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token",
+        "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity",
+        "de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS",
+        "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma",
+        "de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain",
+        "de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink",
+        "de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency" })
 public class TcfWriter
     extends JCasFileWriter_ImplBase
 {
@@ -168,8 +177,16 @@ public class TcfWriter
 
     /**
      * Create TCF File from scratch
+     * 
+     * @param aJCas
+     *            the JCas.
+     * @param aOs
+     *            the output stream.
+     * @throws WLFormatException
+     *             if a TCF problem occurs.
      */
-    public void casToTcfWriter(JCas aJCas, OutputStream aOs) throws WLFormatException
+    public void casToTcfWriter(JCas aJCas, OutputStream aOs)
+        throws WLFormatException
     {
         // create TextCorpus object, specifying its language from the aJcas Object
         TextCorpusStored textCorpus = new TextCorpusStored(aJCas.getDocumentLanguage());
@@ -191,9 +208,13 @@ public class TcfWriter
      *            the TCF file with an existing annotation layers
      * @param aJCas
      *            an annotated CAS object
+     * @param aOs
+     *            the output stream.
+     * @throws WLFormatException
+     *             if a TCF problem occurs.
      */
     public void casToTcfWriter(InputStream aIs, JCas aJCas, OutputStream aOs)
-        throws ResourceInitializationException, AnalysisEngineProcessException, WLFormatException
+        throws WLFormatException
     {
         // If these layers are present in the TCF file, we use them from there, otherwise
         // we generate them

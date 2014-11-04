@@ -40,6 +40,10 @@ public class DaoUtils
      * While exporting annotation documents, some of the writers generate multiple outputs, e.g. a
      * type system file in addition to the annotation data. This method generates a zip file if the
      * exported file do contain multiple file output
+     * 
+     * @param srcFolder source folder.
+     * @param destZipFile target folder.
+     * @throws IOException if an I/O error occurs.
      */
     public static void zipFolder(File srcFolder, File destZipFile)
         throws IOException

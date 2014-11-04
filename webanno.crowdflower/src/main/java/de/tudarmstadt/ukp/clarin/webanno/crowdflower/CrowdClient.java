@@ -81,7 +81,7 @@ public class CrowdClient implements Serializable
 
     /**
      * This sets the API key to be used with Crowdflower. This has to be set to a valid key prior to any other requests to the API.
-     * @param apiKey
+     * @param apiKey the key.
      */
     public void setApiKey(String apiKey)
     {

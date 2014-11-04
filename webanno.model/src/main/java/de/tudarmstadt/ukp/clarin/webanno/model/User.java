@@ -46,7 +46,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.support.spring.ApplicationContext
  * @author Richard Eckart de Castilho
  * @see <a
  *      href="http://static.springsource.org/spring-security/site/docs/3.0.x/reference/appendix-schema.html">Spring
- *      standard schema</a>.
+ *      standard schema</a>
  */
 @Entity
 @Table(name = "users")

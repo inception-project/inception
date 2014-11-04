@@ -53,7 +53,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  * Input Files: <br>
  * 1 Heutzutage heutzutage ADV _ _ 2 ADV _ _ <br>
  * Columns are separated by a TAB character and sentences are separated by a blank new line see the
- * {@link WebannoTsvReader#setAnnotations(InputStream, String, StringBuilder, Map, Map, Map, Map, Map, Map, Map, List)}
+ * {@link WebannoTsvReader#setAnnotations}
  *
  * @author Seid Muhie Yimam
  *

@@ -91,7 +91,8 @@ public class BratAjaxCasController
     /**
      * This Method, a generic Ajax call serves the purpose of returning expected export file types.
      * This only will be called for Larger annotation documents
-     *
+     * 
+     * @param aParameters the parameters.
      * @return export file type once in a while!!!
      */
     public StoreSvgResponse ajaxCall(MultiValueMap<String, String> aParameters)
@@ -111,6 +112,8 @@ public class BratAjaxCasController
 
     /**
      * a protocol which returns the logged in user
+     * 
+     * @return the response.
      */
     public WhoamiResponse whoami()
     {
@@ -121,6 +124,8 @@ public class BratAjaxCasController
     /**
      * a protocol to retunr the expected file type for annotation document exporting . Currently, it
      * returns only tcf file type where in the future svg and pdf types are to be supported
+     * 
+     * @return the response.
      */
     public StoreSvgResponse storeSVG()
     {
@@ -147,6 +152,8 @@ public class BratAjaxCasController
 
     /**
      * some BRAT UI global configurations such as {@code textBackgrounds}
+     * 
+     * @return the response.
      */
     public LoadConfResponse loadConf()
     {
@@ -158,6 +165,9 @@ public class BratAjaxCasController
      * includes List {@link Tag}s and {@link TagSet}s It includes information about span types
      * {@link POS}, {@link NamedEntity}, and {@link CoreferenceLink#getReferenceType()} and relation
      * types such as {@link Dependency}, {@link CoreferenceChain}
+     * 
+     * @param aAnnotationLayers the layers.
+     * @return the response.
      *
      * @see <a href="http://brat.nlplab.org/index.html">Brat</a>
      */
@@ -177,8 +187,16 @@ public class BratAjaxCasController
 
     /**
      * Returns the JSON representation of the document for brat visualizer
+     * 
+     * @param aBratAnnotatorModel the annotator model.
+     * @param aAnnotationOffsetStart the begin offset.
+     * @param aJCas the JCas.
+     * @param aIsGetDocument hum?
+     * @return the response
+     * @throws UIMAException if a conversion error occurs.
+     * @throws IOException if an I/O error occurs.
+     * @throws ClassNotFoundException if a DKPro Core reader/writer cannotbe loaded.
      */
-
     public GetDocumentResponse getDocumentResponse(BratAnnotatorModel aBratAnnotatorModel,
             int aAnnotationOffsetStart, JCas aJCas, boolean aIsGetDocument)
         throws UIMAException, IOException, ClassNotFoundException
@@ -191,6 +209,12 @@ public class BratAjaxCasController
 
     /**
      * wrap JSON responses to BRAT visualizer
+     * 
+     * @param aResponse the response.
+     * @param aBratAnnotatorModel the annotator model.
+     * @param aAnnotationOffsetStart the begin offset.
+     * @param aJCas the JCas.
+     * @param aIsGetDocument hum?
      */
     public static void render(GetDocumentResponse aResponse,
             BratAnnotatorModel aBratAnnotatorModel, int aAnnotationOffsetStart, JCas aJCas,
@@ -211,6 +235,10 @@ public class BratAjaxCasController
 
     /**
      * wrap JSON responses to BRAT visualizer
+     * 
+     * @param aResponse the response.
+     * @param aBModel the annotator model.
+     * @param aJCas the JCas.
      */
     public static void render(GetDocumentResponse aResponse, BratAnnotatorModel aBModel, JCas aJCas)
     {

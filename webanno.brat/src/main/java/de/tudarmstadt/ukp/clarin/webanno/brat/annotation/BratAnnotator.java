@@ -65,8 +65,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
- * Base class for displaying a BRAT visualization. Override methods {@link #getCollectionData()} and
- * {@link #getDocumentData()} to provide the actual data.
+ * Brat annotator component.
  *
  * @author Richard Eckart de Castilho
  * @author Seid Muhie Yimam
@@ -117,6 +116,8 @@ public class BratAnnotator
 
     /**
      * Data models for {@link BratAnnotator}
+     * 
+     * @param aModel the model.
      */
     public void setModel(IModel<BratAnnotatorModel> aModel)
     {
@@ -462,6 +463,8 @@ public class BratAnnotator
     
     /**
      * Reload {@link BratAnnotator} when the Correction/Curation page is opened
+     * 
+     * @param aResponse the response.
      */
     public void reloadContent(IHeaderResponse aResponse)
     {
@@ -471,6 +474,8 @@ public class BratAnnotator
 
     /**
      * Reload {@link BratAnnotator} when the Correction/Curation page is clicked for span/arc merge
+     * 
+     * @param aTarget the AJAX target.
      */
     public void reloadContent(AjaxRequestTarget aTarget)
     {

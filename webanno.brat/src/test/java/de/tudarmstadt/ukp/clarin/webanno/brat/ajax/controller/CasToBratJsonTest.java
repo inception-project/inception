@@ -79,7 +79,7 @@ public class CasToBratJsonTest
     /**
      * generate BRAT JSON for the collection informations
      *
-     * @throws IOException
+     * @throws IOException if an I/O error occurs.
      */
     @Test
     public void testGenerateBratJsonGetCollection()

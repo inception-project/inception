@@ -23,6 +23,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
  * Provide methods for user management such as create, update, list users
+ * 
  * @author Erik-Lân Do Dinh
  * @author Richard Eckart de Castilho
  * @author Seid Muhie Yimam
@@ -34,47 +35,59 @@ public interface UserDao
 {
     /**
      * Create a new {@link User}
+     * 
      * @param aUser
      */
-	void create(User aUser);
+    void create(User aUser);
 
-	/**
-	 * Update existing {@link User}
-	 * @param aUser
-	 * @return
-	 */
-	User update(User aUser);
+    /**
+     * Update existing {@link User}
+     * 
+     * @param aUser
+     *            the user.
+     * @return the user.
+     */
+    User update(User aUser);
 
-	/**
-	 * check if a user with this username exists
-	 * @param aUsername
-	 * @return
-	 */
-	boolean exists(final String aUsername);
+    /**
+     * check if a user with this username exists
+     * 
+     * @param aUsername
+     *            the username.
+     * @return if the user exists.
+     */
+    boolean exists(final String aUsername);
 
-	/**
-	 * delete a user using the username (currently disabled, 1.0.0)
-	 * @param aUsername
-	 * @return
-	 */
-	int delete(String aUsername);
+    /**
+     * delete a user using the username (currently disabled, 1.0.0)
+     * 
+     * @param aUsername
+     *            the username.
+     * @return how many users were deleted.
+     */
+    int delete(String aUsername);
 
-	/**
-	 * delete this {@link User}
-	 * @param aUser
-	 */
-	void delete(User aUser);
+    /**
+     * delete this {@link User}
+     * 
+     * @param aUser
+     *            the user.
+     */
+    void delete(User aUser);
 
-	/**
-	 * get a {@link User} using a username
-	 * @param aUsername
-	 * @return
-	 */
-	User get(String aUsername);
+    /**
+     * get a {@link User} using a username
+     * 
+     * @param aUsername
+     *            the username.
+     * @return the user.
+     */
+    User get(String aUsername);
 
-	/**
-	 * get all users in the system
-	 * @return
-	 */
-	List<User> list();
+    /**
+     * get all users in the system
+     * 
+     * @return the users.
+     */
+    List<User> list();
 }

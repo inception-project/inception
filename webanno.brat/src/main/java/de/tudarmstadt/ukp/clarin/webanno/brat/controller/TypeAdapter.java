@@ -44,12 +44,24 @@ public interface TypeAdapter
      * Add new annotation to the CAS using the MIRA prediction. This is different from the add
      * methods in the {@link TypeAdapter}s in such a way that the begin and end offsets are always
      * exact so that no need to re-compute
+     * 
+     * @param aJcas the JCas.
+     * @param feature the feature.
+     * @param labelValues the values.
+     * @throws BratAnnotationException
+     *             if the annotations could not be created/updated.
+     * @throws IOException if an I/O error occurs.
      */
     void automate(JCas aJcas, AnnotationFeature feature, List<String> labelValues)
         throws BratAnnotationException, IOException;
 
     /**
      * Update this feature with a new value
+     * 
+     * @param aJcas the JCas.
+     * @param feature the feature.
+     * @param address the annotation ID.
+     * @param value the value.
      */
     void updateFeature(JCas aJcas, AnnotationFeature feature, int address, String value);
 
@@ -59,6 +71,7 @@ public interface TypeAdapter
      *
      * @param aJcas
      *            The JCAS object containing annotations
+     * @param features the features.
      * @param aResponse
      *            A brat response containing annotations in brat protocol
      * @param aBratAnnotatorModel
@@ -71,34 +84,46 @@ public interface TypeAdapter
     
     /**
      * The ID of the type.
+     * 
+     * @return the ID.
      */
     long getTypeId();
 
     /**
      * Get the CAS type of the this {@link TypeAdapter}
+     * 
+     * @param cas the CAS.
+     * @return the type.
      */
     Type getAnnotationType(CAS cas);
 
     /**
      * Get the CAS type of the this {@link TypeAdapter}
+     * 
+     * @return the type.
      */
     String getAnnotationTypeName();
 
     /**
      * determine the type of Span annotation to be used to have arc annotations (as Origin and
      * target)
+     * 
+     * @return the attach feature name.
      */
     String getAttachFeatureName();
 
     /**
      * determine the type of Span annotation to be used to have arc annotations (as Origin and
      * target)
-     *
+     * 
+     * @return the attach type name.
      */
     String getAttachTypeName();
 
     /**
      * check if the annotation type is deletable
+     * 
+     * @return if the layer is deletable.
      */
     boolean isDeletable();
 

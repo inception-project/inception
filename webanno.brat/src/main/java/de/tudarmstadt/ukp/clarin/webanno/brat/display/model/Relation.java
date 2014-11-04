@@ -26,7 +26,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.BeanAsArraySerializer;
 
 /**
- * A relation between span annotations -> an arc annotation. Example
+ * A relation between span annotations -&gt; an arc annotation. Example
  * "relations":[["d_48420","SUBJ",[["Arg1","p_21346"],["Arg2","p_21341"]]],...
  *
  * @author Seid Muhie Yimam

@@ -974,8 +974,14 @@ public class MonitoringPage
      * computed for a user against every other users if and only if both users have finished the
      * same document <br>
      * The result is per {@link AnnotationLayer} for all {@link Tag}s
+     * 
+     * @param users the users.
+     * @param adapter the adapters.
+     * @param aLabelFeatureName the label feature name.
+     * @param finishedDocumentLists the finished documents.
+     * @param documentJCases the document JCases.
+     * @return the kappa matrix.
      */
-
     public static double[][] computeKappa(List<User> users, TypeAdapter adapter,
             String aLabelFeatureName, Map<User, List<SourceDocument>> finishedDocumentLists,
             Map<SourceDocument, Map<User, JCas>> documentJCases)

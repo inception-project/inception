@@ -37,6 +37,7 @@ public class WhoamiResponse
 
     /**
      * Get the user name.
+     * @return the username.
      */
     public String getUser()
     {
@@ -45,6 +46,7 @@ public class WhoamiResponse
 
     /**
      * Set the user name.
+     * @param aUser the username.
      */
     public void setUser(String aUser)
     {

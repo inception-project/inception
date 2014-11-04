@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.util;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -89,6 +88,14 @@ public class CuratorUtil
 
     /**
      * Get JCAS objects of annotator where {@link CasDiff} will run on it
+     * 
+     * @param aJCases the JCases.
+     * @param aAnnotationDocuments the annotation documents. 
+     * @param aRepository the repository.
+     * @param annotationSelectionByUsernameAndAddress selections by user.
+     * @throws UIMAException hum?
+     * @throws ClassNotFoundException hum?
+     * @throws IOException if an I/O error occurs.
      */
     public static void getCases(Map<String, JCas> aJCases,
             List<AnnotationDocument> aAnnotationDocuments, RepositoryService aRepository,
@@ -112,11 +119,19 @@ public class CuratorUtil
     /**
      * Set different attributes for {@link BratAnnotatorModel} that will be used for the
      * {@link CurationViewForSourceDocument}
+     * 
+     * @param aSourceDocument the source document.
+     * @param aRepository the repository.
+     * @param aCurationSegment the segment.
+     * @param aAnnotationService the annotation service.
+     * @return the model.
+     * @throws BeansException hum?
+     * @throws IOException if an I/O error occurs.
      */
     public static BratAnnotatorModel setBratAnnotatorModel(SourceDocument aSourceDocument,
             RepositoryService aRepository, CurationViewForSourceDocument aCurationSegment,
             AnnotationService aAnnotationService)
-        throws BeansException, FileNotFoundException, IOException
+        throws BeansException, IOException
     {
         User userLoggedIn = aRepository.getUser(SecurityContextHolder.getContext()
                 .getAuthentication().getName());
@@ -450,8 +465,21 @@ public class CuratorUtil
     }
 
     /**
+     * @param aTarget the AJAX target.
+     * @param aParent the parent.
+     * @param aCurationContainer the container. 
+     * @param aMergeVisualizer the annotator component.
+     * @param aRepository the repository.
+     * @param aAnnotationSelectionByUsernameAndAddress selections by user.
+     * @param aCurationSegment the segment.
+     * @param aAnnotationService the annotation service.
+     * @param aJsonConverter the JSON converter.
      * @return the correction document in automation/correction mode and the curation document in
      * curation mode.
+     * @throws UIMAException hum?
+     * @throws ClassNotFoundException hum?
+     * @throws IOException hum?
+     * @throws BratAnnotationException hum?
      */
     public static JCas updatePanel(
             AjaxRequestTarget aTarget,

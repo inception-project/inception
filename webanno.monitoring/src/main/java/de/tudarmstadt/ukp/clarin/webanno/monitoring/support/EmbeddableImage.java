@@ -22,13 +22,8 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.request.resource.AbstractResource;
 import org.apache.wicket.request.resource.ResourceReference;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-
 /**
- * A {@link Panel} to display embeddable immages inside the {@link MonitoringPage} user/annotation
- * document status table (such as {@link AnnotationDocumentState#IN_PROGRESS},
- * {@link SourceDocumentState#CURATION_FINISHED}...)
+ * A {@link Panel} to display embeddable immages inside a table.
  *
  * @author yimam
  *

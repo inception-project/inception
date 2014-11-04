@@ -45,8 +45,8 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.security.page.ManageUsersPage;
 
 /**
  * A home page for WebAnno: <br>
- * Based on the user's permission, it dispplays either {@link ProjectPage}, d {@link AnnotationPage}
- * , {@link CurationPage} or {@link monitoringPage }(since v.2.0)
+ * Based on the user's permission, it displays either {@link ProjectPage}, d {@link AnnotationPage}
+ * , {@link CurationPage} or {@link MonitoringPage }(since v.2.0)
  *
  * @author Richard Eckart de Castilho
  * @author Seid Muhie Yimam

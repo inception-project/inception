@@ -16,6 +16,6 @@
  * limitations under the License.
  ******************************************************************************/
 /**
- * Provides Classes that cumpute brat specific operations such as {@link de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController#getDocumentResponse(String, String)}....
+ * Provides Classes that compute brat specific operations.
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;

@@ -90,7 +90,7 @@ public class RemoteApiController
      *            in the formats.properties configuration file of WebAnno.
      * @param aFile
      *            a ZIP file containing the project data.
-     * @throws Exception
+     * @throws Exception if there was en error.
      */
     @RequestMapping(value = "/project", method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public @ResponseStatus(HttpStatus.NO_CONTENT)

@@ -239,6 +239,16 @@ public class CurationBuilder
     /**
      * Fetches the CAS that the user will be able to edit. In AUTOMATION/CORRECTION mode, this is 
      * the CAS for the CORRECTION_USER and in CURATION mode it is the CAS for the CURATION user.
+     * 
+     * @param aBratAnnotatorModel the model.
+     * @param aDocument the source document.
+     * @param jCases the JCases.
+     * @param randomAnnotationDocument an annotation document.
+     * @return the JCas.
+     * @throws UIMAException hum?
+     * @throws ClassNotFoundException hum?
+     * @throws IOException if an I/O error occurs.
+     * @throws BratAnnotationException hum?
      */
     public JCas getMergeCas(BratAnnotatorModel aBratAnnotatorModel, SourceDocument aDocument,
             Map<String, JCas> jCases, AnnotationDocument randomAnnotationDocument)
@@ -339,11 +349,18 @@ public class CurationBuilder
     /**
      * For the first time a curation page is opened, create a MergeCas that contains only agreeing
      * annotations Using the CAS of the curator user.
-     *
-     * @throws IOException
-     * @throws ClassNotFoundException
-     * @throws UIMAException
-     * @throws BratAnnotationException
+     * 
+     * @param mergeJCas the merge CAS.
+     * @param randomAnnotationDocument an annotation document. 
+     * @param jCases the JCases
+     * @param aBegin the begin offset.
+     * @param aEnd the end offset.
+     * @param aAnnotationLayers the layers.
+     * @return the JCas.
+     * @throws IOException if an I/O error occurs.
+     * @throws ClassNotFoundException hum?
+     * @throws UIMAException hum?
+     * @throws BratAnnotationException hum?
      */
     public JCas createCurationCas(JCas mergeJCas, AnnotationDocument randomAnnotationDocument,
             Map<String, JCas> jCases, int aBegin, int aEnd, List<AnnotationLayer> aAnnotationLayers)

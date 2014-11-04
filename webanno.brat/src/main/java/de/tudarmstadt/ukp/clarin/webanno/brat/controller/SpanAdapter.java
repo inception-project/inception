@@ -91,6 +91,8 @@ public class SpanAdapter
      * annotations. If this is set and a span is made across multiple tokens, then one annotation of
      * the specified type will be created for each token. If this is not set, a single annotation
      * covering all tokens is created.
+     * 
+     * @param aSingleTokenBehavior whether to enable the behavior.
      */
     public void setLockToTokenOffsets(boolean aSingleTokenBehavior)
     {
@@ -98,6 +100,7 @@ public class SpanAdapter
     }
 
     /**
+     * @return whether the behavior is enabled.
      * @see #setLockToTokenOffsets(boolean)
      */
     public boolean isLockToTokenOffsets()
@@ -271,9 +274,20 @@ public class SpanAdapter
 
     /**
      * Add new span annotation into the CAS and return the the id of the span annotation
-     *
+     * 
+     * @param aJcas
+     *            the JCas.
+     * @param aBegin
+     *            the begin offset.
+     * @param aEnd
+     *            the end offset.
+     * @param aFeature
+     *            the feature.
      * @param aValue
      *            the value of the annotation for the span
+     * @return the ID.
+     * @throws BratAnnotationException
+     *             if the annotation cannot be created/updated.
      */
     public Integer add(JCas aJcas, int aBegin, int aEnd, AnnotationFeature aFeature, String aValue)
         throws BratAnnotationException

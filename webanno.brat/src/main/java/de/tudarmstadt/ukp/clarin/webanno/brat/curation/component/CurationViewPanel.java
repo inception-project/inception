@@ -86,6 +86,8 @@ public class CurationViewPanel extends WebMarkupContainer {
 
     /**
      * Data models for {@link BratAnnotator}
+     * 
+     * @param aModel the model.
      */
     public void setModel(
             IModel<LinkedList<CurationUserSegmentForAnnotationDocument>> aModel) {

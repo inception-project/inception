@@ -46,7 +46,7 @@ public class BinaryCasWriter
      * Location to write the type system to. If this is not set, a file called typesystem.xml will
      * be written to the output path. If this is set, it is expected to be a file relative to the
      * current work directory or an absolute file. <br>
-     * If this parameter is set, the {@link #PARAM_COMPRESS} parameter has no effect on the type
+     * If this parameter is set, the {@link #PARAM_COMPRESSION} parameter has no effect on the type
      * system. Instead, if the type system file should be compressed or not is detected from the
      * file name extension (e.g. ".gz"). <br>
      * If this parameter is set, the type system and index repository are no longer serialized into

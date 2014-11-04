@@ -96,8 +96,9 @@ public class AnnotationFeature
     }
 
     /**
-     *
-     * the type of feature (string, integer, float, boolean, or a span type used as a label)
+     * Get the type of feature (string, integer, float, boolean, or a span type used as a label)
+     * 
+     * @return the type of feature.
      */
     public String getType()
     {
@@ -105,8 +106,9 @@ public class AnnotationFeature
     }
 
     /**
-     *
-     * the type of feature (string, integer, float, boolean, or a span type used as a label)
+     * The type of feature (string, integer, float, boolean, or a span type used as a label)
+     * 
+     * @param type the type of feature.
      */
     public void setType(String type)
     {
@@ -114,7 +116,9 @@ public class AnnotationFeature
     }
 
     /**
-     * the type with which the feature is associated.
+     * Get the layer with which the feature is associated.
+     * 
+     * @return the layer.
      */
     public AnnotationLayer getLayer()
     {
@@ -122,7 +126,9 @@ public class AnnotationFeature
     }
 
     /**
-     * the type with which the feature is associated.
+     * The layer with which the feature is associated.
+     * 
+     * @param layer the layer.
      */
     public void setLayer(AnnotationLayer layer)
     {
@@ -134,13 +140,18 @@ public class AnnotationFeature
         return project;
     }
 
+    /**
+     * @param project the project.
+     */
     public void setProject(Project project)
     {
         this.project = project;
     }
 
     /**
-     * the name of the feature as displayed in the UI.
+     * The name of the feature as displayed in the UI.
+     * 
+     * @return the name displayed in the UI.
      */
     public String getUiName()
     {
@@ -148,7 +159,9 @@ public class AnnotationFeature
     }
 
     /**
-     * the name of the feature as displayed in the UI.
+     * The name of the feature as displayed in the UI.
+     * 
+     * @param uiName the name displayed in the UI.
      */
     public void setUiName(String uiName)
     {
@@ -156,18 +169,19 @@ public class AnnotationFeature
     }
 
     /**
-     *
-     * a description of the feature.
+     * A description of the feature.
+     * 
+     * @return the description.
      */
-
     public String getDescription()
     {
         return description;
     }
 
     /**
-     *
-     * a description of the feature.
+     * A description of the feature.
+     * 
+     * @param description the description.
      */
     public void setDescription(String description)
     {
@@ -175,8 +189,9 @@ public class AnnotationFeature
     }
 
     /**
-     *
-     * whether the type is available in the UI (outside of the project settings)
+     * Whether the type is available in the UI (outside of the project settings)
+     * 
+     * @return if the layer is enabled.
      */
     public boolean isEnabled()
     {
@@ -184,8 +199,9 @@ public class AnnotationFeature
     }
 
     /**
-     *
-     * whether the type is available in the UI (outside of the project settings)
+     * Whether the type is available in the UI (outside of the project settings)
+     * 
+     * @param enabled if the layer is enabled.
      */
     public void setEnabled(boolean enabled)
     {
@@ -193,39 +209,52 @@ public class AnnotationFeature
     }
 
     /**
-     * the name of the feature in the UIMA type system.
+     * The name of the feature in the UIMA type system.
      *
+     * @return the UIMA type name.
      */
-
     public String getName()
     {
         return name;
     }
 
     /**
-     * the name of the feature in the UIMA type system.
-     *
+     * The name of the feature in the UIMA type system.
+     * 
+     * @param name the UIMA type name.
      */
     public void setName(String name)
     {
         this.name = name;
     }
 
+    /**
+     * @return if the feature value is rendered in the label.
+     */
     public boolean isVisible()
     {
         return visible;
     }
 
+    /**
+     * @param visible if the feature value is rendered in the label.
+     */
     public void setVisible(boolean visible)
     {
         this.visible = visible;
     }
 
+    /**
+     * @return the tagset.
+     */
     public TagSet getTagset()
     {
         return tagset;
     }
 
+    /**
+     * @param tagset the tagset.
+     */
     public void setTagset(TagSet tagset)
     {
         this.tagset = tagset;

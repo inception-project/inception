@@ -78,6 +78,11 @@ public final class TypeUtil
     }
     /**
      * Construct the label text used in the brat user interface.
+     * 
+     * @param aAdapter the adapter.
+     * @param aFs the annotation.
+     * @param aFeatures the features.
+     * @return the label.
      */
     public static String getBratLabelText(TypeAdapter aAdapter, AnnotationFS aFs,
             List<AnnotationFeature> aFeatures)
@@ -109,6 +114,8 @@ public final class TypeUtil
     }
 
     /**
+     * @param aBratTypeName the brat type name.
+     * @return the layer ID.
      * @see #getBratTypeName
      */
     public static long getLayerId(String aBratTypeName)

@@ -24,15 +24,11 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
-import org.apache.wicket.request.Response;
 import org.apache.wicket.request.handler.resource.ResourceStreamRequestHandler;
-import org.apache.wicket.request.http.WebResponse;
 import org.apache.wicket.request.resource.ContentDisposition;
 import org.apache.wicket.util.resource.AbstractResourceStream;
-import org.apache.wicket.util.resource.AbstractResourceStreamWriter;
 import org.apache.wicket.util.resource.IResourceStream;
 import org.apache.wicket.util.resource.ResourceStreamNotFoundException;
 
@@ -61,6 +57,9 @@ public class AJAXDownload
 
     /**
      * Call this method to initiate the download.
+     * 
+     * @param aTarget the AJAX target.
+     * @param aFileName the filename.
      */
     public void initiate(AjaxRequestTarget aTarget, String aFileName)
     {
@@ -76,6 +75,7 @@ public class AJAXDownload
         aTarget.appendJavaScript("setTimeout(\"window.location.href='" + url + "'\", 100);");
     }
 
+    @Override
     public void onRequest()
     {
         ResourceStreamRequestHandler handler = new ResourceStreamRequestHandler(
@@ -88,7 +88,7 @@ public class AJAXDownload
      * Override this method for a file name which will let the browser prompt with a save/open
      * dialog.
      * 
-     * @see ResourceStreamRequestTarget#getFileName()
+     * @return the filename.
      */
     protected String getFileName()
     {
@@ -97,6 +97,8 @@ public class AJAXDownload
 
     /**
      * Hook method providing the actual resource stream.
+     * 
+     * @return the stream.
      */
     protected IResourceStream getResourceStream()
     {
@@ -104,6 +106,7 @@ public class AJAXDownload
         IResourceStream resStream = new AbstractResourceStream() {
             private static final long serialVersionUID = 1L;
             InputStream inStream;
+            @Override
             public InputStream getInputStream() throws ResourceStreamNotFoundException{
                 try {
                     inStream =  new FileInputStream(fileName);
@@ -111,6 +114,7 @@ public class AJAXDownload
                 }
                 return inStream;
             }
+            @Override
             public void close() throws IOException {
                 inStream.close();
                 inStream = null;

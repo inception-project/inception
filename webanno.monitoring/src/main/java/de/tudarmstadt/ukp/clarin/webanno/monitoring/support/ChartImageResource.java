@@ -26,7 +26,7 @@ import org.jfree.chart.JFreeChart;
 
 /**
  * A base class for the dynamically generated chart Images for percenatage and number of document
- * finished charts in {@link MonitoringPage}
+ * finished charts.
  *
  * @author Seid Muhie Yimam
  *

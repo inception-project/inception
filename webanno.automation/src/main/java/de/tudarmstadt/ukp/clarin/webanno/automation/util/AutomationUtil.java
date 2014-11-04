@@ -576,6 +576,11 @@ public class AutomationUtil
      * auto-predicted with the other layers. Example, if the train layer is Named Entity and POS
      * layer is used as additional feature, the training document should be predicted using the POS
      * layer documents for POS annotation
+     * 
+     * @param aTemplate the template.
+     * @param aRepository the repository.
+     * @throws IOException hum?
+     * @throws ClassNotFoundException hum?
      */
     public static void otherFeatureClassifiers(MiraTemplate aTemplate, RepositoryService aRepository)
         throws IOException, ClassNotFoundException
@@ -638,8 +643,12 @@ public class AutomationUtil
 
     /**
      * Classifier for an external tab-sep file (token TAB feature)
+     * 
+     * @param aTemplate the template.
+     * @param aRepository the repository.
+     * @throws IOException hum?
+     * @throws ClassNotFoundException hum?
      */
-
     public static void tabSepClassifiers(MiraTemplate aTemplate, RepositoryService aRepository)
         throws IOException, ClassNotFoundException
     {
@@ -855,12 +864,19 @@ public class AutomationUtil
 
     /**
      * Based on the other layer, predict features for the training document
+     * @param aTemplate the template.
+     * @param aRepository the repository.
+     * @return the prediction.
+     * @throws UIMAException hum?
+     * @throws ClassNotFoundException hum?
+     * @throws IOException hum?
+     * @throws BratAnnotationException hum?
      *
-     * @throws AutomationException
+     * @throws AutomationException if an error occurs.
      */
     public static String generateFinalClassifier(MiraTemplate aTemplate,
             RepositoryService aRepository)
-        throws CASException, UIMAException, ClassNotFoundException, IOException,
+        throws UIMAException, ClassNotFoundException, IOException,
         BratAnnotationException, AutomationException
     {
         int frequency = 2;
@@ -1083,12 +1099,17 @@ public class AutomationUtil
 
     /**
      * Based on the other layer, add features for the prediction document
-     *
-     * @throws AutomationException
+     * @param aTemplate the template.
+     * @param aRepository the repository.
+     * @throws UIMAException hum?
+     * @throws ClassNotFoundException hum?
+     * @throws IOException hum?
+     * @throws BratAnnotationException hum?
+     * @throws AutomationException hum?
      */
     public static void addOtherFeatureToPredictDocument(MiraTemplate aTemplate,
             RepositoryService aRepository)
-        throws CASException, UIMAException, ClassNotFoundException, IOException,
+        throws UIMAException, ClassNotFoundException, IOException,
         BratAnnotationException, AutomationException
     {
         AnnotationFeature layerFeature = aTemplate.getTrainFeature();

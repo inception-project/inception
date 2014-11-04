@@ -36,7 +36,7 @@ public static final String JSON_FORMAT = "JSON";
  * tagSetName   TAGSETNAME
  * tagSetDescription    DESCRIPTION
  * ...
- * TAG1 <optional>TAG1Description
+ * TAG1 &lt;optional&gt;TAG1Description
  * ....
  * </pre>
  */

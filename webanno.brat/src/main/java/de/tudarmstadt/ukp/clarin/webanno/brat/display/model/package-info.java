@@ -16,6 +16,6 @@
  * limitations under the License.
  ******************************************************************************/
 /**
- * Provides Model classes used to display Brat annotation objects such as {@link de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse#addEntity(Entity)....}
+ * Provides Model classes used to display Brat annotation objects.
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.display.model;

@@ -176,9 +176,9 @@ public class NamedEntityTaskManager
      * won't have any data items
      *
      * @param template - template as JSON string to use for the new job
-     * @return
-     * @throws JsonProcessingException
-     * @throws IOException
+     * @return the job.
+     * @throws JsonProcessingException hum?
+     * @throws IOException hum?s
      */
     public CrowdJob createJob(String template)
         throws JsonProcessingException, IOException
@@ -193,9 +193,9 @@ public class NamedEntityTaskManager
      * Helper function to concatenate a list of strings with the supplied separator
      * {"item","item3","test"} -> "item,item3,test"
      *
-     * @param words
-     * @param separator
-     * @return string
+     * @param words the words.
+     * @param separator the separator.
+     * @return string the result.
      */
     private static String concatWithSeparator(Collection<String> words, String separator)
     {
@@ -220,11 +220,9 @@ public class NamedEntityTaskManager
      *            token numbers can be send to Crowdflower
      * @param generateGold - whether gold data should be produced or normal data
      * @param limit - limit number of data items to this number
-     * @return Vector<NamedEntityTask1Data>, representing a crowdflower task1 data upload. It can be directly mapped to JSON.
-     * @throws CrowdException
-     *
+     * @return {@code List<NamedEntityTask1Data>}, representing a crowdflower task1 data upload. It can be directly mapped to JSON.
+     * @throws CrowdException hum?
      */
-
     public List<NamedEntityTask1Data> generateTask1Data(List<JCas> documentsJCas, int goldOffset,
             boolean generateGold, int limit)
         throws CrowdException
@@ -496,10 +494,10 @@ public class NamedEntityTaskManager
      * @param goldsJCas - gold data which should be used
      * @param useSents - number of sentences to use
      * @param useGoldSents - number of gold sentences to use
-     * @return
-     * @throws JsonProcessingException
-     * @throws IOException
-     * @throws Exception
+     * @return the job ID.
+     * @throws JsonProcessingException hum?
+     * @throws IOException hum?
+     * @throws Exception hum?
      */
 
     public String uploadNewNERTask1(String template, List<JCas> documentsJCas,
@@ -741,16 +739,15 @@ public class NamedEntityTaskManager
      * Uploads a new task2 to Crowdflower, producing all data entirely of the raw judgments file
      * retrieved from a task1 ID.
      *
-     * @param template
-     * @param jobID1
-     * @param documentsJCas
-     * @param goldsJCas
+     * @param template the template.
+     * @param jobID1 the job ID.
+     * @param documentsJCas the documents.
+     * @param goldsJCas the gold documents.
      * @return Crowdflower ID as string of the new task
-     * @throws JsonProcessingException
-     * @throws IOException
-     * @throws CrowdException
+     * @throws JsonProcessingException hum?
+     * @throws IOException hum?
+     * @throws CrowdException hum?
      */
-
     public String uploadNewNERTask2(String template, String jobID1, List<JCas> documentsJCas,
             List<JCas> goldsJCas)
         throws JsonProcessingException, IOException, CrowdException
@@ -945,12 +942,11 @@ public class NamedEntityTaskManager
     /**
      * Aggregates and sets final judgments in the JCases provided by documentsJCas.
      *
-     * @param jobID2
-     * @param documentsJCas
-     * @throws Exception
-     * @throws IOException
-     * @throws UnsupportedEncodingException
-     * @throws CrowdException
+     * @param jobID2 the job ID.
+     * @param documentsJCas the documents.
+     * @throws IOException hum?
+     * @throws UnsupportedEncodingException hum?
+     * @throws CrowdException hum?
      */
 
     public void setCrowdJobAnnotationsInDocs(String jobID2, List<JCas> documentsJCas)

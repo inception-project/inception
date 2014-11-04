@@ -50,8 +50,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
- * Modal Window to configure {@link BratAnnotator#setAnnotationLayers(ArrayList),
- * BratAnnotator#setWindowSize(int)...}
+ * Modal Window to configure layers, window size, etc.
  *
  * @author Seid Muhie Yimam
  * @author Richard Eckart de Castilho
