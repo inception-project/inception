@@ -606,6 +606,9 @@ var VisualizerUI = (function($, window, undefined) {
               };
               
             var init = function() {
+// WEBANNO EXTENSION BEGIN
+// We do not use the brat forms or messaging system
+/*
                     dispatcher.post('initForm', [viewspanForm,
                     {
                         width: 760,
@@ -627,6 +630,8 @@ var VisualizerUI = (function($, window, undefined) {
                     }, 
                     { keep: true }
                   ]);
+*/
+// WEBANNO EXTENSION END
                 };
             var spanAndAttributeTypesLoaded = function(_spanTypes, _entityAttributeTypes, _eventAttributeTypes, _relationTypesHash) {
                     spanTypes = _spanTypes;
