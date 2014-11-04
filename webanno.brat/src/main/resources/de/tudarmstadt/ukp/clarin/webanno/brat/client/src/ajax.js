@@ -31,8 +31,14 @@ var Ajax = (function($, window, undefined) {
           $.param(data), 
           // success
           function() {
-          var response = Wicket.$(dispatcher.wicketId).temp;
-          delete Wicket.$(dispatcher.wicketId).temp;
+            var response = Wicket.$(dispatcher.wicketId).temp;
+            delete Wicket.$(dispatcher.wicketId).temp;
+            if (response === undefined) {
+                console.log('Server response did not contain brat data - ignoring');
+            	// This is likely a wicket ajax-redirect and nothing that relates to brat.
+            	// We simply ignore this.
+                return;
+            }
 // WEBANNO EXTENSION END
             pending--;
             // If no exception is set, verify the server results
