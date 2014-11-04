@@ -40,7 +40,6 @@
 		<wicket.version>1.5.10</wicket.version>
 		<wicket.odlabs.version>1.5.8</wicket.odlabs.version>
 		<hibernate.version>4.1.4.Final</hibernate.version>
-		<timestamp>${maven.build.timestamp}</timestamp>
 		<maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
 	<dkpro.version>1.5.0</dkpro.version>
 	</properties>
@@ -382,6 +381,7 @@
 					</execution>
 				</executions>
 				<configuration>
+					<timestampFormat>{0,date,yyyy-MM-dd HH:mm:ss}</timestampFormat>
 					<doCheck>false</doCheck>
 					<doUpdate>false</doUpdate>
 					<providerImplementations>
