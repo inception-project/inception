@@ -112,7 +112,7 @@ public abstract class ApplicationPageBase
 
         Properties props = getVersionProperties();
         String versionString = props.getProperty("version") + " (" + props.getProperty("timestamp")
-                + ")";
+                + ", build " + props.getProperty("buildNumber") + ")";
         versionLabel = new Label("version", versionString);
 
         embeddedDbWarning = new Label("embeddedDbWarning",
