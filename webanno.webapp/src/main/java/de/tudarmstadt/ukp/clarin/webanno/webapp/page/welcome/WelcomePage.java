@@ -34,7 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.monitoring.page.MonitoringPage;
 import de.tudarmstadt.ukp.clarin.webanno.project.page.ProjectPage;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.home.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.automation.AutomationPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.correction.CorrectionPage;
