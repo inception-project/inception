@@ -39,12 +39,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.home.security.LogoutPanel;
 
-/**
- *  The @WiQueryUIPlugin annotation and that the class implements IWiQueryPlugin makes sure that the
- * JQuery stylesheet is always present. - REC 2012-02-28
- * 
- * @author Richard Eckart de Castilho
- */
 public abstract class ApplicationPageBase
     extends WebPage
 {

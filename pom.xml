@@ -166,13 +166,6 @@
 				<scope>import</scope>
 			</dependency>
 			<dependency>
-				<groupId>org.odlabs.wiquery</groupId>
-				<artifactId>wiquery-parent</artifactId>
-				<version>${wicket.odlabs.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-			<dependency>
 				<groupId>com.googlecode.wicket-jquery-ui</groupId>
 				<artifactId>jquery-ui-core</artifactId>
 				<version>1.4.1</version>
