@@ -72,15 +72,6 @@
 			<artifactId>wicket-request</artifactId>
 		</dependency>
 
-		<dependency>
-			<groupId>org.odlabs.wiquery</groupId>
-			<artifactId>wiquery-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.odlabs.wiquery</groupId>
-			<artifactId>wiquery-jquery-ui</artifactId>
-		</dependency>
-
 		<!-- JUNIT DEPENDENCY FOR TESTING -->
 		<dependency>
 			<groupId>junit</groupId>

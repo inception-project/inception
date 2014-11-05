@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.webapp;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.Session;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebApplication;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
 import org.apache.wicket.markup.html.WebPage;
@@ -26,9 +25,6 @@ import org.apache.wicket.request.resource.CssResourceReference;
 import org.apache.wicket.request.resource.JavaScriptResourceReference;
 import org.apache.wicket.request.resource.ResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringComponentInjector;
-import org.odlabs.wiquery.core.WiQuerySettings;
-import org.odlabs.wiquery.ui.themes.IThemableApplication;
-import org.odlabs.wiquery.ui.themes.WiQueryCoreThemeResourceReference;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.WebAnnoResources;
 import de.tudarmstadt.ukp.clarin.webanno.monitoring.page.MonitoringPage;
@@ -51,24 +47,10 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.security.page.ManageUsersPage;
  */
 public class WicketApplication
     extends AuthenticatedWebApplication
-    implements IThemableApplication
 {
     boolean isInitialized = false;
 
     private ResourceReference theme;
-
-    public WicketApplication()
-    {
-        theme = new WiQueryCoreThemeResourceReference("redlion");
-    }
-
-    @Override
-    protected void validateInit()
-    {
-        super.validateInit();
-        final WiQuerySettings wqs = WiQuerySettings.get();
-        wqs.setAutoImportJQueryResource(false);
-    }
 
     @Override
     public void init()
@@ -178,16 +160,5 @@ public class WicketApplication
     protected Class<? extends AuthenticatedWebSession> getWebSessionClass()
     {
         return SpringAuthenticatedWebSession.class;
-    }
-
-    public void setTheme(ResourceReference theme)
-    {
-        this.theme = theme;
-    }
-
-    @Override
-    public ResourceReference getTheme(Session session)
-    {
-        return theme;
     }
 }

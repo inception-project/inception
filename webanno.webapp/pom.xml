@@ -111,15 +111,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.odlabs.wiquery</groupId>
-			<artifactId>wiquery-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.odlabs.wiquery</groupId>
-			<artifactId>wiquery-jquery-ui</artifactId>
-		</dependency>
-		
-		<dependency>
 			<groupId>org.wicketstuff</groupId>
 			<artifactId>wicketstuff-input-events</artifactId>
 			<version>1.5.8.1</version>

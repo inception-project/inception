@@ -46,7 +46,6 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.odlabs.wiquery.ui.resizable.ResizableBehavior;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
@@ -169,7 +168,7 @@ public class OpenModalWindowPanel
                     selectedDocument = null;
                     aTarget.add(documentSelection.setOutputMarkupId(true));
                 }
-            }).add(new ResizableBehavior());
+            });
 
             /*
              * add(new StaticImage("icon", new
@@ -330,7 +329,7 @@ public class OpenModalWindowPanel
                         modalWindow.close(aTarget);
                     }
                 }
-            }).add(new ResizableBehavior());
+            });
         }
     }
 
