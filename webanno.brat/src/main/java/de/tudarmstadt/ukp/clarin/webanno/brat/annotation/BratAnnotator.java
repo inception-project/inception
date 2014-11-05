@@ -33,7 +33,9 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow.CloseButtonCallback;
-import org.apache.wicket.markup.html.IHeaderResponse;
+import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.JavaScriptHeaderItem;
+import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -43,19 +45,36 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.codehaus.jackson.JsonGenerator;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 
+import com.googlecode.wicket.jquery.ui.resource.JQueryUIResourceReference;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.OffsetsList;
+import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcOpenDialogResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.LoadConfResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcOpenDialogResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanOpenDialogResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.StoreSvgResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.WhoamiResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAjaxResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAnnotationLogResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAnnotatorUiResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratConfigurationResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratDispatcherResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratSpinnerResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratUrlMonitorResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratUtilResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerUiResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQueryJsonResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySprintfResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgDomResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.WebfontResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -189,10 +208,10 @@ public class BratAnnotator
                 Object result = null;
                 BratAjaxCasController controller = new BratAjaxCasController(repository,
                         annotationService);
+                
+                final String action = request.getParameterValue(PARAM_ACTION).toString();
 
                 try {
-                    final String action = request.getParameterValue(PARAM_ACTION).toString();
-                    
                     LOG.info("AJAX-RPC CALLED: [" + action + "]");
                     
                     if (action.equals(WhoamiResponse.COMMAND)) {
@@ -274,15 +293,23 @@ public class BratAnnotator
                     else if (action.equals(LoadConfResponse.COMMAND)) {
                         result = controller.loadConf();
                     }
-                    else if (action.equals(GetCollectionInformationResponse.COMMAND)
-                            && getModelObject().getProject() != null) {
-                        result = controller.getCollectionInformation(getModelObject()
-                                .getAnnotationLayers());
-
+                    else if (action.equals(GetCollectionInformationResponse.COMMAND)) {
+                        if (getModelObject().getProject() != null) {
+                            result = controller.getCollectionInformation(getModelObject()
+                                    .getAnnotationLayers());
+                        }
+                        else {
+                            result = new GetCollectionInformationResponse();
+                        }
                     }
                     else if (action.equals(GetDocumentResponse.COMMAND)) {
-                        result = controller.getDocumentResponse(getModelObject(), 0, getJCas(),
-                                true);
+                        if (getModelObject().getProject() != null) {
+                            result = controller.getDocumentResponse(getModelObject(), 0, getJCas(),
+                                    true);
+                        }
+                        else {
+                            result = new GetDocumentResponse();
+                        }
                     }
                     
                     LOG.info("AJAX-RPC DONE: [" + action + "]");
@@ -298,13 +325,17 @@ public class BratAnnotator
                 }
 
                 // Serialize updated document to JSON
-                String json = toJson(result);
-
-                // Since we cannot pass the JSON directly to Brat, we attach it to the HTML element
-                // into which BRAT renders the SVG. In our modified ajax.js, we pick it up from
-                // there and then pass it on to BRAT to do the rendering.
-                aTarget.prependJavaScript("Wicket.$('" + vis.getMarkupId() + "').temp = " + json
-                        + ";");
+                if (result == null) {
+                    LOG.warn("AJAX-RPC: Action [" + action + "] produced no result!");
+                }
+                else {
+                    String json = toJson(result);
+                    // Since we cannot pass the JSON directly to Brat, we attach it to the HTML
+                    // element into which BRAT renders the SVG. In our modified ajax.js, we pick it
+                    // up from there and then pass it on to BRAT to do the rendering.
+                    aTarget.prependJavaScript("Wicket.$('" + vis.getMarkupId() + "').temp = "
+                            + json + ";");
+                }
                 aTarget.add(feedbackPanel);
             }
         };
@@ -313,10 +344,17 @@ public class BratAnnotator
         add(controller);
 
     }
+    
+    @Override
+    protected void onConfigure()
+    {
+        super.onConfigure();
+        setVisible(getModelObject() != null && getModelObject().getProject() != null);
+    }
+    
     /**
      * opens the {@link SpanAnnotationModalWindowPage} in a {@link ModalWindow}
      */
-
     private void openSpanAnnotationDialog(final ModalWindow openAnnotationDialog,
             AjaxRequestTarget aTarget, final int aBeginOffset, final int aEndOffset,
             int aSelectedSpanId)
@@ -417,25 +455,48 @@ public class BratAnnotator
     {
         super.renderHead(aResponse);
 
+        // Libraries
+        aResponse.render(JavaScriptHeaderItem.forReference(JQueryUIResourceReference.get()));
+        aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgResourceReference.get()));
+        aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgDomResourceReference.get()));
+        aResponse.render(JavaScriptHeaderItem.forReference(JQuerySprintfResourceReference.get()));
+        aResponse.render(JavaScriptHeaderItem.forReference(JQueryJsonResourceReference.get()));
+        aResponse.render(JavaScriptHeaderItem.forReference(WebfontResourceReference.get()));
+
+        // BRAT helpers
+        aResponse.render(JavaScriptHeaderItem.forReference(BratConfigurationResourceReference.get()));
+        aResponse.render(JavaScriptHeaderItem.forReference(BratUtilResourceReference.get()));
+        aResponse.render(JavaScriptHeaderItem.forReference(BratAnnotationLogResourceReference.get()));
+        
+        // BRAT modules
+        aResponse.render(JavaScriptHeaderItem.forReference(BratDispatcherResourceReference.get()));
+        aResponse.render(JavaScriptHeaderItem.forReference(BratUrlMonitorResourceReference.get()));
+        aResponse.render(JavaScriptHeaderItem.forReference(BratAjaxResourceReference.get()));
+        aResponse.render(JavaScriptHeaderItem.forReference(BratVisualizerResourceReference.get()));
+        aResponse.render(JavaScriptHeaderItem.forReference(BratVisualizerUiResourceReference.get()));
+        aResponse.render(JavaScriptHeaderItem.forReference(BratAnnotatorUiResourceReference.get()));
+//        aResponse.render(JavaScriptHeaderItem.forReference(BratSpinnerResourceReference.get()));
+        
         StringBuilder script = new StringBuilder();
         // REC 2014-10-18 - For a reason that I do not understand, the dispatcher cannot be a local
         // variable. If I put a "var" here, then communication fails with messages such as
         // "action 'openSpanDialog' returned result of action 'loadConf'" in the browsers's JS 
         // console.
-        script.append("dispatcher = new Dispatcher();");
+        script.append("var dispatcher = new Dispatcher();");
         // Each visualizer talks to its own Wicket component instance
         script.append("dispatcher.ajaxUrl = '" + controller.getCallbackUrl() + "'; ");
         // We attach the JSON send back from the server to this HTML element
         // because we cannot directly pass it from Wicket to the caller in ajax.js.
         script.append("dispatcher.wicketId = '" + vis.getMarkupId() + "'; ");
         script.append("var ajax = new Ajax(dispatcher);");
-        script.append("var ajax_" + vis.getMarkupId() + " = ajax;");
+//        script.append("var ajax_" + vis.getMarkupId() + " = ajax;");
         script.append("var visualizer = new Visualizer(dispatcher, '" + vis.getMarkupId() + "');");
         script.append("var visualizerUI = new VisualizerUI(dispatcher, visualizer.svg);");
         script.append("var annotatorUI = new AnnotatorUI(dispatcher, visualizer.svg);");
-        script.append("var spinner = new Spinner(dispatcher, '#spinner');");
+//        script.append("var spinner = new Spinner(dispatcher, '#spinner');");
         script.append("var logger = new AnnotationLog(dispatcher);");
         script.append("dispatcher.post('init');");
+        script.append("Wicket.$('" + vis.getMarkupId() + "').dispatcher = dispatcher;");
         
         // Trigger immediate reload in ANNOTATION mode to avoid using url_monitor.js which causes
         // timing problems on Chrome (sometimes not loading the content). However, in the other
@@ -444,7 +505,7 @@ public class BratAnnotator
             script.append(reloadScript());
         }
 
-        aResponse.renderOnLoadJavaScript("\n" + script.toString());
+        aResponse.render(OnLoadHeaderItem.forScript("\n" + script.toString()));
     }
 
     private String reloadScript()
@@ -452,12 +513,14 @@ public class BratAnnotator
         StringBuilder script = new StringBuilder();
         // This triggers the loading of the metadata (colors, types, etc.)
         // Cf. BratAjaxConfiguration.buildEntityTypes(List<AnnotationLayer>, AnnotationService)
-        script.append("dispatcher.post('ajax', [{action: 'getCollectionInformation',collection: '"
+        script.append("Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('ajax', "
+                + "[{action: 'getCollectionInformation',collection: '"
                 + getCollection() + "'}, 'collectionLoaded', {collection: '" + getCollection()
                 + "',keep: true}]);");
 
         // This one triggers the loading of the actual document data
-        script.append("dispatcher.post('current', ['" + getCollection() + "', '1234', {}, true]);");
+        script.append("Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('current', "
+                + "['" + getCollection() + "', '1234', {}, true]);");
         return script.toString();
     }
     
@@ -468,8 +531,8 @@ public class BratAnnotator
      */
     public void reloadContent(IHeaderResponse aResponse)
     {
-        debug("Requesting reload of brat annotator with id ["+vis.getOutputMarkupId()+"]");
-        aResponse.renderOnLoadJavaScript(reloadScript());
+        // debug("Requesting reload of brat annotator with id ["+vis.getOutputMarkupId()+"]");
+        aResponse.render(OnLoadHeaderItem.forScript(reloadScript()));
     }
 
     /**
@@ -534,10 +597,6 @@ public class BratAnnotator
         try {
             jsonGenerator = jsonConverter.getObjectMapper().getJsonFactory()
                     .createJsonGenerator(out);
-            if (result == null) {
-                result = "test";
-            }
-
             jsonGenerator.writeObject(result);
         }
         catch (IOException e) {

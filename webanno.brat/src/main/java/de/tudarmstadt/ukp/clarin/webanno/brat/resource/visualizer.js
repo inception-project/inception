@@ -272,6 +272,13 @@ var Visualizer = (function($, window, undefined) {
           sourceData[attr] = [];
         }
       });
+      
+// BEGIN WEBANNO EXTENSION
+// Avoid exception due to undefined text in tokenise and sentenceSplit
+      if (sourceData.text === undefined) {
+    	  sourceData.text = "";
+      }
+// END WEBANNO EXTENSION
 
       // If we lack sentence offsets we fall back on naive sentence splitting
       if (sourceData.sentence_offsets === undefined) {
@@ -388,7 +395,12 @@ var Visualizer = (function($, window, undefined) {
 
       // due to silly Chrome bug, I have to make it pay attention
       var forceRedraw = function() {
+// WEBANNO EXTENSION BEGIN
+// $.browser is no longer supported in jQuery 
+/*
         if (!$.browser.chrome) return; // not needed
+*/
+// WEBANNO EXTENSION END
         $svg.css('margin-bottom', 1);
         setTimeout(function() { $svg.css('margin-bottom', 0); }, 0);
       }

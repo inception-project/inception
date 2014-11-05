@@ -113,11 +113,11 @@ public class CurationViewPanel extends WebMarkupContainer {
             IModel<LinkedList<CurationUserSegmentForAnnotationDocument>> aModel) {
         super(id, aModel);
 
-        final FeedbackPanel feedbackPanel = new FeedbackPanel("feedbackPanel");
-        feedbackPanel.setOutputMarkupId(true);
-        feedbackPanel.add(new AttributeModifier("class", "info"));
-        feedbackPanel.add(new AttributeModifier("class", "error"));
-        add(feedbackPanel);
+//        final FeedbackPanel feedbackPanel = new FeedbackPanel("feedbackPanel");
+//        feedbackPanel.setOutputMarkupId(true);
+//        feedbackPanel.add(new AttributeModifier("class", "info"));
+//        feedbackPanel.add(new AttributeModifier("class", "error"));
+//        add(feedbackPanel);
 
         // update list of brat embeddings
         sentenceListView = new ListView<CurationUserSegmentForAnnotationDocument>(

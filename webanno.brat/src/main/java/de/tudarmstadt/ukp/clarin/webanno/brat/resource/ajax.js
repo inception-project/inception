@@ -26,13 +26,18 @@ var Ajax = (function($, window, undefined) {
         }
 
 // WEBANNO EXTENSION BEGIN
-        wicketAjaxPost(
-          dispatcher.ajaxUrl, 
-          $.param(data), 
+        Wicket.Ajax.ajax({
+          "m" : "POST",
+          "c" : dispatcher.wicketId,
+          "u" : dispatcher.ajaxUrl,
+          "ep" : data,
           // success
-          function() {
-            var response = Wicket.$(dispatcher.wicketId).temp;
-            delete Wicket.$(dispatcher.wicketId).temp;
+          "sh" : [ function() {
+        	var response = undefined;
+        	if (Wicket.$(dispatcher.wicketId) !== null) {
+	            response = Wicket.$(dispatcher.wicketId).temp;
+	            delete Wicket.$(dispatcher.wicketId).temp;
+        	}
             if (response === undefined) {
                 console.log('Server response did not contain brat data - ignoring');
             	// This is likely a wicket ajax-redirect and nothing that relates to brat.
@@ -89,9 +94,9 @@ var Ajax = (function($, window, undefined) {
             }
             dispatcher.post('unspin');
 // WEBANNO EXTENSION BEGIN
-          }.bind(this),
+          }],
           // error
-          function() {
+          "fh" : [ function() {
             pending--;
             dispatcher.post('unspin');
             $('#waiter').dialog('close');
@@ -99,9 +104,7 @@ var Ajax = (function($, window, undefined) {
             // In the original ajax.js, these are parameters to the error callback.
 //            dispatcher.post('messages', [[['Error: Action' + data.action + ' failed on error ' + response.statusText, 'error']]]);
 //            console.error(textStatus + ':', errorThrown, response);
-          }.bind(this),
-          null, 
-          null);
+          }]});
 // WEBANNO EXTENSION END
         return id;
       };

@@ -20,11 +20,31 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model;
 import org.apache.commons.lang.StringUtils;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.markup.html.IHeaderResponse;
+import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.JavaScriptHeaderItem;
+import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
 
+import com.googlecode.wicket.jquery.ui.resource.JQueryUIResourceReference;
+
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratVisualizer;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAjaxResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAnnotationLogResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAnnotatorUiResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratConfigurationResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCurationUiResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratDispatcherResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratSpinnerResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratUrlMonitorResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratUtilResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerUiResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQueryJsonResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySprintfResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgDomResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.WebfontResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 
 /**
@@ -91,27 +111,46 @@ public class BratCurationVisualizer extends BratVisualizer {
 	@Override
 	public void renderHead(IHeaderResponse aResponse)
 	{
-		// BRAT call to load the BRAT JSON from our collProvider and docProvider.
-		String[] script = new String[] {
-				"Util.embedByURL(",
-				"  '"+vis.getMarkupId()+"',",
-				"  '"+collProvider.getCallbackUrl()+"', ",
-				"  '"+docProvider.getCallbackUrl()+"', ",
-				"  function(dispatcher) {",
-                "dispatcher.post('clearSVG', []);",
-				"    dispatcher.ajaxUrl = '" + controller.getCallbackUrl() + "'; ",
-                "    dispatcher.wicketId = '" + vis.getMarkupId() + "'; ",
-                "    var ajax = new Ajax(dispatcher);",
-                "    var ajax_"+vis.getMarkupId()+" = ajax;",
-				"    var curation_mod = new CurationMod(dispatcher, '"+vis.getMarkupId()+"');",
-				"  }",
-				");",
-		};
+        // Libraries
+        aResponse.render(JavaScriptHeaderItem.forReference(JQueryUIResourceReference.get()));
+        aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgResourceReference.get()));
+        aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgDomResourceReference.get()));
+        aResponse.render(JavaScriptHeaderItem.forReference(JQuerySprintfResourceReference.get()));
+        aResponse.render(JavaScriptHeaderItem.forReference(JQueryJsonResourceReference.get()));
+        aResponse.render(JavaScriptHeaderItem.forReference(WebfontResourceReference.get()));
 
-		// This doesn't work with head.js because the onLoad event is fired before all the
-		// JavaScript references are loaded.
-		aResponse.renderOnLoadJavaScript("\n"+StringUtils.join(script, "\n"));
+        // BRAT helpers
+        aResponse.render(JavaScriptHeaderItem.forReference(BratConfigurationResourceReference.get()));
+        aResponse.render(JavaScriptHeaderItem.forReference(BratUtilResourceReference.get()));
+        aResponse.render(JavaScriptHeaderItem.forReference(BratAnnotationLogResourceReference.get()));
+        
+        // BRAT modules
+        aResponse.render(JavaScriptHeaderItem.forReference(BratDispatcherResourceReference.get()));
+        aResponse.render(JavaScriptHeaderItem.forReference(BratUrlMonitorResourceReference.get()));
+        aResponse.render(JavaScriptHeaderItem.forReference(BratAjaxResourceReference.get()));
+        aResponse.render(JavaScriptHeaderItem.forReference(BratVisualizerResourceReference.get()));
+        aResponse.render(JavaScriptHeaderItem.forReference(BratVisualizerUiResourceReference.get()));
+        aResponse.render(JavaScriptHeaderItem.forReference(BratAnnotatorUiResourceReference.get()));
+        aResponse.render(JavaScriptHeaderItem.forReference(BratSpinnerResourceReference.get()));	    
+        aResponse.render(JavaScriptHeaderItem.forReference(BratCurationUiResourceReference.get()));        
+	    
+        // BRAT call to load the BRAT JSON from our collProvider and docProvider.
+        StringBuilder script = new StringBuilder();
+        script.append("Util.embedByURL(");
+        script.append("  '"+vis.getMarkupId()+"',");
+        script.append("  '"+collProvider.getCallbackUrl()+"', ");
+        script.append("  '"+docProvider.getCallbackUrl()+"', ");
+        script.append("  function(dispatcher) {");
+        script.append("    dispatcher.wicketId = '" + vis.getMarkupId() + "'; ");
+        script.append("    dispatcher.ajaxUrl = '" + controller.getCallbackUrl() + "'; ");
+        script.append("    var ajax = new Ajax(dispatcher);");
+//        script.append("    var ajax_"+vis.getMarkupId()+" = ajax;");
+        script.append("    var curation_mod = new CurationMod(dispatcher, '"+vis.getMarkupId()+"');");
+        script.append("    dispatcher.post('clearSVG', []);");
+        script.append("  });");
+        aResponse.render(OnLoadHeaderItem.forScript("\n" + script.toString()));
 	}
+	
 	@Override
 	protected String getDocumentData() {
 		return getModelObject().getDocumentResponse() == null?"{}":getModelObject().getDocumentResponse();

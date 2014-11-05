@@ -261,7 +261,7 @@ public class CrowdSourcePage
                 }
             }
             TableDataProvider provider = new TableDataProvider(columnHeaders, rowData);
-            List<IColumn<?>> columns = new ArrayList<IColumn<?>>();
+            List<IColumn<?,?>> columns = new ArrayList<IColumn<?,?>>();
 
             for (int i = 0; i < provider.getColumnCount(); i++) {
                 columns.add(new DocumentColumnMetaData(provider, i));
@@ -1284,7 +1284,7 @@ public class CrowdSourcePage
     }
 
     private class DocumentColumnMetaData
-        extends AbstractColumn<List<String>>
+        extends AbstractColumn<List<String>, Object>
     {
         private static final long serialVersionUID = -3632527878408587144L;
 

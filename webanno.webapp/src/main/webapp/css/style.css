@@ -240,6 +240,18 @@ ul.horizontal li{
     text-align:center;
 }
 
+a.menulink {
+    text-decoration: none;
+}
+
+a.menulink > span {
+    text-decoration: underline;
+    display: table-cell;
+    vertical-align: middle;
+    padding-left: 1em;
+    padding-right: 1em;
+}
+
 /* Caption of the icon 
 ul.horizontal li div {
 	text-align: center;
@@ -579,5 +591,12 @@ div.tabpanel .tab-panel {
 }
 
 tr.border_bottom td {
-		border-bottom: 2pt solid green;
-	}
+	border-bottom: 2pt solid green;
+}
+
+#spinner {
+  display: none;
+  position: fixed;
+  right:10px;
+  top: 55px;
+}

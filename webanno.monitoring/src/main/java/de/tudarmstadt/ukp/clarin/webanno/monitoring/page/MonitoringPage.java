@@ -132,8 +132,8 @@ public class MonitoringPage
     private  TrainingResultForm trainingResultForm;
 
     private Label overview;
-    private DefaultDataTable<?> annotationDocumentStatusTable;
-    private DefaultDataTable<?> agreementTable;
+    private DefaultDataTable<?,?> annotationDocumentStatusTable;
+    private DefaultDataTable<?,?> agreementTable;
     private final Label projectName;
     private AgreementForm agreementForm;
     private final AnnotationTypeSelectionForm annotationTypeSelectionForm;
@@ -210,7 +210,7 @@ public class MonitoringPage
         TableDataProvider prov = new TableDataProvider(documentListAsColumnHeader,
                 userAnnotationDocumentLists);
 
-        List<IColumn<?>> cols = new ArrayList<IColumn<?>>();
+        List<IColumn<?,?>> cols = new ArrayList<IColumn<?,?>>();
 
         for (int i = 0; i < prov.getColumnCount(); i++) {
             cols.add(new DocumentStatusColumnMetaData(prov, i, new Project(), repository));
@@ -398,7 +398,7 @@ public class MonitoringPage
                     TableDataProvider provider = new TableDataProvider(documentListAsColumnHeader,
                             userAnnotationDocumentStatusList);
 
-                    List<IColumn<?>> columns = new ArrayList<IColumn<?>>();
+                    List<IColumn<?,?>> columns = new ArrayList<IColumn<?,?>>();
 
                     for (int i = 0; i < provider.getColumnCount(); i++) {
                         columns.add(new DocumentStatusColumnMetaData(provider, i, project,
@@ -648,7 +648,7 @@ public class MonitoringPage
 
             TableDataProvider provider = new TableDataProvider(usersListAsColumnHeader,
                     agreementResults);
-            List<IColumn<?>> columns = new ArrayList<IColumn<?>>();
+            List<IColumn<?,?>> columns = new ArrayList<IColumn<?,?>>();
 
             for (int m = 0; m < provider.getColumnCount(); m++) {
                 columns.add(new DynamicColumnMetaData(provider, m));
@@ -752,7 +752,7 @@ public class MonitoringPage
             TableDataProvider provider = new TableDataProvider(usersListAsColumnHeader,
                     agreementResults);
 
-            List<IColumn<?>> columns = new ArrayList<IColumn<?>>();
+            List<IColumn<?,?>> columns = new ArrayList<IColumn<?,?>>();
 
             for (int m = 0; m < provider.getColumnCount(); m++) {
                 columns.add(new DynamicColumnMetaData(provider, m));

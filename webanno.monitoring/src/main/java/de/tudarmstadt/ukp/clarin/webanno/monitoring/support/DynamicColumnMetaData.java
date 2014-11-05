@@ -35,7 +35,7 @@ import org.apache.wicket.model.IModel;
  *
  */
 public class DynamicColumnMetaData
-    extends AbstractColumn<List<String>>
+    extends AbstractColumn<List<String>, Object>
 {
 
     private static final long serialVersionUID = 1L;

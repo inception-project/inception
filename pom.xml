@@ -37,8 +37,9 @@
 		<spring.security.version>3.1.4.RELEASE</spring.security.version>
 		<slf4j.version>1.6.4</slf4j.version>
 		<log4j.version>1.2.16</log4j.version>
-		<wicket.version>1.5.12</wicket.version>
-		<wicket.odlabs.version>6.13.0</wicket.odlabs.version>
+		<wicket.version>6.17.0</wicket.version>
+    <wicketstuff.version>${wicket.version}</wicketstuff.version>
+    <wicket-jquery-ui.version>${wicket.version}</wicket-jquery-ui.version>
 		<hibernate.version>4.1.4.Final</hibernate.version>
 		<maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
 	<dkpro.version>1.5.0</dkpro.version>
@@ -165,16 +166,31 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
+      <dependency>
+        <groupId>com.googlecode.wicket-jquery-ui</groupId>
+        <artifactId>wicket-jquery-ui</artifactId>
+        <version>${wicket-jquery-ui.version}</version>
+      </dependency>
 			<dependency>
 				<groupId>com.googlecode.wicket-jquery-ui</groupId>
-				<artifactId>jquery-ui-core</artifactId>
-				<version>1.4.1</version>
+				<artifactId>wicket-jquery-ui-core</artifactId>
+				<version>${wicket-jquery-ui.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.googlecode.wicket-jquery-ui</groupId>
-				<artifactId>jquery-ui-kendo</artifactId>
-				<version>1.4.1</version>
+				<artifactId>wicket-kendo-ui</artifactId>
+				<version>${wicket-jquery-ui.version}</version>
 			</dependency>
+      <dependency>
+        <groupId>org.wicketstuff</groupId>
+        <artifactId>wicketstuff-input-events</artifactId>
+        <version>${wicketstuff.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.wicketstuff</groupId>
+        <artifactId>wicketstuff-progressbar</artifactId>
+        <version>${wicketstuff.version}</version>
+      </dependency>
 			<dependency>
 				<groupId>commons-logging</groupId>
 				<artifactId>commons-logging-api</artifactId>

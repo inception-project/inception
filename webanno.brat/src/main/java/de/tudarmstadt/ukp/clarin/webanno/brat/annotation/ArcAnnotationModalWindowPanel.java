@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -39,6 +40,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.json.JSONObject;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
 import org.apache.wicket.behavior.AttributeAppender;
@@ -57,8 +59,7 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 
-import com.googlecode.wicket.jquery.ui.kendo.combobox.ComboBox;
-import com.googlecode.wicket.jquery.ui.kendo.combobox.ComboBoxRenderer;
+import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
@@ -225,7 +226,22 @@ public class ArcAnnotationModalWindowPanel
 
                         ComboBox<Tag> featureValueCombo = new ComboBox<Tag>("tag",
                                 featureValueModels.get(item.getIndex()), tagset,
-                                new ComboBoxRenderer<Tag>("name", "name"));
+                                new com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer<Tag>("name") {
+                            // BEGIN HACK - ComboBox is too stupid to escape strings that it renders
+                            // to JSON and sends to the frontend...
+                                    public String getText(Tag object)
+                                    {
+                                        return StringUtils.substring(
+                                                JSONObject.quote(object.getName()), 1, -1);
+                                    };
+
+                                    public String getValue(Tag object)
+                                    {
+                                        return StringUtils.substring(
+                                                JSONObject.quote(object.getName()), 1, -1);
+                                    };
+                            // END HACK
+                        });
                         if (item.getIndex() == 0) {
                             // Put focus on first feature
                             featureValueCombo.add(new DefaultFocusBehavior());

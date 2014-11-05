@@ -73,16 +73,6 @@ public class WicketApplication
             mountPage("/correction.html", CorrectionPage.class);
             mountPage("/automation.html", AutomationPage.class);
 
-            mountResource("/client/lib/head.load.min.js",
-                    new JavaScriptResourceReference(WebAnnoResources.class, "client/lib/head.load.min.js"));
-            mountResource("/client/lib/jquery.js",
-                    new JavaScriptResourceReference(WebAnnoResources.class, "client/lib/jquery-1.7.1.js"));
-            mountResource("/client/lib/jquery.min.js",
-                    new JavaScriptResourceReference(WebAnnoResources.class, "client/lib/jquery-1.7.1.min.js"));
-            mountResource("/client/lib/jquery-ui.min.js",
-                    new JavaScriptResourceReference(WebAnnoResources.class, "client/lib/jquery-ui-1.8.16.custom.min.js"));
-            mountResource("/client/lib/jquery.ba-bbq.min.js",
-                    new JavaScriptResourceReference(WebAnnoResources.class, "client/lib/jquery.ba-bbq.min.js"));
             mountResource("/client/lib/jquery.json.min.js",
                     new JavaScriptResourceReference(WebAnnoResources.class, "client/lib/jquery.json.min.js"));
             mountResource("/client/lib/jquery.sprintf.js",

@@ -129,8 +129,8 @@
 			<artifactId>wicket-extensions</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.googlecode.wicket-jquery-ui</groupId>
-			<artifactId>jquery-ui-core</artifactId>
+		  <groupId>com.googlecode.wicket-jquery-ui</groupId>
+			<artifactId>wicket-jquery-ui-core</artifactId>
 		</dependency>
 
 		<!-- JUNIT DEPENDENCY FOR TESTING -->

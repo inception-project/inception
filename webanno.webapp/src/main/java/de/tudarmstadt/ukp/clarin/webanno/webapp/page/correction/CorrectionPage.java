@@ -38,10 +38,11 @@ import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
-import org.apache.wicket.ajax.form.AjaxFormValidatingBehavior;
+import org.apache.wicket.ajax.form.AjaxFormSubmitBehavior;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
-import org.apache.wicket.markup.html.IHeaderResponse;
+import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
@@ -49,8 +50,6 @@ import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.util.string.AppendingStringBuffer;
-import org.springframework.beans.BeansException;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -420,7 +419,7 @@ public class CorrectionPage
         gotoPageTextField = (NumberTextField<Integer>) new NumberTextField<Integer>("gotoPageText",
                 new Model<Integer>(0));
         Form<Void> gotoPageTextFieldForm = new Form<Void>("gotoPageTextFieldForm");
-        gotoPageTextFieldForm.add(new AjaxFormValidatingBehavior(gotoPageTextFieldForm, "onsubmit") {
+        gotoPageTextFieldForm.add(new AjaxFormSubmitBehavior(gotoPageTextFieldForm, "onsubmit") {
 			private static final long serialVersionUID = -4549805321484461545L;
 			@Override
             protected void onSubmit(AjaxRequestTarget aTarget) {
@@ -461,13 +460,6 @@ public class CorrectionPage
 	                    error(e.getMessage());
 	                }
             }
-            @Override
-            protected CharSequence getEventHandler() {
-                AppendingStringBuffer handler = new AppendingStringBuffer();
-                handler.append(super.getEventHandler());
-                handler.append("; return false;");
-                return handler;
-           }
         });
 
         gotoPageTextField.setType(Integer.class);
@@ -1000,7 +992,7 @@ public class CorrectionPage
             jQueryString += "jQuery('#showOpenDocumentModal').trigger('click');";
             firstLoad = false;
         }
-        response.renderOnLoadJavaScript(jQueryString);
+        response.render(OnLoadHeaderItem.forScript(jQueryString));
         if (bratAnnotatorModel.getProject() != null) {
 
             mergeVisualizer.setModelObject(bratAnnotatorModel);

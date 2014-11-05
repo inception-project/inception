@@ -33,7 +33,7 @@ import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
 import org.apache.wicket.markup.ComponentTag;
-import org.apache.wicket.markup.html.IHeaderResponse;
+import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.list.ListItem;
@@ -121,8 +121,8 @@ public class CurationPanel
             // add onclick handler to the browser
             // if clicked in the browser, the function
             // click.response(AjaxRequestTarget target) is called on the server side
-            tag.put("ondblclick", "wicketAjaxGet('" + click.getCallbackUrl() + "')");
-            tag.put("onclick", "wicketAjaxGet('" + click.getCallbackUrl() + "')");
+            tag.put("ondblclick", "Wicket.Ajax.get({'u':'" + click.getCallbackUrl() + "'})");
+            tag.put("onclick", "Wicket.Ajax.get({'u':'" + click.getCallbackUrl() + "'})");
         }
 
     }

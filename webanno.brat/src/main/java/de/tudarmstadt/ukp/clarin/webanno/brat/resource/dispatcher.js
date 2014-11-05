@@ -37,6 +37,12 @@ var Dispatcher = (function($, window, undefined) {
           console.warn('Dropped asynch error:', e);
         }
       };
+// WEBANNO EXTENSION BEGIN
+      that.on = on;
+      that.handleAsynchError = handleAsynchError;
+      that.post = post;
+      that.proxy = proxy;
+// WEBANNO EXTENSION END
 
       var post = function(asynch, message, args, returnType) {
         if (typeof(asynch) !== 'number') {

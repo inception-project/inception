@@ -59,7 +59,7 @@ import de.tudarmstadt.ukp.clarin.webanno.monitoring.support.TableDataProvider;
  *
  */
 public class DocumentStatusColumnMetaData
-    extends AbstractColumn<List<String>>
+    extends AbstractColumn<List<String>, Object>
 {
 
     private RepositoryService projectRepositoryService;
