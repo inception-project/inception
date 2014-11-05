@@ -605,10 +605,11 @@ var VisualizerUI = (function($, window, undefined) {
                 }
               };
               
-            var init = function() {
 // WEBANNO EXTENSION BEGIN
-// We do not use the brat forms or messaging system
-/*
+// Sending the whoami and getting the user is mandatory because many things in brat will not work
+// unless it believes that the user has logged in.
+// WEBANNO EXTENSION END
+            var init = function() {
                     dispatcher.post('initForm', [viewspanForm,
                     {
                         width: 760,
@@ -630,8 +631,6 @@ var VisualizerUI = (function($, window, undefined) {
                     }, 
                     { keep: true }
                   ]);
-*/
-// WEBANNO EXTENSION END
                 };
             var spanAndAttributeTypesLoaded = function(_spanTypes, _entityAttributeTypes, _eventAttributeTypes, _relationTypesHash) {
                     spanTypes = _spanTypes;
@@ -657,14 +656,22 @@ var VisualizerUI = (function($, window, undefined) {
             on('init', init).
             on('dataReady', rememberData).
             on('annotationIsAvailable', annotationIsAvailable).
+// WEBANNO EXTENSION BEGIN
+/*
             on('messages', displayMessages).
+*/
+// WEBANNO EXTENSION END
             on('displaySpanComment', displaySpanComment).
             on('displayArcComment', displayArcComment).
             on('displaySentComment', displaySentComment).
             on('hideComment', hideComment).
+// WEBANNO EXTENSION BEGIN
+/*
             on('showForm', showForm).
             on('hideForm', hideForm).
             on('initForm', initForm).
+*/
+// WEBANNO EXTENSION END
             on('resize', onResize).
             on('collectionLoaded', rememberNormDb).
             on('spanAndAttributeTypesLoaded', spanAndAttributeTypesLoaded).
@@ -672,8 +679,12 @@ var VisualizerUI = (function($, window, undefined) {
             on('doneRendering', onDoneRendering).
             on('startedRendering', onStartedRendering).
             on('keydown', onKeyDown).
-            on('mousemove', onMouseMove).
+            on('mousemove', onMouseMove);
+// WEBANNO EXTENSION BEGIN
+/*
             on('dblclick', onDblClick);
+*/
+// WEBANNO EXTENSION END
         };
 
     return VisualizerUI;
