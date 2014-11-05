@@ -17,7 +17,6 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.head.IHeaderResponse;
@@ -41,7 +40,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratUtilResourceReference
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerUiResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQueryJsonResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySprintfResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgDomResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.WebfontResourceReference;
@@ -115,7 +113,6 @@ public class BratCurationVisualizer extends BratVisualizer {
         aResponse.render(JavaScriptHeaderItem.forReference(JQueryUIResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgDomResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(JQuerySprintfResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(JQueryJsonResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(WebfontResourceReference.get()));
 

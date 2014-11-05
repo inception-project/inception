@@ -43,7 +43,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratUtilResourceReference
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerUiResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQueryJsonResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySprintfResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgDomResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.WebfontResourceReference;
@@ -119,7 +118,6 @@ public abstract class BratVisualizer
         aResponse.render(JavaScriptHeaderItem.forReference(JQueryUIResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgDomResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(JQuerySprintfResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(JQueryJsonResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(WebfontResourceReference.get()));
 

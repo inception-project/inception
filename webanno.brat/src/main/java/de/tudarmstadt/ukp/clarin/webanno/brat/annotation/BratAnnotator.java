@@ -65,13 +65,11 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAnnotationLogResource
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAnnotatorUiResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratConfigurationResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratDispatcherResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratSpinnerResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratUrlMonitorResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratUtilResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerUiResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQueryJsonResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySprintfResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgDomResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.WebfontResourceReference;
@@ -459,7 +457,6 @@ public class BratAnnotator
         aResponse.render(JavaScriptHeaderItem.forReference(JQueryUIResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgDomResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(JQuerySprintfResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(JQueryJsonResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(WebfontResourceReference.get()));
 
