@@ -229,6 +229,7 @@ public class ArcAnnotationModalWindowPanel
                                 new com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer<Tag>("name") {
                             // BEGIN HACK - ComboBox is too stupid to escape strings that it renders
                             // to JSON and sends to the frontend...
+                            // https://github.com/sebfz1/wicket-jquery-ui/issues/134
                                     public String getText(Tag object)
                                     {
                                         return StringUtils.substring(
