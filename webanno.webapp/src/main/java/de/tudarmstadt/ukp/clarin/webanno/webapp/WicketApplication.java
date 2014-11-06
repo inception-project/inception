@@ -59,6 +59,11 @@ public class WicketApplication
             getComponentInstantiationListeners().add(new SpringComponentInjector(this));
             setListeners();
 
+            // Enable dynamic switching between JQuery 1 and JQuery 2 based on the browser
+            // identification. 
+            getJavaScriptLibrarySettings().setJQueryReference(
+                    new DynamicJQueryResourceReference());
+
             mountPage("/login.html", getSignInPageClass());
             mountPage("/welcome.html", getHomePage());
             mountPage("/annotation.html", AnnotationPage.class);
