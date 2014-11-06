@@ -24,6 +24,7 @@ import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.request.resource.CssResourceReference;
 import org.apache.wicket.request.resource.JavaScriptResourceReference;
 import org.apache.wicket.request.resource.ResourceReference;
+import org.apache.wicket.resource.DynamicJQueryResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringComponentInjector;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.WebAnnoResources;
@@ -50,10 +51,8 @@ public class WicketApplication
 {
     boolean isInitialized = false;
 
-    private ResourceReference theme;
-
     @Override
-    public void init()
+    protected void init()
     {
         if (!isInitialized) {
             super.init();
@@ -72,40 +71,6 @@ public class WicketApplication
 
             mountPage("/correction.html", CorrectionPage.class);
             mountPage("/automation.html", AutomationPage.class);
-
-            mountResource("/client/lib/jquery.json.min.js",
-                    new JavaScriptResourceReference(WebAnnoResources.class, "client/lib/jquery.json.min.js"));
-            mountResource("/client/lib/jquery.sprintf.js",
-                    new JavaScriptResourceReference(WebAnnoResources.class, "client/lib/jquery.sprintf.js"));
-            mountResource("/client/lib/jquery.svg.min.js",
-                    new JavaScriptResourceReference(WebAnnoResources.class, "client/lib/jquery.svg.min.js"));
-            mountResource("/client/lib/jquery.svgdom.min.js",
-                    new JavaScriptResourceReference(WebAnnoResources.class, "client/lib/jquery.svgdom.min.js"));
-            mountResource("/client/lib/webfont.js",
-                    new JavaScriptResourceReference(WebAnnoResources.class, "client/lib/webfont.js"));
-
-            mountResource("/client/src/ajax.js",
-                    new JavaScriptResourceReference(WebAnnoResources.class, "client/src/ajax.js"));
-            mountResource("/client/src/annotation_log.js",
-                    new JavaScriptResourceReference(WebAnnoResources.class, "client/src/annotation_log.js"));
-            mountResource("/client/src/annotator_ui.js",
-                    new JavaScriptResourceReference(WebAnnoResources.class, "client/src/annotator_ui.js"));
-            mountResource("/client/src/configuration.js",
-                    new JavaScriptResourceReference(WebAnnoResources.class, "client/src/configuration.js"));
-            mountResource("/client/src/curation_mod.js",
-                    new JavaScriptResourceReference(WebAnnoResources.class, "client/src/curation_mod.js"));
-            mountResource("/client/src/dispatcher.js",
-                    new JavaScriptResourceReference(WebAnnoResources.class, "client/src/dispatcher.js"));
-            mountResource("/client/src/spinner.js",
-                    new JavaScriptResourceReference(WebAnnoResources.class, "client/src/spinner.js"));
-            mountResource("/client/src/url_monitor.js",
-                    new JavaScriptResourceReference(WebAnnoResources.class, "client/src/url_monitor.js"));
-            mountResource("/client/src/util.js",
-                    new JavaScriptResourceReference(WebAnnoResources.class, "client/src/util.js"));
-            mountResource("/client/src/visualizer_ui.js",
-                    new JavaScriptResourceReference(WebAnnoResources.class, "client/src/visualizer_ui.js"));
-            mountResource("/client/src/visualizer.js",
-                    new JavaScriptResourceReference(WebAnnoResources.class, "client/src/visualizer.js"));
 
             mountResource("/static/jquery-theme/jquery-ui-redmond.css",
                     new CssResourceReference(WebAnnoResources.class, "client/css/jquery-ui-redmond.css"));
