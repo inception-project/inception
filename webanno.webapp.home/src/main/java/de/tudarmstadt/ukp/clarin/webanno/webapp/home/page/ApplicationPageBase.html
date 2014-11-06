@@ -26,25 +26,19 @@
     </title>
     <link rel="stylesheet" href="css/style.css" type="text/css">
   </link>
-  <script src="js/css_browser_selector.js" type="text/javascript">
-  </script>
+  <script src="js/css_browser_selector.js" type="text/javascript"></script>
 </head>
 <body>
   <div class="pageheader">
     <img class="pageicon" wicket:message="src:page.icon" />
     <img class="logo" src="images/ClarinD-Logo.png" style="background-color:white;" />
-    <wicket:message key="page.title">
-    </wicket:message>
+    <wicket:message key="page.title"></wicket:message>
   </div>
+  
   <div class="menubar">
-    WebAnno |
-    <a href="welcome.html">
-      Home
-    </a>
-    |
+    WebAnno | <a href="welcome.html"> Home </a> |
     <span style="float: right;">
-      <span wicket:id="logoutPanel">
-      </span>
+      <span wicket:id="logoutPanel"></span>
     </span>
   </div>
 
@@ -53,6 +47,7 @@
       [Feedback]
     </div>
   </div>
+  
   <div class="pagecontent" style="clear: both;">
     <wicket:child>
       [CONTENT]
@@ -68,6 +63,9 @@
     </div>
     <div wicket:id="embeddedDbWarning" style="background-color: red; color: white; font-weight: bold;">
       [Embedded DB Warning]
+    </div>
+    <div wicket:id="browserWarning" style="background-color: red; color: white; font-weight: bold;">
+      [Browser Warning]
     </div>
   </div>
 </body>

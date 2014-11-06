@@ -25,12 +25,17 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.Session;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
 import org.apache.wicket.feedback.FeedbackMessage;
 import org.apache.wicket.feedback.IFeedbackMessageFilter;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
+import org.apache.wicket.protocol.http.ClientProperties;
+import org.apache.wicket.protocol.http.WebSession;
+import org.apache.wicket.protocol.http.request.WebClientInfo;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.core.io.support.PropertiesLoaderUtils;
@@ -50,6 +55,7 @@ public abstract class ApplicationPageBase
     private FeedbackPanel feedbackPanel;
     private Label versionLabel;
     private Label embeddedDbWarning;
+    private Label browserWarning;
 
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
@@ -117,10 +123,28 @@ public abstract class ApplicationPageBase
             LOG.warn("Unable to determine which database is being used", e);
         }
 
+        // Display a warning when using an unsupported browser
+        RequestCycle requestCycle = RequestCycle.get();
+        WebClientInfo clientInfo;
+        if (Session.exists()) {
+            WebSession session = WebSession.get();
+            clientInfo = session.getClientInfo();
+        }
+        else {
+            clientInfo = new WebClientInfo(requestCycle);
+        }
+        ClientProperties clientProperties = clientInfo.getProperties();
+
+        browserWarning = new Label("browserWarning", "THIS BROWSER IS NOT SUPPORTED -- "
+                + "PLEASE USE CHROME OR SAFARI");
+        browserWarning.setVisible(!clientProperties.isBrowserSafari()
+                && !clientProperties.isBrowserChrome());
+
         add(logoutPanel);
         add(feedbackPanel);
         add(versionLabel);
         add(embeddedDbWarning);
+        add(browserWarning);
     }
 
     @Override
