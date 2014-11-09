@@ -30,9 +30,10 @@ public class CreateArcResponse
 
     private GetDocumentResponse annotations;
 
-    public CreateArcResponse()
+    public CreateArcResponse(GetDocumentResponse aAnnotations)
     {
         super(COMMAND);
+        setAnnotations(aAnnotations);
     }
 
     /**

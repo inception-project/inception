@@ -23,8 +23,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.wicket.markup.html.panel.FeedbackPanel;
-
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -125,13 +123,6 @@ public class BratAnnotatorModel
 
     private Map<AnnotationFeature, String> rememberedSpanFeatures = new HashMap<AnnotationFeature, String>();
     private Map<AnnotationFeature, String> rememberedArcFeatures = new HashMap<AnnotationFeature, String>();
-
-	/**
-	 * Specific message to be sent from the annotation dialog to the
-	 * {@link BratAnnotator} so that it can be displayed in the
-	 * {@link FeedbackPanel}
-	 */
-    private String message = "";
 
     private boolean annotationCleared = false;
 
@@ -310,16 +301,6 @@ public class BratAnnotatorModel
     public void setSentenceEndOffset(int sentenceEndOffset)
     {
         this.sentenceEndOffset = sentenceEndOffset;
-    }
-
-    public String getMessage()
-    {
-        return message;
-    }
-
-    public void setMessage(String message)
-    {
-        this.message = message;
     }
 
     public boolean isAnnotationCleared()

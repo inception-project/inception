@@ -52,11 +52,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
  *
  * @author Andreas Straninger
  */
-public class BratCurationVisualizer extends BratVisualizer {
-
-	/**
-	 *
-	 */
+public class BratCurationVisualizer
+    extends BratVisualizer
+{
 	private static final long serialVersionUID = 6653508018500736430L;
 	private AbstractDefaultAjaxBehavior controller;
 
@@ -77,7 +75,6 @@ public class BratCurationVisualizer extends BratVisualizer {
 
             @Override
 			protected void respond(AjaxRequestTarget aTarget) {
-                //aTarget.prependJavaScript("Wicket.$('"+vis.getMarkupId()+"').temp = ['test'];");
 				onSelectAnnotationForMerge(aTarget);
 			}
 
@@ -109,6 +106,9 @@ public class BratCurationVisualizer extends BratVisualizer {
 	@Override
 	public void renderHead(IHeaderResponse aResponse)
 	{
+	    // MUST NOT CALL super.renderHead here because that would call Util.embedByUrl again!
+        // super.renderHead(aResponse);
+        
         // Libraries
         aResponse.render(JavaScriptHeaderItem.forReference(JQueryUIResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgResourceReference.get()));
@@ -141,25 +141,27 @@ public class BratCurationVisualizer extends BratVisualizer {
         script.append("    dispatcher.wicketId = '" + vis.getMarkupId() + "'; ");
         script.append("    dispatcher.ajaxUrl = '" + controller.getCallbackUrl() + "'; ");
         script.append("    var ajax = new Ajax(dispatcher);");
-//        script.append("    var ajax_"+vis.getMarkupId()+" = ajax;");
         script.append("    var curation_mod = new CurationMod(dispatcher, '"+vis.getMarkupId()+"');");
         script.append("    dispatcher.post('clearSVG', []);");
         script.append("  });");
         aResponse.render(OnLoadHeaderItem.forScript("\n" + script.toString()));
 	}
 	
-	@Override
-	protected String getDocumentData() {
-		return getModelObject().getDocumentResponse() == null?"{}":getModelObject().getDocumentResponse();
-	}
+    @Override
+    protected String getDocumentData()
+    {
+        return getModelObject().getDocumentResponse() == null ? "{}" : getModelObject()
+                .getDocumentResponse();
+    }
 
-	@Override
-	protected String getCollectionData() {
-		return getModelObject().getCollectionData();
-	}
+    @Override
+    protected String getCollectionData()
+    {
+        return getModelObject().getCollectionData();
+    }
 
-	protected void onSelectAnnotationForMerge(AjaxRequestTarget aTarget) {
-		// Overriden in Curation Panel
-	}
-
+    protected void onSelectAnnotationForMerge(AjaxRequestTarget aTarget)
+    {
+        // Overriden in Curation Panel
+    }
 }

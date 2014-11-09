@@ -582,7 +582,7 @@ public class CuratorUtil
         aParent.setModelObject(sentences);
         if (aCurationContainer.getBratAnnotatorModel().getMode().equals(Mode.CURATION)) {
             aMergeVisualizer.setModelObject(bratAnnotatorModel);
-            aMergeVisualizer.reloadContent(aTarget);
+            aMergeVisualizer.bratRenderLater(aTarget);
         }
         aTarget.add(aParent);
         

@@ -34,6 +34,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
+import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.request.IRequestParameters;
@@ -111,13 +112,6 @@ public class CurationViewPanel extends WebMarkupContainer {
     public CurationViewPanel(String id,
             IModel<LinkedList<CurationUserSegmentForAnnotationDocument>> aModel) {
         super(id, aModel);
-
-//        final FeedbackPanel feedbackPanel = new FeedbackPanel("feedbackPanel");
-//        feedbackPanel.setOutputMarkupId(true);
-//        feedbackPanel.add(new AttributeModifier("class", "info"));
-//        feedbackPanel.add(new AttributeModifier("class", "error"));
-//        add(feedbackPanel);
-
         // update list of brat embeddings
         sentenceListView = new ListView<CurationUserSegmentForAnnotationDocument>(
                 "sentenceListView", aModel) {
@@ -147,7 +141,6 @@ public class CurationViewPanel extends WebMarkupContainer {
                         // or CorrectionPage
                         if (BratAnnotatorUtility.isDocumentFinished(repository,
                                 curationUserSegment.getBratAnnotatorModel())) {
-                            // aTarget.add(feedbackPanel);
                             aTarget.appendJavaScript("alert('This document is already closed."
                                     + " Please ask admin to re-open')");
                         } else {
@@ -196,29 +189,22 @@ public class CurationViewPanel extends WebMarkupContainer {
                                 }
                                 onChange(aTarget);
                             } catch (UIMAException e) {
-                                // aTarget.add(feedbackPanel);
-                                // error(ExceptionUtils.getRootCauseMessage(e));
-                                aTarget.appendJavaScript(ExceptionUtils
-                                        .getRootCauseMessage(e));
+                                aTarget.addChildren(getPage(), FeedbackPanel.class);
+                                error(ExceptionUtils.getRootCauseMessage(e));
                             } catch (ClassNotFoundException e) {
-                                // aTarget.add(feedbackPanel);
-                                // error(e.getMessage());
-                                aTarget.appendJavaScript(e.getMessage());
+                                aTarget.addChildren(getPage(), FeedbackPanel.class);
+                                error(ExceptionUtils.getRootCauseMessage(e));
                             } catch (DataRetrievalFailureException e) {
-                                aTarget.appendJavaScript(e.getCause()
-                                        .getMessage());
+                                aTarget.addChildren(getPage(), FeedbackPanel.class);
+                                error(ExceptionUtils.getRootCauseMessage(e));
                             } catch (IOException e) {
-                                // aTarget.add(feedbackPanel);
-                                // error(e.getMessage());
-                                aTarget.appendJavaScript(e.getMessage());
+                                aTarget.addChildren(getPage(), FeedbackPanel.class);
+                                error(e.getMessage());
                             } catch (BratAnnotationException e) {
-                                // aTarget.add(feedbackPanel);
-                                // error(e.getMessage());
-                                aTarget.appendJavaScript(e.getMessage());
+                                aTarget.addChildren(getPage(), FeedbackPanel.class);
+                                error(e.getMessage());
                             }
-
                         }
-                        // aTarget.add(feedbackPanel);
                     }
                 };
                 curationVisualizer.setOutputMarkupId(true);

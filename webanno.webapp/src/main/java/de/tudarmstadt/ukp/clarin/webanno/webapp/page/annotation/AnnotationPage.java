@@ -28,11 +28,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
-import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.form.AjaxFormSubmitBehavior;
-import org.apache.wicket.ajax.form.AjaxFormValidatingBehavior;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.head.IHeaderResponse;
@@ -44,7 +42,6 @@ import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.util.string.AppendingStringBuffer;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -98,7 +95,7 @@ public class AnnotationPage
 
     private BratAnnotator annotator;
 
-    FinishImage finish;
+    private FinishImage finish;
     private int windowSize;
 
     private NumberTextField<Integer> gotoPageTextField;
@@ -122,13 +119,6 @@ public class AnnotationPage
 
     public AnnotationPage()
     {
-
-        final FeedbackPanel feedbackPanel = new FeedbackPanel("feedback");
-        add(feedbackPanel);
-        feedbackPanel.setOutputMarkupId(true);
-        feedbackPanel.add(new AttributeModifier("class", "info"));
-        feedbackPanel.add(new AttributeModifier("class", "error"));
-
         annotator = new BratAnnotator("embedder1",
                 new Model<BratAnnotatorModel>(bratAnnotatorModel))
         {
@@ -139,14 +129,25 @@ public class AnnotationPage
             protected void onChange(AjaxRequestTarget aTarget,
                     BratAnnotatorModel aBratAnnotatorModel)
             {
-                // updateRightSide(aTarget, sentenceOuterView, curationContainer, this);
                 bratAnnotatorModel = aBratAnnotatorModel;
-                aTarget.add(feedbackPanel);
-                info(bratAnnotatorModel.getMessage());
                 aTarget.add(numberOfPages);
             }
+            
+            @Override
+            public void renderHead(IHeaderResponse aResponse)
+            {
+                super.renderHead(aResponse);
+                
+                // If the page is reloaded in the browser and a document was already open, we need 
+                // to render it. We use the "later" commands here to avoid polluting the Javascript
+                // header items with document data and because loading times are not that critical
+                // on a reload.
+                if (getModelObject().getProject() != null) {
+                    aResponse.render(OnLoadHeaderItem.forScript(bratInitLaterCommand()));
+                    aResponse.render(OnLoadHeaderItem.forScript(bratRenderLaterCommand()));
+                }
+            }
         };
-        annotator.setOutputMarkupId(true);
 
         // This is an Annotation Operation, set model to ANNOTATION mode
         bratAnnotatorModel.setMode(Mode.ANNOTATION);
@@ -265,51 +266,20 @@ public class AnnotationPage
                     @Override
                     public void onClose(AjaxRequestTarget target)
                     {
+                        // A hack, the dialog opens for the first time, and if no document is
+                        // selected window will be "blind down". Something in the brat js causes
+                        // this!
                         if (bratAnnotatorModel.getProject() == null
                                 || bratAnnotatorModel.getDocument() == null) {
-                            // A hack, the dialog opens for the first time, and if no document is
-                            // selected
-                            // window will be "blind down". SOmething in the brat js causes this!
                             setResponsePage(WelcomePage.class);
                         }
 
+                        // Dialog was cancelled rather that a document was selected.
                         if (closeButtonClicked) {
                             return;
                         }
-                        try {
-                            String username = SecurityContextHolder.getContext()
-                                    .getAuthentication().getName();
-                            repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(),
-                                    Mode.ANNOTATION, username);
-
-                            loadDocumentAction();
-
-                            String collection = "#" + bratAnnotatorModel.getProject().getName()
-                                    + "/";
-                            String document = bratAnnotatorModel.getDocument().getName();
-                            target.add(finish.setOutputMarkupId(true));
-                            // annotator.reloadContent(target);
-                            target.appendJavaScript(
-                                    "window.location.hash = '" + collection + document + "';" + 
-                                    "Wicket.Window.unloadConfirmation=false;" +
-                                    "window.location.reload()");
-                        }
-                        catch (DataRetrievalFailureException e) {
-                            target.add(feedbackPanel);
-                            error(e.getMessage());
-                        }
-                        catch (IOException e) {
-                            target.add(feedbackPanel);
-                            error(e.getMessage());
-                        }
-                        catch (UIMAException e) {
-                            target.add(feedbackPanel);
-                            error(ExceptionUtils.getRootCauseMessage(e));
-                        }
-                        catch (ClassNotFoundException e) {
-                            target.add(feedbackPanel);
-                            error(e.getMessage());
-                        }
+                        
+                        loadDocumentAction(target);
                     }
                 });
                 // target.appendJavaScript("Wicket.Window.unloadConfirmation = false;");
@@ -379,29 +349,7 @@ public class AnnotationPage
                 bratAnnotatorModel
                         .setDocument(listOfSourceDocuements.get(currentDocumentIndex - 1));
 
-                try {
-                    loadDocumentAction();
-                    repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(), Mode.ANNOTATION,
-                            bratAnnotatorModel.getUser().getUsername());
-                }
-                catch (UIMAException e) {
-                    aTarget.add(feedbackPanel);
-                    error(ExceptionUtils.getRootCauseMessage(e));
-                }
-                catch (ClassNotFoundException e) {
-                    aTarget.add(feedbackPanel);
-                    error(e.getMessage());
-                }
-                catch (IOException e) {
-                    aTarget.add(feedbackPanel);
-                    error(e.getMessage());
-                }
-                aTarget.add(feedbackPanel);
-                aTarget.add(finish.setOutputMarkupId(true));
-                aTarget.add(numberOfPages);
-                updateSentenceAddress();
-                aTarget.add(documentNamePanel);
-                annotator.reloadContent(aTarget);
+                loadDocumentAction(aTarget);
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up }, EventType.click)));
 
@@ -448,26 +396,8 @@ public class AnnotationPage
                         currentDocumentIndex + 1).getName());
                 bratAnnotatorModel
                         .setDocument(listOfSourceDocuements.get(currentDocumentIndex + 1));
-                try {
-                    repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(), Mode.ANNOTATION,
-                            bratAnnotatorModel.getUser().getUsername());
-                    loadDocumentAction();
-                }
-                catch (UIMAException e) {
-                    error(ExceptionUtils.getRootCauseMessage(e));
-                }
-                catch (ClassNotFoundException e) {
-                    error(e.getMessage());
-                }
-                catch (IOException e) {
-                    error(e.getMessage());
-                }
-                aTarget.add(feedbackPanel);
-                aTarget.add(finish.setOutputMarkupId(true));
-                aTarget.add(numberOfPages);
-                aTarget.add(documentNamePanel);
-                updateSentenceAddress();
-                annotator.reloadContent(aTarget);
+                
+                loadDocumentAction(aTarget);
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down }, EventType.click)));
 
@@ -496,8 +426,8 @@ public class AnnotationPage
                         Sentence sentence = selectByAddr(jCas, Sentence.class, nextSentenceAddress);
                         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
-                        aTarget.add(feedbackPanel);
-                        annotator.reloadContent(aTarget);
+                        aTarget.addChildren(getPage(), FeedbackPanel.class);
+                        annotator.bratRenderLater(aTarget);
                         aTarget.add(numberOfPages);
                         gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(jCas,
                                 bratAnnotatorModel.getSentenceAddress())+1);
@@ -539,8 +469,8 @@ public class AnnotationPage
                                 previousSentenceAddress);
                         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
-                        aTarget.add(feedbackPanel);
-                        annotator.reloadContent(aTarget);
+                        aTarget.addChildren(getPage(), FeedbackPanel.class);
+                        annotator.bratRenderLater(aTarget);
                         aTarget.add(numberOfPages);
                         gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(jCas,
                                 bratAnnotatorModel.getSentenceAddress())+1);
@@ -579,8 +509,8 @@ public class AnnotationPage
                         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                        aTarget.add(feedbackPanel);
-                        annotator.reloadContent(aTarget);
+                        aTarget.addChildren(getPage(), FeedbackPanel.class);
+                        annotator.bratRenderLater(aTarget);
                         aTarget.add(numberOfPages);
                         gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(jCas,
                                 bratAnnotatorModel.getSentenceAddress())+1);
@@ -623,8 +553,8 @@ public class AnnotationPage
                                 lastDisplayWindowBeginingSentenceAddress);
                         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
-                        aTarget.add(feedbackPanel);
-                        annotator.reloadContent(aTarget);
+                        aTarget.addChildren(getPage(), FeedbackPanel.class);
+                        annotator.bratRenderLater(aTarget);
                         aTarget.add(numberOfPages);
                         gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(jCas,
                                 bratAnnotatorModel.getSentenceAddress())+1);
@@ -665,8 +595,8 @@ public class AnnotationPage
                     bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                     bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                    aTarget.add(feedbackPanel);
-                    annotator.reloadContent(aTarget);
+                    aTarget.addChildren(getPage(), FeedbackPanel.class);
+                    annotator.bratRenderLater(aTarget);
                     aTarget.add(numberOfPages);
                     gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(jCas,
                             bratAnnotatorModel.getSentenceAddress())+1);
@@ -721,8 +651,8 @@ public class AnnotationPage
                     bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                     bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                    aTarget.add(feedbackPanel);
-                    annotator.reloadContent(aTarget);
+                    aTarget.addChildren(getPage(), FeedbackPanel.class);
+                    annotator.bratRenderLater(aTarget);
                     aTarget.add(numberOfPages);
                     gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(jCas,
                             bratAnnotatorModel.getSentenceAddress())+1);
@@ -732,6 +662,7 @@ public class AnnotationPage
         });
 
         finish = new FinishImage("finishImage", new Model<BratAnnotatorModel>(bratAnnotatorModel));
+        finish.setOutputMarkupId(true);
 
         add(new FinishLink("showYesNoModalPanel",
                 new Model<BratAnnotatorModel>(bratAnnotatorModel), finish)
@@ -750,6 +681,8 @@ public class AnnotationPage
     @Override
     public void renderHead(IHeaderResponse response)
     {
+        super.renderHead(response);
+        
         String jQueryString = "";
         if (firstLoad) {
             jQueryString += "jQuery('#showOpenDocumentModal').trigger('click');";
@@ -791,47 +724,84 @@ public class AnnotationPage
         windowSize = aWindowSize;
     }
 
-    public void loadDocumentAction()
-        throws UIMAException, IOException, ClassNotFoundException
+    private void loadDocumentAction(AjaxRequestTarget target)
     {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        bratAnnotatorModel.setUser(repository.getUser(username));
-        JCas jCas = getCas(bratAnnotatorModel.getProject(), bratAnnotatorModel.getUser(),
-                bratAnnotatorModel.getDocument());
-        if (bratAnnotatorModel.getSentenceAddress() == -1
-                || bratAnnotatorModel.getDocument().getId() != currentDocumentId
-                || bratAnnotatorModel.getProject().getId() != currentprojectId) {
+        try {
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
+            repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(), Mode.ANNOTATION,
+                    username);
 
-            bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getFirstSentenceAddress(jCas));
-            bratAnnotatorModel.setLastSentenceAddress(BratAjaxCasUtil.getLastSentenceAddress(jCas));
-            bratAnnotatorModel.setFirstSentenceAddress(bratAnnotatorModel.getSentenceAddress());
-            bratAnnotatorModel.setWindowSize(5);
+            bratAnnotatorModel.setUser(repository.getUser(username));
+            JCas jCas = getCas(bratAnnotatorModel.getProject(), bratAnnotatorModel.getUser(),
+                    bratAnnotatorModel.getDocument());
+            if (bratAnnotatorModel.getSentenceAddress() == -1
+                    || bratAnnotatorModel.getDocument().getId() != currentDocumentId
+                    || bratAnnotatorModel.getProject().getId() != currentprojectId) {
 
-            ProjectUtil.setAnnotationPreference(username, repository, annotationService,
-                    bratAnnotatorModel, Mode.ANNOTATION);
+                bratAnnotatorModel
+                        .setSentenceAddress(BratAjaxCasUtil.getFirstSentenceAddress(jCas));
+                bratAnnotatorModel.setLastSentenceAddress(BratAjaxCasUtil
+                        .getLastSentenceAddress(jCas));
+                bratAnnotatorModel.setFirstSentenceAddress(bratAnnotatorModel.getSentenceAddress());
+                bratAnnotatorModel.setWindowSize(5);
 
-            Sentence sentence = selectByAddr(jCas, Sentence.class,
-                    bratAnnotatorModel.getSentenceAddress());
-            bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
-            bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
-            
-            LOG.debug("Configured BratAnnotatorModel for user [" + username
-                    + "] f:[" + bratAnnotatorModel.getFirstSentenceAddress() + "] l:["
-                    + bratAnnotatorModel.getLastSentenceAddress() + "] s:["
-                    + bratAnnotatorModel.getSentenceAddress() + "]");
+                ProjectUtil.setAnnotationPreference(username, repository, annotationService,
+                        bratAnnotatorModel, Mode.ANNOTATION);
+
+                Sentence sentence = selectByAddr(jCas, Sentence.class,
+                        bratAnnotatorModel.getSentenceAddress());
+                bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
+                bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
+
+                LOG.debug("Configured BratAnnotatorModel for user [" + username + "] f:["
+                        + bratAnnotatorModel.getFirstSentenceAddress() + "] l:["
+                        + bratAnnotatorModel.getLastSentenceAddress() + "] s:["
+                        + bratAnnotatorModel.getSentenceAddress() + "]");
+            }
+
+            // if project is changed, reset some project specific settings
+            if (currentprojectId != bratAnnotatorModel.getProject().getId()) {
+                bratAnnotatorModel.setRememberedArcFeatures(null);
+                bratAnnotatorModel.setRememberedArcLayer(null);
+                bratAnnotatorModel.setRememberedSpanFeatures(null);
+                bratAnnotatorModel.setRememberedSpanLayer(null);
+                // bratAnnotatorModel.setMessage(null);
+            }
+
+            currentprojectId = bratAnnotatorModel.getProject().getId();
+            currentDocumentId = bratAnnotatorModel.getDocument().getId();
+
+            updateSentenceAddress();
+
+            // Wicket-level rendering of annotator because it becomes visible
+            // after selecting a document
+            target.add(annotator);
+
+            // brat-level initialization and rendering of document
+            annotator.bratInit(target);
+            annotator.bratRender(target);
+        }
+        catch (DataRetrievalFailureException e) {
+            target.addChildren(getPage(), FeedbackPanel.class);
+            error(e.getMessage());
+        }
+        catch (IOException e) {
+            target.addChildren(getPage(), FeedbackPanel.class);
+            error(e.getMessage());
+        }
+        catch (UIMAException e) {
+            target.addChildren(getPage(), FeedbackPanel.class);
+            error(ExceptionUtils.getRootCauseMessage(e));
+        }
+        catch (ClassNotFoundException e) {
+            target.addChildren(getPage(), FeedbackPanel.class);
+            error(e.getMessage());
         }
 
-        // if project is changed, reset some project specific settings
-        if (currentprojectId != bratAnnotatorModel.getProject().getId()) {
-            bratAnnotatorModel.setRememberedArcFeatures(null);
-            bratAnnotatorModel.setRememberedArcLayer(null);
-            bratAnnotatorModel.setRememberedSpanFeatures(null);
-            bratAnnotatorModel.setRememberedSpanLayer(null);
-            bratAnnotatorModel.setMessage(null);
-        }
-
-        currentprojectId = bratAnnotatorModel.getProject().getId();
-        currentDocumentId = bratAnnotatorModel.getDocument().getId();
+        // Update dynamic elements in action bar
+        target.add(finish);
+        target.add(numberOfPages);
+        target.add(documentNamePanel);
     }
 
     private JCas getCas(Project aProject, User user, SourceDocument aDocument)

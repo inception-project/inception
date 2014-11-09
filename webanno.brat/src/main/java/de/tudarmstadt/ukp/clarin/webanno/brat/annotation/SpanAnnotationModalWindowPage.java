@@ -40,7 +40,6 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
-import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
 import org.apache.wicket.ajax.json.JSONObject;
@@ -135,12 +134,6 @@ public class SpanAnnotationModalWindowPage
         public AnnotationDialogForm(String id, final ModalWindow aModalWindow)
         {
             super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
-
-            final FeedbackPanel feedbackPanel = new FeedbackPanel("feedbackPanel");
-            add(feedbackPanel);
-            feedbackPanel.setOutputMarkupId(true);
-            feedbackPanel.add(new AttributeModifier("class", "info"));
-            feedbackPanel.add(new AttributeModifier("class", "error"));
 
             for (AnnotationLayer layer : bratAnnotatorModel.getAnnotationLayers()) {
                 if (!layer.isEnabled() || layer.getName().equals(Token.class.getName())) {
@@ -295,12 +288,14 @@ public class SpanAnnotationModalWindowPage
                             // BEGIN HACK - ComboBox is too stupid to escape strings that it renders
                             // to JSON and sends to the frontend...
                             // https://github.com/sebfz1/wicket-jquery-ui/issues/134
+                                    @Override
                                     public String getText(Tag object)
                                     {
                                         return StringUtils.substring(
                                                 JSONObject.quote(object.getName()), 1, -1);
                                     };
 
+                                    @Override
                                     public String getValue(Tag object)
                                     {
                                         return StringUtils.substring(
@@ -342,7 +337,7 @@ public class SpanAnnotationModalWindowPage
                 @Override
                 protected void onSubmit(AjaxRequestTarget aTarget, Form<?> form)
                 {
-                    aTarget.add(feedbackPanel);
+                    aTarget.addChildren(getPage(), FeedbackPanel.class);
                     aModalWindow.close(aTarget);
                     
                     try {
@@ -380,7 +375,7 @@ public class SpanAnnotationModalWindowPage
                 @Override
                 public void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
                 {
-                    aTarget.add(feedbackPanel);
+                    aTarget.addChildren(getPage(), FeedbackPanel.class);
                     aModalWindow.close(aTarget);
                     
                     try {
@@ -536,11 +531,7 @@ public class SpanAnnotationModalWindowPage
         if(selectedSpanId !=-1){
             String bratLabelText = TypeUtil.getBratLabelText(adapter,
                     BratAjaxCasUtil.selectByAddr(jCas, selectedSpanId), features);
-            bratAnnotatorModel.setMessage(generateMessage(selectedLayer, bratLabelText,
-                false));
-        }
-        else{
-             bratAnnotatorModel.setMessage("");
+            info(generateMessage(selectedLayer, bratLabelText, false));
         }
     }
     
@@ -620,7 +611,7 @@ public class SpanAnnotationModalWindowPage
             selectedFeatureValues.put(feature, model.getObject());
         }
 
-        bratAnnotatorModel.setMessage(generateMessage(selectedLayer, null, true));
+        info(generateMessage(selectedLayer, null, true));
 
         // A hack to rememeber the Visural DropDown display
         // value

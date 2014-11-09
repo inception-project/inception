@@ -25,99 +25,105 @@
 		<div wicket:id=finishCurationModal></div>
 		<div wicket:id=reCreateMergeCasModal></div>
 
-		<div class="actionbar">
-			<ul class="horizontal">
-				<li>
-					<fieldset>
-						<legend>Document</legend>
-						<ul class="horizontal">
-							<li><a wicket:id="showOpenDocumentModal"
-								id="showOpenDocumentModal"> <img
-									src="images/drawer_open.png" title="Open" /><br />Open
-							</a></li>
-							<li><a wicket:id="showreCreateMergeCasModal"
-								id="showreCreateMergeCasModal"> <img
-									src="images/document_copies.png"
-									title="Re-Create Merge Annotation" /><br />Re-create Merge
-							</a></li>
-
-							<li><a wicket:id="showPreviousDocument"
-								title="press Shift+PgUp"> <img
-									src="images/document_back.png" title="Prev. Doc" /><br />Prev.
-							</a></li>
-
-							<li><a wicket:id="showNextDocument"
-								title="press Shift+PgDown"> <img
-									src="images/document_next.png" title="Next Doc." /><br />Next
-							</a></li>
-
-							<span wicket:id="exportModalPanel" />
-
-							<span wicket:id="annotationLayersModalPanel" />
-
-						</ul>
-					</fieldset>
-				</li>
-
-				<li>
-					<fieldset>
-						<legend>Page</legend>
-						<ul class="horizontal">
-							<li><a wicket:id="showFirst" title="press Home"> <img
-									src="images/document_page.png" title="First page" /><br />First
-							</a></li>
-							<li><a wicket:id="showPrevious" title="press PgUp"> <img
-									src="images/document_page_previous.png" title="Previous page" /><br />Prev.
-							</a></li>
-
-							<li>
-								<div style="height: 32px;">
-									<form wicket:id="gotoPageTextFieldForm">
-										<input type="number" wicket:id="gotoPageText"
-											style="width: 4em; text-align: right;" title="press Enter" />
-									</form>
-								</div>
-								<div>
-									<a wicket:id="gotoPageLink">Go to</a>
-								</div>
-							</li>
-
-							<li><a wicket:id="showNext" title="press PgDown"> <img
-									src="images/document_page_next.png" title="Next page" /><br />Next
-							</a></li>
-							<li><a wicket:id="showLast" title="press End"> <img
-									src="images/document_page_last.png" title="Last page" /><br />Last
-							</a></li>
-						</ul>
-					</fieldset>
-				</li>
-
-				<li>
-					<fieldset>
-						<legend>Help</legend>
-						<ul class="horizontal">
-							<span wicket:id="guidelineModalPanel" />
-						</ul>
-					</fieldset>
-				</li>
-
-				<li>
-					<fieldset>
-						<legend>Workflow</legend>
-						<ul class="horizontal">
-							<li><a wicket:id="showFinishCurationModal"><img
-									wicket:id="finishImage" title="Done" /><br />Done </a></li>
-						</ul>
-					</fieldset>
-				</li>
-			</ul>
+		<div class="top-sticker">
+			<div class="actionbar">
+				<div>
+					<ul class="horizontal">
+						<li>
+							<fieldset>
+								<legend>Document</legend>
+								<ul class="horizontal">
+									<li><a wicket:id="showOpenDocumentModal"
+										id="showOpenDocumentModal"> <img
+											src="images/drawer_open.png" title="Open" /><br />Open
+									</a></li>
+									<li><a wicket:id="showreCreateMergeCasModal"
+										id="showreCreateMergeCasModal"> <img
+											src="images/document_copies.png"
+											title="Re-Create Merge Annotation" /><br />Re-create Merge
+									</a></li>
+		
+									<li><a wicket:id="showPreviousDocument"
+										title="press Shift+PgUp"> <img
+											src="images/document_back.png" title="Prev. Doc" /><br />Prev.
+									</a></li>
+		
+									<li><a wicket:id="showNextDocument"
+										title="press Shift+PgDown"> <img
+											src="images/document_next.png" title="Next Doc." /><br />Next
+									</a></li>
+		
+									<li><span wicket:id="exportModalPanel" /></li>
+		
+									<li><span wicket:id="annotationLayersModalPanel" /></li>
+		
+								</ul>
+							</fieldset>
+						</li>
+		
+						<li>
+							<fieldset>
+								<legend>Page</legend>
+								<ul class="horizontal">
+									<li><a wicket:id="showFirst" title="press Home"> <img
+											src="images/document_page.png" title="First page" /><br />First
+									</a></li>
+									<li><a wicket:id="showPrevious" title="press PgUp"> <img
+											src="images/document_page_previous.png" title="Previous page" /><br />Prev.
+									</a></li>
+		
+									<li>
+										<div style="height: 32px;">
+											<form wicket:id="gotoPageTextFieldForm">
+												<input type="number" wicket:id="gotoPageText"
+													style="width: 4em; text-align: right;" title="press Enter" />
+											</form>
+										</div>
+										<div>
+											<a wicket:id="gotoPageLink">Go to</a>
+										</div>
+									</li>
+		
+									<li><a wicket:id="showNext" title="press PgDown"> <img
+											src="images/document_page_next.png" title="Next page" /><br />Next
+									</a></li>
+									<li><a wicket:id="showLast" title="press End"> <img
+											src="images/document_page_last.png" title="Last page" /><br />Last
+									</a></li>
+								</ul>
+							</fieldset>
+						</li>
+		
+						<li>
+							<fieldset>
+								<legend>Help</legend>
+								<ul class="horizontal">
+									<li><span wicket:id="guidelineModalPanel" /></li>
+								</ul>
+							</fieldset>
+						</li>
+		
+						<li>
+							<fieldset>
+								<legend>Workflow</legend>
+								<ul class="horizontal">
+									<li><a wicket:id="showFinishCurationModal"><img
+											wicket:id="finishImage" title="Done" /><br />Done </a></li>
+								</ul>
+							</fieldset>
+						</li>
+					</ul>
+				</div>
+				<div class="locationbar">
+				    <span wicket:id="documentNamePanel"></span>
+				    <span style="float: right;">
+				      <span wicket:id="numberOfPages"></span>
+				    </span>
+				</div>
+			</div>
 		</div>
-		<span wicket:id="documentNamePanel"></span>
-		<div style="text-align: center; color: maroon;"
-			wicket:id="numberOfPages"></div>
+			
 		<div wicket:id="curationPanel"></div>
-
-
 	</wicket:extend>
 </body>
 </html>

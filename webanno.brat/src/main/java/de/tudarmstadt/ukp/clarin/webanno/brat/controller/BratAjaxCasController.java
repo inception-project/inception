@@ -230,7 +230,7 @@ public class BratAjaxCasController
                     aBratAnnotatorModel.getWindowSize()));
         }
 
-        render(aResponse, aBratAnnotatorModel, aJCas);
+        render(aResponse, aBratAnnotatorModel, aJCas, annotationService);
     }
 
     /**
@@ -239,8 +239,10 @@ public class BratAjaxCasController
      * @param aResponse the response.
      * @param aBModel the annotator model.
      * @param aJCas the JCas.
+     * @param aAnnotationService the annotation service.s
      */
-    public static void render(GetDocumentResponse aResponse, BratAnnotatorModel aBModel, JCas aJCas)
+    public static void render(GetDocumentResponse aResponse, BratAnnotatorModel aBModel,
+            JCas aJCas, AnnotationService aAnnotationService)
     {
         // Render invisible baseline annotations (sentence, tokens)
         SpanAdapter.renderTokenAndSentence(aJCas, aResponse, aBModel);
@@ -259,7 +261,7 @@ public class BratAjaxCasController
 
             ColoringStrategy coloringStrategy = ColoringStrategy.getBestStrategy(layer, aBModel, i);
 
-            List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
+            List<AnnotationFeature> features = aAnnotationService.listAnnotationFeature(layer);
             List<AnnotationFeature> invisibleFeatures = new ArrayList<AnnotationFeature>();
             for (AnnotationFeature feature : features) {
                 if (!feature.isVisible()) {

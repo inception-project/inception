@@ -131,12 +131,6 @@ public class CurationPanel
     {
         super(id);
 
-        final FeedbackPanel feedbackPanel = new FeedbackPanel("feedbackPanel");
-        add(feedbackPanel);
-        feedbackPanel.setOutputMarkupId(true);
-        feedbackPanel.add(new AttributeModifier("class", "info"));
-        feedbackPanel.add(new AttributeModifier("class", "error"));
-
         // add container for updating ajax
         final WebMarkupContainer textOuterView = new WebMarkupContainer("textOuterView");
         textOuterView.setOutputMarkupId(true);
@@ -192,8 +186,7 @@ public class CurationPanel
             @Override
             protected void onChange(AjaxRequestTarget aTarget, BratAnnotatorModel bratAnnotatorModel)
             {
-                aTarget.add(feedbackPanel);
-                info(bratAnnotatorModel.getMessage());
+                aTarget.addChildren(getPage(), FeedbackPanel.class);
                 aTarget.add(sentenceOuterView);
                 try {
                     CuratorUtil.updatePanel(aTarget, sentenceOuterView, curationContainer,
@@ -290,6 +283,15 @@ public class CurationPanel
                             textOuterView.addOrReplace(textListView);
                             aTarget.add(textOuterView);
                             aTarget.add(sentenceOuterView);
+                            
+                            // Wicket-level rendering of annotator because it becomes visible
+                            // after selecting a document
+                            aTarget.add(mergeVisualizer);
+
+                            // brat-level initialization and rendering of document
+                            mergeVisualizer.bratInit(aTarget);
+                            mergeVisualizer.bratRender(aTarget);
+                            
                         }
                         catch (UIMAException e) {
                             error(ExceptionUtils.getRootCause(e));
@@ -334,16 +336,19 @@ public class CurationPanel
     {
 
     }
+    
     @Override
     public void renderHead(IHeaderResponse response)
     {
+        super.renderHead(response);
+        
         if (firstLoad) {
             firstLoad = false;
         }
         else if (bratAnnotatorModel.getProject() != null) {
             // mergeVisualizer.setModelObject(bratAnnotatorModel);
             mergeVisualizer.setCollection("#" + bratAnnotatorModel.getProject().getName() + "/");
-            mergeVisualizer.reloadContent(response);
+            mergeVisualizer.bratInitRenderLater(response);
         }
     }
 }
