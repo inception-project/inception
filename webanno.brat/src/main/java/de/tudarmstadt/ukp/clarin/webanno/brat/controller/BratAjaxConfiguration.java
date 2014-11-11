@@ -113,18 +113,18 @@ public class BratAjaxConfiguration
 
         EntityType entityType;
         if (aLayer.isBuiltIn() && aLayer.getName().equals(POS.class.getName())) {
-            entityType = new EntityType(aLayer.getName(), bratTypeName);
+            entityType = new EntityType(aLayer.getName(), aLayer.getUiName(), bratTypeName);
         }
         else if (aLayer.isBuiltIn() && aLayer.getName().equals(NamedEntity.class.getName())) {
-            entityType = new EntityType(aLayer.getName(), bratTypeName);
+            entityType = new EntityType(aLayer.getName(), aLayer.getUiName(), bratTypeName);
         }
         else if (aLayer.isBuiltIn() && aLayer.getName().equals(Lemma.class.getName())) {
-            entityType = new EntityType(aLayer.getName(), bratTypeName);
+            entityType = new EntityType(aLayer.getName(), aLayer.getUiName(), bratTypeName);
         }
 
         // custom layers
         else {
-            entityType = new EntityType(aLayer.getName(), bratTypeName);
+            entityType = new EntityType(aLayer.getName(), aLayer.getUiName(), bratTypeName);
         }
 
         if (aAttachingLayer != null) {
@@ -147,7 +147,8 @@ public class BratAjaxConfiguration
             }
             
             RelationType arc = new RelationType(aAttachingLayer.getName(),
-                    attachingLayerBratTypeName, bratTypeName, null, arrowHead);
+                    aAttachingLayer.getUiName(), attachingLayerBratTypeName, bratTypeName, null,
+                    arrowHead);
             entityType.setArcs(asList(arc));
         }
 

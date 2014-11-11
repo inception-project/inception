@@ -55,24 +55,29 @@ public class EntityType
         // Nothing to do
     }
 
-    public EntityType(String aName, String aType)
+    /**
+     * @param aName the "name" (the UIMA type name).
+     * @param aLabel the "label" which is displayed to the user e.g. in the comment popup (the display name)
+     * @param aType the "type" (brat type name, which is basically an identifier used in the UI visual model)
+     */
+    public EntityType(String aName, String aLabel, String aType)
     {
         this(aName /* name */, aType /* type */, true /* unused */, "" /* hotkey */,
                 null /* fgColor */, null /* bgColor */, null /* borderColor */,
-                Arrays.asList(aName) /* labels */, null /* children */, null /* attributes */, 
+                Arrays.asList(aLabel) /* labels */, null /* children */, null /* attributes */, 
                 null /* arcs */);
     }
     
-    public EntityType(String aName, String aType, String aFgColor, String aBgColor,
-            String aBorderColor)
-    {
-        this(aName /* name */, aType /* type */, true /* unused */, "" /* hotkey */,
-                aFgColor /* fgColor */, aBgColor /* bgColor */, aBorderColor /* borderColor */,
-                Arrays.asList(aName) /* labels */, null /* children */, null /* attributes */, 
-                null /* arcs */);
-    }
+//    public EntityType(String aName, String aType, String aFgColor, String aBgColor,
+//            String aBorderColor)
+//    {
+//        this(aName /* name */, aType /* type */, true /* unused */, "" /* hotkey */,
+//                aFgColor /* fgColor */, aBgColor /* bgColor */, aBorderColor /* borderColor */,
+//                Arrays.asList(aName) /* labels */, null /* children */, null /* attributes */, 
+//                null /* arcs */);
+//    }
     
-    public EntityType(String aName, String aType, boolean aUnused, String aHotkey, String aFgColor,
+    private EntityType(String aName, String aType, boolean aUnused, String aHotkey, String aFgColor,
             String aBgColor, String aBorderColor, List<String> aLabels, List<EntityType> aChildren,
             List<String> aAttributes, List<RelationType> aArcs)
     {

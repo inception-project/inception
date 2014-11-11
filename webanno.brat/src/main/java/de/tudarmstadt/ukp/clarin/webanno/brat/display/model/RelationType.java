@@ -53,23 +53,23 @@ public class RelationType
     // FIXME we must not have such global states (public static)
     // public static HashMap<String, Color> typeToColor = new HashMap<String, Color>();
 
-    public RelationType(String aName, String aType, String aTarget)
-    {
-        this(aName, aType, aTarget, null, "triangle,5");
-    }
+//    public RelationType(String aName, String aType, String aTarget)
+//    {
+//        this(aName, aType, aTarget, null, "triangle,5");
+//    }
     
-    public RelationType(String aName, String aType, String aTarget, String aColor)
-    {
-        this(aName, aType, aTarget, aColor, "triangle,5");
-    }
+//    public RelationType(String aName, String aType, String aTarget, String aColor)
+//    {
+//        this(aName, aType, aTarget, aColor, "triangle,5");
+//    }
     
-    public RelationType(String aName, String aType, String aTarget, String aColor,
+    public RelationType(String aName, String aLabel, String aType, String aTarget, String aColor,
             String aArrowHead)
     {
-        this(aColor, aArrowHead, Arrays.asList(aName), aType, Arrays.asList(aTarget), "");
+        this(aColor, aArrowHead, Arrays.asList(aLabel), aType, Arrays.asList(aTarget), "");
     }
     
-    public RelationType(String aColor, String aArrowHead, List<String> aLabels, String aType,
+    private RelationType(String aColor, String aArrowHead, List<String> aLabels, String aType,
             List<String> aTargets, String aDashArray)
     {
         super();
