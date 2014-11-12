@@ -167,9 +167,9 @@ public class AnnotationPage
                     {
                         if (bratAnnotatorModel.getDocument() != null) {
                             try {
-                                JCas jCas = getCas(bratAnnotatorModel.getProject(),
-                                        bratAnnotatorModel.getUser(),
-                                        bratAnnotatorModel.getDocument());
+                                JCas jCas1 = null;
+                                jCas1 = repository.readJCas(bratAnnotatorModel.getDocument(), bratAnnotatorModel.getProject(), bratAnnotatorModel.getUser());
+                                JCas jCas = jCas1;
                                 totalNumberOfSentence = BratAjaxCasUtil.getNumberOfPages(jCas);
 
                                 // If only one page, start displaying from sentence 1
@@ -732,8 +732,9 @@ public class AnnotationPage
                     username);
 
             bratAnnotatorModel.setUser(repository.getUser(username));
-            JCas jCas = getCas(bratAnnotatorModel.getProject(), bratAnnotatorModel.getUser(),
-                    bratAnnotatorModel.getDocument());
+            JCas jCas1 = null;
+            jCas1 = repository.readJCas(bratAnnotatorModel.getDocument(), bratAnnotatorModel.getProject(), bratAnnotatorModel.getUser());
+            JCas jCas = jCas1;
             if (bratAnnotatorModel.getSentenceAddress() == -1
                     || bratAnnotatorModel.getDocument().getId() != currentDocumentId
                     || bratAnnotatorModel.getProject().getId() != currentprojectId) {
@@ -803,13 +804,4 @@ public class AnnotationPage
         target.add(numberOfPages);
         target.add(documentNamePanel);
     }
-
-    private JCas getCas(Project aProject, User user, SourceDocument aDocument)
-        throws UIMAException, IOException, ClassNotFoundException
-    {
-        JCas jCas = null;
-        jCas = repository.readJCas(aDocument, aProject, user);
-        return jCas;
-    }
-
 }
