@@ -96,7 +96,6 @@ public class AnnotationPage
     private BratAnnotator annotator;
 
     private FinishImage finish;
-    private int windowSize;
 
     private NumberTextField<Integer> gotoPageTextField;
 
@@ -712,16 +711,6 @@ public class AnnotationPage
         }
         return jCas;
 
-    }
-
-    public int getWindowSize()
-    {
-        return windowSize;
-    }
-
-    public void setWindowSize(int aWindowSize)
-    {
-        windowSize = aWindowSize;
     }
 
     private void loadDocumentAction(AjaxRequestTarget target)
