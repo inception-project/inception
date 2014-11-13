@@ -50,7 +50,6 @@ import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.springframework.beans.BeansException;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -1076,6 +1075,9 @@ public class AutomationPage
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User logedInUser = repository.getUser(SecurityContextHolder.getContext()
                 .getAuthentication().getName());
+        
+        bratAnnotatorModel.setUser(logedInUser);
+        
         JCas jCas = null;
         try {
             AnnotationDocument logedInUserAnnotationDocument = repository.getAnnotationDocument(
@@ -1116,56 +1118,26 @@ public class AutomationPage
                         logedInUser);
             }
         }
+        
+        // (Re)initialize brat model after potential creating / upgrading CAS
+        bratAnnotatorModel.initForDocument(jCas);
 
-        if (bratAnnotatorModel.getSentenceAddress() == -1
-                || bratAnnotatorModel.getDocument().getId() != currentDocumentId
-                || bratAnnotatorModel.getProject().getId() != currentprojectId) {
-
-            try {
-                bratAnnotatorModel
-                        .setSentenceAddress(BratAjaxCasUtil.getFirstSentenceAddress(jCas));
-                bratAnnotatorModel.setLastSentenceAddress(BratAjaxCasUtil
-                        .getLastSentenceAddress(jCas));
-                bratAnnotatorModel.setFirstSentenceAddress(bratAnnotatorModel.getSentenceAddress());
-
-                Sentence sentence = selectByAddr(jCas, Sentence.class,
-                        bratAnnotatorModel.getSentenceAddress());
-                bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
-                bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
-
-                ProjectUtil.setAnnotationPreference(username, repository, annotationService,
-                        bratAnnotatorModel, Mode.AUTOMATION);
-                
-                LOG.debug("Configured BratAnnotatorModel for user [" + logedInUser.getUsername()
-                        + "] f:[" + bratAnnotatorModel.getFirstSentenceAddress() + "] l:["
-                        + bratAnnotatorModel.getLastSentenceAddress() + "] s:["
-                        + bratAnnotatorModel.getSentenceAddress() + "]");
-            }
-            catch (DataRetrievalFailureException ex) {
-                throw ex;
-            }
-            catch (BeansException e) {
-                throw e;
-            }
-            catch (FileNotFoundException e) {
-                throw e;
-            }
-            catch (IOException e) {
-                throw e;
-            }
-        }
-        bratAnnotatorModel.setUser(logedInUser);
-
+        // Load user preferences
+        ProjectUtil.setAnnotationPreference(username, repository, annotationService,
+                bratAnnotatorModel, Mode.AUTOMATION);
+        
         // if project is changed, reset some project specific settings
         if (currentprojectId != bratAnnotatorModel.getProject().getId()) {
-            bratAnnotatorModel.setRememberedArcFeatures(null);
-            bratAnnotatorModel.setRememberedArcLayer(null);
-            bratAnnotatorModel.setRememberedSpanFeatures(null);
-            bratAnnotatorModel.setRememberedSpanLayer(null);
-//            bratAnnotatorModel.setMessage(null);
+            bratAnnotatorModel.initForProject();
         }
+        
         currentprojectId = bratAnnotatorModel.getProject().getId();
         currentDocumentId = bratAnnotatorModel.getDocument().getId();
+        
+        LOG.debug("Configured BratAnnotatorModel for user [" + bratAnnotatorModel.getUser()
+                + "] f:[" + bratAnnotatorModel.getFirstSentenceAddress() + "] l:["
+                + bratAnnotatorModel.getLastSentenceAddress() + "] s:["
+                + bratAnnotatorModel.getSentenceAddress() + "]");
     }
 
     private void setCurationSegmentBeginEnd()

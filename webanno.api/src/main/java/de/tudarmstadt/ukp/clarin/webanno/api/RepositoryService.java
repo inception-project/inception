@@ -26,11 +26,11 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.JCas;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.model.AutomationStatus;
@@ -1242,4 +1242,6 @@ public interface RepositoryService
 
     AutomationStatus getAutomationStatus(MiraTemplate template);
 
+    void upgrade(CAS aCurCas, Project aProject)
+        throws UIMAException, IOException;
 }

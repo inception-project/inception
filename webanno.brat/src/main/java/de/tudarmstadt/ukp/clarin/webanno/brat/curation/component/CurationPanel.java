@@ -244,21 +244,22 @@ public class CurationPanel
                                         .equals(segment.getSentenceNumber()));
                             }
 
-                            if (bratAnnotatorModel.isScrollPage()) {
-                                JCas jCas = null;
-                                if (bratAnnotatorModel.getMode().equals(Mode.ANNOTATION)
-                                        || bratAnnotatorModel.getMode().equals(Mode.CORRECTION)
-                                        || bratAnnotatorModel.getMode().equals(
-                                                Mode.CORRECTION_MERGE)) {
+                            JCas jCas = null;
+                            if (bratAnnotatorModel.getMode().equals(Mode.ANNOTATION)
+                                    || bratAnnotatorModel.getMode().equals(Mode.CORRECTION)
+                                    || bratAnnotatorModel.getMode().equals(
+                                            Mode.CORRECTION_MERGE)) {
 
-                                    jCas = repository.readJCas(bratAnnotatorModel.getDocument(),
-                                            bratAnnotatorModel.getProject(),
-                                            bratAnnotatorModel.getUser());
-                                }
-                                else {
-                                    jCas = repository.getCurationDocumentContent(bratAnnotatorModel
-                                            .getDocument());
-                                }
+                                jCas = repository.readJCas(bratAnnotatorModel.getDocument(),
+                                        bratAnnotatorModel.getProject(),
+                                        bratAnnotatorModel.getUser());
+                            }
+                            else {
+                                jCas = repository.getCurationDocumentContent(bratAnnotatorModel
+                                        .getDocument());
+                            }
+
+                            if (bratAnnotatorModel.isScrollPage()) {
                                 bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil
                                         .getSentenceBeginAddress(jCas,
                                                 bratAnnotatorModel.getSentenceAddress(),
@@ -290,7 +291,7 @@ public class CurationPanel
 
                             // brat-level initialization and rendering of document
                             mergeVisualizer.bratInit(aTarget);
-                            mergeVisualizer.bratRender(aTarget);
+                            mergeVisualizer.bratRender(aTarget, jCas);
                             
                         }
                         catch (UIMAException e) {

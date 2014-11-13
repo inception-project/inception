@@ -42,7 +42,6 @@ import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import wicket.contrib.input.events.EventType;
@@ -107,7 +106,6 @@ public class CurationPage
     private int sentenceNumber = 1;
     private int totalNumberOfSentence;
 
-    private long currentDocumentId;
     private long currentprojectId;
 
     // Open the dialog window on first load
@@ -996,6 +994,11 @@ public class CurationPage
     private void loadDocumentAction(AjaxRequestTarget target)
     {
         try {
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
+            User userLoggedIn = repository.getUser(SecurityContextHolder.getContext()
+                    .getAuthentication().getName());
+            bratAnnotatorModel.setUser(userLoggedIn);
+            
             List<AnnotationDocument> finishedAnnotationDocuments = new ArrayList<AnnotationDocument>();
 
             for (AnnotationDocument annotationDocument : repository
@@ -1004,48 +1007,31 @@ public class CurationPage
                     finishedAnnotationDocuments.add(annotationDocument);
                 }
             }
+            
             CurationBuilder cb = new CurationBuilder(repository);
             AnnotationDocument randomAnnotationDocument = null;
             if (finishedAnnotationDocuments.size() > 0) {
                 randomAnnotationDocument = finishedAnnotationDocuments.get(0);
             }
-            String username = SecurityContextHolder.getContext().getAuthentication().getName();
-            User userLoggedIn = repository.getUser(SecurityContextHolder.getContext()
-                    .getAuthentication().getName());
-            bratAnnotatorModel.setUser(userLoggedIn);
-            ProjectUtil.setAnnotationPreference(username, repository, annotationService,
-                    bratAnnotatorModel, Mode.CURATION);
+            
             Map<String, JCas> jCases = cb.listJcasesforCuration(finishedAnnotationDocuments,
                     randomAnnotationDocument, Mode.CURATION);
             JCas mergeJCas = cb.getMergeCas(bratAnnotatorModel, bratAnnotatorModel.getDocument(),
                     jCases, randomAnnotationDocument);
 
-            if (bratAnnotatorModel.getSentenceAddress() == -1
-                    || bratAnnotatorModel.getDocument().getId() != currentDocumentId
-                    || bratAnnotatorModel.getProject().getId() != currentprojectId) {
+            // (Re)initialize brat model after potential creating / upgrading CAS
+            bratAnnotatorModel.initForDocument(mergeJCas);
 
-                bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil
-                        .getFirstSentenceAddress(mergeJCas));
-                bratAnnotatorModel.setLastSentenceAddress(BratAjaxCasUtil
-                        .getLastSentenceAddress(mergeJCas));
-                bratAnnotatorModel.setFirstSentenceAddress(bratAnnotatorModel.getSentenceAddress());
-
-                Sentence sentence = selectByAddr(mergeJCas, Sentence.class,
-                        bratAnnotatorModel.getSentenceAddress());
-                bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
-                bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
-            }
+            // Load user preferences
+            ProjectUtil.setAnnotationPreference(username, repository, annotationService,
+                    bratAnnotatorModel, Mode.CURATION);
+            
             // if project is changed, reset some project specific settings
             if (currentprojectId != bratAnnotatorModel.getProject().getId()) {
-                bratAnnotatorModel.setRememberedArcFeatures(null);
-                bratAnnotatorModel.setRememberedArcLayer(null);
-                bratAnnotatorModel.setRememberedSpanFeatures(null);
-                bratAnnotatorModel.setRememberedSpanLayer(null);
-                // bratAnnotatorModel.setMessage(null);
+                bratAnnotatorModel.initForProject();
             }
 
             currentprojectId = bratAnnotatorModel.getProject().getId();
-            currentDocumentId = bratAnnotatorModel.getDocument().getId();
 
             CurationBuilder builder = new CurationBuilder(repository);
             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
@@ -1053,25 +1039,9 @@ public class CurationPage
 
             updatePanel(curationContainer, target);
         }
-        catch (UIMAException e) {
+        catch (Exception e) {
             target.add(getFeedbackPanel());
             error(ExceptionUtils.getRootCause(e));
-        }
-        catch (ClassNotFoundException e) {
-            target.add(getFeedbackPanel());
-            error(e.getMessage());
-        }
-        catch (DataRetrievalFailureException e) {
-            target.add(getFeedbackPanel());
-            error(e.getCause().getMessage());
-        }
-        catch (IOException e) {
-            target.add(getFeedbackPanel());
-            error(e.getMessage());
-        }
-        catch (BratAnnotationException e) {
-            target.add(getFeedbackPanel());
-            error(e.getMessage());
         }
         
         target.add(finish);

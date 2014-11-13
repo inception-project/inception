@@ -117,7 +117,6 @@ public class CorrectionPage
     private int sentenceNumber = 1;
     private int totalNumberOfSentence;
 
-    private long currentDocumentId;
     private long currentprojectId;
 
     // Open the dialog window on first load
@@ -1097,40 +1096,25 @@ public class CorrectionPage
                         bratAnnotatorModel.getDocument(), logedInUser, repository);
             }
         }
+        
+        // (Re)initialize brat model after potential creating / upgrading CAS
+        bratAnnotatorModel.initForDocument(jCas);
 
-        if (bratAnnotatorModel.getSentenceAddress() == -1
-                || bratAnnotatorModel.getDocument().getId() != currentDocumentId
-                || bratAnnotatorModel.getProject().getId() != currentprojectId) {
-
-            bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getFirstSentenceAddress(jCas));
-            bratAnnotatorModel.setLastSentenceAddress(BratAjaxCasUtil.getLastSentenceAddress(jCas));
-            bratAnnotatorModel.setFirstSentenceAddress(bratAnnotatorModel.getSentenceAddress());
-
-            Sentence sentence = selectByAddr(jCas, Sentence.class,
-                    bratAnnotatorModel.getSentenceAddress());
-            bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
-            bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
-
-            ProjectUtil.setAnnotationPreference(logedInUser.getUsername(), repository,
-                    annotationService, bratAnnotatorModel, Mode.CORRECTION);
-
-            LOG.debug("Configured BratAnnotatorModel for user [" + logedInUser.getUsername() + "] f:["
-                    + bratAnnotatorModel.getFirstSentenceAddress() + "] l:["
-                    + bratAnnotatorModel.getLastSentenceAddress() + "] s:["
-                    + bratAnnotatorModel.getSentenceAddress() + "]");
-        }
+        // Load user preferences
+        ProjectUtil.setAnnotationPreference(logedInUser.getUsername(), repository,
+                annotationService, bratAnnotatorModel, Mode.CORRECTION);
 
         // if project is changed, reset some project specific settings
         if (currentprojectId != bratAnnotatorModel.getProject().getId()) {
-            bratAnnotatorModel.setRememberedArcFeatures(null);
-            bratAnnotatorModel.setRememberedArcLayer(null);
-            bratAnnotatorModel.setRememberedSpanFeatures(null);
-            bratAnnotatorModel.setRememberedSpanLayer(null);
-//            bratAnnotatorModel.setMessage(null);
+            bratAnnotatorModel.initForProject();
         }
 
         currentprojectId = bratAnnotatorModel.getProject().getId();
-        currentDocumentId = bratAnnotatorModel.getDocument().getId();
+        
+        LOG.debug("Configured BratAnnotatorModel for user [" + bratAnnotatorModel.getUser()
+                + "] f:[" + bratAnnotatorModel.getFirstSentenceAddress() + "] l:["
+                + bratAnnotatorModel.getLastSentenceAddress() + "] s:["
+                + bratAnnotatorModel.getSentenceAddress() + "]");
     }
 
     private void setCurationSegmentBeginEnd()

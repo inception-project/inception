@@ -715,7 +715,6 @@ public class RepositoryServiceDbData
     @Transactional(noRollbackFor = NoResultException.class)
     public AnnotationDocument getAnnotationDocument(SourceDocument aDocument, User aUser)
     {
-
         return entityManager
                 .createQuery(
                         "FROM AnnotationDocument WHERE document = :document AND " + "user =:user"
@@ -1970,6 +1969,7 @@ public class RepositoryServiceDbData
         }
     }
 
+    @Override
     public void upgrade(CAS aCas, Project aProject)
         throws UIMAException, IOException
     {

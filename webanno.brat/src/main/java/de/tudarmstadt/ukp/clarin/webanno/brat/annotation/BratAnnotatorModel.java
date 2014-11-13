@@ -17,20 +17,24 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.uima.jcas.JCas;
+
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
-import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
  * Data model for the {@link BratAnnotator}
@@ -331,5 +335,31 @@ public class BratAnnotatorModel
     public void setAnnotate(boolean isAnnotate)
     {
         this.isAnnotate = isAnnotate;
+    }
+    
+    public void initForProject()
+    {
+        setRememberedArcFeatures(null);
+        setRememberedArcLayer(null);
+        setRememberedSpanFeatures(null);
+        setRememberedSpanLayer(null);
+    }
+    
+    public void initForDocument(JCas aJCas)
+    {
+        // (Re)initialize brat model after potential creating / upgrading CAS
+        setSentenceAddress(BratAjaxCasUtil.getFirstSentenceAddress(aJCas));
+        setFirstSentenceAddress(getSentenceAddress());
+        setLastSentenceAddress(BratAjaxCasUtil.getLastSentenceAddress(aJCas));
+        setWindowSize(5);
+
+        Sentence sentence = selectByAddr(aJCas, Sentence.class, getSentenceAddress());
+        setSentenceBeginOffset(sentence.getBegin());
+        setSentenceEndOffset(sentence.getEnd());
+
+//        LOG.debug("Configured BratAnnotatorModel for user [" + username + "] f:["
+//                + getFirstSentenceAddress() + "] l:["
+//                + getLastSentenceAddress() + "] s:["
+//                + getSentenceAddress() + "]");
     }
 }

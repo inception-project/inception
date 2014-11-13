@@ -378,7 +378,7 @@ public class BratAnnotator
             public void onClose(AjaxRequestTarget aTarget)
             {
                 if (!closeButtonClicked) {
-                    aTarget.appendJavaScript(bratRenderCommand());
+                    bratRender(aTarget, getJCas());
                     onChange(aTarget, getModelObject());
                 }
             }
@@ -426,7 +426,7 @@ public class BratAnnotator
             public void onClose(AjaxRequestTarget aTarget)
             {
                 if (!closeButtonClicked) {
-                    aTarget.appendJavaScript(bratRenderCommand());
+                    bratRender(aTarget, getJCas());
                     onChange(aTarget, getModelObject());
                 }
 
@@ -508,11 +508,13 @@ public class BratAnnotator
                 + "]);";
     }
     
-    private String bratRenderCommand()
+    private String bratRenderCommand(JCas aJCas)
     {
+        LOG.info("BEGIN bratRenderCommand");
         GetDocumentResponse response = new GetDocumentResponse();
-        BratAjaxCasController.render(response, getModelObject(), getJCas(), annotationService);
+        BratAjaxCasController.render(response, getModelObject(), aJCas, annotationService);
         String json = toJson(response);
+        LOG.info("END bratRenderCommand");
         return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('renderData', [" + json
                 + "]);";
     }
@@ -578,10 +580,11 @@ public class BratAnnotator
      * Render content as part of the current request.
      * 
      * @param aTarget the AJAX target.
+     * @param aJCas the CAS to render.
      */
-    public void bratRender(AjaxRequestTarget aTarget)
+    public void bratRender(AjaxRequestTarget aTarget, JCas aJCas)
     {
-        aTarget.appendJavaScript(bratRenderCommand());
+        aTarget.appendJavaScript(bratRenderCommand(aJCas));
     }
 
     public void bratInit(AjaxRequestTarget aTarget)
