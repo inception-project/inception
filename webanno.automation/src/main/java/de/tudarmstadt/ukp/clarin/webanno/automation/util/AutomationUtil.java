@@ -86,6 +86,7 @@ public class AutomationUtil
     private static AnnotationService annotationService;
 
     private static Log LOG = LogFactory.getLog(AutomationUtil.class);
+    private static final String NILL = "__nill__";
 
     public static void repeateAnnotation(BratAnnotatorModel aModel, RepositoryService aRepository,
             AnnotationService aAnnotationService, int aStart, int aEnd, AnnotationFeature aFeature)
@@ -520,7 +521,7 @@ public class AutomationUtil
                             .getAddress());
                 }
                 else {
-                    tag = annotations.size() == 0 ? "__nill__" : annotations.get(i);
+                    tag = annotations.size() == 0 ? NILL : annotations.get(i);
                     i++;
                 }
 

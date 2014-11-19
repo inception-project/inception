@@ -81,6 +81,9 @@ public class SpanAdapter
 
     private AnnotationLayer layer;
 
+    // value NILL for a token when the training file do not have annotations provided
+    private final static String NILL = "__nill__";
+
     public SpanAdapter(AnnotationLayer aLayer)
     {
         layer = aLayer;
@@ -442,9 +445,17 @@ public class SpanAdapter
     {
         Type type = getType(aJcas.getCas(), getAnnotationTypeName());
         List<String> annotations = new ArrayList<String>();
-        for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, begin, end)) {
-            Feature labelFeature = fs.getType().getFeatureByBaseName(aFeature.getName());
-            annotations.add(fs.getFeatureValueAsString(labelFeature));
+
+        for (Token token : selectCovered(aJcas, Token.class, begin, end)) {
+            if (selectCovered(aJcas.getCas(), type, token.getBegin(), token.getEnd()).size() > 0) {
+                AnnotationFS anno = selectCovered(aJcas.getCas(), type, token.getBegin(),
+                        token.getEnd()).get(0);
+                Feature labelFeature = anno.getType().getFeatureByBaseName(aFeature.getName());
+                annotations.add(anno.getFeatureValueAsString(labelFeature));
+            }
+            else {
+                annotations.add(NILL);
+            }
         }
         return annotations;
     }
@@ -549,14 +560,19 @@ public class SpanAdapter
             }
         }
         else {
-            Type theType = CasUtil.getType(aJcas.getCas(), getAttachTypeName());
-            Feature attachFeature = theType.getFeatureByBaseName(getAttachFeatureName());
+            // check if annotation is on an AttachType
+            Feature attachFeature = null;
+            if (getAttachTypeName() != null) {
+                type = CasUtil.getType(aJcas.getCas(), getAttachTypeName());
+                attachFeature = type.getFeatureByBaseName(getAttachFeatureName());
+            }
+
             for (Token token : select(aJcas, Token.class)) {
                 AnnotationFS newAnnotation = aJcas.getCas().createAnnotation(type,
                         token.getBegin(), token.getEnd());
                 newAnnotation.setFeatureValueFromString(feature, aLabelValues.get(i));
                 i++;
-                if (getAttachFeatureName() != null) {
+                if (attachFeature != null) {
                     token.setFeatureValue(attachFeature, newAnnotation);
                 }
                 aJcas.getCas().addFsToIndexes(newAnnotation);
