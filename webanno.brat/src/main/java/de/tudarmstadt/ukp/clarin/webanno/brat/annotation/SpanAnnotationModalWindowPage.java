@@ -42,7 +42,6 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
-import org.apache.wicket.ajax.json.JSONObject;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
 import org.apache.wicket.behavior.AttributeAppender;
@@ -284,25 +283,7 @@ public class SpanAnnotationModalWindowPage
 
                         ComboBox<Tag> featureValueCombo = new ComboBox<Tag>("tag",
                                 featureValueModels.get(item.getIndex()), tagset,
-                                new com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer<Tag>("name") {
-                            // BEGIN HACK - ComboBox is too stupid to escape strings that it renders
-                            // to JSON and sends to the frontend...
-                            // https://github.com/sebfz1/wicket-jquery-ui/issues/134
-                                    @Override
-                                    public String getText(Tag object)
-                                    {
-                                        return StringUtils.substring(
-                                                JSONObject.quote(object.getName()), 1, -1);
-                                    };
-
-                                    @Override
-                                    public String getValue(Tag object)
-                                    {
-                                        return StringUtils.substring(
-                                                JSONObject.quote(object.getName()), 1, -1);
-                                    };
-                            // END HACK
-                        });
+                                new com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer<Tag>("name"));
                         if (item.getIndex() == 0) {
                             // Put focus on first feature
                             featureValueCombo.add(new DefaultFocusBehavior());
