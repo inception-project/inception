@@ -69,6 +69,12 @@
 			<artifactId>de.tudarmstadt.ukp.dkpro.core.api.metadata-asl</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+			<artifactId>de.tudarmstadt.ukp.dkpro.core.api.parameter-asl</artifactId>
+			<!-- Constants in this dependency are inlined - dependency not required at runtime -->
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<scope>test</scope>

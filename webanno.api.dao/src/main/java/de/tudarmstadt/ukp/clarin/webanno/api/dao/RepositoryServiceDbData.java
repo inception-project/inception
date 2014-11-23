@@ -2113,8 +2113,8 @@ public class RepositoryServiceDbData
         boolean hasSentences = JCasUtil.exists(jCas, Sentence.class);
         if (!hasTokens || !hasSentences) {
             AnalysisEngine pipeline = createEngine(createEngineDescription(
-                    BreakIteratorSegmenter.class, BreakIteratorSegmenter.PARAM_CREATE_TOKENS,
-                    !hasTokens, BreakIteratorSegmenter.PARAM_CREATE_SENTENCES, !hasSentences));
+                    BreakIteratorSegmenter.class, BreakIteratorSegmenter.PARAM_WRITE_TOKEN,
+                    !hasTokens, BreakIteratorSegmenter.PARAM_WRITE_SENTENCE, !hasSentences));
             pipeline.process(cas.getJCas());
         }
         return jCas;
