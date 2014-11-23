@@ -643,7 +643,7 @@ public interface RepositoryService
      * @throws IOException
      *             If the specified webanno.home directory is not available no write permission
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_REMOTE')")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_REMOTE','ROLE_PROJECT_CREATOR')")
     void createProject(Project project, User user)
         throws IOException;
 

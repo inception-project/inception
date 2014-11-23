@@ -32,6 +32,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -66,10 +67,11 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
+import de.tudarmstadt.ukp.clarin.webanno.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 
 /**
@@ -147,8 +149,11 @@ public class ProjectPage
                 }
             });
 
-            MetaDataRoleAuthorizationStrategy.authorize(creatProject, Component.RENDER,
-                    "ROLE_ADMIN");
+            MetaDataRoleAuthorizationStrategy.authorize(
+                    creatProject,
+                    Component.RENDER,
+                    StringUtils.join(new String[] { Role.ROLE_ADMIN.name(),
+                            Role.ROLE_PROJECT_CREATOR.name() }, ","));
 
             add(new ListChoice<Project>("project")
             {
@@ -498,6 +503,17 @@ public class ProjectPage
                                 .getName();
                         User user = repository.getUser(username);
                         repository.createProject(project, user);
+                        
+                        // If the project was created by a user (not a global admin), then add this
+                        // user as a project admin so that the user can see and edit the project.
+                        if (ProjectUtil.isProjectCreator(repository, user)) {
+                            ProjectPermission permission = new ProjectPermission();
+                            permission.setLevel(PermissionLevel.ADMIN);
+                            permission.setProject(project);
+                            permission.setUser(username);
+                            repository.createProjectPermission(permission);
+                        }
+                        
                         annotationService.initializeTypesForProject(project, user, new String[] {},
                                 new String[] {}, new String[] {}, new String[] {}, new String[] {},
                                 new String[] {}, new String[] {}, new String[] {});

@@ -66,6 +66,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
+import de.tudarmstadt.ukp.clarin.webanno.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -137,7 +138,27 @@ public class ProjectUtil
         boolean roleAdmin = false;
         List<Authority> authorities = aProjectRepository.listAuthorities(aUser);
         for (Authority authority : authorities) {
-            if (authority.getAuthority().equals("ROLE_ADMIN")) {
+            if (authority.getAuthority().equals(Role.ROLE_ADMIN.name())) {
+                roleAdmin = true;
+                break;
+            }
+        }
+        return roleAdmin;
+    }
+
+    /**
+     * IS project creator
+     * 
+     * @param aProjectRepository the repository service.
+     * @param aUser the user.
+     * @return if the user is a project creator
+     */
+    public static boolean isProjectCreator(RepositoryService aProjectRepository, User aUser)
+    {
+        boolean roleAdmin = false;
+        List<Authority> authorities = aProjectRepository.listAuthorities(aUser);
+        for (Authority authority : authorities) {
+            if (authority.getAuthority().equals(Role.ROLE_PROJECT_CREATOR.name())) {
                 roleAdmin = true;
                 break;
             }

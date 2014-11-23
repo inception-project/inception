@@ -218,7 +218,11 @@ public class WelcomePage
         if (ProjectUtil.isSuperAdmin(repository, user)) {
             return true;
         }
-        
+
+        if (ProjectUtil.isProjectCreator(repository, user)) {
+            return true;
+        }
+
         for (Project project : repository.listProjects()) {
             if (ProjectUtil.isProjectAdmin(project, repository, user)) {
                 return true;
