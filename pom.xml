@@ -40,7 +40,7 @@
     <wicket-jquery-ui.version>${wicket.version}</wicket-jquery-ui.version>
 		<hibernate.version>4.1.4.Final</hibernate.version>
 		<maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
-	<dkpro.version>1.7.0-SNAPSHOT</dkpro.version>
+	<dkpro.version>1.7.0</dkpro.version>
 	</properties>
 	<repositories>
 		<repository>
@@ -146,13 +146,6 @@
 			<dependency>
 				<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
 				<artifactId>de.tudarmstadt.ukp.dkpro.core-asl</artifactId>
-				<version>${dkpro.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-			<dependency>
-				<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-				<artifactId>de.tudarmstadt.ukp.dkpro.core-gpl</artifactId>
 				<version>${dkpro.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
