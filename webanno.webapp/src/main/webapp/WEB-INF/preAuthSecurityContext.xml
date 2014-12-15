@@ -1,0 +1,52 @@
+<!-- Copyright 2012 Ubiquitous Knowledge Processing (UKP) Lab Technische 
+	Universität Darmstadt Licensed under the Apache License, Version 2.0 (the 
+	"License"); you may not use this file except in compliance with the License. 
+	You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 
+	Unless required by applicable law or agreed to in writing, software distributed 
+	under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES 
+	OR CONDITIONS OF ANY KIND, either express or implied. See the License for 
+	the specific language governing permissions and limitations under the License. -->
+
+<beans:beans xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.springframework.org/schema/security"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+	http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.1.xsd">
+
+	<http use-expressions="false" entry-point-ref="http403EntryPoint">
+		<intercept-url pattern="/**" access="ROLE_ADMIN, ROLE_USER" />
+		<custom-filter ref="ShibbolethHeaderFilter" position="PRE_AUTH_FILTER" />
+	</http>
+	<beans:bean id="http403EntryPoint"
+		class="org.springframework.security.web.authentication.Http403ForbiddenEntryPoint">
+
+	</beans:bean>
+	<beans:bean id="ShibbolethHeaderFilter"
+		class="de.tudarmstadt.ukp.clarin.webanno.webapp.security.preauth.ShibbolethRequestHeaderAuthenticationFilter">
+
+		<beans:property name="principalRequestHeader" value="eduPersonPrincipalName" />
+		<beans:property name="authenticationManager" ref="authenticationManager" />
+		<beans:property name="userDetailsManager" ref="userDetailsService" />
+		<beans:property name="exceptionIfHeaderMissing" value="false" />
+
+	</beans:bean>
+
+	<beans:bean id="preauthAuthProvider"
+		class="org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider">
+		<beans:property name="preAuthenticatedUserDetailsService">
+			<beans:bean id="userDetailsServiceWrapper"
+				class="org.springframework.security.core.userdetails.UserDetailsByNameServiceWrapper">
+				<beans:property name="userDetailsService" ref="userDetailsService" />
+			</beans:bean>
+		</beans:property>
+	</beans:bean>
+
+	<authentication-manager alias="authenticationManager">
+		<authentication-provider ref="preauthAuthProvider" />
+
+	</authentication-manager>
+
+	<jdbc-user-service id="userDetailsService"
+		data-source-ref="dataSource" />
+
+
+</beans:beans>
