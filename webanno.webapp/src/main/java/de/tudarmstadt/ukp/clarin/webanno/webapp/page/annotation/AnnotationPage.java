@@ -759,6 +759,8 @@ public class AnnotationPage
                         bratAnnotatorModel.getDocument()), 
                         repository.getReadableFormats().get(bratAnnotatorModel.getDocument().getFormat()), 
                         bratAnnotatorModel.getDocument());
+                repository.createAnnotationDocumentContent(jcas.getCas().getJCas(),
+                        annotationDocument.getDocument(), user);
             }
             else {
                 // Update the annotation document CAS
