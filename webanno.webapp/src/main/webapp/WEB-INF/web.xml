@@ -27,7 +27,6 @@
 		<param-value>
 			/WEB-INF/applicationContext.xml
 			/WEB-INF/rest-servlet.xml
-			/WEB-INF/securityContext.xml
 			/WEB-INF/databaseContext.xml
 		</param-value>
 	</context-param>
@@ -52,6 +51,10 @@
 	<!--
 		- Listeners react to servlet content events and initialize resources.
 	-->
+	<context-param>
+		<param-name>contextInitializerClasses</param-name>
+		<param-value>de.tudarmstadt.ukp.clarin.webanno.webapp.security.preauth.WebAnnoApplicationContextInitializer</param-value>
+	</context-param>
 	<!-- Make sure the Spring context is always available -->
 	<listener>
 		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>

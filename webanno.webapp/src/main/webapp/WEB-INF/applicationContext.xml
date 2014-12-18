@@ -100,5 +100,13 @@
 				<prop key="org.apache.uima.logger.class">org.apache.uima.util.impl.Log4jLogger_impl</prop>
 			</util:properties>
 		</property>
-</bean>
+	</bean>
+	
+	<beans profile="normal">
+		<import resource="securityContext.xml"/>
+	</beans>
+	
+	<beans profile="preAuth">
+		<import resource="preAuthSecurityContext.xml"/>
+	</beans>	
 </beans>
