@@ -759,16 +759,16 @@ public class AnnotationPage
                         bratAnnotatorModel.getDocument()), 
                         repository.getReadableFormats().get(bratAnnotatorModel.getDocument().getFormat()), 
                         bratAnnotatorModel.getDocument());
-                repository.createAnnotationDocumentContent(jcas.getCas().getJCas(),
-                        annotationDocument.getDocument(), user);
             }
             else {
                 // Update the annotation document CAS
                 jcas = repository.getAnnotationDocumentContent(annotationDocument);
                 repository.upgrade(jcas.getCas(), bratAnnotatorModel.getDocument().getProject());
-                repository.createAnnotationDocumentContent(jcas.getCas().getJCas(),
-                        annotationDocument.getDocument(), user);
             }
+            
+            // After creating an new CAS or upgrading the CAS, we need to save it
+            repository.createAnnotationDocumentContent(jcas.getCas().getJCas(),
+                    annotationDocument.getDocument(), user);
 
             // (Re)initialize brat model after potential creating / upgrading CAS
             bratAnnotatorModel.initForDocument(jcas);
