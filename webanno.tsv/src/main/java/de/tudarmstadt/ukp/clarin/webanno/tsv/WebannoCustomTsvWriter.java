@@ -458,6 +458,12 @@ public class WebannoCustomTsvWriter
 
                     }
                 }
+                //TODO: remove the B- and I- code in the if/else above. no such a thing of 
+               // multiplespan annotation on relations.
+                
+                // if the annotation gov/dep span annotation is on multiple tokens,
+                //we just need an arc to the first token.
+                   break;
             }
         }
     }
@@ -501,6 +507,9 @@ public class WebannoCustomTsvWriter
                                                 .floorEntry(govAnno.getBegin()).getValue()));
                     }
                 }
+             // if the annotation gov/dep span annotation is on multiple tokens,
+             //we just need an arc to the first token.
+                break; 
             }
         }
     }
