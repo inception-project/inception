@@ -230,6 +230,61 @@ public class AutomationUtil
         }
     }
 
+    /**
+     * If the training file or the test file already contain the "Other laye" annotations, get the
+     * UIMA annotation and add it as a feature - no need to train and predict for this "other layer"
+     */
+    private static void addOtherFeatureFromAnnotation(AnnotationFeature aFeature,
+            RepositoryService aRepository, List<List<String>> aPredictions,
+            SourceDocument aSourceDocument)
+        throws UIMAException, ClassNotFoundException, IOException
+    {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = aRepository.getUser(username);
+        TypeAdapter adapter = TypeUtil.getAdapter(aFeature.getLayer());
+        List<String> annotations = new ArrayList<String>();
+        if (aSourceDocument == null) {// this is training - all sources documents will be converted to a single
+            // training file
+            for (SourceDocument sourceDocument : aRepository.listSourceDocuments(aFeature
+                    .getProject())) {
+
+                if ((sourceDocument.isTrainingDocument())) {
+                    JCas jCas = aRepository.readJCas(sourceDocument, sourceDocument.getProject(),
+                            user);
+                    for (Sentence sentence : select(jCas, Sentence.class)) {
+
+                        if (aFeature.getLayer().isMultipleTokens()) {
+                            annotations.addAll((List<String>) ((SpanAdapter) adapter)
+                                    .getMultipleAnnotation(sentence, aFeature).values());
+                        }
+                        else {
+                            annotations.addAll(adapter.getAnnotation(sentence.getCAS().getJCas(),
+                                    aFeature, sentence.getBegin(), sentence.getEnd()));
+                        }
+
+                    }
+                }
+
+            }
+            aPredictions.add(annotations);
+        }
+        else {
+            JCas jCas = aRepository.readJCas(aSourceDocument, aSourceDocument.getProject(), user);
+            for (Sentence sentence : select(jCas, Sentence.class)) {
+
+                if (aFeature.getLayer().isMultipleTokens()) {
+                    annotations.addAll((List<String>) ((SpanAdapter) adapter)
+                            .getMultipleAnnotation(sentence, aFeature).values());
+                }
+                else {
+                    annotations.addAll(adapter.getAnnotation(sentence.getCAS().getJCas(), aFeature,
+                            sentence.getBegin(), sentence.getEnd()));
+                }
+            }
+            aPredictions.add(annotations);
+        }
+    }
+
     public static void addTabSepTrainDocument(MiraTemplate aTemplate, RepositoryService aRepository)
         throws IOException, UIMAException, ClassNotFoundException, AutomationException
     {
@@ -577,11 +632,15 @@ public class AutomationUtil
      * auto-predicted with the other layers. Example, if the train layer is Named Entity and POS
      * layer is used as additional feature, the training document should be predicted using the POS
      * layer documents for POS annotation
-     * 
-     * @param aTemplate the template.
-     * @param aRepository the repository.
-     * @throws IOException hum?
-     * @throws ClassNotFoundException hum?
+     *
+     * @param aTemplate
+     *            the template.
+     * @param aRepository
+     *            the repository.
+     * @throws IOException
+     *             hum?
+     * @throws ClassNotFoundException
+     *             hum?
      */
     public static void otherFeatureClassifiers(MiraTemplate aTemplate, RepositoryService aRepository)
         throws IOException, ClassNotFoundException
@@ -644,11 +703,15 @@ public class AutomationUtil
 
     /**
      * Classifier for an external tab-sep file (token TAB feature)
-     * 
-     * @param aTemplate the template.
-     * @param aRepository the repository.
-     * @throws IOException hum?
-     * @throws ClassNotFoundException hum?
+     *
+     * @param aTemplate
+     *            the template.
+     * @param aRepository
+     *            the repository.
+     * @throws IOException
+     *             hum?
+     * @throws ClassNotFoundException
+     *             hum?
      */
     public static void tabSepClassifiers(MiraTemplate aTemplate, RepositoryService aRepository)
         throws IOException, ClassNotFoundException
@@ -865,20 +928,28 @@ public class AutomationUtil
 
     /**
      * Based on the other layer, predict features for the training document
-     * @param aTemplate the template.
-     * @param aRepository the repository.
-     * @return the prediction.
-     * @throws UIMAException hum?
-     * @throws ClassNotFoundException hum?
-     * @throws IOException hum?
-     * @throws BratAnnotationException hum?
      *
-     * @throws AutomationException if an error occurs.
+     * @param aTemplate
+     *            the template.
+     * @param aRepository
+     *            the repository.
+     * @return the prediction.
+     * @throws UIMAException
+     *             hum?
+     * @throws ClassNotFoundException
+     *             hum?
+     * @throws IOException
+     *             hum?
+     * @throws BratAnnotationException
+     *             hum?
+     *
+     * @throws AutomationException
+     *             if an error occurs.
      */
     public static String generateFinalClassifier(MiraTemplate aTemplate,
             RepositoryService aRepository)
-        throws UIMAException, ClassNotFoundException, IOException,
-        BratAnnotationException, AutomationException
+        throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException,
+        AutomationException
     {
         int frequency = 2;
         double sigma = 1;
@@ -951,7 +1022,7 @@ public class AutomationUtil
         String finalClassifierModelName = aRepository.getMiraModel(layerFeature, false, null)
                 .getAbsolutePath();
         getFeatureOtherLayer(aTemplate, aRepository, beamSize, maxPosteriors, predictions, mira,
-                predFile, predcitedFile);
+                predFile, predcitedFile, null);
 
         getFeaturesTabSep(aTemplate, aRepository, beamSize, maxPosteriors, layerFeature,
                 predictions, mira, predFile, predcitedFile);
@@ -1002,8 +1073,8 @@ public class AutomationUtil
 
     private static void getFeatureOtherLayer(MiraTemplate aTemplate, RepositoryService aRepository,
             int beamSize, boolean maxPosteriors, List<List<String>> predictions, Mira mira,
-            File predFile, File predcitedFile)
-        throws FileNotFoundException, IOException, ClassNotFoundException
+            File predFtFile, File predcitedFile, SourceDocument document)
+        throws FileNotFoundException, IOException, ClassNotFoundException, UIMAException
     {
         // other layers as training document
         for (AnnotationFeature feature : aTemplate.getOtherFeatures()) {
@@ -1011,9 +1082,10 @@ public class AutomationUtil
             int nbest = 1;
             String modelName = aRepository.getMiraModel(feature, true, null).getAbsolutePath();
             if (!new File(modelName).exists()) {
+                addOtherFeatureFromAnnotation(feature, aRepository, predictions, document);
                 continue;
             }
-            String testName = predFile.getAbsolutePath();
+            String testName = predFtFile.getAbsolutePath();
 
             PrintStream stream = new PrintStream(predcitedFile);
             BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
@@ -1100,18 +1172,26 @@ public class AutomationUtil
 
     /**
      * Based on the other layer, add features for the prediction document
-     * @param aTemplate the template.
-     * @param aRepository the repository.
-     * @throws UIMAException hum?
-     * @throws ClassNotFoundException hum?
-     * @throws IOException hum?
-     * @throws BratAnnotationException hum?
-     * @throws AutomationException hum?
+     *
+     * @param aTemplate
+     *            the template.
+     * @param aRepository
+     *            the repository.
+     * @throws UIMAException
+     *             hum?
+     * @throws ClassNotFoundException
+     *             hum?
+     * @throws IOException
+     *             hum?
+     * @throws BratAnnotationException
+     *             hum?
+     * @throws AutomationException
+     *             hum?
      */
     public static void addOtherFeatureToPredictDocument(MiraTemplate aTemplate,
             RepositoryService aRepository)
-        throws UIMAException, ClassNotFoundException, IOException,
-        BratAnnotationException, AutomationException
+        throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException,
+        AutomationException
     {
         AnnotationFeature layerFeature = aTemplate.getTrainFeature();
 
@@ -1126,7 +1206,7 @@ public class AutomationUtil
                 File predcitedFile = new File(predFtFile.getAbsolutePath() + "-pred");
 
                 getFeatureOtherLayer(aTemplate, aRepository, beamSize, maxPosteriors, predictions,
-                        mira, predFtFile, predcitedFile);
+                        mira, predFtFile, predcitedFile, document);
 
                 getFeaturesTabSep(aTemplate, aRepository, beamSize, maxPosteriors, layerFeature,
                         predictions, mira, predFtFile, predcitedFile);
