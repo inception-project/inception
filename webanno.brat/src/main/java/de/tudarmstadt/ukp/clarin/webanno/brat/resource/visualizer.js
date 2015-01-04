@@ -160,10 +160,10 @@ var Visualizer = (function($, window, undefined) {
       // this.leftSpans = undefined;
       // this.rightSpans = undefined;
       // this.annotatorNotes = undefined;
-      // WEBANNO EXTENSION BEGIN
+// WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
       // this.labelText = undefined;
       // this.color = undefined
-      // WEBANNO EXTENSION END
+// WEBANNO EXTENSION END
     };
 
     var Chunk = function(index, text, from, to, space, spans) {
@@ -295,7 +295,7 @@ var Visualizer = (function($, window, undefined) {
         }
       });
       
-// BEGIN WEBANNO EXTENSION
+// BEGIN WEBANNO EXTENSION - #1074 - Fix potential NPE
 // Avoid exception due to undefined text in tokenise and sentenceSplit
       if (sourceData.text === undefined) {
     	  sourceData.text = "";
@@ -417,8 +417,7 @@ var Visualizer = (function($, window, undefined) {
 
       // due to silly Chrome bug, I have to make it pay attention
       var forceRedraw = function() {
-// WEBANNO EXTENSION BEGIN
-// $.browser is no longer supported in jQuery 
+// WEBANNO EXTENSION BEGIN - #1074 - $.browser is no longer supported in jQuery 
 /*
         if (!$.browser.chrome) return; // not needed
 */
@@ -584,14 +583,14 @@ var Visualizer = (function($, window, undefined) {
           var span =
               //      (id,        type,      offsets,   generalType)
               new Span(entity[0], entity[1], entity[2], 'entity');
-          // WEBANNO EXTENSION BEGIN
+// WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
           if (entity[3]) {
         	  span.labelText = entity[3];
           }
           if (entity[4]) {
         	  span.color = entity[4];
           }
-          // WEBANNO EXTENSION END
+// WEBANNO EXTENSION END
           span.splitMultilineOffsets(data.text);
           data.spans[entity[0]] = span;
         });
@@ -693,14 +692,14 @@ var Visualizer = (function($, window, undefined) {
           data.eventDescs[rel[0]] =
               //           (id, triggerId, roles,          klass)
               new EventDesc(t1, t1,        [[rel[1], t2]], 'relation');
-          // WEBANNO EXTENSION BEGIN
+// WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
           if (rel[3]) {
         	  data.eventDescs[rel[0]].labelText = rel[3];
           }
           if (rel[4]) {
         	  data.eventDescs[rel[0]].color = rel[4];
           }
-          // WEBANNO EXTENSION END
+// WEBANNO EXTENSION END
         });
 
         // attributes
@@ -1065,11 +1064,11 @@ var Visualizer = (function($, window, undefined) {
                 labelIdx++;
               }
             }
-            // WEBANNO EXTENSION BEGIN
+// WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
             if (fragment.span.labelText) {
             	fragment.labelText = fragment.span.labelText;
             }
-            // WEBANNO EXTENSION END
+// WEBANNO EXTENSION END
 
             var svgtext = svg.createText(); // one "text" element per row
             var postfixArray = [];
@@ -1342,13 +1341,13 @@ var Visualizer = (function($, window, undefined) {
         $.each(data.arcs, function(arcNo, arc) {
           var labels = Util.getArcLabels(spanTypes, data.spans[arc.origin].type, arc.type, relationTypesHash);
           if (!labels.length) labels = [arc.type];
-          // WEBANNO EXTENSION BEGIN
+// WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
           if (arc.eventDescId && data.eventDescs[arc.eventDescId]) {
             if (data.eventDescs[arc.eventDescId].labelText) {
               labels = [data.eventDescs[arc.eventDescId].labelText];
             }
           }
-          // WEBANNO EXTENSION END
+// WEBANNO EXTENSION END
           $.each(labels, function(labelNo, label) {
             arcTexts[label] = true;
           });
@@ -1472,9 +1471,9 @@ Util.profileStart('chunks');
         var rows = [];
         var fragmentHeights = [];
         var sentenceToggle = 0;
-        // WEBANNO EXTENSION BEGIN
+// WEBANNO EXTENSION BEGIN - #180 - Use sentence number offset received from server
         var sentenceNumber = sourceData.sentence_number_offset;
-        // WEBANNO EXTENSION END
+// WEBANNO EXTENSION END
         var row = new Row(svg);
         row.sentence = ++sentenceNumber;
         row.backgroundIndex = sentenceToggle;
@@ -1656,13 +1655,13 @@ Util.profileStart('chunks');
                                (spanTypes.SPAN_DEFAULT &&
                                 spanTypes.SPAN_DEFAULT.borderColor) || '#000000');
 
-            // WEBANNO EXTENSION BEGIN
+// WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
             if (span.color) {
             	bgColor = span.color;
             	fgColor = bgToFgColor(bgColor);
             	borderColor = 'darken';
             }
-            // WEBANNO EXTENSION END
+// WEBANNO EXTENSION END
 
             // special case: if the border 'color' value is 'darken',
             // then just darken the BG color a bit for the border.
@@ -1677,12 +1676,16 @@ Util.profileStart('chunks');
             var fragmentHeight = 0;
 
             if (!y) y = -sizes.texts.height;
+            // x : center of fragment on x axis
             var x = (fragment.curly.from + fragment.curly.to) / 2;
 
             // XXX is it maybe sizes.texts?
             var yy = y + sizes.fragments.y;
+            // hh : fragment height
             var hh = sizes.fragments.height;
+            // ww : fragment width
             var ww = fragment.width;
+            // xx : left edge of fragment
             var xx = x - ww / 2;
 
             // text margin fine-tuning
@@ -1694,6 +1697,7 @@ Util.profileStart('chunks');
 
             // attach e.g. "False_positive" into the type
             if (span.comment && span.comment.type) { rectClass += ' '+span.comment.type; }
+            // inner coordinates of fragment (excluding margins)
             var bx = xx - Configuration.visual.margin.x - boxTextMargin.x;
             var by = yy - Configuration.visual.margin.y;
             var bw = ww + 2 * Configuration.visual.margin.x;
@@ -1807,11 +1811,11 @@ Util.profileStart('chunks');
                                (spanTypes.SPAN_DEFAULT &&
                                 spanTypes.SPAN_DEFAULT.fgColor) ||
                                '#000000');
-                // WEBANNO EXTENSION BEGIN
+// WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
                 if (span.color) {
                 	bgColor = span.color;
                 }
-                // WEBANNO EXTENSION END
+// WEBANNO EXTENSION END
                 curlyColor = Util.adjustColorLightness(bgColor, -0.6);
               }
 
@@ -1846,13 +1850,13 @@ Util.profileStart('chunks');
                 if (origin.row) {
                   var labels = Util.getArcLabels(spanTypes, leftSpan.type, arc.type, relationTypesHash);
                   if (!labels.length) labels = [arc.type];
-                  // WEBANNO EXTENSION BEGIN
+// WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
                   if (arc.eventDescId && data.eventDescs[arc.eventDescId]) {
                     if (data.eventDescs[arc.eventDescId].labelText) {
                       labels = [data.eventDescs[arc.eventDescId].labelText];
                     }
                   }
-                  // WEBANNO EXTENSION END
+// WEBANNO EXTENSION END
                   if (origin.row.index == rowIndex) {
                     // same row, but before this
                     border = origin.translation.x + leftSpan.fragments[leftSpan.fragments.length - 1].right;
@@ -1883,13 +1887,13 @@ Util.profileStart('chunks');
                 if (target.row) {
                   var labels = Util.getArcLabels(spanTypes, span.type, arc.type, relationTypesHash);
                   if (!labels.length) labels = [arc.type];
-                  // WEBANNO EXTENSION BEGIN
+// WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
                   if (arc.eventDescId && data.eventDescs[arc.eventDescId]) {
                     if (data.eventDescs[arc.eventDescId].labelText) {
                       labels = [data.eventDescs[arc.eventDescId].labelText];
                     }
                   }
-                  // WEBANNO EXTENSION END
+// WEBANNO EXTENSION END
                   if (target.row.index == rowIndex) {
                     // same row, but before this
                     border = target.translation.x + leftSpan.fragments[leftSpan.fragments.length - 1].right;
@@ -2219,13 +2223,13 @@ Util.profileStart('arcs');
                        '#000000');
           if (color == 'hidden') return;
           
-          // WEBANNO EXTENSION BEGIN
+// WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
           if (arc.eventDescId && data.eventDescs[arc.eventDescId]) {
             if (data.eventDescs[arc.eventDescId].color) {
               color = [data.eventDescs[arc.eventDescId].color];
             }
           }
-          // WEBANNO EXTENSION END
+// WEBANNO EXTENSION END
           
           var symmetric = arcDesc && arcDesc.properties && arcDesc.properties.symmetric;
           var dashArray = arcDesc && arcDesc.dashArray;
@@ -2351,13 +2355,13 @@ Util.profileStart('arcs');
                 }
               }
 
-              // WEBANNO EXTENSION BEGIN
+// WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
               if (arc.eventDescId && data.eventDescs[arc.eventDescId]) {
                 if (data.eventDescs[arc.eventDescId].labelText) {
               	  labelText = data.eventDescs[arc.eventDescId].labelText;
                 }
               }
-              // WEBANNO EXTENSION END
+// WEBANNO EXTENSION END
 
               var shadowGroup;
               if (arc.shadowClass || arc.marked) {
@@ -2868,11 +2872,11 @@ Util.profileStart('chunkFinish');
                              '#ffffff');
               if (fragment.span.hidden) continue;
                              
-              // WEBANNO EXTENSION BEGIN
+// WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
               if (fragment.span.color) {
               	bgColor = fragment.span.color;
               }
-              // WEBANNO EXTENSION END
+// WEBANNO EXTENSION END
               
               // Tweak for nesting depth/height. Recognize just three
               // levels for now: normal, nested, and nesting, where
@@ -3083,11 +3087,11 @@ Util.profileStart('before render');
                          (spanTypes.SPAN_DEFAULT && spanTypes.SPAN_DEFAULT.bgColor) ||
                          '#ffffff');
           if (span.hidden) return;
-          // WEBANNO EXTENSION BEGIN
+// WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
           if (span.color) {
           	bgColor = span.color;
           }
-          // WEBANNO EXTENSION END
+// WEBANNO EXTENSION END
           
           highlight = [];
           $.each(span.fragments, function(fragmentNo, fragment) {
@@ -3466,9 +3470,9 @@ Util.profileStart('before render');
       Dispatcher.post('triggerRender');
     };
 
-    // WEBANNO EXTENSION BEGIN
-    // http://24ways.org/2010/calculating-color-contrast/
-    // http://stackoverflow.com/questions/11867545/change-text-color-based-on-brightness-of-the-covered-background-area
+// WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
+// http://24ways.org/2010/calculating-color-contrast/
+// http://stackoverflow.com/questions/11867545/change-text-color-based-on-brightness-of-the-covered-background-area
     var bgToFgColor = function(hexcolor) {
       var r = parseInt(hexcolor.substr(1,2),16);
       var g = parseInt(hexcolor.substr(3,2),16);
@@ -3476,7 +3480,7 @@ Util.profileStart('before render');
       var yiq = ((r*299)+(g*587)+(b*114))/1000;
       return (yiq >= 128) ? '#000000' : '#ffffff';
     }    
-    // WEBANNO EXTENSION END
+// WEBANNO EXTENSION END
     
     return Visualizer;
 })(jQuery, window);
