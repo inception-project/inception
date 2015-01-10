@@ -127,13 +127,13 @@ public class ProjectPage
         extends Form<SelectionModel>
     {
         private static final long serialVersionUID = -1L;
-        private Button creatProject;
+        private Button createProject;
 
         public ProjectSelectionForm(String id)
         {
             super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
 
-            add(creatProject = new Button("create", new ResourceModel("label"))
+            add(createProject = new Button("create", new ResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;
 
@@ -150,7 +150,7 @@ public class ProjectPage
             });
 
             MetaDataRoleAuthorizationStrategy.authorize(
-                    creatProject,
+                    createProject,
                     Component.RENDER,
                     StringUtils.join(new String[] { Role.ROLE_ADMIN.name(),
                             Role.ROLE_PROJECT_CREATOR.name() }, ","));
@@ -392,7 +392,7 @@ public class ProjectPage
                 }
             });
 
-            tabs.add(new AbstractTab(new Model<String>("Export/Import"))
+            tabs.add(new AbstractTab(new Model<String>("Export"))
             {
 
                 private static final long serialVersionUID = 788812791376373350L;

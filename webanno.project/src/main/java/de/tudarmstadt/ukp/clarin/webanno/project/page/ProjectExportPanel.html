@@ -1,3 +1,4 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <!--
 #Copyright 2012
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
@@ -15,26 +16,27 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 -->
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-  <wicket:panel>
-  <div wicket:id="feedbackPanel">[Feedback]</div>
-    <fieldset class="ui-widget-content ui-corner-all">
-      <legend>
-        Export
-      </legend>
-      <div class="buttons">
-      <table>
-      	<tr>
-      	<td>Export progress:</td>
-      	<td wicket:id="progress"></td>
-      	</tr>
-      </table>    
-        <input type="submit" wicket:id="send" value="Export curated documents to CLARIN workspace" />
-        <input type="submit"wicket:id="export" value="Export curated documents to the file system"/>   
-       <input type="submit"wicket:id="exportProject" id="exportProject"
-         value="Export the whole project to the file system"/>
-           <input type="submit"wicket:id="cancel" value="Cancel"/>  
-      </div>
-    </fieldset>
-  </wicket:panel>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<wicket:panel>
+	<fieldset class="ui-widget-content ui-corner-all">
+		<legend>Export</legend>
+		<table>
+			<tr>
+				<td>Export progress:</td>
+				<td wicket:id="progress"></td>
+			</tr>
+		</table>
+		<div class="buttons">
+			<input type="submit" wicket:id="send"
+				value="Export curated documents to CLARIN workspace" /> <input
+				type="submit" wicket:id="export"
+				value="Export curated documents to the file system" /> <input
+				type="submit" wicket:id="exportProject" id="exportProject"
+				value="Export the whole project to the file system" /> <input
+				type="submit" wicket:id="cancel" value="Cancel" />
+		</div>
+	</fieldset>
+	<div wicket:id="feedbackPanel">[Feedback]</div>
+</wicket:panel>
 </html>
