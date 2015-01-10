@@ -75,7 +75,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.monitoring.support.EmbeddableImage;
 import de.tudarmstadt.ukp.clarin.webanno.monitoring.support.TableDataProvider;
-import de.tudarmstadt.ukp.clarin.webanno.project.page.SettingsPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.home.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
@@ -86,7 +86,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
  *
  */
 public class CrowdSourcePage
-    extends SettingsPageBase
+    extends ApplicationPageBase
 {
     private static final long serialVersionUID = -2102136855109258306L;
 
