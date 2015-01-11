@@ -17,6 +17,14 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.monitoring.page;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.IGNORE_TO_NEW;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.NEW_TO_IGNORE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED;
+
 import java.awt.Color;
 import java.io.IOException;
 import java.io.Serializable;
@@ -309,7 +317,7 @@ public class MonitoringPage
                     }
                     sourceDocuments.removeAll(trainingDoc);
 
-                    documentJCases = getJCases(users, sourceDocuments);
+                    documentJCases = null;
 
                     if (aNewSelection == null) {
                         return;
@@ -737,6 +745,10 @@ public class MonitoringPage
                 finishedDocumentLists.put(user, finishedDocuments);
             }
 
+            if (documentJCases == null) {
+                documentJCases = getJCases(users, sourceDocuments);
+            }
+            
             results = computeKappa(users, adapter, features.getModelObject().getName(),
                     finishedDocumentLists, documentJCases);
 
@@ -1078,13 +1090,11 @@ public class MonitoringPage
     }
 
     /**
-     * Get all Cases that is not either new or ignore per user, per document. we need those in
-     * progress if the admin tries to finish it from the monitoring page
+     * Get the finished CASes used to compute agreement.
      */
     private Map<SourceDocument, Map<User, JCas>> getJCases(List<User> users,
             List<SourceDocument> sourceDocuments)
     {
-        // Store Jcases so that we can re-use for different iterations
         Map<SourceDocument, Map<User, JCas>> documentJCases = new HashMap<SourceDocument, Map<User, JCas>>();
         for (SourceDocument document : sourceDocuments) {
             Map<User, JCas> jCases = new HashMap<User, JCas>();
@@ -1092,13 +1102,11 @@ public class MonitoringPage
                 if (repository.existsAnnotationDocument(document, user)) {
                     AnnotationDocument annotationDocument = repository.getAnnotationDocument(
                             document, user);
-                    if (!(annotationDocument.getState().equals(AnnotationDocumentState.IGNORE) || annotationDocument
-                            .getState().equals(AnnotationDocumentState.NEW))) {
+                    if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
                         try {
-                            JCas jCas = repository.getAnnotationDocumentContent(annotationDocument);
                             repository.upgradeCasAndSave(document, document.getProject().getMode(),
                                     user.getUsername());
-                            jCas = repository.getAnnotationDocumentContent(annotationDocument);
+                            JCas jCas = repository.getAnnotationDocumentContent(annotationDocument);
                             jCases.put(user, jCas);
                         }
                         catch (UIMAException e) {
@@ -1113,7 +1121,6 @@ public class MonitoringPage
                         catch (ClassNotFoundException e) {
                             error(e.getMessage());
                         }
-
                     }
                 }
             }
@@ -1199,8 +1206,6 @@ public class MonitoringPage
         public void populateItem(final Item<ICellPopulator<List<String>>> aCellItem,
                 final String componentId, final IModel<List<String>> rowModel)
         {
-
-
             String username = SecurityContextHolder.getContext().getAuthentication()
                     .getName();
             final User user = projectRepositoryService.getUser(username);
@@ -1235,28 +1240,29 @@ public class MonitoringPage
                 else if (state.equals(SourceDocumentState.CURATION_FINISHED)) {
                     iconNameForState = AnnotationDocumentState.FINISHED.toString();
                 }
-                if (iconNameForState.equals(AnnotationDocumentState.IN_PROGRESS.toString())
-                        && document.getSentenceAccessed() != 0) {
-                    JCas jCas = null;
-                    try {
-                        jCas = projectRepositoryService.readJCas(document, document.getProject(), user);
-                    }
-                    catch (UIMAException e) {
-                        LOG.info(ExceptionUtils.getRootCauseMessage(e));
-                    }
-                    catch (ClassNotFoundException e) {
-                        LOG.info(e.getMessage());
-                    }
-                    catch (IOException e) {
-                        LOG.info(e.getMessage());
-                    }
-                   int totalSN = BratAjaxCasUtil.getNumberOfPages(jCas);
-                    aCellItem.add(new Label(componentId, document.getSentenceAccessed() + "/"+totalSN));
-                }
-                else {
+                // #770 - Disable per-document progress on account of slowing down monitoring page
+//                if (iconNameForState.equals(AnnotationDocumentState.IN_PROGRESS.toString())
+//                        && document.getSentenceAccessed() != 0) {
+//                    JCas jCas = null;
+//                    try {
+//                        jCas = projectRepositoryService.readJCas(document, document.getProject(), user);
+//                    }
+//                    catch (UIMAException e) {
+//                        LOG.info(ExceptionUtils.getRootCauseMessage(e));
+//                    }
+//                    catch (ClassNotFoundException e) {
+//                        LOG.info(e.getMessage());
+//                    }
+//                    catch (IOException e) {
+//                        LOG.info(e.getMessage());
+//                    }
+//                   int totalSN = BratAjaxCasUtil.getNumberOfPages(jCas);
+//                    aCellItem.add(new Label(componentId, document.getSentenceAccessed() + "/"+totalSN));
+//                }
+//                else {
                     aCellItem.add(new EmbeddableImage(componentId, new ContextRelativeResource(
                             "/images_small/" + iconNameForState + ".png")));
-                }
+//                }
                 aCellItem.add(AttributeModifier.append("class", "centering"));
                 aCellItem.add(new AjaxEventBehavior("onclick")
                 {
@@ -1268,12 +1274,11 @@ public class MonitoringPage
                         SourceDocument document = projectRepositoryService.getSourceDocument(project,
                                 value.substring(value.indexOf(":") + 1));
                         SourceDocumentState state = document.getState();
-                        if (state.toString().equals(SourceDocumentState.CURATION_FINISHED.toString())) {
+                        if (state.toString().equals(
+                                SourceDocumentState.CURATION_FINISHED.toString())) {
                             try {
-                                changeSourceDocumentState(
-                                        document,
-                                        user,
-                                        SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS);
+                                changeSourceDocumentState(document, user,
+                                        CURATION_FINISHED_TO_CURATION_IN_PROGRESS);
                             }
                             catch (IOException e) {
                                 LOG.info(e.getMessage());
@@ -1282,10 +1287,8 @@ public class MonitoringPage
                         else if (state.toString().equals(
                                 SourceDocumentState.CURATION_IN_PROGRESS.toString())) {
                             try {
-                                changeSourceDocumentState(
-                                        document,
-                                        user,
-                                        SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED);
+                                changeSourceDocumentState(document, user,
+                                        CURATION_IN_PROGRESS_TO_CURATION_FINISHED);
                             }
                             catch (IOException e) {
                                 LOG.info(e.getMessage());
@@ -1328,28 +1331,29 @@ public class MonitoringPage
                 }
 
                 // if state is in progress, add the last sentence number accessed
-                if (annoDoc != null && (annoDoc.getSentenceAccessed() != 0)
-                        && annoDoc.getState().equals(AnnotationDocumentState.IN_PROGRESS)) {
-                    JCas jCas = null;
-                    try {
-                        jCas = projectRepositoryService.readJCas(document, document.getProject(), annotator);
-                    }
-                    catch (UIMAException e) {
-                        LOG.info(ExceptionUtils.getRootCauseMessage(e));
-                    }
-                    catch (ClassNotFoundException e) {
-                        LOG.info(e.getMessage());
-                    }
-                    catch (IOException e) {
-                        LOG.info(e.getMessage());
-                    }
-                   int totalSN = BratAjaxCasUtil.getNumberOfPages(jCas);
-                    aCellItem.add(new Label(componentId, annoDoc.getSentenceAccessed() + "/"+totalSN));
-                }
-                else {
+                // #770 - Disable per-document progress on account of slowing down monitoring page
+//                if (annoDoc != null && (annoDoc.getSentenceAccessed() != 0)
+//                        && annoDoc.getState().equals(AnnotationDocumentState.IN_PROGRESS)) {
+//                    JCas jCas = null;
+//                    try {
+//                        jCas = projectRepositoryService.readJCas(document, document.getProject(), annotator);
+//                    }
+//                    catch (UIMAException e) {
+//                        LOG.info(ExceptionUtils.getRootCauseMessage(e));
+//                    }
+//                    catch (ClassNotFoundException e) {
+//                        LOG.info(e.getMessage());
+//                    }
+//                    catch (IOException e) {
+//                        LOG.info(e.getMessage());
+//                    }
+//                   int totalSN = BratAjaxCasUtil.getNumberOfPages(jCas);
+//                    aCellItem.add(new Label(componentId, annoDoc.getSentenceAccessed() + "/"+totalSN));
+//                }
+//                else {
                     aCellItem.add(new EmbeddableImage(componentId, new ContextRelativeResource(
                             "/images_small/" + state.toString() + ".png")));
-                }
+//                }
                 aCellItem.add(AttributeModifier.append("class", "centering"));
                 aCellItem.add(new AjaxEventBehavior("onclick")
                 {
@@ -1368,26 +1372,21 @@ public class MonitoringPage
                             AnnotationDocument annoDoc = projectRepositoryService
                                     .getAnnotationDocument(document, user);
                             state = annoDoc.getState();
-                            if (state.toString().equals(AnnotationDocumentState.FINISHED.toString())) {
-                                changeAnnotationDocumentState(
-                                        document,
-                                        user,
-                                        AnnotationDocumentStateTransition.ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS);
+                            if (state.toString()
+                                    .equals(AnnotationDocumentState.FINISHED.toString())) {
+                                changeAnnotationDocumentState(document, user,
+                                        ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS);
                             }
                             else if (state.toString().equals(
                                     AnnotationDocumentState.IN_PROGRESS.toString())) {
-                                changeAnnotationDocumentState(
-                                        document,
-                                        user,
-                                        AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
+                                changeAnnotationDocumentState(document, user,
+                                        ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
                             }
                             if (state.toString().equals(AnnotationDocumentState.NEW.toString())) {
-                                changeAnnotationDocumentState(document, user,
-                                        AnnotationDocumentStateTransition.NEW_TO_IGNORE);
+                                changeAnnotationDocumentState(document, user, NEW_TO_IGNORE);
                             }
                             if (state.toString().equals(AnnotationDocumentState.IGNORE.toString())) {
-                                changeAnnotationDocumentState(document, user,
-                                        AnnotationDocumentStateTransition.IGNORE_TO_NEW);
+                                changeAnnotationDocumentState(document, user, IGNORE_TO_NEW);
                             }
                         }
                         // user didn't even start working on it
@@ -1398,9 +1397,10 @@ public class MonitoringPage
                             annotationDocument.setProject(project);
                             annotationDocument.setUser(user.getUsername());
                             annotationDocument.setState(AnnotationDocumentStateTransition
-                                    .transition(AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
+                                    .transition(NEW_TO_ANNOTATION_IN_PROGRESS));
                             try {
-                                projectRepositoryService.createAnnotationDocument(annotationDocument);
+                                projectRepositoryService
+                                        .createAnnotationDocument(annotationDocument);
                             }
                             catch (IOException e) {
                                 LOG.info("Unable to get the LOG file");
