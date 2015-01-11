@@ -82,7 +82,5 @@ public class WebAnnoApplicationContextInitializer
             aEnvironment.setActiveProfiles(PROFILE_DATABASE);
             log.info("Authentication: database");
         }
-        
-        aApplicationContext.refresh();
     }
 }
