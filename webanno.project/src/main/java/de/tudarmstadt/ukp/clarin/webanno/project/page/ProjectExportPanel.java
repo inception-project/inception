@@ -629,6 +629,8 @@ public class ProjectExportPanel extends Panel {
                     annotationDocumentToExport.setName(annotationDocument.getName());
                     annotationDocumentToExport.setState(annotationDocument.getState());
                     annotationDocumentToExport.setUser(annotationDocument.getUser());
+                    annotationDocumentToExport.setTimestamp(annotationDocument.getTimestamp());
+                    annotationDocumentToExport.setSentenceAccessed(annotationDocument.getSentenceAccessed());
                     annotationDocuments.add(annotationDocumentToExport);
                 }
                 sourceDocuments.add(exDocument);
