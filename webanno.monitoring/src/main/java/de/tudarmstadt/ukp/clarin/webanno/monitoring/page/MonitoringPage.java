@@ -1332,7 +1332,7 @@ public class MonitoringPage
                         && annoDoc.getState().equals(AnnotationDocumentState.IN_PROGRESS)) {
                     JCas jCas = null;
                     try {
-                        jCas = projectRepositoryService.readJCas(document, document.getProject(), user);
+                        jCas = projectRepositoryService.readJCas(document, document.getProject(), annotator);
                     }
                     catch (UIMAException e) {
                         LOG.info(ExceptionUtils.getRootCauseMessage(e));
