@@ -31,14 +31,16 @@ import org.springframework.core.io.support.ResourcePropertySource;
 public class WebAnnoApplicationContextInitializer
     implements ApplicationContextInitializer<ConfigurableApplicationContext>
 {
-    private static final String BEAN_PROFILE_PREAUTH = "preAuth";
-    private static final String BEAN_PROFILE_DATABASE = "normal";
-    private static final String AUTH = "auth";
-    private static final String USER_HOME_WEBANNO_SETTING_PROPERTIES = "/.webanno/settings.properties";
-    private static final String USER_HOME_PROPERTY = "user.home";
-    private static final String WEBANNO_HOME_PROPERTY = "webanno.home";
-    private static final String WEBANNO_HOME_SETTING_PROPERTIES = "/settings.properties";
-    private static final String SETTING_PROPERTIES_PREAUTH = "preauth";
+    private static final String PROFILE_PREAUTH = "auto-mode-preauth";
+    private static final String PROFILE_DATABASE = "auto-mode-builtin";
+
+    private static final String PROP_AUTH_MODE = "auth.mode";
+    private static final String PROP_USER_HOME = "user.home";
+    private static final String PROP_WEBANNO_HOME = "webanno.home";
+    
+    private static final String SETTINGS_FILE = "settings.properties";
+    private static final String WEBANNO_USER_HOME_SUBDIR = ".webanno";
+    private static final String AUTH_MODE_PREAUTH = "preauth";
 
     private final Log log = LogFactory.getLog(getClass());
 
@@ -46,61 +48,41 @@ public class WebAnnoApplicationContextInitializer
     public void initialize(ConfigurableApplicationContext aApplicationContext)
     {
         ConfigurableEnvironment aEnvironment = aApplicationContext.getEnvironment();
-        boolean useDefaultBeanProfile = true;
 
-        try {
-            File webannoSettingsViaProp = new File(
-                    System.getProperty(WEBANNO_HOME_PROPERTY, "null")
-                            + WEBANNO_HOME_SETTING_PROPERTIES);
+        String appHome = System.getProperty(PROP_WEBANNO_HOME);
+        String userHome = System.getProperty(PROP_USER_HOME);
 
-            File webannoSettingsUserHome = new File(System.getProperty(USER_HOME_PROPERTY)
-                    + USER_HOME_WEBANNO_SETTING_PROPERTIES);
-
-            // check if settings.properties file exists in webanno.home directory
-            if (System.getProperty(WEBANNO_HOME_PROPERTY) != null
-                    && webannoSettingsViaProp.exists()) {
-                log.info("Settings: " + webannoSettingsViaProp);
-                
+        // Locate settings, first in webanno.home, then in user home
+        File settings = null;
+        if (appHome != null) {
+            settings = new File(appHome, SETTINGS_FILE);
+        }
+        else if (userHome != null) {
+            settings = new File(userHome + "/" + WEBANNO_USER_HOME_SUBDIR, SETTINGS_FILE);
+        }
+        
+        // If settings were found, add them to the environment
+        if (settings != null && settings.exists()) {
+            log.info("Settings: " + settings);
+            try {
                 aEnvironment.getPropertySources().addFirst(
-                        new ResourcePropertySource(new FileSystemResource(webannoSettingsViaProp)));
-
-                if (aEnvironment.containsProperty(AUTH)
-                        && aEnvironment.getProperty(AUTH).equals(SETTING_PROPERTIES_PREAUTH)) {
-                    useDefaultBeanProfile = false;
-                }
+                        new ResourcePropertySource(new FileSystemResource(settings)));
             }
-            // check if settings.properties file exists in user.home directory
-            else if (System.getProperty(USER_HOME_PROPERTY) != null
-                    && webannoSettingsUserHome.exists()) {
-                log.info("Settings: " + webannoSettingsUserHome);
-                
-                aEnvironment.getPropertySources()
-                        .addFirst(
-                                new ResourcePropertySource(new FileSystemResource(
-                                        webannoSettingsUserHome)));
-
-                if (aEnvironment.containsProperty(AUTH)
-                        && aEnvironment.getProperty(AUTH).equals(SETTING_PROPERTIES_PREAUTH)) {
-                    useDefaultBeanProfile = false;
-                }
+            catch (IOException e) {
+                throw new IllegalStateException(e);
             }
-
-            // activating bean profile based on settings.properties file in user.home or
-            // webanno.home if file does not exist in any directory then default database
-            // authentication will be used
-            if (useDefaultBeanProfile) {
-                aEnvironment.setActiveProfiles(BEAN_PROFILE_DATABASE);
-                log.info("Authentication: database");
-            }
-            else {
-                aEnvironment.setActiveProfiles(BEAN_PROFILE_PREAUTH);
-                log.info("Authentication: pre-auth");
-            }
-
-            // aApplicationContext.refresh();
         }
-        catch (IOException e) {
-            throw new IllegalStateException(e);
+
+        // Activate bean profile depending on authentication mode
+        if (AUTH_MODE_PREAUTH.equals(aEnvironment.getProperty(PROP_AUTH_MODE))) {
+            aEnvironment.setActiveProfiles(PROFILE_PREAUTH);
+            log.info("Authentication: pre-auth");
         }
+        else {
+            aEnvironment.setActiveProfiles(PROFILE_DATABASE);
+            log.info("Authentication: database");
+        }
+        
+        aApplicationContext.refresh();
     }
 }
