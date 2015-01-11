@@ -102,11 +102,11 @@
 		</property>
 	</bean>
 	
-	<beans profile="normal">
+	<beans profile="auto-mode-builtin">
 		<import resource="securityContext.xml"/>
 	</beans>
 	
-	<beans profile="preAuth">
+	<beans profile="auto-mode-preauth">
 		<import resource="preAuthSecurityContext.xml"/>
 	</beans>	
 </beans>
