@@ -82,7 +82,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
@@ -432,32 +431,35 @@ public class MonitoringPage
                     annotationDocumentStatusTable.remove();
                     annotationDocumentStatusTable = new DefaultDataTable("rsTable", columns,
                             provider, 20);
-                    annotationDocumentStatusTable.add(new AjaxEventBehavior("onclick")
-                    {
-                        private static final long serialVersionUID = -4468099385971446135L;
-
-                        @Override
-                        protected void onEvent(AjaxRequestTarget aTarget)
-                        {
-                            annotatorsProgress.clear();
-                            annotatorsProgress.putAll(getFinishedDocumentsPerUser(project));
-                            annotatorsProgressImage.setImageResource(createProgressChart(
-                                    annotatorsProgress, totalDocuments, false));
-                            aTarget.add(annotatorsProgressImage.setOutputMarkupId(true));
-
-                            annotatorsProgressInPercent.clear();
-                            annotatorsProgressInPercent
-                                    .putAll(getPercentageOfFinishedDocumentsPerUser(project));
-                            annotatorsProgressPercentageImage.setImageResource(createProgressChart(
-                                    annotatorsProgressInPercent, 100, true));
-                            aTarget.add(annotatorsProgressPercentageImage.setOutputMarkupId(true));
-
-                            aTarget.add(monitoringDetailForm.setOutputMarkupId(true));
-                            updateAgreementTable(aTarget);
-                            aTarget.add(agreementForm.setOutputMarkupId(true));
-
-                        }
-                    });
+                    annotationDocumentStatusTable.setOutputMarkupId(true);
+                    // Issue 1117 - REC Absolutely no idea what this is supposed to be good for, 
+                    // but it breaks pagination!
+//                    annotationDocumentStatusTable.add(new AjaxEventBehavior("onclick")
+//                    {
+//                        private static final long serialVersionUID = -4468099385971446135L;
+//
+//                        @Override
+//                        protected void onEvent(AjaxRequestTarget aTarget)
+//                        {
+//                            annotatorsProgress.clear();
+//                            annotatorsProgress.putAll(getFinishedDocumentsPerUser(project));
+//                            annotatorsProgressImage.setImageResource(createProgressChart(
+//                                    annotatorsProgress, totalDocuments, false));
+//                            aTarget.add(annotatorsProgressImage.setOutputMarkupId(true));
+//
+//                            annotatorsProgressInPercent.clear();
+//                            annotatorsProgressInPercent
+//                                    .putAll(getPercentageOfFinishedDocumentsPerUser(project));
+//                            annotatorsProgressPercentageImage.setImageResource(createProgressChart(
+//                                    annotatorsProgressInPercent, 100, true));
+//                            aTarget.add(annotatorsProgressPercentageImage.setOutputMarkupId(true));
+//
+//                            aTarget.add(monitoringDetailForm.setOutputMarkupId(true));
+//                            updateAgreementTable(aTarget);
+//                            aTarget.add(agreementForm.setOutputMarkupId(true));
+//
+//                        }
+//                    });
                     monitoringDetailForm.add(annotationDocumentStatusTable);
                 }
 
