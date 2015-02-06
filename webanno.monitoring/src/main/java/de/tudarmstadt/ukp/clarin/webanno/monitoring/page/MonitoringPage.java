@@ -249,13 +249,13 @@ public class MonitoringPage
     }
 
     private class ProjectSelectionForm
-        extends Form<SelectionModel>
+        extends Form<ProjectSelectionModel>
     {
         private static final long serialVersionUID = -1L;
 
         public ProjectSelectionForm(String id)
         {
-            super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
+            super(id, new CompoundPropertyModel<ProjectSelectionModel>(new ProjectSelectionModel()));
 
             add(new ListChoice<Project>("project")
             {
@@ -331,33 +331,33 @@ public class MonitoringPage
                     result = "";
 
                     annotationTypeSelectionForm.setModelObject(new SelectionModel());
+                    ProjectSelectionModel projectSelectionModel = ProjectSelectionForm.this.getModelObject();
+                    projectSelectionModel.project = aNewSelection;
+                    projectSelectionModel.annotatorsProgress = new TreeMap<String, Integer>();
+                    projectSelectionModel.annotatorsProgressInPercent = new TreeMap<String, Integer>();
+                    projectSelectionModel.totalDocuments = sourceDocuments.size();
                     updateAgreementForm();
 
                     ProjectSelectionForm.this.setVisible(true);
 
-                    final Map<String, Integer> annotatorsProgress = new TreeMap<String, Integer>();
-                    final Map<String, Integer> annotatorsProgressInPercent = new TreeMap<String, Integer>();
-                    final Project project = aNewSelection;
-
-                    final int totalDocuments = sourceDocuments.size();
-
                     // Annotator's Progress
-                    if (project != null) {
-                        annotatorsProgressInPercent
-                                .putAll(getPercentageOfFinishedDocumentsPerUser(project));
-                        annotatorsProgress.putAll(getFinishedDocumentsPerUser(project));
+                    if (projectSelectionModel.project != null) {
+                        projectSelectionModel.annotatorsProgressInPercent
+                                .putAll(getPercentageOfFinishedDocumentsPerUser(projectSelectionModel.project));
+                        projectSelectionModel.annotatorsProgress.putAll(getFinishedDocumentsPerUser(projectSelectionModel.project));
 
                     }
-                    projectName.setDefaultModelObject(project.getName());
+                    projectName.setDefaultModelObject(projectSelectionModel.project.getName());
                     overallProjectProgressImage.setVisible(false);
                     overview.setVisible(false);
 
                     annotatorsProgressImage.setImageResource(createProgressChart(
-                            annotatorsProgress, totalDocuments, false));
+                            projectSelectionModel.annotatorsProgress,
+                            projectSelectionModel.totalDocuments, false));
                     annotatorsProgressImage.setVisible(true);
 
                     annotatorsProgressPercentageImage.setImageResource(createProgressChart(
-                            annotatorsProgressInPercent, 100, true));
+                            projectSelectionModel.annotatorsProgressInPercent, 100, true));
                     annotatorsProgressPercentageImage.setVisible(true);
 
                     List<String> documentListAsColumnHeader = new ArrayList<String>();
@@ -368,7 +368,7 @@ public class MonitoringPage
 
                     // List of users with USER permission level
                     List<User> usersWithPermissions = repository.listProjectUsersWithPermissions(
-                            project, PermissionLevel.USER);
+                            projectSelectionModel.project, PermissionLevel.USER);
 
                     for (User user : usersWithPermissions) {
                         documentListAsColumnHeader.add(user.getUsername());
@@ -390,10 +390,10 @@ public class MonitoringPage
                     }
 
                     for (User user : usersWithPermissions) {
-                        if (repository.existsProjectTimeStamp(project, user.getUsername())) {
+                        if (repository.existsProjectTimeStamp(projectSelectionModel.project, user.getUsername())) {
                             projectTimeStamp.add(LAST_ACCESS
                                     + new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(repository
-                                            .getProjectTimeStamp(project, user.getUsername())));
+                                            .getProjectTimeStamp(projectSelectionModel.project, user.getUsername())));
                         }
                         else {
                             projectTimeStamp.add(LAST_ACCESS + "__");
@@ -425,41 +425,13 @@ public class MonitoringPage
                     List<IColumn<?,?>> columns = new ArrayList<IColumn<?,?>>();
 
                     for (int i = 0; i < provider.getColumnCount(); i++) {
-                        columns.add(new DocumentStatusColumnMetaData(provider, i, project,
+                        columns.add(new DocumentStatusColumnMetaData(provider, i, projectSelectionModel.project,
                                 repository));
                     }
                     annotationDocumentStatusTable.remove();
                     annotationDocumentStatusTable = new DefaultDataTable("rsTable", columns,
                             provider, 20);
                     annotationDocumentStatusTable.setOutputMarkupId(true);
-                    // Issue 1117 - REC Absolutely no idea what this is supposed to be good for, 
-                    // but it breaks pagination!
-//                    annotationDocumentStatusTable.add(new AjaxEventBehavior("onclick")
-//                    {
-//                        private static final long serialVersionUID = -4468099385971446135L;
-//
-//                        @Override
-//                        protected void onEvent(AjaxRequestTarget aTarget)
-//                        {
-//                            annotatorsProgress.clear();
-//                            annotatorsProgress.putAll(getFinishedDocumentsPerUser(project));
-//                            annotatorsProgressImage.setImageResource(createProgressChart(
-//                                    annotatorsProgress, totalDocuments, false));
-//                            aTarget.add(annotatorsProgressImage.setOutputMarkupId(true));
-//
-//                            annotatorsProgressInPercent.clear();
-//                            annotatorsProgressInPercent
-//                                    .putAll(getPercentageOfFinishedDocumentsPerUser(project));
-//                            annotatorsProgressPercentageImage.setImageResource(createProgressChart(
-//                                    annotatorsProgressInPercent, 100, true));
-//                            aTarget.add(annotatorsProgressPercentageImage.setOutputMarkupId(true));
-//
-//                            aTarget.add(monitoringDetailForm.setOutputMarkupId(true));
-//                            updateAgreementTable(aTarget);
-//                            aTarget.add(agreementForm.setOutputMarkupId(true));
-//
-//                        }
-//                    });
                     monitoringDetailForm.add(annotationDocumentStatusTable);
                 }
 
@@ -631,6 +603,18 @@ public class MonitoringPage
             }
         }
         return overallProjectProgress;
+    }
+
+    static public class ProjectSelectionModel
+        implements Serializable
+    {
+        protected int totalDocuments;
+
+        private static final long serialVersionUID = -1L;
+
+        public Project project;
+        public Map<String, Integer> annotatorsProgress = new TreeMap<String, Integer>();
+        public Map<String, Integer> annotatorsProgressInPercent = new TreeMap<String, Integer>();
     }
 
     static public class SelectionModel
@@ -1300,7 +1284,9 @@ public class MonitoringPage
                             aTarget.appendJavaScript("alert('the state can only be changed explicitly by the curator')");
                         }
 
-                        aTarget.add(annotationDocumentStatusTable);
+                        //aTarget.add(annotationDocumentStatusTable);
+                        aTarget.add(aCellItem);
+                        updateStats(aTarget, projectSelectionForm.getModelObject());
                     }
                 });
             }
@@ -1409,12 +1395,33 @@ public class MonitoringPage
                             }
 
                         }
-                        aTarget.add(annotationDocumentStatusTable);
+                        //aTarget.add(annotationDocumentStatusTable);
+                        aTarget.add(aCellItem);
+                        updateStats(aTarget, projectSelectionForm.getModelObject());
                     }
                 });
             }
         }
 
+        private void updateStats(AjaxRequestTarget aTarget, ProjectSelectionModel aModel)
+        {
+            aModel.annotatorsProgress.clear();
+            aModel.annotatorsProgress.putAll(getFinishedDocumentsPerUser(project));
+            annotatorsProgressImage.setImageResource(createProgressChart(aModel.annotatorsProgress,
+                    aModel.totalDocuments, false));
+            aTarget.add(annotatorsProgressImage.setOutputMarkupId(true));
+
+            aModel.annotatorsProgressInPercent.clear();
+            aModel.annotatorsProgressInPercent.putAll(getPercentageOfFinishedDocumentsPerUser(project));
+            annotatorsProgressPercentageImage.setImageResource(createProgressChart(
+                    aModel.annotatorsProgressInPercent, 100, true));
+            aTarget.add(annotatorsProgressPercentageImage.setOutputMarkupId(true));
+
+            aTarget.add(monitoringDetailForm.setOutputMarkupId(true));
+            updateAgreementTable(aTarget);
+            aTarget.add(agreementForm.setOutputMarkupId(true));
+        }
+        
         /**
          * Helper method to get the cell value for the user-annotation document status as
          * <b>username:documentName</b>
