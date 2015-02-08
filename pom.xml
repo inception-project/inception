@@ -358,9 +358,9 @@
         <module>webanno-webapp</module>
 	</modules>
 	<scm>
-		<developerConnection>scm:svn:https://webanno.googlecode.com/svn/trunk</developerConnection>
-		<connection>scm:svn:https://webanno.googlecode.com/svn/trunk</connection>
-		<url>https://webanno.googlecode.com/svn/trunk</url>
+		<developerConnection>scm:svn:https://webanno.googlecode.com/svn/branches/2.1.x</developerConnection>
+		<connection>scm:svn:https://webanno.googlecode.com/svn/branches/2.1.x</connection>
+		<url>https://webanno.googlecode.com/svn/branches/2.1.x</url>
 	</scm>
 	<build>
 		<extensions>
