@@ -73,6 +73,9 @@ import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.CASImpl;
@@ -82,6 +85,7 @@ import org.apache.uima.fit.factory.AnalysisEngineFactory;
 import org.apache.uima.fit.factory.CollectionReaderFactory;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
@@ -102,7 +106,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -122,6 +125,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.io.JCasFileWriter_ImplBase;
 import de.tudarmstadt.ukp.dkpro.core.api.io.ResourceCollectionReaderBase;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
+import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.TagsetDescription;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.io.bincas.SerializedCasReader;
@@ -647,8 +651,7 @@ public class RepositoryServiceDbData
                 continue;
             }
             else if (!feature.getLayer().getType().equals(WebAnnoConst.CHAIN_TYPE)) {
-                BratAjaxCasUtil.updateCasWithTagSet(cas, feature.getLayer().getName(),
-                        tagSet.getName());
+                updateCasWithTagSet(cas, feature.getLayer().getName(), tagSet.getName());
             }
         }
 
@@ -2367,5 +2370,41 @@ public class RepositoryServiceDbData
             return false;
         }
         return true;
+    }
+    
+    /**
+     * A Helper method to add {@link TagsetDescription} to {@link CAS}
+     * 
+     * @param aCas the CAA.
+     * @param aLayer the layer.
+     * @param aTagSetName the tagset.
+     */
+    public static void updateCasWithTagSet(CAS aCas, String aLayer, String aTagSetName)
+    {
+        Type TagsetType = CasUtil.getType(aCas, TagsetDescription.class);
+        Feature layerFeature = TagsetType.getFeatureByBaseName("layer");
+        Feature nameFeature = TagsetType.getFeatureByBaseName("name");
+
+        boolean tagSetModified = false;
+        // modify existing tagset Name
+        for (FeatureStructure fs : CasUtil.select(aCas, TagsetType)) {
+            String layer = fs.getStringValue(layerFeature);
+            String tagSetName = fs.getStringValue(nameFeature);
+            if (layer.equals(aLayer)) {
+                // only if the tagset name is changed
+                if (!aTagSetName.equals(tagSetName)) {
+                    fs.setStringValue(nameFeature, aTagSetName);
+                    aCas.addFsToIndexes(fs);
+                }
+                tagSetModified = true;
+                break;
+            }
+        }
+        if (!tagSetModified) {
+            FeatureStructure fs = aCas.createFS(TagsetType);
+            fs.setStringValue(layerFeature, aLayer);
+            fs.setStringValue(nameFeature, aTagSetName);
+            aCas.addFsToIndexes(fs);
+        }
     }
 }

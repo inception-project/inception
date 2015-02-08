@@ -565,42 +565,6 @@ public class BratAjaxCasUtil
     }
 
     /**
-     * A Helper method to add {@link TagsetDescription} to {@link CAS}
-     * 
-     * @param aCas the CAA.
-     * @param aLayer the layer.
-     * @param aTagSetName the tagset.
-     */
-    public static void updateCasWithTagSet(CAS aCas, String aLayer, String aTagSetName)
-    {
-        Type TagsetType = CasUtil.getType(aCas, TagsetDescription.class);
-        Feature layerFeature = TagsetType.getFeatureByBaseName("layer");
-        Feature nameFeature = TagsetType.getFeatureByBaseName("name");
-
-        boolean tagSetModified = false;
-        // modify existing tagset Name
-        for (FeatureStructure fs : CasUtil.select(aCas, TagsetType)) {
-            String layer = fs.getStringValue(layerFeature);
-            String tagSetName = fs.getStringValue(nameFeature);
-            if (layer.equals(aLayer)) {
-                // only if the tagset name is changed
-                if (!aTagSetName.equals(tagSetName)) {
-                    fs.setStringValue(nameFeature, aTagSetName);
-                    aCas.addFsToIndexes(fs);
-                }
-                tagSetModified = true;
-                break;
-            }
-        }
-        if (!tagSetModified) {
-            FeatureStructure fs = aCas.createFS(TagsetType);
-            fs.setStringValue(layerFeature, aLayer);
-            fs.setStringValue(nameFeature, aTagSetName);
-            aCas.addFsToIndexes(fs);
-        }
-    }
-
-    /**
      * For a span annotation, if a sub-token is selected, display the whole text so that the user is
      * aware of what is being annotated, based on
      * {@link BratAjaxCasUtil#selectOverlapping(JCas, Class, int, int)} ISSUE - Affected text not
