@@ -24,7 +24,7 @@
     <version>2.1.0-SNAPSHOT</version>
   </parent>
   <artifactId>webanno-crowdflower</artifactId>
-    <name>WebAnno - Crowdsourcing</name>
+    <name>WebAnno - UI - Crowdsourcing</name>
   <dependencies>
     <dependency>
       <groupId>commons-lang</groupId>
