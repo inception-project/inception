@@ -18,11 +18,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<artifactId>de.tudarmstadt.ukp.clarin.webanno</artifactId>
 		<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <artifactId>webanno</artifactId>
 		<version>2.1.0-SNAPSHOT</version>
 	</parent>
-	<artifactId>de.tudarmstadt.ukp.clarin.webanno.webapp</artifactId>
+	<artifactId>webanno-webapp</artifactId>
+    <name>WebAnno - Application</name>
 	<packaging>war</packaging>
 	<dependencies>
 		<dependency>
@@ -40,44 +41,44 @@
 
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>de.tudarmstadt.ukp.clarin.webanno.api</artifactId>
+			<artifactId>webanno-api</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>de.tudarmstadt.ukp.clarin.webanno.automation</artifactId>
+			<artifactId>webanno-automation</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>de.tudarmstadt.ukp.clarin.webanno.brat</artifactId>
+			<artifactId>webanno-brat</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>de.tudarmstadt.ukp.clarin.webanno.crowdflower</artifactId>
+			<artifactId>webanno-crowdflower</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>de.tudarmstadt.ukp.clarin.webanno.model</artifactId>
+			<artifactId>webanno-model</artifactId>
 		</dependency>
 
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>de.tudarmstadt.ukp.clarin.webanno.project</artifactId>
+			<artifactId>webanno-project</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>de.tudarmstadt.ukp.clarin.webanno.webapp.home</artifactId>
+			<artifactId>webanno-webapp-home</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>de.tudarmstadt.ukp.clarin.webanno.support</artifactId>
+			<artifactId>webanno-support</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>de.tudarmstadt.ukp.clarin.webanno.api.dao</artifactId>
+			<artifactId>webanno-api-dao</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>de.tudarmstadt.ukp.clarin.webanno.monitoring</artifactId>
+			<artifactId>webanno-monitoring</artifactId>
 		</dependency>
 
 		<!-- WICKET DEPENDENCIES -->
@@ -266,15 +267,15 @@
 		</dependency>
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>de.tudarmstadt.ukp.clarin.webanno.tei</artifactId>
+			<artifactId>webanno-tei</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>de.tudarmstadt.ukp.clarin.webanno.tsv</artifactId>
+			<artifactId>webanno-tsv</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>de.tudarmstadt.ukp.clarin.webanno.tcf</artifactId>
+			<artifactId>webanno-tcf</artifactId>
 		</dependency>
 		
 		<!-- DATABASE / HIBERNATE -->

@@ -15,117 +15,105 @@
 	See the License for the specific language governing permissions and
 	limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<artifactId>de.tudarmstadt.ukp.clarin.webanno</artifactId>
 		<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <artifactId>webanno</artifactId>
 		<version>2.1.0-SNAPSHOT</version>
 	</parent>
-	<artifactId>de.tudarmstadt.ukp.clarin.webanno.project</artifactId>
+	<artifactId>webanno-monitoring</artifactId>
+    <name>WebAnno - UI - Monitoring</name>
 	<packaging>jar</packaging>
 	<dependencies>
-		<dependency>
-			<groupId>commons-io</groupId>
-			<artifactId>commons-io</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>commons-lang</groupId>
-			<artifactId>commons-lang</artifactId>
-		</dependency>
 		<dependency>
 			<groupId>commons-logging</groupId>
 			<artifactId>commons-logging-api</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>commons-collections</groupId>
-			<artifactId>commons-collections</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpclient</artifactId>
-			<version>4.3.1</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpcore</artifactId>
-			<version>4.3.1</version>
-		</dependency>
-		
-		<dependency>
-			<groupId>org.codehaus.jackson</groupId>
-			<artifactId>jackson-mapper-asl</artifactId>
-		</dependency>
-		
-		<dependency>
-			<groupId>org.hibernate.javax.persistence</groupId>
-			<artifactId>hibernate-jpa-2.0-api</artifactId>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
 		</dependency>
 
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>de.tudarmstadt.ukp.clarin.webanno.api</artifactId>
+			<artifactId>webanno-model</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>de.tudarmstadt.ukp.clarin.webanno.model</artifactId>
+			<artifactId>webanno-project</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>de.tudarmstadt.ukp.clarin.webanno.webapp.home</artifactId>
+			<artifactId>webanno-brat</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>de.tudarmstadt.ukp.clarin.webanno.automation</artifactId>
+			<artifactId>webanno-tsv</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>de.tudarmstadt.ukp.clarin.webanno.brat</artifactId>
+			<artifactId>webanno-support</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>de.tudarmstadt.ukp.clarin.webanno.api.dao</artifactId>
+			<artifactId>webanno-api</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>de.tudarmstadt.ukp.clarin.webanno.support</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>de.tudarmstadt.ukp.clarin.webanno.tsv</artifactId>
-		</dependency>
-
-		<!-- UIMA dependencies -->
 	
 		<dependency>
-			<groupId>org.apache.uima</groupId>
-			<artifactId>uimaj-core</artifactId>
+			<groupId>org.jfree</groupId>
+			<artifactId>jfreechart</artifactId>
 		</dependency>
-
-		<!-- DKPro Core dependencies -->
+		<dependency>
+			<groupId>org.jfree</groupId>
+			<artifactId>jcommon</artifactId>
+		</dependency>
 		
 		<dependency>
-			<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-			<artifactId>de.tudarmstadt.ukp.dkpro.core.api.segmentation-asl</artifactId>
+			<groupId>de.tudarmstadt.ukp.dkpro.statistics</groupId>
+			<artifactId>de.tudarmstadt.ukp.dkpro.statistics</artifactId>
+			<version>1.0.2</version>
 		</dependency>
 
 		<!-- Spring dependencies -->
-
+		
 		<dependency>
 			<groupId>org.springframework</groupId>
-			<artifactId>spring-beans</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-web</artifactId>
+			<artifactId>spring-tx</artifactId>
 		</dependency>
 
-		<!-- SPRING SECURITY -->
+		<!-- Spring security dependencies -->
 		
 		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-core</artifactId>
+		</dependency>
+
+		<!-- UIMA dependencies -->
+		
+		<dependency>
+			<groupId>org.apache.uima</groupId>
+			<artifactId>uimaj-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.uima</groupId>
+			<artifactId>uimafit-core</artifactId>
+		</dependency>
+
+		<!-- DKPro Core dependencies -->
+
+		<dependency>
+			<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+			<artifactId>de.tudarmstadt.ukp.dkpro.core.api.segmentation-asl</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+			<artifactId>de.tudarmstadt.ukp.dkpro.core.api.lexmorph-asl</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+			<artifactId>de.tudarmstadt.ukp.dkpro.core.api.syntax-asl</artifactId>
 		</dependency>
 
 		<!-- WICKET DEPENDENCIES -->
@@ -139,20 +127,9 @@
 		</dependency>
 		<dependency>
 			<groupId>org.apache.wicket</groupId>
-			<artifactId>wicket-request</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.wicket</groupId>
-			<artifactId>wicket-auth-roles</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.wicket</groupId>
 			<artifactId>wicket-extensions</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.wicketstuff</groupId>
-			<artifactId>wicketstuff-progressbar</artifactId>
-		</dependency>
+
 
 		<!-- JUNIT DEPENDENCY FOR TESTING -->
 		<dependency>

@@ -19,10 +19,11 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-		<artifactId>de.tudarmstadt.ukp.clarin.webanno</artifactId>
+		<artifactId>webanno</artifactId>
 		<version>2.1.0-SNAPSHOT</version>
 	</parent>
-	<artifactId>de.tudarmstadt.ukp.clarin.webanno.tsv</artifactId>
+	<artifactId>webanno-tsv</artifactId>
+    <name>WebAnno - IO - TSV</name>
 	<dependencies>
 		<dependency>
 			<groupId>commons-lang</groupId>
