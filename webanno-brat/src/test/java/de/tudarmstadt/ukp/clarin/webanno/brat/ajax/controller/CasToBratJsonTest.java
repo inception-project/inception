@@ -40,10 +40,10 @@ import org.junit.Test;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
@@ -124,12 +124,12 @@ public class CasToBratJsonTest
         collectionInformation.setSearchConfig(new ArrayList<String[]>());
 
         List<String> tagSetNames = new ArrayList<String>();
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.POS);
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.DEPENDENCY);
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.NAMEDENTITY);
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.COREFERENCE);
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.POS);
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.DEPENDENCY);
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.NAMEDENTITY);
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE);
         tagSetNames
-                .add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.COREFRELTYPE);
+                .add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFRELTYPE);
 
         ProjectUtil.setJsonConverter(jsonConverter);
         ProjectUtil.generateJson(collectionInformation, new File(jsonFilePath));
@@ -178,12 +178,12 @@ public class CasToBratJsonTest
         }
 
         List<String> tagSetNames = new ArrayList<String>();
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.POS);
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.DEPENDENCY);
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.NAMEDENTITY);
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.COREFERENCE);
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.POS);
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.DEPENDENCY);
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.NAMEDENTITY);
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE);
         tagSetNames
-                .add(de.tudarmstadt.ukp.clarin.webanno.brat.controller.WebAnnoConst.COREFRELTYPE);
+                .add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFRELTYPE);
 
         BratAnnotatorModel bratannotatorModel = new BratAnnotatorModel();
         bratannotatorModel.setWindowSize(10);

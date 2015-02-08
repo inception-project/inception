@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.uima.cas.FeatureStructure;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
