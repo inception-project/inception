@@ -1,0 +1,22 @@
+[[sect_menu]]
+== Main Menu
+
+After login, you will be presented with the WebAnno overview screen. This screen can be reached at 
+any time from within the GUI by clicking on the *Home* link in the left upper corner. 
+
+Here, you can navigate to one of the currently eight options:
+ 
+  * <<sect_annotation>> - The page to perform annotations
+  * <<sect_curation>> - Compare and merge annotations from multiple users (only for _curators_)
+  * <<sect_correction>> - Correcting automatic annotation (under development)
+  * <<sect_automation>> - Creating automatically annotated data
+  * <<sect_projects>> - Set up or change annotation projects (only for _administrators_)
+  * <<sect_monitoring>> - Allows you to see the projects, their progress and change documentstatus (only for _administrators_ and _curators_)
+  * <<sect_users>> - Allows you to manage the rights of users
+
+Please click on the functionality you need. The individual functionalities will be explained in 
+further chapters.
+
+////
+image::menu.jpg[align="center"]
+////

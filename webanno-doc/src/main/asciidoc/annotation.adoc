@@ -1,0 +1,94 @@
+[[sect_annotation]]
+== Annotation
+
+=== Opening a Document
+
+When navigating to the *Annotation* page, a dialogue opens that allows you to select a project, and 
+a document within the project. If you want to open a different project or document later, click on 
+*Open* button to open the dialog.
+
+image::annotation1.jpg[align="center"]
+
+Projects appear as folders, and contain the documents of the project. Double-click on a document to 
+open it for annotation. Document names written in black show that the document has not been opened 
+by the current user, blue font means that it has already been opened, whereas red font indicates 
+that the document has already been marked as *done*.
+
+Once the document is opened, a default of 10 sentences are loaded on the annotation  page.  The  
+*Settings*  button will  allow  you  to specify the settings of you the annotation layer.
+
+The first option allows you to select an Annotation Layer you are displayed during annotation. The second option allows you to specify the number of sentences that will be displayed on one page. The last option allows you to select auto-scroll while annotating. Auto-scroll scrolls automatically forward by putting the last annotated sentence in the middle.
+
+=== Navigation
+
+Sentence  numbers  on  the  left  side  of  the  annotation  page  shows  the  exact sentence numbers in the document. 
+
+image::annotation3.jpg[align="center"]
+
+The arrow buttons *first page*, *next page*, *previous page*, *last page*, and *go to page* allow you to navigate accordingly. The *Prev.* and *Next* buttons in the *Document* frame allow you to go to the previous or next document on your project list. You can also use the following keyboard assignments in order to navigate only using your keyboard.
+
+  * *HOME*: jump to first sentence
+  * *END*: jump to last sentence
+  * *PAGE DOWN*: move to the next page, if not in the last page already
+  * *PAGE UP*: move to previous page , if not already in the first page
+  * *SHIFT+PgUp* and *SHIFT+PgDn*: go to previous/next document in project, if available
+
+A click on the *Help* button displays the Guidelines for the tool and *The Annotator's Guide to NER-Annotation*.
+When you are finished with annotating or curating a document, please click on the *Done*
+button, so that the document may be further processed. If the button above the *Done* is a cross symbol, it means the documents has already been finished. If the symbol has a tick, it is still open.
+
+image::annotation4.jpg[align="center"]
+
+Annotation of spans works by selecting the span, or double-clicking on a word. This opens the annotation dialog, where you can add a new annotation. The layer can be selected on the left side of the frame. The tag can be selected out of the right box, containing the tags of the tagset. One can also type in the initial letters and chose the needed tag. In the case of lemma annotation, a lemma can be typed into the box on the right. 
+
+image::annotation_edit.jpg[align="center"]
+
+To change or delete an annotation, double-click on the annotation (span or link annotations).
+
+Link annotations (between POS tags) are created by selecting the starting POS-tag, then dragging the arrow to connect it to its target POS tag. All possible targets are highlighted. 
+
+image::annotation_pos_span.jpg[align="center"]
+
+=== Export
+
+Annotations are always immediately persistent in the backend database. Thus, it is not necessary to  save the annotations explicitly. Also, losing the connection through network issues or timeouts does not cause data loss. To obtain a local copy of the current document, click on *export* button. The following frame will appear:
+
+image::annotation_export.jpg[align="center"]
+
+Choose your preferred format. Please take note of the facts that the plain text format does not contain any annotations and that the files in the binary format need to be unpacked before further usage. For further information on the formats provided in !WebAnno, please consult the corresponding chapter [OutputFormat WebAnno's supported formats].
+
+The document will be saved to your local disk, and can be re-imported via adding the document to a project by a project administrator. Please export your data periodically, at least when finishing a document or not continuing annotations for an extended period of time. 
+
+
+=== Layers
+
+Concerning annotation, !WebAnno offers six pre-defined layers:
+Span annotations support NE, lemma, POS, and co-referance. Several annotation layers may be selected. 
+
+Moreover, additional custom layers may be created, as described in [http://code.google.com/p/webanno/wiki/Projects#New_Layer_Creation New Layer Creation] in detail.
+
+For example, for NE annotation, select the options as shown below (red check mark):
+
+image::annotation2.jpg[align="center"]
+
+link:http://en.wikipedia.org/wiki/Named-entity_recognition[NE] annotation can be chosen from a tagset and can span over several tokens within one sentence. Nested NE annotations are also possible (in the example below: "Frankfurter" in "Frankfurter FC"). 
+
+image::annotation_ner.jpg[align="center"]
+
+link:http://en.wikipedia.org/wiki/Lemma_%28morphology%29[Lemma] annotation, as shown below, is freely selectable over a single token.
+
+image::annotation_lemma.jpg[align="center"]
+
+link:http://en.wikipedia.org/wiki/Part_of_speech[POS] can be chosen over one token out of a tagset.
+
+image::annotation_pos.jpg[align="center"]
+
+link:http://en.wikipedia.org/wiki/Coreference[Co-reference] annotation can be made over several tokens within one sentence. A single token sequence have several co-ref spans simultaneously.
+
+<wiki:comment>
+Make examples 
+</wiki:comment>
+
+The other kind of annotation that is supported by WebAnno is Arc. The arcs can be made within one sentence and their types are chosen out of a tagset. Dependency arcs are defined between POS. Every POS is allowed to have only one head. Co-reference arcs are defined between co-reference-anchors. All transitively combined anchors build a colour-coded lexical chain.
+
+image::annotation_span_many.jpg[align="center"]

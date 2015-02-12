@@ -1,0 +1,7 @@
+[[sect_login]]
+== Logging in
+
+Upon navigating to the WebAnno page, the login screen opens. Please enter your credentials to 
+proceed.
+
+image::login.jpg[align="center"]

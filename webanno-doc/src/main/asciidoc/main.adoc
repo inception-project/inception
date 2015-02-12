@@ -1,0 +1,71 @@
+WebAnno {project-version} Manual
+================================
+
+:Author: The WebAnno Team
+:revnumber: {project-version}
+
+== Introduction
+
+This guide summarizes the functionality of WebAnno from the user's perspective.
+
+This document serves as a quick user’s guide for the operation of the web-based annotation platform 
+WebAnno, and is targeted towards users of the platform, including project managers, curators and 
+annotators.
+
+It is assumed that WebAnno has been installed successfully. For issues regarding the installation, 
+please see link:installation.html[Installation Guide]. 
+
+All materials, including this guide, is available via the project site: https://code.google.com/p/webanno/
+
+== System Requirements
+
+WebAnno is compatible with Google Chrome or Safari browsers, specifically for annotation and 
+visualization. The remaining component of WebAnno, such as project settings and monitoring page 
+should run in all browsers.
+
+Requirements to run a WebAnno server: Java 7+, MySQL, Tomcat (a standalone demo version requiring only Java 7+ is also available).
+
+== Workflow
+
+The following image shows an exemplary workflow of an annotation project with WebAnno.
+
+image::progress_workflow.jpg[align="center"]
+
+First, the projects needs to be set up. In more detail, this means that users are to be added, 
+guidelines need to provided, documents have to be uploaded, tagsets need to be defined and uploaded,
+etc. The process of setting up and administrating a project are explicitly described in <<sect_projects>>.
+
+After the setup of a project, the users which were assigned with the task of annotation annotate the
+documents according to the guidelines. The task of annotation is further explained in <<sect_annotation>>.
+The work of the annotators is managed and controlled by Monitoring. Here, the person in charge has
+to assign the workload. For example, in order to prevent redundant annotation, documents which are
+already annotated by several other annotators and need not be annotated by another person, can be
+blocked for others. The person in charge is also able to follow the progress of individual
+annotators. All these tasks are demonstrated in <<sect_monitoring>> in more detail. The person in charge should not only control the quantity, but also the quality of annotation by looking closer into the
+annotations of individual annotators. This can be done by logging in with the credentials of the
+annotators.
+
+After at least two annotators finished the annotation of the same document by clicking on *Done*, the
+curator can start his work. The curator compares the annotations and corrects them if needed. This
+task is further explained in <<sect_curation>>. 
+
+The document merged by the curator can be exported as soon as the curator clicked on "Done" for the
+document. The extraction of curated documents is also explained in <<sect_projects>>.
+
+////
+==  Tutorials
+
+For tutorials on the different functionalities of WebAnno, please see [https://code.google.com/p/webanno/wiki/Tutorials Tutorials]. 
+Soon also video-tutorials will be available.
+////
+
+include::login.adoc[]
+include::menu.adoc[]
+include::annotation.adoc[]
+include::curation.adoc[]
+include::correction.adoc[]
+include::automation.adoc[]
+include::projects.adoc[]
+include::monitoring.adoc[]
+include::users.adoc[]
+include::troubleshooting.adoc[]

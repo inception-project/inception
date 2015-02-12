@@ -1,0 +1,49 @@
+[[sect_monitoring]]
+== Monitoring ==
+
+As an administrator, you are able to observe the progress and document status of projects you are 
+responsible for. Moreover, you are able to see the time of the last login of every user and observe the agreement between the annotators.
+After clicking on *Monitoring* in the main menu, the following page is displayed:
+
+image::monitoring1.jpg[align="center"]
+
+In the right frame, the overall progress of all projects is displayed.
+on the left frame one sees all projects, that one has an administrator role in.  
+By clicking on one of the projects on the left, it may be selected and the following view is opened:
+
+image::monitoring2.jpg[align="center"]
+
+The percentual progress out of the workload for individual annotators may be viewed as well as the number of finished documents.
+
+The following table will explain the different symbols, which explain the status of a document for a user and the described task.
+
+[cols="2*", options="header"]
+|===
+| Symbol
+| Meaning
+
+| image:icon_new.png[align="center"]
+| Annotation has not started yet
+
+| image:icon_locked.png[align="center"]
+| Document not available to user
+
+| image:icon_annotation_in_progress.png[align="center"]
+| Annotation is in progress
+
+| image:icon_done.png[align="center"]
+| Annotation is complete
+
+| image:icon_curation_in_progress.png[align="center"]
+| Curation is in progress
+|===
+
+You can also alter the document status of annotators. By clicking on the symbols you can change between *Done* and *In Progress*.
+You can also alter between *New* and *Locked* status. 
+The second column of the document status frame displays the status of the curation. 
+
+As there is only one curator for one document, curation is not divided into individual curators.
+
+Scrolling down, two further frames become visible. The left one, named *Layer*, allows you to chose a layer in which pairwise kappa agreement between annotators will be calculated.
+
+image::monitoring_agreement.jpg[align="center"]

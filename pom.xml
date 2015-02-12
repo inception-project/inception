@@ -356,6 +356,7 @@
         <module>webanno-automation</module>
         <module>webanno-crowdflower</module>
         <module>webanno-webapp</module>
+        <module>webanno-doc</module>
 	</modules>
 	<scm>
 		<developerConnection>scm:svn:https://webanno.googlecode.com/svn/branches/2.1.x</developerConnection>
