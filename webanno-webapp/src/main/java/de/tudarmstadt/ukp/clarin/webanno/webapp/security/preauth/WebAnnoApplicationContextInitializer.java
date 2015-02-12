@@ -28,6 +28,8 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.support.ResourcePropertySource;
 
+import de.tudarmstadt.ukp.clarin.webanno.webapp.home.page.SettingsUtil;
+
 public class WebAnnoApplicationContextInitializer
     implements ApplicationContextInitializer<ConfigurableApplicationContext>
 {
@@ -35,11 +37,6 @@ public class WebAnnoApplicationContextInitializer
     private static final String PROFILE_DATABASE = "auto-mode-builtin";
 
     private static final String PROP_AUTH_MODE = "auth.mode";
-    private static final String PROP_USER_HOME = "user.home";
-    private static final String PROP_WEBANNO_HOME = "webanno.home";
-    
-    private static final String SETTINGS_FILE = "settings.properties";
-    private static final String WEBANNO_USER_HOME_SUBDIR = ".webanno";
     private static final String AUTH_MODE_PREAUTH = "preauth";
 
     private final Log log = LogFactory.getLog(getClass());
@@ -49,20 +46,10 @@ public class WebAnnoApplicationContextInitializer
     {
         ConfigurableEnvironment aEnvironment = aApplicationContext.getEnvironment();
 
-        String appHome = System.getProperty(PROP_WEBANNO_HOME);
-        String userHome = System.getProperty(PROP_USER_HOME);
-
-        // Locate settings, first in webanno.home, then in user home
-        File settings = null;
-        if (appHome != null) {
-            settings = new File(appHome, SETTINGS_FILE);
-        }
-        else if (userHome != null) {
-            settings = new File(userHome + "/" + WEBANNO_USER_HOME_SUBDIR, SETTINGS_FILE);
-        }
+        File settings = SettingsUtil.getSettingsFile();
         
         // If settings were found, add them to the environment
-        if (settings != null && settings.exists()) {
+        if (settings != null) {
             log.info("Settings: " + settings);
             try {
                 aEnvironment.getPropertySources().addFirst(

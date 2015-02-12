@@ -144,10 +144,11 @@ select.hfill[multiple]{
  * Page header
  */
 .logo{
-    margin-left:5px;
+    margin:2px;
+	margin-left:5px;
     float:right;
     vertical-align:middle;
-    height:59px;
+    height:64px;
 }
 
 .pageicon{
