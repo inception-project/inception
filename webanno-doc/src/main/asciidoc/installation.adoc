@@ -1,6 +1,0 @@
-WebAnno Installation Guide
-==========================
-
-:Author: The WebAnno Team
-:toc:
-

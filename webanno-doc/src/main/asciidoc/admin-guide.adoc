@@ -1,0 +1,5 @@
+WebAnno {project-version} Administrator Guide
+=============================================
+:Author: The WebAnno Team
+
+include::{include-dir}settings.adoc[]

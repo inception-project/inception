@@ -1,0 +1,80 @@
+[[sect_settings]]
+== Settings
+
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+| database.dialect
+| Database dialect
+| org.hibernate.dialect.HSQLDialect
+| org.hibernate.dialect.MySQL5InnoDBDialect
+
+| database.driver
+| Database driver
+| org.hsqldb.jdbc.JDBCDriver
+| com.mysql.jdbc.Driver
+
+| database.url
+| JDBC connection string
+| _location in WebAnno home_
+| jdbc:mysql://localhost:3306/weblab
+
+| database.username
+| Database username
+| sa
+| user
+
+| database.initial-pool-size
+| 
+| 4
+|
+
+| database.min-pool-size
+| 
+| 4
+| 
+
+| database.max-pool-size
+| 
+| 10
+| 
+
+| database.generate
+| 
+| update
+| 
+
+| database.password
+| Database password
+| sa
+| pass
+
+| backup.keep.time
+| 
+| 0
+| 
+
+| backup.interval
+| 
+| 0
+| 5
+
+| backup.keep.number
+| 
+| 0
+| 5
+
+| crowdsource.enabled
+| 
+| 0
+| 
+
+| style.logo
+|
+| 
+| _path to an image file_
+|===

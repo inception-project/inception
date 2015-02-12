@@ -1,8 +1,6 @@
-WebAnno {project-version} Manual
-================================
-
+WebAnno {project-version} User Guide
+====================================
 :Author: The WebAnno Team
-:revnumber: {project-version}
 
 == Introduction
 
@@ -59,13 +57,13 @@ For tutorials on the different functionalities of WebAnno, please see [https://c
 Soon also video-tutorials will be available.
 ////
 
-include::login.adoc[]
-include::menu.adoc[]
-include::annotation.adoc[]
-include::curation.adoc[]
-include::correction.adoc[]
-include::automation.adoc[]
-include::projects.adoc[]
-include::monitoring.adoc[]
-include::users.adoc[]
-include::troubleshooting.adoc[]
+include::{include-dir}login.adoc[]
+include::{include-dir}menu.adoc[]
+include::{include-dir}annotation.adoc[]
+include::{include-dir}curation.adoc[]
+include::{include-dir}correction.adoc[]
+include::{include-dir}automation.adoc[]
+include::{include-dir}projects.adoc[]
+include::{include-dir}monitoring.adoc[]
+include::{include-dir}users.adoc[]
+include::{include-dir}troubleshooting.adoc[]

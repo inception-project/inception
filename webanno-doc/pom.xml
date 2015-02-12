@@ -16,7 +16,7 @@
         <artifactId>asciidoctor-maven-plugin</artifactId>
         <executions>
           <execution>
-            <id>output-html</id>
+            <id>user-guide-html</id>
             <phase>generate-resources</phase>
             <goals>
               <goal>process-asciidoc</goal>
@@ -24,32 +24,39 @@
             <configuration>
               <backend>html5</backend>
               <sourceHighlighter>coderay</sourceHighlighter>
+              <sourceDocumentName>user-guide.adoc</sourceDocumentName>
+              <imagesDir>./user-guide/images</imagesDir>
               <!-- <doctype>book</doctype> -->
-              <sourceDocumentName>main.adoc</sourceDocumentName>
               <attributes>
                 <toc>left</toc>
                 <toclevels>8</toclevels>
                 <sectanchors>true</sectanchors>
                 <docinfo1>true</docinfo1>
                 <project-version>${project.version}</project-version>
+                <revnumber>${project-version}</revnumber>
+                <include-dir>./user-guide/</include-dir>
               </attributes>
             </configuration>
           </execution>
           <execution>
-            <id>output-pdf</id>
+            <id>admin-guide-html</id>
             <phase>generate-resources</phase>
             <goals>
               <goal>process-asciidoc</goal>
             </goals>
             <configuration>
-              <backend>pdf</backend>
+              <backend>html5</backend>
               <sourceHighlighter>coderay</sourceHighlighter>
+              <sourceDocumentName>admin-guide.adoc</sourceDocumentName>
               <!-- <doctype>book</doctype> -->
-              <sourceDocumentName>main.adoc</sourceDocumentName>
               <attributes>
+                <toc>left</toc>
                 <toclevels>8</toclevels>
+                <sectanchors>true</sectanchors>
                 <docinfo1>true</docinfo1>
                 <project-version>${project.version}</project-version>
+                <revnumber>${project-version}</revnumber>
+                <include-dir>./admin-guide/</include-dir>
               </attributes>
             </configuration>
           </execution>
