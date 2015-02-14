@@ -1,0 +1,20 @@
+[[sect_upgrade]]
+== Upgrade
+
+This section describes how to upgrade the standalone version of WebAnno using an embedded database. For further information on how to upgrade WebAnno, in particular the WAR version, when using a MySQL database, or older versions of WebAnno, please refer to the <<admin-guide.adoc#,Administrator Guide>>.
+
+=== Make a backup
+
+Before any upgrade, make a copy of your WebAnno home folder.
+
+IMPORTANT: If WebAnno is configured to use an external database, e.g. MySQL, make a backup of this
+         database as well. See the <<admin-guide.adoc#,Administrator Guide>> for further information.
+
+=== Upgrade from 2.0.x to 2.1.x
+
+* clean up the temporary installation before running the new version:
+** On OS X: `rm -R "$TMPDIR/winstoneEmbeddedWAR"`
+** On Linux: `rm -R /tmp/winstoneEmbeddedWAR`
+** On Windows: remove the `winstoneEmbeddedWAR` that should be somewhere under `C:\Users\<username>\AppData\Local\Temp`
+* start the new version
+

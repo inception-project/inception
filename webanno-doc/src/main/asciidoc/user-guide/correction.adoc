@@ -3,11 +3,7 @@
 
 In this page, already annotated documents may be checked, corrected and enhanced.
 
-=== Preprocessing
-
 Before being able to see and correct documents, make sure to have chosen _correction_ when creating your project in projects. The instruction to do so is on the following page: <<sect_projects>>. Also make sure that the documents you upload are already annotated.
-
-=== Handling of Correction page
 
 After clicking on the *Correction* symbol on the main page, the Correction page is opened. In the appearing frame, which is the left one in the image below, the user has to choose a project first. 
 

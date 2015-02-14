@@ -28,53 +28,53 @@
 | sa
 | user
 
-| database.initial-pool-size
-| 
-| 4
-|
-
-| database.min-pool-size
-| 
-| 4
-| 
-
-| database.max-pool-size
-| 
-| 10
-| 
-
-| database.generate
-| 
-| update
-| 
-
 | database.password
 | Database password
 | sa
 | pass
 
-| backup.keep.time
+| database.initial-pool-size
+| Initial database connection pool size
+| 4
+|
+
+| database.min-pool-size
+| Minimum database connection pool size
+| 4
 | 
-| 0
+
+| database.max-pool-size
+| Maximum database connection pool size
+| 10
 | 
+
+// | database.generate
+// | 
+// | update
+// | 
 
 | backup.interval
-| 
+| Time between backups (seconds)
 | 0
-| 5
+| 300 _(60 * 5 = 5 minutes)_
 
 | backup.keep.number
-| 
+| Maximum number of backups to keep
 | 0
 | 5
 
-| crowdsource.enabled
-| 
+| backup.keep.time
+| Maximum age of backups to keep (seconds)
 | 0
-| 
+| 2592000 _(60 * 60 * 24 * 30 = 30 days)_
+
+| crowdsource.enabled
+| Enable crowdsourcing
+| 0
+| 1
 
 | style.logo
-|
-| 
+| Logo image displayed in the upper-right corner
+| _unset_
 | _path to an image file_
 |===

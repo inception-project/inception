@@ -26,14 +26,25 @@
               <sourceHighlighter>coderay</sourceHighlighter>
               <sourceDocumentName>user-guide.adoc</sourceDocumentName>
               <imagesDir>./user-guide/images</imagesDir>
-              <!-- <doctype>book</doctype> -->
               <attributes>
                 <toc>left</toc>
-                <toclevels>8</toclevels>
-                <sectanchors>true</sectanchors>
-                <docinfo1>true</docinfo1>
-                <project-version>${project.version}</project-version>
-                <revnumber>${project-version}</revnumber>
+                <include-dir>./user-guide/</include-dir>
+              </attributes>
+            </configuration>
+          </execution>
+          <execution>
+            <id>user-guide-pdf</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>process-asciidoc</goal>
+            </goals>
+            <configuration>
+              <backend>pdf</backend>
+              <sourceHighlighter>coderay</sourceHighlighter>
+              <sourceDocumentName>user-guide.adoc</sourceDocumentName>
+              <imagesDir>./user-guide/images</imagesDir>
+              <attributes>
+                <toc>preamble</toc>
                 <include-dir>./user-guide/</include-dir>
               </attributes>
             </configuration>
@@ -48,14 +59,24 @@
               <backend>html5</backend>
               <sourceHighlighter>coderay</sourceHighlighter>
               <sourceDocumentName>admin-guide.adoc</sourceDocumentName>
-              <!-- <doctype>book</doctype> -->
               <attributes>
                 <toc>left</toc>
-                <toclevels>8</toclevels>
-                <sectanchors>true</sectanchors>
-                <docinfo1>true</docinfo1>
-                <project-version>${project.version}</project-version>
-                <revnumber>${project-version}</revnumber>
+                <include-dir>./admin-guide/</include-dir>
+              </attributes>
+            </configuration>
+          </execution>
+          <execution>
+            <id>admin-guide-pdf</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>process-asciidoc</goal>
+            </goals>
+            <configuration>
+              <backend>pdf</backend>
+              <sourceHighlighter>coderay</sourceHighlighter>
+              <sourceDocumentName>admin-guide.adoc</sourceDocumentName>
+              <attributes>
+                <toc>preamble</toc>
                 <include-dir>./admin-guide/</include-dir>
               </attributes>
             </configuration>
@@ -69,6 +90,16 @@
           <groupId>org.asciidoctor</groupId>
           <artifactId>asciidoctor-maven-plugin</artifactId>
           <version>1.5.2</version>
+          <configuration>
+            <attributes>
+              <toclevels>8</toclevels>
+              <sectanchors>true</sectanchors>
+              <docinfo1>true</docinfo1>
+              <project-version>${project.version}</project-version>
+              <revnumber>${project.version}</revnumber>
+              <icons>font</icons>
+            </attributes>
+          </configuration>
           <dependencies>
             <dependency>
               <groupId>org.asciidoctor</groupId>
