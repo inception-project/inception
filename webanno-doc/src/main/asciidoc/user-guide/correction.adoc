@@ -19,20 +19,4 @@ The upper one, Annotation, is the frame in which annotations can be made by the 
 The lower frame, User: Suggestion, displays the annotation that was previously made in the uploaded document. By clicking on the annotations (not the words), they are chosen as _right_ and are therefore displayed in the Annotation frame. Additional annotations may be made just like in _Annotation_, by selecting the span or relation to be annotated, choosing the layer and tag. For more detailed instruction or the guidelines for the navigation in the upper frames (Document, Page, Help, Workflow), see the guidelines for <<sect_annotation>>. 
 No changes may be made in the lower frame.
 
-The colouring of the annotation signals the same as in _Curation_:
-
-[cols="2*"]
-|===
-| Light Blue (in upper frame)
-| final annotation
-
-| Dark Blue (in the lower frame)
-| not chosen annotation
-
-
-| White (in lower frame)
-| chosen annotation
-
-| Red (in lower frame)
-| Wrong annotation (same span, other type).
-|===
+The colouring of the annotation signals the same as in <<sect_curation>>.
