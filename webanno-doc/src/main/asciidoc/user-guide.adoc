@@ -6,7 +6,7 @@ WebAnno User Guide
 
 This guide summarizes the functionality of WebAnno from the user's perspective.
 
-NOTE: It is assumed that you plan to test the WebAnno standalone version or an already existing server installation of WebAnno. For information on how to set up WebAnno for a group of users on a server, please refer to the <<admin-guide.adoc,Administrator Guide>>.
+NOTE: It is assumed that you plan to test the WebAnno standalone version or an already existing server installation of WebAnno. For information on how to set up WebAnno for a group of users on a server, please refer to the <<admin-guide.adoc#,Administrator Guide>>.
 
 All materials, including this guide, are available via the link:https://code.google.com/p/webanno/[WebAnno homepage].
 
