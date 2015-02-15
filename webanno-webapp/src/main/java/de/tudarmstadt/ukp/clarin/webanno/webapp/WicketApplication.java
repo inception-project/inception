@@ -17,19 +17,28 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.webapp;
 
+import java.io.File;
+import java.util.Properties;
+
+import org.apache.commons.lang.StringUtils;
 import org.apache.wicket.Page;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebApplication;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
 import org.apache.wicket.markup.html.WebPage;
+import org.apache.wicket.markup.html.image.Image;
+import org.apache.wicket.request.Url;
+import org.apache.wicket.request.resource.ContextRelativeResourceReference;
 import org.apache.wicket.request.resource.CssResourceReference;
-import org.apache.wicket.request.resource.JavaScriptResourceReference;
-import org.apache.wicket.request.resource.ResourceReference;
+import org.apache.wicket.request.resource.SharedResourceReference;
+import org.apache.wicket.request.resource.UrlResourceReference;
 import org.apache.wicket.resource.DynamicJQueryResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringComponentInjector;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.WebAnnoResources;
 import de.tudarmstadt.ukp.clarin.webanno.monitoring.page.MonitoringPage;
 import de.tudarmstadt.ukp.clarin.webanno.project.page.ProjectPage;
+import de.tudarmstadt.ukp.clarin.webanno.support.FileSystemResource;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.home.page.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.automation.AutomationPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.correction.CorrectionPage;
@@ -84,6 +93,17 @@ public class WicketApplication
             mountResource("/style-ui.css",
                     new CssResourceReference(WebAnnoResources.class, "client/css/style-ui.css"));
 
+            Properties settings = SettingsUtil.getSettings();
+            String logoValue = settings.getProperty("style.logo");
+            if (StringUtils.isNotBlank(logoValue) && new File(logoValue).canRead()) {
+                getSharedResources().add("logo", new FileSystemResource(new File(logoValue)));
+                mountResource("/images/logo.png", new SharedResourceReference("logo"));
+            }
+            else {
+                mountResource("/images/logo.png", new ContextRelativeResourceReference(
+                        "images/logo.png", false));
+            }
+            
 /*            // mount fonts
             mountResource("/static/fonts/Astloch-Bold.ttf",
                     new CssResourceReference(Myresources.class, "fonts/Astloch-Bold.ttf"));
