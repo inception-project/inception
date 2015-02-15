@@ -1,0 +1,21 @@
+WebAnno Administrator Guide
+===========================
+:Author: The WebAnno Team
+
+include::common/systemrequirements.adoc[]
+
+<<<
+
+include::{include-dir}installation.adoc[]
+
+<<<
+
+include::{include-dir}upgrade.adoc[]
+
+<<<
+
+include::{include-dir}systemproperties.adoc[]
+
+<<<
+
+include::{include-dir}settings.adoc[]

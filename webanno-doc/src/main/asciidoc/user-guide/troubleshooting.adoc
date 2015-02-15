@@ -1,0 +1,10 @@
+[[sect_troubleshooting]]
+== Troubleshooting
+
+If the tool is kept open in the browser, but not used for a long period of time, you will have to
+log in again. For this, press the reload button of your browser.
+
+If the tool does not react for more than 1 minute, please also reload and re-login. 
+
+We are collecting error reports to improve the tool. For this, the error must be reproducible: 
+If you find a way how to produce the error, please open an issue and describe it.

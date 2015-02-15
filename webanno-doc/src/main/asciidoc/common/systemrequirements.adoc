@@ -1,0 +1,30 @@
+
+== System Requirements
+
+.Requirements for users
+[cols="2*"]
+|===
+| Browser
+| Chrome or Safari
+|===
+
+.Requirements to run the standalone version
+[cols="2*"]
+|===
+| Java Runtime Environment
+| version 7 or higher
+|===
+
+.Requirements run a WebAnno server
+[cols="2*"]
+|===
+| Java Runtime Environment
+| version 7 or higher
+
+| Apache Tomcat
+| version 6 or higher
+
+| MySQL Server
+| version 5 or higher
+|===
+

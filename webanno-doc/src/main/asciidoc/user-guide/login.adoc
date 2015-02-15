@@ -1,0 +1,9 @@
+[[sect_login]]
+== Logging in
+
+Upon navigating to the WebAnno page, the login screen opens. Please enter your credentials to 
+proceed.
+
+NOTE: When WebAnno is started for the first time, a default user called *admin* with the password *admin* is automatically created. Be sure to change the passwort for this user after logging in (see <<sect_users>>). 
+
+image::login.jpg[align="center"]

@@ -1,0 +1,20 @@
+[[sect_systemproperties]]
+== System Properties
+
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+| webanno.home
+| WebAnno home folder
+| ~/.webanno
+| /srv/webanno
+
+| javamelody.disabled
+| Disable JavaMelody
+| true
+| false
+|===
