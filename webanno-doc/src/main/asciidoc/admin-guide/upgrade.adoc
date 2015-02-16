@@ -26,7 +26,7 @@
 * Recreate the users
 ** If you are using MySQL
 *** create a new database for the new WebAnno version and update the *settings.properties* accordingly
-*** use link:http://dev.mysql.com/doc/refman/5.0/en/mysqldump.html[mysqldump] to dump the table `users`from the old database and load it back into the new database
+*** use link:http://dev.mysql.com/doc/refman/5.0/en/mysqldump.html[mysqldump] to dump the tables `users` and `authorities` from the old database and load it back into the new database
 ** If you are not using MySQL, you have to recreate the users manually
 * When upgrading to WebAnno 2.x from a pre 2.x version, remove the *format.properties* file from the WebAnno home folder
 * Restart WebAnno and import the previously exported projects
