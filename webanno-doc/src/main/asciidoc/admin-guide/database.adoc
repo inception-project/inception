@@ -1,0 +1,46 @@
+// Copyright 2015
+// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_database]]
+== Database
+
+WebAnno uses an SQL database to store project and user data. 
+
+We test MySQL using a MySQL server. WebAnno uses by default an embedded HSQLDB database. However, we 
+recommend using the embedded database only for testing purposes. For production use, we recomment
+using a MySQL server. The reason for this is, that:
+
+* we do more testing on the MySQL server and
+* in the past, we had cases where we described in-place upgrade procedures that required performing
+  SQL commands to change the data model as part of the upgrade. We promise to try avoiding this in
+  the future. However, in case we offer advice on fixing anything directly in the database, this
+  advice will refer to a MySQL database.
+
+We try to keep the data model simple, so there should be no significant requirements to the database
+being used. Theoretically, it should be possible to use any JDBC-compatible database after adding a
+corresponding driver to the classpath and configuring WebAnno to use the driver in the
+`settings.properties` file.
+
+
+=== Using HSQLDB in production
+
+WebAnno displays a warning in the user interface when an embedded database is being used. In case
+that you really want to run WebAnno with an embedded database in production, you probably want to
+disable this warning. To do so, please add the following entry to the `settings.properties` file:
+
+----
+warnings.embeddedDatabase=false
+----

@@ -19,7 +19,14 @@
 
 All-in-one version which does not require a database server or servlet container to be set up.
 
-Get the standalone jar from the [WebAnnoInstFile downloads] and start it simply with a *double-click* in your file manager. !WebAnno stores its data in a folder called `.webanno` (_dot webanno_) within your home folder,
+[NOTE]
+====
+By default, WebAnno creates and uses an embedded database. It is not recommended to use WebAnno in
+such a configuration for production use. Instead, please configure WebAnno to use a database server
+when using it in production. For more information, please refer to the <<admin-guide.adoc#sect_database,Administrator Guide>>.
+====
+
+Get the standalone jar from the [WebAnnoInstFile downloads] and start it simply with a *double-click* in your file manager. WebAnno stores its data in a folder called `.webanno` (_dot webanno_) within your home folder,
 
 You can start with the [SampleProjects example projects] to explore some of the functionalities. 
 
@@ -45,3 +52,4 @@ Mind to replace `/my/webanno/home` with path of a folder where WebAnno can store
 By default the server starts on port 8080 an you can access it via a browser at `http://localhost:8080` after you started it. You can add the parameter `--httpPort=9999` at the end of the command line to start the server on port 9999 (or choose any other port).
 
 A full list of the command line parameters can be found in the link:http://winstone.sourceforge.net/#commandLine[Winstone documentation].
+

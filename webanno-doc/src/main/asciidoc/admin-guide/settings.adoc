@@ -93,4 +93,14 @@
 | Logo image displayed in the upper-right corner
 | _unset_
 | _path to an image file_
+
+| warnings.embeddedDatabase
+| Warn about using an embedded database
+| true
+| false
+
+| warnings.unsupportedBrowser
+| Warn about unsupported browser
+| true
+| false
 |===

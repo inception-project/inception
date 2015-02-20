@@ -106,6 +106,7 @@ public abstract class ApplicationPageBase
                 return true;
             }
         });
+        
 
         Properties props = getVersionProperties();
         String versionString = props.getProperty("version") + " (" + props.getProperty("timestamp")
@@ -114,7 +115,7 @@ public abstract class ApplicationPageBase
 
         embeddedDbWarning = new Label("embeddedDbWarning",
                 "USE THIS INSTALLATION FOR TESTING ONLY -- "
-                + "AN EMBEDDED DATABASE IS NOT SUPPORTED FOR PRODUCTION USE");
+                + "AN EMBEDDED DATABASE IS NOT RECOMMENDED FOR PRODUCTION USE");
         embeddedDbWarning.setVisible(false);
         try {
             String driver = repository.getDatabaseDriverName();
@@ -125,6 +126,12 @@ public abstract class ApplicationPageBase
             LOG.warn("Unable to determine which database is being used", e);
         }
 
+        // Override warning about embedded database.
+        Properties settings = SettingsUtil.getSettings();
+        if ("false".equals(settings.getProperty("warnings.embeddedDatabase"))) {
+            embeddedDbWarning.setVisible(false);
+        }
+        
         // Display a warning when using an unsupported browser
         RequestCycle requestCycle = RequestCycle.get();
         WebClientInfo clientInfo;
@@ -142,6 +149,11 @@ public abstract class ApplicationPageBase
         browserWarning.setVisible(!clientProperties.isBrowserSafari()
                 && !clientProperties.isBrowserChrome());
 
+        // Override warning about browser.
+        if ("false".equals(settings.getProperty("warnings.unsupportedBrowser"))) {
+            browserWarning.setVisible(false);
+        }
+        
         add(logoutPanel);
         add(feedbackPanel);
         add(versionLabel);
