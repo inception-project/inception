@@ -26,6 +26,10 @@ include::{include-dir}installation.adoc[]
 
 <<<
 
+include::{include-dir}database.adoc[]
+
+<<<
+
 include::{include-dir}upgrade.adoc[]
 
 <<<
