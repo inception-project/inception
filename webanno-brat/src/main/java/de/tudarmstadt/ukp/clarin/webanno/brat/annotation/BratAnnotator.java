@@ -256,7 +256,8 @@ public class BratAnnotator
                          */
 
                         if (BratAnnotatorUtility.isDocumentFinished(repository, getModelObject())) {
-                            error("This document is already closed. Please ask admin to re-open");
+                            error("This document is already closed. Please ask your project "
+                                    + "manager to re-open it via the Montoring page");
                         }
                         else {
                             openSpanAnnotationDialog(openAnnotationDialog, aTarget, beginOffset,
