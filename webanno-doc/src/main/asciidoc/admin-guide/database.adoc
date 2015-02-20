@@ -42,5 +42,5 @@ that you really want to run WebAnno with an embedded database in production, you
 disable this warning. To do so, please add the following entry to the `settings.properties` file:
 
 ----
-warnings.embeddedDatabase = false
+warnings.embeddedDatabase=false
 ----
