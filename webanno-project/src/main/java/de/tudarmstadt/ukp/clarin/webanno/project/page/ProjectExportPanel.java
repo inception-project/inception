@@ -20,7 +20,9 @@ package de.tudarmstadt.ukp.clarin.webanno.project.page;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -33,25 +35,17 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.FileEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.util.EntityUtils;
 import org.apache.uima.UIMAException;
-import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
-import org.apache.wicket.markup.html.form.Button;
+import org.apache.wicket.markup.html.form.DropDownChoice;
+import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.link.DownloadLink;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 import org.wicketstuff.progressbar.ProgressBar;
@@ -85,11 +79,12 @@ import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoCustomTsvWriter;
  *
  * @author Seid Muhie Yimam
  */
-@SuppressWarnings("deprecation")
 public class ProjectExportPanel extends Panel {
 	private static final long serialVersionUID = 2116717853865353733L;
 
     private static final Log LOG = LogFactory.getLog(ProjectPage.class);
+    
+    private static final String FORMAT_AUTO = "AUTO";
 
 	private static final String META_INF = "/META-INF";
 	public static final String EXPORTED_PROJECT = "exportedproject";
@@ -131,151 +126,7 @@ public class ProjectExportPanel extends Panel {
 
 	public ProjectExportPanel(String id, final Model<Project> aProjectModel) {
 		super(id);
-
-		final FeedbackPanel feedbackPanel = new FeedbackPanel("feedbackPanel");
-		add(feedbackPanel);
-		feedbackPanel.setOutputMarkupId(true);
-		feedbackPanel.add(new AttributeModifier("class", "info"));
-		feedbackPanel.add(new AttributeModifier("class", "error"));
-
-		add(new DownloadLink("export", new LoadableDetachableModel<File>() {
-			private static final long serialVersionUID = 840863954694163375L;
-
-			@Override
-			protected File load() {
-				File exportFile = null;
-				File exportTempDir = null;
-				try {
-					exportTempDir = File.createTempFile("webanno", "export");
-					exportTempDir.delete();
-					exportTempDir.mkdirs();
-
-					boolean curationDocumentExist = existsCurationDocument(aProjectModel
-							.getObject());
-
-					if (!curationDocumentExist) {
-						error("No curation document created yet for this document");
-					} else {
-						exportCuratedDocuments(aProjectModel.getObject(),
-								exportTempDir);
-						DaoUtils.zipFolder(exportTempDir, new File(
-								exportTempDir.getAbsolutePath() + ".zip"));
-						exportFile = new File(exportTempDir.getAbsolutePath()
-								+ ".zip");
-
-					}
-				} catch (IOException e) {
-					error(e.getMessage());
-				} catch (Exception e) {
-					error(e.getMessage());
-				} finally {
-					try {
-						FileUtils.forceDelete(exportTempDir);
-					} catch (IOException e) {
-						error("Unable to delete temp file");
-					}
-				}
-
-				return exportFile;
-			}
-		}) {
-			private static final long serialVersionUID = 5630612543039605914L;
-
-			@Override
-			public boolean isVisible() {
-				return existsCurationDocument(aProjectModel.getObject());
-
-			}
-
-			@Override
-			public boolean isEnabled() {
-				return enabled;
-
-			}
-		}.setDeleteAfterDownload(true)).setOutputMarkupId(true);
-
-		final AJAXDownload exportProject = new AJAXDownload();
-
-        fileGenerationProgress = new ProgressBar("progress", new ProgressionModel()
-        {
-            private static final long serialVersionUID = 1971929040248482474L;
-
-            @Override
-            protected Progression getProgression()
-            {
-                return new Progression(progress);
-            }
-        })
-        {
-            private static final long serialVersionUID = -6599620911784164177L;
-
-            @Override
-            protected void onFinished(AjaxRequestTarget target)
-            {
-                if (!canceled && !fileName.equals(downloadedFile)) {
-                    exportProject.initiate(target, fileName);
-                    downloadedFile = fileName;
-                    
-                    while (!runnable.getMessages().isEmpty()) {
-                        info(runnable.getMessages().poll());
-                    }
-
-                    enabled = true;
-                    ProjectPage.visible = true;
-                    target.add(ProjectPage.projectSelectionForm.setEnabled(true));
-                    target.add(ProjectPage.projectDetailForm);
-                    target.add(feedbackPanel);
-                    info("project export processing done");
-                }
-                else if (canceled) {
-                    enabled = true;
-                    ProjectPage.visible = true;
-                    target.add(ProjectPage.projectSelectionForm.setEnabled(true));
-                    target.add(ProjectPage.projectDetailForm);
-                    target.add(feedbackPanel);
-                    info("project export processing canceled");
-                }
-            }
-        };
-
-		fileGenerationProgress.add(exportProject);
-		add(fileGenerationProgress);
-
-		add(exportProjectLink = new AjaxLink<Void>("exportProject") {
-			private static final long serialVersionUID = -5758406309688341664L;
-
-			@Override
-			public boolean isEnabled() {
-				return enabled;
-
-			}
-
-			@Override
-			public void onClick(final AjaxRequestTarget target) {
-				enabled = false;
-				canceled = true;
-				progress = 0;
-				ProjectPage.projectSelectionForm.setEnabled(false);
-				ProjectPage.visible = false;
-				target.add(ProjectExportPanel.this.getPage());
-				fileGenerationProgress.start(target);
-				runnable = new FileGenerator(aProjectModel, target);
-				thread = new Thread(runnable);
-				thread.start();
-			}
-		});
-
-		add(new AjaxLink<Void>("cancel") {
-			private static final long serialVersionUID = 5856284172060991446L;
-
-			@Override
-			public void onClick(final AjaxRequestTarget target) {
-				if (thread != null) {
-					progress = 100;
-					thread.interrupt();
-				}
-			}
-		});
+		add(new ProjectExportForm("exportForm", aProjectModel.getObject()));
 	}
 
 	private boolean existsCurationDocument(Project aProject) {
@@ -298,25 +149,32 @@ public class ProjectExportPanel extends Panel {
 	}
 	
     /**
-     * Copy, if exists, curation documents to a folder that will be exported as
-     * Zip file
+     * Copy, if exists, curation documents to a folder that will be exported as Zip file
      *
      * @param aProject
      *            The {@link Project}
      * @param aCurationDocumentExist
      *            Check if Curation document exists
      * @param aCopyDir
-     *            The folder where curated documents are copied to be exported
-     *            as Zip File
+     *            The folder where curated documents are copied to be exported as Zip File
      */
-    private void exportCuratedDocuments(Project aProject, File aCopyDir)
-            throws FileNotFoundException, UIMAException, IOException,
-            ClassNotFoundException {
-
+    private void exportCuratedDocuments(ProjectExportModel aModel, File aCopyDir)
+        throws FileNotFoundException, UIMAException, IOException, ClassNotFoundException
+    {
         // Get all the source documents from the project
         List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = repository
-                .listSourceDocuments(aProject);
+                .listSourceDocuments(aModel.project);
 
+        // Determine which format to use for export.
+        Class<?> writer;
+        if (FORMAT_AUTO.equals(aModel.format)) {
+            writer = WebannoCustomTsvWriter.class;
+        }
+        else {
+            writer = repository.getWritableFormats().get(
+                    repository.getWritableFormatId(aModel.format));
+        }
+        
         int initProgress = progress-1;
         int i = 1;
         for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
@@ -340,7 +198,7 @@ public class ProjectExportPanel extends Panel {
                 File curationFile = null;
                 if (CurationFileAsSerialisedCas.exists()) {
                     curationFile = repository.exportAnnotationDocument(
-                            sourceDocument, CURATION_USER, WebannoCustomTsvWriter.class,
+                            sourceDocument, CURATION_USER, writer,
                             sourceDocument.getName(), Mode.CURATION);
                 }
                 // in Case they didn't exist
@@ -353,23 +211,22 @@ public class ProjectExportPanel extends Panel {
             }
 
             // If this project is a correction project, add the auto-annotated
-            // CAS to same folder as
-            // CURATION_FOLDER
-            if (aProject.getMode().equals(Mode.AUTOMATION)
-                    || aProject.getMode().equals(Mode.CORRECTION)) {
-                File CorrectionFileAsSerialisedCas = repository
+            // CAS to same folder as CURATION_FOLDER
+            if (aModel.project.getMode().equals(Mode.AUTOMATION)
+                    || aModel.project.getMode().equals(Mode.CORRECTION)) {
+                File correctionFileAsSerialisedCas = repository
                         .exportserializedCas(sourceDocument, CORRECTION_USER);
                 File correctionFile = null;
-                if (CorrectionFileAsSerialisedCas.exists()) {
+                if (correctionFileAsSerialisedCas.exists()) {
                     correctionFile = repository.exportAnnotationDocument(
-                            sourceDocument, CORRECTION_USER, WebannoCustomTsvWriter.class,
+                            sourceDocument, CORRECTION_USER, writer,
                             sourceDocument.getName(), Mode.CORRECTION);
                 }
                 // in Case they didn't exist
-                if (CorrectionFileAsSerialisedCas.exists()) {
+                if (correctionFileAsSerialisedCas.exists()) {
                     FileUtils.copyFileToDirectory(correctionFile, curationDir);
                     FileUtils.copyFileToDirectory(
-                            CorrectionFileAsSerialisedCas, curationCasDir);
+                            correctionFileAsSerialisedCas, curationCasDir);
                     FileUtils.forceDelete(correctionFile);
                 }
             }
@@ -377,17 +234,210 @@ public class ProjectExportPanel extends Panel {
             i++;
         }
     }
+    
+    public class ProjectExportForm
+        extends Form<ProjectExportModel>
+    {
+        private static final long serialVersionUID = 9151007311548196811L;
+
+        public ProjectExportForm(String id, Project aProject)
+        {
+            super(id, new CompoundPropertyModel<ProjectExportModel>(
+                    new ProjectExportModel(aProject)));
+            
+            add(new DropDownChoice<String>("format", new LoadableDetachableModel<List<String>>()
+            {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                protected List<String> load()
+                {
+                    try {
+                        List<String> formats = new ArrayList<String>(
+                                repository.getWritableFormatLabels());
+                        formats.add(0, FORMAT_AUTO);
+                        return formats;
+                    }
+                    catch (ClassNotFoundException | IOException e) {
+                        error(e.getMessage());
+                        return Collections.emptyList();
+                    }
+                }
+            }) {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                protected boolean wantOnSelectionChangedNotifications()
+                {
+                    // Needed to update the model with the selection because the DownloadLink does
+                    // not trigger a form submit.
+                    return true;
+                }
+            });
+            
+            add(new DownloadLink("export", new LoadableDetachableModel<File>() {
+                private static final long serialVersionUID = 840863954694163375L;
+
+                @Override
+                protected File load() {
+                    File exportFile = null;
+                    File exportTempDir = null;
+                    try {
+                        exportTempDir = File.createTempFile("webanno", "export");
+                        exportTempDir.delete();
+                        exportTempDir.mkdirs();
+
+                        boolean curationDocumentExist = existsCurationDocument(ProjectExportForm.this
+                                .getModelObject().project);
+
+                        if (!curationDocumentExist) {
+                            error("No curation document created yet for this document");
+                        } else {
+                            exportCuratedDocuments(ProjectExportForm.this.getModelObject(),
+                                    exportTempDir);
+                            DaoUtils.zipFolder(exportTempDir, new File(
+                                    exportTempDir.getAbsolutePath() + ".zip"));
+                            exportFile = new File(exportTempDir.getAbsolutePath()
+                                    + ".zip");
+
+                        }
+                    } catch (Exception e) {
+                        error(e.getMessage());
+                    } finally {
+                        try {
+                            FileUtils.forceDelete(exportTempDir);
+                        } catch (IOException e) {
+                            error("Unable to delete temp file");
+                        }
+                    }
+
+                    return exportFile;
+                }
+            }) {
+                private static final long serialVersionUID = 5630612543039605914L;
+
+                @Override
+                public boolean isVisible() {
+                    return existsCurationDocument(ProjectExportForm.this
+                            .getModelObject().project);
+                }
+
+                @Override
+                public boolean isEnabled() {
+                    return enabled;
+
+                }
+            }.setDeleteAfterDownload(true)).setOutputMarkupId(true);
+
+            final AJAXDownload exportProject = new AJAXDownload();
+
+            fileGenerationProgress = new ProgressBar("progress", new ProgressionModel()
+            {
+                private static final long serialVersionUID = 1971929040248482474L;
+
+                @Override
+                protected Progression getProgression()
+                {
+                    return new Progression(progress);
+                }
+            })
+            {
+                private static final long serialVersionUID = -6599620911784164177L;
+
+                @Override
+                protected void onFinished(AjaxRequestTarget target)
+                {
+                    if (!canceled && !fileName.equals(downloadedFile)) {
+                        exportProject.initiate(target, fileName);
+                        downloadedFile = fileName;
+                        
+                        while (!runnable.getMessages().isEmpty()) {
+                            info(runnable.getMessages().poll());
+                        }
+
+                        enabled = true;
+                        ProjectPage.visible = true;
+                        target.add(ProjectPage.projectSelectionForm.setEnabled(true));
+                        target.add(ProjectPage.projectDetailForm);
+                        target.addChildren(getPage(), FeedbackPanel.class);
+                        info("project export processing done");
+                    }
+                    else if (canceled) {
+                        enabled = true;
+                        ProjectPage.visible = true;
+                        target.add(ProjectPage.projectSelectionForm.setEnabled(true));
+                        target.add(ProjectPage.projectDetailForm);
+                        target.addChildren(getPage(), FeedbackPanel.class);
+                        info("project export processing canceled");
+                    }
+                }
+            };
+
+            fileGenerationProgress.add(exportProject);
+            add(fileGenerationProgress);
+
+            add(exportProjectLink = new AjaxLink<Void>("exportProject") {
+                private static final long serialVersionUID = -5758406309688341664L;
+
+                @Override
+                public boolean isEnabled() {
+                    return enabled;
+                }
+
+                @Override
+                public void onClick(final AjaxRequestTarget target) {
+                    enabled = false;
+                    canceled = true;
+                    progress = 0;
+                    ProjectPage.projectSelectionForm.setEnabled(false);
+                    ProjectPage.visible = false;
+                    target.add(ProjectExportPanel.this.getPage());
+                    fileGenerationProgress.start(target);
+                    runnable = new FileGenerator(ProjectExportForm.this.getModelObject(), target);
+                    thread = new Thread(runnable);
+                    thread.start();
+                }
+            });
+
+            add(new AjaxLink<Void>("cancel") {
+                private static final long serialVersionUID = 5856284172060991446L;
+
+                @Override
+                public void onClick(final AjaxRequestTarget target) {
+                    if (thread != null) {
+                        progress = 100;
+                        thread.interrupt();
+                    }
+                }
+            });
+        }
+    }
+    
+    public static class ProjectExportModel
+        implements Serializable
+    {
+        private static final long serialVersionUID = -4486934192675904995L;
+        
+        String format;
+        Project project;
+        
+        public ProjectExportModel(Project aProject)
+        {
+            format = FORMAT_AUTO;
+            project = aProject;
+        }
+    }
 
     public class FileGenerator
         implements Runnable
     {
-        private Model<Project> projectModel;
+        private ProjectExportModel model;
         private AjaxRequestTarget target;
         private Queue<String> messages = new ConcurrentLinkedQueue<>();
 
-        public FileGenerator(Model<Project> aProjectModel, AjaxRequestTarget aTarget)
+        public FileGenerator(ProjectExportModel aModel, AjaxRequestTarget aTarget)
         {
-            projectModel = aProjectModel;
+            model = aModel;
             target = aTarget;
         }
 
@@ -397,9 +447,9 @@ public class ProjectExportPanel extends Panel {
             File file;
             try {
                 Thread.sleep(100); // Why do we sleep here?
-                file = generateZipFile(projectModel, target);
+                file = generateZipFile(model, target);
                 fileName = file.getAbsolutePath();
-                projectName = projectModel.getObject().getName();
+                projectName = model.project.getName();
                 canceled = false;
             }
             catch (Throwable e) {
@@ -414,7 +464,7 @@ public class ProjectExportPanel extends Panel {
             return messages;
         }
 
-        public File generateZipFile(final Model<Project> aProjectModel, AjaxRequestTarget target)
+        public File generateZipFile(final ProjectExportModel aModel, AjaxRequestTarget target)
             throws IOException, UIMAException, ClassNotFoundException, ZippingException,
             InterruptedException, ProjectExportException
         {
@@ -428,20 +478,20 @@ public class ProjectExportPanel extends Panel {
             exportTempDir.mkdirs();
 
             File projectZipFile = new File(exportTempDir.getAbsolutePath() + ".zip");
-            if (aProjectModel.getObject().getId() == 0) {
+            if (aModel.project.getId() == 0) {
                 throw new ProjectExportException(
                         "Project not yet created. Please save project details first!");
             }
 
-            exportProjectSettings(aProjectModel.getObject(), projectSettings, exportTempDir);
+            exportProjectSettings(aModel.project, projectSettings, exportTempDir);
             progress = 9;
-            exportSourceDocuments(aProjectModel.getObject(), exportTempDir);
-            exportAnnotationDocuments(aProjectModel.getObject(), exportTempDir);
-            exportProjectLog(aProjectModel.getObject(), exportTempDir);
-            exportGuideLine(aProjectModel.getObject(), exportTempDir);
-            exportProjectMetaInf(aProjectModel.getObject(), exportTempDir);
+            exportSourceDocuments(aModel.project, exportTempDir);
+            exportAnnotationDocuments(aModel, exportTempDir);
+            exportProjectLog(aModel.project, exportTempDir);
+            exportGuideLine(aModel.project, exportTempDir);
+            exportProjectMetaInf(aModel.project, exportTempDir);
             progress = 90;
-            exportCuratedDocuments(aProjectModel.getObject(), exportTempDir);
+            exportCuratedDocuments(aModel, exportTempDir);
             try {
                 DaoUtils.zipFolder(exportTempDir, projectZipFile);
             }
@@ -663,11 +713,11 @@ public class ProjectExportPanel extends Panel {
          * @throws ClassNotFoundException
          * @throws UIMAException
          */
-        private void exportAnnotationDocuments(Project aProject, File aCopyDir)
+        private void exportAnnotationDocuments(ProjectExportModel aModel, File aCopyDir)
             throws IOException, UIMAException, ClassNotFoundException
         {
             List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = repository
-                    .listSourceDocuments(aProject);
+                    .listSourceDocuments(aModel.project);
             int i = 1;
             int initProgress = progress;
             for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
@@ -693,12 +743,18 @@ public class ProjectExportPanel extends Panel {
                                 sourceDocument, annotationDocument.getUser());
 
                         File annotationFile = null;
-                        Class<?> writer = repository.getWritableFormats().get(
-                                sourceDocument.getFormat());
+                        String formatId;
+                        if (FORMAT_AUTO.equals(aModel.format)) {
+                            formatId = sourceDocument.getFormat();
+                        }
+                        else {
+                            formatId = repository.getWritableFormatId(aModel.format);
+                        }
+                        Class<?> writer = repository.getWritableFormats().get(formatId);
                         if (writer == null) {
-                            String msg = "["+sourceDocument.getName()+"] No writer found for source document format ["
-                                    + sourceDocument.getFormat()
-                                    + "] - export  only contains serialized CAS for this document.";
+                            String msg = "[" + sourceDocument.getName()
+                                    + "] No writer found for format [" + formatId
+                                    + "] - export only contains serialized CAS for this document.";
                             // Avoid repeating the same message over for different users
                             if (!messages.contains(msg)) {
                                 messages.add(msg);

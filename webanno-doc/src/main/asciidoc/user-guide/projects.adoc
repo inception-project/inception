@@ -163,6 +163,9 @@ WebAnno offers two modes of exporting projects:
    * *Export the whole project* for the purpose of creating a backup, of migrating it to a new WebAnno version, of migrating to a different WebAnno instance, or simply in order to reimport it as a duplicate copy.
    * *Export curated documents* for the purpose of getting an easy access to the final annotation results. If you do not have any curated documents in your project, this export option is not offered.
 
+The format of the exported annotations is selected using the *Format* drop-down field. When *AUTO*
+is selected, the file format corresponds to the format of the source document.
+
 *Bug note: do not leave the export page after initiating an export before the progress bar is complete or your WebAnno instance can become locked until it is restarted!*
 
 When exporting a whole project, the structure of the exported ZIP file is a follows:
@@ -171,13 +174,13 @@ When exporting a whole project, the structure of the exported ZIP file is a foll
 * *<project ID>.json* - project metadata file
 * *annotation*
 ** *<source document name>*
-*** *<user ID>.XXX* - file representing the annotations for this user. The file format corresponds to the format of the source document.
+*** *<user ID>.XXX* - file representing the annotations for this user in the selected format. 
 * *annotation_ser*
 ** *<source document name>*
 *** *<user ID>.ser* - serialized CAS file representing the annotations for this user
 * *curation*
 ** *<source document name>*
-*** *CURATION_USER.tsv* - TSV file representing the state of curation
+*** *CURATION_USER.XXX* -  file representing the state of curation in the selected format.
 * *curation_ser*
 ** *<source document name>*
 *** *CURATION_USER.ser* - serialized UIMA CAS representing the state of curation
