@@ -43,6 +43,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -1533,6 +1534,7 @@ public class RepositoryServiceDbData
                 }
             }
         }
+        Collections.sort(readableFormats);
         return readableFormats;
     }
 
@@ -1583,6 +1585,7 @@ public class RepositoryServiceDbData
                 }
             }
         }
+        Collections.sort(writableFormats);
         return writableFormats;
     }
 
