@@ -493,6 +493,8 @@ ul.feedbackPanel {
     margin-top: 0px;
     margin-bottom: 0px;
     text-align: left;
+    max-height: 100ox;
+    overflow: scroll;
 }
 
 /* left/right column arrangments for project/annotation settings */
