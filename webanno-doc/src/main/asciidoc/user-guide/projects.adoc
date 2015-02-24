@@ -147,7 +147,7 @@ To export a tagset, choose the format of the export at the bottom of the frame a
 === Guidelines
 
 To add or delete guidelines, which will be accessible by users in the project, you have to select the tab *Guidelines*. Two new frames will be displayed.
-To upload guidelines, click on *Dateien auswählen* in the first frame – *Add guideline document*, select a file from your local disc and then click *Import guidelines*.
+To upload guidelines, click on *Choose files* in the first frame – *Add guideline document*, select a file from your local disc and then click *Import guidelines*.
 
 image::project9.jpg[align="center"]
 
@@ -164,7 +164,8 @@ WebAnno offers two modes of exporting projects:
    * *Export curated documents* for the purpose of getting an easy access to the final annotation results. If you do not have any curated documents in your project, this export option is not offered.
 
 The format of the exported annotations is selected using the *Format* drop-down field. When *AUTO*
-is selected, the file format corresponds to the format of the source document.
+is selected, the file format corresponds to the format of the source document. If WebAnno has not
+write support for the source format, the file is exported in the WebAnno TSV format instead.
 
 *Bug note: do not leave the export page after initiating an export before the progress bar is complete or your WebAnno instance can become locked until it is restarted!*
 
@@ -180,13 +181,21 @@ When exporting a whole project, the structure of the exported ZIP file is a foll
 *** *<user ID>.ser* - serialized CAS file representing the annotations for this user
 * *curation*
 ** *<source document name>*
-*** *CURATION_USER.XXX* -  file representing the state of curation in the selected format.
+*** *CURATION_USER.XXX* - file representing the state of curation in the selected format.
+*** *CORRECTION_USER.XXX* - _correction_ project: original document state, _automation_ project 
+    automatically generated suggestions
 * *curation_ser*
 ** *<source document name>*
 *** *CURATION_USER.ser* - serialized UIMA CAS representing the state of curation
+*** *CORRECTION_USER.ser* - _correction_ project: original document state, _automation_ project 
+    automatically generated suggestions
 * *log*
 ** *<project ID>.log* - project log file
 * *source* - folder containing the original source files
 ====
+
+NOTE: The files under `annotation` and `curation` are provided for convenience only. They are 
+      ignored upon import. Only the `annotation_ser` and `curation_ser` folders are relevant for
+      import.
 
 Currently, WebAnno does not allow the user to choose a specific format for bulk-exporting annotations. However, link:https://groups.google.com/forum/#!msg/webanno-user/X3ShaFPXQT0/PnBzpPdXrIgJ[this mailing list post] describes how link:https://code.google.com/p/dkpro-core-asl/[DKPro Core] can be used to transform the UIMA CAS formats into alternative formats.   

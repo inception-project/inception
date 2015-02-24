@@ -86,12 +86,12 @@ public class ProjectUtil
 
     private static MappingJacksonHttpMessageConverter jsonConverter;
 
-    private static final String META_INF = "META-INF";
-    private static final String SOURCE = "source";
-    private static final String ANNOTATION_AS_SERIALISED_CAS = "annotation_ser/";
-    private static final String CURATION_AS_SERIALISED_CAS = "curation_ser";
-    private static final String GUIDELINE = "guideline";
-    private static final String LOG_DIR = "log";
+    public static final String META_INF = "META-INF";
+    public static final String SOURCE = "source";
+    public static final String ANNOTATION_AS_SERIALISED_CAS = "annotation_ser";
+    public static final String CURATION_AS_SERIALISED_CAS = "curation_ser";
+    public static final String GUIDELINE = "guideline";
+    public static final String LOG_DIR = "log";
     public static final String EXPORTED_PROJECT = "exportedproject";
 
     public static void setJsonConverter(MappingJacksonHttpMessageConverter aJsonConverter)
@@ -960,8 +960,8 @@ public class ProjectUtil
             // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
             String entryName = normalizeEntryName(entry);
             
-            if (entryName.startsWith(ANNOTATION_AS_SERIALISED_CAS)) {
-                String fileName = entryName.replace(ANNOTATION_AS_SERIALISED_CAS, "");
+            if (entryName.startsWith(ANNOTATION_AS_SERIALISED_CAS+"/")) {
+                String fileName = entryName.replace(ANNOTATION_AS_SERIALISED_CAS+"/", "");
 
                 // the user annotated the document is file name minus extension
                 // (anno1.ser)
