@@ -86,14 +86,14 @@ public class ProjectExportPanel extends Panel {
     
     private static final String FORMAT_AUTO = "AUTO";
 
-	private static final String META_INF = "/META-INF";
-	public static final String EXPORTED_PROJECT = "exportedproject";
-	private static final String SOURCE_FOLDER = "/source";
-	private static final String CURATION_AS_SERIALISED_CAS = "/curation_ser/";
+	private static final String META_INF = "/" + ProjectUtil.META_INF;
+	public static final String EXPORTED_PROJECT = ProjectUtil.EXPORTED_PROJECT;
+	private static final String SOURCE_FOLDER = "/"+ProjectUtil.SOURCE;
+	private static final String CURATION_AS_SERIALISED_CAS = "/"+ProjectUtil.CURATION_AS_SERIALISED_CAS+"/";
 	private static final String CURATION_FOLDER = "/curation/";
-	private static final String LOG_FOLDER = "/log";
-	private static final String GUIDELINES_FOLDER = "/guideline";
-	private static final String ANNOTATION_CAS_FOLDER = "/annotation_ser/";
+	private static final String LOG_FOLDER = "/" + ProjectUtil.LOG_DIR;
+	private static final String GUIDELINES_FOLDER = "/"+ProjectUtil.GUIDELINE;
+	private static final String ANNOTATION_CAS_FOLDER = "/"+ProjectUtil.ANNOTATION_AS_SERIALISED_CAS+"/";
 	private static final String ANNOTATION_ORIGINAL_FOLDER = "/annotation/";
 
 	private static final String CURATION_USER = "CURATION_USER";
@@ -173,63 +173,38 @@ public class ProjectExportPanel extends Panel {
         else {
             writer = repository.getWritableFormats().get(
                     repository.getWritableFormatId(aModel.format));
+            if (writer == null) {
+                writer = WebannoCustomTsvWriter.class;
+            }
         }
         
         int initProgress = progress-1;
         int i = 1;
         for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
-
-            File curationCasDir = new File(aCopyDir
-                    + CURATION_AS_SERIALISED_CAS + sourceDocument.getName());
+            File curationCasDir = new File(aCopyDir + CURATION_AS_SERIALISED_CAS
+                    + sourceDocument.getName());
             FileUtils.forceMkdir(curationCasDir);
 
-            File curationDir = new File(aCopyDir + CURATION_FOLDER
-                    + sourceDocument.getName());
+            File curationDir = new File(aCopyDir + CURATION_FOLDER + sourceDocument.getName());
             FileUtils.forceMkdir(curationDir);
 
             // If the curation document is exist (either finished or in progress
-            if (sourceDocument.getState().equals(
-                    SourceDocumentState.CURATION_FINISHED)
-                    || sourceDocument.getState().equals(
-                            SourceDocumentState.CURATION_IN_PROGRESS)) {
-
-                File CurationFileAsSerialisedCas = repository
-                        .exportserializedCas(sourceDocument, CURATION_USER);
-                File curationFile = null;
-                if (CurationFileAsSerialisedCas.exists()) {
-                    curationFile = repository.exportAnnotationDocument(
-                            sourceDocument, CURATION_USER, writer,
-                            sourceDocument.getName(), Mode.CURATION);
-                }
-                // in Case they didn't exist
-                if (CurationFileAsSerialisedCas.exists()) {
+            if (sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)
+                    || sourceDocument.getState().equals(SourceDocumentState.CURATION_IN_PROGRESS)) {
+                File curationCasFile = repository.exportserializedCas(sourceDocument,
+                        CURATION_USER);
+                if (curationCasFile.exists()) {
+                    // Copy CAS - this is used when importing the project again
+                    FileUtils.copyFileToDirectory(curationCasFile, curationCasDir);
+                    
+                    // Copy secondary export format for convenience - not used during import
+                    File curationFile = repository.exportAnnotationDocument(sourceDocument,
+                            CURATION_USER, writer, CURATION_USER, Mode.CURATION);
                     FileUtils.copyFileToDirectory(curationFile, curationDir);
-                    FileUtils.copyFileToDirectory(CurationFileAsSerialisedCas,
-                            curationCasDir);
                     FileUtils.forceDelete(curationFile);
                 }
             }
-
-            // If this project is a correction project, add the auto-annotated
-            // CAS to same folder as CURATION_FOLDER
-            if (aModel.project.getMode().equals(Mode.AUTOMATION)
-                    || aModel.project.getMode().equals(Mode.CORRECTION)) {
-                File correctionFileAsSerialisedCas = repository
-                        .exportserializedCas(sourceDocument, CORRECTION_USER);
-                File correctionFile = null;
-                if (correctionFileAsSerialisedCas.exists()) {
-                    correctionFile = repository.exportAnnotationDocument(
-                            sourceDocument, CORRECTION_USER, writer,
-                            sourceDocument.getName(), Mode.CORRECTION);
-                }
-                // in Case they didn't exist
-                if (correctionFileAsSerialisedCas.exists()) {
-                    FileUtils.copyFileToDirectory(correctionFile, curationDir);
-                    FileUtils.copyFileToDirectory(
-                            correctionFileAsSerialisedCas, curationCasDir);
-                    FileUtils.forceDelete(correctionFile);
-                }
-            }
+            
             progress = initProgress+ (int) Math.ceil(((double) i)/documents.size()*10.0);
             i++;
         }
@@ -360,7 +335,7 @@ public class ProjectExportPanel extends Panel {
                         target.add(ProjectPage.projectSelectionForm.setEnabled(true));
                         target.add(ProjectPage.projectDetailForm);
                         target.addChildren(getPage(), FeedbackPanel.class);
-                        info("project export processing done");
+                        info("Project export complete");
                     }
                     else if (canceled) {
                         enabled = true;
@@ -368,7 +343,7 @@ public class ProjectExportPanel extends Panel {
                         target.add(ProjectPage.projectSelectionForm.setEnabled(true));
                         target.add(ProjectPage.projectDetailForm);
                         target.addChildren(getPage(), FeedbackPanel.class);
-                        info("project export processing canceled");
+                        info("Project export cancelled");
                     }
                 }
             };
@@ -721,9 +696,29 @@ public class ProjectExportPanel extends Panel {
             int i = 1;
             int initProgress = progress;
             for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
+                // Determine which format to use for export
+                String formatId;
+                if (FORMAT_AUTO.equals(aModel.format)) {
+                    formatId = sourceDocument.getFormat();
+                }
+                else {
+                    formatId = repository.getWritableFormatId(aModel.format);
+                }
+                Class<?> writer = repository.getWritableFormats().get(formatId);
+                if (writer == null) {
+                    String msg = "[" + sourceDocument.getName()
+                            + "] No writer found for format [" + formatId
+                            + "] - exporting as WebAnno TSV instead.";
+                    // Avoid repeating the same message over for different users
+                    if (!messages.contains(msg)) {
+                        messages.add(msg);
+                    }
+                    writer = WebannoCustomTsvWriter.class;
+                }
+
+                // Export annotations from regular users
                 for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : repository
                         .listAnnotationDocuments(sourceDocument)) {
-
                     // copy annotation document only for ACTIVE users and the state of the 
                     // annotation document is not NEW/IGNORE
                     if (userRepository.get(annotationDocument.getUser()) != null
@@ -743,23 +738,6 @@ public class ProjectExportPanel extends Panel {
                                 sourceDocument, annotationDocument.getUser());
 
                         File annotationFile = null;
-                        String formatId;
-                        if (FORMAT_AUTO.equals(aModel.format)) {
-                            formatId = sourceDocument.getFormat();
-                        }
-                        else {
-                            formatId = repository.getWritableFormatId(aModel.format);
-                        }
-                        Class<?> writer = repository.getWritableFormats().get(formatId);
-                        if (writer == null) {
-                            String msg = "[" + sourceDocument.getName()
-                                    + "] No writer found for format [" + formatId
-                                    + "] - export only contains serialized CAS for this document.";
-                            // Avoid repeating the same message over for different users
-                            if (!messages.contains(msg)) {
-                                messages.add(msg);
-                            }
-                        }
                         if (annotationFileAsSerialisedCas.exists() && writer != null) {
                             annotationFile = repository.exportAnnotationDocument(sourceDocument,
                                     annotationDocument.getUser(), writer,
@@ -773,10 +751,35 @@ public class ProjectExportPanel extends Panel {
                                         .copyFileToDirectory(annotationFile, annotationDocumentDir);
                                 FileUtils.forceDelete(annotationFile);
                             }
-
                         }
                     }
                 }
+                
+                // BEGIN FIXME #1224 CURATION_USER and CORRECTION_USER files should be exported in annotation_ser
+                // If this project is a correction project, add the auto-annotated  CAS to same 
+                // folder as CURATION_FOLDER
+                if (aModel.project.getMode().equals(Mode.AUTOMATION)
+                        || aModel.project.getMode().equals(Mode.CORRECTION)) {
+                    File correctionCasFile = repository.exportserializedCas(sourceDocument,
+                            CORRECTION_USER);
+                    if (correctionCasFile.exists()) {
+                        // Copy CAS - this is used when importing the project again
+                        File curationCasDir = new File(aCopyDir + CURATION_AS_SERIALISED_CAS
+                                + sourceDocument.getName());
+                        FileUtils.forceMkdir(curationCasDir);
+                        FileUtils.copyFileToDirectory(correctionCasFile, curationCasDir);
+                        
+                        // Copy secondary export format for convenience - not used during import
+                        File curationDir = new File(aCopyDir + CURATION_FOLDER + sourceDocument.getName());
+                        FileUtils.forceMkdir(curationDir);
+                        File correctionFile = repository.exportAnnotationDocument(sourceDocument,
+                                CORRECTION_USER, writer, CORRECTION_USER, Mode.CORRECTION);
+                        FileUtils.copyFileToDirectory(correctionFile, curationDir);
+                        FileUtils.forceDelete(correctionFile);
+                    }
+                }
+                // END FIXME #1224 CURATION_USER and CORRECTION_USER files should be exported in annotation_ser
+                
                 progress = initProgress + (int) Math.ceil(((double) i) / documents.size() * 80.0);
                 i++;
             }
