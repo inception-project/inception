@@ -24,7 +24,9 @@ import java.util.Properties;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.wicket.Application;
 import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.RuntimeConfigurationType;
 import org.apache.wicket.Session;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
 import org.apache.wicket.feedback.FeedbackMessage;
@@ -107,11 +109,7 @@ public abstract class ApplicationPageBase
             }
         });
         
-
-        Properties props = getVersionProperties();
-        String versionString = props.getProperty("version") + " (" + props.getProperty("timestamp")
-                + ", build " + props.getProperty("buildNumber") + ")";
-        versionLabel = new Label("version", versionString);
+        versionLabel = new Label("version", SettingsUtil.getVersionString());
 
         embeddedDbWarning = new Label("embeddedDbWarning",
                 "USE THIS INSTALLATION FOR TESTING ONLY -- "
@@ -166,22 +164,17 @@ public abstract class ApplicationPageBase
     {
         super.onConfigure();
         logoutPanel.setVisible(AuthenticatedWebSession.get().isSignedIn());
-    }
+        
+        // Do not cache pages in development mode - allows us to make changes to the HMTL without
+        // having to reload the application
+        if (RuntimeConfigurationType.DEVELOPMENT.equals(getApplication().getConfigurationType())) {
+            getApplication().getMarkupSettings().getMarkupFactory().getMarkupCache().clear();
+        }
+   }
 
     public FeedbackPanel getFeedbackPanel()
     {
         return feedbackPanel;
-    }
-
-    public Properties getVersionProperties()
-    {
-        try {
-            return PropertiesLoaderUtils.loadAllProperties("/META-INF/version.properties");
-        }
-        catch (IOException e) {
-            LOG.error("Unable to load version information", e);
-            return new Properties();
-        }
     }
 
     @Override

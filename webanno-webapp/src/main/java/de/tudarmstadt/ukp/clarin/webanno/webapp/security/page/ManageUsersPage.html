@@ -1,4 +1,5 @@
-﻿<!--
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!--
 #Copyright 2012
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
 #Technische Universität Darmstadt
@@ -19,61 +20,69 @@
 	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
 	<wicket:extend>
-		<form wicket:id="selectionForm" class="vfill" style="margin: 0px 15px; float: left">
-			<fieldset class="ui-widget-content ui-corner-all centering">
-				<div>
-					<label class="top">Users:</label>
-				</div>
-				<div>
-					<select class="hfill" wicket:id="user"></select>
-				</div>
-				<div class="buttons">
-					<input type="submit" wicket:id="create" />
-					<input type="submit" wicket:id="delete" />
-				</div>
-			</fieldset>
-		</form>
-
-		<form wicket:id="detailForm" class="vfill" style="margin: 15px">
-			<fieldset class="ui-widget-content ui-corner-all centering">
-				<table class="hfill">
-					<tr>
-						<td><label wicket:for="username">Username:</label></td>
-						<td class="hfill"><input type="text" class="hfill"
-							wicket:id="username" /></td>
-					</tr>
-					<tr>
-						<td><label wicket:for="password">Password:</label></td>
-						<td class="hfill"><input type="password" class="hfill" autocomplete="off"
-							wicket:id="password" /></td>
-					</tr>
-					<tr>
-						<td><label wicket:for="repeatPassword">Repeat password:</label></td>
-						<td class="hfill"><input type="password" class="hfill"
-							wicket:id="repeatPassword" /></td>
-					</tr>
-					<tr>
-						<td><label wicket:for="email">E-Mail:</label></td>
-						<td class="hfill"><input type="email" class="hfill"
-							wicket:id="email" /></td>
-					</tr>
-					<wicket:container wicket:id="adminOnly">
-						<tr>
-							<td><label wicket:for="roles">Roles:</label></td>
-							<td class="hfill"><select wicket:id="roles"></select></td>
-						</tr>
-						<tr>
-							<td><label wicket:for="enabled">Enable account:</label></td>
-							<td class="hfill"><input type="checkbox" wicket:id="enabled" /></td>
-						</tr>
-					</wicket:container>
-				</table>
-				<div class="buttons">
-					<input type="submit" wicket:id="save" />
-					<input type="submit" wicket:id="cancel" />
-				</div>
-			</fieldset>
-		</form>
+		<table class="hfill">
+			<tr style="vertical-align: top;">
+				<td width="20%">
+					<form wicket:id="selectionForm">
+						<fieldset class="ui-widget-content ui-corner-all">
+                            <legend>Users</legend>
+							<div>
+								<select class="hfill" wicket:id="user" size="29"></select>
+							</div>
+							<div class="buttons">
+								<input type="submit" wicket:id="create" /> <input type="submit"
+									wicket:id="delete" />
+							</div>
+						</fieldset>
+					</form>
+				</td>
+				<td width="80%">
+					<form wicket:id="detailForm">
+						<fieldset class="ui-widget-content ui-corner-all">
+                            <legend>User details</legend>
+							<table class="hfill">
+								<tr>
+									<td><label wicket:for="username">Username:</label></td>
+									<td class="hfill"><input type="text" class="hfill"
+										wicket:id="username" /></td>
+								</tr>
+								<tr>
+									<td><label wicket:for="password">Password:</label></td>
+									<td class="hfill"><input type="password" class="hfill"
+										autocomplete="off" wicket:id="password" /></td>
+								</tr>
+								<tr>
+									<td><label wicket:for="repeatPassword">Repeat
+											password:</label></td>
+									<td class="hfill"><input type="password" class="hfill"
+										wicket:id="repeatPassword" /></td>
+								</tr>
+								<tr>
+									<td><label wicket:for="email">E-Mail:</label></td>
+									<td class="hfill"><input type="email" class="hfill"
+										wicket:id="email" /></td>
+								</tr>
+								<wicket:container wicket:id="adminOnly">
+									<tr>
+										<td><label wicket:for="roles">Roles:</label></td>
+										<td class="hfill"><select wicket:id="roles"></select></td>
+									</tr>
+									<tr>
+										<td><label wicket:for="enabled">Enable account:</label></td>
+										<td class="hfill"><input type="checkbox"
+											wicket:id="enabled" /></td>
+									</tr>
+								</wicket:container>
+							</table>
+							<div class="buttons">
+								<input type="submit" wicket:id="save" /> <input type="submit"
+									wicket:id="cancel" />
+							</div>
+						</fieldset>
+					</form>
+				</td>
+			</tr>
+		</table>
 
 	</wicket:extend>
 </body>

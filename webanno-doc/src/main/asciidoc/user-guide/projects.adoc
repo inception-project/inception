@@ -63,7 +63,7 @@ To add or delete documents, you have to click on the tab *Documents* in the proj
 
 image::project6.jpg[align="center"]
 
-Choose a document by clicking on *Dateien auswählen*. Please mind the format, which you have to choose above.  Then click on *Import document*. 
+Choose a document by clicking on *Choose files*. Please mind the format, which you have to choose above.  Then click on *Import document*. 
 The imported documents can be seen in the frame below.
 To delete a document from the project, you have to click on it and then click on *Delete* in the right lower corner.
 
@@ -153,6 +153,17 @@ image::project9.jpg[align="center"]
 
 Uploaded guidelines are displayed in the second frame – *Guideline documents*.
 To delete a guideline document, click on it and then on *Delete* in the right lower corner of the frame.
+
+=== Import
+
+Projects are associated with the accounts of users that act as project managers, annotators, or
+curators. When importing a previously exported project, you can choose to automatically generate
+missing users (enabled by default). If this option is disabled, projects still maintain their
+association to users by name. If the respective user accounts are created manually after the import,
+the users will start showing up in the projects.
+
+NOTE: Generated users are disabled and have no password. The must be explicitly enabled and a
+      password must be set before the users can log in again.
 
 === Export
 

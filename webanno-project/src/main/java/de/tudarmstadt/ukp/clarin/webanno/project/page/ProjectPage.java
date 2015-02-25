@@ -42,6 +42,7 @@ import org.apache.wicket.extensions.ajax.markup.html.tabs.AjaxTabbedPanel;
 import org.apache.wicket.extensions.markup.html.tabs.AbstractTab;
 import org.apache.wicket.extensions.markup.html.tabs.ITab;
 import org.apache.wicket.markup.html.form.Button;
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.ListChoice;
@@ -62,6 +63,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.automation.project.ProjectMiraTemplatePanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -100,6 +102,9 @@ public class ProjectPage
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
 
+    @SpringBean(name = "userRepository")
+    private UserDao userRepository;
+
     public static ProjectSelectionForm projectSelectionForm;
     public static ProjectDetailForm projectDetailForm;
     private final ImportProjectForm importProjectForm;
@@ -117,7 +122,8 @@ public class ProjectPage
 
         importProjectForm = new ImportProjectForm("importProjectForm");
 
-        add(projectSelectionForm.add(importProjectForm));
+        add(projectSelectionForm);
+        add(importProjectForm);
         add(projectDetailForm);
 
         MetaDataRoleAuthorizationStrategy.authorize(importProjectForm, Component.RENDER,
@@ -241,37 +247,44 @@ public class ProjectPage
     }
 
     private class ImportProjectForm
-        extends Form<Void>
+        extends Form<ImportProjectModel>
     {
         private static final long serialVersionUID = -6361609153142402692L;
         private FileUploadField fileUpload;
-        private List<FileUpload> exportedProjects;
 
         @SuppressWarnings({ "unchecked", "rawtypes" })
         public ImportProjectForm(String id)
         {
-            super(id);
+            super(id, new CompoundPropertyModel<>(new ImportProjectModel()));
+            add(new CheckBox("generateUsers"));
             add(fileUpload = new FileUploadField("content", new Model()));
 
             add(new Button("importProject", new ResourceModel("label"))
             {
-
                 private static final long serialVersionUID = 1L;
 
                 @Override
                 public void onSubmit()
                 {
-                    exportedProjects = fileUpload.getFileUploads();
-
+                    List<FileUpload> exportedProjects = fileUpload.getFileUploads();
                     if (isEmpty(exportedProjects)) {
                         error("Please choose appropriate project/s in zip format");
-                        return;
                     }
-                    
-                    actionImportProject(exportedProjects);
+                    else {
+                        actionImportProject(exportedProjects,
+                                ImportProjectForm.this.getModelObject().generateUsers);
+                    }                    
                 }
             });
         }
+    }
+    
+    private class ImportProjectModel
+        implements Serializable
+    {
+        private static final long serialVersionUID = -5858027181097577052L;
+
+        boolean generateUsers = true;
     }
 
     public class ProjectDetailForm
@@ -561,7 +574,7 @@ public class ProjectPage
         }
     }
     
-    private void actionImportProject(List<FileUpload> exportedProjects)
+    private void actionImportProject(List<FileUpload> exportedProjects, boolean aGenerateUsers)
     {
         Project importedProject = new Project();
         // import multiple projects!
@@ -609,7 +622,7 @@ public class ProjectPage
                 ProjectUtil.createAnnotationDocument(importedProjectSetting, importedProject,
                         repository);
                 ProjectUtil.createProjectPermission(importedProjectSetting, importedProject,
-                        repository);
+                        repository, aGenerateUsers, userRepository);
                 /*
                  * for (TagSet tagset : importedProjectSetting.getTagSets()) {
                  * ProjectUtil.createTagset(importedProject, tagset, projectRepository,

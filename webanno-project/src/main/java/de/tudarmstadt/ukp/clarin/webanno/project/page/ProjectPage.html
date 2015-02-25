@@ -1,3 +1,4 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <!--
 #Copyright 2012
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
@@ -22,34 +23,36 @@
 		<table class="hfill">
 			<tr style="vertical-align: top;">
 				<td width="20%">
-					<form wicket:id="projectSelectionForm">
-						<fieldset class="ui-widget-content ui-corner-all">
-							<legend>Projects</legend>
-							<select class="hfill" wicket:id="project" size="29"></select>
+					<fieldset class="ui-widget-content ui-corner-all">
+						<legend>Projects</legend>
+						<form wicket:id="projectSelectionForm">
+							<div>
+								<select class="hfill" wicket:id="project" size="29"></select>
+							</div>
 							<div class="buttons">
 								<input type="submit" wicket:id="create" />
 							</div>
-							<form wicket:id="importProjectForm">
-							    <fieldset class="ui-widget-content ui-corner-all">
-							      <legend>
-							        Import Project
-							      </legend>
-							      <div>
-							        <table class="hfill">
-							          <tr>
-							            <td class="hfill">
-							              <input wicket:id="content" type="file" multiple />
-							            </td>
-							          </tr>
-							        </table>
-							        <div class="buttons">
-							          <input type="submit" wicket:id="importProject" />
-							        </div>
-							      </div>
-							    </fieldset>
-							</form>
-						</fieldset>
-					</form>
+						</form>
+					</fieldset>
+					<fieldset class="ui-widget-content ui-corner-all">
+						<legend>Import Project</legend>
+						<form wicket:id="importProjectForm">
+							<table class="hfill">
+								<tr>
+								    <td><label>Files</label></td>
+									<td class="hfill"><input wicket:id="content" type="file"
+										multiple /></td>
+								</tr>
+                                <tr>
+									<td><input wicket:id="generateUsers" type="checkbox" /></td>
+									<td class="hfill"><label>Create missing users</label></td>
+								</tr>
+							</table>
+							<div class="buttons">
+								<input type="submit" wicket:id="importProject" />
+							</div>
+						</form>
+					</fieldset>
 				</td>
 				<td width="80%">
 					<form wicket:id="projectDetailForm">
