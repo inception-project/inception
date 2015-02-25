@@ -44,6 +44,12 @@ public class WebAnnoApplicationContextInitializer
     @Override
     public void initialize(ConfigurableApplicationContext aApplicationContext)
     {
+        log.info("  _      __    __   ___                ");
+        log.info(" | | /| / /__ / /  / _ | ___  ___  ___ ");
+        log.info(" | |/ |/ / -_) _ \\/ __ |/ _ \\/ _ \\/ _ \\");
+        log.info(" |__/|__/\\__/_.__/_/ |_/_//_/_//_/\\___/");
+        log.info(SettingsUtil.getVersionString());
+        
         ConfigurableEnvironment aEnvironment = aApplicationContext.getEnvironment();
 
         File settings = SettingsUtil.getSettingsFile();

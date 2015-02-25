@@ -55,6 +55,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
@@ -897,16 +898,32 @@ public class ProjectUtil
      */
     public static void createProjectPermission(
             de.tudarmstadt.ukp.clarin.webanno.model.export.Project aImportedProjectSetting,
-            Project aImportedProject, RepositoryService aRepository)
+            Project aImportedProject, RepositoryService aRepository, boolean aGenerateUsers,
+            UserDao aUserDao)
         throws IOException
     {
+        Set<String> users = new HashSet<>();
+        
         for (de.tudarmstadt.ukp.clarin.webanno.model.export.ProjectPermission importedPermission : aImportedProjectSetting
                 .getProjectPermissions()) {
-            de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission permission = new de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission();
+            ProjectPermission permission = new ProjectPermission();
             permission.setLevel(importedPermission.getLevel());
             permission.setProject(aImportedProject);
             permission.setUser(importedPermission.getUser());
             aRepository.createProjectPermission(permission);
+            
+            users.add(importedPermission.getUser());
+        }
+        
+        if (aGenerateUsers) {
+            for (String user : users) {
+                if (!aRepository.existsUser(user)) {
+                    User u = new User();
+                    u.setUsername(user);
+                    u.setEnabled(false);
+                    aUserDao.create(u);
+                }
+            }
         }
     }
 

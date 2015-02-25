@@ -21,7 +21,10 @@ After selecting this functionality, you are displayed a frame which shows all us
 
 image::manage_users.jpg[align="center"]
 
-Now you may change his role or password,sign him an e-Mail address or dis- or enable his account by placing the tick.
+Now you may change his role or password, specify  an e-mail address or dis- or enable his account by placing the tick.
+
+NOTE: Disabling an account prevents the user from logging in. The user remains associated with any
+      projects and remains visible in on the <<sect_monitoring>> page.
 
 To create a new user, click on *Create* in the left frame. This will display a similar frame as the one described in the last paragraph. Here you have to give a login-name to the new user.
 

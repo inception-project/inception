@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
 import org.springframework.stereotype.Repository;
@@ -87,7 +88,7 @@ public class UserDaoImpl
 	}
 
 	@Override
-	@Transactional
+    @Transactional(noRollbackFor = NoResultException.class)
 	public User get(String aUsername)
 	{
 		if (!exists(aUsername)) {

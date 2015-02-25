@@ -24,14 +24,52 @@ import java.io.InputStream;
 import java.util.Properties;
 
 import org.apache.commons.logging.LogFactory;
+import org.springframework.core.io.support.PropertiesLoaderUtils;
 
 public class SettingsUtil
 {
+    public static final String PROP_BUILD_NUMBER = "buildNumber";
+    public static final String PROP_TIMESTAMP = "timestamp";
+    public static final String PROP_VERSION = "version";
+    
     private static final String PROP_USER_HOME = "user.home";
     private static final String PROP_WEBANNO_HOME = "webanno.home";
     
     private static final String SETTINGS_FILE = "settings.properties";
     private static final String WEBANNO_USER_HOME_SUBDIR = ".webanno";
+    
+    private static Properties versionInfo;
+    private static Properties settings;
+    
+    public static Properties getVersionProperties()
+    {
+        if (versionInfo == null) {
+            try {
+                versionInfo = PropertiesLoaderUtils.loadAllProperties("/META-INF/version.properties");
+            }
+            catch (IOException e) {
+                versionInfo = new Properties();
+                versionInfo.setProperty(PROP_VERSION, "unknown");
+                versionInfo.setProperty(PROP_TIMESTAMP, "unknown");
+                versionInfo.setProperty(PROP_BUILD_NUMBER, "unknown");
+            }
+        }
+        
+        return versionInfo;
+    }
+    
+    public static String getVersionString()
+    {
+        Properties props = getVersionProperties();
+        if ("unknown".equals(props.getProperty(PROP_VERSION))) {
+            return "Version information not available";
+        }
+        else {
+            return props.getProperty(SettingsUtil.PROP_VERSION) + " ("
+                    + props.getProperty(SettingsUtil.PROP_TIMESTAMP) + ", build "
+                    + props.getProperty(SettingsUtil.PROP_BUILD_NUMBER) + ")";
+        }
+    }
     
     /**
      * Locate the settings file and return its location.
@@ -62,15 +100,17 @@ public class SettingsUtil
     
     public static Properties getSettings()
     {
-        Properties settings = new Properties();
-        File settingsFile = getSettingsFile();
-        if (settingsFile != null) {
-            try (InputStream in = new FileInputStream(settingsFile)) {
-                settings.load(in);
-            }
-            catch (IOException e) {
-                LogFactory.getLog(SettingsUtil.class).error(
-                        "Unable to load settings file [" + settings + "]", e);
+        if (settings == null) {
+            settings = new Properties();
+            File settingsFile = getSettingsFile();
+            if (settingsFile != null) {
+                try (InputStream in = new FileInputStream(settingsFile)) {
+                    settings.load(in);
+                }
+                catch (IOException e) {
+                    LogFactory.getLog(SettingsUtil.class).error(
+                            "Unable to load settings file [" + settings + "]", e);
+                }
             }
         }
         return settings;

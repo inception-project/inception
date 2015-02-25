@@ -128,10 +128,18 @@ public class ManageUsersPage
                             return userRepository.list();
                         }
                     });
-                    setChoiceRenderer(new ChoiceRenderer<User>("username"));
+                    setChoiceRenderer(new ChoiceRenderer<User>() {
+                        private static final long serialVersionUID = 1L;
+
+                        @Override
+                        public Object getDisplayValue(User aUser)
+                        {
+                            return aUser.getUsername() + (aUser.isEnabled() ? "" : " (disabled)");
+                        }
+                    });
                     setNullValid(false);
                 }
-
+                
                 @Override
                 protected void onSelectionChanged(User aNewSelection)
                 {
