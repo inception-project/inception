@@ -353,19 +353,4 @@ public interface AnnotationService
      * @param type the type.
      */
     void removeAnnotationLayer(AnnotationLayer type);
-
-    void createPOSLayer(Project project, User user, String[] postags, String[] posTagDescriptions)
-        throws IOException;
-
-    void createDepLayer(Project project, User user, String[] depTags, String[] depTagDescriptions)
-        throws IOException;
-
-    void createNeLayer(Project project, User user, String[] neTags, String[] neTagDescriptions)
-        throws IOException;
-
-    void createCorefLayer(Project project, User user, String[] corefTypeTags, String[] corefRelTags)
-        throws IOException;
-
-    void createLemmaLayer(Project project, User user)
-        throws IOException;
 }

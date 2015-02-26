@@ -2412,6 +2412,9 @@ public class RepositoryServiceDbData
         }
     }
     
+    /**
+     * List project accessible by current user
+     */
     public List<Project> listAccessibleProjects()
     {
         List<Project> allowedProject = new ArrayList<Project>();

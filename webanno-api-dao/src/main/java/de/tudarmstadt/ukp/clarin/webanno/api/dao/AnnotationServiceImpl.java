@@ -45,6 +45,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.chunk.Chunk;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
@@ -95,25 +96,25 @@ public class AnnotationServiceImpl
             entityManager.merge(aTagSet);
         }
         RepositoryServiceDbData.createLog(aTagSet.getProject(), aUser.getUsername()).info(
-                " Added tagset  [" + aTagSet.getName() + "] with ID [" + aTagSet.getId() + "]");
+                " Added tagset [" + aTagSet.getName() + "] with ID [" + aTagSet.getId() + "]");
         RepositoryServiceDbData.createLog(aTagSet.getProject(), aUser.getUsername())
                 .removeAllAppenders();
     }
 
     @Override
     @Transactional
-    public void createLayer(AnnotationLayer aType, User aUser)
+    public void createLayer(AnnotationLayer aLayer, User aUser)
         throws IOException
     {
-        if (aType.getId() == 0) {
-            entityManager.persist(aType);
+        if (aLayer.getId() == 0) {
+            entityManager.persist(aLayer);
         }
         else {
-            entityManager.merge(aType);
+            entityManager.merge(aLayer);
         }
-        RepositoryServiceDbData.createLog(aType.getProject(), aUser.getUsername()).info(
-                " Added tagset  [" + aType.getName() + "] with ID [" + aType.getId() + "]");
-        RepositoryServiceDbData.createLog(aType.getProject(), aUser.getUsername())
+        RepositoryServiceDbData.createLog(aLayer.getProject(), aUser.getUsername()).info(
+                " Added layer [" + aLayer.getName() + "] with ID [" + aLayer.getId() + "]");
+        RepositoryServiceDbData.createLog(aLayer.getProject(), aUser.getUsername())
                 .removeAllAppenders();
     }
 
@@ -290,7 +291,7 @@ public class AnnotationServiceImpl
         }
     }
 
-    private AnnotationFeature initializeType(String aName, String aUiName, String aDescription,
+    private AnnotationFeature createFeature(String aName, String aUiName, String aDescription,
             String aType, String aTagSetName, String aLanguage, String[] aTags,
             String[] aTagDescription, Project aProject, User aUser)
         throws IOException
@@ -345,19 +346,19 @@ public class AnnotationServiceImpl
         createCorefLayer(aProject, aUser, aCorefTypeTags, aCorefRelTags);
 
         createLemmaLayer(aProject, aUser);
-
+        
+        createChunkLayer(aProject, aUser);
     }
 
-    @Override
-    public void createLemmaLayer(Project aProject, User aUser)
+    private void createLemmaLayer(Project aProject, User aUser)
         throws IOException
     {
-        AnnotationLayer lemmaLayer = setLayer(Lemma.class.getName(), "value", "Lemma", SPAN_TYPE,
-                aProject);
         AnnotationLayer tokenLayer = getLayer(Token.class.getName(), aProject);
-        AnnotationFeature tokenLemmaFeature = setFeature("lemma", "lemma", aProject, tokenLayer,
+        AnnotationFeature tokenLemmaFeature = createFeature("lemma", "lemma", aProject, tokenLayer,
                 Lemma.class.getName());
         tokenLemmaFeature.setVisible(true);
+        
+        AnnotationLayer lemmaLayer = new AnnotationLayer(Lemma.class.getName(), "Lemma", SPAN_TYPE, aProject, true);
         lemmaLayer.setAttachType(tokenLayer);
         lemmaLayer.setAttachFeature(tokenLemmaFeature);
 
@@ -371,31 +372,28 @@ public class AnnotationServiceImpl
         lemmaFeature.setUiName("Lemma value");
         lemmaFeature.setLayer(lemmaLayer);
         createFeature(lemmaFeature);
-
     }
 
-    @Override
-    public void createCorefLayer(Project aProject, User aUser, String[] aCorefTypeTags,
+    private void createCorefLayer(Project aProject, User aUser, String[] aCorefTypeTags,
             String[] aCorefRelTags)
         throws IOException
     {
         // Coref Layer
-        AnnotationFeature corefTypeFeature = initializeType("referenceType", "referenceType",
+        AnnotationFeature corefTypeFeature = createFeature("referenceType", "referenceType",
                 "coreference type annotation",
                 "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference", "BART", "de",
                 aCorefTypeTags.length > 0 ? aCorefTypeTags : new String[] { "nam" },
                 aCorefTypeTags.length > 0 ? aCorefTypeTags : new String[] { "nam" }, aProject,
                 aUser);
 
-        AnnotationFeature corefRelFeature = initializeType("referenceRelation",
+        AnnotationFeature corefRelFeature = createFeature("referenceRelation",
                 "referenceRelation", "coreference relation annotation",
                 "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference", "TuebaDZ", "de",
                 aCorefRelTags.length > 0 ? aCorefRelTags : new String[] { "anaphoric" },
                 aCorefRelTags.length > 0 ? aCorefRelTags : new String[] { "anaphoric" }, aProject,
                 aUser);
 
-        AnnotationLayer base = setLayer("de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference",
-                "coreference", "Coreference", CHAIN_TYPE, aProject);
+        AnnotationLayer base = new AnnotationLayer("de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference", "Coreference", CHAIN_TYPE, aProject, true);
         base.setCrossSentence(true);
         base.setAllowStacking(true);
         base.setMultipleTokens(true);
@@ -410,13 +408,10 @@ public class AnnotationServiceImpl
         corefRelFeature.setVisible(true);
     }
 
-    @Override
-    public void createNeLayer(Project aProject, User aUser, String[] aNeTags,
+    private void createNeLayer(Project aProject, User aUser, String[] aNeTags,
             String[] aNeTagDescriptions)
         throws IOException
     {
-        // NE layer
-
         String[] neTags = aNeTags.length > 0 ? aNeTags : new String[] { "PER", "PERderiv",
                 "PERpart", "LOC", "LOCderiv", "LOCpart", "ORG", "ORGderiv", "ORGpart", "OTH",
                 "OTHderiv", "OTHpart" };
@@ -427,12 +422,11 @@ public class AnnotationServiceImpl
                         "Hyphenated part  is organization",
                         "Other: Every name that is not a location, person or organisation",
                         "Other derivative", "Hyphenated part  is Other" };
-        AnnotationFeature neFeature = initializeType("value", "value", "Named Entity annotation",
+        AnnotationFeature neFeature = createFeature("value", "value", "Named Entity annotation",
                 CAS.TYPE_NAME_STRING, "NER_WebAnno", "de", neTags, neTagDescriptions, aProject,
                 aUser);
 
-        AnnotationLayer neLayer = setLayer(NamedEntity.class.getName(), "value", "Named Entity",
-                SPAN_TYPE, aProject);
+        AnnotationLayer neLayer = new AnnotationLayer(NamedEntity.class.getName(), "Named Entity", SPAN_TYPE, aProject, true);
         neLayer.setAllowStacking(true);
         neLayer.setMultipleTokens(true);
         neLayer.setLockToTokenOffset(false);
@@ -441,8 +435,27 @@ public class AnnotationServiceImpl
         neFeature.setLayer(neLayer);
     }
 
-    @Override
-    public void createDepLayer(Project aProject, User aUser, String[] aDepTags,
+    private void createChunkLayer(Project aProject, User aUser)
+        throws IOException
+    {
+        AnnotationLayer chunkLayer = new AnnotationLayer(Chunk.class.getName(), "Chunk", SPAN_TYPE,
+                aProject, true);
+        chunkLayer.setAllowStacking(false);
+        chunkLayer.setMultipleTokens(true);
+        chunkLayer.setLockToTokenOffset(false);
+        createLayer(chunkLayer, aUser);
+
+        AnnotationFeature chunkValueFeature = new AnnotationFeature();
+        chunkValueFeature.setDescription("Chunk tag");
+        chunkValueFeature.setName("chunkValue");
+        chunkValueFeature.setType(CAS.TYPE_NAME_STRING);
+        chunkValueFeature.setProject(aProject);
+        chunkValueFeature.setUiName("Tag");
+        chunkValueFeature.setLayer(chunkLayer);
+        createFeature(chunkValueFeature);
+    }
+    
+    private void createDepLayer(Project aProject, User aUser, String[] aDepTags,
             String[] aDepTagDescriptions)
         throws IOException
     {
@@ -458,12 +471,11 @@ public class AnnotationServiceImpl
                 "CC", "CM", "UC", "AC", "PNC" };
         String[] depTagsDescription = aDepTagDescriptions.length == depTags.length ? aDepTagDescriptions
                 : depTags;
-        AnnotationFeature deFeature = initializeType("DependencyType", "DependencyType",
+        AnnotationFeature deFeature = createFeature("DependencyType", "DependencyType",
                 "Dependency annotation", CAS.TYPE_NAME_STRING, "Tiger", "de", depTags,
                 depTagsDescription, aProject, aUser);
 
-        AnnotationLayer depLayer = setLayer(Dependency.class.getName(), "DependencyType",
-                "Dependency", RELATION_TYPE, aProject);
+        AnnotationLayer depLayer = new AnnotationLayer(Dependency.class.getName(), "Dependency", RELATION_TYPE, aProject, true);
         AnnotationLayer tokenLayer = getLayer(Token.class.getName(), aProject);
         List<AnnotationFeature> tokenFeatures = listAnnotationFeature(tokenLayer);
         AnnotationFeature tokenPosFeature = null;
@@ -481,8 +493,7 @@ public class AnnotationServiceImpl
         deFeature.setLayer(depLayer);
     }
 
-    @Override
-    public void createPOSLayer(Project aProject, User aUser, String[] aPostags,
+    private void createPOSLayer(Project aProject, User aUser, String[] aPostags,
             String[] aPosTagDescriptions)
         throws IOException
     {
@@ -551,7 +562,7 @@ public class AnnotationServiceImpl
                         "Partizip Perfekt, voll \nBsp:gegangen, angekommen ",
                         "Nichtwort, Sonderzeichen enthaltend \nBsp:3:7, H2O, D2XW3", "--" };
 
-        AnnotationFeature posFeature = initializeType(
+        AnnotationFeature posFeature = createFeature(
                 "PosValue",
                 "PosValue",
                 "Stuttgart-Tübingen-Tag-Set \nGerman Part of Speech tagset "
@@ -560,9 +571,8 @@ public class AnnotationServiceImpl
                 CAS.TYPE_NAME_STRING, "STTS", "de", posTags, posTagDescriptions, aProject, aUser);
 
         AnnotationLayer tokenLayer = getLayer(Token.class.getName(), aProject);
-        AnnotationLayer posLayer = setLayer(POS.class.getName(), "PosValue", "POS", SPAN_TYPE,
-                aProject);
-        AnnotationFeature tokenPosFeature = setFeature("pos", "pos", aProject, tokenLayer,
+        AnnotationLayer posLayer = new AnnotationLayer(POS.class.getName(), "POS", SPAN_TYPE, aProject, true);
+        AnnotationFeature tokenPosFeature = createFeature("pos", "pos", aProject, tokenLayer,
                 POS.class.getName());
         tokenPosFeature.setVisible(true);
         posLayer.setAttachType(tokenLayer);
@@ -576,26 +586,13 @@ public class AnnotationServiceImpl
     private AnnotationLayer createTokenLayer(Project aProject, User aUser)
         throws IOException
     {
-        AnnotationLayer tokenLayer = setLayer(Token.class.getName(), "", "Token", SPAN_TYPE,
-                aProject);
+        AnnotationLayer tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE, aProject, true);
 
         createLayer(tokenLayer, aUser);
         return tokenLayer;
     }
 
-    private AnnotationLayer setLayer(String aName, String aFeatureName, String aUiName,
-            String aType, Project aProject)
-    {
-        AnnotationLayer layer = new AnnotationLayer();
-        layer.setName(aName);
-        layer.setUiName(aUiName);
-        layer.setProject(aProject);
-        layer.setBuiltIn(true);
-        layer.setType(aType);
-        return layer;
-    }
-
-    private AnnotationFeature setFeature(String aName, String aUiname, Project aProject,
+    private AnnotationFeature createFeature(String aName, String aUiname, Project aProject,
             AnnotationLayer aLayer, String aType)
     {
         AnnotationFeature feature = new AnnotationFeature();
