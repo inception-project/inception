@@ -15,59 +15,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package de.tudarmstadt.ukp.clarin.webanno.brat.project;
+package de.tudarmstadt.ukp.clarin.webanno.project.page;
 
 import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringWriter;
-import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
-import javax.persistence.NoResultException;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.codehaus.jackson.JsonGenerator;
-import org.springframework.beans.BeanWrapper;
-import org.springframework.beans.BeanWrapperImpl;
-import org.springframework.beans.BeansException;
-import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
-import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
-import de.tudarmstadt.ukp.clarin.webanno.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -82,10 +62,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.export.MiraTemplate;
  * @author Seid Muhie Yimam
  *
  */
-public class ProjectUtil
+public class ImportUtil
 {
-
-    private static MappingJacksonHttpMessageConverter jsonConverter;
 
     public static final String META_INF = "META-INF";
     public static final String SOURCE = "source";
@@ -95,12 +73,7 @@ public class ProjectUtil
     public static final String LOG_DIR = "log";
     public static final String EXPORTED_PROJECT = "exportedproject";
 
-    public static void setJsonConverter(MappingJacksonHttpMessageConverter aJsonConverter)
-    {
-        jsonConverter = aJsonConverter;
-    }
-
-    private static final Log LOG = LogFactory.getLog(ProjectUtil.class);
+    private static final Log LOG = LogFactory.getLog(ImportUtil.class);
 
     /**
      * Read Tag and Tag Description. A line has a tag name and a tag description separated by a TAB
@@ -128,311 +101,6 @@ public class ProjectUtil
     }
 
     /**
-     * IS user super Admin
-     * 
-     * @param aProjectRepository the repository service.
-     * @param aUser the user.
-     * @return if the user is a global admin.
-     */
-    public static boolean isSuperAdmin(RepositoryService aProjectRepository, User aUser)
-    {
-        boolean roleAdmin = false;
-        List<Authority> authorities = aProjectRepository.listAuthorities(aUser);
-        for (Authority authority : authorities) {
-            if (authority.getAuthority().equals(Role.ROLE_ADMIN.name())) {
-                roleAdmin = true;
-                break;
-            }
-        }
-        return roleAdmin;
-    }
-
-    /**
-     * IS project creator
-     * 
-     * @param aProjectRepository the repository service.
-     * @param aUser the user.
-     * @return if the user is a project creator
-     */
-    public static boolean isProjectCreator(RepositoryService aProjectRepository, User aUser)
-    {
-        boolean roleAdmin = false;
-        List<Authority> authorities = aProjectRepository.listAuthorities(aUser);
-        for (Authority authority : authorities) {
-            if (authority.getAuthority().equals(Role.ROLE_PROJECT_CREATOR.name())) {
-                roleAdmin = true;
-                break;
-            }
-        }
-        return roleAdmin;
-    }
-
-    /**
-     * Determine if the User is allowed to update a project
-     *
-     * @param aProject the project
-     * @param aProjectRepository the repository service.
-     * @param aUser the user.
-     * @return if the user may update a project.
-     */
-    public static boolean isProjectAdmin(Project aProject, RepositoryService aProjectRepository,
-            User aUser)
-    {
-        boolean roleAdmin = false;
-        List<Authority> authorities = aProjectRepository.listAuthorities(aUser);
-        for (Authority authority : authorities) {
-            if (authority.getAuthority().equals("ROLE_ADMIN")) {
-                roleAdmin = true;
-                break;
-            }
-        }
-
-        boolean projectAdmin = false;
-        if (!roleAdmin) {
-
-            try {
-                List<ProjectPermission> permissionLevels = aProjectRepository
-                        .listProjectPermisionLevel(aUser, aProject);
-                for (ProjectPermission permissionLevel : permissionLevels) {
-                    if (StringUtils.equalsIgnoreCase(permissionLevel.getLevel().getName(),
-                            PermissionLevel.ADMIN.getName())) {
-                        projectAdmin = true;
-                        break;
-                    }
-                }
-            }
-            catch (NoResultException ex) {
-                LOG.info("No permision is given to this user " + ex);
-            }
-        }
-
-        return (projectAdmin || roleAdmin);
-    }
-
-    /**
-     * Determine if the User is a curator or not
-     *
-     * @param aProject the project.
-     * @param aProjectRepository the respository service.
-     * @param aUser the user.
-     * @return if the user is a curator.
-     */
-    public static boolean isCurator(Project aProject, RepositoryService aProjectRepository,
-            User aUser)
-    {
-        boolean roleAdmin = false;
-        List<Authority> authorities = aProjectRepository.listAuthorities(aUser);
-        for (Authority authority : authorities) {
-            if (authority.getAuthority().equals("ROLE_ADMIN")) {
-                roleAdmin = true;
-                break;
-            }
-        }
-
-        boolean curator = false;
-        if (!roleAdmin) {
-
-            try {
-                List<ProjectPermission> permissionLevels = aProjectRepository
-                        .listProjectPermisionLevel(aUser, aProject);
-                for (ProjectPermission permissionLevel : permissionLevels) {
-                    if (StringUtils.equalsIgnoreCase(permissionLevel.getLevel().getName(),
-                            PermissionLevel.CURATOR.getName())) {
-                        curator = true;
-                        break;
-                    }
-                }
-            }
-            catch (NoResultException ex) {
-                LOG.info("No permision is given to this user " + ex);
-            }
-        }
-
-        return (curator || roleAdmin);
-    }
-
-    /**
-     * Determine if the User is member of a project
-     *
-     * @param aProject the project.
-     * @param aProjectRepository the respository service.
-     * @param aUser the user.
-     * @return if the user is a member.
-     */
-    public static boolean isMember(Project aProject, RepositoryService aProjectRepository,
-            User aUser)
-    {
-        boolean roleAdmin = false;
-        List<Authority> authorities = aProjectRepository.listAuthorities(aUser);
-        for (Authority authority : authorities) {
-            if (authority.getAuthority().equals("ROLE_ADMIN")) {
-                roleAdmin = true;
-                break;
-            }
-        }
-
-        boolean user = false;
-        if (!roleAdmin) {
-
-            try {
-                List<ProjectPermission> permissionLevels = aProjectRepository
-                        .listProjectPermisionLevel(aUser, aProject);
-                for (ProjectPermission permissionLevel : permissionLevels) {
-                    if (StringUtils.equalsIgnoreCase(permissionLevel.getLevel().getName(),
-                            PermissionLevel.USER.getName())) {
-                        user = true;
-                        break;
-                    }
-                }
-            }
-
-            catch (NoResultException ex) {
-                LOG.info("No permision is given to this user " + ex);
-            }
-        }
-
-        return (user || roleAdmin);
-    }
-
-    /**
-     * Convert Java objects into JSON format and write it to a file
-     *
-     * @param aObject the object.
-     * @param aFile the file
-     * @throws IOException if an I/O error occurs.
-     */
-
-    public static void generateJson(Object aObject, File aFile)
-        throws IOException
-    {
-        StringWriter out = new StringWriter();
-
-        JsonGenerator jsonGenerator = jsonConverter.getObjectMapper().getJsonFactory()
-                .createJsonGenerator(out);
-
-        jsonGenerator.writeObject(aObject);
-        FileUtils.writeStringToFile(aFile, out.toString());
-    }
-
-    /**
-     * Set annotation preferences of users for a given project such as window size, annotation
-     * layers,... reading from the file system.
-     *
-     * @param aUsername
-     *            The {@link User} for whom we need to read the preference (preferences are stored
-     *            per user)
-     * @param aRepositoryService the repository service.
-     * @param aAnnotationService the annotation service.
-     * @param aBModel
-     *            The {@link BratAnnotatorModel} that will be populated with preferences from the
-     *            file
-     * @param aMode the mode.
-     * @throws BeansException hum?
-     * @throws IOException hum?
-     */
-    public static void setAnnotationPreference(String aUsername,
-            RepositoryService aRepositoryService, AnnotationService aAnnotationService,
-            BratAnnotatorModel aBModel, Mode aMode)
-        throws BeansException, IOException
-    {
-        AnnotationPreference preference = new AnnotationPreference();
-        BeanWrapper wrapper = new BeanWrapperImpl(preference);
-        // get annotation preference from file system
-        try {
-            for (Entry<Object, Object> entry : aRepositoryService.loadUserSettings(aUsername,
-                    aBModel.getProject()).entrySet()) {
-                String property = entry.getKey().toString();
-                int index = property.lastIndexOf(".");
-                String propertyName = property.substring(index + 1);
-                String mode = property.substring(0, index);
-                if (wrapper.isWritableProperty(propertyName) && mode.equals(aMode.getName())) {
-
-                    if (AnnotationPreference.class.getDeclaredField(propertyName).getGenericType() instanceof ParameterizedType) {
-                        List<String> value = Arrays.asList(StringUtils.replaceChars(
-                                entry.getValue().toString(), "[]", "").split(","));
-                        if (!value.get(0).equals("")) {
-                            wrapper.setPropertyValue(propertyName, value);
-                        }
-                    }
-                    else {
-                        wrapper.setPropertyValue(propertyName, entry.getValue());
-                    }
-                }
-            }
-            aBModel.setWindowSize(preference.getWindowSize());
-            aBModel.setScrollPage(preference.isScrollPage());
-            aBModel.setStaticColor(preference.isStaticColor());
-
-            // Get tagset using the id, from the properties file
-            aBModel.getAnnotationLayers().clear();
-            if (preference.getAnnotationLayers() != null) {
-                for (Long id : preference.getAnnotationLayers()) {
-                    aBModel.getAnnotationLayers().add(aAnnotationService.getLayer(id));
-                }
-            }
-        }
-        // no preference found
-        catch (Exception e) {
-
-            /*
-             * // disable corefernce annotation for correction/curation pages for 0.4.0 release
-             * List<TagSet> tagSets = aAnnotationService.listTagSets(aBModel.getProject());
-             * List<TagSet> corefTagSets = new ArrayList<TagSet>(); List<TagSet> noFeatureTagSet =
-             * new ArrayList<TagSet>(); for (TagSet tagSet : tagSets) { if (tagSet.getLayer() ==
-             * null || tagSet.getFeature() == null) { noFeatureTagSet.add(tagSet); } else if
-             * (tagSet.getLayer().getType().equals(ChainAdapter.CHAIN)) { corefTagSets.add(tagSet);
-             * } }
-             *
-             * if (aMode.equals(Mode.CORRECTION) || aMode.equals(Mode.AUTOMATION) ||
-             * aMode.equals(Mode.CURATION)) { tagSets.removeAll(corefTagSets); }
-             * tagSets.remove(noFeatureTagSet); aBModel.setAnnotationLayers(new
-             * HashSet<TagSet>(tagSets));
-             */
-            /*
-             * abAnnotatorModel.setAnnotationLayers(new HashSet<TagSet>(aAnnotationService
-             * .listTagSets(abAnnotatorModel.getProject())));
-             */
-
-            List<AnnotationLayer> layers = aAnnotationService.listAnnotationLayer(aBModel
-                    .getProject());
-            aBModel.setAnnotationLayers(layers);
-        }
-    }
-
-    // The magic bytes for ZIP
-    // see
-    // http://notepad2.blogspot.de/2012/07/java-detect-if-stream-or-file-is-zip.html
-    private static byte[] MAGIC = { 'P', 'K', 0x3, 0x4 };
-
-    /**
-     * check if the {@link InputStream} provided is a zip file
-     * 
-     * @param in the stream.
-     * @return if it is a ZIP file.
-     */
-    public static boolean isZipStream(InputStream in)
-    {
-        if (!in.markSupported()) {
-            in = new BufferedInputStream(in);
-        }
-        boolean isZip = true;
-        try {
-            in.mark(MAGIC.length);
-            for (byte element : MAGIC) {
-                if (element != (byte) in.read()) {
-                    isZip = false;
-                    break;
-                }
-            }
-            in.reset();
-        }
-        catch (IOException e) {
-            isZip = false;
-        }
-        return isZip;
-    }
-
-    /**
      * Check if the zip file is webanno compatible
      * 
      * @param aZipFile the file.
@@ -450,7 +118,7 @@ public class ProjectUtil
         ZipFile zip = new ZipFile(aZipFile);
         for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
             ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
-            if (entry.toString().replace("/", "").startsWith(ProjectUtil.EXPORTED_PROJECT)
+            if (entry.toString().replace("/", "").startsWith(ImportUtil.EXPORTED_PROJECT)
                     && entry.toString().replace("/", "").endsWith(".json")) {
                 isZipValidWebanno = true;
                 break;
@@ -1126,50 +794,6 @@ public class ProjectUtil
                         + aProject.getId() + "]");
             }
         }
-    }
-
-    /**
-     * Return true if there exist at least one annotation document FINISHED for annotation for this
-     * {@link SourceDocument}
-     * @param aSourceDocument the source document.
-     * @param aUser the user.
-     * @param aProject the project.
-     * @param aRepository the repository service.
-     * @return if a finished document exists.
-     */
-    public static boolean existFinishedDocument(
-            de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument aSourceDocument, User aUser,
-            RepositoryService aRepository, Project aProject)
-    {
-        List<de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument> annotationDocuments = aRepository
-                .listAnnotationDocuments(aSourceDocument);
-        boolean finishedAnnotationDocumentExist = false;
-        for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : annotationDocuments) {
-            if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
-                finishedAnnotationDocumentExist = true;
-                break;
-            }
-        }
-        return finishedAnnotationDocumentExist;
-
-    }
-
-    public static void savePreference(BratAnnotatorModel aBModel, RepositoryService aRepository)
-        throws FileNotFoundException, IOException
-    {
-        AnnotationPreference preference = new AnnotationPreference();
-        preference.setScrollPage(aBModel.isScrollPage());
-        preference.setWindowSize(aBModel.getWindowSize());
-        preference.setStaticColor(aBModel.isStaticColor());
-        ArrayList<Long> layers = new ArrayList<Long>();
-
-        for (AnnotationLayer layer : aBModel.getAnnotationLayers()) {
-            layers.add(layer.getId());
-        }
-        preference.setAnnotationLayers(layers);
-
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        aRepository.saveUserSettings(username, aBModel.getProject(), aBModel.getMode(), preference);
     }
 
     public static de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer exportLayerDetails(

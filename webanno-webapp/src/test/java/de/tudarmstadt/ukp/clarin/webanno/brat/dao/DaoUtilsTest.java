@@ -36,7 +36,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.DaoUtils;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.ZipUtils;
 
 public class DaoUtilsTest
 {
@@ -50,7 +50,7 @@ public class DaoUtilsTest
         File zipedFiles = new File("target/"
                 + toBeZippedFiles.getName() + ".zip");
         try {
-            DaoUtils.zipFolder(toBeZippedFiles, zipedFiles);
+            ZipUtils.zipFolder(toBeZippedFiles, zipedFiles);
         }
         catch (Exception e) {
             LOG.info("Zipping fails" + ExceptionUtils.getRootCauseMessage(e));

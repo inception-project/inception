@@ -20,8 +20,8 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.page.curation;
 import junit.framework.TestCase;
 
 import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.jcas.JCas;
 import org.apache.uima.fit.factory.JCasBuilder;
+import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;

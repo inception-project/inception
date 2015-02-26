@@ -25,12 +25,9 @@ import org.apache.wicket.Page;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebApplication;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
 import org.apache.wicket.markup.html.WebPage;
-import org.apache.wicket.markup.html.image.Image;
-import org.apache.wicket.request.Url;
 import org.apache.wicket.request.resource.ContextRelativeResourceReference;
 import org.apache.wicket.request.resource.CssResourceReference;
 import org.apache.wicket.request.resource.SharedResourceReference;
-import org.apache.wicket.request.resource.UrlResourceReference;
 import org.apache.wicket.resource.DynamicJQueryResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringComponentInjector;
 

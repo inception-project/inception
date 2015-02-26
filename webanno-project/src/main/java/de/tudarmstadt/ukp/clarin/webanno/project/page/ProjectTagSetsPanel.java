@@ -61,7 +61,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
@@ -69,6 +68,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.model.export.ExportedTagSetConstant;
 import de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 
 /**
  * A Panel user to manage Tagsets.
@@ -84,6 +84,8 @@ public class ProjectTagSetsPanel
     private AnnotationService annotationService;
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
+    @SpringBean(name = "jsonConverter")
+    private MappingJacksonHttpMessageConverter jsonConverter;
 
     private List<FileUpload> uploadedFiles;
     private FileUploadField fileUpload;
@@ -283,7 +285,7 @@ public class ProjectTagSetsPanel
                             try {
                                 tagInputStream = tagFile.getInputStream();
                                 String text = IOUtils.toString(tagInputStream, "UTF-8");
-                                Map<String, String> tabbedTagsetFromFile = ProjectUtil
+                                Map<String, String> tabbedTagsetFromFile = ImportUtil
                                         .getTagSetFromFile(text);
 
                                 Set<String> listOfTagsFromFile = tabbedTagsetFromFile.keySet();
@@ -519,11 +521,9 @@ public class ProjectTagSetsPanel
 
                             }
                             exTagSet.setTags(exportedTags);
-                            MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
-                            ProjectUtil.setJsonConverter(jsonConverter);
 
                             try {
-                                ProjectUtil.generateJson(exTagSet, exportFile);
+                                JSONUtil.generateJson(jsonConverter, exTagSet, exportFile);
                             }
                             catch (IOException e) {
                                 error("File Path not found or No permision to save the file!");

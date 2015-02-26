@@ -70,7 +70,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationB
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationUserSegmentForAnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationViewForSourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.project.PreferencesUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.CuratorUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -1123,7 +1123,7 @@ public class AutomationPage
         bratAnnotatorModel.initForDocument(jCas);
 
         // Load user preferences
-        ProjectUtil.setAnnotationPreference(username, repository, annotationService,
+        PreferencesUtil.setAnnotationPreference(username, repository, annotationService,
                 bratAnnotatorModel, Mode.AUTOMATION);
         
         // if project is changed, reset some project specific settings

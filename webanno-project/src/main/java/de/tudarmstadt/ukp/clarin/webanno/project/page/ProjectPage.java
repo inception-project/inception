@@ -64,8 +64,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.ZipUtils;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.automation.project.ProjectMiraTemplatePanel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -73,6 +74,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.Role;
+import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.home.page.ApplicationPageBase;
@@ -192,7 +195,7 @@ public class ProjectPage
 
                             // else only projects she is admin of
                             for (Project project : allProjects) {
-                                if (ProjectUtil.isProjectAdmin(project, repository, user)) {
+                                if (SecurityUtil.isProjectAdmin(project, repository, user)) {
                                     allowedProject.add(project);
                                 }
                             }
@@ -489,7 +492,7 @@ public class ProjectPage
                 public void onSubmit()
                 {
                     Project project = projectDetailForm.getModelObject();
-                    if (!ProjectUtil.isNameValid(project.getName())) {
+                    if (!ImportUtil.isNameValid(project.getName())) {
 
                         // Maintain already loaded project and selected Users
                         // Hence Illegal Project modification (limited
@@ -497,7 +500,7 @@ public class ProjectPage
                         // project
                         // name,...) preserves the original one
                         if (project.getId() != 0) {
-                            project.setName(ProjectUtil.validName(project.getName()));
+                            project.setName(ImportUtil.validName(project.getName()));
                         }
                         error("Project name shouldn't contain characters such as /\\*?&!$+[^]");
                         LOG.error("Project name shouldn't contain characters such as /\\*?&!$+[^]");
@@ -520,7 +523,7 @@ public class ProjectPage
                         
                         // If the project was created by a user (not a global admin), then add this
                         // user as a project admin so that the user can see and edit the project.
-                        if (ProjectUtil.isProjectCreator(repository, user)) {
+                        if (SecurityUtil.isProjectCreator(repository, user)) {
                             ProjectPermission permission = new ProjectPermission();
                             permission.setLevel(PermissionLevel.ADMIN);
                             permission.setProject(project);
@@ -582,19 +585,19 @@ public class ProjectPage
             InputStream tagInputStream;
             try {
                 tagInputStream = exportedProject.getInputStream();
-                if (!ProjectUtil.isZipStream(tagInputStream)) {
+                if (!ZipUtils.isZipStream(tagInputStream)) {
                     error("Invalid ZIP file");
                     return;
                 }
                 File zipFfile = exportedProject.writeToTempFile();
-                if (!ProjectUtil.isZipValidWebanno(zipFfile)) {
+                if (!ImportUtil.isZipValidWebanno(zipFfile)) {
                     error("Incompatible to webanno ZIP file");
                 }
                 ZipFile zip = new ZipFile(zipFfile);
                 InputStream projectInputStream = null;
                 for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
                     ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
-                    if (entry.toString().replace("/", "").startsWith(ProjectUtil.EXPORTED_PROJECT)
+                    if (entry.toString().replace("/", "").startsWith(ImportUtil.EXPORTED_PROJECT)
                             && entry.toString().replace("/", "").endsWith(".json")) {
                         projectInputStream = zip.getInputStream(entry);
                         break;
@@ -609,37 +612,37 @@ public class ProjectPage
                         .getObjectMapper().readValue(text,
                                 de.tudarmstadt.ukp.clarin.webanno.model.export.Project.class);
 
-                importedProject = ProjectUtil.createProject(importedProjectSetting, repository);
+                importedProject = ImportUtil.createProject(importedProjectSetting, repository);
 
-                Map<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature, AnnotationFeature> featuresMap = ProjectUtil
+                Map<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature, AnnotationFeature> featuresMap = ImportUtil
                         .createLayer(importedProject, importedProjectSetting, repository,
                                 annotationService);
-                ProjectUtil.createSourceDocument(importedProjectSetting, importedProject,
+                ImportUtil.createSourceDocument(importedProjectSetting, importedProject,
                         repository, featuresMap);
-                ProjectUtil.createMiraTemplate(importedProjectSetting, repository, featuresMap);
-                ProjectUtil.createCrowdJob(importedProjectSetting, repository, importedProject);
+                ImportUtil.createMiraTemplate(importedProjectSetting, repository, featuresMap);
+                ImportUtil.createCrowdJob(importedProjectSetting, repository, importedProject);
 
-                ProjectUtil.createAnnotationDocument(importedProjectSetting, importedProject,
+                ImportUtil.createAnnotationDocument(importedProjectSetting, importedProject,
                         repository);
-                ProjectUtil.createProjectPermission(importedProjectSetting, importedProject,
+                ImportUtil.createProjectPermission(importedProjectSetting, importedProject,
                         repository, aGenerateUsers, userRepository);
                 /*
                  * for (TagSet tagset : importedProjectSetting.getTagSets()) {
-                 * ProjectUtil.createTagset(importedProject, tagset, projectRepository,
+                 * ImportUtil.createTagset(importedProject, tagset, projectRepository,
                  * annotationService); }
                  */
                 // add source document content
-                ProjectUtil.createSourceDocumentContent(zip, importedProject, repository);
+                ImportUtil.createSourceDocumentContent(zip, importedProject, repository);
                 // add annotation document content
-                ProjectUtil.createAnnotationDocumentContent(zip, importedProject, repository);
+                ImportUtil.createAnnotationDocumentContent(zip, importedProject, repository);
                 // create curation document content
-                ProjectUtil.createCurationDocumentContent(zip, importedProject, repository);
+                ImportUtil.createCurationDocumentContent(zip, importedProject, repository);
                 // create project log
-                ProjectUtil.createProjectLog(zip, importedProject, repository);
+                ImportUtil.createProjectLog(zip, importedProject, repository);
                 // create project guideline
-                ProjectUtil.createProjectGuideline(zip, importedProject, repository);
+                ImportUtil.createProjectGuideline(zip, importedProject, repository);
                 // cretae project META-INF
-                ProjectUtil.createProjectMetaInf(zip, importedProject, repository);
+                ImportUtil.createProjectMetaInf(zip, importedProject, repository);
             }
             catch (IOException e) {
                 error("Error Importing Project " + ExceptionUtils.getRootCauseMessage(e));

@@ -28,7 +28,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -215,16 +215,16 @@ public class WelcomePage
 
     private boolean projectSettingsEnabeled(User user)
     {
-        if (ProjectUtil.isSuperAdmin(repository, user)) {
+        if (SecurityUtil.isSuperAdmin(repository, user)) {
             return true;
         }
 
-        if (ProjectUtil.isProjectCreator(repository, user)) {
+        if (SecurityUtil.isProjectCreator(repository, user)) {
             return true;
         }
 
         for (Project project : repository.listProjects()) {
-            if (ProjectUtil.isProjectAdmin(project, repository, user)) {
+            if (SecurityUtil.isProjectAdmin(project, repository, user)) {
                 return true;
             }
         }
@@ -234,12 +234,12 @@ public class WelcomePage
 
     private boolean curationEnabeled(User user)
     {
-        if (ProjectUtil.isSuperAdmin(repository, user)) {
+        if (SecurityUtil.isSuperAdmin(repository, user)) {
             return true;
         }
         
         for (Project project : repository.listProjects()) {
-            if (ProjectUtil.isCurator(project, repository, user)) {
+            if (SecurityUtil.isCurator(project, repository, user)) {
                 return true;
             }
         }
@@ -249,12 +249,12 @@ public class WelcomePage
 
     private boolean annotationEnabeled(User user, Mode mode)
     {
-        if (ProjectUtil.isSuperAdmin(repository, user)) {
+        if (SecurityUtil.isSuperAdmin(repository, user)) {
             return true;
         }
         
         for (Project project : repository.listProjects()) {
-            if (ProjectUtil.isMember(project, repository, user)
+            if (SecurityUtil.isMember(project, repository, user)
                     && mode.equals(project.getMode())) {
                 return true;
             }
@@ -265,13 +265,13 @@ public class WelcomePage
     
     private boolean monitoringEnabeled(User user)
     {
-        if (ProjectUtil.isSuperAdmin(repository, user)) {
+        if (SecurityUtil.isSuperAdmin(repository, user)) {
             return true;
         }
         
         for (Project project : repository.listProjects()) {
-            if (ProjectUtil.isCurator(project, repository, user)
-                    || ProjectUtil.isProjectAdmin(project, repository, user)) {
+            if (SecurityUtil.isCurator(project, repository, user)
+                    || SecurityUtil.isProjectAdmin(project, repository, user)) {
                 return true;
             }
         }

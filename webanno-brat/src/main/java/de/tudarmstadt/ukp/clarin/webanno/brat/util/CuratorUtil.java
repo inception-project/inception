@@ -64,7 +64,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationU
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationViewForSourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.project.PreferencesUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -150,7 +150,7 @@ public class CuratorUtil
         bratAnnotatorModel.setSentenceEndOffset(aCurationSegment.getEnd());
 
         bratAnnotatorModel.setMode(Mode.CURATION);
-        ProjectUtil.setAnnotationPreference(userLoggedIn.getUsername(), aRepository,
+        PreferencesUtil.setAnnotationPreference(userLoggedIn.getUsername(), aRepository,
                 aAnnotationService, bratAnnotatorModel, Mode.CURATION);
         
         LOG.debug("Configured BratAnnotatorModel for user [" + userLoggedIn + "] f:["

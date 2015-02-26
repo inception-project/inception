@@ -44,7 +44,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
@@ -100,7 +100,7 @@ public class RemoteApiController
     {
         LOG.info("Creating project [" + aName + "]");
 
-        if (!ProjectUtil.isZipStream(aFile.getInputStream())) {
+        if (!ZipUtils.isZipStream(aFile.getInputStream())) {
             throw new InvalidFileNameException("", "is an invalid Zip file");
         }
 

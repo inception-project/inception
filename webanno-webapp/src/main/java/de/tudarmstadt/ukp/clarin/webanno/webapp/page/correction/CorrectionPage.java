@@ -68,7 +68,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationB
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationUserSegmentForAnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationViewForSourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.project.PreferencesUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.CuratorUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -1101,7 +1101,7 @@ public class CorrectionPage
         bratAnnotatorModel.initForDocument(jCas);
 
         // Load user preferences
-        ProjectUtil.setAnnotationPreference(logedInUser.getUsername(), repository,
+        PreferencesUtil.setAnnotationPreference(logedInUser.getUsername(), repository,
                 annotationService, bratAnnotatorModel, Mode.CORRECTION);
 
         // if project is changed, reset some project specific settings

@@ -53,7 +53,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.project.PreferencesUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -774,7 +774,7 @@ public class AnnotationPage
             bratAnnotatorModel.initForDocument(jcas);
 
             // Load user preferences
-            ProjectUtil.setAnnotationPreference(username, repository, annotationService,
+            PreferencesUtil.setAnnotationPreference(username, repository, annotationService,
                     bratAnnotatorModel, Mode.ANNOTATION);
             
             // if project is changed, reset some project specific settings

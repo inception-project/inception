@@ -49,8 +49,8 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -186,12 +186,11 @@ public class OpenModalWindowPanel
 
     public List<Project> getAllowedProjects()
     {
-
         List<Project> allowedProject = new ArrayList<Project>();
         switch (mode) {
         case ANNOTATION:
             for (Project project : projectRepository.listProjects()) {
-                if (ProjectUtil.isMember(project, projectRepository, user)
+                if (SecurityUtil.isMember(project, projectRepository, user)
                         && project.getMode().equals(Mode.ANNOTATION)) {
                     allowedProject.add(project);
                 }
@@ -199,14 +198,14 @@ public class OpenModalWindowPanel
             break;
         case CURATION:
             for (Project project : projectRepository.listProjects()) {
-                if (ProjectUtil.isCurator(project, projectRepository, user)) {
+                if (SecurityUtil.isCurator(project, projectRepository, user)) {
                     allowedProject.add(project);
                 }
             }
             break;
         case CORRECTION:
             for (Project project : projectRepository.listProjects()) {
-                if (ProjectUtil.isMember(project, projectRepository, user)
+                if (SecurityUtil.isMember(project, projectRepository, user)
                         && project.getMode().equals(Mode.CORRECTION)) {
                     allowedProject.add(project);
                 }
@@ -214,7 +213,7 @@ public class OpenModalWindowPanel
             break;
         case AUTOMATION:
             for (Project project : projectRepository.listProjects()) {
-                if (ProjectUtil.isMember(project, projectRepository, user)
+                if (SecurityUtil.isMember(project, projectRepository, user)
                         && project.getMode().equals(Mode.AUTOMATION)) {
                     allowedProject.add(project);
                 }
@@ -369,8 +368,7 @@ public class OpenModalWindowPanel
                 }
                 break;
             case CURATION:
-                if (!ProjectUtil.existFinishedDocument(sourceDocument, user, projectRepository,
-                        selectedProject)) {
+                if (!projectRepository.existFinishedDocument(sourceDocument, user, selectedProject)) {
                     excludeDocuments.add(sourceDocument);
                 }
                 else if (sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)) {

@@ -1244,4 +1244,7 @@ public interface RepositoryService
 
     void upgrade(CAS aCurCas, Project aProject)
         throws UIMAException, IOException;
+    
+    boolean existFinishedDocument(
+            SourceDocument aSourceDocument, User aUser, Project aProject);
 }

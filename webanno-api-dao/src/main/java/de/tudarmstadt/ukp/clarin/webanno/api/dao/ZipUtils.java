@@ -19,10 +19,12 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
 import static org.apache.commons.io.IOUtils.closeQuietly;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -33,8 +35,40 @@ import org.apache.commons.io.IOUtils;
  *
  * @author Seid Muhie Yimam
  */
-public class DaoUtils
+public class ZipUtils
 {
+    // The magic bytes for ZIP
+    // see
+    // http://notepad2.blogspot.de/2012/07/java-detect-if-stream-or-file-is-zip.html
+    private static byte[] MAGIC = { 'P', 'K', 0x3, 0x4 };
+
+    /**
+     * check if the {@link InputStream} provided is a zip file
+     * 
+     * @param in the stream.
+     * @return if it is a ZIP file.
+     */
+    public static boolean isZipStream(InputStream in)
+    {
+        if (!in.markSupported()) {
+            in = new BufferedInputStream(in);
+        }
+        boolean isZip = true;
+        try {
+            in.mark(MAGIC.length);
+            for (byte element : MAGIC) {
+                if (element != (byte) in.read()) {
+                    isZip = false;
+                    break;
+                }
+            }
+            in.reset();
+        }
+        catch (IOException e) {
+            isZip = false;
+        }
+        return isZip;
+    }
 
     /**
      * While exporting annotation documents, some of the writers generate multiple outputs, e.g. a
