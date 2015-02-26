@@ -21,8 +21,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -32,6 +35,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -51,6 +55,8 @@ import org.springframework.http.converter.json.MappingJacksonHttpMessageConverte
 import org.wicketstuff.progressbar.ProgressBar;
 import org.wicketstuff.progressbar.Progression;
 import org.wicketstuff.progressbar.ProgressionModel;
+
+import com.ibm.icu.text.SimpleDateFormat;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
@@ -304,7 +310,24 @@ public class ProjectExportPanel extends Panel {
                 }
             }.setDeleteAfterDownload(true)).setOutputMarkupId(true);
 
-            final AJAXDownload exportProject = new AJAXDownload();
+            final AJAXDownload exportProject = new AJAXDownload() {
+                protected String getFileName() {
+                    String name;
+                    SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd_HHmm");
+                    try {
+                        name = URLEncoder.encode(
+                                ProjectExportForm.this.getModelObject().project.getName(), "UTF-8");
+                    }
+                    catch (UnsupportedEncodingException e) {
+                        name = super.getFileName();
+                    }
+                    
+                    name = FilenameUtils.removeExtension(name);
+                    name += "_" + fmt.format(new Date()) + ".zip";
+                    
+                    return name;
+                };
+            };
 
             fileGenerationProgress = new ProgressBar("progress", new ProgressionModel()
             {
