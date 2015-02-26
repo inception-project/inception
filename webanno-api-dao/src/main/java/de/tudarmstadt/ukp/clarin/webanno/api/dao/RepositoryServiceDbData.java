@@ -101,6 +101,7 @@ import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
@@ -667,7 +668,7 @@ public class RepositoryServiceDbData
         if (exportTempDir.listFiles().length > 1) {
             exportFile = new File(exportTempDir.getAbsolutePath() + ".zip");
             try {
-                DaoUtils.zipFolder(exportTempDir, exportFile);
+                ZipUtils.zipFolder(exportTempDir, exportFile);
             }
             catch (Exception e) {
                 createLog(project, aUser).info("Unable to create zip File");
@@ -2409,5 +2410,55 @@ public class RepositoryServiceDbData
             fs.setStringValue(nameFeature, aTagSetName);
             aCas.addFsToIndexes(fs);
         }
+    }
+    
+    public List<Project> listAccessibleProjects()
+    {
+        List<Project> allowedProject = new ArrayList<Project>();
+
+        String username = SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+        User user = getUser(username);
+
+        List<Project> allProjects = listProjects();
+        List<Authority> authorities = listAuthorities(user);
+
+        // if global admin, show all projects
+        for (Authority authority : authorities) {
+            if (authority.getAuthority().equals("ROLE_ADMIN")) {
+                return allProjects;
+            }
+        }
+
+        // else only projects she is admin of
+        for (Project project : allProjects) {
+            if (SecurityUtil.isProjectAdmin(project, this, user)) {
+                allowedProject.add(project);
+            }
+        }
+        return allowedProject;
+    }
+    
+    /**
+     * Return true if there exist at least one annotation document FINISHED for annotation for this
+     * {@link SourceDocument}
+     * @param aSourceDocument the source document.
+     * @param aUser the user.
+     * @param aProject the project.
+     * @param aRepository the repository service.
+     * @return if a finished document exists.
+     */
+    public boolean existFinishedDocument(
+            SourceDocument aSourceDocument, User aUser, Project aProject)
+    {
+        List<de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument> annotationDocuments = listAnnotationDocuments(aSourceDocument);
+        boolean finishedAnnotationDocumentExist = false;
+        for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : annotationDocuments) {
+            if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
+                finishedAnnotationDocumentExist = true;
+                break;
+            }
+        }
+        return finishedAnnotationDocumentExist;
     }
 }

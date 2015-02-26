@@ -46,12 +46,13 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.project.PreferencesUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.tcf.TcfReader;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
@@ -131,8 +132,7 @@ public class CasToBratJsonTest
         tagSetNames
                 .add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFRELTYPE);
 
-        ProjectUtil.setJsonConverter(jsonConverter);
-        ProjectUtil.generateJson(collectionInformation, new File(jsonFilePath));
+        JSONUtil.generateJson(jsonConverter, collectionInformation, new File(jsonFilePath));
 
         String reference = FileUtils.readFileToString(new File(
                 "src/test/resources/output_cas_to_json_collection_expected.json"), "UTF-8");
@@ -200,8 +200,6 @@ public class CasToBratJsonTest
         bratannotatorModel.setProject(project);
         bratannotatorModel.setMode(Mode.ANNOTATION);
 
-        ProjectUtil.setJsonConverter(jsonConverter);
-
         GetDocumentResponse response = new GetDocumentResponse();
         response.setText(jCas.getDocumentText());
 
@@ -213,7 +211,7 @@ public class CasToBratJsonTest
                     bratannotatorModel);
         }*/
 
-        ProjectUtil.generateJson(response, new File(jsonFilePath));
+        JSONUtil.generateJson(jsonConverter, response, new File(jsonFilePath));
 
         String reference = FileUtils.readFileToString(new File(
                 "src/test/resources/output_cas_to_json_document_expected.json"), "UTF-8");

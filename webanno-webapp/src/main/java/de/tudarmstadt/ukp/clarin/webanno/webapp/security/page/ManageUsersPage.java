@@ -46,9 +46,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.project.page.ImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.home.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome.WelcomePage;
 
@@ -242,7 +242,7 @@ public class ManageUsersPage
                     else if(DetailForm.this.getModelObject().getUsername().contains(" ")){
                         info("User username should not contain SPACE character.");
                     }
-                    else if (ProjectUtil
+                    else if (ImportUtil
                             .isNameValid(DetailForm.this.getModelObject().getUsername())) {
                         actionSave();
                     }

@@ -83,10 +83,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.CurationPanel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
@@ -287,8 +287,8 @@ public class MonitoringPage
 
                             // else only projects she is admin of
                             for (Project project : allProjects) {
-                                if (ProjectUtil.isProjectAdmin(project, repository, user)
-                                        || ProjectUtil.isCurator(project, repository, user)) {
+                                if (SecurityUtil.isProjectAdmin(project, repository, user)
+                                        || SecurityUtil.isCurator(project, repository, user)) {
                                     allowedProject.add(project);
                                 }
                             }
@@ -594,8 +594,8 @@ public class MonitoringPage
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = repository.getUser(username);
         for (Project project : repository.listProjects()) {
-            if (ProjectUtil.isCurator(project, repository, user)
-                    || ProjectUtil.isProjectAdmin(project, repository, user)) {
+            if (SecurityUtil.isCurator(project, repository, user)
+                    || SecurityUtil.isProjectAdmin(project, repository, user)) {
                 int annoFinished = repository.listFinishedAnnotationDocuments(project).size();
                 int allAnno = repository.numberOfExpectedAnnotationDocuments(project);
                 int progress = (int) Math.round((double) (annoFinished * 100) / (allAnno));

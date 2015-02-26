@@ -61,8 +61,8 @@ import com.ibm.icu.text.SimpleDateFormat;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.DaoUtils;
-import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.ZipUtils;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -78,6 +78,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.export.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.export.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoCustomTsvWriter;
 
 /**
@@ -92,14 +93,14 @@ public class ProjectExportPanel extends Panel {
     
     private static final String FORMAT_AUTO = "AUTO";
 
-	private static final String META_INF = "/" + ProjectUtil.META_INF;
-	public static final String EXPORTED_PROJECT = ProjectUtil.EXPORTED_PROJECT;
-	private static final String SOURCE_FOLDER = "/"+ProjectUtil.SOURCE;
-	private static final String CURATION_AS_SERIALISED_CAS = "/"+ProjectUtil.CURATION_AS_SERIALISED_CAS+"/";
+	private static final String META_INF = "/" + ImportUtil.META_INF;
+	public static final String EXPORTED_PROJECT = ImportUtil.EXPORTED_PROJECT;
+	private static final String SOURCE_FOLDER = "/"+ImportUtil.SOURCE;
+	private static final String CURATION_AS_SERIALISED_CAS = "/"+ImportUtil.CURATION_AS_SERIALISED_CAS+"/";
 	private static final String CURATION_FOLDER = "/curation/";
-	private static final String LOG_FOLDER = "/" + ProjectUtil.LOG_DIR;
-	private static final String GUIDELINES_FOLDER = "/"+ProjectUtil.GUIDELINE;
-	private static final String ANNOTATION_CAS_FOLDER = "/"+ProjectUtil.ANNOTATION_AS_SERIALISED_CAS+"/";
+	private static final String LOG_FOLDER = "/" + ImportUtil.LOG_DIR;
+	private static final String GUIDELINES_FOLDER = "/"+ImportUtil.GUIDELINE;
+	private static final String ANNOTATION_CAS_FOLDER = "/"+ImportUtil.ANNOTATION_AS_SERIALISED_CAS+"/";
 	private static final String ANNOTATION_ORIGINAL_FOLDER = "/annotation/";
 
 	private static final String CURATION_USER = "CURATION_USER";
@@ -113,6 +114,9 @@ public class ProjectExportPanel extends Panel {
 
 	@SpringBean(name = "userRepository")
 	private UserDao userRepository;
+
+    @SpringBean(name = "jsonConverter")
+    private MappingJacksonHttpMessageConverter jsonConverter;
 
 	private int progress = 0;
 	private ProgressBar fileGenerationProgress;
@@ -276,7 +280,7 @@ public class ProjectExportPanel extends Panel {
                         } else {
                             exportCuratedDocuments(ProjectExportForm.this.getModelObject(),
                                     exportTempDir);
-                            DaoUtils.zipFolder(exportTempDir, new File(
+                            ZipUtils.zipFolder(exportTempDir, new File(
                                     exportTempDir.getAbsolutePath() + ".zip"));
                             exportFile = new File(exportTempDir.getAbsolutePath()
                                     + ".zip");
@@ -491,7 +495,7 @@ public class ProjectExportPanel extends Panel {
             progress = 90;
             exportCuratedDocuments(aModel, exportTempDir);
             try {
-                DaoUtils.zipFolder(exportTempDir, projectZipFile);
+                ZipUtils.zipFolder(exportTempDir, projectZipFile);
             }
             catch (Exception e) {
                 throw new ZippingException("Unable to Zipp the file");
@@ -524,7 +528,7 @@ public class ProjectExportPanel extends Panel {
             // later
             Map<AnnotationFeature, de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature> featureToExFeatures = new HashMap<>();
             for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
-                exLayers.add(ProjectUtil.exportLayerDetails(layerToExLayers, featureToExFeatures,
+                exLayers.add(ImportUtil.exportLayerDetails(layerToExLayers, featureToExFeatures,
                         layer, annotationService));
             }
 
@@ -671,11 +675,9 @@ public class ProjectExportPanel extends Panel {
             }
 
             exProjekt.setMiraTemplates(exTemplates);
-            MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
-            ProjectUtil.setJsonConverter(jsonConverter);
 
             try {
-                ProjectUtil.generateJson(exProjekt, aProjectSettings);
+                JSONUtil.generateJson(jsonConverter, exProjekt, aProjectSettings);
                 FileUtils.copyFileToDirectory(aProjectSettings, aExportTempDir);
             }
             catch (IOException e) {

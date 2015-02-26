@@ -80,13 +80,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.brat.project.ProjectUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
@@ -104,6 +105,8 @@ public class ProjectLayersPanel
     private AnnotationService annotationService;
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
+    @SpringBean(name = "jsonConverter")
+    private MappingJacksonHttpMessageConverter jsonConverter;
 
     private ModalWindow openHelpDialog;
 
@@ -367,11 +370,11 @@ public class ProjectLayersPanel
                             project)) {
                         layer = annotationService.getLayer(aExLayer.getName(),
                                 selectedProjectModel.getObject());
-                        ProjectUtil.setLayer(annotationService, layer, aExLayer, project, aUser);
+                        ImportUtil.setLayer(annotationService, layer, aExLayer, project, aUser);
                     }
                     else {
                         layer = new AnnotationLayer();
-                        ProjectUtil.setLayer(annotationService, layer, aExLayer, project, aUser);
+                        ImportUtil.setLayer(annotationService, layer, aExLayer, project, aUser);
                     }
                     layer.setAttachType(aAttachLayer);
                     for (de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature exfeature : aExLayer
@@ -383,26 +386,26 @@ public class ProjectLayersPanel
                         if (exTagset != null
                                 && annotationService.existsTagSet(exTagset.getName(), project)) {
                             tagSet = annotationService.getTagSet(exTagset.getName(), project);
-                            ProjectUtil.createTagSet(tagSet, exTagset, project, aUser,
+                            ImportUtil.createTagSet(tagSet, exTagset, project, aUser,
                                     annotationService);
                         }
                         else if (exTagset != null) {
                             tagSet = new TagSet();
-                            ProjectUtil.createTagSet(tagSet, exTagset, project, aUser,
+                            ImportUtil.createTagSet(tagSet, exTagset, project, aUser,
                                     annotationService);
                         }
                         if (annotationService.existsFeature(exfeature.getName(), layer)) {
                             AnnotationFeature feature = annotationService.getFeature(
                                     exfeature.getName(), layer);
                             feature.setTagset(tagSet);
-                            ProjectUtil.setFeature(annotationService, feature, exfeature, project,
+                            ImportUtil.setFeature(annotationService, feature, exfeature, project,
                                     aUser);
                             continue;
                         }
                         AnnotationFeature feature = new AnnotationFeature();
                         feature.setLayer(layer);
                         feature.setTagset(tagSet);
-                        ProjectUtil.setFeature(annotationService, feature, exfeature, project,
+                        ImportUtil.setFeature(annotationService, feature, exfeature, project,
                                 aUser);
                     }
                 }
@@ -885,20 +888,17 @@ public class ProjectLayersPanel
                     }
                     AnnotationLayer layer = layerDetailForm.getModelObject();
 
-                    de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer exLayer = ProjectUtil
+                    de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer exLayer = ImportUtil
                             .exportLayerDetails(null, null, layer, annotationService);
                     if (layer.getAttachType() != null) {
                         AnnotationLayer attachLayer = layer.getAttachType();
-                        de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer exAttachLayer = ProjectUtil
+                        de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer exAttachLayer = ImportUtil
                                 .exportLayerDetails(null, null, attachLayer, annotationService);
                         exLayer.setAttachType(exAttachLayer);
                     }
 
-                    MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
-                    ProjectUtil.setJsonConverter(jsonConverter);
-
                     try {
-                        ProjectUtil.generateJson(exLayer, exportFile);
+                        JSONUtil.generateJson(jsonConverter, exLayer, exportFile);
                     }
                     catch (IOException e) {
                         error("File Path not found or No permision to save the file!");
@@ -1236,5 +1236,5 @@ public class ProjectLayersPanel
         catch (Exception e) {
         }
         return helpFieldContent;
-    }
+    }    
 }
