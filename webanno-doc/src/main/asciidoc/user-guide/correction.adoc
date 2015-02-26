@@ -17,6 +17,10 @@
 [[sect_correction]]
 == Correction
 
+NOTE: This functionality is only available to *annotators*, *project managers*, and 
+      *administrators*. Annotators and project managers only see projects in which
+      they hold the respective roles. 
+
 In this page, already annotated documents may be checked, corrected and enhanced.
 
 Before being able to see and correct documents, make sure to have chosen _correction_ when creating your project in projects. The instruction to do so is on the following page: <<sect_projects>>. Also make sure that the documents you upload are already annotated.

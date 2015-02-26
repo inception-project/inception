@@ -17,6 +17,10 @@
 [[sect_annotation]]
 == Annotation
 
+NOTE: This functionality is only available to *annotators*, *project managers*, and 
+      *administrators*. Annotators and project managers only see projects in which
+      they hold the respective roles. 
+
 === Opening a Document
 
 When navigating to the *Annotation* page, a dialogue opens that allows you to select a project, and 
