@@ -15,7 +15,9 @@
 // limitations under the License.
 
 [[sect_users]]
-== User Management ==
+== User Management
+
+NOTE: This functionality is only available to *administrators*.
 
 After selecting this functionality, you are displayed a frame which shows all users. By selecting a user, a frame is displayed on the right. 
 
@@ -29,3 +31,20 @@ NOTE: Disabling an account prevents the user from logging in. The user remains a
 To create a new user, click on *Create* in the left frame. This will display a similar frame as the one described in the last paragraph. Here you have to give a login-name to the new user.
 
 In both cases, do not forget to save your changes by pressing the *Save* button.
+
+. User roles
+|====
+| Role | Description
+| ROLE_USER
+| *User.* Required to log in to the application. Removal of this role from an account will prevent
+  login even for users that additionally hold the ROLE_ADMIN!
+
+| ROLE_ADMIN
+| *Administrator.* Can manage users and has access to all other functionalities.
+
+| ROLE_PROJECT_CREATOR
+| *Project creator.* Can create new projects.
+
+| ROLE_REMOTE
+| *Remote API access.* Currently experimental and undocumented. Do not use.
+|====

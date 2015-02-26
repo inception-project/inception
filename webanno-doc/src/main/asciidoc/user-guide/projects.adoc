@@ -17,6 +17,11 @@
 [[sect_projects]]
 == Projects
 
+NOTE: This functionality is only available to *project managers* (managers of existing projects), 
+      *project creators* (users with the ability to create new projects), and *administrators*.
+      Project managers only see projects in which they hold the respective roles. Project creators
+      only see projects in which they hold the project manager role.
+
 This is the place to specify/edit annotation projects.  
 You can either select one of the existing projects for editing, or click *Create Project* to add a project.
 
@@ -156,9 +161,11 @@ To delete a guideline document, click on it and then on *Delete* in the right lo
 
 === Import
 
+NOTE: This functionality is only available to *administrators*.
+
 Projects are associated with the accounts of users that act as project managers, annotators, or
-curators. When importing a previously exported project, you can choose to automatically generate
-missing users (enabled by default). If this option is disabled, projects still maintain their
+curators. When importing a previously exported project, you can choose to automatically *generate
+missing users* (enabled by default). If this option is disabled, projects still maintain their
 association to users by name. If the respective user accounts are created manually after the import,
 the users will start showing up in the projects.
 
