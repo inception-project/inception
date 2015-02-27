@@ -112,4 +112,8 @@ include::{include-dir}users.adoc[]
 
 <<<
 
+include::{include-dir}formats.adoc[]
+
+<<<
+
 include::{include-dir}troubleshooting.adoc[]
