@@ -177,29 +177,7 @@ public class ProjectPage
                         @Override
                         protected List<Project> load()
                         {
-                            List<Project> allowedProject = new ArrayList<Project>();
-
-                            String username = SecurityContextHolder.getContext()
-                                    .getAuthentication().getName();
-                            User user = repository.getUser(username);
-
-                            List<Project> allProjects = repository.listProjects();
-                            List<Authority> authorities = repository.listAuthorities(user);
-
-                            // if global admin, show all projects
-                            for (Authority authority : authorities) {
-                                if (authority.getAuthority().equals("ROLE_ADMIN")) {
-                                    return allProjects;
-                                }
-                            }
-
-                            // else only projects she is admin of
-                            for (Project project : allProjects) {
-                                if (SecurityUtil.isProjectAdmin(project, repository, user)) {
-                                    allowedProject.add(project);
-                                }
-                            }
-                            return allowedProject;
+                            return repository.listAccessibleProjects();
                         }
                     });
                     setChoiceRenderer(new ChoiceRenderer<Project>("name"));

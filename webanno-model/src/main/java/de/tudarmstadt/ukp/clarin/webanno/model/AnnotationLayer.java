@@ -101,6 +101,21 @@ public class AnnotationLayer
     
     private boolean linkedListBehavior;
 
+    
+    public AnnotationLayer()
+    {
+        // Required
+    }
+    
+    public AnnotationLayer(String aName, String aUiName, String aType, Project aProject, boolean aBuiltIn)
+    {
+        setName(aName);
+        setUiName(aUiName);
+        setProject(aProject);
+        setBuiltIn(aBuiltIn);
+        setType(aType);
+    }
+    
     /**
      * A short unique numeric identifier for the type (primary key in the DB). This identifier is
      * only transiently used when communicating with the UI. It is not persisted long term other

@@ -128,6 +128,29 @@ A tagset may be chosen in the last field. Only non-default tagsets may be chosen
 
 *Please take care that when working with non-custom layers, they have to be ex- and imported, if you want to use the resulting files in e.g. correction projects.*
 
+.Built-in layers
+|====
+| Layer | Type
+
+| Chunk
+| Span
+
+| Coreference
+| Chain
+
+| Dependency
+| Relation
+
+| Lemma
+| Span
+
+| Named Entity
+| Span
+
+| Part of Speech (POS)
+| Span
+|====
+
 
 === Tagsets
 
