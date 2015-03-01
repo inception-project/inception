@@ -15,31 +15,85 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 -->
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-  <head>
-    <wicket:head>
-      <!--
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<head>
+<wicket:head>
+	<!--
         Cannot use head.js because then onLoad event fires before all JS has been loaded causing errors.
       -->
-      <link href="static/jquery-theme/jquery-ui-redmond.css" rel="stylesheet" type="text/css"/>
-      <link rel="stylesheet" type="text/css" href="style-vis.css"/>
-      <link rel="stylesheet" type="text/css" href="style-ui.css"/>
-    </wicket:head>
-  </head>
-  <body>
-    <wicket:panel>
-      <fieldset class="ui-widget-content ui-corner-all">
-        <legend>Annotation</legend>
-        <div wicket:id="vis"></div>
-      </fieldset>
-      
-      <div wicket:id="openAnnotationDialog"></div>
+	<link href="static/jquery-theme/jquery-ui-redmond.css" rel="stylesheet"
+		type="text/css" />
+	<link rel="stylesheet" type="text/css" href="style-vis.css" />
+	<link rel="stylesheet" type="text/css" href="style-ui.css" />
 
-      <div id="messagepullup" class="messages" style="display: none"></div>
-      <div id="commentpopup"></div>
-      <div id="document_name">
-	    <input readonly="readonly"></input>
-      </div>
+	<link rel="stylesheet" type="text/css"
+		href="css/kendo/kendo.common.min.css" media="all" />
+	<link rel="stylesheet" type="text/css"
+		href="css/kendo/kendo.default.min.css" media="all" />
+	<link rel="stylesheet" href="css/style.css" type="text/css" />
+</wicket:head>
+</head>
+<body>
+	<wicket:panel>
+
+		<table class="hfill">
+			<tr style="vertical-align: top;">
+				<td width="80%">
+					<fieldset class="ui-widget-content ui-corner-all">
+						<legend>Annotation</legend>
+						<div wicket:id="vis"></div>
+					</fieldset>
+				</td>
+				<td width="20%">
+					<form wicket:id="annotationFeatureForm">
+						<fieldset>
+							<legend>Annotation Layers</legend>
+							<table>
+								<tr>
+									<td>Selected text:</td>
+									<td><span wicket:id="selectedTextLabel" style="color: red"></span></td>
+								</tr>
+								<tr>
+									<td>Layer</td>
+									<td><select name="Layers" wicket:id="layers"
+										style="width: 100%"></select></td>
+								</tr>
+							</table>
+						</fieldset>
+						<fieldset>
+							<legend>Features</legend>
+							<div wicket:id="wmc">
+								<table class="hfill">
+									<tr wicket:id="featureValues">
+										<td><span wicket:id="feature"></span></td>
+										<td><input style="width: 100%" wicket:id="tag"></input></td>
+									</tr>
+								</table>
+							</div>
+						</fieldset>
+						<fieldset>
+							<legend>Actions</legend>
+							<table>
+								<tr>
+									<td>
+										<button class="buttons" wicket:id="annotate">Annotate</button>
+										<button class="buttons" wicket:id="delete">Delete</button>
+										<button class="buttons" wicket:id="reverse">Reverse</button>
+									</td>
+								</tr>
+							</table>
+						</fieldset>
+					</form>
+				</td>
+			</tr>
+		</table>
+
+		<div id="messagepullup" class="messages" style="display: none"></div>
+		<div id="commentpopup"></div>
+		<div id="document_name">
+			<input readonly="readonly"></input>
+		</div>
 	</wicket:panel>
-  </body>
+</body>
 </html>
