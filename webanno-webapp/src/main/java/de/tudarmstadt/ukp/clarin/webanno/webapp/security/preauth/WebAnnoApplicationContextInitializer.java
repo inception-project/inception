@@ -28,6 +28,7 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.support.ResourcePropertySource;
 
+import de.tudarmstadt.ukp.clarin.webanno.webapp.WebAnnoLoggingFilter;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.home.page.SettingsUtil;
 
 public class WebAnnoApplicationContextInitializer
@@ -44,6 +45,8 @@ public class WebAnnoApplicationContextInitializer
     @Override
     public void initialize(ConfigurableApplicationContext aApplicationContext)
     {
+        WebAnnoLoggingFilter.setLoggingUsername("SYSTEM");
+        
         log.info("  _      __    __   ___                ");
         log.info(" | | /| / /__ / /  / _ | ___  ___  ___ ");
         log.info(" | |/ |/ / -_) _ \\/ __ |/ _ \\/ _ \\/ _ \\");
