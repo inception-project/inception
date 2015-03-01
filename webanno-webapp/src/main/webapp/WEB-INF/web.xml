@@ -75,8 +75,16 @@
 		<filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
 	</filter>
 
+    <!--
+        2) Make username accessible to logging framework
+    -->
+    <filter>
+      <filter-name>logging</filter-name>
+      <filter-class>de.tudarmstadt.ukp.clarin.webanno.webapp.WebAnnoLoggingFilter</filter-class>
+    </filter>
+
 	<!--
-		2) Handle access to the monitoring URL - after the security check so
+		3) Handle access to the monitoring URL - after the security check so
 		only authenticated users can access this URL.
 	-->
 	<filter>
@@ -85,7 +93,7 @@
 	</filter>
 
 	<!--
-		3) Make sure we have one JPA session/transaction per request. Closes
+		4) Make sure we have one JPA session/transaction per request. Closes
 		session at the end, without this, changed data may not be automatically saved to the DB.
 	-->
 	<filter>
@@ -93,8 +101,9 @@
 		<filter-class>org.springframework.orm.jpa.support.OpenEntityManagerInViewFilter</filter-class>
 	</filter>
 
+
 	<!--
-		4) Pass control to Wicket
+		5) Pass control to Wicket
 	-->
 	<filter>
 		<filter-name>wicket.filter</filter-name>
@@ -130,6 +139,11 @@
 		<url-pattern>/*</url-pattern>
 	</filter-mapping>
 
+    <filter-mapping>
+        <filter-name>logging</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+  
 	<filter-mapping>
 		<filter-name>monitoring</filter-name>
 		<url-pattern>/*</url-pattern>
