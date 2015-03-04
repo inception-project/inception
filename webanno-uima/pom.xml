@@ -20,7 +20,7 @@
 	<parent>
 		<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 		<artifactId>webanno</artifactId>
-		<version>2.1.0-SNAPSHOT</version>
+		<version>2.1.0</version>
 	</parent>
 	<artifactId>webanno-uima</artifactId>
     <name>WebAnno - Core - UIMA</name>

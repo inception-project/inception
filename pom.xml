@@ -15,7 +15,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 	<artifactId>webanno</artifactId>
-	<version>2.1.0-SNAPSHOT</version>
+	<version>2.1.0</version>
 	<packaging>pom</packaging>
 	<name>WebAnno</name>
 	<url>http://code.google.com/p/webanno/</url>
@@ -71,77 +71,77 @@
 			<dependency>
 				<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 				<artifactId>webanno-api</artifactId>
-				<version>2.1.0-SNAPSHOT</version>
+				<version>2.1.0</version>
 			</dependency>
 			<dependency>
 				<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 				<artifactId>webanno-api-dao</artifactId>
-				<version>2.1.0-SNAPSHOT</version>
+				<version>2.1.0</version>
 			</dependency>
 			<dependency>
 				<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 				<artifactId>webanno-brat</artifactId>
-				<version>2.1.0-SNAPSHOT</version>
+				<version>2.1.0</version>
 			</dependency>
 			<dependency>
 				<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 				<artifactId>webanno-tsv</artifactId>
-				<version>2.1.0-SNAPSHOT</version>
+				<version>2.1.0</version>
 			</dependency>
 			<dependency>
 				<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 				<artifactId>webanno-model</artifactId>
-				<version>2.1.0-SNAPSHOT</version>
+				<version>2.1.0</version>
 			</dependency>
 			<dependency>
 				<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 				<artifactId>webanno-monitoring</artifactId>
-				<version>2.1.0-SNAPSHOT</version>
+				<version>2.1.0</version>
 			</dependency>
 			<dependency>
 				<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 				<artifactId>webanno-tcf</artifactId>
-				<version>2.1.0-SNAPSHOT</version>
+				<version>2.1.0</version>
 			</dependency>
 			<dependency>
 				<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 				<artifactId>webanno-tei</artifactId>
-				<version>2.1.0-SNAPSHOT</version>
+				<version>2.1.0</version>
 			</dependency>
 			<dependency>
 				<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 				<artifactId>webanno-uima</artifactId>
-				<version>2.1.0-SNAPSHOT</version>
+				<version>2.1.0</version>
 			</dependency>
 			<dependency>
 				<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 				<artifactId>webanno-webapp</artifactId>
-				<version>2.1.0-SNAPSHOT</version>
+				<version>2.1.0</version>
 			</dependency>
 			<dependency>
 				<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 				<artifactId>webanno-crowdflower</artifactId>
-				<version>2.1.0-SNAPSHOT</version>
+				<version>2.1.0</version>
 			</dependency>
 			<dependency>
 				<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 				<artifactId>webanno-support</artifactId>
-				<version>2.1.0-SNAPSHOT</version>
+				<version>2.1.0</version>
 			</dependency>
 			<dependency>
 				<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 				<artifactId>webanno-webapp-home</artifactId>
-				<version>2.1.0-SNAPSHOT</version>
+				<version>2.1.0</version>
 			</dependency>
 			<dependency>
 				<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 				<artifactId>webanno-automation</artifactId>
-				<version>2.1.0-SNAPSHOT</version>
+				<version>2.1.0</version>
 			</dependency>
 			<dependency>
 				<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 				<artifactId>webanno-project</artifactId>
-				<version>2.1.0-SNAPSHOT</version>
+				<version>2.1.0</version>
 			</dependency>
 			<dependency>
 				<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
@@ -359,9 +359,9 @@
         <module>webanno-doc</module>
 	</modules>
 	<scm>
-		<developerConnection>scm:svn:https://webanno.googlecode.com/svn/branches/2.1.x</developerConnection>
-		<connection>scm:svn:https://webanno.googlecode.com/svn/branches/2.1.x</connection>
-		<url>https://webanno.googlecode.com/svn/branches/2.1.x</url>
+		<developerConnection>scm:svn:https://webanno.googlecode.com/svn/tags/webanno-2.1.0</developerConnection>
+		<connection>scm:svn:https://webanno.googlecode.com/svn/tags/webanno-2.1.0</connection>
+		<url>https://webanno.googlecode.com/svn/tags/webanno-2.1.0</url>
 	</scm>
 	<build>
 		<extensions>
