@@ -20,7 +20,7 @@
 	<parent>
 		<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 		<artifactId>webanno</artifactId>
-		<version>2.1.0</version>
+		<version>2.1.1-SNAPSHOT</version>
 	</parent>
 	<artifactId>webanno-tcf</artifactId>
     <name>WebAnno - IO - TCF</name>
