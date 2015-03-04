@@ -2412,9 +2412,6 @@ public class RepositoryServiceDbData
         }
     }
     
-    /**
-     * List project accessible by current user
-     */
     public List<Project> listAccessibleProjects()
     {
         List<Project> allowedProject = new ArrayList<Project>();
@@ -2445,10 +2442,13 @@ public class RepositoryServiceDbData
     /**
      * Return true if there exist at least one annotation document FINISHED for annotation for this
      * {@link SourceDocument}
-     * @param aSourceDocument the source document.
-     * @param aUser the user.
-     * @param aProject the project.
-     * @param aRepository the repository service.
+     * 
+     * @param aSourceDocument
+     *            the source document.
+     * @param aUser
+     *            the user.
+     * @param aProject
+     *            the project.
      * @return if a finished document exists.
      */
     public boolean existFinishedDocument(

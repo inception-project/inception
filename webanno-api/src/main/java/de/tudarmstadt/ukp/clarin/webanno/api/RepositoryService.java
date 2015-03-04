@@ -31,6 +31,7 @@ import org.apache.uima.jcas.JCas;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.model.AutomationStatus;
@@ -929,7 +930,7 @@ public interface RepositoryService
     /**
      * remove a crowd project
      *
-     * @param crowdProject
+     * @param crowdProject the job.
      */
     void removeCrowdJob(CrowdJob crowdProject);
 
@@ -941,6 +942,7 @@ public interface RepositoryService
      * Returns the labels on the UI for the format of the {@link SourceDocument} to be read from a
      * properties File
      *
+     * @return labels of readable formats.
      * @throws IOException
      *             if an I/O error occurs.
      * @throws ClassNotFoundException
@@ -1038,6 +1040,7 @@ public interface RepositoryService
      * Save annotation references, such as {@code BratAnnotator#windowSize}..., in a properties file
      * so that they are not required to configure every time they open the document.
      *
+     * @param <T> object type to save
      * @param username
      *            the user name
      * @param subject
@@ -1245,6 +1248,11 @@ public interface RepositoryService
     void upgrade(CAS aCurCas, Project aProject)
         throws UIMAException, IOException;
     
+    /**
+     * List project accessible by current user
+     * 
+     * @return list of projects accessible by the user.
+     */
     List<Project> listAccessibleProjects();
 
     boolean existFinishedDocument(

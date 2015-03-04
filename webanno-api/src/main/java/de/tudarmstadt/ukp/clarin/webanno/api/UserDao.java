@@ -37,6 +37,7 @@ public interface UserDao
      * Create a new {@link User}
      * 
      * @param aUser
+     *            the user to create.
      */
     void create(User aUser);
 
