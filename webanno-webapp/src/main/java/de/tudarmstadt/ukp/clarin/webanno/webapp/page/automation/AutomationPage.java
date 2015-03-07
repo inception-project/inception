@@ -233,7 +233,7 @@ public class AutomationPage
             }
 
             @Override
-            protected void onAnnotate(BratAnnotatorModel aBratAnnotatorModel, int aStart, int aEnd)
+            protected void onAnnotate(AjaxRequestTarget aTarget, BratAnnotatorModel aBratAnnotatorModel, int aStart, int aEnd)
             {
                 MiraTemplate template;
                 Set<AnnotationFeature> features = bratAnnotatorModel.getRememberedSpanFeatures()
@@ -271,10 +271,11 @@ public class AutomationPage
                     template = null;
                     return;
                 }
+                update(aTarget);
             }
 
             @Override
-            protected void onDelete(BratAnnotatorModel aBratAnnotatorModel, int aStart, int aEnd)
+            protected void onDelete(AjaxRequestTarget aTarget, BratAnnotatorModel aBratAnnotatorModel, int aStart, int aEnd)
             {
                 MiraTemplate template;
                 Set<AnnotationFeature> features = bratAnnotatorModel.getRememberedSpanFeatures()
@@ -315,6 +316,7 @@ public class AutomationPage
                     template = null;
                     return;
                 }
+                update(aTarget);
             }
         };
         // reset sentenceAddress and lastSentenceAddress to the orginal once

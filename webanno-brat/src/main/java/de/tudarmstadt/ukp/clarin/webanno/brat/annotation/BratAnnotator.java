@@ -379,8 +379,14 @@ public class BratAnnotator
             public void onClose(AjaxRequestTarget aTarget)
             {
                 if (!closeButtonClicked) {
-                    bratRender(aTarget, getJCas());
+                   
                     onChange(aTarget, getModelObject());
+                    onAnnotate(aTarget,getModelObject(), beginOffset, endOffset);
+                    if (!getModelObject().isAnnotate()
+                            && getModelObject().getProject().getMode().equals(Mode.AUTOMATION)) {
+                            onDelete(aTarget, getModelObject(), beginOffset, endOffset);
+                        }
+                    bratRender(aTarget, getJCas());
                 }
             }
         });
@@ -621,12 +627,12 @@ public class BratAnnotator
 
     }
 
-    protected void onAnnotate(BratAnnotatorModel aModel, int aStart, int aEnd)
+    protected void onAnnotate(AjaxRequestTarget aTarget, BratAnnotatorModel aModel, int aStart, int aEnd)
     {
         // Overriden in AutomationPage
     }
 
-    protected void onDelete(BratAnnotatorModel aModel, int aStart, int aEnd)
+    protected void onDelete(AjaxRequestTarget aTarget, BratAnnotatorModel aModel, int aStart, int aEnd)
     {
         // Overriden in AutomationPage
     }
