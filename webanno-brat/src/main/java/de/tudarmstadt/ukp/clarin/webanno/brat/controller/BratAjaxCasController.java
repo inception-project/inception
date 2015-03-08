@@ -68,11 +68,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  */
 public class BratAjaxCasController
 {
-    public static final String MIME_TYPE_XML = "application/xml";
-    public static final String PRODUCES_JSON = "application/json";
-    public static final String PRODUCES_XML = "application/xml";
-    public static final String CONSUMES_URLENCODED = "application/x-www-form-urlencoded";
-
     @Resource(name = "documentRepository")
     private RepositoryService repository;
 
@@ -91,28 +86,6 @@ public class BratAjaxCasController
     }
 
     /**
-     * This Method, a generic Ajax call serves the purpose of returning expected export file types.
-     * This only will be called for Larger annotation documents
-     * 
-     * @param aParameters the parameters.
-     * @return export file type once in a while!!!
-     */
-    public StoreSvgResponse ajaxCall(MultiValueMap<String, String> aParameters)
-    {
-        StoreSvgResponse storeSvgResponse = new StoreSvgResponse();
-        ArrayList<Stored> storedList = new ArrayList<Stored>();
-        Stored stored = new Stored();
-
-        stored.setName("TCF");
-        stored.setSuffix("TCF");
-        storedList.add(stored);
-
-        storeSvgResponse.setStored(storedList);
-
-        return storeSvgResponse;
-    }
-
-    /**
      * a protocol which returns the logged in user
      * 
      * @return the response.
@@ -121,35 +94,6 @@ public class BratAjaxCasController
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return new WhoamiResponse(username);
-    }
-
-    /**
-     * a protocol to retunr the expected file type for annotation document exporting . Currently, it
-     * returns only tcf file type where in the future svg and pdf types are to be supported
-     * 
-     * @return the response.
-     */
-    public StoreSvgResponse storeSVG()
-    {
-        StoreSvgResponse storeSvgResponse = new StoreSvgResponse();
-        ArrayList<Stored> storedList = new ArrayList<Stored>();
-        Stored stored = new Stored();
-
-        stored.setName("TCF");
-        stored.setSuffix("TCF");
-        storedList.add(stored);
-
-        storeSvgResponse.setStored(storedList);
-
-        return storeSvgResponse;
-    }
-
-    public ImportDocumentResponse importDocument(String aCollection, String aDocId, String aText,
-            String aTitle, HttpServletRequest aRequest)
-    {
-        ImportDocumentResponse importDocument = new ImportDocumentResponse();
-        importDocument.setDocument(aDocId);
-        return importDocument;
     }
 
     /**
@@ -180,11 +124,6 @@ public class BratAjaxCasController
         info.setEntityTypes(BratAjaxConfiguration.buildEntityTypes(aAnnotationLayers,
                 annotationService));
         return info;
-    }
-
-    public GetDocumentTimestampResponse getDocumentTimestamp(String aCollection, String aDocument)
-    {
-        return new GetDocumentTimestampResponse();
     }
 
     /**
