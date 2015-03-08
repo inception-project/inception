@@ -79,7 +79,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
@@ -91,7 +90,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationRe
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.LoadConfResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanOpenDialogResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.StoreSvgResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.WhoamiResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAjaxResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAnnotationLogResourceReference;
@@ -241,9 +239,6 @@ public class BratAnnotator
 
                     if (action.equals(WhoamiResponse.COMMAND)) {
                         result = controller.whoami();
-                    }
-                    else if (action.equals(StoreSvgResponse.COMMAND)) {
-                        result = controller.storeSVG();
                     }
                     else if (action.equals(SpanOpenDialogResponse.COMMAND)) {
                         isRelationAnno = false;
@@ -732,7 +727,7 @@ public class BratAnnotator
     private String bratInitCommand()
     {
         GetCollectionInformationResponse response = new GetCollectionInformationResponse();
-        response.setEntityTypes(BratAjaxConfiguration.buildEntityTypes(getModelObject()
+        response.setEntityTypes(BratAjaxCasController.buildEntityTypes(getModelObject()
                 .getAnnotationLayers(), annotationService));
         String json = toJson(response);
         return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('collectionLoaded', [" + json
