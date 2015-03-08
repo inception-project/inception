@@ -270,27 +270,9 @@ public class BratAjaxCasController
         return entityTypes;
     }
     
-    private static void configureLayer(AnnotationService aAnnotationService,
-            Set<EntityType> aEntityTypes, AnnotationLayer aLayer,
-            AnnotationLayer aAttachingLayer)
+    private static EntityType configureEntityType(AnnotationLayer aLayer)
     {
-        // FIXME This is a hack! Actually we should check the type of the attachFeature when
-        // determine which layers attach to with other layers. Currently we only use attachType,
-        // but do not follow attachFeature if it is set.
-        if (aLayer.isBuiltIn() && aLayer.getName().equals(POS.class.getName())) {
-            aAttachingLayer = aAnnotationService.getLayer(Dependency.class.getName(),
-                    aLayer.getProject());
-        }
-        
-        String bratTypeName = TypeUtil.getBratTypeName(aLayer);
-        
-        // FIXME this is a hack because the chain layer consists of two UIMA types, a "Chain"
-        // and a "Link" type. ChainAdapter always seems to use "Chain" but some places also
-        // still use "Link" - this should be cleaned up so that knowledge about "Chain" and
-        // "Link" types is local to the ChainAdapter and not known outside it!
-        if (aLayer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
-            bratTypeName += ChainAdapter.CHAIN;
-        }
+        String bratTypeName = getBratTypeName(aLayer);
 
         EntityType entityType;
         if (aLayer.isBuiltIn() && aLayer.getName().equals(POS.class.getName())) {
@@ -302,37 +284,75 @@ public class BratAjaxCasController
         else if (aLayer.isBuiltIn() && aLayer.getName().equals(Lemma.class.getName())) {
             entityType = new EntityType(aLayer.getName(), aLayer.getUiName(), bratTypeName);
         }
-
         // custom layers
         else {
             entityType = new EntityType(aLayer.getName(), aLayer.getUiName(), bratTypeName);
         }
+        
+        return entityType;
+    }
+    
+    private static RelationType configureRelationType(AnnotationLayer aLayer,
+            AnnotationLayer aAttachingLayer)
+    {
+        String attachingLayerBratTypeName = TypeUtil.getBratTypeName(aAttachingLayer);
+        // FIXME this is a hack because the chain layer consists of two UIMA types, a "Chain"
+        // and a "Link" type. ChainAdapter always seems to use "Chain" but some places also
+        // still use "Link" - this should be cleaned up so that knowledge about "Chain" and
+        // "Link" types is local to the ChainAdapter and not known outside it!
+        if (aLayer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
+            attachingLayerBratTypeName += ChainAdapter.CHAIN;
+        }
+        
+        // Handle arrow-head styles depending on linkedListBehavior
+        String arrowHead;
+        if (aLayer.getType().equals(WebAnnoConst.CHAIN_TYPE) && !aLayer.isLinkedListBehavior()) {
+            arrowHead = "none";
+        }
+        else {
+            arrowHead = "triangle,5";
+        }
+        
+        String bratTypeName = getBratTypeName(aLayer);
+        RelationType arc = new RelationType(aAttachingLayer.getName(),
+                aAttachingLayer.getUiName(), attachingLayerBratTypeName, bratTypeName, null,
+                arrowHead);
+        return arc;
+    }
+    
+    private static void configureLayer(AnnotationService aAnnotationService,
+            Set<EntityType> aEntityTypes, AnnotationLayer aLayer,
+            AnnotationLayer aAttachingLayer)
+    {
+        EntityType entityType = configureEntityType(aLayer);
+        
+        // FIXME This is a hack! Actually we should check the type of the attachFeature when
+        // determine which layers attach to with other layers. Currently we only use attachType,
+        // but do not follow attachFeature if it is set.
+        if (aLayer.isBuiltIn() && aLayer.getName().equals(POS.class.getName())) {
+            aAttachingLayer = aAnnotationService.getLayer(Dependency.class.getName(),
+                    aLayer.getProject());
+        }
 
         if (aAttachingLayer != null) {
-            String attachingLayerBratTypeName = TypeUtil.getBratTypeName(aAttachingLayer);
-            // FIXME this is a hack because the chain layer consists of two UIMA types, a "Chain"
-            // and a "Link" type. ChainAdapter always seems to use "Chain" but some places also
-            // still use "Link" - this should be cleaned up so that knowledge about "Chain" and
-            // "Link" types is local to the ChainAdapter and not known outside it!
-            if (aLayer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
-                attachingLayerBratTypeName += ChainAdapter.CHAIN;
-            }
-            
-            // Handle arrow-head styles depending on linkedListBehavior
-            String arrowHead;
-            if (aLayer.getType().equals(WebAnnoConst.CHAIN_TYPE) && !aLayer.isLinkedListBehavior()) {
-                arrowHead = "none";
-            }
-            else {
-                arrowHead = "triangle,5";
-            }
-            
-            RelationType arc = new RelationType(aAttachingLayer.getName(),
-                    aAttachingLayer.getUiName(), attachingLayerBratTypeName, bratTypeName, null,
-                    arrowHead);
+            RelationType arc = configureRelationType(aLayer, aAttachingLayer);
             entityType.setArcs(asList(arc));
         }
 
         aEntityTypes.add(entityType);
+    }
+    
+    private static String getBratTypeName(AnnotationLayer aLayer)
+    {
+        String bratTypeName = TypeUtil.getBratTypeName(aLayer);
+        
+        // FIXME this is a hack because the chain layer consists of two UIMA types, a "Chain"
+        // and a "Link" type. ChainAdapter always seems to use "Chain" but some places also
+        // still use "Link" - this should be cleaned up so that knowledge about "Chain" and
+        // "Link" types is local to the ChainAdapter and not known outside it!
+        if (aLayer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
+            bratTypeName += ChainAdapter.CHAIN;
+        } 
+        return bratTypeName;
     }
 }
