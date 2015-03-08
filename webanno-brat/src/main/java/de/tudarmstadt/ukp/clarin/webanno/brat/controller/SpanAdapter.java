@@ -94,7 +94,7 @@ public class SpanAdapter
      * annotations. If this is set and a span is made across multiple tokens, then one annotation of
      * the specified type will be created for each token. If this is not set, a single annotation
      * covering all tokens is created.
-     * 
+     *
      * @param aSingleTokenBehavior whether to enable the behavior.
      */
     public void setLockToTokenOffsets(boolean aSingleTokenBehavior)
@@ -277,7 +277,7 @@ public class SpanAdapter
 
     /**
      * Add new span annotation into the CAS and return the the id of the span annotation
-     * 
+     *
      * @param aJcas
      *            the JCas.
      * @param aBegin
@@ -493,6 +493,7 @@ public class SpanAdapter
     {
 
         Type type = CasUtil.getType(aJcas.getCas(), getAnnotationTypeName());
+        Type attachType;
         Feature feature = type.getFeatureByBaseName(aFeature.getName());
 
         int i = 0;
@@ -563,8 +564,8 @@ public class SpanAdapter
             // check if annotation is on an AttachType
             Feature attachFeature = null;
             if (getAttachTypeName() != null) {
-                type = CasUtil.getType(aJcas.getCas(), getAttachTypeName());
-                attachFeature = type.getFeatureByBaseName(getAttachFeatureName());
+                attachType = CasUtil.getType(aJcas.getCas(), getAttachTypeName());
+                attachFeature = attachType.getFeatureByBaseName(getAttachFeatureName());
             }
 
             for (Token token : select(aJcas, Token.class)) {
