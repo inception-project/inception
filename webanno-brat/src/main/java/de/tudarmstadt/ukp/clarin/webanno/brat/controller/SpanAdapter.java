@@ -493,7 +493,6 @@ public class SpanAdapter
     {
 
         Type type = CasUtil.getType(aJcas.getCas(), getAnnotationTypeName());
-        Type attachType;
         Feature feature = type.getFeatureByBaseName(aFeature.getName());
 
         int i = 0;
@@ -563,6 +562,7 @@ public class SpanAdapter
         else {
             // check if annotation is on an AttachType
             Feature attachFeature = null;
+            Type attachType;
             if (getAttachTypeName() != null) {
                 attachType = CasUtil.getType(aJcas.getCas(), getAttachTypeName());
                 attachFeature = attachType.getFeatureByBaseName(getAttachFeatureName());
