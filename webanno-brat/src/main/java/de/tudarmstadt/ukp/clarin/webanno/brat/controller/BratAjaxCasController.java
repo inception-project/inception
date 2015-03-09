@@ -247,35 +247,14 @@ public class BratAjaxCasController
                 return o1.getName().compareTo(o2.getName());
             }
         });
-        
-        // Scan through the layers once to remember which layers attach to which layers
-        Map<AnnotationLayer, AnnotationLayer> attachingLayers = new LinkedHashMap<AnnotationLayer, AnnotationLayer>();
-        for (AnnotationLayer layer : layers) {
-            if (layer.getType().equals(CHAIN_TYPE)) {
-                attachingLayers.put(layer, layer);
-            }
-            else if (layer.getType().equals(RELATION_TYPE)) {
-                // FIXME This implies that at most one relation layer can attach to a span layer
-                attachingLayers.put(layer.getAttachType(), layer);
-            }
-        }
 
         // Now build the actual configuration
         Set<EntityType> entityTypes = new LinkedHashSet<EntityType>();
         for (AnnotationLayer layer : layers) {
-            AnnotationLayer aAttachingLayer = attachingLayers.get(layer);
             EntityType entityType = configureEntityType(layer);
-            
-            // FIXME This is a hack! Actually we should check the type of the attachFeature when
-            // determine which layers attach to with other layers. Currently we only use attachType,
-            // but do not follow attachFeature if it is set.
-            if (layer.isBuiltIn() && layer.getName().equals(POS.class.getName())) {
-                aAttachingLayer = aAnnotationService.getLayer(Dependency.class.getName(),
-                        layer.getProject());
-            }
-            
-            if (aAttachingLayer != null) {
-                RelationType arc = configureRelationType(layer, aAttachingLayer);
+
+            for (AnnotationLayer attachingLayer : getAttachingLayers(layer, layers, aAnnotationService)) {
+                RelationType arc = configureRelationType(layer, attachingLayer);
                 entityType.setArcs(asList(arc));
             }
             
@@ -283,6 +262,37 @@ public class BratAjaxCasController
         }
 
         return entityTypes;
+    }
+    
+    /**
+     * Scan through the layers once to remember which layers attach to which layers.
+     */
+    private static List<AnnotationLayer> getAttachingLayers(AnnotationLayer aTarget,
+            List<AnnotationLayer> aLayers, AnnotationService aAnnotationService)
+    {
+        List<AnnotationLayer> attachingLayers = new ArrayList<>();
+        
+        // Chains always attach to themselves
+        if (CHAIN_TYPE.equals(aTarget.getType())) {
+            attachingLayers.add(aTarget);
+        }
+        
+        // FIXME This is a hack! Actually we should check the type of the attachFeature when
+        // determine which layers attach to with other layers. Currently we only use attachType,
+        // but do not follow attachFeature if it is set.
+        if (aTarget.isBuiltIn() && aTarget.getName().equals(POS.class.getName())) {
+            attachingLayers.add(aAnnotationService.getLayer(Dependency.class.getName(),
+                    aTarget.getProject()));
+        }
+        
+        // Custom layers
+        for (AnnotationLayer l : aLayers) {
+            if (aTarget.equals(l.getAttachType())) {
+                attachingLayers.add(l);
+            }
+        }
+        
+        return attachingLayers;
     }
     
     private static EntityType configureEntityType(AnnotationLayer aLayer)
