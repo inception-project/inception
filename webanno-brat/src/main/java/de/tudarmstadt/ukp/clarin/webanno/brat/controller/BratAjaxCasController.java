@@ -263,8 +263,23 @@ public class BratAjaxCasController
         // Now build the actual configuration
         Set<EntityType> entityTypes = new LinkedHashSet<EntityType>();
         for (AnnotationLayer layer : layers) {
-            configureLayer(aAnnotationService, entityTypes, layer,
-                    attachingLayers.get(layer));
+            AnnotationLayer aAttachingLayer = attachingLayers.get(layer);
+            EntityType entityType = configureEntityType(layer);
+            
+            // FIXME This is a hack! Actually we should check the type of the attachFeature when
+            // determine which layers attach to with other layers. Currently we only use attachType,
+            // but do not follow attachFeature if it is set.
+            if (layer.isBuiltIn() && layer.getName().equals(POS.class.getName())) {
+                aAttachingLayer = aAnnotationService.getLayer(Dependency.class.getName(),
+                        layer.getProject());
+            }
+            
+            if (aAttachingLayer != null) {
+                RelationType arc = configureRelationType(layer, aAttachingLayer);
+                entityType.setArcs(asList(arc));
+            }
+            
+            entityTypes.add(entityType);
         }
 
         return entityTypes;
@@ -273,23 +288,7 @@ public class BratAjaxCasController
     private static EntityType configureEntityType(AnnotationLayer aLayer)
     {
         String bratTypeName = getBratTypeName(aLayer);
-
-        EntityType entityType;
-        if (aLayer.isBuiltIn() && aLayer.getName().equals(POS.class.getName())) {
-            entityType = new EntityType(aLayer.getName(), aLayer.getUiName(), bratTypeName);
-        }
-        else if (aLayer.isBuiltIn() && aLayer.getName().equals(NamedEntity.class.getName())) {
-            entityType = new EntityType(aLayer.getName(), aLayer.getUiName(), bratTypeName);
-        }
-        else if (aLayer.isBuiltIn() && aLayer.getName().equals(Lemma.class.getName())) {
-            entityType = new EntityType(aLayer.getName(), aLayer.getUiName(), bratTypeName);
-        }
-        // custom layers
-        else {
-            entityType = new EntityType(aLayer.getName(), aLayer.getUiName(), bratTypeName);
-        }
-        
-        return entityType;
+        return new EntityType(aLayer.getName(), aLayer.getUiName(), bratTypeName);
     }
     
     private static RelationType configureRelationType(AnnotationLayer aLayer,
@@ -318,28 +317,6 @@ public class BratAjaxCasController
                 aAttachingLayer.getUiName(), attachingLayerBratTypeName, bratTypeName, null,
                 arrowHead);
         return arc;
-    }
-    
-    private static void configureLayer(AnnotationService aAnnotationService,
-            Set<EntityType> aEntityTypes, AnnotationLayer aLayer,
-            AnnotationLayer aAttachingLayer)
-    {
-        EntityType entityType = configureEntityType(aLayer);
-        
-        // FIXME This is a hack! Actually we should check the type of the attachFeature when
-        // determine which layers attach to with other layers. Currently we only use attachType,
-        // but do not follow attachFeature if it is set.
-        if (aLayer.isBuiltIn() && aLayer.getName().equals(POS.class.getName())) {
-            aAttachingLayer = aAnnotationService.getLayer(Dependency.class.getName(),
-                    aLayer.getProject());
-        }
-
-        if (aAttachingLayer != null) {
-            RelationType arc = configureRelationType(aLayer, aAttachingLayer);
-            entityType.setArcs(asList(arc));
-        }
-
-        aEntityTypes.add(entityType);
     }
     
     private static String getBratTypeName(AnnotationLayer aLayer)
