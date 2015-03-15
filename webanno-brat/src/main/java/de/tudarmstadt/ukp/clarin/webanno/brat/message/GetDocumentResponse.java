@@ -36,8 +36,11 @@ public class GetDocumentResponse
 
     private List<String> modifications = new ArrayList<String>();
 
+    @JsonProperty("rtl_mode")
+    private boolean rtlMode;
+
     @JsonProperty("sentence_number_offset")
-    int sentenceNumberOffset;
+    private int sentenceNumberOffset;
 
     private String text;
 
@@ -281,6 +284,13 @@ public class GetDocumentResponse
         sentenceNumberOffset = aSentenceNumberOffset;
     }
 
+    public boolean isRtlMode()
+    {
+        return rtlMode;
+    }
 
-
+    public void setRtlMode(boolean aRtlMode)
+    {
+        rtlMode = aRtlMode;
+    }
 }

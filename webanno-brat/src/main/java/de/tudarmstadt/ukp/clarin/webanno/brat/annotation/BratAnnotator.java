@@ -497,6 +497,7 @@ public class BratAnnotator
         script.append("var logger = new AnnotationLog(dispatcher);");
         script.append("dispatcher.post('init');");
         script.append("Wicket.$('" + vis.getMarkupId() + "').dispatcher = dispatcher;");
+        script.append("Wicket.$('" + vis.getMarkupId() + "').visualizer = visualizer;");
         script.append("})();");
         
         // Must be OnDomReader so that this is rendered before all other Javascript that is
