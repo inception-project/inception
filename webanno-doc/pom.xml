@@ -67,6 +67,40 @@
             </configuration>
           </execution>
           <execution>
+            <id>developer-guide-html</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>process-asciidoc</goal>
+            </goals>
+            <configuration>
+              <backend>html5</backend>
+              <sourceHighlighter>coderay</sourceHighlighter>
+              <sourceDocumentName>developer-guide.adoc</sourceDocumentName>
+              <imagesDir>./developer-guide/images</imagesDir>
+              <attributes>
+                <toc>left</toc>
+                <include-dir>./developer-guide/</include-dir>
+              </attributes>
+            </configuration>
+          </execution>
+          <execution>
+            <id>developer-guide-pdf</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>process-asciidoc</goal>
+            </goals>
+            <configuration>
+              <backend>pdf</backend>
+              <sourceHighlighter>coderay</sourceHighlighter>
+              <sourceDocumentName>developer-guide.adoc</sourceDocumentName>
+              <imagesDir>./developer-guide/images</imagesDir>
+              <attributes>
+                <toc>preamble</toc>
+                <include-dir>./developer-guide/</include-dir>
+              </attributes>
+            </configuration>
+          </execution>
+          <execution>
             <id>admin-guide-html</id>
             <phase>generate-resources</phase>
             <goals>
