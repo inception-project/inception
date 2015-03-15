@@ -17,14 +17,12 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.webapp.home.page;
 
-import java.io.IOException;
 import java.util.Locale;
 import java.util.Properties;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.wicket.Application;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.RuntimeConfigurationType;
 import org.apache.wicket.Session;
@@ -42,7 +40,6 @@ import org.apache.wicket.protocol.http.request.WebClientInfo;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.springframework.core.io.support.PropertiesLoaderUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
