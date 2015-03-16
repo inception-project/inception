@@ -17,13 +17,13 @@
 [[sect_setup]]
 == Setup
 
-=== Installation guide to develop !WebAnno in Eclipse
+=== Installation guide to develop WebAnno in Eclipse
 
 This is a guide to setting up a developer environment in Eclipse for WebAnno using Max OS X. The 
 procedure should be similar for other operation systems.  
 
 First, you need to follow some steps of the user [InstallationGuide installation guide]. You need to
-configure your MySQL-server for !WebAnno. After that, jump right to the chapter !WebAnno and follow
+configure your MySQL-server for WebAnno. After that, jump right to the chapter WebAnno and follow
 all steps besides the first one until the end of the document.
 
 We recommend you start from a Eclipse Classic distribution.
@@ -40,11 +40,12 @@ We recommend you start from a Eclipse Classic distribution.
 
 * You should check that Text file encoding is UTF-8  in "Preferences -> General -> Workspace" of your eclipse install.
 
-=== !WebAnno and tomcat installation=
+=== WebAnno and tomcat installation=
 
 Checkout out the svn repository `https://webanno.googlecode.com/svn/trunk` and *checkout the project as Maven project*: http://webanno.googlecode.com/svn/wiki/images/checkout_as_maven_project.png
 
 Download Apache Tomcat from `http://tomcat.apache.org/` (we're using version 7). Then, you need to add the Tomcat server to your runtime configuration. Go to preferences and go to *Servers -> Runtime environments*:
+
 http://webanno.googlecode.com/svn/wiki/images/AddApacheTomcat.png
 
 When prompted for an installation path, specify the folder where you extracted (or installed) Apache Tomcat v7 into. 

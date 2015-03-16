@@ -61,7 +61,7 @@ a CAS data structure is used to represent the annotation document.
 | 
 
 | builtIn
-| Built-in types are pre-defined via DKPro Core and cannot be changed or deleted.
+| Built-in types are pre-defined via DKPro Core and cannot be deleted.
 
 | enabled
 | If the type can be used for annotation or not. Types cannot be deleted after creation because we
@@ -144,10 +144,13 @@ deleted.
 | Feature name displayed in the UI
 
 | type
-|
+| 
 
 | description
 |
+
+| builtIn
+| Built-in features are pre-defined via DKPro Core and cannot deleted.
 
 | enabled
 | If the feature can be used for annotation or not. Features cannot be deleted after creation 
@@ -167,6 +170,31 @@ so this is a way to not allow editing/displaying of these types anymore.
 
 `tag_set`
 `tag`
+
+
+=== Constraints
+
+`constraints`
+
+|====
+| Column | Description
+
+| id
+|
+
+| project
+|
+
+| name
+|
+
+| description
+|
+
+| rules
+|
+|====
+
 
 === Permissions
 
