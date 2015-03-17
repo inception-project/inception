@@ -354,7 +354,12 @@ var Visualizer = (function($, window, undefined) {
       var minArcSlant = 8;
       var arcHorizontalSpacing = 10; // min space boxes with connecting arc
       var rowSpacing = -5;          // for some funny reason approx. -10 gives "tight" packing.
+// BEGIN WEBANNO EXTENSION - #361 - Sentence numbers are cropped
+/*
+      var sentNumMargin = 20;
+*/
       var sentNumMargin = 40;
+// END WEBANNO EXTENSION
       var smoothArcCurves = true;   // whether to use curves (vs lines) in arcs
       var smoothArcSteepness = 0.5; // steepness of smooth curves (control point)
       var reverseArcControlx = 5;   // control point distance for "UFO catchers"
@@ -1710,6 +1715,8 @@ Util.profileStart('chunks');
 
             var shadowRect;
             var markedRect;
+// BEGIN WEBANNO EXTENSION - WebAnno does not support search / span marking
+/*
             if (span.marked) {
               markedRect = svg.rect(chunk.highlightGroup,
                   bx - markedSpanSize, by - markedSpanSize,
@@ -1733,9 +1740,13 @@ Util.profileStart('chunks');
               chunkTo = Math.max(bx + bw + markedSpanSize, chunkTo);
               fragmentHeight = Math.max(bh + 2 * markedSpanSize, fragmentHeight);
             }
+*/
+// WEBANNO EXTENSION END           
             // .match() removes unconfigured shadows, which were
             // always showing up as black.
             // TODO: don't hard-code configured shadowclasses.
+// BEGIN WEBANNO EXTENSION - WebAnno does not operate with shadows
+/*
             if (span.shadowClass &&
                 span.shadowClass.match('True_positive|False_positive|False_negative|AnnotationError|AnnotationWarning|AnnotatorNotes|Normalized|AnnotationIncomplete|AnnotationUnconfirmed|rectEditHighlight|EditHighlight_arc|MissingAnnotation|ChangedAnnotation ')) {
               shadowRect = svg.rect(fragment.group,
@@ -1750,6 +1761,8 @@ Util.profileStart('chunks');
               chunkTo = Math.max(bx + bw + rectShadowSize, chunkTo);
               fragmentHeight = Math.max(bh + 2 * rectShadowSize, fragmentHeight);
             }
+*/
+// WEBANNO EXTENSION END           
             fragment.rect = svg.rect(fragment.group,
                 bx, by, bw, bh, {
 
@@ -1763,11 +1776,15 @@ Util.profileStart('chunks');
                 'strokeDashArray': span.attributeMerge.dashArray,
               });
 
+// BEGIN WEBANNO EXTENSION - WebAnno does not support marking normalizations
+/*
             // TODO XXX: quick nasty hack to allow normalizations
             // to be marked visually; do something cleaner!
             if (span.normalized) {
               $(fragment.rect).addClass(span.normalized);
             }
+*/
+// WEBANNO EXTENSION END
 
             fragment.right = bx + bw; // TODO put it somewhere nicer?
             if (!(span.shadowClass || span.marked)) {
