@@ -15,6 +15,7 @@
 		<class>de.tudarmstadt.ukp.clarin.webanno.model.CrowdJob</class>
 		<class>de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate</class>
 		<class>de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature</class>
-		<class>de.tudarmstadt.ukp.clarin.webanno.model.AutomationStatus</class>					
+		<class>de.tudarmstadt.ukp.clarin.webanno.model.AutomationStatus</class>		
+        <class>de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet</class>			
 	</persistence-unit>
 </persistence>
