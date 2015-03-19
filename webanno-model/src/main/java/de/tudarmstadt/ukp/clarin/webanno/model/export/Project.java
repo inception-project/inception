@@ -25,6 +25,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.annotate.JsonPropertyOrder;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 
 /**
  * All required contents of a project to be exported.
@@ -32,14 +33,15 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
  *
  */
 
-@JsonPropertyOrder(value = { "name", "description","mode","version"})
+@JsonPropertyOrder(value = { "name", "description", "mode", "version" })
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Project
 {
     @JsonProperty("name")
-    String name;
+    private String name;
+    
     @JsonProperty("description")
-    String description;
+    private String description;
 
     @JsonProperty("mode")
     private Mode mode = Mode.ANNOTATION;
@@ -49,7 +51,6 @@ public class Project
 
     @JsonProperty("annotation_documents")
     private List<AnnotationDocument> annotationDocuments;
-
 
     @JsonProperty("project_permissions")
     private List<ProjectPermission> projectPermissions ;
@@ -66,9 +67,11 @@ public class Project
     @JsonProperty("crowd_jobs")
     private List<CrowdJob> crowdJobs = new ArrayList<CrowdJob>();
 
-
     @JsonProperty("version")
     private int version;
+
+    @JsonProperty("script_direction")
+    private ScriptDirection scriptDirection;
 
     public String getName()
     {
@@ -178,4 +181,13 @@ public class Project
 		this.crowdJobs = crowdJobs;
 	}
 
+    public ScriptDirection getScriptDirection()
+    {
+        return scriptDirection;
+    }
+
+    public void setScriptDirection(ScriptDirection aScriptDirection)
+    {
+        scriptDirection = aScriptDirection;
+    }
 }

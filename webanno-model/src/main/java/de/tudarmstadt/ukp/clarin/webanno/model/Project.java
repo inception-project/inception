@@ -57,6 +57,9 @@ public class Project
 
     // version of the project
     private int version = 1;
+    
+    @Type(type="de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirectionType")
+    private ScriptDirection scriptDirection;
 
     public Project()
     {
@@ -102,6 +105,22 @@ public class Project
     public void setVersion(int version)
     {
         this.version = version;
+    }
+
+    public ScriptDirection getScriptDirection()
+    {
+        // If unset, default to LTR - property was not present in older WebAnno versions
+        if (scriptDirection == null) {
+            return ScriptDirection.LTR;
+        }
+        else {
+            return scriptDirection;
+        }
+    }
+
+    public void setScriptDirection(ScriptDirection scriptDirection)
+    {
+        this.scriptDirection = scriptDirection;
     }
 
     @Override
