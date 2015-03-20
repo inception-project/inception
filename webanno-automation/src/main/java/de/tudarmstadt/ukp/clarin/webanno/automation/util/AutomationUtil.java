@@ -46,6 +46,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CASException;
+import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -59,6 +63,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AutomationStatus;
@@ -243,7 +248,8 @@ public class AutomationUtil
         User user = aRepository.getUser(username);
         TypeAdapter adapter = TypeUtil.getAdapter(aFeature.getLayer());
         List<String> annotations = new ArrayList<String>();
-        if (aSourceDocument == null) {// this is training - all sources documents will be converted to a single
+        if (aSourceDocument == null) {// this is training - all sources documents will be converted
+                                      // to a single
             // training file
             for (SourceDocument sourceDocument : aRepository.listSourceDocuments(aFeature
                     .getProject())) {
@@ -1303,6 +1309,118 @@ public class AutomationUtil
 
     }
 
+    /**
+     * Add new annotation to the CAS using the MIRA prediction. This is different from the add
+     * methods in the {@link TypeAdapter}s in such a way that the begin and end offsets are always
+     * exact so that no need to re-compute
+     *
+     * @param aJcas
+     *            the JCas.
+     * @param feature
+     *            the feature.
+     * @param labelValues
+     *            the values.
+     * @throws BratAnnotationException
+     *             if the annotations could not be created/updated.
+     * @throws IOException
+     *             if an I/O error occurs.
+     */
+    public static void automate(JCas aJcas, AnnotationFeature aFeature, List<String> aLabelValues)
+        throws BratAnnotationException, IOException
+    {
+
+        String typeName = aFeature.getLayer().getName();
+        String attachTypeName = aFeature.getLayer().getAttachType() == null ? null : aFeature
+                .getLayer().getAttachType().getName();
+        Type type = CasUtil.getType(aJcas.getCas(), typeName);
+        Feature feature = type.getFeatureByBaseName(aFeature.getName());
+
+        int i = 0;
+        String prevNe = "O";
+        int begin = 0;
+        int end = 0;
+        // remove existing annotations of this type, after all it is an
+        // automation, no care
+        BratAnnotatorUtility.clearAnnotations(aJcas, type);
+
+        if (!aFeature.getLayer().isLockToTokenOffset() || aFeature.getLayer().isMultipleTokens()) {
+            for (Token token : select(aJcas, Token.class)) {
+                String value = aLabelValues.get(i);
+                AnnotationFS newAnnotation;
+                if (value.equals("O") && prevNe.equals("O")) {
+                    i++;
+                    continue;
+                }
+                else if (value.equals("O") && !prevNe.equals("O")) {
+                    newAnnotation = aJcas.getCas().createAnnotation(type, begin, end);
+                    newAnnotation.setFeatureValueFromString(feature, prevNe.replace("B-", ""));
+                    prevNe = "O";
+                    aJcas.getCas().addFsToIndexes(newAnnotation);
+                }
+                else if (!value.equals("O") && prevNe.equals("O")) {
+                    begin = token.getBegin();
+                    end = token.getEnd();
+                    prevNe = value;
+
+                }
+                else if (!value.equals("O") && !prevNe.equals("O")) {
+                    if (value.replace("B-", "").replace("I-", "")
+                            .equals(prevNe.replace("B-", "").replace("I-", ""))
+                            && value.startsWith("B-")) {
+                        newAnnotation = aJcas.getCas().createAnnotation(type, begin, end);
+                        newAnnotation.setFeatureValueFromString(feature, prevNe.replace("B-", "")
+                                .replace("I-", ""));
+                        prevNe = value;
+                        begin = token.getBegin();
+                        end = token.getEnd();
+                        aJcas.getCas().addFsToIndexes(newAnnotation);
+
+                    }
+                    else if (value.replace("B-", "").replace("I-", "")
+                            .equals(prevNe.replace("B-", "").replace("I-", ""))) {
+                        i++;
+                        end = token.getEnd();
+                        continue;
+
+                    }
+                    else {
+                        newAnnotation = aJcas.getCas().createAnnotation(type, begin, end);
+                        newAnnotation.setFeatureValueFromString(feature, prevNe.replace("B-", "")
+                                .replace("I-", ""));
+                        prevNe = value;
+                        begin = token.getBegin();
+                        end = token.getEnd();
+                        aJcas.getCas().addFsToIndexes(newAnnotation);
+
+                    }
+                }
+
+                i++;
+
+            }
+        }
+        else {
+            // check if annotation is on an AttachType
+            Feature attachFeature = null;
+            Type attachType;
+            if (attachTypeName != null) {
+                attachType = CasUtil.getType(aJcas.getCas(), attachTypeName);
+                attachFeature = attachType.getFeatureByBaseName(attachTypeName);
+            }
+
+            for (Token token : select(aJcas, Token.class)) {
+                AnnotationFS newAnnotation = aJcas.getCas().createAnnotation(type,
+                        token.getBegin(), token.getEnd());
+                newAnnotation.setFeatureValueFromString(feature, aLabelValues.get(i));
+                i++;
+                if (attachFeature != null) {
+                    token.setFeatureValue(attachFeature, newAnnotation);
+                }
+                aJcas.getCas().addFsToIndexes(newAnnotation);
+            }
+        }
+    }
+
     public static void predict(MiraTemplate aTemplate, RepositoryService aRepository)
         throws CASException, UIMAException, ClassNotFoundException, IOException,
         BratAnnotationException
@@ -1367,13 +1485,13 @@ public class AutomationUtil
                 }
 
                 TypeAdapter adapter = TypeUtil.getAdapter(layerFeature.getLayer());
-                adapter.automate(jCas, layerFeature, annotations);
+                automate(jCas, layerFeature, annotations);
                 LOG.info("Predictions found are written to the CAS");
                 aRepository.createCorrectionDocumentContent(jCas, document, user);
                 document.setProcessed(true);
                 status.setAnnoDocs(status.getAnnoDocs() - 1);
             }
         }
-
     }
+
 }
