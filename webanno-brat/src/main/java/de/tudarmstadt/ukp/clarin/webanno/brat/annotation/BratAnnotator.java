@@ -92,7 +92,7 @@ public class BratAnnotator
     extends Panel
 {
     private static final Log LOG = LogFactory.getLog(BratAnnotator.class);
-    
+
     private static final String PARAM_ACTION = "action";
     private static final String PARAM_ARC_ID = "arcId";
     private static final String PARAM_ID = "id";
@@ -133,7 +133,7 @@ public class BratAnnotator
 
     /**
      * Data models for {@link BratAnnotator}
-     * 
+     *
      * @param aModel the model.
      */
     public void setModel(IModel<BratAnnotatorModel> aModel)
@@ -163,7 +163,7 @@ public class BratAnnotator
 
         // Allow AJAX updates.
         setOutputMarkupId(true);
-        
+
         // The annotator is invisible when no document has been selected. Make sure that we can
         // make it visible via AJAX once the document has been selected.
         setOutputMarkupPlaceholderTag(true);
@@ -207,12 +207,12 @@ public class BratAnnotator
                 Object result = null;
                 BratAjaxCasController controller = new BratAjaxCasController(repository,
                         annotationService);
-                
+
                 final String action = request.getParameterValue(PARAM_ACTION).toString();
 
                 try {
                     LOG.info("AJAX-RPC CALLED: [" + action + "]");
-                    
+
                     if (action.equals(WhoamiResponse.COMMAND)) {
                         result = controller.whoami();
                     }
@@ -309,7 +309,7 @@ public class BratAnnotator
                             result = new GetDocumentResponse();
                         }
                     }
-                    
+
                     LOG.info("AJAX-RPC DONE: [" + action + "]");
                 }
                 catch (ClassNotFoundException e) {
@@ -342,14 +342,14 @@ public class BratAnnotator
         add(controller);
 
     }
-    
+
     @Override
     protected void onConfigure()
     {
         super.onConfigure();
         setVisible(getModelObject() != null && getModelObject().getProject() != null);
     }
-    
+
     /**
      * opens the {@link SpanAnnotationModalWindowPage} in a {@link ModalWindow}
      */
@@ -379,11 +379,10 @@ public class BratAnnotator
             public void onClose(AjaxRequestTarget aTarget)
             {
                 if (!closeButtonClicked) {
-                   
+
                     onChange(aTarget, getModelObject());
                     onAnnotate(aTarget,getModelObject(), beginOffset, endOffset);
-                    if (!getModelObject().isAnnotate()
-                            && getModelObject().getProject().getMode().equals(Mode.AUTOMATION)) {
+                    if (!getModelObject().isAnnotate()) {
                             onDelete(aTarget, getModelObject(), beginOffset, endOffset);
                         }
                     bratRender(aTarget, getJCas());
@@ -469,7 +468,7 @@ public class BratAnnotator
         aResponse.render(JavaScriptHeaderItem.forReference(BratConfigurationResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(BratUtilResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(BratAnnotationLogResourceReference.get()));
-        
+
         // BRAT modules
         aResponse.render(JavaScriptHeaderItem.forReference(BratDispatcherResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(BratUrlMonitorResourceReference.get()));
@@ -477,11 +476,11 @@ public class BratAnnotator
         aResponse.render(JavaScriptHeaderItem.forReference(BratVisualizerResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(BratVisualizerUiResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(BratAnnotatorUiResourceReference.get()));
-        
+
         StringBuilder script = new StringBuilder();
         // REC 2014-10-18 - For a reason that I do not understand, the dispatcher cannot be a local
         // variable. If I put a "var" here, then communication fails with messages such as
-        // "action 'openSpanDialog' returned result of action 'loadConf'" in the browsers's JS 
+        // "action 'openSpanDialog' returned result of action 'loadConf'" in the browsers's JS
         // console.
         script.append("(function() {");
         script.append("var dispatcher = new Dispatcher();");
@@ -499,7 +498,7 @@ public class BratAnnotator
         script.append("Wicket.$('" + vis.getMarkupId() + "').dispatcher = dispatcher;");
         script.append("Wicket.$('" + vis.getMarkupId() + "').visualizer = visualizer;");
         script.append("})();");
-        
+
         // Must be OnDomReader so that this is rendered before all other Javascript that is
         // appended to the same AJAX request which turns the annotator visible after a document
         // has been chosen.
@@ -510,12 +509,12 @@ public class BratAnnotator
     {
         GetCollectionInformationResponse response = new GetCollectionInformationResponse();
         response.setEntityTypes(BratAjaxConfiguration.buildEntityTypes(getModelObject()
-                .getAnnotationLayers(), annotationService));        
+                .getAnnotationLayers(), annotationService));
         String json = toJson(response);
         return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('collectionLoaded', [" + json
                 + "]);";
     }
-    
+
     private String bratRenderCommand(JCas aJCas)
     {
         LOG.info("BEGIN bratRenderCommand");
@@ -526,10 +525,10 @@ public class BratAnnotator
         return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('renderData', [" + json
                 + "]);";
     }
-    
+
     /**
      * This triggers the loading of the metadata (colors, types, etc.)
-     * 
+     *
      * @return the init script.
      * @see BratAjaxConfiguration#buildEntityTypes
      */
@@ -540,21 +539,21 @@ public class BratAnnotator
                 + getCollection() + "'}, 'collectionLoaded', {collection: '" + getCollection()
                 + "',keep: true}]);";
     }
-    
+
     /**
      * This one triggers the loading of the actual document data
      *
-     * @return brat 
+     * @return brat
      */
     protected String bratRenderLaterCommand()
     {
         return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('current', "
                 + "['" + getCollection() + "', '1234', {}, true]);";
     }
-    
+
     /**
      * Reload {@link BratAnnotator} when the Correction/Curation page is opened
-     * 
+     *
      * @param aResponse the response.
      */
     public void bratInitRenderLater(IHeaderResponse aResponse)
@@ -565,7 +564,7 @@ public class BratAnnotator
 
     /**
      * Reload {@link BratAnnotator} when the Correction/Curation page is opened
-     * 
+     *
      * @param aTarget the AJAX target.
      */
     public void bratInitRenderLater(AjaxRequestTarget aTarget)
@@ -576,7 +575,7 @@ public class BratAnnotator
 
     /**
      * Render content in a separate request.
-     * 
+     *
      * @param aTarget the AJAX target.
      */
     public void bratRenderLater(AjaxRequestTarget aTarget)
@@ -586,7 +585,7 @@ public class BratAnnotator
 
     /**
      * Render content as part of the current request.
-     * 
+     *
      * @param aTarget the AJAX target.
      * @param aJCas the CAS to render.
      */
@@ -637,7 +636,7 @@ public class BratAnnotator
     {
         // Overriden in AutomationPage
     }
-    
+
     private String toJson(Object result)
     {
         StringWriter out = new StringWriter();
@@ -650,10 +649,10 @@ public class BratAnnotator
         catch (IOException e) {
             error("Unable to produce JSON response " + ":"
                     + ExceptionUtils.getRootCauseMessage(e));
-        }     
+        }
         return out.toString();
     }
-    
+
     private JCas getJCas()
     {
         JCas jCas = null;
