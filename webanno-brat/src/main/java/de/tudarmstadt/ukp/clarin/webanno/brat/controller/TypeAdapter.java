@@ -17,7 +17,6 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
-import java.io.IOException;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
@@ -39,25 +38,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 public interface TypeAdapter
 {
     static final String FEATURE_SEPARATOR = " | ";
-
-    /**
-     * Add new annotation to the CAS using the MIRA prediction. This is different from the add
-     * methods in the {@link TypeAdapter}s in such a way that the begin and end offsets are always
-     * exact so that no need to re-compute
-     * 
-     * @param aJcas the JCas.
-     * @param feature the feature.
-     * @param labelValues the values.
-     * @throws BratAnnotationException
-     *             if the annotations could not be created/updated.
-     * @throws IOException if an I/O error occurs.
-     */
-    void automate(JCas aJcas, AnnotationFeature feature, List<String> labelValues)
-        throws BratAnnotationException, IOException;
-
     /**
      * Update this feature with a new value
-     * 
+     *
      * @param aJcas the JCas.
      * @param feature the feature.
      * @param address the annotation ID.
@@ -81,17 +64,17 @@ public interface TypeAdapter
      */
     void render(JCas aJcas, List<AnnotationFeature> features, GetDocumentResponse aResponse,
             BratAnnotatorModel aBratAnnotatorModel, ColoringStrategy aColoringStrategy);
-    
+
     /**
      * The ID of the type.
-     * 
+     *
      * @return the ID.
      */
     long getTypeId();
 
     /**
      * Get the CAS type of the this {@link TypeAdapter}
-     * 
+     *
      * @param cas the CAS.
      * @return the type.
      */
@@ -99,7 +82,7 @@ public interface TypeAdapter
 
     /**
      * Get the CAS type of the this {@link TypeAdapter}
-     * 
+     *
      * @return the type.
      */
     String getAnnotationTypeName();
@@ -107,7 +90,7 @@ public interface TypeAdapter
     /**
      * determine the type of Span annotation to be used to have arc annotations (as Origin and
      * target)
-     * 
+     *
      * @return the attach feature name.
      */
     String getAttachFeatureName();
@@ -115,14 +98,14 @@ public interface TypeAdapter
     /**
      * determine the type of Span annotation to be used to have arc annotations (as Origin and
      * target)
-     * 
+     *
      * @return the attach type name.
      */
     String getAttachTypeName();
 
     /**
      * check if the annotation type is deletable
-     * 
+     *
      * @return if the layer is deletable.
      */
     boolean isDeletable();
@@ -143,6 +126,6 @@ public interface TypeAdapter
     void deleteBySpan(JCas aJCas, AnnotationFS fs, int aBegin, int aEnd);
 
     List<String> getAnnotation(JCas aJcas, AnnotationFeature feature, int begin, int end);
-    
+
     AnnotationLayer getLayer();
 }

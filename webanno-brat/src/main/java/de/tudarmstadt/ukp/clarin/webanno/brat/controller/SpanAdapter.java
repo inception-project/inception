@@ -19,10 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
-import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -42,7 +40,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -485,100 +482,6 @@ public class SpanAdapter
             }
         }
         return multAnno;
-    }
-
-    @Override
-    public void automate(JCas aJcas, AnnotationFeature aFeature, List<String> aLabelValues)
-        throws BratAnnotationException, IOException
-    {
-
-        Type type = CasUtil.getType(aJcas.getCas(), getAnnotationTypeName());
-        Feature feature = type.getFeatureByBaseName(aFeature.getName());
-
-        int i = 0;
-        String prevNe = "O";
-        int begin = 0;
-        int end = 0;
-        // remove existing annotations of this type, after all it is an
-        // automation, no care
-        BratAnnotatorUtility.clearAnnotations(aJcas, type);
-
-        if (!aFeature.getLayer().isLockToTokenOffset() || aFeature.getLayer().isMultipleTokens()) {
-            for (Token token : select(aJcas, Token.class)) {
-                String value = aLabelValues.get(i);
-                AnnotationFS newAnnotation;
-                if (value.equals("O") && prevNe.equals("O")) {
-                    i++;
-                    continue;
-                }
-                else if (value.equals("O") && !prevNe.equals("O")) {
-                    newAnnotation = aJcas.getCas().createAnnotation(type, begin, end);
-                    newAnnotation.setFeatureValueFromString(feature, prevNe.replace("B-", ""));
-                    prevNe = "O";
-                    aJcas.getCas().addFsToIndexes(newAnnotation);
-                }
-                else if (!value.equals("O") && prevNe.equals("O")) {
-                    begin = token.getBegin();
-                    end = token.getEnd();
-                    prevNe = value;
-
-                }
-                else if (!value.equals("O") && !prevNe.equals("O")) {
-                    if (value.replace("B-", "").replace("I-", "")
-                            .equals(prevNe.replace("B-", "").replace("I-", ""))
-                            && value.startsWith("B-")) {
-                        newAnnotation = aJcas.getCas().createAnnotation(type, begin, end);
-                        newAnnotation.setFeatureValueFromString(feature, prevNe.replace("B-", "")
-                                .replace("I-", ""));
-                        prevNe = value;
-                        begin = token.getBegin();
-                        end = token.getEnd();
-                        aJcas.getCas().addFsToIndexes(newAnnotation);
-
-                    }
-                    else if (value.replace("B-", "").replace("I-", "")
-                            .equals(prevNe.replace("B-", "").replace("I-", ""))) {
-                        i++;
-                        end = token.getEnd();
-                        continue;
-
-                    }
-                    else {
-                        newAnnotation = aJcas.getCas().createAnnotation(type, begin, end);
-                        newAnnotation.setFeatureValueFromString(feature, prevNe.replace("B-", "")
-                                .replace("I-", ""));
-                        prevNe = value;
-                        begin = token.getBegin();
-                        end = token.getEnd();
-                        aJcas.getCas().addFsToIndexes(newAnnotation);
-
-                    }
-                }
-
-                i++;
-
-            }
-        }
-        else {
-            // check if annotation is on an AttachType
-            Feature attachFeature = null;
-            Type attachType;
-            if (getAttachTypeName() != null) {
-                attachType = CasUtil.getType(aJcas.getCas(), getAttachTypeName());
-                attachFeature = attachType.getFeatureByBaseName(getAttachFeatureName());
-            }
-
-            for (Token token : select(aJcas, Token.class)) {
-                AnnotationFS newAnnotation = aJcas.getCas().createAnnotation(type,
-                        token.getBegin(), token.getEnd());
-                newAnnotation.setFeatureValueFromString(feature, aLabelValues.get(i));
-                i++;
-                if (attachFeature != null) {
-                    token.setFeatureValue(attachFeature, newAnnotation);
-                }
-                aJcas.getCas().addFsToIndexes(newAnnotation);
-            }
-        }
     }
 
     /**

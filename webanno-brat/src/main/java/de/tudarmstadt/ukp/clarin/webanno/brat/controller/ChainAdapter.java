@@ -55,7 +55,7 @@ public class ChainAdapter
     implements TypeAdapter
 {
 //    private final Log log = LogFactory.getLog(getClass());
-    
+
     public static final String CHAIN = "Chain";
     public static final String LINK = "Link";
 
@@ -79,11 +79,11 @@ public class ChainAdapter
     // private boolean singleTokenBehavior = false;
 
     private boolean deletable;
-    
+
     private boolean linkedListBehavior;
 
     private AnnotationLayer layer;
-    
+
     public ChainAdapter(AnnotationLayer aLayer, long aLayerId, String aTypeName,
             String aLabelFeatureName, String aFirstFeatureName, String aNextFeatureName)
     {
@@ -134,16 +134,16 @@ public class ChainAdapter
         }
         // At this point arc and span feature labels must have been found! If not, the later code
         // will crash.
-        
+
         Type chainType = getAnnotationType(aJcas.getCas());
         Feature chainFirst = chainType.getFeatureByBaseName(chainFirstFeatureName);
-        
+
         int colorIndex = 0;
         // Iterate over the chains
         for (FeatureStructure chainFs : selectFS(aJcas.getCas(), chainType)) {
             AnnotationFS linkFs = (AnnotationFS) chainFs.getFeatureValue(chainFirst);
             AnnotationFS prevLinkFs = null;
-            
+
             // Every chain is supposed to have a different color
             String color = ColoringStrategy.PALETTE_NORMAL_FILTERED[colorIndex
                     % ColoringStrategy.PALETTE_NORMAL_FILTERED.length];
@@ -156,7 +156,7 @@ public class ChainAdapter
             while (linkFs != null) {
                 Feature linkNext = linkFs.getType().getFeatureByBaseName(linkNextFeatureName);
                 AnnotationFS nextLinkFs = (AnnotationFS) linkFs.getFeatureValue(linkNext);
-                
+
                 // Is link after window? If yes, we can skip the rest of the chain
                 if (linkFs.getBegin() >= windowEnd) {
                     break; // Go to next chain
@@ -169,7 +169,7 @@ public class ChainAdapter
                     linkFs = nextLinkFs;
                     continue; // Go to next link
                 }
-                
+
                 String bratTypeName = TypeUtil.getBratTypeName(this);
 
                 // Render span
@@ -177,18 +177,18 @@ public class ChainAdapter
                     String bratLabelText = TypeUtil.getBratLabelText(this, linkFs,
                             (spanLabelFeature != null) ? asList(spanLabelFeature)
                                     : Collections.EMPTY_LIST);
-                    Offsets offsets = new Offsets(linkFs.getBegin() - windowBegin, 
+                    Offsets offsets = new Offsets(linkFs.getBegin() - windowBegin,
                             linkFs.getEnd() - windowBegin);
-    
+
                     aResponse.addEntity(new Entity(BratAjaxCasUtil.getAddr(linkFs), bratTypeName,
                             offsets, bratLabelText, color));
                 }
-                
+
                 // Render arc (we do this on prevLinkFs because then we easily know that the current
                 // and last link are within the window ;)
                 if (prevLinkFs != null) {
                     String bratLabelText = null;
-                    
+
                     if (linkedListBehavior && arcLabelFeature != null) {
                         // Render arc label
                         bratLabelText = TypeUtil.getBratLabelText(this, prevLinkFs,
@@ -199,9 +199,9 @@ public class ChainAdapter
                         bratLabelText = TypeUtil.getBratLabelText(this, prevLinkFs,
                                 Collections.EMPTY_LIST);
                     }
-                    
+
                     List<Argument> argumentList = asList(
-                            new Argument("Arg1", BratAjaxCasUtil.getAddr(prevLinkFs)), 
+                            new Argument("Arg1", BratAjaxCasUtil.getAddr(prevLinkFs)),
                             new Argument("Arg2", BratAjaxCasUtil.getAddr(linkFs)));
 
                     aResponse.addRelation(new Relation(BratAjaxCasUtil.getAddr(prevLinkFs),
@@ -216,31 +216,31 @@ public class ChainAdapter
                 prevLinkFs = linkFs;
                 linkFs = nextLinkFs;
             }
-        }        
+        }
     }
-            
+
     public int addSpan( JCas aJCas, int aBegin, int aEnd,
             AnnotationFeature aFeature, String aLabelValue)
         throws MultipleSentenceCoveredException
     {
         List<Token> tokens = BratAjaxCasUtil.selectOverlapping(aJCas, Token.class, aBegin, aEnd);
-        
+
         if (!BratAjaxCasUtil.isSameSentence(aJCas, aBegin, aEnd)) {
             throw new MultipleSentenceCoveredException(
                     "Annotation coveres multiple sentences, "
                             + "limit your annotation to single sentence!");
         }
-        
+
         // update the begin and ends (no sub token selection)
         int begin = tokens.get(0).getBegin();
         int end = tokens.get(tokens.size() - 1).getEnd();
-        
+
         // Add the link annotation on the span
         AnnotationFS newLink = newLink(aJCas, begin, end, aFeature, aLabelValue);
-        
+
         // The added link is a new chain on its own - add the chain head FS
         newChain(aJCas, newLink);
-        
+
         return BratAjaxCasUtil.getAddr(newLink);
     }
 
@@ -269,7 +269,7 @@ public class ChainAdapter
         else {
             FeatureStructure originChain = getChainForLink(aJCas, aOriginFs);
             FeatureStructure targetChain = getChainForLink(aJCas, aTargetFs);
-            
+
             AnnotationFS targetPrev = getPrevLink(targetChain, aTargetFs);
 
             if (!BratAjaxCasUtil.isSame(originChain, targetChain)) {
@@ -277,7 +277,7 @@ public class ChainAdapter
                     // if the two links are in different chains then split the chains up at the
                     // origin point and target point and create a new link betweek origin and target
                     // the tail of the origin chain becomes a new chain
-                    
+
                     // if originFs has a next, then split of the origin chain up
                     // the rest becomes its own chain
                     if (originNext != null) {
@@ -285,7 +285,7 @@ public class ChainAdapter
                         // we set originNext below
                         // we set the arc label below
                     }
-                    
+
                     // if targetFs has a prev, then split it off
                     if (targetPrev != null) {
                         setNextLink(targetPrev, null);
@@ -295,7 +295,7 @@ public class ChainAdapter
                     else {
                         aJCas.removeFsFromIndexes(targetChain);
                     }
-                    
+
                     // connect the rest of the target chain to the origin chain
                     setNextLink(aOriginFs, aTargetFs);
                     BratAjaxCasUtil.setFeature(aOriginFs, aFeature, aValue);
@@ -305,10 +305,10 @@ public class ChainAdapter
                   List<AnnotationFS> links = new ArrayList<AnnotationFS>();
                   links.addAll(collectLinks(originChain));
                   links.addAll(collectLinks(targetChain));
-                  
+
                   // sort them ascending by begin and descending by end (default UIMA order)
                   Collections.sort(links, new AnnotationComparator());
-  
+
                   // thread them
                   AnnotationFS prev = null;
                   for (AnnotationFS link : links) {
@@ -320,13 +320,13 @@ public class ChainAdapter
                       }
                       prev = link;
                   }
-  
+
                   // make sure the last link terminates the chain
                   setNextLink(links.get(links.size()-1), null);
-  
+
                   // the chain head needs to point to the first link
                   setFirstLink(originChain, links.get(0));
-                  
+
                   // we don't need the second chain head anymore
                   aJCas.removeFsFromIndexes(targetChain);
                 }
@@ -339,7 +339,7 @@ public class ChainAdapter
                 }
             }
         }
-        
+
         // We do not actually create a new FS for the arc. Features are set on the originFS.
         return BratAjaxCasUtil.getAddr(aOriginFs);
     }
@@ -356,27 +356,27 @@ public class ChainAdapter
         }
         // END HACK - ISSUE 933
     }
-    
+
     public void deleteArc(JCas aJCas, int aAddress)
     {
         AnnotationFS linkToDelete = BratAjaxCasUtil.selectByAddr(aJCas, AnnotationFS.class,
-                aAddress);        
-        
+                aAddress);
+
         // Create the tail chain
         // We know that there must be a next link, otherwise no arc would have been rendered!
         newChain(aJCas, getNextLink(linkToDelete));
-        
+
         // Disconnect the tail from the head
         setNextLink(linkToDelete, null);
     }
-    
+
     public void deleteSpan(JCas aJCas, int aAddress)
     {
         Type chainType = getAnnotationType(aJCas.getCas());
 
         AnnotationFS linkToDelete = BratAjaxCasUtil.selectByAddr(aJCas, AnnotationFS.class,
                 aAddress);
-        
+
         // case 1 "removing first link": we keep the existing chain head and just remove the
         // first element
         //
@@ -385,7 +385,7 @@ public class ChainAdapter
         //
         // case 3 "removing the last link": the old chain head remains and the last element of the
         // chain is removed.
-        
+
         // To know which case we have, we first need to find the chain containing the element to
         // be deleted.
         FeatureStructure oldChainFs = null;
@@ -393,7 +393,7 @@ public class ChainAdapter
         chainLoop: for (FeatureStructure chainFs : selectFS(aJCas.getCas(), chainType)) {
             AnnotationFS linkFs = getFirstLink(chainFs);
             prevLinkFs = null; // Reset when entering new chain!
-            
+
             // Now we seek the link within the current chain
             while (linkFs != null) {
                 if (BratAjaxCasUtil.isSame(linkFs, linkToDelete)) {
@@ -404,7 +404,7 @@ public class ChainAdapter
                 linkFs = getNextLink(linkFs);
             }
         }
-        
+
         // Did we find the chain?!
         if (oldChainFs == null) {
             throw new IllegalArgumentException("Chain link with address [" + aAddress
@@ -417,7 +417,7 @@ public class ChainAdapter
             // case 1: first element removed
             setFirstLink(oldChainFs, followingLinkToDelete);
             aJCas.removeFsFromIndexes(linkToDelete);
-            
+
             // removed last element form chain?
             if (followingLinkToDelete == null) {
                 aJCas.removeFsFromIndexes(oldChainFs);
@@ -430,10 +430,10 @@ public class ChainAdapter
         }
         else if (prevLinkFs != null && followingLinkToDelete != null) {
             // case 2: removing a middle link
-            
+
             // Set up new chain for rest
             newChain(aJCas, followingLinkToDelete);
-            
+
             // Cut off from old chain
             setNextLink(prevLinkFs, null);
         }
@@ -492,14 +492,6 @@ public class ChainAdapter
     }
 
     @Override
-    public void automate(JCas aJcas, AnnotationFeature aFeature, List<String> labelValues)
-        throws BratAnnotationException
-    {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
     public void delete(JCas aJCas, AnnotationFeature aFeature, int aBegin, int aEnd, String aValue)
     {
         // TODO Auto-generated method stub
@@ -521,10 +513,10 @@ public class ChainAdapter
         FeatureStructure fs = BratAjaxCasUtil.selectByAddr(aJcas, FeatureStructure.class, aAddress);
         fs.setFeatureValueFromString(feature, aValue);
     }
-    
+
     /**
      * Find the chain head for the given link.
-     * 
+     *
      * @param aJCas the CAS.
      * @param aLink the link to search the chain for.
      * @return the chain.
@@ -532,10 +524,10 @@ public class ChainAdapter
     private FeatureStructure getChainForLink(JCas aJCas, AnnotationFS aLink)
     {
         Type chainType = getAnnotationType(aJCas.getCas());
-        
+
         for (FeatureStructure chainFs : selectFS(aJCas.getCas(), chainType)) {
             AnnotationFS linkFs = getFirstLink(chainFs);
-            
+
             // Now we seek the link within the current chain
             while (linkFs != null) {
                 if (BratAjaxCasUtil.isSame(linkFs, aLink)) {
@@ -544,12 +536,12 @@ public class ChainAdapter
                 linkFs = getNextLink(linkFs);
             }
         }
-        
+
         // This should never happen unless the data in the CAS has been created erratically
         throw new IllegalArgumentException("Link not part of any chain");
     }
-    
-    private List<AnnotationFS> collectLinks(FeatureStructure aChain) 
+
+    private List<AnnotationFS> collectLinks(FeatureStructure aChain)
     {
         List<AnnotationFS> links = new ArrayList<AnnotationFS>();
 
@@ -564,7 +556,7 @@ public class ChainAdapter
 
         return links;
     }
-    
+
     /**
      * Sort ascending by begin and descending by end.
      */
@@ -583,7 +575,7 @@ public class ChainAdapter
             }
         }
     }
-    
+
     /**
      * Create a new chain head feature structure. Already adds the chain to the CAS.
      */
@@ -609,7 +601,7 @@ public class ChainAdapter
         aJCas.getCas().addFsToIndexes(newLink);
         return newLink;
     }
-    
+
     /**
      * Set the first link of a chain in the chain head feature structure.
      */
@@ -617,7 +609,7 @@ public class ChainAdapter
     {
         aChain.setFeatureValue(aChain.getType().getFeatureByBaseName(chainFirstFeatureName), aLink);
     }
-    
+
     /**
      * Get the first link of a chain from the chain head feature structure.
      */
@@ -630,7 +622,7 @@ public class ChainAdapter
     /**
      * Get the chain link before the given link within the given chain. The given link must be part
      * of the given chain.
-     * 
+     *
      * @param aChain
      *            a chain head feature structure.
      * @param aLink
@@ -660,7 +652,7 @@ public class ChainAdapter
         aLink.setFeatureValue(
                 aLink.getType().getFeatureByBaseName(linkNextFeatureName), aNext);
     }
-    
+
     /**
      * Get the link following the current link.
      */
@@ -670,34 +662,34 @@ public class ChainAdapter
                 linkNextFeatureName));
     }
 
-   
+
     // BEGIN HACK - ISSUE 933
     private boolean isArc = false;
-    
+
     public void setArc(boolean aIsArc)
     {
         isArc = aIsArc;
     }
     // END HACK - ISSUE 933
-    
+
     /**
      * Controls whether the chain behaves like a linked list or like a set. When operating as a
      * set, chains are automatically threaded and no arrows and labels are displayed on arcs.
      * When operating as a linked list, chains are not threaded and arrows and labels are displayed
      * on arcs.
-     * 
+     *
      * @param aBehaveLikeSet whether to behave like a set.
      */
     public void setLinkedListBehavior(boolean aBehaveLikeSet)
     {
         linkedListBehavior = aBehaveLikeSet;
     }
-    
+
     public boolean isLinkedListBehavior()
     {
         return linkedListBehavior;
     }
-    
+
     @Override
     public AnnotationLayer getLayer()
     {

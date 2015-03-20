@@ -183,7 +183,7 @@ public class ArcAdapter
 
     /**
      * Update the CAS with new/modification of arc annotations from brat
-     * 
+     *
      * @param aOriginFs
      *            the origin FS.
      * @param aTargetFs
@@ -437,14 +437,6 @@ public class ArcAdapter
     public List<String> getAnnotation(JCas aJcas, AnnotationFeature aFeature, int begin, int end)
     {
         return new ArrayList<String>();
-    }
-
-    @Override
-    public void automate(JCas aJcas, AnnotationFeature aFeature, List<String> labelValues)
-        throws BratAnnotationException
-    {
-        // TODO Auto-generated method stub
-
     }
 
     @Override
