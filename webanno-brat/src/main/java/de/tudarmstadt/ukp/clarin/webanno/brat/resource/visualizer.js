@@ -26,6 +26,10 @@
 var Visualizer = (function($, window, undefined) {
     var fontLoadTimeout = 5000; // 5 seconds
   
+	// WEBANNO EXTENSION BEGIN - RTL support - DEV mode switch
+	var rtlmode = false;
+	// WEBANNO EXTENSION END
+    
     var DocumentData = function(text) {
       this.text = text;
       this.chunks = [];
@@ -354,7 +358,12 @@ var Visualizer = (function($, window, undefined) {
       var minArcSlant = 8;
       var arcHorizontalSpacing = 10; // min space boxes with connecting arc
       var rowSpacing = -5;          // for some funny reason approx. -10 gives "tight" packing.
+// BEGIN WEBANNO EXTENSION - #361 - Sentence numbers are cropped
+/*
+      var sentNumMargin = 20;
+*/
       var sentNumMargin = 40;
+// END WEBANNO EXTENSION
       var smoothArcCurves = true;   // whether to use curves (vs lines) in arcs
       var smoothArcSteepness = 0.5; // steepness of smooth curves (control point)
       var reverseArcControlx = 5;   // control point distance for "UFO catchers"
@@ -1432,6 +1441,10 @@ Util.profileStart('init');
         redraw = false;
         drawing = true;
 
+// WEBANNO EXTENSION BEGIN - RTL support - mode switch
+	    rtlmode = sourceData.rtl_mode;
+// WEBANNO EXTENSION END
+        
         if (sourceData) setData(sourceData);
         showMtime();
 
@@ -1467,7 +1480,17 @@ Util.profileStart('measures');
 Util.profileEnd('measures');
 Util.profileStart('chunks');
 
+// WEBANNO EXTENSION BEGIN - RTL support - [currentX] initial position
+/*
         var currentX = Configuration.visual.margin.x + sentNumMargin + rowPadding;
+*/
+       var currentX;
+       if (rtlmode) {
+    	   currentX = canvasWidth - (Configuration.visual.margin.x + sentNumMargin + rowPadding);
+       } else {
+    	   currentX = Configuration.visual.margin.x + sentNumMargin + rowPadding;
+       }
+// WEBANNO EXTENSION END
         var rows = [];
         var fragmentHeights = [];
         var sentenceToggle = 0;
@@ -1623,7 +1646,12 @@ Util.profileStart('chunks');
               // don't indent if
               // * the first word in a non-paragraph line
               for (var i = spacePos; i < spaceLen; i++) spaceWidth += spaceWidths[chunk.lastSpace[i]] || 0;
+// WEBANNO EXTENSION BEGIN - RTL support - [currentX] adjustment for spaceWidth             
+/*
               currentX += spaceWidth;
+*/
+              currentX += rtlmode ? -spaceWidth : spaceWidth;
+// WEBANNO EXTENSION END
             }
           }
           
@@ -1710,6 +1738,8 @@ Util.profileStart('chunks');
 
             var shadowRect;
             var markedRect;
+// BEGIN WEBANNO EXTENSION - WebAnno does not support search / span marking
+/*
             if (span.marked) {
               markedRect = svg.rect(chunk.highlightGroup,
                   bx - markedSpanSize, by - markedSpanSize,
@@ -1733,9 +1763,13 @@ Util.profileStart('chunks');
               chunkTo = Math.max(bx + bw + markedSpanSize, chunkTo);
               fragmentHeight = Math.max(bh + 2 * markedSpanSize, fragmentHeight);
             }
+*/
+// WEBANNO EXTENSION END           
             // .match() removes unconfigured shadows, which were
             // always showing up as black.
             // TODO: don't hard-code configured shadowclasses.
+// BEGIN WEBANNO EXTENSION - WebAnno does not operate with shadows
+/*
             if (span.shadowClass &&
                 span.shadowClass.match('True_positive|False_positive|False_negative|AnnotationError|AnnotationWarning|AnnotatorNotes|Normalized|AnnotationIncomplete|AnnotationUnconfirmed|rectEditHighlight|EditHighlight_arc|MissingAnnotation|ChangedAnnotation ')) {
               shadowRect = svg.rect(fragment.group,
@@ -1750,6 +1784,8 @@ Util.profileStart('chunks');
               chunkTo = Math.max(bx + bw + rectShadowSize, chunkTo);
               fragmentHeight = Math.max(bh + 2 * rectShadowSize, fragmentHeight);
             }
+*/
+// WEBANNO EXTENSION END           
             fragment.rect = svg.rect(fragment.group,
                 bx, by, bw, bh, {
 
@@ -1763,11 +1799,15 @@ Util.profileStart('chunks');
                 'strokeDashArray': span.attributeMerge.dashArray,
               });
 
+// BEGIN WEBANNO EXTENSION - WebAnno does not support marking normalizations
+/*
             // TODO XXX: quick nasty hack to allow normalizations
             // to be marked visually; do something cleaner!
             if (span.normalized) {
               $(fragment.rect).addClass(span.normalized);
             }
+*/
+// WEBANNO EXTENSION END
 
             fragment.right = bx + bw; // TODO put it somewhere nicer?
             if (!(span.shadowClass || span.marked)) {
@@ -1955,21 +1995,45 @@ Util.profileStart('chunks');
             sentenceToggle = 1 - sentenceToggle;
           }
 
+// WEBANNO EXTENSION BEGIN - RTL support - soft-wrap long sentences
+/*
           if (chunk.sentence ||
               currentX + boxWidth + rightBorderForArcs >= canvasWidth - 2 * Configuration.visual.margin.x) {
+*/
+          var chunkDoesNotFit = false;
+          if (rtlmode) {
+        	chunkDoesNotFit = currentX - boxWidth - rightBorderForArcs <= 
+        		2 * Configuration.visual.margin.x;
+          }
+          else {
+        	chunkDoesNotFit = currentX + boxWidth + rightBorderForArcs >= 
+        		canvasWidth - 2 * Configuration.visual.margin.x
+          }
+          
+          if (chunk.sentence || chunkDoesNotFit) {
+// WEBANNO EXTENSION END
+
             // the chunk does not fit
             row.arcs = svg.group(row.group, { 'class': 'arcs' });
+// WEBANNO EXTENSION BEGIN - RTL support - [currentX] reset after soft-wrap
+/*
             // TODO: related to issue #571
             // replace arcHorizontalSpacing with a calculated value
             currentX = Configuration.visual.margin.x + sentNumMargin + rowPadding +
                 (hasLeftArcs ? arcHorizontalSpacing : (hasInternalArcs ? arcSlant : 0)) +
                 spaceWidth;
-            if (hasLeftArcs) {
-              var adjustedCurTextWidth = sizes.texts.widths[chunk.text] + arcHorizontalSpacing;
-              if (adjustedCurTextWidth > maxTextWidth) {
-                maxTextWidth = adjustedCurTextWidth;
-              }
+*/
+            if (rtlmode) {
+              currentX = canvasWidth - (Configuration.visual.margin.x + sentNumMargin + rowPadding +
+	              (hasRightArcs ? arcHorizontalSpacing : (hasInternalArcs ? arcSlant : 0))/* +
+	              spaceWidth*/);
             }
+            else {
+	          currentX = Configuration.visual.margin.x + sentNumMargin + rowPadding +
+	              (hasLeftArcs ? arcHorizontalSpacing : (hasInternalArcs ? arcSlant : 0)) /*+
+	              spaceWidth*/;
+            }
+// WEBANNO EXTENSION END            
             if (spacingRowBreak > 0) {
               currentX += spacingRowBreak;
               spacing = 0; // do not center intervening elements
@@ -2048,10 +2112,21 @@ Util.profileStart('chunks');
           row.chunks.push(chunk);
           chunk.row = row;
 
+// WEBANNO EXTENSION BEGIN - RTL support - chunk - translate position (based on currentX/boxX)
+/*
           translate(chunk, currentX + boxX, 0);
           chunk.textX = currentX + boxX;
+*/
+          translate(chunk, currentX + (rtlmode ? -boxX : boxX), 0);
+          chunk.textX = currentX + (rtlmode ? -boxX : boxX);
+// WEBANNO EXTENSION END
 
+// WEBANNO EXTENSION BEGIN - RTL support - [currentX] adjustment for boxWidth (chunk)
+/*
           currentX += boxWidth;
+*/
+          currentX += rtlmode ? -boxWidth : boxWidth;
+// WEBANNO EXTENSION END
         }); // chunks
 
         // finish the last row
@@ -2725,8 +2800,21 @@ Util.profileStart('rows');
           if (row.sentence) {
             var sentence_hash = new URLHash(coll, doc, { focus: [[ 'sent', row.sentence ]] } );
             var link = svg.link(sentNumGroup, sentence_hash.getHash());
+// WEBANNO EXTENSION BEGIN - RTL support - Sentence number in margin           
+/*
             var text = svg.text(link, sentNumMargin - Configuration.visual.margin.x, y - rowPadding,
                 '' + row.sentence, { 'data-sent': row.sentence });
+*/
+			// Render sentence number as link
+            var text;
+            if (rtlmode) {
+              text = svg.text(link, canvasWidth - sentNumMargin + Configuration.visual.margin.x, y - rowPadding,
+                  '' + row.sentence, { 'data-sent': row.sentence });
+            } else {
+              text = svg.text(link, sentNumMargin - Configuration.visual.margin.x, y - rowPadding,
+                  '' + row.sentence, { 'data-sent': row.sentence });
+            }
+// WEBANNO EXTENSION END            
             var sentComment = data.sentComment[row.sentence];
             if (sentComment) {
               var box = text.getBBox();
@@ -2796,11 +2884,30 @@ Util.profileStart('chunkFinish');
           }
           var nextChunk = data.chunks[chunkNo + 1];
           var nextSpace = nextChunk ? nextChunk.space : '';
+// WEBANNO EXTENSION BEGIN - RTL support - Render chunks as SVG text
+/*
           sentenceText.span(chunk.text + nextSpace, {
             x: chunk.textX,
             y: chunk.row.textY,
             'data-chunk-id': chunk.index
           });
+*/
+          if (rtlmode) {
+        	// Render every text chunk as a SVG text so we maintain control over the layout. When 
+        	// rendering as a SVG span (as brat does), then the browser changes the layout on the 
+        	// X-axis as it likes in RTL mode.
+            svg.text(textGroup, chunk.textX, chunk.row.textY, chunk.text + nextSpace, {
+              'data-chunk-id': chunk.index
+            });
+          }
+          else {
+        	// Original rendering using tspan in ltr mode as it play nicer with selection
+            sentenceText.span(chunk.text + nextSpace, {
+              x: chunk.textX,
+              y: chunk.row.textY,
+              'data-chunk-id': chunk.index});
+          }
+// WEBANNO EXTENSION END
 
           // chunk backgrounds
           if (chunk.fragments.length) {
@@ -2945,9 +3052,22 @@ Util.profileStart('chunkFinish');
 Util.profileEnd('chunkFinish');
 Util.profileStart('finish');
 
+// WEBANNO EXTENSION BEGIN - RTL support - Render sentence number margin separator
+/*
         svg.path(sentNumGroup, svg.createPath().
           move(sentNumMargin, 0).
           line(sentNumMargin, y));
+*/
+        if (rtlmode) {
+          svg.path(sentNumGroup, svg.createPath().
+            move(canvasWidth - sentNumMargin, 0).
+            line(canvasWidth - sentNumMargin, y));
+        } else {
+          svg.path(sentNumGroup, svg.createPath().
+            move(sentNumMargin, 0).
+            line(sentNumMargin, y));
+        }
+// WEBANNO EXTENSION END        
 
         // resize the SVG
         var width = maxTextWidth + sentNumMargin + 2 * Configuration.visual.margin.x + 1;
@@ -2956,6 +3076,11 @@ Util.profileStart('finish');
         $svg.width(canvasWidth);
         $svg.height(y);
         $svg.attr("viewBox", "0 0 " + canvasWidth + " " + y);
+// WEBANNO EXTENSION BEGIN - RTL support - Set SVG canvas to RTL mode
+        if (rtlmode) {
+          $svg.attr("direction", "rtl");
+        }
+// WEBANNO EXTENSION END        
         $svgDiv.height(y);
 
 Util.profileEnd('finish');

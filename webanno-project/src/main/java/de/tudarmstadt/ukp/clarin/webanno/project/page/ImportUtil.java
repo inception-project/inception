@@ -48,6 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
+import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -400,6 +401,15 @@ public class ImportUtil
         project.setName(projectName);
         project.setDescription(aProject.getDescription());
         project.setMode(aProject.getMode());
+        
+        // Set default to LTR on import from old WebAnno versions
+        if (aProject.getScriptDirection() == null) {
+            project.setScriptDirection(ScriptDirection.LTR);
+        }
+        else {
+            project.setScriptDirection(aProject.getScriptDirection());
+        }
+        
         aRepository.createProject(project, user);
         return project;
     }

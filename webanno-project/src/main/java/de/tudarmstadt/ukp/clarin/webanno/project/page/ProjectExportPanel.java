@@ -517,6 +517,7 @@ public class ProjectExportPanel extends Panel {
             exProjekt.setDescription(aProject.getDescription());
             exProjekt.setName(aProject.getName());
             exProjekt.setMode(aProject.getMode());
+            exProjekt.setScriptDirection(aProject.getScriptDirection());
             exProjekt.setVersion(aProject.getVersion());
 
             List<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer> exLayers = new ArrayList<>();

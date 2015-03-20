@@ -46,6 +46,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.WhoamiResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
@@ -246,6 +247,8 @@ public class BratAjaxCasController
     public static void render(GetDocumentResponse aResponse, BratAnnotatorModel aBModel,
             JCas aJCas, AnnotationService aAnnotationService)
     {
+        aResponse.setRtlMode(ScriptDirection.RTL.equals(aBModel.getProject().getScriptDirection()));
+        
         // Render invisible baseline annotations (sentence, tokens)
         SpanAdapter.renderTokenAndSentence(aJCas, aResponse, aBModel);
 
