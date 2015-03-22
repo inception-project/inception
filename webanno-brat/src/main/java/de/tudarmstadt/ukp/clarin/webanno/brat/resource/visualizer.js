@@ -1738,8 +1738,6 @@ Util.profileStart('chunks');
 
             var shadowRect;
             var markedRect;
-// BEGIN WEBANNO EXTENSION - WebAnno does not support search / span marking
-/*
             if (span.marked) {
               markedRect = svg.rect(chunk.highlightGroup,
                   bx - markedSpanSize, by - markedSpanSize,
@@ -1763,7 +1761,6 @@ Util.profileStart('chunks');
               chunkTo = Math.max(bx + bw + markedSpanSize, chunkTo);
               fragmentHeight = Math.max(bh + 2 * markedSpanSize, fragmentHeight);
             }
-*/
 // WEBANNO EXTENSION END           
             // .match() removes unconfigured shadows, which were
             // always showing up as black.

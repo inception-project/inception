@@ -1044,6 +1044,12 @@ public class BratAnnotator
         aTarget.add(annotationFeatureForm);
 
         setLayerAndFeatureModels(jCas);
+        
+        // Mark edited annotation in UI
+        aTarget.appendJavaScript("Wicket.$('" + vis.getMarkupId()
+                + "').dispatcher.post('current', " + "['" + getCollection()
+                + "', '1234', {edited:[[" + selectedAnnotationId + "]]}, false]);");
+        
         bratRender(aTarget, jCas);
         onChange(aTarget, getModelObject());
     }
