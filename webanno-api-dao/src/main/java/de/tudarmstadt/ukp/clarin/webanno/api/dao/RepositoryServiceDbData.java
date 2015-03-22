@@ -22,6 +22,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.commons.io.IOUtils.copyLarge;
 import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.uima.cas.impl.Serialization.deserializeCASComplete;
+import static org.apache.uima.cas.impl.Serialization.serializeCASComplete;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngine;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
 import static org.apache.uima.fit.pipeline.SimplePipeline.runPipeline;
@@ -37,6 +39,8 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -130,7 +134,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.TagsetDescription;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.dkpro.core.io.bincas.SerializedCasReader;
+import de.tudarmstadt.ukp.dkpro.core.io.bincas.BinaryCasReader;
 import de.tudarmstadt.ukp.dkpro.core.io.bincas.SerializedCasWriter;
 import de.tudarmstadt.ukp.dkpro.core.tokit.BreakIteratorSegmenter;
 
@@ -569,81 +573,46 @@ public class RepositoryServiceDbData
         throws UIMAException, IOException, ClassNotFoundException
     {
         File annotationFolder = getAnnotationFolder(aDocument);
-        String serializedCaseFileName;
-        // for Correction, it will export the corrected document (of the logged
-        // in user)
-        // (CORRECTION_USER.ser is
-        // the automated result displayed for the user to correct it, not the
-        // final result)
-        // for automation, it will export either the corrected cocument
-        // (Annotated) or the automated
-        // document
+        String serializedCasFileName;
+        // for Correction, it will export the corrected document (of the logged in user)
+        // (CORRECTION_USER.ser is the automated result displayed for the user to correct it, not 
+        // the final result) for automation, it will export either the corrected document
+        // (Annotated) or the automated document
         if (aMode.equals(Mode.ANNOTATION) || aMode.equals(Mode.AUTOMATION)
                 || aMode.equals(Mode.CORRECTION)) {
-            serializedCaseFileName = aUser + ".ser";
+            serializedCasFileName = aUser + ".ser";
         }
         // The merge result will be exported
         else {
-            serializedCaseFileName = WebAnnoConst.CURATION_USER + ".ser";
+            serializedCasFileName = WebAnnoConst.CURATION_USER + ".ser";
         }
 
-        CollectionReader reader = CollectionReaderFactory
-                .createReader(SerializedCasReader.class, SerializedCasReader.PARAM_SOURCE_LOCATION,
-                        annotationFolder, SerializedCasReader.PARAM_PATTERNS, new String[] { "[+]"
-                                + serializedCaseFileName });
-        if (!reader.hasNext()) {
-            throw new FileNotFoundException("Annotation file [" + serializedCaseFileName
+        // Read file
+        File serializedCasFile = new File(annotationFolder, serializedCasFileName);
+        if (!serializedCasFile.exists()) {
+            throw new FileNotFoundException("Annotation file [" + serializedCasFileName
                     + "] not found in [" + annotationFolder + "]");
         }
-        List<AnnotationLayer> layers = annotationService
-                .listAnnotationLayer(aDocument.getProject());
-        List<String> multipleSpans = new ArrayList<String>();
-        for (AnnotationLayer layer : layers) {
-            if (layer.isMultipleTokens()) {
-                multipleSpans.add(layer.getName());
-            }
-        }
         
-        File exportTempDir = File.createTempFile("webanno", "export");
-        exportTempDir.delete();
-        exportTempDir.mkdirs();
+        CAS cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
+        readSerializedCas(cas.getJCas(), serializedCasFile);
         
-        AnalysisEngineDescription writer;
-        if (aWriter.getName()
-                .equals("de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoCustomTsvWriter")) {
-            writer = createEngineDescription(aWriter,
-                    JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
-                    JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension, "multipleSpans",
-                    multipleSpans);
-        }
-        else {
-            writer = createEngineDescription(aWriter,
-                    JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
-                    JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension);
-        }
-        CAS cas = JCasFactory.createJCas().getCas();
-        reader.getNext(cas);
-        // Get the original TCF file and preserve it
-        DocumentMetaData documentMetadata = DocumentMetaData.get(cas.getJCas());
+        // Update type system the CAS
+        upgrade(cas, aDocument.getProject());
+        
         // Update the source file name in case it is changed for some reason
-
         Project project = aDocument.getProject();
         File currentDocumentUri = new File(dir.getAbsolutePath() + PROJECT + project.getId()
                 + DOCUMENT + aDocument.getId() + SOURCE);
-
+        DocumentMetaData documentMetadata = DocumentMetaData.get(cas.getJCas());
         documentMetadata.setDocumentUri(new File(currentDocumentUri, aFileName).toURI().toURL()
                 .toExternalForm());
-
         documentMetadata.setDocumentBaseUri(currentDocumentUri.toURI().toURL().toExternalForm());
-
         documentMetadata.setCollectionId(currentDocumentUri.toURI().toURL().toExternalForm());
-
         documentMetadata.setDocumentUri(new File(dir.getAbsolutePath() + PROJECT + project.getId()
                 + DOCUMENT + aDocument.getId() + SOURCE + "/" + aFileName).toURI().toURL()
                 .toExternalForm());
-
-        // update the cas first
-        upgrade(cas, aDocument.getProject());
+        
         // update with the correct tagset name
         List<AnnotationFeature> features = annotationService.listAnnotationFeature(project);
         for (AnnotationFeature feature : features) {
@@ -657,11 +626,39 @@ public class RepositoryServiceDbData
             }
         }
 
+        File exportTempDir = File.createTempFile("webanno", "export");
+        exportTempDir.delete();
+        exportTempDir.mkdirs();
+        
+        AnalysisEngineDescription writer;
+        if (aWriter.getName()
+                .equals("de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoCustomTsvWriter")) {
+            List<AnnotationLayer> layers = annotationService
+                    .listAnnotationLayer(aDocument.getProject());
+            List<String> multipleSpans = new ArrayList<String>();
+            for (AnnotationLayer layer : layers) {
+                if (layer.isMultipleTokens()) {
+                    multipleSpans.add(layer.getName());
+                }
+            }
+
+            writer = createEngineDescription(aWriter,
+                    JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
+                    JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension, 
+                    "multipleSpans", multipleSpans);
+        }
+        else {
+            writer = createEngineDescription(aWriter,
+                    JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
+                    JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension);
+        }
+        
         runPipeline(cas, writer);
 
         createLog(project, aUser).info(
-                " Exported file [" + aDocument.getName() + "] with ID [" + aDocument.getId()
-                        + "] from project [" + project.getId() + "]");
+                " Exported annotation file [" + aDocument.getName() + "] with ID ["
+                        + aDocument.getId() + "] for user [" + aUser + "] from project ["
+                        + project.getId() + "]");
         createLog(project, aUser).removeAllAppenders();
 
         File exportFile;
@@ -1499,27 +1496,17 @@ public class RepositoryServiceDbData
     private void writeContent(SourceDocument aDocument, JCas aJcas, String aUsername)
         throws IOException
     {
+        DocumentMetaData md;
         try {
-            File targetPath = getAnnotationFolder(aDocument);
-            AnalysisEngine writer = AnalysisEngineFactory.createEngine(
-                    SerializedCasWriter.class, SerializedCasWriter.PARAM_TARGET_LOCATION,
-                    targetPath, SerializedCasWriter.PARAM_USE_DOCUMENT_ID, true);
-            DocumentMetaData md;
-            try {
-                md = DocumentMetaData.get(aJcas);
-            }
-            catch (IllegalArgumentException e) {
-                md = DocumentMetaData.create(aJcas);
-            }
-            md.setDocumentId(aUsername);
-            writer.process(aJcas);
+            md = DocumentMetaData.get(aJcas);
         }
-        catch (ResourceInitializationException e) {
-            throw new IOException(e);
+        catch (IllegalArgumentException e) {
+            md = DocumentMetaData.create(aJcas);
         }
-        catch (AnalysisEngineProcessException e) {
-            throw new IOException(e);
-        }
+        md.setDocumentId(aUsername);
+        
+        File targetPath = getAnnotationFolder(aDocument);
+        writeSerializedCas(aJcas, new File(targetPath, aUsername+".ser"));
     }
 
     @Override
@@ -1712,7 +1699,18 @@ public class RepositoryServiceDbData
 
                 // Now write the new version to "<username>.ser" or
                 // CURATION_USER.ser
-                writeContent(aDocument, aJcas, aUserName);
+                DocumentMetaData md;
+                try {
+                    md = DocumentMetaData.get(aJcas);
+                }
+                catch (IllegalArgumentException e) {
+                    md = DocumentMetaData.create(aJcas);
+                }
+                md.setDocumentId(aUserName);
+                
+                File targetPath = getAnnotationFolder(aDocument);
+                writeSerializedCas(aJcas, new File(targetPath, aUserName+".ser"));
+                
                 createLog(aDocument.getProject(), aUser.getUsername()).info(
                         "Updated annotation document [" + aDocument.getName() + "] " + "with ID ["
                                 + aDocument.getId() + "] in project ID ["
@@ -1845,45 +1843,32 @@ public class RepositoryServiceDbData
     private JCas getAnnotationContent(SourceDocument aDocument, String aUsername)
         throws IOException
     {
-        log.debug("Getting annotation document [" + aDocument.getName() + "] with ID ["
-                + aDocument.getId() + "] in project ID [" + aDocument.getProject().getId()
-                + "] for user [" + aUsername + "]");
+        if (log.isDebugEnabled()) {
+            log.debug("Getting annotation document [" + aDocument.getName() + "] with ID ["
+                    + aDocument.getId() + "] in project ID [" + aDocument.getProject().getId()
+                    + "] for user [" + aUsername + "]");
+        }
         
         //DebugUtils.smallStack();
         
         synchronized (lock) {
-
             File annotationFolder = getAnnotationFolder(aDocument);
 
             String file = aUsername + ".ser";
 
             try {
-
-                TypeSystemDescription builtInTypes = TypeSystemDescriptionFactory
-                        .createTypeSystemDescription();
-                List<TypeSystemDescription> projectTypes = getProjectTypes(aDocument.getProject());
-                projectTypes.add(builtInTypes);
-                TypeSystemDescription allTypes = CasCreationUtils.mergeTypeSystems(projectTypes);
-
-                CAS cas = JCasFactory.createJCas(allTypes).getCas();
-
-                CollectionReader reader = CollectionReaderFactory.createReader(
-                        SerializedCasReader.class, SerializedCasReader.PARAM_SOURCE_LOCATION,
-                        annotationFolder, SerializedCasReader.PARAM_PATTERNS, new String[] { "[+]"
-                                + file });
-                if (!reader.hasNext()) {
+                File serializedCasFile = new File(annotationFolder, file);
+                if (!serializedCasFile.exists()) {
                     throw new FileNotFoundException("Annotation document of user [" + aUsername
                             + "] for source document [" + aDocument.getName() + "] ("
                             + aDocument.getId() + "). not found in project["
                             + aDocument.getProject().getName() + "] ("
                             + aDocument.getProject().getId() + ")");
                 }
-                reader.getNext(cas);
-
+                
+                CAS cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
+                readSerializedCas(cas.getJCas(), serializedCasFile);
                 return cas.getJCas();
-            }
-            catch (IOException e) {
-                throw new DataRetrievalFailureException("Unable to parse annotation", e);
             }
             catch (UIMAException e) {
                 throw new DataRetrievalFailureException("Unable to parse annotation", e);
@@ -2463,5 +2448,26 @@ public class RepositoryServiceDbData
             }
         }
         return finishedAnnotationDocumentExist;
+    }
+    
+    private static void writeSerializedCas(JCas aJCas, File aFile)
+        throws IOException
+    {
+        try (ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(aFile))) {
+            CASCompleteSerializer serializer = serializeCASComplete(aJCas.getCasImpl());
+            os.writeObject(serializer);
+        }
+    }
+
+    private static void readSerializedCas(JCas aJCas, File aFile)
+        throws IOException
+    {
+        try (ObjectInputStream is = new ObjectInputStream(new FileInputStream(aFile))) {
+            CASCompleteSerializer serializer = (CASCompleteSerializer) is.readObject();
+            deserializeCASComplete(serializer, aJCas.getCasImpl());
+        }
+        catch (ClassNotFoundException e) {
+            throw new IOException(e);
+        }
     }
 }
