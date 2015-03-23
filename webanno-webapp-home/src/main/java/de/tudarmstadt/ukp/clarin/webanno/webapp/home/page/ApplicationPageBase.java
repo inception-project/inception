@@ -39,6 +39,7 @@ import org.apache.wicket.protocol.http.WebSession;
 import org.apache.wicket.protocol.http.request.WebClientInfo;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
+import org.apache.wicket.request.resource.caching.NoOpResourceCachingStrategy;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -166,6 +167,7 @@ public abstract class ApplicationPageBase
         // having to reload the application
         if (RuntimeConfigurationType.DEVELOPMENT.equals(getApplication().getConfigurationType())) {
             getApplication().getMarkupSettings().getMarkupFactory().getMarkupCache().clear();
+            getApplication().getResourceSettings().setCachingStrategy(NoOpResourceCachingStrategy.INSTANCE);
         }
    }
 
