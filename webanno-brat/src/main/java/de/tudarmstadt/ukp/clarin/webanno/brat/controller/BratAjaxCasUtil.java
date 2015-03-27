@@ -20,19 +20,17 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
-import static org.apache.uima.fit.util.JCasUtil.selectFollowing;
-import static org.apache.uima.fit.util.JCasUtil.selectPreceding;
-
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FSIterator;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.impl.FeatureStructureImpl;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.util.CasUtil;
+import org.apache.uima.cas.text.AnnotationIndex;
+import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
 
@@ -40,7 +38,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
-import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.TagsetDescription;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
@@ -259,10 +256,11 @@ public class BratAjaxCasUtil
      * @param aEnd the end offset.
      * @return the sentence.
      */
-    public static Sentence getCurrentSentence(JCas aJCas, int aBegin, int aEnd){
+    public static Sentence getCurrentSentence(JCas aJCas, int aBegin, int aEnd)
+    {
         Sentence currentSentence = null;
-        for(Sentence sentence :select(aJCas, Sentence.class)){
-            if(sentence.getBegin()<=aBegin && sentence.getEnd()>=aEnd){
+        for (Sentence sentence : select(aJCas, Sentence.class)) {
+            if (sentence.getBegin() <= aBegin && sentence.getEnd() >= aEnd) {
                 currentSentence = sentence;
                 break;
             }
@@ -273,7 +271,8 @@ public class BratAjaxCasUtil
     /**
      * Get the last sentence CAS address in the current display window
      *
-     * @param aJcas the JCas.
+     * @param aJcas
+     *            the JCas.
      * @param aFirstSentenceAddress
      *            the CAS address of the first sentence in the display window
      * @param aWindowSize
@@ -283,94 +282,109 @@ public class BratAjaxCasUtil
     public static int getLastSentenceAddressInDisplayWindow(JCas aJcas, int aFirstSentenceAddress,
             int aWindowSize)
     {
-        int i = aFirstSentenceAddress;
-        int lastSentenceAddress = getLastSentenceAddress(aJcas);
-        int count = 1;
-
+        int count = 0;
+        FSIterator<Sentence> si = seekByAddress(aJcas, Sentence.class, aFirstSentenceAddress);
+        Sentence s = si.get();
         while (count < aWindowSize) {
-            i = getFollowingSentenceAddress(aJcas, i);
-            if (i >= lastSentenceAddress) {
-                return i;
+            si.moveToNext();
+            if (si.isValid()) {
+                s = si.get();
             }
-            count++;
+            else {
+                break;
+            }
+            count ++;
         }
-        return i;
+        
+        return s.getAddress();
     }
 
-
     /**
-     * Get the last sentence CAS End Offset in the current display window
-     *
-     * @param aJcas the JCas.
-     * @param aFirstSentenceAddress
-     *            the CAS address of the first sentence in the display window
-     * @param aWindowSize
-     *            the window size
-     * @return The address of the last sentence address in the current display window.
+     * Get an iterator position at the annotation with the specified address.
+     * 
+     * @param aJcas
+     *            the CAS object
+     * @param aType
+     *            the expected annotation type
+     * @param aAddr
+     *            the annotationa address
+     * @return the iterator.
      */
-    public static int getLastSentenceEndOffsetInDisplayWindow(JCas aJcas, int aFirstSentenceAddress,
-            int aWindowSize)
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private static <T extends Annotation> FSIterator<T> seekByAddress(JCas aJcas, Class<T> aType,
+            int aAddr)
     {
-        int i = getLastSentenceAddressInDisplayWindow(aJcas, aFirstSentenceAddress, aWindowSize);
-        return selectByAddr(aJcas, i).getEnd();
+        AnnotationIndex<T> idx = (AnnotationIndex) aJcas.getAnnotationIndex(JCasUtil
+                .getAnnotationType(aJcas, aType));
+        return idx.iterator(selectByAddr(aJcas, aAddr));
     }
 
     /**
-     * Get the beginning address of a sentence to be displayed in BRAT.
+     * Gets the address of the first sentence visible on screen in such a way that the specified
+     * focus offset is centered on screen.
      *
      * @param aJcas
      *            the CAS object
      * @param aSentenceAddress
      *            the old sentence address
-     * @param aOffSet
+     * @param aFocosOffset
      *            the actual offset of the sentence.
-     * @param aProject the project.
-     * @param aDocument the document.
-     * @param aWindowSize the window size.
+     * @param aProject
+     *            the project.
+     * @param aDocument
+     *            the document.
+     * @param aWindowSize
+     *            the window size.
      * @return the ID of the first sentence.
      */
-    public static int getSentenceBeginAddress(JCas aJcas, int aSentenceAddress, int aOffSet,
+    public static int getSentenceBeginAddress(JCas aJcas, int aSentenceAddress, int aFocosOffset,
             Project aProject, SourceDocument aDocument, int aWindowSize)
     {
-        int i = aSentenceAddress;
-        int count = 0;
-        while (count <= aWindowSize) {
-            count++;
-            Sentence sentence = selectByAddr(aJcas, Sentence.class, i);
-            if (sentence.getBegin() <= aOffSet && aOffSet <= sentence.getEnd()) {
+        FSIterator<Sentence> si = seekByAddress(aJcas, Sentence.class, aSentenceAddress);
+        
+        // Seek the sentence that contains the current focus
+        Sentence s = si.get();
+        while (si.isValid()) {
+            if (s.getEnd() < aFocosOffset) {
+                // Focus after current sentence
+                si.moveToNext();
+            }
+            else if (aFocosOffset < s.getBegin()) {
+                // Focus before current sentence
+                si.moveToPrevious();
+            }
+            else {
+                // Focus must be in current sentence
                 break;
             }
-            List<Sentence> precedingSentences = selectFollowing(aJcas, Sentence.class, sentence, 1);
-            if (precedingSentences.size() > 0) {
-                i = precedingSentences.get(0).getAddress();
+            s = si.get();
+        }
+        
+        // Center sentence
+        int count = 0;
+        while (si.isValid() && count < (aWindowSize / 2)) {
+            si.moveToPrevious();
+            if (si.isValid()) {
+                s = si.get();
             }
+            count++;
         }
-
-        Sentence sentence = selectByAddr(aJcas, Sentence.class, i);
-        List<Sentence> precedingSentences = selectPreceding(aJcas, Sentence.class, sentence,
-                aWindowSize / 2);
-
-        if (precedingSentences.size() > 0 && aSentenceAddress >= i) {
-            return precedingSentences.get(0).getAddress();
-        }
-
-        if (precedingSentences.size() > 0 && aWindowSize > 2) {
-            return precedingSentences.get(0).getAddress();
-        }
-        // Selection is on the first sentence
-        return sentence.getAddress();
+        
+        return s.getAddress();
     }
 
     /**
      * Move to the next page of size display window.
-     * @param aJcas the JCas.
-     *
+     * 
+     * @param aJcas
+     *            the JCas.
      * @param aCurrenSentenceBeginAddress
      *            The beginning sentence address of the current window.
-     * @param aWindowSize the window size.
+     * @param aWindowSize
+     *            the window size.
      * @return the Beginning address of the next window
      */
-    public static int getNextDisplayWindowSentenceBeginAddress(JCas aJcas,
+    public static int getNextPageFirstSentenceAddress(JCas aJcas,
             int aCurrenSentenceBeginAddress, int aWindowSize)
     {
         List<Integer> beginningAddresses = getDisplayWindowBeginningSentenceAddresses(aJcas,
@@ -378,11 +392,11 @@ public class BratAjaxCasUtil
 
         int beginningAddress = aCurrenSentenceBeginAddress;
         for (int i = 0; i < beginningAddresses.size(); i++) {
-
             if (i == beginningAddresses.size() - 1) {
                 beginningAddress = beginningAddresses.get(i);
                 break;
             }
+            
             if (beginningAddresses.get(i) == aCurrenSentenceBeginAddress) {
                 beginningAddress = beginningAddresses.get(i + 1);
                 break;
@@ -394,8 +408,8 @@ public class BratAjaxCasUtil
                 break;
             }
         }
+        
         return beginningAddress;
-
     }
 
     /**
@@ -430,27 +444,6 @@ public class BratAjaxCasUtil
         return beginningAddress;
     }
 
-    /**
-     * Get the sentence address of the next sentence
-     *
-     * @param aJcas
-     *            The CAS object
-     * @param aRef
-     *            The address of the current sentence
-     * @return address of the next sentence
-     */
-    public static int getFollowingSentenceAddress(JCas aJcas, int aRef)
-    {
-        Sentence sentence = selectByAddr(aJcas, Sentence.class, aRef);
-        List<Sentence> followingSentence = selectFollowing(aJcas, Sentence.class, sentence, 1);
-        if (followingSentence.size() > 0) {
-            return followingSentence.get(0).getAddress();
-        }
-        else {
-            return aRef;
-        }
-    }
-
     public static int getLastDisplayWindowFirstSentenceAddress(JCas aJcas, int aWindowSize)
     {
         List<Integer> displayWindowBeginingSentenceAddresses = getDisplayWindowBeginningSentenceAddresses(
@@ -468,7 +461,6 @@ public class BratAjaxCasUtil
     public static int getNumberOfPages(JCas aJcas)
     {
         return select(aJcas, Sentence.class).size();
-
     }
 
     /**
@@ -525,14 +517,13 @@ public class BratAjaxCasUtil
     {
         int sentenceNumber = 0;
         for (Sentence sentence : select(aJcas, Sentence.class)) {
-            if (sentence.getBegin() <= aBeginOffset && aBeginOffset<=sentence.getEnd()) {
+            if (sentence.getBegin() <= aBeginOffset && aBeginOffset <= sentence.getEnd()) {
                 sentenceNumber++;
                 break;
             }
             sentenceNumber++;
         }
         return sentenceNumber;
-
     }
 
     /**
@@ -543,10 +534,9 @@ public class BratAjaxCasUtil
      */
     public static int getSentenceAddress(JCas aJcas, int aSentenceNumber)
     {
-
         int i = 1;
         int address = 0;
-        if (aSentenceNumber <1){
+        if (aSentenceNumber < 1) {
             return 0;
         }
         for (Sentence sentence : select(aJcas, Sentence.class)) {
@@ -561,7 +551,6 @@ public class BratAjaxCasUtil
             return 0;
         }
         return address;
-
     }
 
     /**

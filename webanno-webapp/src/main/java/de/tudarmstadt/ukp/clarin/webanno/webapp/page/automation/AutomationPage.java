@@ -829,7 +829,7 @@ public class AutomationPage
                                 bratAnnotatorModel.getSentenceBeginOffset(),
                                 bratAnnotatorModel.getSentenceEndOffset()).getAddress();
                         int nextSentenceAddress = BratAjaxCasUtil
-                                .getNextDisplayWindowSentenceBeginAddress(mergeJCas, address,
+                                .getNextPageFirstSentenceAddress(mergeJCas, address,
                                         bratAnnotatorModel.getWindowSize());
                         if (address != nextSentenceAddress) {
                             bratAnnotatorModel.setSentenceAddress(nextSentenceAddress);
