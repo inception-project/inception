@@ -280,6 +280,8 @@ public class BratAnnotator
                                     + "manager to re-open it via the Montoring page");
                         }
                         result = new SpanOpenDialogResponse();
+                        bratRenderHighlight(aTarget, selectedAnnotationId);
+                        bratRender(aTarget, jCas);
                     }
                     else if (action.equals(ArcOpenDialogResponse.COMMAND)) {
                         JCas jCas = getCas(getModelObject());
@@ -303,6 +305,8 @@ public class BratAnnotator
                             error("This document is already closed. Please ask admin to re-open");
                         }
                         result = new ArcOpenDialogResponse();
+                        bratRenderHighlight(aTarget, selectedAnnotationId);
+                        bratRender(aTarget, jCas);
                     }
                     else if (action.equals(LoadConfResponse.COMMAND)) {
                         result = controller.loadConf();
@@ -817,6 +821,28 @@ public class BratAnnotator
     {
         aTarget.appendJavaScript(bratRenderCommand(aJCas));
     }
+    
+    /**
+     * Render content as part of the current request.
+     *
+     * @param aTarget
+     *            the AJAX target.
+     * @param aAnnotationId
+     *            the annotation ID to highlight.
+     */
+    public void bratRenderHighlight(AjaxRequestTarget aTarget, int aAnnotationId)
+    {
+        if (aAnnotationId < 0) {
+            aTarget.appendJavaScript("Wicket.$('" + vis.getMarkupId()
+                    + "').dispatcher.post('current', " + "['" + getCollection()
+                    + "', '1234', {edited:[]}, false]);");
+        }
+        else {
+            aTarget.appendJavaScript("Wicket.$('" + vis.getMarkupId()
+                    + "').dispatcher.post('current', " + "['" + getCollection()
+                    + "', '1234', {edited:[[" + aAnnotationId + "]]}, false]);");
+        }
+    }
 
     public void bratInit(AjaxRequestTarget aTarget)
     {
@@ -1046,10 +1072,7 @@ public class BratAnnotator
         setLayerAndFeatureModels(jCas);
         
         // Mark edited annotation in UI
-        aTarget.appendJavaScript("Wicket.$('" + vis.getMarkupId()
-                + "').dispatcher.post('current', " + "['" + getCollection()
-                + "', '1234', {edited:[[" + selectedAnnotationId + "]]}, false]);");
-        
+        bratRenderHighlight(aTarget, selectedAnnotationId);
         bratRender(aTarget, jCas);
         onChange(aTarget, getModelObject());
     }
