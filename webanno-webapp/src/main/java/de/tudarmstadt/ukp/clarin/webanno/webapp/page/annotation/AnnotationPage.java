@@ -361,7 +361,7 @@ public class AnnotationPage
                     if (bratAnnotatorModel.getDocument() != null) {
                         JCas jCas = getJCas();
                         int nextSentenceAddress = BratAjaxCasUtil
-                                .getNextDisplayWindowSentenceBeginAddress(jCas,
+                                .getNextPageFirstSentenceAddress(jCas,
                                         bratAnnotatorModel.getSentenceAddress(),
                                         bratAnnotatorModel.getWindowSize());
                         if (bratAnnotatorModel.getSentenceAddress() != nextSentenceAddress) {

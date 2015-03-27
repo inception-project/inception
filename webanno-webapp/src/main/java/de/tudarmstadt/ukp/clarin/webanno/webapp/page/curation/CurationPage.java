@@ -696,7 +696,7 @@ public class CurationPage
                         mergeJCas = repository.getCurationDocumentContent(bratAnnotatorModel
                                 .getDocument());
                         int nextSentenceAddress = BratAjaxCasUtil
-                                .getNextDisplayWindowSentenceBeginAddress(mergeJCas,
+                                .getNextPageFirstSentenceAddress(mergeJCas,
                                         bratAnnotatorModel.getSentenceAddress(),
                                         bratAnnotatorModel.getWindowSize());
                         if (bratAnnotatorModel.getSentenceAddress() != nextSentenceAddress) {
