@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
+import static java.util.Arrays.asList;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -84,12 +85,16 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Argument;
+import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
+import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.OffsetsList;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcOpenDialogResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Relation;
+import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.LoadConfResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanOpenDialogResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.WhoamiResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAjaxResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAnnotationLogResourceReference;
@@ -137,6 +142,10 @@ public class BratAnnotator
     private static final String PARAM_ORIGIN_SPAN_ID = "originSpanId";
     private static final String PARAM_TARGET_TYPE = "targetType";
     private static final String PARAM_ORIGIN_TYPE = "originType";
+
+    private static final String GHOST_PLACE_HOLDER = "###";
+    private static final String GHOST_COLOR = "orange";
+
 
     @SpringBean(name = "jsonConverter")
     private MappingJacksonHttpMessageConverter jsonConverter;
@@ -240,12 +249,18 @@ public class BratAnnotator
                     if (action.equals(WhoamiResponse.COMMAND)) {
                         result = controller.whoami();
                     }
-                    else if (action.equals(SpanOpenDialogResponse.COMMAND)) {
+                    else if (action.equals(SpanAnnotationResponse.COMMAND)) {
                         isRelationAnno = false;
                         JCas jCas = getCas(getModelObject());
                         if (request.getParameterValue(PARAM_ID).toString() == null) {
                             selectedAnnotationId = -1;
                             setLayerAndFeatureModels(jCas);
+                        }
+                        else if (request.getParameterValue(PARAM_ID).toInt() == -1) {
+                            LOG.info("This is ghost Annotation, select Layer and Feature to annotate.");
+                            error("This is ghost Annotation, select Layer and Feature to annotate.");
+                            aTarget.addChildren(getPage(), FeedbackPanel.class);
+                            return;
                         }
                         else {
                             selectedAnnotationId = request.getParameterValue(PARAM_ID).toInt();
@@ -279,11 +294,14 @@ public class BratAnnotator
                             error("This document is already closed. Please ask your project "
                                     + "manager to re-open it via the Montoring page");
                         }
-                        result = new SpanOpenDialogResponse();
-                        bratRenderHighlight(aTarget, selectedAnnotationId);
-                        bratRender(aTarget, jCas);
+                        if(selectedAnnotationId==-1) {
+                            bratRenderHighlight(aTarget, selectedAnnotationId);
+                            bratRender(aTarget, jCas);
+                            ghostSpanAnnotationRender(aTarget, jCas, offsetLists.get(0).getBegin(), offsetLists
+                                    .get(offsetLists.size() - 1).getEnd());
+                        }
                     }
-                    else if (action.equals(ArcOpenDialogResponse.COMMAND)) {
+                    else if (action.equals(ArcAnnotationResponse.COMMAND)) {
                         JCas jCas = getCas(getModelObject());
                         isRelationAnno = true;
 
@@ -296,6 +314,12 @@ public class BratAnnotator
                             selectedAnnotationId = -1;
                             setLayerAndFeatureModels(jCas);
                         }
+                        else if (request.getParameterValue(PARAM_ARC_ID).toInt() == -1) {
+                            LOG.info("This is ghost Annotation, select Layer and Feature to annotate.");
+                            error("This is ghost Annotation, select Layer and Feature to annotate.");
+                            aTarget.addChildren(getPage(), FeedbackPanel.class);
+                            return;
+                        }
                         else {
                             selectedAnnotationId = request.getParameterValue(PARAM_ARC_ID).toInt();
                             setLayerAndFeatureModels(jCas);
@@ -304,9 +328,11 @@ public class BratAnnotator
                         if (BratAnnotatorUtility.isDocumentFinished(repository, getModelObject())) {
                             error("This document is already closed. Please ask admin to re-open");
                         }
-                        result = new ArcOpenDialogResponse();
-                        bratRenderHighlight(aTarget, selectedAnnotationId);
-                        bratRender(aTarget, jCas);
+                        if(selectedAnnotationId==-1) {
+                            bratRenderHighlight(aTarget, selectedAnnotationId);
+                            bratRender(aTarget, jCas);
+                            ghostArcAnnotationRender(aTarget, jCas);
+                        }
                     }
                     else if (action.equals(LoadConfResponse.COMMAND)) {
                         result = controller.loadConf();
@@ -750,6 +776,43 @@ public class BratAnnotator
                 + "]);";
     }
 
+    public void ghostSpanAnnotationRender(AjaxRequestTarget aTarget, JCas aJCas, int aBeginOffset,
+            int aEndOffset)
+    {
+        LOG.info("BEGIN ghostAnnoRender");
+        GetDocumentResponse response = new GetDocumentResponse();
+        // SpanAdapter.renderTokenAndSentence(aJCas, response, getModelObject());
+        List<Offsets> offsets = new ArrayList<Offsets>();
+        offsets.add(new Offsets(aBeginOffset, aEndOffset));
+        response.addEntity(new Entity(-1, GHOST_PLACE_HOLDER, offsets, GHOST_PLACE_HOLDER, GHOST_COLOR));
+
+        BratAjaxCasController.render(response, getModelObject(), aJCas, annotationService);
+
+        String json = toJson(response);
+        aTarget.appendJavaScript("Wicket.$('" + vis.getMarkupId()
+                + "').dispatcher.post('renderData', [" + json + "]);");
+        LOG.info("END ghostAnnoRender");
+
+    }
+
+    public void ghostArcAnnotationRender(AjaxRequestTarget aTarget, JCas aJCas)
+    {
+        LOG.info("BEGIN ghostArcAnnoRender");
+        GetDocumentResponse response = new GetDocumentResponse();
+        List<Argument> argumentList = asList(new Argument("Arg1", originSpanId),
+                new Argument("Arg2",targetSpanId));
+        response.addRelation(new Relation(-1,
+                    GHOST_PLACE_HOLDER, argumentList, GHOST_PLACE_HOLDER, GHOST_COLOR));
+
+        BratAjaxCasController.render(response, getModelObject(), aJCas, annotationService);
+
+        String json = toJson(response);
+        aTarget.appendJavaScript("Wicket.$('" + vis.getMarkupId()
+                + "').dispatcher.post('renderData', [" + json + "]);");
+        LOG.info("END ghostArcAnnoRender");
+
+    }
+
     /**
      * This triggers the loading of the metadata (colors, types, etc.)
      *
@@ -821,7 +884,7 @@ public class BratAnnotator
     {
         aTarget.appendJavaScript(bratRenderCommand(aJCas));
     }
-    
+
     /**
      * Render content as part of the current request.
      *
@@ -1070,9 +1133,12 @@ public class BratAnnotator
         aTarget.add(annotationFeatureForm);
 
         setLayerAndFeatureModels(jCas);
-        
+
         // Mark edited annotation in UI
-        bratRenderHighlight(aTarget, selectedAnnotationId);
+        aTarget.appendJavaScript("Wicket.$('" + vis.getMarkupId()
+                + "').dispatcher.post('current', " + "['" + getCollection()
+                + "', '1234', {edited:[[" + selectedAnnotationId + "]]}, false]);");
+
         bratRender(aTarget, jCas);
         onChange(aTarget, getModelObject());
     }
@@ -1162,7 +1228,7 @@ public class BratAnnotator
         selectedAnnotationId = -1;
         aTarget.add(annotationFeatureForm);
 
-       // setLayerAndFeatureModels(jCas);
+        // setLayerAndFeatureModels(jCas);
         bratRender(aTarget, jCas);
         onChange(aTarget, getModelObject());
     }

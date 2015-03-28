@@ -22,12 +22,12 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.message;
  * 
  * This command is part of WebAnno and not contained in the original brat.
  */
-public class ArcOpenDialogResponse
+public class ArcAnnotationResponse
     extends AjaxResponse
 {
     public static final String COMMAND = "arcOpenDialog";
 
-    public ArcOpenDialogResponse()
+    public ArcAnnotationResponse()
     {
         super(COMMAND);
     }
