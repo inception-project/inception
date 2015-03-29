@@ -1312,10 +1312,20 @@ var Visualizer = (function($, window, undefined) {
               endPos = (lastChar < firstChar)
                 ? startPos
                 : text.getEndPositionOfChar(lastChar).x;
+              
+// WEBANNO EXTENSION BEGIN - RTL support - Curlies coordinates
+              // In RTL mode, positions are negative (left to right)
+              if (rtlmode) {
+            	startPos = -startPos;
+            	endPos = -endPos;
+              }
+              
+              // Make sure that starpos and endpos are properly ordered on the X axis
               fragment.curly = {
-                from: startPos,
-                to: endPos
-              };
+                  from: Math.min(startPos, endPos),
+                  to: Math.max(startPos, endPos)
+                };
+// WEBANNO EXTENSION END              
             } else { // it's markedText [id, start?, char#, offset]
               if (fragment[2] < 0) fragment[2] = 0;
               if (!fragment[2]) { // start
@@ -1964,10 +1974,28 @@ Util.profileStart('chunks');
           chunk.right = chunkTo;
           var textWidth = sizes.texts.widths[chunk.text];
           chunkHeight += sizes.texts.height;
+// WEBANNO EXTENSION BEGIN - RTL support - [boxX] adjustment for decoration
+/*
+          // If chunkFrom becomes negative, then boxX becomes positive
           var boxX = -Math.min(chunkFrom, 0);
+*/
+          // If chunkFrom becomes negative (LTR) or chunkTo becomes positive (RTL), then boxX becomes positive
+          var boxX = rtlmode ? chunkTo : -Math.min(chunkFrom, 0);
+// WEBANNO EXTENSION END         
+// WEBANNO EXTENSION BEGIN - RTL support - [boxWidth] calculation of boxWidth
+/*
           var boxWidth =
               Math.max(textWidth, chunkTo) -
               Math.min(0, chunkFrom);
+*/
+          var boxWidth;
+          if (rtlmode) {
+            boxWidth = Math.max(textWidth, -chunkFrom) - Math.min(0, -chunkTo);
+          }
+          else {
+            boxWidth = Math.max(textWidth, chunkTo) - Math.min(0, chunkFrom);
+          }
+// WEBANNO EXTENSION END
           // if (hasLeftArcs) {
             // TODO change this with smallestLeftArc
             // var spacing = arcHorizontalSpacing - (currentX - lastArcBorder);
@@ -2059,7 +2087,17 @@ Util.profileStart('chunks');
           if (row.index !== lastRow.index) {
             $.each(openTextHighlights, function(textId, textDesc) {
               if (textDesc[3] != lastX) {
+// WEBANNO EXTENSION BEGIN - RTL support - breaking highlights (?)
+/*
                 var newDesc = [lastRow, textDesc[3], lastX + boxX, textDesc[4]];
+*/
+                var newDesc;
+                if (rtlmode) {
+                  newDesc = [lastRow, textDesc[3], lastX - boxX, textDesc[4]];
+                } else {
+                  newDesc = [lastRow, textDesc[3], lastX + boxX, textDesc[4]];
+                }
+// WEBANNO EXTENSION END
                 textMarkedRows.push(newDesc);
               }
               textDesc[3] = currentX;
@@ -2068,13 +2106,23 @@ Util.profileStart('chunks');
 
           // open text highlights
           $.each(chunk.markedTextStart, function(textNo, textDesc) {
+// WEBANNO EXTENSION BEGIN - RTL support - breaking highlights (?)
+/*
             textDesc[3] += currentX + boxX;
+*/
+            textDesc[3] += currentX + (rtlmode ? -boxX : boxX);
+// WEBANNO EXTENSION END
             openTextHighlights[textDesc[0]] = textDesc;
           });
 
           // close text highlights
           $.each(chunk.markedTextEnd, function(textNo, textDesc) {
+// WEBANNO EXTENSION BEGIN - RTL support - breaking highlights (?)
+/*
             textDesc[3] += currentX + boxX;
+*/
+            textDesc[3] += currentX + (rtlmode ? -boxX : boxX);
+// WEBANNO EXTENSION END
             var startDesc = openTextHighlights[textDesc[0]];
             delete openTextHighlights[textDesc[0]];
             markedRow = [row, startDesc[3], textDesc[3], startDesc[4]];
@@ -3002,12 +3050,24 @@ Util.profileStart('chunkFinish');
               // tends to look better
               var yStartTweak = 1;
               // store to have same mouseover highlight without recalc
+// WEBANNO EXTENSION BEGIN - RTL support - Highlight positions
+/*
               fragment.highlightPos = {
                   x: chunk.textX + fragment.curly.from + xShrink,
                   y: chunk.row.textY + sizes.texts.y + yShrink + yStartTweak,
                   w: fragment.curly.to - fragment.curly.from - 2*xShrink,
                   h: sizes.texts.height - 2*yShrink - yStartTweak,
               };
+*/
+              // Store highlight coordinates
+              fragment.highlightPos = {
+                  x: chunk.textX + (rtlmode ? (fragment.curly.from - xShrink) : (fragment.curly.from + xShrink)),
+                  y: chunk.row.textY + sizes.texts.y + yShrink + yStartTweak,
+                  w: fragment.curly.to - fragment.curly.from - 2*xShrink,
+                  h: sizes.texts.height - 2*yShrink - yStartTweak,
+              };
+// WEBANNO EXTENSION END
+              // Render highlight              
               svg.rect(highlightGroup,
                   fragment.highlightPos.x, fragment.highlightPos.y,
                   fragment.highlightPos.w, fragment.highlightPos.h,
