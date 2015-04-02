@@ -577,6 +577,25 @@ public class BratAjaxCasUtil
         return seletedTextSb.toString();
     }
     
+    public static <T> T getFeature(FeatureStructure aFS, AnnotationFeature aFeature)
+    {
+        Feature labelFeature = aFS.getType().getFeatureByBaseName(aFeature.getName());
+
+        switch (labelFeature.getRange().getName()) {
+        case CAS.TYPE_NAME_STRING:
+            return (T) aFS.getStringValue(labelFeature);
+        case CAS.TYPE_NAME_BOOLEAN:
+            return (T) (Boolean) aFS.getBooleanValue(labelFeature);
+        case CAS.TYPE_NAME_FLOAT:
+            return (T) (Float) aFS.getFloatValue(labelFeature);
+        case CAS.TYPE_NAME_INTEGER:
+            return (T) (Integer) aFS.getIntValue(labelFeature);
+        default:
+            throw new IllegalArgumentException("Cannot get value of feature [" + aFeature.getName()
+                    + "] with type [" + labelFeature.getRange().getName() + "]");
+        }
+    }
+
     /**
      * Set a feature value.
      * 
@@ -590,60 +609,28 @@ public class BratAjaxCasUtil
      */
     public static void setFeature(FeatureStructure aFS, AnnotationFeature aFeature, Object aValue)
     {
-        if (aFeature != null) {
-            setFeature(aFS, aFeature.getName(), aValue);
+        if (aFeature == null) {
+            return;
         }
-    }
-
-    public static <T> T getFeature(FeatureStructure aFS, String aFeatureName)
-    {
-        Feature labelFeature = aFS.getType().getFeatureByBaseName(aFeatureName);
         
-        switch (labelFeature.getRange().getName()) {
-        case CAS.TYPE_NAME_STRING:
-            return (T) aFS.getStringValue(labelFeature);
-        case CAS.TYPE_NAME_BOOLEAN:
-            return (T) (Boolean) aFS.getBooleanValue(labelFeature);
-        case CAS.TYPE_NAME_FLOAT:
-            return (T) (Float) aFS.getFloatValue(labelFeature);
-        case CAS.TYPE_NAME_INTEGER:
-            return (T) (Integer) aFS.getIntValue(labelFeature);
-        default:
-            throw new IllegalArgumentException("Cannot get value of feature [" + aFeatureName
-                    + "] with type [" + labelFeature.getRange().getName() + "]");
-        }
-   }
-    
-   /**
-    * Set a feature value.
-    * 
-    * @param aFS
-    *            the feature structure.
-    * @param aFeatureName
-    *            the feature within the annotation whose value to set.
-    * @param aValue
-    *            the feature value.
-    */
-    public static void setFeature(FeatureStructure aFS, String aFeatureName, Object aValue)
-    {
-        Feature labelFeature = aFS.getType().getFeatureByBaseName(aFeatureName);
+        Feature feature = aFS.getType().getFeatureByBaseName(aFeature.getName());
 
-        switch (labelFeature.getRange().getName()) {
+        switch (feature.getRange().getName()) {
         case CAS.TYPE_NAME_STRING:
-            aFS.setStringValue(labelFeature, (String) aValue);
+            aFS.setStringValue(feature, (String) aValue);
             break;
         case CAS.TYPE_NAME_BOOLEAN:
-            aFS.setBooleanValue(labelFeature, aValue != null ? (boolean) aValue : false);
+            aFS.setBooleanValue(feature, aValue != null ? (boolean) aValue : false);
             break;
         case CAS.TYPE_NAME_FLOAT:
-            aFS.setFloatValue(labelFeature, aValue != null ? (float) aValue : 0.0f);
+            aFS.setFloatValue(feature, aValue != null ? (float) aValue : 0.0f);
             break;
         case CAS.TYPE_NAME_INTEGER:
-            aFS.setIntValue(labelFeature, aValue != null ? (int) aValue : 0);
+            aFS.setIntValue(feature, aValue != null ? (int) aValue : 0);
             break;
         default:
-            throw new IllegalArgumentException("Cannot set value of feature [" + aFeatureName
-                    + "] with type [" + labelFeature.getRange().getName() + "] to [" + aValue + "]");
+            throw new IllegalArgumentException("Cannot set value of feature [" + aFeature.getName()
+                    + "] with type [" + feature.getRange().getName() + "] to [" + aValue + "]");
         }
     }
 

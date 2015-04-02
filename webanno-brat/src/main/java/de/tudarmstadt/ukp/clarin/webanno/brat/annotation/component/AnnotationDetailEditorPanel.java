@@ -869,7 +869,7 @@ public class AnnotationDetailEditorPanel
                     }
                     if (feature.isEnabled()) {
                         selectedFeatureValues.put(feature, (Serializable) BratAjaxCasUtil
-                                .getFeature(annoFs, feature.getName()));
+                                .getFeature(annoFs, feature));
                     }
                 }
             }
@@ -914,7 +914,7 @@ public class AnnotationDetailEditorPanel
                 }
                 if (feature.isEnabled()) {
                     selectedFeatureValues.put(feature, (Serializable) BratAjaxCasUtil
-                            .getFeature(annoFs, feature.getName()));
+                            .getFeature(annoFs, feature));
                 }
             }
         }

@@ -385,7 +385,7 @@ public class SpanAdapter
         for (AnnotationFS fs : CasUtil.selectCovered(aJCas.getCas(), type, aBegin, aEnd)) {
 
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
-                if (ObjectUtils.equals(BratAjaxCasUtil.getFeature(fs, aFeature.getName()), aValue)) {
+                if (ObjectUtils.equals(BratAjaxCasUtil.getFeature(fs, aFeature), aValue)) {
                     delete(aJCas, ((FeatureStructureImpl) fs).getAddress());
                 }
             }
