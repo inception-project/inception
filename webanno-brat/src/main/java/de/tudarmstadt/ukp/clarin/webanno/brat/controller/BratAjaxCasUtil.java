@@ -24,6 +24,7 @@ import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang.ObjectUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FSIterator;
 import org.apache.uima.cas.Feature;
@@ -579,20 +580,27 @@ public class BratAjaxCasUtil
     
     public static <T> T getFeature(FeatureStructure aFS, AnnotationFeature aFeature)
     {
-        Feature labelFeature = aFS.getType().getFeatureByBaseName(aFeature.getName());
+        Feature feature = aFS.getType().getFeatureByBaseName(aFeature.getName());
 
-        switch (labelFeature.getRange().getName()) {
+        // Sanity check
+        if (ObjectUtils.equals(aFeature.getType(), feature.getRange().getName())) {
+            throw new IllegalArgumentException("Actual feature type ["
+                    + feature.getRange().getName() + "]does not match expected feature type ["
+                    + aFeature.getType() + "].");
+        }
+
+        switch (aFeature.getType()) {
         case CAS.TYPE_NAME_STRING:
-            return (T) aFS.getStringValue(labelFeature);
+            return (T) aFS.getStringValue(feature);
         case CAS.TYPE_NAME_BOOLEAN:
-            return (T) (Boolean) aFS.getBooleanValue(labelFeature);
+            return (T) (Boolean) aFS.getBooleanValue(feature);
         case CAS.TYPE_NAME_FLOAT:
-            return (T) (Float) aFS.getFloatValue(labelFeature);
+            return (T) (Float) aFS.getFloatValue(feature);
         case CAS.TYPE_NAME_INTEGER:
-            return (T) (Integer) aFS.getIntValue(labelFeature);
+            return (T) (Integer) aFS.getIntValue(feature);
         default:
             throw new IllegalArgumentException("Cannot get value of feature [" + aFeature.getName()
-                    + "] with type [" + labelFeature.getRange().getName() + "]");
+                    + "] with type [" + feature.getRange().getName() + "]");
         }
     }
 
@@ -615,7 +623,14 @@ public class BratAjaxCasUtil
         
         Feature feature = aFS.getType().getFeatureByBaseName(aFeature.getName());
 
-        switch (feature.getRange().getName()) {
+        // Sanity check
+        if (ObjectUtils.equals(aFeature.getType(), feature.getRange().getName())) {
+            throw new IllegalArgumentException("Actual feature type ["
+                    + feature.getRange().getName() + "]does not match expected feature type ["
+                    + aFeature.getType() + "].");
+        }
+        
+        switch (aFeature.getType()) {
         case CAS.TYPE_NAME_STRING:
             aFS.setStringValue(feature, (String) aValue);
             break;
