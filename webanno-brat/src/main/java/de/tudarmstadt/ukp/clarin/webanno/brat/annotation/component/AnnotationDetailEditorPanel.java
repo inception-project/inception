@@ -55,9 +55,9 @@ import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.RefreshingView;
+import org.apache.wicket.markup.repeater.util.ModelIteratorAdapter;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
@@ -110,7 +110,7 @@ public class AnnotationDetailEditorPanel
     private AnnotationFeatureForm annotationFeatureForm;
     private Label selectedTextLabel;
     private DropDownChoice<AnnotationLayer> layers;
-    private RefreshingView<FeatureValueModel> featureValues;
+    private RefreshingView<AnnotationFeature> featureValues;
     private WebMarkupContainer wmc;
     private AjaxButton annotateButton;
     private AjaxSubmitLink deleteButton;
@@ -121,7 +121,7 @@ public class AnnotationDetailEditorPanel
     private Map<AnnotationFeature, Serializable> selectedFeatureValues = 
             new HashMap<AnnotationFeature, Serializable>();
 
-    private List<IModel<FeatureValueModel>> featuresModel;
+    private List<AnnotationFeature> featuresModel;
     private List<IModel<Serializable>> featureValueModels;
 
     public AnnotationDetailEditorPanel(String id, IModel<BratAnnotatorModel> aModel)
@@ -132,14 +132,6 @@ public class AnnotationDetailEditorPanel
 
         annotationFeatureForm.setOutputMarkupId(true);
         add(annotationFeatureForm);
-    }
-
-    public class FeatureValueModel
-        implements Serializable
-    {
-        private static final long serialVersionUID = 8890434759648466456L;
-        public AnnotationFeature feature;
-        public String tag;
     }
 
     private class AnnotationFeatureForm
@@ -192,7 +184,7 @@ public class AnnotationDetailEditorPanel
                 {
                     BratAnnotatorModel model = AnnotationFeatureForm.this.getModelObject();
                     
-                    featuresModel = new ArrayList<IModel<FeatureValueModel>>();
+                    featuresModel = new ArrayList<AnnotationFeature>();
                     featureValueModels = new ArrayList<IModel<Serializable>>();
                     for (AnnotationFeature feature : annotationService
                             .listAnnotationFeature(model.getSelectedAnnotationLayer())) {
@@ -206,12 +198,9 @@ public class AnnotationDetailEditorPanel
                                         WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
                             continue;
                         }
-                        IModel<FeatureValueModel> featureModel = new Model<FeatureValueModel>();
 
-                        FeatureValueModel featureValue = new FeatureValueModel();
-                        featureValue.feature = feature;
-                        featureModel.setObject(featureValue);
-                        featuresModel.add(featureModel);
+                        featuresModel.add(feature);
+                        
                         IModel<Serializable> tagModel = Model.of();
                         if (selectedFeatureValues.containsKey(feature)) {
                             tagModel.setObject(selectedFeatureValues.get(feature));
@@ -224,22 +213,21 @@ public class AnnotationDetailEditorPanel
             });
             add(layers);
 
-            featuresModel = new ArrayList<IModel<FeatureValueModel>>();
+            featuresModel = new ArrayList<AnnotationFeature>();
             featureValueModels = new ArrayList<IModel<Serializable>>();
 
             updateFeaturesModel(annotationService, aBModel);
 
             wmc = new WebMarkupContainer("wmc");
             wmc.setOutputMarkupId(true);
-            add(wmc.add(featureValues = new RefreshingView<FeatureValueModel>("featureValues")
+            add(wmc.add(featureValues = new RefreshingView<AnnotationFeature>("featureValues")
             {
                 private static final long serialVersionUID = -8359786805333207043L;
 
                 @Override
-                protected void populateItem(final Item<FeatureValueModel> item)
+                protected void populateItem(final Item<AnnotationFeature> item)
                 {
-                    FeatureValueModel featureValue = item.getModelObject();
-                    AnnotationFeature feature = featureValue.feature;
+                    AnnotationFeature feature = item.getModelObject();
 
                     Component component;
                     switch (feature.getType()) {
@@ -271,7 +259,7 @@ public class AnnotationDetailEditorPanel
                     }
                 }
 
-                private Component renderLinkFeatureEditor(Item<FeatureValueModel> item,
+                private Component renderLinkFeatureEditor(Item<AnnotationFeature> item,
                         final AnnotationFeature feature, final IModel<String> model)
                 {
                     Fragment frag = new Fragment("editor", "linkFeatureEditor", item)
@@ -284,7 +272,7 @@ public class AnnotationDetailEditorPanel
                     return frag.get("tag");
                 }
                 
-                private Component renderBooleanFeatureEditor(Item<FeatureValueModel> item,
+                private Component renderBooleanFeatureEditor(Item<AnnotationFeature> item,
                         final AnnotationFeature feature, final IModel<Boolean> model)
                 {
                     Fragment frag = new Fragment("editor", "booleanFeatureEditor", item)
@@ -306,7 +294,7 @@ public class AnnotationDetailEditorPanel
 
                 @SuppressWarnings("unchecked")
                 private <N extends Number> Component renderNumberFeatureEditor(
-                        Item<FeatureValueModel> item, final AnnotationFeature feature,
+                        Item<AnnotationFeature> item, final AnnotationFeature feature,
                         final IModel<N> model)
                 {
                     Fragment frag = new Fragment("editor", "numberFeatureEditor", item)
@@ -341,7 +329,7 @@ public class AnnotationDetailEditorPanel
                     return frag.get("tag");
                 }
                 
-                private Component renderTextFeatureEditor(Item<FeatureValueModel> item,
+                private Component renderTextFeatureEditor(Item<AnnotationFeature> item,
                         final AnnotationFeature feature, final IModel<String> model)
                 {
                     Fragment frag = new Fragment("editor", "textFeatureEditor", item)
@@ -380,9 +368,18 @@ public class AnnotationDetailEditorPanel
                 }
 
                 @Override
-                protected Iterator<IModel<FeatureValueModel>> getItemModels()
+                protected Iterator<IModel<AnnotationFeature>> getItemModels()
                 {
-                    return featuresModel.iterator();
+                    ModelIteratorAdapter<AnnotationFeature> i = new ModelIteratorAdapter<AnnotationFeature>(
+                            featuresModel)
+                    {
+                        @Override
+                        protected IModel<AnnotationFeature> model(AnnotationFeature aObject)
+                        {
+                            return Model.of(aObject);
+                        }
+                    };
+                    return i;
                 }
             }));
             featureValues.setOutputMarkupId(true);
@@ -540,16 +537,10 @@ public class AnnotationDetailEditorPanel
                     continue;
                 }
 
-                IModel<FeatureValueModel> featureModel = new Model<FeatureValueModel>();
-
-                FeatureValueModel featureValue = new FeatureValueModel();
-                featureValue.feature = feature;
-                featureModel.setObject(featureValue);
-                featuresModel.add(featureModel);
+                featuresModel.add(feature);
                 
-                IModel<Serializable> tagModel = new Model<Serializable>();
+                IModel<Serializable> tagModel = Model.of();
                 if (aBModel.getSelectedAnnotationId() != -1) {
-
                     tagModel.setObject(selectedFeatureValues.get(feature));
                 }
                 else if (aBModel.getRememberedSpanFeatures() != null
@@ -571,7 +562,7 @@ public class AnnotationDetailEditorPanel
         
         // Verify if input is valid according to tagset
         for (int i = 0; i < featureValueModels.size(); i++) {
-            AnnotationFeature feature = featuresModel.get(i).getObject().feature;
+            AnnotationFeature feature = featuresModel.get(i);
             if (CAS.TYPE_NAME_STRING.equals(feature.getType())) {
                 @SuppressWarnings("unchecked")
                 IModel<String> model = (IModel<String>) (IModel) featureValueModels.get(i);
@@ -613,13 +604,12 @@ public class AnnotationDetailEditorPanel
                 aBModel.setSelectedAnnotationId(((ChainAdapter) adapter).addSpan(jCas,
                         aBModel.getBeginOffset(), aBModel.getEndOffset(), null, null));
             }
-            // continue;// next time, it will update features
         }
 
         // Set feature values
         List<AnnotationFeature> features = new ArrayList<AnnotationFeature>();
         for (int i = 0; i < featureValueModels.size(); i++) {
-            AnnotationFeature feature = featuresModel.get(i).getObject().feature;
+            AnnotationFeature feature = featuresModel.get(i);
             features.add(feature);
 
             // For string features with extensible tagsets, extend the tagset
@@ -683,7 +673,6 @@ public class AnnotationDetailEditorPanel
     private void actionDelete(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
         throws IOException, UIMAException, ClassNotFoundException
     {
-
         JCas jCas = getCas(aBModel);
         AnnotationFS fs = selectByAddr(jCas, aBModel.getSelectedAnnotationId());
         TypeAdapter adapter = getAdapter(aBModel.getSelectedAnnotationLayer());
@@ -745,16 +734,14 @@ public class AnnotationDetailEditorPanel
 
         // store latest annotations
         for (IModel<Serializable> model : featureValueModels) {
-            AnnotationFeature feature = featuresModel.get(featureValueModels.indexOf(model))
-                    .getObject().feature;
+            AnnotationFeature feature = featuresModel.get(featureValueModels.indexOf(model));
             aBModel.setSelectedAnnotationLayer(feature.getLayer());
             selectedFeatureValues.put(feature, model.getObject());
         }
 
         info(BratAnnotator.generateMessage(aBModel.getSelectedAnnotationLayer(), null, true));
 
-        // A hack to rememeber the Visural DropDown display
-        // value
+        // A hack to remember the visual DropDown display value
         aBModel.setRememberedSpanLayer(aBModel.getSelectedAnnotationLayer());
         aBModel.setRememberedSpanFeatures(selectedFeatureValues);
 
@@ -782,8 +769,7 @@ public class AnnotationDetailEditorPanel
         TypeAdapter adapter = getAdapter(aBModel.getSelectedAnnotationLayer());
         if (adapter instanceof ArcAdapter) {
             for (IModel<Serializable> model : featureValueModels) {
-                AnnotationFeature feature = featuresModel.get(featureValueModels.indexOf(model))
-                        .getObject().feature;
+                AnnotationFeature feature = featuresModel.get(featureValueModels.indexOf(model));
                 aBModel.setSelectedAnnotationId(((ArcAdapter) adapter).add(targetFs, originFs,
                         jCas, aBModel, feature, model.getObject()));
             }
@@ -808,8 +794,7 @@ public class AnnotationDetailEditorPanel
         // store latest annotations
         for (IModel<Serializable> model : featureValueModels) {
             deletedAnnoSb.append(model.getObject() + " ");
-            AnnotationFeature feature = featuresModel.get(featureValueModels.indexOf(model))
-                    .getObject().feature;
+            AnnotationFeature feature = featuresModel.get(featureValueModels.indexOf(model));
             aBModel.setSelectedAnnotationLayer(feature.getLayer());
             selectedFeatureValues.put(feature, model.getObject());
         }
@@ -859,8 +844,10 @@ public class AnnotationDetailEditorPanel
 
     public void setLayerAndFeatureModels(JCas aJCas, final BratAnnotatorModel aBModel)
     {
+        annotationFeatureForm.setModelObject(aBModel);
+        
         featureValueModels = new ArrayList<IModel<Serializable>>();
-        featuresModel = new ArrayList<IModel<FeatureValueModel>>();
+        featuresModel = new ArrayList<AnnotationFeature>();
 
         if (aBModel.isRelationAnno()) {
             long layerId = TypeUtil.getLayerId(aBModel.getOriginSpanType());
@@ -870,8 +857,8 @@ public class AnnotationDetailEditorPanel
                         Dependency.class.getName(), aBModel.getProject()));
             }
             else if (spanLayer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
-                aBModel.setSelectedAnnotationLayer(spanLayer);// one layer both for the span and
-                // arc annotation
+                // one layer both for the span and arc annotation
+                aBModel.setSelectedAnnotationLayer(spanLayer);
             }
             else {
                 for (AnnotationLayer layer : annotationService.listAnnotationLayer(aBModel
@@ -965,22 +952,10 @@ public class AnnotationDetailEditorPanel
                     && feature.getName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
                 continue;
             }
-            IModel<FeatureValueModel> featureModel = new Model<FeatureValueModel>();
 
-            FeatureValueModel featureValue = new FeatureValueModel();
-            featureValue.feature = feature;
-            featureModel.setObject(featureValue);
-            featuresModel.add(featureModel);
-            IModel<Serializable> tagModel = new LoadableDetachableModel<Serializable>()
-            {
-                private static final long serialVersionUID = -6629150412846045592L;
-
-                @Override
-                public String load()
-                {
-                    return "";
-                }
-            };
+            featuresModel.add(feature);
+            
+            IModel<Serializable> tagModel = Model.of();
             if (selectedFeatureValues.containsKey(feature)) {
                 tagModel.setObject(selectedFeatureValues.get(feature));
             }
@@ -995,7 +970,7 @@ public class AnnotationDetailEditorPanel
 
     public void setAnnotationLayers(BratAnnotatorModel aBModel)
     {
-        listAnnotationLayers(aBModel);
+        loadSpanLayers(aBModel);
         if (annotationLayers.size() == 0) {
             aBModel.setSelectedAnnotationLayer(new AnnotationLayer());
         }
@@ -1009,13 +984,14 @@ public class AnnotationDetailEditorPanel
         }
     }
 
-    private void listAnnotationLayers(BratAnnotatorModel aBModel)
+    private void loadSpanLayers(BratAnnotatorModel aBModel)
     {
         annotationLayers.clear();
         if (aBModel.isRelationAnno()) {
             annotationLayers.add(aBModel.getSelectedAnnotationLayer());
             return;
         }
+        
         for (AnnotationLayer layer : aBModel.getAnnotationLayers()) {
             if (layer.getType().equals(WebAnnoConst.RELATION_TYPE) || !layer.isEnabled()
                     || layer.getName().equals(Token.class.getName())) {
@@ -1026,7 +1002,6 @@ public class AnnotationDetailEditorPanel
                 continue;
             }
             annotationLayers.add(layer);
-
         }
     }
 }
