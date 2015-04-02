@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.ObjectUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.Feature;
@@ -289,7 +290,7 @@ public class SpanAdapter
      * @throws BratAnnotationException
      *             if the annotation cannot be created/updated.
      */
-    public Integer add(JCas aJcas, int aBegin, int aEnd, AnnotationFeature aFeature, String aValue)
+    public Integer add(JCas aJcas, int aBegin, int aEnd, AnnotationFeature aFeature, Object aValue)
         throws BratAnnotationException
     {
         if (crossMultipleSentence || BratAjaxCasUtil.isSameSentence(aJcas, aBegin, aEnd)) {
@@ -326,7 +327,7 @@ public class SpanAdapter
      * A Helper method to add annotation to CAS
      */
     private Integer updateCas(CAS aCas, int aBegin, int aEnd, AnnotationFeature aFeature,
-            String aValue)
+            Object aValue)
     {
         Type type = CasUtil.getType(aCas, getAnnotationTypeName());
         for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
@@ -378,16 +379,14 @@ public class SpanAdapter
     }
 
     @Override
-    public void delete(JCas aJCas, AnnotationFeature aFeature, int aBegin, int aEnd, String aValue)
+    public void delete(JCas aJCas, AnnotationFeature aFeature, int aBegin, int aEnd, Object aValue)
     {
         Type type = CasUtil.getType(aJCas.getCas(), getAnnotationTypeName());
-        Feature feature = type.getFeatureByBaseName(aFeature.getName());
         for (AnnotationFS fs : CasUtil.selectCovered(aJCas.getCas(), type, aBegin, aEnd)) {
 
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
-                if (fs.getFeatureValueAsString(feature).equals(aValue)) {
+                if (ObjectUtils.equals(BratAjaxCasUtil.getFeature(fs, aFeature.getName()), aValue)) {
                     delete(aJCas, ((FeatureStructureImpl) fs).getAddress());
-
                 }
             }
         }
@@ -495,7 +494,7 @@ public class SpanAdapter
     }
 
     @Override
-    public void updateFeature(JCas aJcas, AnnotationFeature aFeature, int aAddress, String aValue)
+    public void updateFeature(JCas aJcas, AnnotationFeature aFeature, int aAddress, Object aValue)
     {
         FeatureStructure fs = BratAjaxCasUtil.selectByAddr(aJcas, FeatureStructure.class, aAddress);
         BratAjaxCasUtil.setFeature(fs, aFeature, aValue);

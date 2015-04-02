@@ -201,7 +201,7 @@ public class ArcAdapter
      *             if the annotation could not be created/updated.
      */
     public Integer add(AnnotationFS aOriginFs, AnnotationFS aTargetFs,
-            JCas aJCas, BratAnnotatorModel aBratAnnotatorModel, AnnotationFeature aFeature, String aLabelValue)
+            JCas aJCas, BratAnnotatorModel aBratAnnotatorModel, AnnotationFeature aFeature, Object aLabelValue)
         throws BratAnnotationException
     {
         Sentence sentence = BratAjaxCasUtil.selectSentenceAt(aJCas,
@@ -229,7 +229,7 @@ public class ArcAdapter
      * A Helper method to {@link #addToCas(String, BratAnnotatorUIData)}
      */
     private Integer updateCas(JCas aJCas, int aBegin, int aEnd, AnnotationFS aOriginFs,
-            AnnotationFS aTargetFs, String aValue, AnnotationFeature aFeature)
+            AnnotationFS aTargetFs, Object aValue, AnnotationFeature aFeature)
     {
         boolean duplicate = false;
 
@@ -266,10 +266,7 @@ public class ArcAdapter
                         aTargetFs) && (aValue == null || !aValue.equals(WebAnnoConst.ROOT))) {
 
                     if (!allowStacking) {
-                        if (aFeature != null) {
-                            Feature feature = type.getFeatureByBaseName(aFeature.getName());
-                            fs.setFeatureValueFromString(feature, aValue);
-                        }
+                        BratAjaxCasUtil.setFeature(fs, aFeature, aValue);
                         return ((FeatureStructureImpl) fs).getAddress();
                     }
                 }
@@ -440,10 +437,9 @@ public class ArcAdapter
     }
 
     @Override
-    public void delete(JCas aJCas, AnnotationFeature aFeature, int aBegin, int aEnd, String aValue)
+    public void delete(JCas aJCas, AnnotationFeature aFeature, int aBegin, int aEnd, Object aValue)
     {
         // TODO Auto-generated method stub
-
     }
 
     public boolean isCrossMultipleSentence()
@@ -499,7 +495,7 @@ public class ArcAdapter
     }
 
     @Override
-    public void updateFeature(JCas aJcas, AnnotationFeature aFeature, int aAddress, String aValue)
+    public void updateFeature(JCas aJcas, AnnotationFeature aFeature, int aAddress, Object aValue)
     {
         FeatureStructure fs = BratAjaxCasUtil.selectByAddr(aJcas, FeatureStructure.class, aAddress);
         BratAjaxCasUtil.setFeature(fs, aFeature, aValue);

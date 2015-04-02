@@ -20,9 +20,11 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
+
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FSIterator;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
@@ -586,14 +588,32 @@ public class BratAjaxCasUtil
      * @param aValue
      *            the feature value.
      */
-   public static void setFeature(FeatureStructure aFS, AnnotationFeature aFeature, String aValue)
+    public static void setFeature(FeatureStructure aFS, AnnotationFeature aFeature, Object aValue)
     {
         if (aFeature != null) {
-            Feature labelFeature = aFS.getType().getFeatureByBaseName(aFeature.getName());
-            aFS.setFeatureValueFromString(labelFeature, aValue);
+            setFeature(aFS, aFeature.getName(), aValue);
         }
     }
-   
+
+    public static <T> T getFeature(FeatureStructure aFS, String aFeatureName)
+    {
+        Feature labelFeature = aFS.getType().getFeatureByBaseName(aFeatureName);
+        
+        switch (labelFeature.getRange().getName()) {
+        case CAS.TYPE_NAME_STRING:
+            return (T) aFS.getStringValue(labelFeature);
+        case CAS.TYPE_NAME_BOOLEAN:
+            return (T) (Boolean) aFS.getBooleanValue(labelFeature);
+        case CAS.TYPE_NAME_FLOAT:
+            return (T) (Float) aFS.getFloatValue(labelFeature);
+        case CAS.TYPE_NAME_INTEGER:
+            return (T) (Integer) aFS.getIntValue(labelFeature);
+        default:
+            throw new IllegalArgumentException("Cannot get value of feature [" + aFeatureName
+                    + "] with type [" + labelFeature.getRange().getName() + "]");
+        }
+   }
+    
    /**
     * Set a feature value.
     * 
@@ -604,12 +624,29 @@ public class BratAjaxCasUtil
     * @param aValue
     *            the feature value.
     */
-  public static void setFeature(FeatureStructure aFS, String aFeatureName, String aValue)
-   {
-       Feature labelFeature = aFS.getType().getFeatureByBaseName(aFeatureName);
-       aFS.setFeatureValueFromString(labelFeature, aValue);
-   }
-  
+    public static void setFeature(FeatureStructure aFS, String aFeatureName, Object aValue)
+    {
+        Feature labelFeature = aFS.getType().getFeatureByBaseName(aFeatureName);
+
+        switch (labelFeature.getRange().getName()) {
+        case CAS.TYPE_NAME_STRING:
+            aFS.setStringValue(labelFeature, (String) aValue);
+            break;
+        case CAS.TYPE_NAME_BOOLEAN:
+            aFS.setBooleanValue(labelFeature, (boolean) aValue);
+            break;
+        case CAS.TYPE_NAME_FLOAT:
+            aFS.setFloatValue(labelFeature, (float) aValue);
+            break;
+        case CAS.TYPE_NAME_INTEGER:
+            aFS.setIntValue(labelFeature, (int) aValue);
+            break;
+        default:
+            throw new IllegalArgumentException("Cannot set value of feature [" + aFeatureName
+                    + "] with type [" + labelFeature.getRange().getName() + "] to [" + aValue + "]");
+        }
+    }
+
     /**
      * Set a feature value.
      * 

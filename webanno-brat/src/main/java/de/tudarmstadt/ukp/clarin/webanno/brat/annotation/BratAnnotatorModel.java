@@ -124,8 +124,8 @@ public class BratAnnotatorModel
     private AnnotationLayer rememberedSpanLayer;
     private AnnotationLayer rememberedArcLayer;
 
-    private Map<AnnotationFeature, String> rememberedSpanFeatures = new HashMap<AnnotationFeature, String>();
-    private Map<AnnotationFeature, String> rememberedArcFeatures = new HashMap<AnnotationFeature, String>();
+    private Map<AnnotationFeature, Serializable> rememberedSpanFeatures = new HashMap<AnnotationFeature, Serializable>();
+    private Map<AnnotationFeature, Serializable> rememberedArcFeatures = new HashMap<AnnotationFeature, Serializable>();
 
     private boolean annotationCleared = false;
 
@@ -296,22 +296,22 @@ public class BratAnnotatorModel
         this.rememberedArcLayer = rememberedArcLayer;
     }
 
-    public Map<AnnotationFeature, String> getRememberedSpanFeatures()
+    public Map<AnnotationFeature, Serializable> getRememberedSpanFeatures()
     {
         return rememberedSpanFeatures;
     }
 
-    public void setRememberedSpanFeatures(Map<AnnotationFeature, String> rememberedSpanFeature)
+    public void setRememberedSpanFeatures(Map<AnnotationFeature, Serializable> rememberedSpanFeature)
     {
         this.rememberedSpanFeatures = rememberedSpanFeature;
     }
 
-    public Map<AnnotationFeature, String> getRememberedArcFeatures()
+    public Map<AnnotationFeature, Serializable> getRememberedArcFeatures()
     {
         return rememberedArcFeatures;
     }
 
-    public void setRememberedArcFeatures(Map<AnnotationFeature, String> rememberedArcFeature)
+    public void setRememberedArcFeatures(Map<AnnotationFeature, Serializable> rememberedArcFeature)
     {
         this.rememberedArcFeatures = rememberedArcFeature;
     }

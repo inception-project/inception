@@ -492,10 +492,9 @@ public class ChainAdapter
     }
 
     @Override
-    public void delete(JCas aJCas, AnnotationFeature aFeature, int aBegin, int aEnd, String aValue)
+    public void delete(JCas aJCas, AnnotationFeature aFeature, int aBegin, int aEnd, Object aValue)
     {
         // TODO Auto-generated method stub
-
     }
 
     @Override
@@ -506,12 +505,10 @@ public class ChainAdapter
     }
 
     @Override
-    public void updateFeature(JCas aJcas, AnnotationFeature aFeature,int aAddress, String aValue)
+    public void updateFeature(JCas aJcas, AnnotationFeature aFeature, int aAddress, Object aValue)
     {
-        Type type = CasUtil.getType(aJcas.getCas(), aFeature.getLayer().getName()+LINK);
-        Feature feature = type.getFeatureByBaseName(aFeature.getName());
         FeatureStructure fs = BratAjaxCasUtil.selectByAddr(aJcas, FeatureStructure.class, aAddress);
-        fs.setFeatureValueFromString(feature, aValue);
+        BratAjaxCasUtil.setFeature(fs, aFeature, aValue);
     }
 
     /**

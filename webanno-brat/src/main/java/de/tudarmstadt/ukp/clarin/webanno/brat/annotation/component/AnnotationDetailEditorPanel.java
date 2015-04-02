@@ -38,6 +38,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
+import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
@@ -60,6 +61,7 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 
+import com.googlecode.wicket.kendo.ui.form.NumberTextField;
 import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
@@ -111,11 +113,14 @@ public class AnnotationDetailEditorPanel
     private AjaxSubmitLink reverseButton;
 
     private List<AnnotationLayer> annotationLayers = new ArrayList<AnnotationLayer>();
-    private Map<AnnotationFeature, String> selectedFeatureValues = new HashMap<AnnotationFeature, String>();
+    
+    // FIXME: This field should be removed
+    private Map<AnnotationFeature, Serializable> selectedFeatureValues = 
+            new HashMap<AnnotationFeature, Serializable>();
 
     private IModel<AnnotationLayer> layersModel;
     private List<IModel<FeatureValueModel>> featuresModel;
-    private List<IModel<String>> featureValueModels;
+    private List<IModel<Serializable>> featureValueModels;
 
     public AnnotationDetailEditorPanel(String id, IModel<BratAnnotatorModel> aModel)
     {
@@ -209,14 +214,13 @@ public class AnnotationDetailEditorPanel
             });
             layers.add(new AjaxFormComponentUpdatingBehavior("onchange")
             {
-
                 private static final long serialVersionUID = 5179816588460867471L;
 
                 @Override
                 protected void onUpdate(AjaxRequestTarget aTarget)
                 {
                     featuresModel = new ArrayList<IModel<FeatureValueModel>>();
-                    featureValueModels = new ArrayList<IModel<String>>();
+                    featureValueModels = new ArrayList<IModel<Serializable>>();
                     aBModel.setSelectedAnnotationLayer(layers.getModelObject());
                     for (AnnotationFeature feature : annotationService
                             .listAnnotationFeature(aBModel.getSelectedAnnotationLayer())) {
@@ -236,7 +240,7 @@ public class AnnotationDetailEditorPanel
                         featureValue.feature = feature;
                         featureModel.setObject(featureValue);
                         featuresModel.add(featureModel);
-                        IModel<String> tagModel = new LoadableDetachableModel<String>()
+                        IModel<Serializable> tagModel = new LoadableDetachableModel<Serializable>()
                         {
                             private static final long serialVersionUID = -6629150412846045592L;
 
@@ -259,7 +263,7 @@ public class AnnotationDetailEditorPanel
             add(layers);
 
             featuresModel = new ArrayList<IModel<FeatureValueModel>>();
-            featureValueModels = new ArrayList<IModel<String>>();
+            featureValueModels = new ArrayList<IModel<Serializable>>();
 
             updateFeaturesModel(annotationService, aBModel);
 
@@ -281,31 +285,69 @@ public class AnnotationDetailEditorPanel
                     }
                     item.add(new Label("feature", featureLabel));
 
+                    Component component;
+                    switch (feature.getType()) {
+                    // All types that should be rendered as a text editor optionally with tagset
+                    case CAS.TYPE_NAME_INTEGER:
+                    case CAS.TYPE_NAME_FLOAT:
+                        component = renderNumberFeatureEditor(item, feature,
+                                (IModel<Number>) (IModel) featureValueModels.get(item.getIndex()));
+                        break;
+                    case CAS.TYPE_NAME_BOOLEAN:
+                    case CAS.TYPE_NAME_STRING:
+                    default:
+                        component = renderTextFeatureEditor(item, feature,
+                                (IModel<String>) (IModel) featureValueModels.get(item.getIndex()));
+                        break;
+                    }
+                    
+                    if (item.getIndex() == 0) {
+                        // Put focus on first feature
+                        component.add(new DefaultFocusBehavior());
+                    }
+                }
+
+                @SuppressWarnings("unchecked")
+                private <N extends Number> Component renderNumberFeatureEditor(Item<FeatureValueModel> item,
+                        AnnotationFeature feature, IModel<N> model)
+                {
+                    switch (feature.getType()) {
+                    case CAS.TYPE_NAME_INTEGER: {
+                        NumberTextField<Integer> field = new NumberTextField<Integer>("tag", 
+                                (IModel<Integer>) (IModel) featureValueModels.get(item.getIndex()));
+                        item.add(field);
+                    }
+                    case CAS.TYPE_NAME_FLOAT: {
+                        NumberTextField<Float> field = new NumberTextField<Float>("tag", 
+                                (IModel<Float>) (IModel) featureValueModels.get(item.getIndex()));
+                        item.add(field);
+                    }
+                    default:
+                        throw new IllegalArgumentException("Type [" + feature.getType()
+                                + "] cannot be rendered as a numeric input field");
+                    }
+                }
+                
+                private Component renderTextFeatureEditor(Item<FeatureValueModel> item,
+                        AnnotationFeature feature, IModel<String> model)
+                {
                     if (feature.getTagset() != null) {
                         List<Tag> tagset = new ArrayList<Tag>();
                         if (feature.getTagset() != null) {
                             tagset.addAll(annotationService.listTags(feature.getTagset()));
                         }
 
-                        ComboBox<Tag> featureValueCombo = new ComboBox<Tag>("tag",
-                                featureValueModels.get(item.getIndex()), tagset,
+                        ComboBox<Tag> featureValueCombo = new ComboBox<Tag>("tag", model, tagset,
                                 new com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer<Tag>(
                                         "name"));
-                        if (item.getIndex() == 0) {
-                            // Put focus on first feature
-                            featureValueCombo.add(new DefaultFocusBehavior());
-                        }
                         item.add(featureValueCombo);
+                        return featureValueCombo;
                     }
                     else {
-                        TextField<String> featureTextField = new TextField<String>("tag",
-                                featureValueModels.get(item.getIndex()));
+                        TextField<String> featureTextField = new TextField<String>("tag", model);
                         featureTextField.add(new AttributeAppender("class", "k-textbox"));
                         item.add(featureTextField);
-                        if (item.getIndex() == 0) {
-                            // Put focus on first feature
-                            featureTextField.add(new DefaultFocusBehavior());
-                        }
+                        return featureTextField;
                     }
                 }
 
@@ -466,7 +508,8 @@ public class AnnotationDetailEditorPanel
                 featureValue.feature = feature;
                 featureModel.setObject(featureValue);
                 featuresModel.add(featureModel);
-                IModel<String> tagModel = new Model<String>();
+                
+                IModel<Serializable> tagModel = new Model<Serializable>();
                 if (aBModel.getSelectedAnnotationId() != -1) {
 
                     tagModel.setObject(selectedFeatureValues.get(feature));
@@ -487,44 +530,47 @@ public class AnnotationDetailEditorPanel
             error("No layer is selected. First select a layer");
             return;
         }
-        // check type of a feature
-        for (IModel<String> model : featureValueModels) {
-            AnnotationFeature feature = featuresModel.get(featureValueModels.indexOf(model))
-                    .getObject().feature;
-            try {
+        
+//        // check type of a feature
+//        for (IModel<?> model : featureValueModels) {
+//            AnnotationFeature feature = featuresModel.get(featureValueModels.indexOf(model))
+//                    .getObject().feature;
+//            try {
+//                if (feature.getType().equals(CAS.TYPE_NAME_INTEGER)
+//                        && !((Integer) Integer.parseInt(model.getObject()) instanceof Integer)) {
+//                    error(model.getObject() + " is not an integer value");
+//                    return;
+//                }
+//                if (feature.getType().equals(CAS.TYPE_NAME_FLOAT)
+//                        && !((Float) Float.parseFloat(model.getObject()) instanceof Float)) {
+//                    error(model.getObject() + " is not a float value");
+//                    return;
+//                }
+//                if (feature.getType().equals(CAS.TYPE_NAME_BOOLEAN)
+//                        && !((Boolean) Boolean.parseBoolean(model.getObject()) instanceof Boolean)) {
+//                    error(model.getObject() + " is not a boolean value");
+//                    return;
+//                }
+//            }
+//            catch (Exception e) {
+//                error(model.getObject() + " should be of type " + feature.getType());
+//                return;
+//            }
+//        }
 
-                if (feature.getType().equals(CAS.TYPE_NAME_INTEGER)
-                        && !((Integer) Integer.parseInt(model.getObject()) instanceof Integer)) {
-                    error(model.getObject() + " is not an integer value");
-                    return;
-                }
-                if (feature.getType().equals(CAS.TYPE_NAME_FLOAT)
-                        && !((Float) Float.parseFloat(model.getObject()) instanceof Float)) {
-                    error(model.getObject() + " is not a float value");
-                    return;
-                }
-                if (feature.getType().equals(CAS.TYPE_NAME_BOOLEAN)
-                        && !((Boolean) Boolean.parseBoolean(model.getObject()) instanceof Boolean)) {
-                    error(model.getObject() + " is not a boolean value");
-                    return;
-                }
-            }
-            catch (Exception e) {
-                error(model.getObject() + " should be of type " + feature.getType());
-                return;
-            }
-        }
-
-        // Verify if input is valid
+        // Verify if input is valid according to tagset
         for (int i = 0; i < featureValueModels.size(); i++) {
-            IModel<String> model = featureValueModels.get(i);
             AnnotationFeature feature = featuresModel.get(i).getObject().feature;
-            // Check if tag is necessary, set, and correct
-            if (feature.getTagset() != null && !feature.getTagset().isCreateTag()
-                    && !annotationService.existsTag(model.getObject(), feature.getTagset())) {
-                error("[" + model.getObject()
-                        + "] is not in the tag list. Please choose form the existing tags");
-                return;
+            if (CAS.TYPE_NAME_STRING.equals(feature.getType())) {
+                @SuppressWarnings("unchecked")
+                IModel<String> model = (IModel<String>) (IModel) featureValueModels.get(i);
+                // Check if tag is necessary, set, and correct
+                if (feature.getTagset() != null && !feature.getTagset().isCreateTag()
+                        && !annotationService.existsTag(model.getObject(), feature.getTagset())) {
+                    error("[" + model.getObject()
+                            + "] is not in the tag list. Please choose form the existing tags");
+                    return;
+                }
             }
         }
 
@@ -562,32 +608,38 @@ public class AnnotationDetailEditorPanel
         // Set feature values
         List<AnnotationFeature> features = new ArrayList<AnnotationFeature>();
         for (int i = 0; i < featureValueModels.size(); i++) {
-            IModel<String> model = featureValueModels.get(i);
             AnnotationFeature feature = featuresModel.get(i).getObject().feature;
             features.add(feature);
 
-            Tag selectedTag;
-            if (feature.getTagset() == null) {
-                selectedTag = new Tag();
-                selectedTag.setName(model.getObject());
-            }
-            else if (feature.getTagset() != null && feature.getTagset().isCreateTag()
-                    && !annotationService.existsTag(model.getObject(), feature.getTagset())) {
-                selectedTag = new Tag();
-                selectedTag.setName(model.getObject());
-                selectedTag.setTagSet(feature.getTagset());
-                if (model.getObject() != null) {
-                    // Do not persist if we unset a feature value
-                    annotationService.createTag(selectedTag, aBModel.getUser());
+            // For string features with extensible tagsets, extend the tagset
+            if (CAS.TYPE_NAME_STRING.equals(feature.getType())) {
+                @SuppressWarnings("unchecked")
+                IModel<String> model = (IModel<String>) (IModel) featureValueModels.get(i);
+    
+                Tag selectedTag;
+//                if (feature.getTagset() == null) {
+//                    selectedTag = new Tag();
+//                    selectedTag.setName(model.getObject());
+//                }
+//                else 
+                if (feature.getTagset() != null && feature.getTagset().isCreateTag()
+                        && !annotationService.existsTag(model.getObject(), feature.getTagset())) {
+                    selectedTag = new Tag();
+                    selectedTag.setName(model.getObject());
+                    selectedTag.setTagSet(feature.getTagset());
+                    if (model.getObject() != null) {
+                        // Do not persist if we unset a feature value
+                        annotationService.createTag(selectedTag, aBModel.getUser());
+                    }
                 }
-            }
-            else {
-                selectedTag = annotationService.getTag(model.getObject(), feature.getTagset());
+//                else {
+//                    selectedTag = annotationService.getTag(model.getObject(), feature.getTagset());
+//                }
             }
 
             adapter.updateFeature(jCas, feature, aBModel.getSelectedAnnotationId(),
-                    selectedTag.getName());
-            selectedFeatureValues.put(feature, model.getObject());
+                    featureValueModels.get(i).getObject());
+            selectedFeatureValues.put(feature, featureValueModels.get(i));
         }
 
         // update timestamp now
@@ -689,7 +741,7 @@ public class AnnotationDetailEditorPanel
         aBModel.setAnnotate(false);
 
         // store latest annotations
-        for (IModel<String> model : featureValueModels) {
+        for (IModel<Serializable> model : featureValueModels) {
             AnnotationFeature feature = featuresModel.get(featureValueModels.indexOf(model))
                     .getObject().feature;
             aBModel.setSelectedAnnotationLayer(feature.getLayer());
@@ -726,7 +778,7 @@ public class AnnotationDetailEditorPanel
 
         TypeAdapter adapter = getAdapter(aBModel.getSelectedAnnotationLayer());
         if (adapter instanceof ArcAdapter) {
-            for (IModel<String> model : featureValueModels) {
+            for (IModel<Serializable> model : featureValueModels) {
                 AnnotationFeature feature = featuresModel.get(featureValueModels.indexOf(model))
                         .getObject().feature;
                 aBModel.setSelectedAnnotationId(((ArcAdapter) adapter).add(targetFs, originFs,
@@ -751,7 +803,7 @@ public class AnnotationDetailEditorPanel
         StringBuffer deletedAnnoSb = new StringBuffer();
 
         // store latest annotations
-        for (IModel<String> model : featureValueModels) {
+        for (IModel<Serializable> model : featureValueModels) {
             deletedAnnoSb.append(model.getObject() + " ");
             AnnotationFeature feature = featuresModel.get(featureValueModels.indexOf(model))
                     .getObject().feature;
@@ -804,7 +856,7 @@ public class AnnotationDetailEditorPanel
 
     public void setLayerAndFeatureModels(JCas aJCas, final BratAnnotatorModel aBModel)
     {
-        featureValueModels = new ArrayList<IModel<String>>();
+        featureValueModels = new ArrayList<IModel<Serializable>>();
         featuresModel = new ArrayList<IModel<FeatureValueModel>>();
 
         if (aBModel.isRelationAnno()) {
@@ -930,7 +982,7 @@ public class AnnotationDetailEditorPanel
             featureValue.feature = feature;
             featureModel.setObject(featureValue);
             featuresModel.add(featureModel);
-            IModel<String> tagModel = new LoadableDetachableModel<String>()
+            IModel<Serializable> tagModel = new LoadableDetachableModel<Serializable>()
             {
                 private static final long serialVersionUID = -6629150412846045592L;
 

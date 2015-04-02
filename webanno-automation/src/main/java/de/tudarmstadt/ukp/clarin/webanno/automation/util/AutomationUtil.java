@@ -130,7 +130,7 @@ public class AutomationUtil
                         sentence.getBegin() + i + selectedText.length()).size() > 0) {
 
                     SpanAdapter adapter = (SpanAdapter) getAdapter(aFeature.getLayer());
-                    String value = aModel.getRememberedSpanFeatures().get(aFeature);
+                    Object value = aModel.getRememberedSpanFeatures().get(aFeature);
                     adapter.add(jCas, sentence.getBegin() + i, sentence.getBegin() + i
                             + selectedText.length() - 1, aFeature, value);
 
@@ -178,7 +178,7 @@ public class AutomationUtil
                 if (selectCovered(jCas, Token.class, sentence.getBegin() + i,
                         sentence.getBegin() + i + selectedText.length()).size() > 0) {
 
-                    String value = aModel.getRememberedSpanFeatures().get(aFeature);
+                    Object value = aModel.getRememberedSpanFeatures().get(aFeature);
                     adapter.delete(jCas, aFeature, sentence.getBegin() + i, sentence.getBegin() + i
                             + selectedText.length() - 1, value);
                 }
