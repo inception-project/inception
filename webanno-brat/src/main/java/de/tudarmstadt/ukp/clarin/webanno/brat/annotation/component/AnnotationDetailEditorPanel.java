@@ -239,12 +239,6 @@ public class AnnotationDetailEditorPanel
                     FeatureValueModel featureValue = item.getModelObject();
                     AnnotationFeature feature = featureValue.feature;
 
-                    String featureLabel = feature.getUiName();
-                    if (feature.getTagset() != null) {
-                        featureLabel += " (" + feature.getTagset().getName() + ")";
-                    }
-                    item.add(new Label("feature", featureLabel));
-
                     Component component;
                     switch (feature.getType()) {
                     case CAS.TYPE_NAME_INTEGER:
@@ -280,6 +274,12 @@ public class AnnotationDetailEditorPanel
                     Fragment frag = new Fragment("editor", "booleanFeatureEditor", item)
                     {
                         {
+                            String featureLabel = feature.getUiName();
+                            if (feature.getTagset() != null) {
+                                featureLabel += " (" + feature.getTagset().getName() + ")";
+                            }
+                            add(new Label("feature", featureLabel));
+                            
                             CheckBox checkBox = new CheckBox("tag", model);
                             add(checkBox);
                         }
@@ -296,6 +296,12 @@ public class AnnotationDetailEditorPanel
                     Fragment frag = new Fragment("editor", "numberFeatureEditor", item)
                     {
                         {
+                            String featureLabel = feature.getUiName();
+                            if (feature.getTagset() != null) {
+                                featureLabel += " (" + feature.getTagset().getName() + ")";
+                            }
+                            add(new Label("feature", featureLabel));
+                            
                             switch (feature.getType()) {
                             case CAS.TYPE_NAME_INTEGER: {
                                 NumberTextField<Integer> field = new NumberTextField<Integer>(
@@ -325,6 +331,12 @@ public class AnnotationDetailEditorPanel
                     Fragment frag = new Fragment("editor", "textFeatureEditor", item)
                     {
                         {
+                            String featureLabel = feature.getUiName();
+                            if (feature.getTagset() != null) {
+                                featureLabel += " (" + feature.getTagset().getName() + ")";
+                            }
+                            add(new Label("feature", featureLabel));
+                            
                             if (feature.getTagset() != null) {
                                 List<Tag> tagset = new ArrayList<Tag>();
                                 if (feature.getTagset() != null) {
