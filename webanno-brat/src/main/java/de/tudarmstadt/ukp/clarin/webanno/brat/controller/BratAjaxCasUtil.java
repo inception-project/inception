@@ -633,13 +633,13 @@ public class BratAjaxCasUtil
             aFS.setStringValue(labelFeature, (String) aValue);
             break;
         case CAS.TYPE_NAME_BOOLEAN:
-            aFS.setBooleanValue(labelFeature, (boolean) aValue);
+            aFS.setBooleanValue(labelFeature, aValue != null ? (boolean) aValue : false);
             break;
         case CAS.TYPE_NAME_FLOAT:
-            aFS.setFloatValue(labelFeature, (float) aValue);
+            aFS.setFloatValue(labelFeature, aValue != null ? (float) aValue : 0.0f);
             break;
         case CAS.TYPE_NAME_INTEGER:
-            aFS.setIntValue(labelFeature, (int) aValue);
+            aFS.setIntValue(labelFeature, aValue != null ? (int) aValue : 0);
             break;
         default:
             throw new IllegalArgumentException("Cannot set value of feature [" + aFeatureName

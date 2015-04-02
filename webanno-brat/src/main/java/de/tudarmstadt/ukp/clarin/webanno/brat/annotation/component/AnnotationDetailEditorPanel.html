@@ -40,7 +40,16 @@
 					<table class="hfill">
 						<tr wicket:id="featureValues">
 							<td><span wicket:id="feature"></span></td>
-							<td><input style="width: 100%" wicket:id="tag"></input></td>
+							<td><span wicket:id="editor"></span></td>
+						    <wicket:fragment wicket:id="textFeatureEditor">
+						       <input style="width: 100%" wicket:id="tag"></input>
+						    </wicket:fragment>
+						    <wicket:fragment wicket:id="numberFeatureEditor">
+						       <input type="number" style="width: 100%" wicket:id="tag"></input>
+						    </wicket:fragment>
+						    <wicket:fragment wicket:id="booleanFeatureEditor">
+						       <input type="checkbox" style="width: 100%" wicket:id="tag"></input>
+						    </wicket:fragment>
 						</tr>
 					</table>
 				</div>

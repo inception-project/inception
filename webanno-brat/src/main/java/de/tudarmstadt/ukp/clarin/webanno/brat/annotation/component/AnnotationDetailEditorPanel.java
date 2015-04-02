@@ -35,7 +35,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
@@ -46,11 +45,13 @@ import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
+import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.RefreshingView;
@@ -240,17 +241,7 @@ public class AnnotationDetailEditorPanel
                         featureValue.feature = feature;
                         featureModel.setObject(featureValue);
                         featuresModel.add(featureModel);
-                        IModel<Serializable> tagModel = new LoadableDetachableModel<Serializable>()
-                        {
-                            private static final long serialVersionUID = -6629150412846045592L;
-
-                            @Override
-                            public String load()
-                            {
-
-                                return "";
-                            }
-                        };
+                        IModel<Serializable> tagModel = Model.of();
                         if (selectedFeatureValues.containsKey(feature)) {
                             tagModel.setObject(selectedFeatureValues.get(feature));
                         }
@@ -287,18 +278,25 @@ public class AnnotationDetailEditorPanel
 
                     Component component;
                     switch (feature.getType()) {
-                    // All types that should be rendered as a text editor optionally with tagset
                     case CAS.TYPE_NAME_INTEGER:
+                        component = renderNumberFeatureEditor(item, feature,
+                                (IModel<Number>) (IModel) featureValueModels.get(item.getIndex()));
+                        break;
                     case CAS.TYPE_NAME_FLOAT:
                         component = renderNumberFeatureEditor(item, feature,
                                 (IModel<Number>) (IModel) featureValueModels.get(item.getIndex()));
                         break;
                     case CAS.TYPE_NAME_BOOLEAN:
+                        component = renderBooleanFeatureEditor(item, feature,
+                                (IModel<Boolean>) (IModel) featureValueModels.get(item.getIndex()));
+                        break;
                     case CAS.TYPE_NAME_STRING:
-                    default:
                         component = renderTextFeatureEditor(item, feature,
                                 (IModel<String>) (IModel) featureValueModels.get(item.getIndex()));
                         break;
+                    default:
+                        throw new IllegalArgumentException("Type [" + feature.getType()
+                                + "] cannot be rendered");
                     }
                     
                     if (item.getIndex() == 0) {
@@ -307,48 +305,81 @@ public class AnnotationDetailEditorPanel
                     }
                 }
 
-                @SuppressWarnings("unchecked")
-                private <N extends Number> Component renderNumberFeatureEditor(Item<FeatureValueModel> item,
-                        AnnotationFeature feature, IModel<N> model)
+                private Component renderBooleanFeatureEditor(Item<FeatureValueModel> item,
+                        final AnnotationFeature feature, final IModel<Boolean> model)
                 {
-                    switch (feature.getType()) {
-                    case CAS.TYPE_NAME_INTEGER: {
-                        NumberTextField<Integer> field = new NumberTextField<Integer>("tag", 
-                                (IModel<Integer>) (IModel) featureValueModels.get(item.getIndex()));
-                        item.add(field);
-                    }
-                    case CAS.TYPE_NAME_FLOAT: {
-                        NumberTextField<Float> field = new NumberTextField<Float>("tag", 
-                                (IModel<Float>) (IModel) featureValueModels.get(item.getIndex()));
-                        item.add(field);
-                    }
-                    default:
-                        throw new IllegalArgumentException("Type [" + feature.getType()
-                                + "] cannot be rendered as a numeric input field");
-                    }
+                    Fragment frag = new Fragment("editor", "booleanFeatureEditor", item)
+                    {
+                        {
+                            CheckBox checkBox = new CheckBox("tag", model);
+                            add(checkBox);
+                        }
+                    };
+                    item.add(frag);
+                    return frag.get("tag");
+                }
+
+                @SuppressWarnings("unchecked")
+                private <N extends Number> Component renderNumberFeatureEditor(
+                        Item<FeatureValueModel> item, final AnnotationFeature feature,
+                        final IModel<N> model)
+                {
+                    Fragment frag = new Fragment("editor", "numberFeatureEditor", item)
+                    {
+                        {
+                            switch (feature.getType()) {
+                            case CAS.TYPE_NAME_INTEGER: {
+                                NumberTextField<Integer> field = new NumberTextField<Integer>(
+                                        "tag", (IModel<Integer>) (IModel) model, Integer.class);
+                                add(field);
+                                break;
+                            }
+                            case CAS.TYPE_NAME_FLOAT: {
+                                NumberTextField<Float> field = new NumberTextField<Float>("tag",
+                                        (IModel<Float>) (IModel) model, Float.class);
+                                add(field);
+                                break;
+                            }
+                            default:
+                                throw new IllegalArgumentException("Type [" + feature.getType()
+                                        + "] cannot be rendered as a numeric input field");
+                            }
+                        }
+                    };
+                    item.add(frag);
+                    return frag.get("tag");
                 }
                 
                 private Component renderTextFeatureEditor(Item<FeatureValueModel> item,
-                        AnnotationFeature feature, IModel<String> model)
+                        final AnnotationFeature feature, final IModel<String> model)
                 {
-                    if (feature.getTagset() != null) {
-                        List<Tag> tagset = new ArrayList<Tag>();
-                        if (feature.getTagset() != null) {
-                            tagset.addAll(annotationService.listTags(feature.getTagset()));
-                        }
+                    Fragment frag = new Fragment("editor", "textFeatureEditor", item)
+                    {
+                        {
+                            if (feature.getTagset() != null) {
+                                List<Tag> tagset = new ArrayList<Tag>();
+                                if (feature.getTagset() != null) {
+                                    tagset.addAll(annotationService.listTags(feature.getTagset()));
+                                }
 
-                        ComboBox<Tag> featureValueCombo = new ComboBox<Tag>("tag", model, tagset,
-                                new com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer<Tag>(
-                                        "name"));
-                        item.add(featureValueCombo);
-                        return featureValueCombo;
-                    }
-                    else {
-                        TextField<String> featureTextField = new TextField<String>("tag", model);
-                        featureTextField.add(new AttributeAppender("class", "k-textbox"));
-                        item.add(featureTextField);
-                        return featureTextField;
-                    }
+                                ComboBox<Tag> featureValueCombo = new ComboBox<Tag>(
+                                        "tag",
+                                        model,
+                                        tagset,
+                                        new com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer<Tag>(
+                                                "name"));
+                                add(featureValueCombo);
+                            }
+                            else {
+                                TextField<String> featureTextField = new TextField<String>("tag",
+                                        model);
+                                featureTextField.add(new AttributeAppender("class", "k-textbox"));
+                                add(featureTextField);
+                            }
+                        }
+                    };
+                    item.add(frag);
+                    return frag.get("tag");
                 }
 
                 @Override
@@ -889,12 +920,9 @@ public class AnnotationDetailEditorPanel
                         continue;
                     }
                     if (feature.isEnabled()) {
-                        Feature annoFeature = annoFs.getType().getFeatureByBaseName(
-                                feature.getName());
-                        selectedFeatureValues.put(feature,
-                                annoFs.getFeatureValueAsString(annoFeature));
+                        selectedFeatureValues.put(feature, (Serializable) BratAjaxCasUtil
+                                .getFeature(annoFs, feature.getName()));
                     }
-
                 }
             }
         }
@@ -937,10 +965,9 @@ public class AnnotationDetailEditorPanel
                     continue;
                 }
                 if (feature.isEnabled()) {
-                    Feature annoFeature = annoFs.getType().getFeatureByBaseName(feature.getName());
-                    selectedFeatureValues.put(feature, annoFs.getFeatureValueAsString(annoFeature));
+                    selectedFeatureValues.put(feature, (Serializable) BratAjaxCasUtil
+                            .getFeature(annoFs, feature.getName()));
                 }
-
             }
         }
         else {
