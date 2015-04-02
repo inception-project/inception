@@ -163,16 +163,7 @@ public class AnnotationDetailEditorPanel
             };
             layers.setOutputMarkupId(true);
             
-            layers.setChoiceRenderer(new ChoiceRenderer<AnnotationLayer>()
-            {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                public Object getDisplayValue(AnnotationLayer aObject)
-                {
-                    return aObject.getUiName();
-                }
-            });
+            layers.setChoiceRenderer(new ChoiceRenderer<AnnotationLayer>("uiName"));
             
             layers.add(new AjaxFormComponentUpdatingBehavior("onchange")
             {
