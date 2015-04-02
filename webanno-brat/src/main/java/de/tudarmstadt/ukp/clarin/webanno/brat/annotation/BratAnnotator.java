@@ -349,7 +349,7 @@ public class BratAnnotator
             private static final long serialVersionUID = 2857345299480098279L;
 
             @Override
-            protected void afterModify(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
+            protected void onChange(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
             {
                 aTarget.add(annotationDetailEditorPanel); // Mark edited annotation in UI
 
@@ -364,7 +364,7 @@ public class BratAnnotator
                 
                 bratRenderHighlight(aTarget, aBModel.getSelectedAnnotationId());
                 
-                onChange(aTarget, aBModel);
+                BratAnnotator.this.onChange(aTarget, aBModel);
             }
         };
 

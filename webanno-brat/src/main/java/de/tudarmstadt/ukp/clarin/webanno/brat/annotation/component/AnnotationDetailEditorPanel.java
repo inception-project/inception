@@ -622,7 +622,7 @@ public class AnnotationDetailEditorPanel
 
         setLayerAndFeatureModels(jCas, aBModel);
 
-        afterModify(aTarget, aBModel);
+        onChange(aTarget, aBModel);
     }
 
     private void actionDelete(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
@@ -708,7 +708,7 @@ public class AnnotationDetailEditorPanel
 
         setLayerAndFeatureModels(jCas, aBModel);
 
-        afterModify(aTarget, aBModel);
+        onChange(aTarget, aBModel);
     }
 
     private void actionReverse(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
@@ -770,7 +770,7 @@ public class AnnotationDetailEditorPanel
 
         setLayerAndFeatureModels(jCas, aBModel);
 
-        afterModify(aTarget, aBModel);
+        onChange(aTarget, aBModel);
     }
 
     private JCas getCas(BratAnnotatorModel aBModel)
@@ -947,7 +947,7 @@ public class AnnotationDetailEditorPanel
         }
     }
 
-    protected void afterModify(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
+    protected void onChange(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
     {
         // Overriden in BratAnnotator
     }
