@@ -97,10 +97,13 @@ public class AnnotationDetailEditorPanel
 {
     private static final long serialVersionUID = 7324241992353693848L;
     private static final Log LOG = LogFactory.getLog(AnnotationDetailEditorPanel.class);
+    
     @SpringBean(name = "jsonConverter")
     private MappingJacksonHttpMessageConverter jsonConverter;
+
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
+    
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
 
@@ -115,11 +118,9 @@ public class AnnotationDetailEditorPanel
 
     private List<AnnotationLayer> annotationLayers = new ArrayList<AnnotationLayer>();
     
-    // FIXME: This field should be removed
     private Map<AnnotationFeature, Serializable> selectedFeatureValues = 
             new HashMap<AnnotationFeature, Serializable>();
 
-    private IModel<AnnotationLayer> layersModel;
     private List<IModel<FeatureValueModel>> featuresModel;
     private List<IModel<Serializable>> featureValueModels;
 
@@ -141,54 +142,21 @@ public class AnnotationDetailEditorPanel
         public String tag;
     }
 
-    public class SelectionModel
-        implements Serializable
-    {
-        private static final long serialVersionUID = -4178958678920895292L;
-        public AnnotationLayer layers;
-        public String selectedText;
-
-        public String feature;
-        public String tag;
-    }
-
     private class AnnotationFeatureForm
-        extends Form<SelectionModel>
+        extends Form<BratAnnotatorModel>
     {
         private static final long serialVersionUID = 3635145598405490893L;
 
-        public AnnotationFeatureForm(String id, final BratAnnotatorModel aBModel)
+        public AnnotationFeatureForm(String id, BratAnnotatorModel aBModel)
         {
-            super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
-            // super(id);
-
-            selectedTextLabel = new Label("selectedTextLabel",
-                    new LoadableDetachableModel<String>()
-                    {
-                        private static final long serialVersionUID = 1L;
-
-                        @Override
-                        protected String load()
-                        {
-                            return aBModel.getSelectedText();
-                        }
-                    });
+            super(id, new CompoundPropertyModel<BratAnnotatorModel>(aBModel));
+            
+            selectedTextLabel = new Label("selectedText");
             selectedTextLabel.setOutputMarkupId(true);
             add(selectedTextLabel);
 
-            layersModel = new LoadableDetachableModel<AnnotationLayer>()
-            {
-                private static final long serialVersionUID = -6629150412846045592L;
-
-                @Override
-                public AnnotationLayer load()
-                {
-
-                    return aBModel.getSelectedAnnotationLayer();
-                }
-            };
             layers = (DropDownChoice<AnnotationLayer>) new DropDownChoice<AnnotationLayer>(
-                    "layers", layersModel, annotationLayers)
+                    "selectedAnnotationLayer", annotationLayers)
             {
                 private static final long serialVersionUID = -1L;
 
@@ -197,12 +165,13 @@ public class AnnotationDetailEditorPanel
                 {
                     super.onConfigure();
                     // at the moment we allow one layer per relation annotation (first
-                    // source/target span layers should be selected!)
-                    setNullValid(!aBModel.isRelationAnno());
+                    // source/target span layer should be selected!)
+                    setNullValid(!AnnotationFeatureForm.this.getModelObject().isRelationAnno());
 
                 }
             };
             layers.setOutputMarkupId(true);
+            
             layers.setChoiceRenderer(new ChoiceRenderer<AnnotationLayer>()
             {
                 private static final long serialVersionUID = 1L;
@@ -213,6 +182,7 @@ public class AnnotationDetailEditorPanel
                     return aObject.getUiName();
                 }
             });
+            
             layers.add(new AjaxFormComponentUpdatingBehavior("onchange")
             {
                 private static final long serialVersionUID = 5179816588460867471L;
@@ -222,14 +192,13 @@ public class AnnotationDetailEditorPanel
                 {
                     featuresModel = new ArrayList<IModel<FeatureValueModel>>();
                     featureValueModels = new ArrayList<IModel<Serializable>>();
-                    aBModel.setSelectedAnnotationLayer(layers.getModelObject());
                     for (AnnotationFeature feature : annotationService
-                            .listAnnotationFeature(aBModel.getSelectedAnnotationLayer())) {
+                            .listAnnotationFeature(AnnotationFeatureForm.this.getModelObject().getSelectedAnnotationLayer())) {
 
                         if (!feature.isEnabled()) {
                             continue;
                         }
-                        if (aBModel.getSelectedAnnotationLayer().getType()
+                        if (AnnotationFeatureForm.this.getModelObject().getSelectedAnnotationLayer().getType()
                                 .equals(WebAnnoConst.CHAIN_TYPE)
                                 && feature.getName().equals(
                                         WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
@@ -396,20 +365,22 @@ public class AnnotationDetailEditorPanel
                 @Override
                 protected void onSubmit(AjaxRequestTarget aTarget, Form<?> form)
                 {
+                    BratAnnotatorModel model = AnnotationFeatureForm.this.getModelObject();
+                    
                     aTarget.addChildren(getPage(), FeedbackPanel.class);
 
-                    if (aBModel.getSelectedAnnotationLayer().getId() == 0) {
+                    if (model.getSelectedAnnotationLayer().getId() == 0) {
                         error("There is no annotation layer selected");
                         LOG.error("There is no annotation layer selected");
                         return;
                     }
-                    if (!aBModel.isRelationAnno() && aBModel.getSelectedText().isEmpty()) {
+                    if (!model.isRelationAnno() && model.getSelectedText().isEmpty()) {
                         error("There is no text selected to annotate");
                         LOG.error("There is no text selected to annotate");
                         return;
                     }
                     try {
-                        actionAnnotate(aTarget, aBModel);
+                        actionAnnotate(aTarget, model);
 
                     }
                     catch (BratAnnotationException e) {
@@ -426,12 +397,15 @@ public class AnnotationDetailEditorPanel
                 protected void onConfigure()
                 {
                     super.onConfigure();
-                    if (aBModel.isRelationAnno()) {
+                    
+                    BratAnnotatorModel model = AnnotationFeatureForm.this.getModelObject();
+
+                    if (model.isRelationAnno()) {
                         setEnabled(true);
                     }
                     else {
-                        setEnabled(aBModel.getSelectedText() != null
-                                && !aBModel.getSelectedText().equals(""));
+                        setEnabled(model.getSelectedText() != null
+                                && !model.getSelectedText().equals(""));
                     }
 
                 }
@@ -452,7 +426,8 @@ public class AnnotationDetailEditorPanel
                 protected void onConfigure()
                 {
                     super.onConfigure();
-                    setVisible(aBModel.getSelectedAnnotationId() != -1);
+                    BratAnnotatorModel model = AnnotationFeatureForm.this.getModelObject();
+                    setVisible(model.getSelectedAnnotationId() != -1);
                 }
 
                 @Override
@@ -461,7 +436,8 @@ public class AnnotationDetailEditorPanel
                     aTarget.addChildren(getPage(), FeedbackPanel.class);
 
                     try {
-                        actionDelete(aTarget, aBModel);
+                        BratAnnotatorModel model = AnnotationFeatureForm.this.getModelObject();
+                        actionDelete(aTarget, model);
                     }
                     catch (UIMAException e) {
                         error(ExceptionUtils.getRootCauseMessage(e));
@@ -482,7 +458,8 @@ public class AnnotationDetailEditorPanel
                 protected void onConfigure()
                 {
                     super.onConfigure();
-                    setVisible(aBModel.isRelationAnno() && aBModel.getSelectedAnnotationId() != -1);
+                    BratAnnotatorModel model = AnnotationFeatureForm.this.getModelObject();
+                    setVisible(model.isRelationAnno() && model.getSelectedAnnotationId() != -1);
                 }
 
                 @Override
@@ -490,7 +467,8 @@ public class AnnotationDetailEditorPanel
                 {
                     aTarget.addChildren(getPage(), FeedbackPanel.class);
                     try {
-                        actionReverse(aTarget, aBModel);
+                        BratAnnotatorModel model = AnnotationFeatureForm.this.getModelObject();
+                        actionReverse(aTarget, model);
                     }
                     catch (BratAnnotationException e) {
                         aTarget.prependJavaScript("alert('" + e.getMessage() + "')");
@@ -974,16 +952,6 @@ public class AnnotationDetailEditorPanel
             aBModel.setSelectedAnnotationLayer(new AnnotationLayer());
         }
 
-        layersModel = new LoadableDetachableModel<AnnotationLayer>()
-        {
-            private static final long serialVersionUID = -6629150412846045592L;
-
-            @Override
-            public AnnotationLayer load()
-            {
-                return aBModel.getSelectedAnnotationLayer();
-            }
-        };
         for (AnnotationFeature feature : annotationService.listAnnotationFeature(aBModel
                 .getSelectedAnnotationLayer())) {
 
