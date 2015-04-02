@@ -352,10 +352,6 @@ public class BratAnnotator
             protected void afterModify(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
             {
                 aTarget.add(annotationDetailEditorPanel); // Mark edited annotation in UI
-                aTarget.appendJavaScript("Wicket.$('" + vis.getMarkupId()
-                        + "').dispatcher.post('current', " + "['" + getCollection()
-                        + "', '1234', {edited:[[" + aBModel.getSelectedAnnotationId()
-                        + "]]}, false]);");
 
                 try {
                     bratRender(aTarget, getCas(aBModel));
@@ -365,6 +361,9 @@ public class BratAnnotator
                     error("Error reading CAS " + e.getMessage());
                     return;
                 }
+                
+                bratRenderHighlight(aTarget, aBModel.getSelectedAnnotationId());
+                
                 onChange(aTarget, aBModel);
             }
         };
