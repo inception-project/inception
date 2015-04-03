@@ -267,17 +267,18 @@ public class AnnotationDetailEditorPanel
                     }
                 }
 
-                private Component renderLinkFeatureEditor(Item<AnnotationFeature> item,
+                private Component renderLinkFeatureEditor(final Item<AnnotationFeature> item,
                         final AnnotationFeature feature, final IModel<List<LinkModel>> model)
                 {
                     Fragment frag = new Fragment("editor", "linkFeatureEditor", item)
                     {
+                        private TextField text;
+                        
                         {
                             add(new Label("feature", feature.getUiName()));
 
                             add(new RefreshingView<LinkModel>("slots")
                             {
-
                                 @Override
                                 protected Iterator<IModel<LinkModel>> getItemModels()
                                 {
@@ -299,13 +300,32 @@ public class AnnotationDetailEditorPanel
                                     aItem.setModel(new CompoundPropertyModel<LinkModel>(aItem
                                             .getModelObject()));
 
-                                    add(new Label("role"));
-                                    add(new Label("label"));
+                                    aItem.add(new Label("role"));
+                                    aItem.add(new Label("label"));
                                 }
                             });
+                            
+                            add(text = new TextField<String>("newRole", Model.of("")));                            
+
+                            add(new AjaxButton("add") {
+                                private static final long serialVersionUID = 1L;
+                                
+                                
+                                @Override
+                                protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
+                                {
+                                    List<LinkModel> links = model.getObject();
+                                    LinkModel m = new LinkModel();
+                                    m.role = (String) text.getModelObject();
+                                    links.add(m);
+                                    
+                                    aTarget.add(item);
+                                }
+                            });                            
                         }
                     };
                     item.add(frag);
+                    item.setOutputMarkupId(true);
                     return frag.get("tag");
                 }
 
@@ -1046,6 +1066,7 @@ public class AnnotationDetailEditorPanel
         implements Serializable
     {
         public String role;
-        public int targetAddr;
+        public String label;
+        public int targetAddr = -1;
     }
 }
