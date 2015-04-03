@@ -96,13 +96,13 @@ public class AnnotationDetailEditorPanel
 {
     private static final long serialVersionUID = 7324241992353693848L;
     private static final Log LOG = LogFactory.getLog(AnnotationDetailEditorPanel.class);
-    
+
     @SpringBean(name = "jsonConverter")
     private MappingJacksonHttpMessageConverter jsonConverter;
 
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
-    
+
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
 
@@ -116,9 +116,8 @@ public class AnnotationDetailEditorPanel
     private AjaxSubmitLink reverseButton;
 
     private List<AnnotationLayer> annotationLayers = new ArrayList<AnnotationLayer>();
-    
-    private Map<AnnotationFeature, Serializable> selectedFeatureValues = 
-            new HashMap<AnnotationFeature, Serializable>();
+
+    private Map<AnnotationFeature, Serializable> selectedFeatureValues = new HashMap<AnnotationFeature, Serializable>();
 
     private List<AnnotationFeature> featuresModel;
     private List<IModel<Serializable>> featureValueModels;
@@ -141,7 +140,7 @@ public class AnnotationDetailEditorPanel
         public AnnotationFeatureForm(String id, BratAnnotatorModel aBModel)
         {
             super(id, new CompoundPropertyModel<BratAnnotatorModel>(aBModel));
-            
+
             selectedTextLabel = new Label("selectedText");
             selectedTextLabel.setOutputMarkupId(true);
             add(selectedTextLabel);
@@ -162,9 +161,9 @@ public class AnnotationDetailEditorPanel
                 }
             };
             layers.setOutputMarkupId(true);
-            
+
             layers.setChoiceRenderer(new ChoiceRenderer<AnnotationLayer>("uiName"));
-            
+
             layers.add(new AjaxFormComponentUpdatingBehavior("onchange")
             {
                 private static final long serialVersionUID = 5179816588460867471L;
@@ -173,11 +172,11 @@ public class AnnotationDetailEditorPanel
                 protected void onUpdate(AjaxRequestTarget aTarget)
                 {
                     BratAnnotatorModel model = AnnotationFeatureForm.this.getModelObject();
-                    
+
                     featuresModel = new ArrayList<AnnotationFeature>();
                     featureValueModels = new ArrayList<IModel<Serializable>>();
-                    for (AnnotationFeature feature : annotationService
-                            .listAnnotationFeature(model.getSelectedAnnotationLayer())) {
+                    for (AnnotationFeature feature : annotationService.listAnnotationFeature(model
+                            .getSelectedAnnotationLayer())) {
 
                         if (!feature.isEnabled()) {
                             continue;
@@ -190,7 +189,7 @@ public class AnnotationDetailEditorPanel
                         }
 
                         featuresModel.add(feature);
-                        
+
                         IModel<Serializable> tagModel = Model.of();
                         if (selectedFeatureValues.containsKey(feature)) {
                             tagModel.setObject(selectedFeatureValues.get(feature));
@@ -225,19 +224,23 @@ public class AnnotationDetailEditorPanel
                         switch (feature.getType()) {
                         case CAS.TYPE_NAME_INTEGER:
                             component = renderNumberFeatureEditor(item, feature,
-                                    (IModel<Number>) (IModel) featureValueModels.get(item.getIndex()));
+                                    (IModel<Number>) (IModel) featureValueModels.get(item
+                                            .getIndex()));
                             break;
                         case CAS.TYPE_NAME_FLOAT:
                             component = renderNumberFeatureEditor(item, feature,
-                                    (IModel<Number>) (IModel) featureValueModels.get(item.getIndex()));
+                                    (IModel<Number>) (IModel) featureValueModels.get(item
+                                            .getIndex()));
                             break;
                         case CAS.TYPE_NAME_BOOLEAN:
                             component = renderBooleanFeatureEditor(item, feature,
-                                    (IModel<Boolean>) (IModel) featureValueModels.get(item.getIndex()));
+                                    (IModel<Boolean>) (IModel) featureValueModels.get(item
+                                            .getIndex()));
                             break;
                         case CAS.TYPE_NAME_STRING:
                             component = renderTextFeatureEditor(item, feature,
-                                    (IModel<String>) (IModel) featureValueModels.get(item.getIndex()));
+                                    (IModel<String>) (IModel) featureValueModels.get(item
+                                            .getIndex()));
                             break;
                         default:
                             throw new IllegalArgumentException("Unsupported type ["
@@ -249,15 +252,15 @@ public class AnnotationDetailEditorPanel
                     case MULTIPLE_WITH_ROLE: {
                         // If it is none of the primitive types, it must be a link feature
                         component = renderLinkFeatureEditor(item, feature,
-                                (IModel<List<LinkModel>>) (IModel) featureValueModels.get(item.getIndex()));
+                                (IModel<List<LinkModel>>) (IModel) featureValueModels.get(item
+                                        .getIndex()));
                         break;
                     }
                     default:
-                        throw new IllegalArgumentException("Unsupported link mode [" + feature.getMode()
-                                + "] on feature [" + feature.getName() + "]");
+                        throw new IllegalArgumentException("Unsupported link mode ["
+                                + feature.getMode() + "] on feature [" + feature.getName() + "]");
                     }
 
-                    
                     if (item.getIndex() == 0) {
                         // Put focus on first feature
                         component.add(new DefaultFocusBehavior());
@@ -271,13 +274,15 @@ public class AnnotationDetailEditorPanel
                     {
                         {
                             add(new Label("feature", feature.getUiName()));
-                            
-                            add(new RefreshingView<LinkModel>("slots") {
+
+                            add(new RefreshingView<LinkModel>("slots")
+                            {
 
                                 @Override
                                 protected Iterator<IModel<LinkModel>> getItemModels()
                                 {
-                                    ModelIteratorAdapter<LinkModel> i = new ModelIteratorAdapter<LinkModel>(model.getObject())
+                                    ModelIteratorAdapter<LinkModel> i = new ModelIteratorAdapter<LinkModel>(
+                                            model.getObject())
                                     {
                                         @Override
                                         protected IModel<LinkModel> model(LinkModel aObject)
@@ -293,7 +298,7 @@ public class AnnotationDetailEditorPanel
                                 {
                                     aItem.setModel(new CompoundPropertyModel<LinkModel>(aItem
                                             .getModelObject()));
-                                    
+
                                     add(new Label("role"));
                                     add(new Label("label"));
                                 }
@@ -303,7 +308,7 @@ public class AnnotationDetailEditorPanel
                     item.add(frag);
                     return frag.get("tag");
                 }
-                
+
                 private Component renderBooleanFeatureEditor(Item<AnnotationFeature> item,
                         final AnnotationFeature feature, final IModel<Boolean> model)
                 {
@@ -315,7 +320,7 @@ public class AnnotationDetailEditorPanel
                                 featureLabel += " (" + feature.getTagset().getName() + ")";
                             }
                             add(new Label("feature", featureLabel));
-                            
+
                             CheckBox checkBox = new CheckBox("tag", model);
                             add(checkBox);
                         }
@@ -337,7 +342,7 @@ public class AnnotationDetailEditorPanel
                                 featureLabel += " (" + feature.getTagset().getName() + ")";
                             }
                             add(new Label("feature", featureLabel));
-                            
+
                             switch (feature.getType()) {
                             case CAS.TYPE_NAME_INTEGER: {
                                 NumberTextField<Integer> field = new NumberTextField<Integer>(
@@ -360,7 +365,7 @@ public class AnnotationDetailEditorPanel
                     item.add(frag);
                     return frag.get("tag");
                 }
-                
+
                 private Component renderTextFeatureEditor(Item<AnnotationFeature> item,
                         final AnnotationFeature feature, final IModel<String> model)
                 {
@@ -372,7 +377,7 @@ public class AnnotationDetailEditorPanel
                                 featureLabel += " (" + feature.getTagset().getName() + ")";
                             }
                             add(new Label("feature", featureLabel));
-                            
+
                             if (feature.getTagset() != null) {
                                 List<Tag> tagset = new ArrayList<Tag>();
                                 if (feature.getTagset() != null) {
@@ -422,14 +427,15 @@ public class AnnotationDetailEditorPanel
                 protected void onSubmit(AjaxRequestTarget aTarget, Form<?> form)
                 {
                     BratAnnotatorModel model = AnnotationFeatureForm.this.getModelObject();
-                    
+
                     aTarget.addChildren(getPage(), FeedbackPanel.class);
 
-                    if (model.getSelectedAnnotationLayer().getId() == 0) {
+                    if (model.getSelectedAnnotationLayer() == null) {
                         error("There is no annotation layer selected");
                         LOG.error("There is no annotation layer selected");
                         return;
                     }
+
                     if (!model.isRelationAnno() && model.getSelectedText().isEmpty()) {
                         error("There is no text selected to annotate");
                         LOG.error("There is no text selected to annotate");
@@ -453,7 +459,7 @@ public class AnnotationDetailEditorPanel
                 protected void onConfigure()
                 {
                     super.onConfigure();
-                    
+
                     BratAnnotatorModel model = AnnotationFeatureForm.this.getModelObject();
 
                     if (model.isRelationAnno()) {
@@ -560,7 +566,7 @@ public class AnnotationDetailEditorPanel
                         && feature.getName().equals(WebAnnoConst.COREFERENCE_TYPE_FEATURE)) {
                     continue;
                 }
-                
+
                 if (!aBModel.isRelationAnno()
                         && aBModel.getSelectedAnnotationLayer().getType()
                                 .equals(WebAnnoConst.CHAIN_TYPE)
@@ -569,7 +575,7 @@ public class AnnotationDetailEditorPanel
                 }
 
                 featuresModel.add(feature);
-                
+
                 IModel<Serializable> tagModel = Model.of();
                 if (aBModel.getSelectedAnnotationId() != -1) {
                     tagModel.setObject(selectedFeatureValues.get(feature));
@@ -590,7 +596,7 @@ public class AnnotationDetailEditorPanel
             error("No layer is selected. First select a layer");
             return;
         }
-        
+
         // Verify if input is valid according to tagset
         for (int i = 0; i < featureValueModels.size(); i++) {
             AnnotationFeature feature = featuresModel.get(i);
@@ -647,7 +653,7 @@ public class AnnotationDetailEditorPanel
             if (CAS.TYPE_NAME_STRING.equals(feature.getType())) {
                 @SuppressWarnings("unchecked")
                 IModel<String> model = (IModel<String>) (IModel) featureValueModels.get(i);
-    
+
                 if (feature.getTagset() != null && feature.getTagset().isCreateTag()
                         && !annotationService.existsTag(model.getObject(), feature.getTagset())) {
                     // Persist only if the feature value is actually set
@@ -685,7 +691,7 @@ public class AnnotationDetailEditorPanel
             aBModel.setRememberedSpanLayer(aBModel.getSelectedAnnotationLayer());
             aBModel.setRememberedSpanFeatures(selectedFeatureValues);
         }
-        
+
         aBModel.setAnnotate(true);
         if (aBModel.getSelectedAnnotationId() != -1) {
             String bratLabelText = TypeUtil
@@ -876,7 +882,7 @@ public class AnnotationDetailEditorPanel
     public void setLayerAndFeatureModels(JCas aJCas, final BratAnnotatorModel aBModel)
     {
         annotationFeatureForm.setModelObject(aBModel);
-        
+
         featureValueModels = new ArrayList<IModel<Serializable>>();
         featuresModel = new ArrayList<AnnotationFeature>();
 
@@ -910,8 +916,8 @@ public class AnnotationDetailEditorPanel
                         continue;
                     }
                     if (feature.isEnabled()) {
-                        selectedFeatureValues.put(feature, (Serializable) BratAjaxCasUtil
-                                .getFeature(annoFs, feature));
+                        selectedFeatureValues.put(feature,
+                                (Serializable) BratAjaxCasUtil.getFeature(annoFs, feature));
                     }
                 }
             }
@@ -955,8 +961,8 @@ public class AnnotationDetailEditorPanel
                     continue;
                 }
                 if (feature.isEnabled()) {
-                    selectedFeatureValues.put(feature, (Serializable) BratAjaxCasUtil
-                            .getFeature(annoFs, feature));
+                    selectedFeatureValues.put(feature,
+                            (Serializable) BratAjaxCasUtil.getFeature(annoFs, feature));
                 }
             }
         }
@@ -985,7 +991,7 @@ public class AnnotationDetailEditorPanel
             }
 
             featuresModel.add(feature);
-            
+
             IModel<Serializable> tagModel = Model.of();
             if (selectedFeatureValues.containsKey(feature)) {
                 tagModel.setObject(selectedFeatureValues.get(feature));
@@ -1022,7 +1028,7 @@ public class AnnotationDetailEditorPanel
             annotationLayers.add(aBModel.getSelectedAnnotationLayer());
             return;
         }
-        
+
         for (AnnotationLayer layer : aBModel.getAnnotationLayers()) {
             if (layer.getType().equals(WebAnnoConst.RELATION_TYPE) || !layer.isEnabled()
                     || layer.getName().equals(Token.class.getName())) {
@@ -1035,7 +1041,7 @@ public class AnnotationDetailEditorPanel
             annotationLayers.add(layer);
         }
     }
-    
+
     public static class LinkModel
         implements Serializable
     {

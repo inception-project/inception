@@ -21,55 +21,6 @@
 	<wicket:panel>
 		<form wicket:id="annotationFeatureForm">
 			<fieldset>
-				<legend>Annotation Layers</legend>
-				<table>
-					<tr>
-						<td>Selected text</td>
-						<td><span wicket:id="selectedText" style="color: red"></span></td>
-					</tr>
-					<tr>
-						<td>Layer</td>
-						<td><select wicket:id="selectedAnnotationLayer" style="width: 100%"></select></td>
-					</tr>
-				</table>
-			</fieldset>
-			<fieldset>
-				<legend>Features</legend>
-				<div wicket:id="wmc">
-					<table class="hfill">
-						<tr wicket:id="featureValues">
-						    <td wicket:id="editor"></td>
-						    <wicket:fragment wicket:id="textFeatureEditor">
-	                            <td><span wicket:id="feature"></span></td>
-	                            <td><input style="width: 100%" wicket:id="tag"></input></td>
-						    </wicket:fragment>
-						    <wicket:fragment wicket:id="numberFeatureEditor">
-                                <td><span wicket:id="feature"></span></td>
-                                <td><input type="number" style="width: 100%" wicket:id="tag"></input></td>
-						    </wicket:fragment>
-						    <wicket:fragment wicket:id="booleanFeatureEditor">
-                                <td><span wicket:id="feature"></span></td>
-                                <td><input type="checkbox" style="width: 100%" wicket:id="tag"></input></td>
-						    </wicket:fragment>
-						    <wicket:fragment wicket:id="linkFeatureEditor">
-						        <td>
-                                    <fieldset>
-                                        <legend><span wicket:id="feature"></span></legend>
-                                        <table class="hfill">
-                                          <tr wicket:id="slots">
-                                              <td><span wicket:id="role"></span></td>
-                                              <td><span wicket:id="label"></span></td>
-                                              <td></td>
-                                          </tr>
-                                        </table>
-                                    </fieldset>
-						        </td>
-						    </wicket:fragment>
-						</tr>
-					</table>
-				</div>
-			</fieldset>
-			<fieldset>
 				<legend>Actions</legend>
 				<table>
 					<tr>
@@ -80,6 +31,60 @@
 						</td>
 					</tr>
 				</table>
+			</fieldset>
+			<fieldset>
+				<legend>Annotation Layers</legend>
+				<table>
+					<tr>
+						<td>Selected text</td>
+						<td><span wicket:id="selectedText" style="color: red"></span></td>
+					</tr>
+					<tr>
+						<td>Layer</td>
+						<td><select wicket:id="selectedAnnotationLayer"
+							style="width: 100%"></select></td>
+					</tr>
+				</table>
+			</fieldset>
+			<fieldset>
+				<legend>Features</legend>
+				<div wicket:id="wmc">
+					<table class="hfill">
+						<tr wicket:id="featureValues">
+							<td wicket:id="editor"></td>
+							<wicket:fragment wicket:id="textFeatureEditor">
+								<td><span wicket:id="feature"></span></td>
+								<td><input style="width: 100%" wicket:id="tag"></input></td>
+							</wicket:fragment>
+							<wicket:fragment wicket:id="numberFeatureEditor">
+								<td><span wicket:id="feature"></span></td>
+								<td><input type="number" style="width: 100%"
+									wicket:id="tag"></input></td>
+							</wicket:fragment>
+							<wicket:fragment wicket:id="booleanFeatureEditor">
+								<td><span wicket:id="feature"></span></td>
+								<td><input type="checkbox" style="width: 100%"
+									wicket:id="tag"></input></td>
+							</wicket:fragment>
+							<wicket:fragment wicket:id="linkFeatureEditor">
+								<td>
+									<fieldset>
+										<legend>
+											<span wicket:id="feature"></span>
+										</legend>
+										<table class="hfill">
+											<tr wicket:id="slots">
+												<td><span wicket:id="role"></span></td>
+												<td><span wicket:id="label"></span></td>
+												<td></td>
+											</tr>
+										</table>
+									</fieldset>
+								</td>
+							</wicket:fragment>
+						</tr>
+					</table>
+				</div>
 			</fieldset>
 		</form>
 	</wicket:panel>
