@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.commons.io.IOUtils.copyLarge;
 import static org.apache.commons.lang.StringUtils.isBlank;
@@ -76,7 +77,6 @@ import org.apache.log4j.PatternLayout;
 import org.apache.uima.UIMAException;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
-import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
@@ -86,14 +86,12 @@ import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.CASImpl;
 import org.apache.uima.cas.impl.Serialization;
 import org.apache.uima.collection.CollectionReader;
-import org.apache.uima.fit.factory.AnalysisEngineFactory;
 import org.apache.uima.fit.factory.CollectionReaderFactory;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
-import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
@@ -134,8 +132,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.TagsetDescription;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.dkpro.core.io.bincas.BinaryCasReader;
-import de.tudarmstadt.ukp.dkpro.core.io.bincas.SerializedCasWriter;
 import de.tudarmstadt.ukp.dkpro.core.tokit.BreakIteratorSegmenter;
 
 /**
@@ -1939,15 +1935,6 @@ public class RepositoryServiceDbData
                 }
 
             }
-            catch (UIMAException e) {
-
-            }
-            catch (ClassNotFoundException e) {
-
-            }
-            catch (IOException e) {
-
-            }
             catch (Exception e) {
                 // no need to catch, it is acceptable that no curation document
                 // exists to be upgraded while there are annotation documents
@@ -2253,18 +2240,17 @@ public class RepositoryServiceDbData
         entityManager.remove(aStstus);
     }
 
-    List<TypeSystemDescription> getProjectTypes(Project aProject)
+    private List<TypeSystemDescription> getProjectTypes(Project aProject)
     {
-
         // Create a new type system from scratch
         List<TypeSystemDescription> types = new ArrayList<TypeSystemDescription>();
         for (AnnotationLayer type : annotationService.listAnnotationLayer(aProject)) {
-            if (type.getType().equals("span") && !type.isBuiltIn()) {
+            if (type.getType().equals(SPAN_TYPE) && !type.isBuiltIn()) {
                 TypeSystemDescription tsd = new TypeSystemDescription_impl();
                 TypeDescription td = tsd.addType(type.getName(), "", CAS.TYPE_NAME_ANNOTATION);
                 List<AnnotationFeature> features = annotationService.listAnnotationFeature(type);
                 for (AnnotationFeature feature : features) {
-                    td.addFeature(feature.getName(), "", feature.getType());
+                    generateFeature(tsd, td, feature);
                 }
 
                 types.add(tsd);
@@ -2279,7 +2265,7 @@ public class RepositoryServiceDbData
 
                 List<AnnotationFeature> features = annotationService.listAnnotationFeature(type);
                 for (AnnotationFeature feature : features) {
-                    td.addFeature(feature.getName(), "", feature.getType());
+                    generateFeature(tsd, td, feature);
                 }
 
                 types.add(tsd);
@@ -2302,6 +2288,28 @@ public class RepositoryServiceDbData
         }
 
         return types;
+    }
+    
+    private void generateFeature(TypeSystemDescription aTSD, TypeDescription aTD,
+            AnnotationFeature aFeature)
+    {
+        switch (aFeature.getMode()) {
+        case NONE:
+            aTD.addFeature(aFeature.getName(), "", aFeature.getType());
+            break;
+        case MULTIPLE_WITH_ROLE: {
+            // Link type
+            TypeDescription linkTD = aTSD.addType(aFeature.getLinkTypeName(), "", CAS.TYPE_NAME_TOP);
+            linkTD.addFeature(aFeature.getLinkTypeRoleFeatureName(), "", CAS.TYPE_NAME_STRING);
+            linkTD.addFeature(aFeature.getLinkTypeTargetFeatureName(), "", aFeature.getType());
+            // Link feature
+            aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_FS_ARRAY, linkTD.getName(), false);
+            break;
+        }
+        default:
+            throw new IllegalArgumentException("Unknown link mode [" + aFeature.getMode()
+                    + "] on feature [" + aFeature.getName() + "]");
+        }
     }
 
     @Override
@@ -2397,6 +2405,7 @@ public class RepositoryServiceDbData
         }
     }
     
+    @Override
     public List<Project> listAccessibleProjects()
     {
         List<Project> allowedProject = new ArrayList<Project>();
@@ -2436,6 +2445,7 @@ public class RepositoryServiceDbData
      *            the project.
      * @return if a finished document exists.
      */
+    @Override
     public boolean existFinishedDocument(
             SourceDocument aSourceDocument, User aUser, Project aProject)
     {

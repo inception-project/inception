@@ -23,8 +23,8 @@ import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.apache.commons.lang.ObjectUtils;
+import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FSIterator;
 import org.apache.uima.cas.Feature;
@@ -37,6 +37,7 @@ import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
 
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel.LinkModel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -67,7 +68,7 @@ public class BratAjaxCasUtil
         if (a == null || b == null) {
             return false;
         }
-
+        
         return getAddr(a) == getAddr(b);
     }
 
@@ -122,10 +123,21 @@ public class BratAjaxCasUtil
     {
         return ((FeatureStructureImpl) aFS).getAddress();
     }
-
+    
     public static AnnotationFS selectByAddr(JCas aJCas, int aAddress)
     {
         return selectByAddr(aJCas, AnnotationFS.class, aAddress);
+    }
+
+    public static FeatureStructure selectByAddr(CAS aCas, int aAddress)
+    {
+        return selectByAddr(aCas, FeatureStructure.class, aAddress);
+    }
+
+    public static <T extends FeatureStructure> T selectByAddr(CAS aCas, Class<T> aType,
+            int aAddress)
+    {
+        return aType.cast(aCas.getLowLevelCAS().ll_getFSForRef(aAddress));
     }
 
     public static <T extends FeatureStructure> T selectByAddr(JCas aJCas, Class<T> aType,
@@ -154,7 +166,7 @@ public class BratAjaxCasUtil
 
     /**
      * Get an annotation using the begin/offsets and its type
-     *
+     * 
      * @param aJcas the JCas.
      * @param aType the type.
      * @param aBegin the begin offset.
@@ -174,7 +186,7 @@ public class BratAjaxCasUtil
     /**
      * Get the sentence for this CAS based on the begin and end offsets. This is basically used to
      * transform sentence address in one CAS to other sentence address for different CAS
-     *
+     * 
      * @param aJcas the JCas.
      * @param aBegin the begin offset.
      * @param aEnd the end offset.
@@ -253,7 +265,7 @@ public class BratAjaxCasUtil
     }
     /**
      * Get the current sentence based on the anotation begin/end offset
-     *
+     * 
      * @param aJCas the JCas.
      * @param aBegin the begin offset.
      * @param aEnd the end offset.
@@ -298,13 +310,13 @@ public class BratAjaxCasUtil
             }
             count ++;
         }
-
+        
         return s.getAddress();
     }
 
     /**
      * Get an iterator position at the annotation with the specified address.
-     *
+     * 
      * @param aJcas
      *            the CAS object
      * @param aType
@@ -344,7 +356,7 @@ public class BratAjaxCasUtil
             Project aProject, SourceDocument aDocument, int aWindowSize)
     {
         FSIterator<Sentence> si = seekByAddress(aJcas, Sentence.class, aSentenceAddress);
-
+        
         // Seek the sentence that contains the current focus
         Sentence s = si.get();
         while (si.isValid()) {
@@ -362,7 +374,7 @@ public class BratAjaxCasUtil
             }
             s = si.get();
         }
-
+        
         // Center sentence
         int count = 0;
         while (si.isValid() && count < (aWindowSize / 2)) {
@@ -372,13 +384,13 @@ public class BratAjaxCasUtil
             }
             count++;
         }
-
+        
         return s.getAddress();
     }
 
     /**
      * Move to the next page of size display window.
-     *
+     * 
      * @param aJcas
      *            the JCas.
      * @param aCurrenSentenceBeginAddress
@@ -399,7 +411,7 @@ public class BratAjaxCasUtil
                 beginningAddress = beginningAddresses.get(i);
                 break;
             }
-
+            
             if (beginningAddresses.get(i) == aCurrenSentenceBeginAddress) {
                 beginningAddress = beginningAddresses.get(i + 1);
                 break;
@@ -411,7 +423,7 @@ public class BratAjaxCasUtil
                 break;
             }
         }
-
+        
         return beginningAddress;
     }
 
@@ -457,7 +469,7 @@ public class BratAjaxCasUtil
 
     /**
      * Get the total number of sentences
-     *
+     * 
      * @param aJcas the JCas.
      * @return the number of sentences.
      */
@@ -468,7 +480,7 @@ public class BratAjaxCasUtil
 
     /**
      * Returns the beginning address of all pages. This is used properly display<b> Page X of Y </b>
-     *
+     * 
      * @param aJcas the JCas.
      * @param aWindowSize the window size.
      * @return hum?
@@ -491,7 +503,7 @@ public class BratAjaxCasUtil
     /**
      * Get the ordinal sentence number in the display window. This will be sent to brat so that it
      * will adjust the sentence number to display accordingly
-     *
+     * 
      * @param aJcas the JCas.
      * @param aSentenceAddress the sentence ID.
      * @return the sentence number.
@@ -532,7 +544,7 @@ public class BratAjaxCasUtil
     /**
      * Get Sentence address for this ordinal sentence number. Used to go to specific sentence number
      * @param aJcas the JCas.
-     * @param aSentenceNumber the sentence number.
+     * @param aSentenceNumber the sentence number. 
      * @return the ID.
      */
     public static int getSentenceAddress(JCas aJcas, int aSentenceNumber)
@@ -561,7 +573,7 @@ public class BratAjaxCasUtil
      * aware of what is being annotated, based on
      * {@link BratAjaxCasUtil#selectOverlapping(JCas, Class, int, int)} ISSUE - Affected text not
      * correctly displayed in annotation dialog (Bug #272)
-     *
+     * 
      * @param aJcas the JCas.
      * @param aBeginOffset the begin offset.
      * @param aEndOffset the end offset.
@@ -577,36 +589,62 @@ public class BratAjaxCasUtil
         }
         return seletedTextSb.toString();
     }
-
+    
     public static <T> T getFeature(FeatureStructure aFS, AnnotationFeature aFeature)
     {
         Feature feature = aFS.getType().getFeatureByBaseName(aFeature.getName());
 
-        // Sanity check
-        if (!ObjectUtils.equals(aFeature.getType(), feature.getRange().getName())) {
-            throw new IllegalArgumentException("Actual feature type ["
-                    + feature.getRange().getName() + "]does not match expected feature type ["
-                    + aFeature.getType() + "].");
+        switch (aFeature.getMode()) {
+        case NONE: {
+            // Sanity check
+            if (!ObjectUtils.equals(aFeature.getType(), feature.getRange().getName())) {
+                throw new IllegalArgumentException("Actual feature type ["
+                        + feature.getRange().getName() + "]does not match expected feature type ["
+                        + aFeature.getType() + "].");
+            }
+            
+            switch (aFeature.getType()) {
+            case CAS.TYPE_NAME_STRING:
+                return (T) aFS.getStringValue(feature);
+            case CAS.TYPE_NAME_BOOLEAN:
+                return (T) (Boolean) aFS.getBooleanValue(feature);
+            case CAS.TYPE_NAME_FLOAT:
+                return (T) (Float) aFS.getFloatValue(feature);
+            case CAS.TYPE_NAME_INTEGER:
+                return (T) (Integer) aFS.getIntValue(feature);
+            default:
+                throw new IllegalArgumentException("Cannot get value of feature [" + aFeature.getName()
+                        + "] with type [" + feature.getRange().getName() + "]");
+            }
         }
+        case MULTIPLE_WITH_ROLE: {
+            // Get type and features - we need them later in the loop
+            Feature linkFeature = aFS.getType().getFeatureByBaseName(aFeature.getName());
+            Type linkType = aFS.getCAS().getTypeSystem().getType(aFeature.getLinkTypeName());
+            Feature roleFeat = linkType.getFeatureByBaseName(aFeature.getLinkTypeRoleFeatureName());
+            Feature targetFeat = linkType.getFeatureByBaseName(aFeature.getLinkTypeTargetFeatureName());
 
-        switch (aFeature.getType()) {
-        case CAS.TYPE_NAME_STRING:
-            return (T) aFS.getStringValue(feature);
-        case CAS.TYPE_NAME_BOOLEAN:
-            return (T) (Boolean) aFS.getBooleanValue(feature);
-        case CAS.TYPE_NAME_FLOAT:
-            return (T) (Float) aFS.getFloatValue(feature);
-        case CAS.TYPE_NAME_INTEGER:
-            return (T) (Integer) aFS.getIntValue(feature);
+            List<LinkModel> links = new ArrayList<>();
+            ArrayFS array = (ArrayFS) aFS.getFeatureValue(linkFeature);
+            if (array != null) {
+                for (FeatureStructure link : array.toArray()) {
+                    LinkModel m = new LinkModel();
+                    m.role = link.getStringValue(roleFeat);
+                    m.targetAddr = getAddr(link.getFeatureValue(targetFeat));
+                    links.add(m);
+                }
+            }
+            return (T) links;
+        }
         default:
             throw new IllegalArgumentException("Cannot get value of feature [" + aFeature.getName()
-                    + "] with type [" + feature.getRange().getName() + "]");
+                    + "] with link mode [" + aFeature.getMode() + "]");
         }
     }
 
     /**
      * Set a feature value.
-     *
+     * 
      * @param aFS
      *            the feature structure.
      * @param aFeature
@@ -620,38 +658,76 @@ public class BratAjaxCasUtil
         if (aFeature == null) {
             return;
         }
-
+        
         Feature feature = aFS.getType().getFeatureByBaseName(aFeature.getName());
 
-        // Sanity check
-        if (ObjectUtils.equals(aFeature.getType(), feature.getRange().getName())) {
-            throw new IllegalArgumentException("Actual feature type ["
-                    + feature.getRange().getName() + "]does not match expected feature type ["
-                    + aFeature.getType() + "].");
+        switch (aFeature.getMode()) {
+        case NONE: {
+            // Sanity check
+            if (!ObjectUtils.equals(aFeature.getType(), feature.getRange().getName())) {
+                throw new IllegalArgumentException("Actual feature type ["
+                        + feature.getRange().getName() + "]does not match expected feature type ["
+                        + aFeature.getType() + "].");
+            }
+            
+            switch (aFeature.getType()) {
+            case CAS.TYPE_NAME_STRING:
+                aFS.setStringValue(feature, (String) aValue);
+                break;
+            case CAS.TYPE_NAME_BOOLEAN:
+                aFS.setBooleanValue(feature, aValue != null ? (boolean) aValue : false);
+                break;
+            case CAS.TYPE_NAME_FLOAT:
+                aFS.setFloatValue(feature, aValue != null ? (float) aValue : 0.0f);
+                break;
+            case CAS.TYPE_NAME_INTEGER:
+                aFS.setIntValue(feature, aValue != null ? (int) aValue : 0);
+                break;
+            default:
+                throw new IllegalArgumentException("Cannot set value of feature [" + aFeature.getName()
+                        + "] with type [" + feature.getRange().getName() + "] to [" + aValue + "]");
+            }
+            break;
         }
+        case MULTIPLE_WITH_ROLE: {
+            // Get type and features - we need them later in the loop
+            Type linkType = aFS.getCAS().getTypeSystem().getType(aFeature.getLinkTypeName());
+            Feature roleFeat = linkType.getFeatureByBaseName(aFeature.getLinkTypeRoleFeatureName());
+            Feature targetFeat = linkType.getFeatureByBaseName(aFeature.getLinkTypeTargetFeatureName());
 
-        switch (aFeature.getType()) {
-        case CAS.TYPE_NAME_STRING:
-            aFS.setStringValue(feature, (String) aValue);
+            // Create all the links
+            // FIXME: actually we could re-use existing link link feature structures 
+            List<FeatureStructure> linkFSes = new ArrayList<FeatureStructure>();
+            List<LinkModel> links = (List<LinkModel>) aValue;
+            for (LinkModel e : links) {
+                FeatureStructure link = aFS.getCAS().createFS(linkType);
+                link.setStringValue(roleFeat, e.role);
+                link.setFeatureValue(targetFeat, selectByAddr(aFS.getCAS(), e.targetAddr));
+                linkFSes.add(link);
+            }
+            
+            // Create a new array if size differs otherwise re-use existing one
+            ArrayFS array = (ArrayFS) BratAjaxCasUtil.getFeatureFS(aFS, aFeature.getName());
+            if (array.size() != linkFSes.size()) {
+                array = aFS.getCAS().createArrayFS(linkFSes.size());
+            }
+
+            // Fill in links
+            array.copyFromArray(linkFSes.toArray(new FeatureStructure[linkFSes.size()]), 0, 0,
+                    linkFSes.size());
+            
+            aFS.setFeatureValue(feature, array);
             break;
-        case CAS.TYPE_NAME_BOOLEAN:
-            aFS.setBooleanValue(feature, aValue != null ? (boolean) aValue : false);
-            break;
-        case CAS.TYPE_NAME_FLOAT:
-            aFS.setFloatValue(feature, aValue != null ? (float) aValue : 0.0f);
-            break;
-        case CAS.TYPE_NAME_INTEGER:
-            aFS.setIntValue(feature, aValue != null ? (int) aValue : 0);
-            break;
+        }
         default:
-            throw new IllegalArgumentException("Cannot set value of feature [" + aFeature.getName()
-                    + "] with type [" + feature.getRange().getName() + "] to [" + aValue + "]");
+            throw new IllegalArgumentException("Unsupported link mode [" + aFeature.getMode()
+                    + "] on feature [" + aFeature.getName() + "]");
         }
     }
 
     /**
      * Set a feature value.
-     *
+     * 
      * @param aFS
      *            the feature structure.
      * @param aFeatureName
@@ -665,10 +741,10 @@ public class BratAjaxCasUtil
         Feature labelFeature = aFS.getType().getFeatureByBaseName(aFeatureName);
         aFS.setFeatureValue(labelFeature, aValue);
     }
-
+    
     /**
      * Get a feature value.
-     *
+     * 
      * @param aFS
      *            the feature structure.
      * @param aFeatureName

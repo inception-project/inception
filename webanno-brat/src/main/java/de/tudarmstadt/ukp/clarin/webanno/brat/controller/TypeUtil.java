@@ -28,6 +28,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.FeatureMode;
 
 /**
  * Utility Class for {@link TypeAdapter} with static methods such as geting
@@ -91,7 +92,8 @@ public final class TypeUtil
         StringBuilder bratLabelText = new StringBuilder();
         for (AnnotationFeature feature : aFeatures) {
 
-            if (!(feature.isEnabled()) && !(feature.isVisible())) {
+            if (!feature.isEnabled() || !feature.isVisible()
+                    || !FeatureMode.NONE.equals(feature.getMode())) {
                 continue;
             }
 

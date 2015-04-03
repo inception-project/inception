@@ -220,28 +220,43 @@ public class AnnotationDetailEditorPanel
                     AnnotationFeature feature = item.getModelObject();
 
                     Component component;
-                    switch (feature.getType()) {
-                    case CAS.TYPE_NAME_INTEGER:
-                        component = renderNumberFeatureEditor(item, feature,
-                                (IModel<Number>) (IModel) featureValueModels.get(item.getIndex()));
+                    switch (feature.getMode()) {
+                    case NONE: {
+                        switch (feature.getType()) {
+                        case CAS.TYPE_NAME_INTEGER:
+                            component = renderNumberFeatureEditor(item, feature,
+                                    (IModel<Number>) (IModel) featureValueModels.get(item.getIndex()));
+                            break;
+                        case CAS.TYPE_NAME_FLOAT:
+                            component = renderNumberFeatureEditor(item, feature,
+                                    (IModel<Number>) (IModel) featureValueModels.get(item.getIndex()));
+                            break;
+                        case CAS.TYPE_NAME_BOOLEAN:
+                            component = renderBooleanFeatureEditor(item, feature,
+                                    (IModel<Boolean>) (IModel) featureValueModels.get(item.getIndex()));
+                            break;
+                        case CAS.TYPE_NAME_STRING:
+                            component = renderTextFeatureEditor(item, feature,
+                                    (IModel<String>) (IModel) featureValueModels.get(item.getIndex()));
+                            break;
+                        default:
+                            throw new IllegalArgumentException("Unsupported type ["
+                                    + feature.getType() + "] on feature [" + feature.getName()
+                                    + "]");
+                        }
                         break;
-                    case CAS.TYPE_NAME_FLOAT:
-                        component = renderNumberFeatureEditor(item, feature,
-                                (IModel<Number>) (IModel) featureValueModels.get(item.getIndex()));
-                        break;
-                    case CAS.TYPE_NAME_BOOLEAN:
-                        component = renderBooleanFeatureEditor(item, feature,
-                                (IModel<Boolean>) (IModel) featureValueModels.get(item.getIndex()));
-                        break;
-                    case CAS.TYPE_NAME_STRING:
-                        component = renderTextFeatureEditor(item, feature,
-                                (IModel<String>) (IModel) featureValueModels.get(item.getIndex()));
-                        break;
-                    default:
+                    }
+                    case MULTIPLE_WITH_ROLE: {
                         // If it is none of the primitive types, it must be a link feature
                         component = renderLinkFeatureEditor(item, feature,
-                                (IModel<String>) (IModel) featureValueModels.get(item.getIndex()));
+                                (IModel<List<LinkModel>>) (IModel) featureValueModels.get(item.getIndex()));
+                        break;
                     }
+                    default:
+                        throw new IllegalArgumentException("Unsupported link mode [" + feature.getMode()
+                                + "] on feature [" + feature.getName() + "]");
+                    }
+
                     
                     if (item.getIndex() == 0) {
                         // Put focus on first feature
@@ -250,12 +265,39 @@ public class AnnotationDetailEditorPanel
                 }
 
                 private Component renderLinkFeatureEditor(Item<AnnotationFeature> item,
-                        final AnnotationFeature feature, final IModel<String> model)
+                        final AnnotationFeature feature, final IModel<List<LinkModel>> model)
                 {
                     Fragment frag = new Fragment("editor", "linkFeatureEditor", item)
                     {
                         {
                             add(new Label("feature", feature.getUiName()));
+                            
+                            add(new RefreshingView<LinkModel>("slots") {
+
+                                @Override
+                                protected Iterator<IModel<LinkModel>> getItemModels()
+                                {
+                                    ModelIteratorAdapter<LinkModel> i = new ModelIteratorAdapter<LinkModel>(model.getObject())
+                                    {
+                                        @Override
+                                        protected IModel<LinkModel> model(LinkModel aObject)
+                                        {
+                                            return Model.of(aObject);
+                                        }
+                                    };
+                                    return i;
+                                }
+
+                                @Override
+                                protected void populateItem(Item<LinkModel> aItem)
+                                {
+                                    aItem.setModel(new CompoundPropertyModel<LinkModel>(aItem
+                                            .getModelObject()));
+                                    
+                                    add(new Label("role"));
+                                    add(new Label("label"));
+                                }
+                            });
                         }
                     };
                     item.add(frag);
@@ -992,5 +1034,12 @@ public class AnnotationDetailEditorPanel
             }
             annotationLayers.add(layer);
         }
+    }
+    
+    public static class LinkModel
+        implements Serializable
+    {
+        public String role;
+        public int targetAddr;
     }
 }
