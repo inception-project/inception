@@ -802,18 +802,22 @@ public class AnnotationPage
             annotator.bratRender(aTarget, jcas);
         }
         catch (DataRetrievalFailureException e) {
+            LOG.error("Error", e);
             aTarget.addChildren(getPage(), FeedbackPanel.class);
             error(e.getMessage());
         }
         catch (IOException e) {
+            LOG.error("Error", e);
             aTarget.addChildren(getPage(), FeedbackPanel.class);
             error(e.getMessage());
         }
         catch (UIMAException e) {
+            LOG.error("Error", e);
             aTarget.addChildren(getPage(), FeedbackPanel.class);
             error(ExceptionUtils.getRootCauseMessage(e));
         }
         catch (ClassNotFoundException e) {
+            LOG.error("Error", e);
             aTarget.addChildren(getPage(), FeedbackPanel.class);
             error(e.getMessage());
         }
