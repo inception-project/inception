@@ -80,7 +80,7 @@
 | yes
 | yes
 | yes
-| 
+| token, multiple token, and arc annotations supported. No chain annotation is supported. no sub-token annotation is supported
 
 | XMI
 | yes
