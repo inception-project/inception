@@ -67,7 +67,7 @@ public class BratAjaxCasUtil
         if (a == null || b == null) {
             return false;
         }
-        
+
         return getAddr(a) == getAddr(b);
     }
 
@@ -122,7 +122,7 @@ public class BratAjaxCasUtil
     {
         return ((FeatureStructureImpl) aFS).getAddress();
     }
-    
+
     public static AnnotationFS selectByAddr(JCas aJCas, int aAddress)
     {
         return selectByAddr(aJCas, AnnotationFS.class, aAddress);
@@ -154,7 +154,7 @@ public class BratAjaxCasUtil
 
     /**
      * Get an annotation using the begin/offsets and its type
-     * 
+     *
      * @param aJcas the JCas.
      * @param aType the type.
      * @param aBegin the begin offset.
@@ -174,7 +174,7 @@ public class BratAjaxCasUtil
     /**
      * Get the sentence for this CAS based on the begin and end offsets. This is basically used to
      * transform sentence address in one CAS to other sentence address for different CAS
-     * 
+     *
      * @param aJcas the JCas.
      * @param aBegin the begin offset.
      * @param aEnd the end offset.
@@ -253,7 +253,7 @@ public class BratAjaxCasUtil
     }
     /**
      * Get the current sentence based on the anotation begin/end offset
-     * 
+     *
      * @param aJCas the JCas.
      * @param aBegin the begin offset.
      * @param aEnd the end offset.
@@ -298,13 +298,13 @@ public class BratAjaxCasUtil
             }
             count ++;
         }
-        
+
         return s.getAddress();
     }
 
     /**
      * Get an iterator position at the annotation with the specified address.
-     * 
+     *
      * @param aJcas
      *            the CAS object
      * @param aType
@@ -344,7 +344,7 @@ public class BratAjaxCasUtil
             Project aProject, SourceDocument aDocument, int aWindowSize)
     {
         FSIterator<Sentence> si = seekByAddress(aJcas, Sentence.class, aSentenceAddress);
-        
+
         // Seek the sentence that contains the current focus
         Sentence s = si.get();
         while (si.isValid()) {
@@ -362,7 +362,7 @@ public class BratAjaxCasUtil
             }
             s = si.get();
         }
-        
+
         // Center sentence
         int count = 0;
         while (si.isValid() && count < (aWindowSize / 2)) {
@@ -372,13 +372,13 @@ public class BratAjaxCasUtil
             }
             count++;
         }
-        
+
         return s.getAddress();
     }
 
     /**
      * Move to the next page of size display window.
-     * 
+     *
      * @param aJcas
      *            the JCas.
      * @param aCurrenSentenceBeginAddress
@@ -399,7 +399,7 @@ public class BratAjaxCasUtil
                 beginningAddress = beginningAddresses.get(i);
                 break;
             }
-            
+
             if (beginningAddresses.get(i) == aCurrenSentenceBeginAddress) {
                 beginningAddress = beginningAddresses.get(i + 1);
                 break;
@@ -411,7 +411,7 @@ public class BratAjaxCasUtil
                 break;
             }
         }
-        
+
         return beginningAddress;
     }
 
@@ -457,7 +457,7 @@ public class BratAjaxCasUtil
 
     /**
      * Get the total number of sentences
-     * 
+     *
      * @param aJcas the JCas.
      * @return the number of sentences.
      */
@@ -468,7 +468,7 @@ public class BratAjaxCasUtil
 
     /**
      * Returns the beginning address of all pages. This is used properly display<b> Page X of Y </b>
-     * 
+     *
      * @param aJcas the JCas.
      * @param aWindowSize the window size.
      * @return hum?
@@ -491,7 +491,7 @@ public class BratAjaxCasUtil
     /**
      * Get the ordinal sentence number in the display window. This will be sent to brat so that it
      * will adjust the sentence number to display accordingly
-     * 
+     *
      * @param aJcas the JCas.
      * @param aSentenceAddress the sentence ID.
      * @return the sentence number.
@@ -532,7 +532,7 @@ public class BratAjaxCasUtil
     /**
      * Get Sentence address for this ordinal sentence number. Used to go to specific sentence number
      * @param aJcas the JCas.
-     * @param aSentenceNumber the sentence number. 
+     * @param aSentenceNumber the sentence number.
      * @return the ID.
      */
     public static int getSentenceAddress(JCas aJcas, int aSentenceNumber)
@@ -561,7 +561,7 @@ public class BratAjaxCasUtil
      * aware of what is being annotated, based on
      * {@link BratAjaxCasUtil#selectOverlapping(JCas, Class, int, int)} ISSUE - Affected text not
      * correctly displayed in annotation dialog (Bug #272)
-     * 
+     *
      * @param aJcas the JCas.
      * @param aBeginOffset the begin offset.
      * @param aEndOffset the end offset.
@@ -577,13 +577,13 @@ public class BratAjaxCasUtil
         }
         return seletedTextSb.toString();
     }
-    
+
     public static <T> T getFeature(FeatureStructure aFS, AnnotationFeature aFeature)
     {
         Feature feature = aFS.getType().getFeatureByBaseName(aFeature.getName());
 
         // Sanity check
-        if (ObjectUtils.equals(aFeature.getType(), feature.getRange().getName())) {
+        if (!ObjectUtils.equals(aFeature.getType(), feature.getRange().getName())) {
             throw new IllegalArgumentException("Actual feature type ["
                     + feature.getRange().getName() + "]does not match expected feature type ["
                     + aFeature.getType() + "].");
@@ -606,7 +606,7 @@ public class BratAjaxCasUtil
 
     /**
      * Set a feature value.
-     * 
+     *
      * @param aFS
      *            the feature structure.
      * @param aFeature
@@ -620,7 +620,7 @@ public class BratAjaxCasUtil
         if (aFeature == null) {
             return;
         }
-        
+
         Feature feature = aFS.getType().getFeatureByBaseName(aFeature.getName());
 
         // Sanity check
@@ -629,7 +629,7 @@ public class BratAjaxCasUtil
                     + feature.getRange().getName() + "]does not match expected feature type ["
                     + aFeature.getType() + "].");
         }
-        
+
         switch (aFeature.getType()) {
         case CAS.TYPE_NAME_STRING:
             aFS.setStringValue(feature, (String) aValue);
@@ -651,7 +651,7 @@ public class BratAjaxCasUtil
 
     /**
      * Set a feature value.
-     * 
+     *
      * @param aFS
      *            the feature structure.
      * @param aFeatureName
@@ -665,10 +665,10 @@ public class BratAjaxCasUtil
         Feature labelFeature = aFS.getType().getFeatureByBaseName(aFeatureName);
         aFS.setFeatureValue(labelFeature, aValue);
     }
-    
+
     /**
      * Get a feature value.
-     * 
+     *
      * @param aFS
      *            the feature structure.
      * @param aFeatureName
