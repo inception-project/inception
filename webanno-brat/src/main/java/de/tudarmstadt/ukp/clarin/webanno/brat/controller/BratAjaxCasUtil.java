@@ -37,7 +37,7 @@ import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel.LinkModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -594,7 +594,7 @@ public class BratAjaxCasUtil
     {
         Feature feature = aFS.getType().getFeatureByBaseName(aFeature.getName());
 
-        switch (aFeature.getMode()) {
+        switch (aFeature.getMultiValueMode()) {
         case NONE: {
             // Sanity check
             if (!ObjectUtils.equals(aFeature.getType(), feature.getRange().getName())) {
@@ -617,28 +617,36 @@ public class BratAjaxCasUtil
                         + "] with type [" + feature.getRange().getName() + "]");
             }
         }
-        case MULTIPLE_WITH_ROLE: {
-            // Get type and features - we need them later in the loop
-            Feature linkFeature = aFS.getType().getFeatureByBaseName(aFeature.getName());
-            Type linkType = aFS.getCAS().getTypeSystem().getType(aFeature.getLinkTypeName());
-            Feature roleFeat = linkType.getFeatureByBaseName(aFeature.getLinkTypeRoleFeatureName());
-            Feature targetFeat = linkType.getFeatureByBaseName(aFeature.getLinkTypeTargetFeatureName());
+        case ARRAY: {
+            switch (aFeature.getLinkMode()) {
+            case WITH_ROLE: {
+                // Get type and features - we need them later in the loop
+                Feature linkFeature = aFS.getType().getFeatureByBaseName(aFeature.getName());
+                Type linkType = aFS.getCAS().getTypeSystem().getType(aFeature.getLinkTypeName());
+                Feature roleFeat = linkType.getFeatureByBaseName(aFeature.getLinkTypeRoleFeatureName());
+                Feature targetFeat = linkType.getFeatureByBaseName(aFeature.getLinkTypeTargetFeatureName());
 
-            List<LinkModel> links = new ArrayList<>();
-            ArrayFS array = (ArrayFS) aFS.getFeatureValue(linkFeature);
-            if (array != null) {
-                for (FeatureStructure link : array.toArray()) {
-                    LinkModel m = new LinkModel();
-                    m.role = link.getStringValue(roleFeat);
-                    m.targetAddr = getAddr(link.getFeatureValue(targetFeat));
-                    links.add(m);
+                List<LinkWithRoleModel> links = new ArrayList<>();
+                ArrayFS array = (ArrayFS) aFS.getFeatureValue(linkFeature);
+                if (array != null) {
+                    for (FeatureStructure link : array.toArray()) {
+                        LinkWithRoleModel m = new LinkWithRoleModel();
+                        m.role = link.getStringValue(roleFeat);
+                        m.targetAddr = getAddr(link.getFeatureValue(targetFeat));
+                        m.label = ((AnnotationFS) link.getFeatureValue(targetFeat)).getCoveredText();
+                        links.add(m);
+                    }
                 }
+                return (T) links;
             }
-            return (T) links;
+            default:
+                throw new IllegalArgumentException("Cannot get value of feature [" + aFeature.getName()
+                        + "] with link mode [" + aFeature.getMultiValueMode() + "]");
+            }
         }
         default:
-            throw new IllegalArgumentException("Cannot get value of feature [" + aFeature.getName()
-                    + "] with link mode [" + aFeature.getMode() + "]");
+            throw new IllegalArgumentException("Unsupported multi-value mode ["
+                    + aFeature.getMultiValueMode() + "] on feature [" + aFeature.getName() + "]");
         }
     }
 
@@ -661,7 +669,7 @@ public class BratAjaxCasUtil
         
         Feature feature = aFS.getType().getFeatureByBaseName(aFeature.getName());
 
-        switch (aFeature.getMode()) {
+        switch (aFeature.getMultiValueMode()) {
         case NONE: {
             // Sanity check
             if (!ObjectUtils.equals(aFeature.getType(), feature.getRange().getName())) {
@@ -689,44 +697,52 @@ public class BratAjaxCasUtil
             }
             break;
         }
-        case MULTIPLE_WITH_ROLE: {
-            // Get type and features - we need them later in the loop
-            Type linkType = aFS.getCAS().getTypeSystem().getType(aFeature.getLinkTypeName());
-            Feature roleFeat = linkType.getFeatureByBaseName(aFeature.getLinkTypeRoleFeatureName());
-            Feature targetFeat = linkType.getFeatureByBaseName(aFeature.getLinkTypeTargetFeatureName());
+        case ARRAY: {
+            switch (aFeature.getLinkMode()) {
+            case WITH_ROLE: {
+                // Get type and features - we need them later in the loop
+                Type linkType = aFS.getCAS().getTypeSystem().getType(aFeature.getLinkTypeName());
+                Feature roleFeat = linkType.getFeatureByBaseName(aFeature.getLinkTypeRoleFeatureName());
+                Feature targetFeat = linkType.getFeatureByBaseName(aFeature.getLinkTypeTargetFeatureName());
 
-            // Create all the links
-            // FIXME: actually we could re-use existing link link feature structures 
-            List<FeatureStructure> linkFSes = new ArrayList<FeatureStructure>();
-            List<LinkModel> links = (List<LinkModel>) aValue;
-            for (LinkModel e : links) {
-                // Skip links that have been added in the UI but where the target has not yet been
-                // set
-                if (e.targetAddr == -1) {
-                    continue;
+                // Create all the links
+                // FIXME: actually we could re-use existing link link feature structures 
+                List<FeatureStructure> linkFSes = new ArrayList<FeatureStructure>();
+                List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) aValue;
+                for (LinkWithRoleModel e : links) {
+                    // Skip links that have been added in the UI but where the target has not yet been
+                    // set
+                    if (e.targetAddr == -1) {
+                        continue;
+                    }
+                    
+                    FeatureStructure link = aFS.getCAS().createFS(linkType);
+                    link.setStringValue(roleFeat, e.role);
+                    link.setFeatureValue(targetFeat, selectByAddr(aFS.getCAS(), e.targetAddr));
+                    linkFSes.add(link);
                 }
                 
-                FeatureStructure link = aFS.getCAS().createFS(linkType);
-                link.setStringValue(roleFeat, e.role);
-                link.setFeatureValue(targetFeat, selectByAddr(aFS.getCAS(), e.targetAddr));
-                linkFSes.add(link);
-            }
-            
-            // Create a new array if size differs otherwise re-use existing one
-            ArrayFS array = (ArrayFS) BratAjaxCasUtil.getFeatureFS(aFS, aFeature.getName());
-            if (array == null || (array.size() != linkFSes.size())) {
-                array = aFS.getCAS().createArrayFS(linkFSes.size());
-            }
+                // Create a new array if size differs otherwise re-use existing one
+                ArrayFS array = (ArrayFS) BratAjaxCasUtil.getFeatureFS(aFS, aFeature.getName());
+                if (array == null || (array.size() != linkFSes.size())) {
+                    array = aFS.getCAS().createArrayFS(linkFSes.size());
+                }
 
-            // Fill in links
-            array.copyFromArray(linkFSes.toArray(new FeatureStructure[linkFSes.size()]), 0, 0,
-                    linkFSes.size());
-            
-            aFS.setFeatureValue(feature, array);
+                // Fill in links
+                array.copyFromArray(linkFSes.toArray(new FeatureStructure[linkFSes.size()]), 0, 0,
+                        linkFSes.size());
+                
+                aFS.setFeatureValue(feature, array);
+                break;                
+            }
+            default:
+                throw new IllegalArgumentException("Unsupported link mode ["
+                        + aFeature.getLinkMode() + "] on feature [" + aFeature.getName() + "]");
+            }
             break;
         }
         default:
-            throw new IllegalArgumentException("Unsupported link mode [" + aFeature.getMode()
+            throw new IllegalArgumentException("Unsupported multi-value mode [" + aFeature.getMultiValueMode()
                     + "] on feature [" + aFeature.getName() + "]");
         }
     }

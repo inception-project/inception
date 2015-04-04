@@ -18,38 +18,14 @@
 package de.tudarmstadt.ukp.clarin.webanno.model;
 
 /**
- * Type of link features.
+ * Implementation of {@link PersistentEnumUserType}
  */
-public enum FeatureMode
-    implements PersistentEnum
+public class LinkModeType
+    extends PersistentEnumUserType<LinkMode>
 {
-    NONE("none"),
-    SIMPLE("simple"),
-    MULTIPLE("multiple"),
-    SIMPLE_WITH_ROLE("simpleWithRole"),
-    MULTIPLE_WITH_ROLE("multipleWithRole");
-
-    private final String id;
-
-    FeatureMode(String aId)
-    {
-        id = aId;
-    }
-
     @Override
-    public String getId()
+    public Class<LinkMode> returnedClass()
     {
-        return id;
-    }
-
-    public String getName()
-    {
-        return getId();
-    }
-
-    @Override
-    public String toString()
-    {
-        return getId();
+        return LinkMode.class;
     }
 }

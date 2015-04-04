@@ -76,7 +76,8 @@ public abstract class PersistentEnumUserType<T extends PersistentEnum> implement
                 return value;
             }
         }
-        throw new IllegalStateException("Unknown " + returnedClass().getSimpleName() + " id");
+        throw new IllegalStateException("Unknown " + returnedClass().getSimpleName() + " value ["
+                + name + "]");
     }
 
     @Override

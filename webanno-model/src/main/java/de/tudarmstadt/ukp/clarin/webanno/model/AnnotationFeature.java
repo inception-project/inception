@@ -86,10 +86,14 @@ public class AnnotationFeature
 
     private boolean visible = true;
 
-    @Column(name = "mode")
-    @Type(type="de.tudarmstadt.ukp.clarin.webanno.model.FeatureModeType")
-    private FeatureMode mode;
-    
+    @Column(name = "multi_value_mode")
+    @Type(type="de.tudarmstadt.ukp.clarin.webanno.model.MultiValueModeType")
+    private MultiValueMode multiValueMode;
+
+    @Column(name = "link_mode")
+    @Type(type="de.tudarmstadt.ukp.clarin.webanno.model.LinkModeType")
+    private LinkMode linkMode;
+
     @Column(name = "link_type_name")
     private String linkTypeName;
     
@@ -274,19 +278,34 @@ public class AnnotationFeature
         this.tagset = tagset;
     }
 
-    public FeatureMode getMode()
+    public MultiValueMode getMultiValueMode()
     {
-        if (mode == null) {
-            return FeatureMode.NONE;
+        if (multiValueMode == null) {
+            return MultiValueMode.NONE;
         }
         else {
-            return mode;
+            return multiValueMode;
         }
     }
 
-    public void setMode(FeatureMode aMode)
+    public void setMode(MultiValueMode aMode)
     {
-        mode = aMode;
+        multiValueMode = aMode;
+    }
+    
+    public LinkMode getLinkMode()
+    {
+        if (linkMode == null) {
+            return LinkMode.NONE;
+        }
+        else {
+            return linkMode;
+        }
+    }
+
+    public void setLinkMode(LinkMode aLinkMode)
+    {
+        linkMode = aLinkMode;
     }
 
     public String getLinkTypeName()

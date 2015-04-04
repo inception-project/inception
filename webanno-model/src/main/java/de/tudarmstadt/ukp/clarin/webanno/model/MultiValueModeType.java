@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2015
+ * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -20,12 +20,13 @@ package de.tudarmstadt.ukp.clarin.webanno.model;
 /**
  * Implementation of {@link PersistentEnumUserType}
  */
-public class FeatureModeType
-    extends PersistentEnumUserType<FeatureMode>
+public class MultiValueModeType
+    extends PersistentEnumUserType<MultiValueMode>
 {
     @Override
-    public Class<FeatureMode> returnedClass()
+    public Class<MultiValueMode> returnedClass()
     {
-        return FeatureMode.class;
+        return MultiValueMode.class;
     }
+
 }

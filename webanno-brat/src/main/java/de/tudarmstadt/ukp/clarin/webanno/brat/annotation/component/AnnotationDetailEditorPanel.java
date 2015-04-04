@@ -44,6 +44,7 @@ import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.AbstractTextComponent;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -219,7 +220,7 @@ public class AnnotationDetailEditorPanel
                     AnnotationFeature feature = item.getModelObject();
 
                     Component component;
-                    switch (feature.getMode()) {
+                    switch (feature.getMultiValueMode()) {
                     case NONE: {
                         switch (feature.getType()) {
                         case CAS.TYPE_NAME_INTEGER:
@@ -249,16 +250,25 @@ public class AnnotationDetailEditorPanel
                         }
                         break;
                     }
-                    case MULTIPLE_WITH_ROLE: {
-                        // If it is none of the primitive types, it must be a link feature
-                        component = renderLinkFeatureEditor(item, feature,
-                                (IModel<List<LinkModel>>) (IModel) featureValueModels.get(item
-                                        .getIndex()));
+                    case ARRAY: {
+                        switch (feature.getLinkMode()) {
+                        case WITH_ROLE: {
+                            // If it is none of the primitive types, it must be a link feature
+                            component = renderLinkFeatureEditor(item, feature,
+                                    (IModel<List<LinkWithRoleModel>>) (IModel) featureValueModels.get(item
+                                            .getIndex()));
+                            break;
+                            
+                        }
+                        default:
+                            throw new IllegalArgumentException("Unsupported link mode ["
+                                    + feature.getLinkMode() + "] on feature [" + feature.getName() + "]");
+                        }
                         break;
                     }
                     default:
-                        throw new IllegalArgumentException("Unsupported link mode ["
-                                + feature.getMode() + "] on feature [" + feature.getName() + "]");
+                        throw new IllegalArgumentException("Unsupported multi-value mode ["
+                                + feature.getMultiValueMode() + "] on feature [" + feature.getName() + "]");
                     }
 
                     if (item.getIndex() == 0) {
@@ -268,25 +278,25 @@ public class AnnotationDetailEditorPanel
                 }
 
                 private Component renderLinkFeatureEditor(final Item<AnnotationFeature> item,
-                        final AnnotationFeature feature, final IModel<List<LinkModel>> model)
+                        final AnnotationFeature feature, final IModel<List<LinkWithRoleModel>> model)
                 {
                     Fragment frag = new Fragment("editor", "linkFeatureEditor", item)
                     {
-                        private TextField text;
+                        private AbstractTextComponent text;
                         
                         {
                             add(new Label("feature", feature.getUiName()));
 
-                            add(new RefreshingView<LinkModel>("slots")
+                            add(new RefreshingView<LinkWithRoleModel>("slots")
                             {
                                 @Override
-                                protected Iterator<IModel<LinkModel>> getItemModels()
+                                protected Iterator<IModel<LinkWithRoleModel>> getItemModels()
                                 {
-                                    ModelIteratorAdapter<LinkModel> i = new ModelIteratorAdapter<LinkModel>(
+                                    ModelIteratorAdapter<LinkWithRoleModel> i = new ModelIteratorAdapter<LinkWithRoleModel>(
                                             model.getObject())
                                     {
                                         @Override
-                                        protected IModel<LinkModel> model(LinkModel aObject)
+                                        protected IModel<LinkWithRoleModel> model(LinkWithRoleModel aObject)
                                         {
                                             return Model.of(aObject);
                                         }
@@ -295,9 +305,9 @@ public class AnnotationDetailEditorPanel
                                 }
 
                                 @Override
-                                protected void populateItem(Item<LinkModel> aItem)
+                                protected void populateItem(Item<LinkWithRoleModel> aItem)
                                 {
-                                    aItem.setModel(new CompoundPropertyModel<LinkModel>(aItem
+                                    aItem.setModel(new CompoundPropertyModel<LinkWithRoleModel>(aItem
                                             .getModelObject()));
 
                                     aItem.add(new Label("role"));
@@ -305,17 +315,27 @@ public class AnnotationDetailEditorPanel
                                 }
                             });
                             
-                            add(text = new TextField<String>("newRole", Model.of("")));                            
+                            if (feature.getTagset() != null) {
+                                List<Tag> tagset = annotationService.listTags(feature.getTagset());
+                                 text = new ComboBox<Tag>(
+                                        "newRole", Model.of(""), tagset,
+                                        new com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer<Tag>(
+                                                "name"));
+                                add(text);
+                            }
+                            else {
+                                add(text = new TextField<String>("newRole", Model.of("")));                            
+                            }
 
+                            // Add a new empty slot with the specified role
                             add(new AjaxButton("add") {
                                 private static final long serialVersionUID = 1L;
-                                
                                 
                                 @Override
                                 protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
                                 {
-                                    List<LinkModel> links = model.getObject();
-                                    LinkModel m = new LinkModel();
+                                    List<LinkWithRoleModel> links = model.getObject();
+                                    LinkWithRoleModel m = new LinkWithRoleModel();
                                     m.role = (String) text.getModelObject();
                                     links.add(m);
                                     
@@ -399,15 +419,9 @@ public class AnnotationDetailEditorPanel
                             add(new Label("feature", featureLabel));
 
                             if (feature.getTagset() != null) {
-                                List<Tag> tagset = new ArrayList<Tag>();
-                                if (feature.getTagset() != null) {
-                                    tagset.addAll(annotationService.listTags(feature.getTagset()));
-                                }
-
+                                List<Tag> tagset = annotationService.listTags(feature.getTagset());
                                 ComboBox<Tag> featureValueCombo = new ComboBox<Tag>(
-                                        "tag",
-                                        model,
-                                        tagset,
+                                        "tag", model, tagset,
                                         new com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer<Tag>(
                                                 "name"));
                                 add(featureValueCombo);
@@ -1062,7 +1076,10 @@ public class AnnotationDetailEditorPanel
         }
     }
 
-    public static class LinkModel
+    /**
+     * Represents a link with a role in the UI.
+     */
+    public static class LinkWithRoleModel
         implements Serializable
     {
         public String role;

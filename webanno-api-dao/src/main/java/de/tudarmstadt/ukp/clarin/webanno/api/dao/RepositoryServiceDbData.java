@@ -2293,21 +2293,29 @@ public class RepositoryServiceDbData
     private void generateFeature(TypeSystemDescription aTSD, TypeDescription aTD,
             AnnotationFeature aFeature)
     {
-        switch (aFeature.getMode()) {
+        switch (aFeature.getMultiValueMode()) {
         case NONE:
             aTD.addFeature(aFeature.getName(), "", aFeature.getType());
             break;
-        case MULTIPLE_WITH_ROLE: {
-            // Link type
-            TypeDescription linkTD = aTSD.addType(aFeature.getLinkTypeName(), "", CAS.TYPE_NAME_TOP);
-            linkTD.addFeature(aFeature.getLinkTypeRoleFeatureName(), "", CAS.TYPE_NAME_STRING);
-            linkTD.addFeature(aFeature.getLinkTypeTargetFeatureName(), "", aFeature.getType());
-            // Link feature
-            aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_FS_ARRAY, linkTD.getName(), false);
+        case ARRAY: {
+            switch (aFeature.getLinkMode()) {
+            case WITH_ROLE: {
+                // Link type
+                TypeDescription linkTD = aTSD.addType(aFeature.getLinkTypeName(), "", CAS.TYPE_NAME_TOP);
+                linkTD.addFeature(aFeature.getLinkTypeRoleFeatureName(), "", CAS.TYPE_NAME_STRING);
+                linkTD.addFeature(aFeature.getLinkTypeTargetFeatureName(), "", aFeature.getType());
+                // Link feature
+                aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_FS_ARRAY, linkTD.getName(), false);
+                break;
+            }
+            default:
+                throw new IllegalArgumentException("Unsupported link mode ["
+                        + aFeature.getLinkMode() + "] on feature [" + aFeature.getName() + "]");
+            }
             break;
         }
         default:
-            throw new IllegalArgumentException("Unknown link mode [" + aFeature.getMode()
+            throw new IllegalArgumentException("Unsupported multi-value mode [" + aFeature.getMultiValueMode()
                     + "] on feature [" + aFeature.getName() + "]");
         }
     }
