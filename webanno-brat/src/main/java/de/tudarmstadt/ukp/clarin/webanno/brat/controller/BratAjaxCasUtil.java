@@ -700,6 +700,12 @@ public class BratAjaxCasUtil
             List<FeatureStructure> linkFSes = new ArrayList<FeatureStructure>();
             List<LinkModel> links = (List<LinkModel>) aValue;
             for (LinkModel e : links) {
+                // Skip links that have been added in the UI but where the target has not yet been
+                // set
+                if (e.targetAddr == -1) {
+                    continue;
+                }
+                
                 FeatureStructure link = aFS.getCAS().createFS(linkType);
                 link.setStringValue(roleFeat, e.role);
                 link.setFeatureValue(targetFeat, selectByAddr(aFS.getCAS(), e.targetAddr));
@@ -708,7 +714,7 @@ public class BratAjaxCasUtil
             
             // Create a new array if size differs otherwise re-use existing one
             ArrayFS array = (ArrayFS) BratAjaxCasUtil.getFeatureFS(aFS, aFeature.getName());
-            if (array.size() != linkFSes.size()) {
+            if (array == null || (array.size() != linkFSes.size())) {
                 array = aFS.getCAS().createArrayFS(linkFSes.size());
             }
 
