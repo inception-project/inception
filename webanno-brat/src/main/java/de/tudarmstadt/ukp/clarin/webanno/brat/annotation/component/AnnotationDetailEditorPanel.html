@@ -46,61 +46,59 @@
 					</tr>
 				</table>
 			</fieldset>
-			<fieldset>
+			<fieldset wicket:id="wmc">
 				<legend>Features</legend>
-				<div wicket:id="wmc">
-					<table class="hfill">
-						<tr wicket:id="featureValues">
-							<td wicket:id="editor"></td>
-							<wicket:fragment wicket:id="textFeatureEditor">
-								<td><span wicket:id="feature"></span></td>
-								<td><input style="width: 100%" wicket:id="tag"></input></td>
-							</wicket:fragment>
-							<wicket:fragment wicket:id="numberFeatureEditor">
-								<td><span wicket:id="feature"></span></td>
-								<td><input type="number" style="width: 100%"
-									wicket:id="tag"></input></td>
-							</wicket:fragment>
-							<wicket:fragment wicket:id="booleanFeatureEditor">
-								<td><span wicket:id="feature"></span></td>
-								<td><input type="checkbox" style="width: 100%"
-									wicket:id="tag"></input></td>
-							</wicket:fragment>
-							<wicket:fragment wicket:id="linkFeatureEditor">
-								<td colspan="2">
-									<fieldset>
-										<legend>
-											<span wicket:id="feature"></span>
-										</legend>
-										<table class="hfill">
-											<tr wicket:id="slots">
-												<td><span wicket:id="role"></span></td>
-												<td><span wicket:id="label"></span></td>
-											</tr>
-											<tr>
-                                                 <td><input style="width: 100%" wicket:id="newRole"></input></td>
-                                                 <td><button class="buttons" wicket:id="add">Add</button></td>
-											</tr>
-										</table>
-									</fieldset>
-								</td>
-							</wicket:fragment>
-							<!--  
-							<wicket:fragment wicket:id="multiEditor">
-                                <td colspan="2">
-                                    <fieldset>
-                                        <legend>
-                                            <span wicket:id="feature"></span>
-                                        </legend>
-                                        <table class="hfill">
-                                        </table>
-                                    </fieldset>
-                                </td>
-							</wicket:fragment>
-							-->
-						</tr>
-					</table>
-				</div>
+				<table class="hfill">
+					<tr wicket:id="featureValues">
+						<td wicket:id="editor"></td>
+						<wicket:fragment wicket:id="textFeatureEditor">
+							<td><span wicket:id="feature"></span></td>
+							<td><input style="width: 100%" wicket:id="tag"></input></td>
+						</wicket:fragment>
+						<wicket:fragment wicket:id="numberFeatureEditor">
+							<td><span wicket:id="feature"></span></td>
+							<td><input type="number" style="width: 100%"
+								wicket:id="tag"></input></td>
+						</wicket:fragment>
+						<wicket:fragment wicket:id="booleanFeatureEditor">
+							<td><span wicket:id="feature"></span></td>
+							<td><input type="checkbox" style="width: 100%"
+								wicket:id="tag"></input></td>
+						</wicket:fragment>
+						<wicket:fragment wicket:id="linkFeatureEditor">
+							<td colspan="2">
+								<fieldset>
+									<legend>
+										<span wicket:id="feature"></span>
+									</legend>
+									<table class="hfill">
+										<tr wicket:id="slots">
+											<td><span wicket:id="role"></span></td>
+											<td><span wicket:id="label"></span></td>
+										</tr>
+										<tr>
+                                                <td><input style="width: 100%" wicket:id="newRole"></input></td>
+                                                <td><button class="buttons" wicket:id="add">Add</button></td>
+										</tr>
+									</table>
+								</fieldset>
+							</td>
+						</wicket:fragment>
+						<!--  
+						<wicket:fragment wicket:id="multiEditor">
+                               <td colspan="2">
+                                   <fieldset>
+                                       <legend>
+                                           <span wicket:id="feature"></span>
+                                       </legend>
+                                       <table class="hfill">
+                                       </table>
+                                   </fieldset>
+                               </td>
+						</wicket:fragment>
+						-->
+					</tr>
+				</table>
 			</fieldset>
 		</form>
 	</wicket:panel>

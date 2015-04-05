@@ -38,6 +38,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
+import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
@@ -142,317 +143,34 @@ public class AnnotationDetailEditorPanel
         {
             super(id, new CompoundPropertyModel<BratAnnotatorModel>(aBModel));
 
+            featuresModel = new ArrayList<AnnotationFeature>();
+            featureValueModels = new ArrayList<IModel<Serializable>>();
+
             selectedTextLabel = new Label("selectedText");
             selectedTextLabel.setOutputMarkupId(true);
             add(selectedTextLabel);
 
-            layers = (DropDownChoice<AnnotationLayer>) new DropDownChoice<AnnotationLayer>(
-                    "selectedAnnotationLayer", annotationLayers)
-            {
-                private static final long serialVersionUID = -1L;
+            add(layers = new LayerSelector("selectedAnnotationLayer", annotationLayers));
+
+            updateFeaturesModel(annotationService, aBModel);
+
+            featureValues = new FeatureEditorPanel("featureValues");
+            
+            wmc = new WebMarkupContainer("wmc") {
+                private static final long serialVersionUID = 8908304272310098353L;
 
                 @Override
                 protected void onConfigure()
                 {
                     super.onConfigure();
-                    // at the moment we allow one layer per relation annotation (first
-                    // source/target span layer should be selected!)
-                    setNullValid(!AnnotationFeatureForm.this.getModelObject().isRelationAnno());
-
+                    
+                    setVisible(!featuresModel.isEmpty());
                 }
             };
-            layers.setOutputMarkupId(true);
-
-            layers.setChoiceRenderer(new ChoiceRenderer<AnnotationLayer>("uiName"));
-
-            layers.add(new AjaxFormComponentUpdatingBehavior("onchange")
-            {
-                private static final long serialVersionUID = 5179816588460867471L;
-
-                @Override
-                protected void onUpdate(AjaxRequestTarget aTarget)
-                {
-                    BratAnnotatorModel model = AnnotationFeatureForm.this.getModelObject();
-
-                    featuresModel = new ArrayList<AnnotationFeature>();
-                    featureValueModels = new ArrayList<IModel<Serializable>>();
-                    for (AnnotationFeature feature : annotationService.listAnnotationFeature(model
-                            .getSelectedAnnotationLayer())) {
-
-                        if (!feature.isEnabled()) {
-                            continue;
-                        }
-                        if (model.getSelectedAnnotationLayer().getType()
-                                .equals(WebAnnoConst.CHAIN_TYPE)
-                                && feature.getName().equals(
-                                        WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
-                            continue;
-                        }
-
-                        featuresModel.add(feature);
-
-                        IModel<Serializable> tagModel = Model.of();
-                        if (selectedFeatureValues.containsKey(feature)) {
-                            tagModel.setObject(selectedFeatureValues.get(feature));
-                        }
-                        featureValueModels.add(tagModel);
-                    }
-                    aTarget.add(wmc);
-                    aTarget.add(annotateButton);
-                }
-            });
-            add(layers);
-
-            featuresModel = new ArrayList<AnnotationFeature>();
-            featureValueModels = new ArrayList<IModel<Serializable>>();
-
-            updateFeaturesModel(annotationService, aBModel);
-
-            wmc = new WebMarkupContainer("wmc");
             wmc.setOutputMarkupId(true);
-            add(wmc.add(featureValues = new RefreshingView<AnnotationFeature>("featureValues")
-            {
-                private static final long serialVersionUID = -8359786805333207043L;
-
-                @Override
-                protected void populateItem(final Item<AnnotationFeature> item)
-                {
-                    AnnotationFeature feature = item.getModelObject();
-
-                    Component component;
-                    switch (feature.getMultiValueMode()) {
-                    case NONE: {
-                        switch (feature.getType()) {
-                        case CAS.TYPE_NAME_INTEGER:
-                            component = renderNumberFeatureEditor(item, feature,
-                                    (IModel<Number>) (IModel) featureValueModels.get(item
-                                            .getIndex()));
-                            break;
-                        case CAS.TYPE_NAME_FLOAT:
-                            component = renderNumberFeatureEditor(item, feature,
-                                    (IModel<Number>) (IModel) featureValueModels.get(item
-                                            .getIndex()));
-                            break;
-                        case CAS.TYPE_NAME_BOOLEAN:
-                            component = renderBooleanFeatureEditor(item, feature,
-                                    (IModel<Boolean>) (IModel) featureValueModels.get(item
-                                            .getIndex()));
-                            break;
-                        case CAS.TYPE_NAME_STRING:
-                            component = renderTextFeatureEditor(item, feature,
-                                    (IModel<String>) (IModel) featureValueModels.get(item
-                                            .getIndex()));
-                            break;
-                        default:
-                            throw new IllegalArgumentException("Unsupported type ["
-                                    + feature.getType() + "] on feature [" + feature.getName()
-                                    + "]");
-                        }
-                        break;
-                    }
-                    case ARRAY: {
-                        switch (feature.getLinkMode()) {
-                        case WITH_ROLE: {
-                            // If it is none of the primitive types, it must be a link feature
-                            component = renderLinkFeatureEditor(item, feature,
-                                    (IModel<List<LinkWithRoleModel>>) (IModel) featureValueModels.get(item
-                                            .getIndex()));
-                            break;
-                            
-                        }
-                        default:
-                            throw new IllegalArgumentException("Unsupported link mode ["
-                                    + feature.getLinkMode() + "] on feature [" + feature.getName() + "]");
-                        }
-                        break;
-                    }
-                    default:
-                        throw new IllegalArgumentException("Unsupported multi-value mode ["
-                                + feature.getMultiValueMode() + "] on feature [" + feature.getName() + "]");
-                    }
-
-                    if (item.getIndex() == 0) {
-                        // Put focus on first feature
-                        component.add(new DefaultFocusBehavior());
-                    }
-                }
-
-                private Component renderLinkFeatureEditor(final Item<AnnotationFeature> item,
-                        final AnnotationFeature feature, final IModel<List<LinkWithRoleModel>> model)
-                {
-                    Fragment frag = new Fragment("editor", "linkFeatureEditor", item)
-                    {
-                        private AbstractTextComponent text;
-                        
-                        {
-                            add(new Label("feature", feature.getUiName()));
-
-                            add(new RefreshingView<LinkWithRoleModel>("slots")
-                            {
-                                @Override
-                                protected Iterator<IModel<LinkWithRoleModel>> getItemModels()
-                                {
-                                    ModelIteratorAdapter<LinkWithRoleModel> i = new ModelIteratorAdapter<LinkWithRoleModel>(
-                                            model.getObject())
-                                    {
-                                        @Override
-                                        protected IModel<LinkWithRoleModel> model(LinkWithRoleModel aObject)
-                                        {
-                                            return Model.of(aObject);
-                                        }
-                                    };
-                                    return i;
-                                }
-
-                                @Override
-                                protected void populateItem(Item<LinkWithRoleModel> aItem)
-                                {
-                                    aItem.setModel(new CompoundPropertyModel<LinkWithRoleModel>(aItem
-                                            .getModelObject()));
-
-                                    aItem.add(new Label("role"));
-                                    aItem.add(new Label("label"));
-                                }
-                            });
-                            
-                            if (feature.getTagset() != null) {
-                                List<Tag> tagset = annotationService.listTags(feature.getTagset());
-                                 text = new ComboBox<Tag>(
-                                        "newRole", Model.of(""), tagset,
-                                        new com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer<Tag>(
-                                                "name"));
-                                add(text);
-                            }
-                            else {
-                                add(text = new TextField<String>("newRole", Model.of("")));                            
-                            }
-
-                            // Add a new empty slot with the specified role
-                            add(new AjaxButton("add") {
-                                private static final long serialVersionUID = 1L;
-                                
-                                @Override
-                                protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
-                                {
-                                    List<LinkWithRoleModel> links = model.getObject();
-                                    LinkWithRoleModel m = new LinkWithRoleModel();
-                                    m.role = (String) text.getModelObject();
-                                    links.add(m);
-                                    
-                                    aTarget.add(item);
-                                }
-                            });                            
-                        }
-                    };
-                    item.add(frag);
-                    item.setOutputMarkupId(true);
-                    return frag.get("tag");
-                }
-
-                private Component renderBooleanFeatureEditor(Item<AnnotationFeature> item,
-                        final AnnotationFeature feature, final IModel<Boolean> model)
-                {
-                    Fragment frag = new Fragment("editor", "booleanFeatureEditor", item)
-                    {
-                        {
-                            String featureLabel = feature.getUiName();
-                            if (feature.getTagset() != null) {
-                                featureLabel += " (" + feature.getTagset().getName() + ")";
-                            }
-                            add(new Label("feature", featureLabel));
-
-                            CheckBox checkBox = new CheckBox("tag", model);
-                            add(checkBox);
-                        }
-                    };
-                    item.add(frag);
-                    return frag.get("tag");
-                }
-
-                @SuppressWarnings("unchecked")
-                private <N extends Number> Component renderNumberFeatureEditor(
-                        Item<AnnotationFeature> item, final AnnotationFeature feature,
-                        final IModel<N> model)
-                {
-                    Fragment frag = new Fragment("editor", "numberFeatureEditor", item)
-                    {
-                        {
-                            String featureLabel = feature.getUiName();
-                            if (feature.getTagset() != null) {
-                                featureLabel += " (" + feature.getTagset().getName() + ")";
-                            }
-                            add(new Label("feature", featureLabel));
-
-                            switch (feature.getType()) {
-                            case CAS.TYPE_NAME_INTEGER: {
-                                NumberTextField<Integer> field = new NumberTextField<Integer>(
-                                        "tag", (IModel<Integer>) (IModel) model, Integer.class);
-                                add(field);
-                                break;
-                            }
-                            case CAS.TYPE_NAME_FLOAT: {
-                                NumberTextField<Float> field = new NumberTextField<Float>("tag",
-                                        (IModel<Float>) (IModel) model, Float.class);
-                                add(field);
-                                break;
-                            }
-                            default:
-                                throw new IllegalArgumentException("Type [" + feature.getType()
-                                        + "] cannot be rendered as a numeric input field");
-                            }
-                        }
-                    };
-                    item.add(frag);
-                    return frag.get("tag");
-                }
-
-                private Component renderTextFeatureEditor(Item<AnnotationFeature> item,
-                        final AnnotationFeature feature, final IModel<String> model)
-                {
-                    Fragment frag = new Fragment("editor", "textFeatureEditor", item)
-                    {
-                        {
-                            String featureLabel = feature.getUiName();
-                            if (feature.getTagset() != null) {
-                                featureLabel += " (" + feature.getTagset().getName() + ")";
-                            }
-                            add(new Label("feature", featureLabel));
-
-                            if (feature.getTagset() != null) {
-                                List<Tag> tagset = annotationService.listTags(feature.getTagset());
-                                ComboBox<Tag> featureValueCombo = new ComboBox<Tag>(
-                                        "tag", model, tagset,
-                                        new com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer<Tag>(
-                                                "name"));
-                                add(featureValueCombo);
-                            }
-                            else {
-                                TextField<String> featureTextField = new TextField<String>("tag",
-                                        model);
-                                add(featureTextField);
-                            }
-                        }
-                    };
-                    item.add(frag);
-                    return frag.get("tag");
-                }
-
-                @Override
-                protected Iterator<IModel<AnnotationFeature>> getItemModels()
-                {
-                    ModelIteratorAdapter<AnnotationFeature> i = new ModelIteratorAdapter<AnnotationFeature>(
-                            featuresModel)
-                    {
-                        @Override
-                        protected IModel<AnnotationFeature> model(AnnotationFeature aObject)
-                        {
-                            return Model.of(aObject);
-                        }
-                    };
-                    return i;
-                }
-            }));
-            featureValues.setOutputMarkupId(true);
+            wmc.add(featureValues);
+            add(wmc);
+            
             annotateButton = new AjaxButton("annotate")
             {
                 private static final long serialVersionUID = 980971048279862290L;
@@ -475,9 +193,9 @@ public class AnnotationDetailEditorPanel
                         LOG.error("There is no text selected to annotate");
                         return;
                     }
+                    
                     try {
                         actionAnnotate(aTarget, model);
-
                     }
                     catch (BratAnnotationException e) {
                         error(e.getMessage());
@@ -503,10 +221,9 @@ public class AnnotationDetailEditorPanel
                         setEnabled(model.getSelectedText() != null
                                 && !model.getSelectedText().equals(""));
                     }
-
                 }
-
             };
+            
             if (featuresModel.isEmpty()) {
                 // Put focus on annotate button if there are no features
                 annotateButton.add(new DefaultFocusBehavior());
@@ -1073,6 +790,357 @@ public class AnnotationDetailEditorPanel
                 continue;
             }
             annotationLayers.add(layer);
+        }
+    }
+
+    public class FeatureEditorPanel extends RefreshingView<AnnotationFeature>
+    {
+        private static final long serialVersionUID = -8359786805333207043L;
+
+        public FeatureEditorPanel(String aId)
+        {
+            super(aId);
+            setOutputMarkupId(true);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected void populateItem(final Item<AnnotationFeature> item)
+        {
+            // Feature editors that allow multiple values may want to update themselves,
+            // e.g. to add another slot.
+            item.setOutputMarkupId(true);
+
+            AnnotationFeature feature = item.getModelObject();
+
+            FeatureEditor frag;
+            switch (feature.getMultiValueMode()) {
+            case NONE: {
+                switch (feature.getType()) {
+                case CAS.TYPE_NAME_INTEGER: {
+                    frag = new NumberFeatureEditor("editor", "numberFeatureEditor", item,
+                            (IModel<Number>) (IModel) featureValueModels.get(item.getIndex()),
+                            feature);
+                    break;
+                }
+                case CAS.TYPE_NAME_FLOAT: {
+                    frag = new NumberFeatureEditor("editor", "numberFeatureEditor", item,
+                            (IModel<Number>) (IModel) featureValueModels.get(item.getIndex()),
+                            feature);
+                    break;
+                }
+                case CAS.TYPE_NAME_BOOLEAN: {
+                    frag = new BooleanFeatureEditor("editor", "booleanFeatureEditor", item,
+                            (IModel<Boolean>) (IModel) featureValueModels.get(item.getIndex()),
+                            feature);
+                    break;
+                }
+                case CAS.TYPE_NAME_STRING: {
+                    frag = new TextFeatureEditor("editor", "textFeatureEditor", item,
+                            (IModel<String>) (IModel) featureValueModels.get(item.getIndex()),
+                            feature);
+                    break;
+                }
+                default:
+                    throw new IllegalArgumentException("Unsupported type [" + feature.getType()
+                            + "] on feature [" + feature.getName() + "]");
+                }
+                break;
+            }
+            case ARRAY: {
+                switch (feature.getLinkMode()) {
+                case WITH_ROLE: {
+                    // If it is none of the primitive types, it must be a link feature
+                    frag = new LinkFeatureEditor("editor", "linkFeatureEditor", item,
+                            (IModel<List<LinkWithRoleModel>>) (IModel) featureValueModels.get(item
+                                    .getIndex()), feature);
+                    break;
+
+                }
+                default:
+                    throw new IllegalArgumentException("Unsupported link mode ["
+                            + feature.getLinkMode() + "] on feature [" + feature.getName() + "]");
+                }
+                break;
+            }
+            default:
+                throw new IllegalArgumentException("Unsupported multi-value mode ["
+                        + feature.getMultiValueMode() + "] on feature [" + feature.getName() + "]");
+            }
+
+            item.add(frag);
+
+            if (item.getIndex() == 0) {
+                // Put focus on first feature
+                frag.getFocusComponent().add(new DefaultFocusBehavior());
+            }
+        }
+
+        @Override
+        protected Iterator<IModel<AnnotationFeature>> getItemModels()
+        {
+            ModelIteratorAdapter<AnnotationFeature> i = new ModelIteratorAdapter<AnnotationFeature>(
+                    featuresModel)
+            {
+                @Override
+                protected IModel<AnnotationFeature> model(AnnotationFeature aObject)
+                {
+                    return Model.of(aObject);
+                }
+            };
+            return i;
+        }
+    }
+
+    public static abstract class FeatureEditor extends Fragment
+    {
+        public FeatureEditor(String aId, String aMarkupId, MarkupContainer aMarkupProvider,
+                IModel<?> aModel)
+        {
+            super(aId, aMarkupId, aMarkupProvider, aModel);
+        }
+
+        abstract public Component getFocusComponent();
+    }
+    
+    public static class NumberFeatureEditor<T extends Number> extends FeatureEditor
+    {
+        private final NumberTextField field;
+        
+        public NumberFeatureEditor(String aId, String aMarkupId, MarkupContainer aMarkupProvider,
+                IModel<T> aModel, AnnotationFeature feature)
+        {
+            super(aId, aMarkupId, aMarkupProvider, aModel);
+            
+            String featureLabel = feature.getUiName();
+            if (feature.getTagset() != null) {
+                featureLabel += " (" + feature.getTagset().getName() + ")";
+            }
+            add(new Label("feature", featureLabel));
+
+            switch (feature.getType()) {
+            case CAS.TYPE_NAME_INTEGER: {
+                field = new NumberTextField<Integer>(
+                        "tag", (IModel<Integer>) (IModel) aModel, Integer.class);
+                add(field);
+                break;
+            }
+            case CAS.TYPE_NAME_FLOAT: {
+                field = new NumberTextField<Float>("tag",
+                        (IModel<Float>) (IModel) aModel, Float.class);
+                add(field);
+                break;
+            }
+            default:
+                throw new IllegalArgumentException("Type [" + feature.getType()
+                        + "] cannot be rendered as a numeric input field");
+            }
+        }
+        
+        @Override
+        public NumberTextField getFocusComponent()
+        {
+            return field;
+        }
+    };
+
+    public static class BooleanFeatureEditor extends FeatureEditor
+    {
+        private final CheckBox field;
+        
+        public BooleanFeatureEditor(String aId, String aMarkupId, MarkupContainer aMarkupProvider,
+                IModel<Boolean> aModel, AnnotationFeature feature)
+        {
+            super(aId, aMarkupId, aMarkupProvider, aModel);
+
+            String featureLabel = feature.getUiName();
+            if (feature.getTagset() != null) {
+                featureLabel += " (" + feature.getTagset().getName() + ")";
+            }
+            add(new Label("feature", featureLabel));
+
+            field = new CheckBox("tag", aModel);
+            add(field);
+        }
+
+        @Override
+        public Component getFocusComponent()
+        {
+            return field;
+        }
+    };
+
+    public class TextFeatureEditor
+        extends FeatureEditor
+    {
+        private final AbstractTextComponent field;
+
+        public TextFeatureEditor(String aId, String aMarkupId, MarkupContainer aMarkupProvider,
+                IModel<String> aModel, AnnotationFeature feature)
+        {
+            super(aId, aMarkupId, aMarkupProvider, aModel);
+
+            String featureLabel = feature.getUiName();
+            if (feature.getTagset() != null) {
+                featureLabel += " (" + feature.getTagset().getName() + ")";
+            }
+            add(new Label("feature", featureLabel));
+
+            if (feature.getTagset() != null) {
+                List<Tag> tagset = annotationService.listTags(feature.getTagset());
+                field = new ComboBox<Tag>("tag", aModel, tagset,
+                        new com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer<Tag>("name"));
+            }
+            else {
+                field = new TextField<String>("tag", aModel);
+            }
+            add(field);
+        }
+
+        @Override
+        public Component getFocusComponent()
+        {
+            return field;
+        }
+    };
+
+    public class LinkFeatureEditor
+        extends FeatureEditor
+    {
+        private final AbstractTextComponent text;
+
+        public LinkFeatureEditor(String aId, String aMarkupId, MarkupContainer aMarkupProvider,
+                IModel<List<LinkWithRoleModel>> aModel, AnnotationFeature feature)
+        {
+            super(aId, aMarkupId, aMarkupProvider, aModel);
+
+            add(new Label("feature", feature.getUiName()));
+
+            add(new RefreshingView<LinkWithRoleModel>("slots")
+            {
+                @Override
+                protected Iterator<IModel<LinkWithRoleModel>> getItemModels()
+                {
+                    ModelIteratorAdapter<LinkWithRoleModel> i = new ModelIteratorAdapter<LinkWithRoleModel>(
+                            LinkFeatureEditor.this.getModelObject())
+                    {
+                        @Override
+                        protected IModel<LinkWithRoleModel> model(LinkWithRoleModel aObject)
+                        {
+                            return Model.of(aObject);
+                        }
+                    };
+                    return i;
+                }
+
+                @Override
+                protected void populateItem(Item<LinkWithRoleModel> aItem)
+                {
+                    aItem.setModel(new CompoundPropertyModel<LinkWithRoleModel>(aItem
+                            .getModelObject()));
+
+                    aItem.add(new Label("role"));
+                    aItem.add(new Label("label"));
+                }
+            });
+            
+            if (feature.getTagset() != null) {
+                List<Tag> tagset = annotationService.listTags(feature.getTagset());
+                 text = new ComboBox<Tag>(
+                        "newRole", Model.of(""), tagset,
+                        new com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer<Tag>(
+                                "name"));
+                add(text);
+            }
+            else {
+                add(text = new TextField<String>("newRole", Model.of("")));                            
+            }
+
+            // Add a new empty slot with the specified role
+            add(new AjaxButton("add") {
+                private static final long serialVersionUID = 1L;
+                
+                @Override
+                protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
+                {
+                    List<LinkWithRoleModel> links = LinkFeatureEditor.this.getModelObject();;
+                    LinkWithRoleModel m = new LinkWithRoleModel();
+                    m.role = (String) text.getModelObject();
+                    links.add(m);
+                    
+                    aTarget.add(LinkFeatureEditor.this.getParent());
+                }
+            });                            
+        }
+        
+        public List<LinkWithRoleModel> getModelObject()
+        {
+            return (List<LinkWithRoleModel>) getDefaultModelObject();
+        }
+
+        @Override
+        public Component getFocusComponent()
+        {
+            return text;
+        }
+    };
+    
+    public class LayerSelector
+        extends DropDownChoice<AnnotationLayer>
+    {
+        private static final long serialVersionUID = 2233133653137312264L;
+
+        public LayerSelector(String aId, List<? extends AnnotationLayer> aChoices)
+        {
+            super(aId, aChoices);
+            setOutputMarkupId(true);
+            setChoiceRenderer(new ChoiceRenderer<AnnotationLayer>("uiName"));
+
+            add(new AjaxFormComponentUpdatingBehavior("onchange")
+            {
+                private static final long serialVersionUID = 5179816588460867471L;
+
+                @Override
+                protected void onUpdate(AjaxRequestTarget aTarget)
+                {
+                    BratAnnotatorModel model = annotationFeatureForm.getModelObject();
+
+                    featuresModel = new ArrayList<AnnotationFeature>();
+                    featureValueModels = new ArrayList<IModel<Serializable>>();
+                    for (AnnotationFeature feature : annotationService.listAnnotationFeature(model
+                            .getSelectedAnnotationLayer())) {
+
+                        if (!feature.isEnabled()) {
+                            continue;
+                        }
+                        if (model.getSelectedAnnotationLayer().getType()
+                                .equals(WebAnnoConst.CHAIN_TYPE)
+                                && feature.getName().equals(
+                                        WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
+                            continue;
+                        }
+
+                        featuresModel.add(feature);
+
+                        IModel<Serializable> tagModel = Model.of();
+                        if (selectedFeatureValues.containsKey(feature)) {
+                            tagModel.setObject(selectedFeatureValues.get(feature));
+                        }
+                        featureValueModels.add(tagModel);
+                    }
+                    aTarget.add(wmc);
+                    aTarget.add(annotateButton);
+                }
+            });
+        }
+
+        @Override
+        protected void onConfigure()
+        {
+            super.onConfigure();
+            // at the moment we allow one layer per relation annotation (first
+            // source/target span layer should be selected!)
+            setNullValid(annotationFeatureForm.getModelObject().isRelationAnno());
         }
     }
 
