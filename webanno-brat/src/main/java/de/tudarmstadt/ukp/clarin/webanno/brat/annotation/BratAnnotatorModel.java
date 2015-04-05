@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.ObjectUtils;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
@@ -490,5 +491,40 @@ public class BratAnnotatorModel
         // + getFirstSentenceAddress() + "] l:["
         // + getLastSentenceAddress() + "] s:["
         // + getSentenceAddress() + "]");
+    }
+
+    private AnnotationFeature armedFeature;
+    private int armedSlot = -1;
+    
+    public void setArmedSlot(AnnotationFeature aName, int aIndex)
+    {
+        armedFeature = aName;
+        armedSlot = aIndex;
+    }
+
+    public boolean isArmedSlot(AnnotationFeature aName, int aIndex)
+    {
+        return ObjectUtils.equals(aName, armedFeature) && aIndex == armedSlot;
+    }
+    
+    public void clearArmedSlot()
+    {
+        armedFeature = null;
+        armedSlot = -1;
+    }
+
+    public boolean isSlotArmed()
+    {
+        return armedFeature != null;
+    }
+
+    public AnnotationFeature getArmedFeature()
+    {
+        return armedFeature;
+    }
+
+    public int getArmedSlot()
+    {
+        return armedSlot;
     }
 }

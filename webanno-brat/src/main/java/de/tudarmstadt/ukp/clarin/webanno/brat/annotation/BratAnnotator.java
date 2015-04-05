@@ -112,8 +112,10 @@ public class BratAnnotator
 
     @SpringBean(name = "jsonConverter")
     private MappingJacksonHttpMessageConverter jsonConverter;
+    
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
+    
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
 
@@ -191,61 +193,67 @@ public class BratAnnotator
                         result = controller.whoami();
                     }
                     else if (action.equals(SpanAnnotationResponse.COMMAND)) {
-                        getModelObject().setRelationAnno(false);
-                        JCas jCas = getCas(getModelObject());
-                        if (request.getParameterValue(PARAM_ID).toString() == null) {
-                            getModelObject().setSelectedAnnotationId(-1);
-                            annotationDetailEditorPanel.setLayerAndFeatureModels(jCas,
-                                    getModelObject());
-                        }
-                        else if (request.getParameterValue(PARAM_ID).toInt() == -1) {
-                            LOG.info("This is ghost Annotation, select Layer and Feature to annotate.");
-                            error("This is ghost Annotation, select Layer and Feature to annotate.");
-                            aTarget.addChildren(getPage(), FeedbackPanel.class);
-                            return;
+                        if (getModelObject().isSlotArmed()) {
+                            annotationDetailEditorPanel.setSlot(getModelObject(), request
+                                    .getParameterValue(PARAM_ID).toInt());
                         }
                         else {
-                            getModelObject().setSelectedAnnotationId(
-                                    request.getParameterValue(PARAM_ID).toInt());
-                            annotationDetailEditorPanel.setLayerAndFeatureModels(jCas,
-                                    getModelObject());
-                        }
-
-                        offsets = request.getParameterValue(PARAM_OFFSETS).toString();
-                        OffsetsList offsetLists = jsonConverter.getObjectMapper().readValue(
-                                offsets, OffsetsList.class);
-
-                        if (getModelObject().getSelectedAnnotationId() == -1) {
-                            Sentence sentence = BratAjaxCasUtil.selectSentenceAt(jCas,
-                                    getModelObject().getSentenceBeginOffset(), getModelObject()
-                                            .getSentenceEndOffset());
-                            getModelObject().setBeginOffset(
-                                    sentence.getBegin() + offsetLists.get(0).getBegin());
-                            getModelObject().setEndOffset(
-                                    sentence.getBegin()
-                                            + offsetLists.get(offsetLists.size() - 1).getEnd());
-                        }
-
-                        // get the begin/end from the annotation, no need to re-calculate
-                        else {
-                            AnnotationFS fs = BratAjaxCasUtil.selectByAddr(jCas, getModelObject()
-                                    .getSelectedAnnotationId());
-                            getModelObject().setBeginOffset(fs.getBegin());
-                            getModelObject().setEndOffset(fs.getEnd());
-                        }
-
-                        getModelObject().setSelectedText(
-                                request.getParameterValue(PARAM_SPAN_TEXT).toString());
-
-                        if (BratAnnotatorUtility.isDocumentFinished(repository, getModelObject())) {
-                            error("This document is already closed. Please ask your project "
-                                    + "manager to re-open it via the Montoring page");
-                        }
-                        if (getModelObject().getSelectedAnnotationId() == -1) {
-                            bratRenderHighlight(aTarget, getModelObject().getSelectedAnnotationId());
-                            bratRender(aTarget, jCas);
-                            ghostSpanAnnotationRender(aTarget, jCas, offsetLists.get(0).getBegin(),
-                                    offsetLists.get(offsetLists.size() - 1).getEnd());
+                            getModelObject().setRelationAnno(false);
+                            JCas jCas = getCas(getModelObject());
+                            if (request.getParameterValue(PARAM_ID).toString() == null) {
+                                getModelObject().setSelectedAnnotationId(-1);
+                                annotationDetailEditorPanel.setLayerAndFeatureModels(jCas,
+                                        getModelObject());
+                            }
+                            else if (request.getParameterValue(PARAM_ID).toInt() == -1) {
+                                LOG.info("This is ghost Annotation, select Layer and Feature to annotate.");
+                                error("This is ghost Annotation, select Layer and Feature to annotate.");
+                                aTarget.addChildren(getPage(), FeedbackPanel.class);
+                                return;
+                            }
+                            else {
+                                getModelObject().setSelectedAnnotationId(
+                                        request.getParameterValue(PARAM_ID).toInt());
+                                annotationDetailEditorPanel.setLayerAndFeatureModels(jCas,
+                                        getModelObject());
+                            }
+    
+                            offsets = request.getParameterValue(PARAM_OFFSETS).toString();
+                            OffsetsList offsetLists = jsonConverter.getObjectMapper().readValue(
+                                    offsets, OffsetsList.class);
+    
+                            if (getModelObject().getSelectedAnnotationId() == -1) {
+                                Sentence sentence = BratAjaxCasUtil.selectSentenceAt(jCas,
+                                        getModelObject().getSentenceBeginOffset(), getModelObject()
+                                                .getSentenceEndOffset());
+                                getModelObject().setBeginOffset(
+                                        sentence.getBegin() + offsetLists.get(0).getBegin());
+                                getModelObject().setEndOffset(
+                                        sentence.getBegin()
+                                                + offsetLists.get(offsetLists.size() - 1).getEnd());
+                            }
+    
+                            // get the begin/end from the annotation, no need to re-calculate
+                            else {
+                                AnnotationFS fs = BratAjaxCasUtil.selectByAddr(jCas, getModelObject()
+                                        .getSelectedAnnotationId());
+                                getModelObject().setBeginOffset(fs.getBegin());
+                                getModelObject().setEndOffset(fs.getEnd());
+                            }
+    
+                            getModelObject().setSelectedText(
+                                    request.getParameterValue(PARAM_SPAN_TEXT).toString());
+    
+                            if (BratAnnotatorUtility.isDocumentFinished(repository, getModelObject())) {
+                                error("This document is already closed. Please ask your project "
+                                        + "manager to re-open it via the Montoring page");
+                            }
+                            if (getModelObject().getSelectedAnnotationId() == -1) {
+                                bratRenderHighlight(aTarget, getModelObject().getSelectedAnnotationId());
+                                bratRender(aTarget, jCas);
+                                ghostSpanAnnotationRender(aTarget, jCas, offsetLists.get(0).getBegin(),
+                                        offsetLists.get(offsetLists.size() - 1).getEnd());
+                            }
                         }
                     }
                     else if (action.equals(ArcAnnotationResponse.COMMAND)) {
