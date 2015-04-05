@@ -657,19 +657,19 @@ public class AnnotationDetailEditorPanel
                     }
                 }
             }
+            
             // populate feature value
             if (aBModel.getSelectedAnnotationId() != -1) {
                 AnnotationFS annoFs = BratAjaxCasUtil.selectByAddr(aJCas,
                         aBModel.getSelectedAnnotationId());
                 for (AnnotationFeature feature : annotationService.listAnnotationFeature(aBModel
                         .getSelectedAnnotationLayer())) {
-                    if (feature.getName().equals(WebAnnoConst.COREFERENCE_TYPE_FEATURE)) {
+                    if (!feature.isEnabled() || isSuppressedFeature(aBModel, feature)) {
                         continue;
                     }
-                    if (feature.isEnabled()) {
-                        selectedFeatureValues.put(feature,
-                                (Serializable) BratAjaxCasUtil.getFeature(annoFs, feature));
-                    }
+                    
+                    selectedFeatureValues.put(feature,
+                            (Serializable) BratAjaxCasUtil.getFeature(annoFs, feature));
                 }
             }
         }
@@ -680,14 +680,11 @@ public class AnnotationDetailEditorPanel
             aBModel.setSelectedAnnotationLayer(aBModel.getRememberedSpanLayer());
             for (AnnotationFeature feature : annotationService.listAnnotationFeature(aBModel
                     .getSelectedAnnotationLayer())) {
-                if (feature.getName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
+                if (!feature.isEnabled() || isSuppressedFeature(aBModel, feature)) {
                     continue;
                 }
-                if (feature.isEnabled()) {
-                    selectedFeatureValues.put(feature,
-                            aBModel.getRememberedSpanFeatures().get(feature));
-                }
-
+                selectedFeatureValues
+                        .put(feature, aBModel.getRememberedSpanFeatures().get(feature));
             }
         }
         else if (aBModel.getSelectedAnnotationId() != -1) {
@@ -708,13 +705,12 @@ public class AnnotationDetailEditorPanel
             // populate feature value
             for (AnnotationFeature feature : annotationService.listAnnotationFeature(aBModel
                     .getSelectedAnnotationLayer())) {
-                if (feature.getName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
+                if (!feature.isEnabled() || isSuppressedFeature(aBModel, feature)) {
                     continue;
                 }
-                if (feature.isEnabled()) {
-                    selectedFeatureValues.put(feature,
-                            (Serializable) BratAjaxCasUtil.getFeature(annoFs, feature));
-                }
+
+                selectedFeatureValues.put(feature,
+                        (Serializable) BratAjaxCasUtil.getFeature(annoFs, feature));
             }
         }
         else {
@@ -724,20 +720,7 @@ public class AnnotationDetailEditorPanel
         for (AnnotationFeature feature : annotationService.listAnnotationFeature(aBModel
                 .getSelectedAnnotationLayer())) {
 
-            if (!feature.isEnabled()) {
-                continue;
-            }
-
-            if (aBModel.isRelationAnno()
-                    && aBModel.getSelectedAnnotationLayer().getType()
-                            .equals(WebAnnoConst.CHAIN_TYPE)
-                    && feature.getName().equals(WebAnnoConst.COREFERENCE_TYPE_FEATURE)) {
-                continue;
-            }
-            if (!aBModel.isRelationAnno()
-                    && aBModel.getSelectedAnnotationLayer().getType()
-                            .equals(WebAnnoConst.CHAIN_TYPE)
-                    && feature.getName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
+            if (!feature.isEnabled() || isSuppressedFeature(aBModel, feature)) {
                 continue;
             }
 
@@ -749,6 +732,22 @@ public class AnnotationDetailEditorPanel
             }
             featureValueModels.add(tagModel);
         }
+    }
+    
+    private static boolean isSuppressedFeature(BratAnnotatorModel aBModel, AnnotationFeature aFeature)
+    {
+        String featName = aFeature.getName();
+        
+        if (WebAnnoConst.CHAIN_TYPE.equals(aFeature.getLayer().getType())) {
+            if (aBModel.isRelationAnno()) {
+                return WebAnnoConst.COREFERENCE_RELATION_FEATURE.equals(featName);
+            }
+            else {
+                return WebAnnoConst.COREFERENCE_TYPE_FEATURE.equals(featName);
+            }
+        }
+        
+        return false;
     }
 
     protected void onChange(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
