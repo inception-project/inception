@@ -193,13 +193,13 @@ public class BratAnnotator
                         result = controller.whoami();
                     }
                     else if (action.equals(SpanAnnotationResponse.COMMAND)) {
+                        JCas jCas = getCas(getModelObject());
                         if (getModelObject().isSlotArmed()) {
-                            annotationDetailEditorPanel.setSlot(getModelObject(), request
+                            annotationDetailEditorPanel.setSlot(jCas, getModelObject(), request
                                     .getParameterValue(PARAM_ID).toInt());
                         }
                         else {
                             getModelObject().setRelationAnno(false);
-                            JCas jCas = getCas(getModelObject());
                             if (request.getParameterValue(PARAM_ID).toString() == null) {
                                 getModelObject().setSelectedAnnotationId(-1);
                                 annotationDetailEditorPanel.setLayerAndFeatureModels(jCas,

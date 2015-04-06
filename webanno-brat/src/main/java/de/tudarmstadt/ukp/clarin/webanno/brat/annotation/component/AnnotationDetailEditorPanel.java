@@ -633,7 +633,7 @@ public class AnnotationDetailEditorPanel
         aBModel.setSentenceEndOffset(sentence.getEnd());
     }
 
-    public void setSlot(final BratAnnotatorModel aBModel, int aAnnotationId)
+    public void setSlot(JCas aJCas, final BratAnnotatorModel aBModel, int aAnnotationId)
     {
         // Set an armed slot
         if (!aBModel.isRelationAnno() && aBModel.isSlotArmed()) {
@@ -641,6 +641,7 @@ public class AnnotationDetailEditorPanel
                     .get(aBModel.getArmedFeature());
             LinkWithRoleModel link = links.get(aBModel.getArmedSlot());
             link.targetAddr = aAnnotationId;
+            link.label = selectByAddr(aJCas, aAnnotationId).getCoveredText();
             aBModel.clearArmedSlot();
             return;
         }
