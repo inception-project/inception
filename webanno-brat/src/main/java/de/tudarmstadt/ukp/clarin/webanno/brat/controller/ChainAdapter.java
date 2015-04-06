@@ -21,9 +21,12 @@ import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.uima.cas.CAS;
@@ -84,15 +87,23 @@ public class ChainAdapter
 
     private AnnotationLayer layer;
 
+    private Map<String, AnnotationFeature> features;
+
     public ChainAdapter(AnnotationLayer aLayer, long aLayerId, String aTypeName,
-            String aLabelFeatureName, String aFirstFeatureName, String aNextFeatureName)
+            String aLabelFeatureName, String aFirstFeatureName, String aNextFeatureName,
+            Collection<AnnotationFeature> aFeatures)
     {
         layer = aLayer;
         layerId = aLayerId;
         annotationTypeName = aTypeName;
         chainFirstFeatureName = aFirstFeatureName;
         linkNextFeatureName = aNextFeatureName;
-    }
+
+        features = new LinkedHashMap<String, AnnotationFeature>();
+        for (AnnotationFeature f : aFeatures) {
+            features.put(f.getName(), f);
+        }
+}
 
     /**
      * Add annotations from the CAS, which is controlled by the window size, to the brat response
@@ -691,5 +702,11 @@ public class ChainAdapter
     public AnnotationLayer getLayer()
     {
         return layer;
+    }
+    
+    @Override
+    public Collection<AnnotationFeature> listFeatures()
+    {
+        return features.values();
     }
 }

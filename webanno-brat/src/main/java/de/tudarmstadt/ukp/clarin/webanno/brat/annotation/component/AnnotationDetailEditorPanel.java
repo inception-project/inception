@@ -371,7 +371,7 @@ public class AnnotationDetailEditorPanel
         // may notice that it would create a duplicate and return the address of
         // an existing annotation instead of a new one.
         JCas jCas = getCas(aBModel);
-        TypeAdapter adapter = getAdapter(aBModel.getSelectedAnnotationLayer());
+        TypeAdapter adapter = getAdapter(annotationService, aBModel.getSelectedAnnotationLayer());
 
         if (aBModel.getSelectedAnnotationId() == -1) {
             if (aBModel.isRelationAnno()) {
@@ -466,7 +466,7 @@ public class AnnotationDetailEditorPanel
     {
         JCas jCas = getCas(aBModel);
         AnnotationFS fs = selectByAddr(jCas, aBModel.getSelectedAnnotationId());
-        TypeAdapter adapter = getAdapter(aBModel.getSelectedAnnotationLayer());
+        TypeAdapter adapter = getAdapter(annotationService, aBModel.getSelectedAnnotationLayer());
         String attachFeatureName = adapter.getAttachFeatureName();
         String attachTypeName = adapter.getAnnotationTypeName();
 
@@ -474,7 +474,7 @@ public class AnnotationDetailEditorPanel
 
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(aBModel.getProject())) {
 
-            typeAdapters.add(getAdapter(layer));
+            typeAdapters.add(getAdapter(annotationService, layer));
         }
         // delete associated relation annotation
         for (TypeAdapter ad : typeAdapters) {
@@ -557,7 +557,7 @@ public class AnnotationDetailEditorPanel
         AnnotationFS originFs = selectByAddr(jCas, aBModel.getOriginSpanId());
         AnnotationFS targetFs = selectByAddr(jCas, aBModel.getTargetSpanId());
 
-        TypeAdapter adapter = getAdapter(aBModel.getSelectedAnnotationLayer());
+        TypeAdapter adapter = getAdapter(annotationService, aBModel.getSelectedAnnotationLayer());
         if (adapter instanceof ArcAdapter) {
             for (IModel<Serializable> model : featureValueModels) {
                 AnnotationFeature feature = featuresModel.get(featureValueModels.indexOf(model));

@@ -165,7 +165,7 @@ public class BratAnnotationDocumentVisualizer
             ColoringStrategy coloringStrategy = ColoringStrategy.getBestStrategy(layer,
                     bratAnnotatorModel, i);
 
-            getAdapter(layer)
+            getAdapter(annotationService, layer)
                     .render(jCas, features, response, bratAnnotatorModel, coloringStrategy);
             i++;
         }

@@ -696,7 +696,7 @@ public class MonitoringPage
         double[][] results = new double[users.size()][users.size()];
         if (features.getModelObject() != null) {
 
-            TypeAdapter adapter = TypeUtil.getAdapter(features.getModelObject().getLayer());
+            TypeAdapter adapter = TypeUtil.getAdapter(annotationService, features.getModelObject().getLayer());
 
             // assume all users finished only one document
             double[][] multipleDocumentsFinished = new double[users.size()][users.size()];

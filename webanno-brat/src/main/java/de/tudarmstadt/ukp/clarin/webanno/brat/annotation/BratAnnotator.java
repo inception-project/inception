@@ -194,7 +194,7 @@ public class BratAnnotator
                     }
                     else if (action.equals(SpanAnnotationResponse.COMMAND)) {
                         JCas jCas = getCas(getModelObject());
-                        if (getModelObject().isSlotArmed()) {
+                        if (getModelObject().isSlotArmed() && request.getParameterValue(PARAM_ID) != null) {
                             annotationDetailEditorPanel.setSlot(jCas, getModelObject(), request
                                     .getParameterValue(PARAM_ID).toInt());
                         }

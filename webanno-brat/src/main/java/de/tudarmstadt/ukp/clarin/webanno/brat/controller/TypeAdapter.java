@@ -17,6 +17,7 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
@@ -128,4 +129,6 @@ public interface TypeAdapter
     List<String> getAnnotation(JCas aJcas, AnnotationFeature feature, int begin, int end);
 
     AnnotationLayer getLayer();
+    
+    Collection<AnnotationFeature> listFeatures();
 }

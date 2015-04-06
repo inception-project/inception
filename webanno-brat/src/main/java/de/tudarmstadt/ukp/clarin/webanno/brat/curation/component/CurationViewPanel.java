@@ -271,7 +271,7 @@ public class CurationViewPanel extends WebMarkupContainer {
 
         long layerId = TypeUtil.getLayerId(spanType);
         AnnotationLayer layer = annotationService.getLayer(layerId);
-        SpanAdapter adapter = (SpanAdapter) getAdapter(layer);
+        SpanAdapter adapter = (SpanAdapter) getAdapter(annotationService, layer);
 
         // Add annotation - we set no feature values yet.
         int selectedSpanId = adapter.add(aMergeJCas, fsClicked.getBegin(), fsClicked.getEnd(),
@@ -393,7 +393,7 @@ public class CurationViewPanel extends WebMarkupContainer {
 
             AnnotationLayer layer = annotationService.getLayer(layerId);
             AnnotationFS fsClicked = selectByAddr(clickedJCas, fsArcaddress);
-            ArcAdapter adapter = (ArcAdapter) getAdapter(layer);
+            ArcAdapter adapter = (ArcAdapter) getAdapter(annotationService, layer);
 
             // Add annotation - we set no feature values yet.
             int selectedSpanId = adapter.add(originFs, targetFs, aJcas,

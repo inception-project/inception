@@ -23,8 +23,11 @@ import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.uima.cas.CAS;
@@ -104,9 +107,11 @@ public class ArcAdapter
 
     private AnnotationLayer layer;
 
+    private Map<String, AnnotationFeature> features;
+
     public ArcAdapter(AnnotationLayer aLayer, long aTypeId, String aTypeName,
             String aTargetFeatureName, String aSourceFeatureName, /* String aArcSpanType, */
-            String aAttacheFeatureName, String aAttachType)
+            String aAttacheFeatureName, String aAttachType, Collection<AnnotationFeature> aFeatures)
     {
         layer = aLayer;
         typeId = aTypeId;
@@ -117,6 +122,10 @@ public class ArcAdapter
         attacheFeatureName = aAttacheFeatureName;
         attachType = aAttachType;
 
+        features = new LinkedHashMap<String, AnnotationFeature>();
+        for (AnnotationFeature f : aFeatures) {
+            features.put(f.getName(), f);
+        }
     }
 
     /**
@@ -514,5 +523,11 @@ public class ArcAdapter
     public AnnotationLayer getLayer()
     {
         return layer;
+    }
+    
+    @Override
+    public Collection<AnnotationFeature> listFeatures()
+    {
+        return features.values();
     }
 }
