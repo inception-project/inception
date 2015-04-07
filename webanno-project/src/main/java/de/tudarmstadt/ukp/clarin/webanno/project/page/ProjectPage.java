@@ -466,7 +466,15 @@ public class ProjectPage
                     .setEnabled(projectDetailForm.getModelObject().getId() == 0));
 
             add(new DropDownChoice<ScriptDirection>("scriptDirection",
-                    Arrays.asList(ScriptDirection.values())));
+                    Arrays.asList(ScriptDirection.values())) {
+                @Override
+                protected void onConfigure()
+                {
+                    // Feature not finished yet
+                    setVisible(false);
+                    setEnabled(false);
+                }
+            });
 
             add(new Button("save", new ResourceModel("label"))
             {
