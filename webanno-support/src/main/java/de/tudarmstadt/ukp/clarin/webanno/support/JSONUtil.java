@@ -29,10 +29,15 @@ public class JSONUtil
 {
     /**
      * Convert Java objects into JSON format and write it to a file
-     *
-     * @param aObject the object.
-     * @param aFile the file
-     * @throws IOException if an I/O error occurs.
+     * 
+     * @param jsonConverter
+     *            converter.
+     * @param aObject
+     *            the object.
+     * @param aFile
+     *            the file
+     * @throws IOException
+     *             if an I/O error occurs.
      */
     public static void generateJson(MappingJacksonHttpMessageConverter jsonConverter,
             Object aObject, File aFile)

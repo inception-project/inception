@@ -569,10 +569,19 @@ public class ImportUtil
     /**
      * Create {@link ProjectPermission} from the exported
      * {@link de.tudarmstadt.ukp.clarin.webanno.model.export.ProjectPermission}
-     * @param aImportedProjectSetting the imported project.
-     * @param aImportedProject the project.
-     * @param aRepository the repository service.
-     * @throws IOException if an I/O error occurs.
+     * 
+     * @param aImportedProjectSetting
+     *            the imported project.
+     * @param aImportedProject
+     *            the project.
+     * @param aRepository
+     *            the repository service.
+     * @param aGenerateUsers
+     *            whether to generate missing users.
+     * @param aUserDao
+     *            the users service.
+     * @throws IOException
+     *             if an I/O error occurs.
      */
     public static void createProjectPermission(
             de.tudarmstadt.ukp.clarin.webanno.model.export.Project aImportedProjectSetting,

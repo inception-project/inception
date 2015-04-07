@@ -1316,9 +1316,9 @@ public class AutomationUtil
      *
      * @param aJcas
      *            the JCas.
-     * @param feature
+     * @param aFeature
      *            the feature.
-     * @param labelValues
+     * @param aLabelValues
      *            the values.
      * @throws BratAnnotationException
      *             if the annotations could not be created/updated.
