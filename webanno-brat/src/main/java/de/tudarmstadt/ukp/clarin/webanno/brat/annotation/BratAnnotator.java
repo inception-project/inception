@@ -183,6 +183,7 @@ public class BratAnnotator
         openAnnotationDialog.setResizable(true);
         openAnnotationDialog.setWidthUnit("px");
         openAnnotationDialog.setHeightUnit("px");
+        openAnnotationDialog.setCookieName("annotationDialogPreferences");
         openAnnotationDialog.setCloseButtonCallback(new CloseButtonCallback()
         {
             private static final long serialVersionUID = -5423095433535634321L;
