@@ -1815,7 +1815,9 @@ Util.profileStart('chunks');
             }
 */
 // WEBANNO EXTENSION END
-
+// BEGIN WEBANNO EXTENSION - RTL support
+            fragment.left = bx; // TODO put it somewhere nicer?
+// WEBANNO EXTENSION END
             fragment.right = bx + bw; // TODO put it somewhere nicer?
             if (!(span.shadowClass || span.marked)) {
               chunkFrom = Math.min(bx, chunkFrom);
@@ -1904,15 +1906,33 @@ Util.profileStart('chunks');
                     }
                   }
 // WEBANNO EXTENSION END
+// WEBANNO EXTENSION BEGIN - RTL support - chunk spacing with arcs                  
+/*                  
                   if (origin.row.index == rowIndex) {
                     // same row, but before this
                     border = origin.translation.x + leftSpan.fragments[leftSpan.fragments.length - 1].right;
                   } else {
                     border = Configuration.visual.margin.x + sentNumMargin + rowPadding;
                   }
+*/
+                  if (origin.row.index == rowIndex) {
+                	border = origin.translation.x + leftSpan.fragments[leftSpan.fragments.length - 1].right;
+                  } else {
+                	if (rtlmode) {
+                      border = 0;
+                	} else {
+                      border = Configuration.visual.margin.x + sentNumMargin + rowPadding;
+                	}
+                  }
+// WEBANNO EXTENSION END              
                   var labelNo = Configuration.abbrevsOn ? labels.length - 1 : 0;
                   var smallestLabelWidth = sizes.arcs.widths[labels[labelNo]] + 2 * minArcSlant;
+// WEBANNO EXTENSION BEGIN - RTL support - chunk spacing with arcs                  
+/*                  
                   var gap = currentX + bx - border;
+*/
+                  var gap = Math.abs(currentX + (rtlmode ? -bx : bx) - border);
+// WEBANNO EXTENSION END              
                   var arcSpacing = smallestLabelWidth - gap;
                   if (!hasLeftArcs || spacing < arcSpacing) {
                     spacing = arcSpacing;
@@ -1941,15 +1961,34 @@ Util.profileStart('chunks');
                     }
                   }
 // WEBANNO EXTENSION END
+// WEBANNO EXTENSION BEGIN - RTL support - chunk spacing with arcs                  
+/*                  
                   if (target.row.index == rowIndex) {
                     // same row, but before this
                     border = target.translation.x + leftSpan.fragments[leftSpan.fragments.length - 1].right;
                   } else {
                     border = Configuration.visual.margin.x + sentNumMargin + rowPadding;
                   }
+*/
+                  if (target.row.index == rowIndex) {
+                    // same row, but before this
+                    border = target.translation.x + leftSpan.fragments[leftSpan.fragments.length - 1].right;
+                  } else {
+                	if (rtlmode) {
+                      border = 0;
+                	} else {
+                      border = Configuration.visual.margin.x + sentNumMargin + rowPadding;
+                	}
+                  }
+// WEBANNO EXTENSION END              
                   var labelNo = Configuration.abbrevsOn ? labels.length - 1 : 0;
                   var smallestLabelWidth = sizes.arcs.widths[labels[labelNo]] + 2 * minArcSlant;
+// WEBANNO EXTENSION BEGIN - RTL support - chunk spacing with arcs                  
+/*                  
                   var gap = currentX + bx - border;
+*/
+                  var gap = Math.abs(currentX + (rtlmode ? -bx : bx) - border);
+// WEBANNO EXTENSION END              
                   var arcSpacing = smallestLabelWidth - gap;
                   if (!hasLeftArcs || spacing < arcSpacing) {
                     spacing = arcSpacing;
@@ -2000,9 +2039,19 @@ Util.profileStart('chunks');
             // TODO change this with smallestLeftArc
             // var spacing = arcHorizontalSpacing - (currentX - lastArcBorder);
             // arc too small?
+// WEBANNO EXTENSION BEGIN - RTL support - [currentX] adjustment for spacing (arcs)
+/*
           if (spacing > 0) currentX += spacing;
+*/
+          if (spacing > 0) {
+            currentX += rtlmode ? -spacing : spacing;
+          }
+// WEBANNO EXTENSION END
           // }
           var rightBorderForArcs = hasRightArcs ? arcHorizontalSpacing : (hasInternalArcs ? arcSlant : 0);
+// WEBANNO EXTENSION BEGIN - RTL support - leftBorderForArcs
+          var leftBorderForArcs = hasLeftArcs ? arcHorizontalSpacing : (hasInternalArcs ? arcSlant : 0);
+// WEBANNO EXTENSION END
 
           var lastX = currentX;
           var lastRow = row;
@@ -2027,7 +2076,7 @@ Util.profileStart('chunks');
 */
           var chunkDoesNotFit = false;
           if (rtlmode) {
-        	chunkDoesNotFit = currentX - boxWidth - rightBorderForArcs <= 
+        	chunkDoesNotFit = currentX - boxWidth - leftBorderForArcs <= 
         		2 * Configuration.visual.margin.x;
           }
           else {
@@ -2058,9 +2107,20 @@ Util.profileStart('chunks');
 	              (hasLeftArcs ? arcHorizontalSpacing : (hasInternalArcs ? arcSlant : 0)) /*+
 	              spaceWidth*/;
             }
-// WEBANNO EXTENSION END            
+// WEBANNO EXTENSION END
+            if (hasLeftArcs) {
+              var adjustedCurTextWidth = sizes.texts.widths[chunk.text] + arcHorizontalSpacing;
+              if (adjustedCurTextWidth > maxTextWidth) {
+                maxTextWidth = adjustedCurTextWidth;
+              }
+            }
             if (spacingRowBreak > 0) {
+// WEBANNO EXTENSION BEGIN - RTL support - [currentX] adjustment for spacingRowBreak (for arcs)
+/*
               currentX += spacingRowBreak;
+*/
+              currentX += rtlmode ? -spacingRowBreak : spacingRowBreak;
+// WEBANNO EXTENSION END
               spacing = 0; // do not center intervening elements
             }
 
@@ -2422,17 +2482,43 @@ Util.profileStart('arcs');
               });
               var from, to;
 
+// WEBANNO EXTENSION BEGIN - RTL support - arc from
+/*
               if (rowIndex == leftRow) {
                 from = leftBox.x + (chunkReverse ? 0 : leftBox.width);
               } else {
                 from = sentNumMargin;
               }
+*/
+              if (rowIndex == leftRow) {
+            	if (rtlmode) {
+            	  from = leftBox.x + (chunkReverse ? leftBox.width : 0);
+            	} else {
+            	  from = leftBox.x + (chunkReverse ? 0 : leftBox.width);
+            	}
+              } else {
+                from = rtlmode ? canvasWidth - 2 * Configuration.visual.margin.y - sentNumMargin : sentNumMargin;
+              }
+// WEBANNO EXTENSION END                
 
+// WEBANNO EXTENSION BEGIN - RTL support - arc to
+/*
               if (rowIndex == rightRow) {
                 to = rightBox.x + (chunkReverse ? rightBox.width : 0);
               } else {
                 to = canvasWidth - 2 * Configuration.visual.margin.y;
               }
+*/              
+              if (rowIndex == rightRow) {
+            	if (rtlmode) {
+                  to = rightBox.x + (chunkReverse ? 0 : rightBox.width);
+            	} else {
+                  to = rightBox.x + (chunkReverse ? rightBox.width : 0);
+            	}
+              } else {
+                to = rtlmode ? 0 : canvasWidth - 2 * Configuration.visual.margin.y;
+              }
+// WEBANNO EXTENSION END                
 
               var adjustHeight = true;
               if (collapseArcs) {
@@ -2615,12 +2701,37 @@ Util.profileStart('arcs');
               var arrowStart = textStart - arrowAtLabelAdjust;
               path = svg.createPath().move(arrowStart, -height);
               if (rowIndex == leftRow) {
+// WEBANNO EXTENSION BEGIN - RTL support - arc slant     
+/*
                 var cornerx = from + ufoCatcherMod * arcSlant;
+*/
+                var cornerx = from + (rtlmode ? -1 : 1) * ufoCatcherMod * arcSlant;
+// WEBANNO EXTENSION END            	  
                 // for normal cases, should not be past textStart even if narrow
+// WEBANNO EXTENSION BEGIN - RTL support - arc slant     
+/*
                 if (!ufoCatcher && cornerx > arrowStart - 1) { cornerx = arrowStart - 1; }
+*/
+                if (rtlmode) {
+                  if (!ufoCatcher && cornerx < arrowStart + 1) { cornerx = arrowStart + 1; }
+                } else {
+                  if (!ufoCatcher && cornerx > arrowStart - 1) { cornerx = arrowStart - 1; }
+                }
+// WEBANNO EXTENSION END            	  
                 if (smoothArcCurves) {
-                  var controlx = ufoCatcher ? cornerx + 2*ufoCatcherMod*reverseArcControlx : smoothArcSteepness*from+(1-smoothArcSteepness)*cornerx;
-                  var endy = leftBox.y + (leftToRight || arc.equiv ? leftBox.height / 2 : Configuration.visual.margin.y);
+// WEBANNO EXTENSION BEGIN - RTL support - arc slant            	
+//                  var controlx = ufoCatcher ? cornerx + 2*ufoCatcherMod*reverseArcControlx : smoothArcSteepness*from+(1-smoothArcSteepness)*cornerx;
+//                  var endy = leftBox.y + (leftToRight || arc.equiv ? leftBox.height / 2 : Configuration.visual.margin.y);
+                  var controlx;
+                  var endy;
+                  if (rtlmode) {
+                    controlx = ufoCatcher ? cornerx - 2*ufoCatcherMod*reverseArcControlx : smoothArcSteepness*from+(1-smoothArcSteepness)*cornerx;
+                    endy = leftBox.y + (leftToRight && !arc.equiv ? Configuration.visual.margin.y : leftBox.height / 2);
+                  } else {
+                    controlx = ufoCatcher ? cornerx + 2*ufoCatcherMod*reverseArcControlx : smoothArcSteepness*from+(1-smoothArcSteepness)*cornerx;
+                    endy = leftBox.y + (leftToRight || arc.equiv ? leftBox.height / 2 : Configuration.visual.margin.y);
+                  }
+// WEBANNO EXTENSION END            	  
                   // no curving for short lines covering short vertical
                   // distances, the arrowheads can go off (#925)
                   if (Math.abs(-height-endy) < 2 &&
@@ -2692,13 +2803,39 @@ Util.profileStart('arcs');
               var arrowEnd = textEnd + arrowAtLabelAdjust;
               path = svg.createPath().move(arrowEnd, -height);
               if (rowIndex == rightRow) {
+// WEBANNO EXTENSION BEGIN - RTL support - arc slant            	
+/*
                 var cornerx  = to - ufoCatcherMod * arcSlant;
+*/
+                var cornerx = to - (rtlmode ? -1 : 1) * ufoCatcherMod * arcSlant;
+// WEBANNO EXTENSION END            	  
                 // TODO: duplicates above in part, make funcs
                 // for normal cases, should not be past textEnd even if narrow
+// WEBANNO EXTENSION BEGIN - RTL support - arc slant                	
+/*                	
                 if (!ufoCatcher && cornerx < arrowEnd + 1) { cornerx = arrowEnd + 1; }
+*/
+                if (rtlmode) {
+                  if (!ufoCatcher && cornerx > arrowEnd - 1) { cornerx = arrowEnd - 1; }
+                } else {
+                  if (!ufoCatcher && cornerx < arrowEnd + 1) { cornerx = arrowEnd + 1; }
+                }
                 if (smoothArcCurves) {
+// WEBANNO EXTENSION BEGIN - RTL support - arc slant                	
+/*                	
                   var controlx = ufoCatcher ? cornerx - 2*ufoCatcherMod*reverseArcControlx : smoothArcSteepness*to+(1-smoothArcSteepness)*cornerx;
                   var endy = rightBox.y + (leftToRight && !arc.equiv ? Configuration.visual.margin.y : rightBox.height / 2);
+*/
+                  var controlx;
+                  var endy;
+                  if (rtlmode) {
+                    controlx = ufoCatcher ? cornerx - 2*ufoCatcherMod*reverseArcControlx : smoothArcSteepness*to+(1-smoothArcSteepness)*cornerx;
+                    endy = rightBox.y + (leftToRight && !arc.equiv ? Configuration.visual.margin.y : rightBox.height / 2);
+                  } else {
+                    controlx = ufoCatcher ? cornerx - 2*ufoCatcherMod*reverseArcControlx : smoothArcSteepness*to+(1-smoothArcSteepness)*cornerx;
+                    endy = rightBox.y + (leftToRight && !arc.equiv ? Configuration.visual.margin.y : rightBox.height / 2);
+                  }
+// WEBANNO EXTENSION END                  
                   // no curving for short lines covering short vertical
                   // distances, the arrowheads can go off (#925)
                   if (Math.abs(-height-endy) < 2 &&
@@ -2757,6 +2894,8 @@ Util.profileStart('fragmentConnectors');
               if (row.chunks.length) {
                 row.hasAnnotations = true;
 
+// WEBANNO EXTENSION BEGIN - RTL support - split fragments connector line
+/*
                 if (rowIndex == leftRow) {
                   from = leftBox.x + leftBox.width;
                 } else {
@@ -2768,6 +2907,19 @@ Util.profileStart('fragmentConnectors');
                 } else {
                   to = canvasWidth - 2 * Configuration.visual.margin.y;
                 }
+*/                
+                if (rowIndex == leftRow) {
+                  from = rtlmode ? leftBox.x : leftBox.x + leftBox.width;
+                } else {
+                  from = rtlmode ? canvasWidth - 2 * Configuration.visual.margin.y - sentNumMargin : sentNumMargin;
+                }
+
+                if (rowIndex == rightRow) {
+                  to = rtlmode ? rightBox.x + rightBox.width : rightBox.x;
+                } else {
+                  to = rtlmode ? 0 : canvasWidth - 2 * Configuration.visual.margin.y;
+                }
+// WEBANNO EXTENSION END
 
                 var height = leftBox.y + leftBox.height - Configuration.visual.margin.y;
                 if (roundCoordinates) {
@@ -2876,8 +3028,22 @@ Util.profileStart('rows');
                   ry: rectShadowRounding,
                   'data-sent': row.sentence,
               });
+// WEBANNO EXTENSION BEGIN - RTL support - Sentence comment in margin           
+/*
               var text = svg.text(sentNumGroup, sentNumMargin - Configuration.visual.margin.x, y - rowPadding,
                   '' + row.sentence, { 'data-sent': row.sentence });
+*/
+             // Render sentence comment
+              var text;
+              if (rtlmode) {
+                text = svg.text(sentNumGroup, canvasWidth - sentNumMargin + Configuration.visual.margin.x, y - rowPadding,
+                    '' + row.sentence, { 'data-sent': row.sentence }); 
+              } else {
+                text = svg.text(sentNumGroup, sentNumMargin - Configuration.visual.margin.x, y - rowPadding,
+                    '' + row.sentence, { 'data-sent': row.sentence });
+
+              }
+// WEBANNO EXTENSION END            
             }
           }
 
