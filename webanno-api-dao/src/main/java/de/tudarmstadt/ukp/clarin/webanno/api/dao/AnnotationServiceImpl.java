@@ -381,14 +381,14 @@ public class AnnotationServiceImpl
         // Coref Layer
         AnnotationFeature corefTypeFeature = createFeature("referenceType", "referenceType",
                 "coreference type annotation",
-                "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference", "BART", "de",
+                CAS.TYPE_NAME_STRING, "BART", "de",
                 aCorefTypeTags.length > 0 ? aCorefTypeTags : new String[] { "nam" },
                 aCorefTypeTags.length > 0 ? aCorefTypeTags : new String[] { "nam" }, aProject,
                 aUser);
 
         AnnotationFeature corefRelFeature = createFeature("referenceRelation",
                 "referenceRelation", "coreference relation annotation",
-                "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference", "TuebaDZ", "de",
+                CAS.TYPE_NAME_STRING, "TuebaDZ", "de",
                 aCorefRelTags.length > 0 ? aCorefRelTags : new String[] { "anaphoric" },
                 aCorefRelTags.length > 0 ? aCorefRelTags : new String[] { "anaphoric" }, aProject,
                 aUser);
