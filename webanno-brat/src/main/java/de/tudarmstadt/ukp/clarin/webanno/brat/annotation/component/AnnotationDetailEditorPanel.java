@@ -807,10 +807,6 @@ public class AnnotationDetailEditorPanel
                     || layer.getName().equals(Token.class.getName())) {
                 continue;
             }
-            List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
-            if (features.size() == 0) {
-                continue;
-            }
             annotationLayers.add(layer);
         }
     }
