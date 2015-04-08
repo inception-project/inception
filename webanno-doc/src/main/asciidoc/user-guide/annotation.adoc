@@ -80,7 +80,7 @@ Choose your preferred format. Please take note of the facts that the plain text 
 The document will be saved to your local disk, and can be re-imported via adding the document to a project by a project administrator. Please export your data periodically, at least when finishing a document or not continuing annotations for an extended period of time. 
 
 
-=== Layers
+=== Making annotations
 
 Concerning annotation, WebAnno offers six pre-defined layers:
 Span annotations support NE, lemma, POS, and co-referance. Several annotation layers may be selected. 
@@ -110,3 +110,19 @@ link:http://en.wikipedia.org/wiki/Coreference[Co-reference] annotation can be ma
 The other kind of annotation that is supported by WebAnno is Arc. The arcs can be made within one sentence and their types are chosen out of a tagset. Dependency arcs are defined between POS. Every POS is allowed to have only one head. Co-reference arcs are defined between co-reference-anchors. All transitively combined anchors build a colour-coded lexical chain.
 
 image::annotation_span_many.jpg[align="center"]
+
+==== Primitive features
+
+WebAnno supports primitive features that can be of the type string, boolean, integer, and float.
+Boolean features are displayed as a checkbox that can either be marked or unmarked. Integer and 
+float features are displayed using a number field. String features are displayed using a text field
+or - in case they have a tagset - using a combobox.
+
+==== Link features
+
+Link features can be used to link one annotation to others. Before a link can be made, a slot with 
+a role must be added. Enter the role label in the text field and press the *add* button to create
+the slot. Next, click on field in the newly created slot to *arm* it. The field's color will change
+to indicate that it is armed. Now you can fill the slot by double-clicking on a span 
+annotation. To remove a slot, arm it and then press the *del* button.
+

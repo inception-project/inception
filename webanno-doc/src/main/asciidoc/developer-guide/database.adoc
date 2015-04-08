@@ -134,20 +134,41 @@ deleted.
 | project
 |
 
-| annotation_type
-| (foreign key)
-
 | name
 | UIMA feature name
 
 | uiName
 | Feature name displayed in the UI
 
-| type
-| 
-
 | description
 |
+
+| annotation_type
+| (foreign key) The type to which this feature belongs.
+
+| type
+| The type of feature. Must be a type from the CAS or a UIMA built-in type such as "uima.cas.String".
+
+| multi_value_mode
+| Used to control if a feature can have multiple values and how these are represented. "none", "array".
+
+| link_mode
+| If the feature is a link to another feature structure, this column indicates what kind of relation
+is used, e.g. "none", "simple", "withRole".
+
+| link_type_name
+| If a "multipleWithRole" type is used, then the an additional UIMA type must be created that
+bears a role feature and points to the target type.
+
+| link_type_role_feature_name
+| The name of the feature bearing the role.
+
+| link_type_target_feature_name
+| The name of the feature pointing to the target.
+
+| tag_set
+| *optional* The id of the tagset which is used for this layer. If this is null, the label can be freely set
+(text input field), otherwise only values from the tagset can be used as labels.
 
 | builtIn
 | Built-in features are pre-defined via DKPro Core and cannot deleted.
@@ -159,12 +180,85 @@ so this is a way to not allow editing/displaying of these types anymore.
 
 | visible
 | Feature rendered - if set to false only shown in annotation editor
-
-| tag_set
-| *optional* The id of the tagset which is used for this layer. If this is null, the label can be freely set
-(text input field), otherwise only values from the tagset can be used as labels.
 |====
 
+===== Examples
+
+.Part-of-speech tag feature in the DKPro Core POS layer
+|====
+| Column | Value
+
+| name
+| PosValue
+
+| uiName
+| Part of speech
+
+| description
+| Part-of-speech tag
+
+| annotation_type
+| -> de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS (span)
+
+| type
+| uima.cas.String
+
+| link_mode
+| null
+
+| link_type_name
+| null
+
+| link_type_role_feature_name
+| null
+
+| link_type_target_feature_name
+| null
+
+| tag_set
+| -> STTS
+
+| builtIn
+| true
+|====
+
+.Arguments feature in a custom semantic predicate-argument structure
+|====
+| Column | Value
+
+| name
+| args
+
+| uiName
+| Arguments
+
+| description
+| Semantic arguments
+
+| annotation_type
+| -> webanno.custom.SemanticPredicate (span)
+
+| type
+| webanno.custom.SemanticArgument (span)
+
+| link_mode
+| multipleWithRole
+
+| link_type_name
+| webanno.custom.SemanticArgumentLink
+
+| link_type_role_feature_name
+| role
+
+| link_type_target_feature_name
+| target
+
+| tag_set
+| null
+
+| builtIn
+| false
+|====
 
 === Tagsets
 
