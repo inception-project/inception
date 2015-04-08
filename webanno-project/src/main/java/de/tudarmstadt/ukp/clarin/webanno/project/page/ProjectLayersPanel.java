@@ -39,6 +39,7 @@ import java.util.Map.Entry;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.WordUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.AttributeModifier;
@@ -80,9 +81,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
+import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -125,7 +127,8 @@ public class ProjectLayersPanel
     private final Model<Project> selectedProjectModel;
     private IModel<String> helpDataModel = new Model<String>();
 
-    private List<String> types = new ArrayList<String>();
+    private List<String> primitiveTypes = new ArrayList<String>();
+    private List<String> spanTypes = new ArrayList<String>();
     private String layerType = WebAnnoConst.SPAN_TYPE;
     private List<FileUpload> uploadedFiles;
     private FileUploadField fileUpload;
@@ -405,8 +408,8 @@ public class ProjectLayersPanel
                         AnnotationFeature feature = new AnnotationFeature();
                         feature.setLayer(layer);
                         feature.setTagset(tagSet);
-                        ImportUtil.setFeature(annotationService, feature, exfeature, project,
-                                aUser);
+                        ImportUtil
+                                .setFeature(annotationService, feature, exfeature, project, aUser);
                     }
                 }
             });
@@ -432,19 +435,19 @@ public class ProjectLayersPanel
         private String layerName;
         private DropDownChoice<String> layerTypes;
         private DropDownChoice<AnnotationLayer> attachTypes;
-        
+
         private Label lockToTokenOffsetLabel;
         private CheckBox lockToTokenOffset;
-        
+
         private Label allowStackingLabel;
         private CheckBox allowStacking;
-       
+
         private Label crossSentenceLabel;
         private CheckBox crossSentence;
-       
+
         private Label multipleTokensLabel;
         private CheckBox multipleTokens;
-       
+
         private Label linkedListBehaviorLabel;
         private CheckBox linkedListBehavior;
 
@@ -500,19 +503,19 @@ public class ProjectLayersPanel
                     layerType = getModelObject().getType();
                     target.add(lockToTokenOffsetLabel);
                     target.add(lockToTokenOffset);
-                    
+
                     target.add(allowStackingLabel);
                     target.add(allowStacking);
-                   
+
                     target.add(crossSentenceLabel);
                     target.add(crossSentence);
-                   
+
                     target.add(multipleTokensLabel);
                     target.add(multipleTokens);
-                   
+
                     target.add(linkedListBehaviorLabel);
-                    target.add(linkedListBehavior); 
-                    
+                    target.add(linkedListBehavior);
+
                     target.add(attachTypes);
                 }
             });
@@ -599,15 +602,16 @@ public class ProjectLayersPanel
                     openHelpDialog(openHelpDialog, target, "layerBehavior");
                 }
             });
-            
-            add(lockToTokenOffsetLabel = new Label("lockToTokenOffsetLabel", "Lock to token offsets:")
+
+            add(lockToTokenOffsetLabel = new Label("lockToTokenOffsetLabel",
+                    "Lock to token offsets:")
             {
                 private static final long serialVersionUID = -1290883833837327207L;
 
                 {
                     setOutputMarkupPlaceholderTag(true);
                 }
-                
+
                 @Override
                 protected void onConfigure()
                 {
@@ -626,7 +630,7 @@ public class ProjectLayersPanel
                 {
                     setOutputMarkupPlaceholderTag(true);
                 }
-                
+
                 @Override
                 protected void onConfigure()
                 {
@@ -646,7 +650,7 @@ public class ProjectLayersPanel
                 {
                     setOutputMarkupPlaceholderTag(true);
                 }
-                
+
                 @Override
                 protected void onConfigure()
                 {
@@ -664,7 +668,7 @@ public class ProjectLayersPanel
                 {
                     setOutputMarkupPlaceholderTag(true);
                 }
-                
+
                 @Override
                 protected void onConfigure()
                 {
@@ -676,14 +680,15 @@ public class ProjectLayersPanel
                 }
             });
 
-            add(crossSentenceLabel = new Label("crossSentenceLabel", "Allow crossing sentence boundary:")
+            add(crossSentenceLabel = new Label("crossSentenceLabel",
+                    "Allow crossing sentence boundary:")
             {
                 private static final long serialVersionUID = -5354062154610496880L;
 
                 {
                     setOutputMarkupPlaceholderTag(true);
                 }
-                
+
                 @Override
                 protected void onConfigure()
                 {
@@ -701,7 +706,7 @@ public class ProjectLayersPanel
                 {
                     setOutputMarkupPlaceholderTag(true);
                 }
-                
+
                 @Override
                 protected void onConfigure()
                 {
@@ -720,7 +725,7 @@ public class ProjectLayersPanel
                 {
                     setOutputMarkupPlaceholderTag(true);
                 }
-                
+
                 @Override
                 protected void onConfigure()
                 {
@@ -739,7 +744,7 @@ public class ProjectLayersPanel
                 {
                     setOutputMarkupPlaceholderTag(true);
                 }
-                
+
                 @Override
                 protected void onConfigure()
                 {
@@ -751,15 +756,16 @@ public class ProjectLayersPanel
                             && layer.getAttachFeature() == null);
                 }
             });
-            
-            add(linkedListBehaviorLabel = new Label("linkedListBehaviorLabel", "Behave like a linked list:")
+
+            add(linkedListBehaviorLabel = new Label("linkedListBehaviorLabel",
+                    "Behave like a linked list:")
             {
                 private static final long serialVersionUID = -5354062154610496880L;
 
                 {
                     setOutputMarkupPlaceholderTag(true);
                 }
-                
+
                 @Override
                 protected void onConfigure()
                 {
@@ -775,7 +781,7 @@ public class ProjectLayersPanel
                 {
                     setOutputMarkupPlaceholderTag(true);
                 }
-                
+
                 @Override
                 protected void onConfigure()
                 {
@@ -939,10 +945,20 @@ public class ProjectLayersPanel
             add(new CheckBox("enabled"));
             add(new CheckBox("visible"));
 
-            types.add(CAS.TYPE_NAME_STRING);
-            types.add(CAS.TYPE_NAME_INTEGER);
-            types.add(CAS.TYPE_NAME_FLOAT);
-            types.add(CAS.TYPE_NAME_BOOLEAN);
+            primitiveTypes.add(CAS.TYPE_NAME_STRING);
+            primitiveTypes.add(CAS.TYPE_NAME_INTEGER);
+            primitiveTypes.add(CAS.TYPE_NAME_FLOAT);
+            primitiveTypes.add(CAS.TYPE_NAME_BOOLEAN);
+            spanTypes.add(CAS.TYPE_NAME_ANNOTATION);
+            for (AnnotationLayer spanLayer : annotationService
+                    .listAnnotationLayer(selectedProjectModel.getObject())) {
+                if (spanLayer.getName().equals(Token.class.getName())) {
+                    continue;
+                }
+                if (spanLayer.getType().equals(WebAnnoConst.SPAN_TYPE)) {
+                    spanTypes.add(spanLayer.getName());
+                }
+            }
 
             add(featureType = (DropDownChoice<String>) new DropDownChoice<String>("type")
             {
@@ -959,6 +975,8 @@ public class ProjectLayersPanel
                             if (getModelObject() != null) {
                                 return Arrays.asList(getModelObject());
                             }
+                            List<String> types = new ArrayList<String>(primitiveTypes);
+                            types.addAll(spanTypes);
                             return types;
 
                         }
@@ -1057,8 +1075,7 @@ public class ProjectLayersPanel
                             return;
                         }
                         feature.setName(name);
-                        annotationService.createFeature(feature);
-                        featureDetailForm.setVisible(false);
+                        saveFeature(feature);
                     }
                     if (tagSet.getModelObject() != null) {
                         FeatureDetailForm.this.getModelObject().setTagset(tagSet.getModelObject());
@@ -1069,13 +1086,30 @@ public class ProjectLayersPanel
         }
     }
 
+    private void saveFeature(AnnotationFeature aFeature)
+    {
+        if (!(primitiveTypes.contains(aFeature.getType())
+                || aFeature.getLayer().getName().equals(WebAnnoConst.RELATION_TYPE) || aFeature
+                .getLayer().getName().equals(WebAnnoConst.CHAIN_TYPE))) {
+            aFeature.setMode(MultiValueMode.ARRAY);
+            aFeature.setLinkMode(LinkMode.WITH_ROLE);
+            aFeature.setLinkTypeRoleFeatureName("role");
+            aFeature.setLinkTypeTargetFeatureName("target");
+            aFeature.setLinkTypeName(aFeature.getLayer().getName()+WordUtils.capitalize(aFeature.getName()));
+        }
+
+        annotationService.createFeature(aFeature);
+        featureDetailForm.setVisible(false);
+
+    }
+
     public class FeatureSelectionForm
         extends Form<SelectionModel>
     {
         private static final long serialVersionUID = -1L;
 
         private ListChoice<AnnotationFeature> feature;
-        
+
         public FeatureSelectionForm(String id)
         {
             super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
@@ -1142,11 +1176,11 @@ public class ProjectLayersPanel
                 }
             });
         }
-        
+
         private LoadableDetachableModel<List<AnnotationFeature>> regenerateModel()
         {
             return new LoadableDetachableModel<List<AnnotationFeature>>()
-                    {
+            {
                 private static final long serialVersionUID = 1L;
 
                 @Override
@@ -1170,7 +1204,7 @@ public class ProjectLayersPanel
                 }
             };
         }
-        
+
         public void updateChoices()
         {
             feature.setChoices(regenerateModel());
@@ -1236,5 +1270,5 @@ public class ProjectLayersPanel
         catch (Exception e) {
         }
         return helpFieldContent;
-    }    
+    }
 }
