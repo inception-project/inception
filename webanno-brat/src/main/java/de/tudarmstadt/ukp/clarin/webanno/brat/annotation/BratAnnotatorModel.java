@@ -28,6 +28,7 @@ import java.util.Map;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.uima.jcas.JCas;
 
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel.FeatureModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -302,9 +303,14 @@ public class BratAnnotatorModel
         return rememberedSpanFeatures;
     }
 
-    public void setRememberedSpanFeatures(Map<AnnotationFeature, Serializable> rememberedSpanFeature)
+    public void setRememberedSpanFeatures(List<FeatureModel> aModels)
     {
-        this.rememberedSpanFeatures = rememberedSpanFeature;
+        rememberedSpanFeatures = new HashMap<>();
+        if (aModels != null) {
+            for (FeatureModel fm : aModels) {
+                rememberedSpanFeatures.put(fm.feature, fm.value);
+            }
+        }
     }
 
     public Map<AnnotationFeature, Serializable> getRememberedArcFeatures()
@@ -312,9 +318,14 @@ public class BratAnnotatorModel
         return rememberedArcFeatures;
     }
 
-    public void setRememberedArcFeatures(Map<AnnotationFeature, Serializable> rememberedArcFeature)
+    public void setRememberedArcFeatures(List<FeatureModel> aModels)
     {
-        this.rememberedArcFeatures = rememberedArcFeature;
+        rememberedArcFeatures = new HashMap<>();
+        if (aModels != null) {
+            for (FeatureModel fm : aModels) {
+                rememberedArcFeatures.put(fm.feature, fm.value);
+            }
+        }
     }
 
     public int getSentenceBeginOffset()
