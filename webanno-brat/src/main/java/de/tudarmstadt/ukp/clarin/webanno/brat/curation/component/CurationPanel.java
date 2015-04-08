@@ -155,9 +155,9 @@ public class CurationPanel
             protected void onChange(AjaxRequestTarget aTarget)
             {
                 try {
-                    CuratorUtil.updatePanel(aTarget, this, curationContainer,
-                            mergeVisualizer, repository, annotationSelectionByUsernameAndAddress,
-                            curationView, annotationService, jsonConverter);
+                    CuratorUtil.updatePanel(aTarget, this, curationContainer, mergeVisualizer,
+                            repository, annotationSelectionByUsernameAndAddress, curationView,
+                            annotationService, jsonConverter);
                 }
                 catch (UIMAException e) {
                     error(ExceptionUtils.getRootCause(e));
@@ -189,9 +189,9 @@ public class CurationPanel
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
                 aTarget.add(sentenceOuterView);
                 try {
-                    CuratorUtil.updatePanel(aTarget, sentenceOuterView, curationContainer,
-                            this, repository, annotationSelectionByUsernameAndAddress,
-                            curationView, annotationService, jsonConverter);
+                    CuratorUtil.updatePanel(aTarget, sentenceOuterView, curationContainer, this,
+                            repository, annotationSelectionByUsernameAndAddress, curationView,
+                            annotationService, jsonConverter);
                 }
                 catch (UIMAException e) {
                     error(ExceptionUtils.getRootCause(e));
@@ -232,8 +232,8 @@ public class CurationPanel
                     {
                         curationView = curationViewItem;
                         try {
-                            CuratorUtil.updatePanel(aTarget, sentenceOuterView,
-                                    curationContainer, mergeVisualizer, repository,
+                            CuratorUtil.updatePanel(aTarget, sentenceOuterView, curationContainer,
+                                    mergeVisualizer, repository,
                                     annotationSelectionByUsernameAndAddress, curationView,
                                     annotationService, jsonConverter);
 
@@ -247,8 +247,7 @@ public class CurationPanel
                             JCas jCas = null;
                             if (bratAnnotatorModel.getMode().equals(Mode.ANNOTATION)
                                     || bratAnnotatorModel.getMode().equals(Mode.CORRECTION)
-                                    || bratAnnotatorModel.getMode().equals(
-                                            Mode.CORRECTION_MERGE)) {
+                                    || bratAnnotatorModel.getMode().equals(Mode.CORRECTION_MERGE)) {
 
                                 jCas = repository.readJCas(bratAnnotatorModel.getDocument(),
                                         bratAnnotatorModel.getProject(),
@@ -273,7 +272,8 @@ public class CurationPanel
                                 bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                                 bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                                CurationBuilder builder = new CurationBuilder(repository);
+                                CurationBuilder builder = new CurationBuilder(repository,
+                                        annotationService);
                                 curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
                                 textListView.setModelObject(builder.buildCurationContainer(
                                         bratAnnotatorModel).getCurationViews());
@@ -284,7 +284,7 @@ public class CurationPanel
                             textOuterView.addOrReplace(textListView);
                             aTarget.add(textOuterView);
                             aTarget.add(sentenceOuterView);
-                            
+
                             // Wicket-level rendering of annotator because it becomes visible
                             // after selecting a document
                             aTarget.add(mergeVisualizer);
@@ -292,7 +292,7 @@ public class CurationPanel
                             // brat-level initialization and rendering of document
                             mergeVisualizer.bratInit(aTarget);
                             mergeVisualizer.bratRender(aTarget, jCas);
-                            
+
                         }
                         catch (UIMAException e) {
                             error(ExceptionUtils.getRootCause(e));
@@ -337,12 +337,12 @@ public class CurationPanel
     {
 
     }
-    
+
     @Override
     public void renderHead(IHeaderResponse response)
     {
         super.renderHead(response);
-        
+
         if (firstLoad) {
             firstLoad = false;
         }

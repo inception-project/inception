@@ -62,7 +62,7 @@ public final class TypeUtil
 
             adapter.setCrossMultipleSentence(aLayer.isCrossSentence());
             adapter.setAllowStacking(aLayer.isAllowStacking());
-            
+
             return adapter;
             // default is chain (based on operation, change to CoreferenceLinK)
         }
@@ -70,9 +70,9 @@ public final class TypeUtil
             ChainAdapter adapter = new ChainAdapter(aLayer, aLayer.getId(), aLayer.getName()
                     + ChainAdapter.CHAIN, aLayer.getName(), "first", "next",
                     aRepo.listAnnotationFeature(aLayer));
-            
+
             adapter.setLinkedListBehavior(aLayer.isLinkedListBehavior());
-            
+
             return adapter;
 
         }
@@ -83,7 +83,7 @@ public final class TypeUtil
     }
     /**
      * Construct the label text used in the brat user interface.
-     * 
+     *
      * @param aAdapter the adapter.
      * @param aFs the annotation.
      * @param aFeatures the features.
@@ -128,7 +128,7 @@ public final class TypeUtil
     {
         return Long.parseLong(aBratTypeName.substring(0, aBratTypeName.indexOf("_")));
     }
-    
+
     public static String getBratTypeName(TypeAdapter aAdapter)
     {
         return aAdapter.getTypeId() + "_" + aAdapter.getAnnotationTypeName();

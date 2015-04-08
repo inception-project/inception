@@ -36,7 +36,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import javax.annotation.Resource;
 import javax.persistence.NoResultException;
 
 import org.apache.commons.io.FileUtils;
@@ -84,12 +83,6 @@ import edu.lium.mira.Mira;
 public class AutomationUtil
 {
 
-    @Resource(name = "documentRepository")
-    private RepositoryService repository;
-
-    @Resource(name = "annotationService")
-    private static AnnotationService annotationService;
-
     private static Log LOG = LogFactory.getLog(AutomationUtil.class);
     private static final String NILL = "__nill__";
 
@@ -129,7 +122,8 @@ public class AutomationUtil
                 if (selectCovered(jCas, Token.class, sentence.getBegin() + i,
                         sentence.getBegin() + i + selectedText.length()).size() > 0) {
 
-                    SpanAdapter adapter = (SpanAdapter) getAdapter(annotationService, aFeature.getLayer());
+                    SpanAdapter adapter = (SpanAdapter) getAdapter(aAnnotationService,
+                            aFeature.getLayer());
                     Object value = aModel.getRememberedSpanFeatures().get(aFeature);
                     adapter.add(jCas, sentence.getBegin() + i, sentence.getBegin() + i
                             + selectedText.length() - 1, aFeature, value);
@@ -154,7 +148,7 @@ public class AutomationUtil
         // get selected text, concatenations of tokens
         String selectedText = BratAjaxCasUtil.getSelectedText(annoCas, aStart, aEnd);
 
-        TypeAdapter adapter = getAdapter(annotationService, aFeature.getLayer());
+        TypeAdapter adapter = getAdapter(aAnnotationService, aFeature.getLayer());
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = aRepository.getUser(username);
 
@@ -190,7 +184,7 @@ public class AutomationUtil
     // generates training document that will be used to predict the training document
     // to add extra features, for example add POS tag as a feature for NE classifier
     public static void addOtherFeatureTrainDocument(MiraTemplate aTemplate,
-            RepositoryService aRepository)
+            RepositoryService aRepository, AnnotationService aAnnotationService)
         throws IOException, UIMAException, ClassNotFoundException
     {
         File miraDir = aRepository.getMiraDir(aTemplate.getTrainFeature());
@@ -216,7 +210,7 @@ public class AutomationUtil
             }
 
             BufferedWriter trainOut = new BufferedWriter(new FileWriter(trainFile));
-            TypeAdapter adapter = TypeUtil.getAdapter(annotationService, feature.getLayer());
+            TypeAdapter adapter = TypeUtil.getAdapter(aAnnotationService, feature.getLayer());
             for (SourceDocument sourceDocument : aRepository.listSourceDocuments(feature
                     .getProject())) {
                 if ((sourceDocument.isTrainingDocument() && sourceDocument.getFeature() != null && sourceDocument
@@ -240,15 +234,16 @@ public class AutomationUtil
      * UIMA annotation and add it as a feature - no need to train and predict for this "other layer"
      */
     private static void addOtherFeatureFromAnnotation(AnnotationFeature aFeature,
-            RepositoryService aRepository, List<List<String>> aPredictions,
-            SourceDocument aSourceDocument)
+            RepositoryService aRepository, AnnotationService aAnnotationService,
+            List<List<String>> aPredictions, SourceDocument aSourceDocument)
         throws UIMAException, ClassNotFoundException, IOException
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = aRepository.getUser(username);
-        TypeAdapter adapter = TypeUtil.getAdapter(annotationService, aFeature.getLayer());
+        TypeAdapter adapter = TypeUtil.getAdapter(aAnnotationService, aFeature.getLayer());
         List<String> annotations = new ArrayList<String>();
-        if (aSourceDocument == null) {// this is training - all sources documents will be converted to a single
+        if (aSourceDocument == null) {// this is training - all sources documents will be converted
+                                      // to a single
             // training file
             for (SourceDocument sourceDocument : aRepository.listSourceDocuments(aFeature
                     .getProject())) {
@@ -345,7 +340,7 @@ public class AutomationUtil
     }
 
     public static void generateTrainDocument(MiraTemplate aTemplate, RepositoryService aRepository,
-            boolean aBase)
+            AnnotationService aAnnotationService, boolean aBase)
         throws IOException, UIMAException, ClassNotFoundException, AutomationException
     {
         File miraDir = aRepository.getMiraDir(aTemplate.getTrainFeature());
@@ -409,7 +404,7 @@ public class AutomationUtil
         AutomationStatus status = aRepository.getAutomationStatus(aTemplate);
 
         BufferedWriter trainOut = new BufferedWriter(new FileWriter(trainFile));
-        TypeAdapter adapter = TypeUtil.getAdapter(annotationService, feature.getLayer());
+        TypeAdapter adapter = TypeUtil.getAdapter(aAnnotationService, feature.getLayer());
         // Training documents (Curated or webanno-compatible imported ones - read using UIMA)
         for (SourceDocument sourceDocument : aRepository.listSourceDocuments(feature.getProject())) {
             if ((sourceDocument.isTrainingDocument() && sourceDocument.getFeature() != null && sourceDocument
@@ -475,7 +470,8 @@ public class AutomationUtil
         trainOut.close();
     }
 
-    public static void generatePredictDocument(MiraTemplate aTemplate, RepositoryService aRepository)
+    public static void generatePredictDocument(MiraTemplate aTemplate,
+            RepositoryService aRepository, AnnotationService aAnnotationService)
         throws IOException, UIMAException, ClassNotFoundException
     {
         File miraDir = aRepository.getMiraDir(aTemplate.getTrainFeature());
@@ -496,7 +492,7 @@ public class AutomationUtil
         if (!documentChanged) {
             return;
         }
-        TypeAdapter adapter = TypeUtil.getAdapter(annotationService, feature.getLayer());
+        TypeAdapter adapter = TypeUtil.getAdapter(aAnnotationService, feature.getLayer());
         for (SourceDocument document : aRepository.listSourceDocuments(feature.getProject())) {
             if (!document.isProcessed() && !document.isTrainingDocument()) {
                 File predFile = new File(miraDir, document.getId() + ".pred.ft");
@@ -952,7 +948,7 @@ public class AutomationUtil
      *             if an error occurs.
      */
     public static String generateFinalClassifier(MiraTemplate aTemplate,
-            RepositoryService aRepository)
+            RepositoryService aRepository, AnnotationService aAnnotationService)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException,
         AutomationException
     {
@@ -1026,13 +1022,13 @@ public class AutomationUtil
         String trainName = trainFile.getAbsolutePath();
         String finalClassifierModelName = aRepository.getMiraModel(layerFeature, false, null)
                 .getAbsolutePath();
-        getFeatureOtherLayer(aTemplate, aRepository, beamSize, maxPosteriors, predictions, mira,
-                predFile, predcitedFile, null);
+        getFeatureOtherLayer(aTemplate, aRepository, aAnnotationService, beamSize, maxPosteriors,
+                predictions, mira, predFile, predcitedFile, null);
 
         getFeaturesTabSep(aTemplate, aRepository, beamSize, maxPosteriors, layerFeature,
                 predictions, mira, predFile, predcitedFile);
 
-        generateTrainDocument(aTemplate, aRepository, false);
+        generateTrainDocument(aTemplate, aRepository, aAnnotationService, false);
 
         String trainTemplate;
         if (predictions.size() == 0) {
@@ -1077,8 +1073,9 @@ public class AutomationUtil
     }
 
     private static void getFeatureOtherLayer(MiraTemplate aTemplate, RepositoryService aRepository,
-            int beamSize, boolean maxPosteriors, List<List<String>> predictions, Mira mira,
-            File predFtFile, File predcitedFile, SourceDocument document)
+            AnnotationService aAnnotationService, int beamSize, boolean maxPosteriors,
+            List<List<String>> predictions, Mira mira, File predFtFile, File predcitedFile,
+            SourceDocument document)
         throws FileNotFoundException, IOException, ClassNotFoundException, UIMAException
     {
         // other layers as training document
@@ -1087,7 +1084,8 @@ public class AutomationUtil
             int nbest = 1;
             String modelName = aRepository.getMiraModel(feature, true, null).getAbsolutePath();
             if (!new File(modelName).exists()) {
-                addOtherFeatureFromAnnotation(feature, aRepository, predictions, document);
+                addOtherFeatureFromAnnotation(feature, aRepository, aAnnotationService,
+                        predictions, document);
                 continue;
             }
             String testName = predFtFile.getAbsolutePath();
@@ -1194,7 +1192,7 @@ public class AutomationUtil
      *             hum?
      */
     public static void addOtherFeatureToPredictDocument(MiraTemplate aTemplate,
-            RepositoryService aRepository)
+            RepositoryService aRepository, AnnotationService aAnnotationService)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException,
         AutomationException
     {
@@ -1210,8 +1208,8 @@ public class AutomationUtil
                 boolean maxPosteriors = false;
                 File predcitedFile = new File(predFtFile.getAbsolutePath() + "-pred");
 
-                getFeatureOtherLayer(aTemplate, aRepository, beamSize, maxPosteriors, predictions,
-                        mira, predFtFile, predcitedFile, document);
+                getFeatureOtherLayer(aTemplate, aRepository, aAnnotationService, beamSize,
+                        maxPosteriors, predictions, mira, predFtFile, predcitedFile, document);
 
                 getFeaturesTabSep(aTemplate, aRepository, beamSize, maxPosteriors, layerFeature,
                         predictions, mira, predFtFile, predcitedFile);

@@ -99,8 +99,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
  */
 public class AutomationPage
     extends ApplicationPageBase
-{    
-    private static final Log LOG = LogFactory.getLog(AutomationPage.class);    
+{
+    private static final Log LOG = LogFactory.getLog(AutomationPage.class);
 
     private static final long serialVersionUID = 1378872465851908515L;
 
@@ -203,10 +203,10 @@ public class AutomationPage
             {
                 try {
                     aTarget.addChildren(getPage(), FeedbackPanel.class);
-//                    info(bratAnnotatorModel.getMessage());
+                    // info(bratAnnotatorModel.getMessage());
                     aTarget.addChildren(getPage(), FeedbackPanel.class);
                     bratAnnotatorModel = aBratAnnotatorModel;
-                    CurationBuilder builder = new CurationBuilder(repository);
+                    CurationBuilder builder = new CurationBuilder(repository, annotationService);
                     curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                     setCurationSegmentBeginEnd();
                     curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
@@ -526,7 +526,7 @@ public class AutomationPage
                         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                        CurationBuilder builder = new CurationBuilder(repository);
+                        CurationBuilder builder = new CurationBuilder(repository, annotationService);
                         curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                         setCurationSegmentBeginEnd();
                         curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
@@ -608,7 +608,7 @@ public class AutomationPage
                         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                        CurationBuilder builder = new CurationBuilder(repository);
+                        CurationBuilder builder = new CurationBuilder(repository, annotationService);
                         curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                         setCurationSegmentBeginEnd();
                         curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
@@ -826,9 +826,8 @@ public class AutomationPage
                         int address = BratAjaxCasUtil.selectSentenceAt(mergeJCas,
                                 bratAnnotatorModel.getSentenceBeginOffset(),
                                 bratAnnotatorModel.getSentenceEndOffset()).getAddress();
-                        int nextSentenceAddress = BratAjaxCasUtil
-                                .getNextPageFirstSentenceAddress(mergeJCas, address,
-                                        bratAnnotatorModel.getWindowSize());
+                        int nextSentenceAddress = BratAjaxCasUtil.getNextPageFirstSentenceAddress(
+                                mergeJCas, address, bratAnnotatorModel.getWindowSize());
                         if (address != nextSentenceAddress) {
                             bratAnnotatorModel.setSentenceAddress(nextSentenceAddress);
 
@@ -837,7 +836,8 @@ public class AutomationPage
                             bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                             bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                            CurationBuilder builder = new CurationBuilder(repository);
+                            CurationBuilder builder = new CurationBuilder(repository,
+                                    annotationService);
                             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                             setCurationSegmentBeginEnd();
                             curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
@@ -895,7 +895,8 @@ public class AutomationPage
                             bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                             bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                            CurationBuilder builder = new CurationBuilder(repository);
+                            CurationBuilder builder = new CurationBuilder(repository,
+                                    annotationService);
 
                             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                             setCurationSegmentBeginEnd();
@@ -954,7 +955,8 @@ public class AutomationPage
                             bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                             bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                            CurationBuilder builder = new CurationBuilder(repository);
+                            CurationBuilder builder = new CurationBuilder(repository,
+                                    annotationService);
                             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                             setCurationSegmentBeginEnd();
                             curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
@@ -1010,7 +1012,8 @@ public class AutomationPage
                             bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                             bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                            CurationBuilder builder = new CurationBuilder(repository);
+                            CurationBuilder builder = new CurationBuilder(repository,
+                                    annotationService);
                             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                             setCurationSegmentBeginEnd();
                             curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
@@ -1075,9 +1078,9 @@ public class AutomationPage
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User logedInUser = repository.getUser(SecurityContextHolder.getContext()
                 .getAuthentication().getName());
-        
+
         bratAnnotatorModel.setUser(logedInUser);
-        
+
         JCas jCas = null;
         try {
             AnnotationDocument logedInUserAnnotationDocument = repository.getAnnotationDocument(
@@ -1118,22 +1121,22 @@ public class AutomationPage
                         logedInUser);
             }
         }
-        
+
         // (Re)initialize brat model after potential creating / upgrading CAS
         bratAnnotatorModel.initForDocument(jCas);
 
         // Load user preferences
         PreferencesUtil.setAnnotationPreference(username, repository, annotationService,
                 bratAnnotatorModel, Mode.AUTOMATION);
-        
+
         // if project is changed, reset some project specific settings
         if (currentprojectId != bratAnnotatorModel.getProject().getId()) {
             bratAnnotatorModel.initForProject();
         }
-        
+
         currentprojectId = bratAnnotatorModel.getProject().getId();
         currentDocumentId = bratAnnotatorModel.getDocument().getId();
-        
+
         LOG.debug("Configured BratAnnotatorModel for user [" + bratAnnotatorModel.getUser()
                 + "] f:[" + bratAnnotatorModel.getFirstSentenceAddress() + "] l:["
                 + bratAnnotatorModel.getLastSentenceAddress() + "] s:["
@@ -1182,12 +1185,12 @@ public class AutomationPage
         catch (BratAnnotationException e) {
             error(e.getMessage());
         }
-        
+
         gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(correctionDocument,
                 bratAnnotatorModel.getSentenceAddress()) + 1);
         gotoPageAddress = BratAjaxCasUtil.getSentenceAddress(correctionDocument,
                 gotoPageTextField.getModelObject());
-        
+
         target.add(gotoPageTextField);
         target.add(automateView);
         target.add(numberOfPages);

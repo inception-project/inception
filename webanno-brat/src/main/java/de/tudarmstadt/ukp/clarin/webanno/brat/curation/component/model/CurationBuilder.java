@@ -28,8 +28,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Resource;
-
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
@@ -71,16 +69,16 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 public class CurationBuilder
 {
 
-    @Resource(name = "annotationService")
-    private static AnnotationService annotationService;
-
+    private final AnnotationService annotationService;
     private final RepositoryService repository;
+
     int sentenceNumber;
     int begin, end;
 
-    public CurationBuilder(RepositoryService repository)
+    public CurationBuilder(RepositoryService repository, AnnotationService aAnnotationService)
     {
         this.repository = repository;
+        this.annotationService = aAnnotationService;
     }
 
     public CurationContainer buildCurationContainer(BratAnnotatorModel aBratAnnotatorModel)
@@ -143,7 +141,8 @@ public class CurationBuilder
         }
 
         if (entryTypes == null) {
-            entryTypes = getEntryTypes(mergeJCas, aBratAnnotatorModel.getAnnotationLayers());
+            entryTypes = getEntryTypes(mergeJCas, aBratAnnotatorModel.getAnnotationLayers(),
+                    annotationService);
         }
 
         for (Integer begin : segmentBeginEnd.keySet()) {
@@ -205,7 +204,7 @@ public class CurationBuilder
         // Upgrading should be an explicit action during the opening of a document at the end
         // of the open dialog - it must not happen during editing because the CAS addresses
         // are used as IDs in the UI
-        //repository.upgradeCasAndSave(aDocument, aMode, user.getUsername());
+        // repository.upgradeCasAndSave(aDocument, aMode, user.getUsername());
         JCas jCas = repository.getAnnotationDocumentContent(randomAnnotationDocument);
         jCases.put(user.getUsername(), jCas);
         return jCases;
@@ -226,7 +225,7 @@ public class CurationBuilder
             if (randomAnnotationDocument == null) {
                 randomAnnotationDocument = annotationDocument;
             }
-            
+
             // Upgrading should be an explicit action during the opening of a document at the end
             // of the open dialog - it must not happen during editing because the CAS addresses
             // are used as IDs in the UI
@@ -238,18 +237,26 @@ public class CurationBuilder
     }
 
     /**
-     * Fetches the CAS that the user will be able to edit. In AUTOMATION/CORRECTION mode, this is 
+     * Fetches the CAS that the user will be able to edit. In AUTOMATION/CORRECTION mode, this is
      * the CAS for the CORRECTION_USER and in CURATION mode it is the CAS for the CURATION user.
-     * 
-     * @param aBratAnnotatorModel the model.
-     * @param aDocument the source document.
-     * @param jCases the JCases.
-     * @param randomAnnotationDocument an annotation document.
+     *
+     * @param aBratAnnotatorModel
+     *            the model.
+     * @param aDocument
+     *            the source document.
+     * @param jCases
+     *            the JCases.
+     * @param randomAnnotationDocument
+     *            an annotation document.
      * @return the JCas.
-     * @throws UIMAException hum?
-     * @throws ClassNotFoundException hum?
-     * @throws IOException if an I/O error occurs.
-     * @throws BratAnnotationException hum?
+     * @throws UIMAException
+     *             hum?
+     * @throws ClassNotFoundException
+     *             hum?
+     * @throws IOException
+     *             if an I/O error occurs.
+     * @throws BratAnnotationException
+     *             hum?
      */
     public JCas getMergeCas(BratAnnotatorModel aBratAnnotatorModel, SourceDocument aDocument,
             Map<String, JCas> jCases, AnnotationDocument randomAnnotationDocument)
@@ -259,19 +266,21 @@ public class CurationBuilder
         try {
             if (aBratAnnotatorModel.getMode().equals(Mode.AUTOMATION)
                     || aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)) {
-                // Upgrading should be an explicit action during the opening of a document at the end
+                // Upgrading should be an explicit action during the opening of a document at the
+                // end
                 // of the open dialog - it must not happen during editing because the CAS addresses
                 // are used as IDs in the UI
-//                repository.upgradeCasAndSave(aDocument, aBratAnnotatorModel.getMode(),
-//                        aBratAnnotatorModel.getUser().getUsername());
+                // repository.upgradeCasAndSave(aDocument, aBratAnnotatorModel.getMode(),
+                // aBratAnnotatorModel.getUser().getUsername());
                 mergeJCas = repository.getCorrectionDocumentContent(aDocument);
             }
             else {
-                // Upgrading should be an explicit action during the opening of a document at the end
+                // Upgrading should be an explicit action during the opening of a document at the
+                // end
                 // of the open dialog - it must not happen during editing because the CAS addresses
                 // are used as IDs in the UI
-//                repository.upgradeCasAndSave(aDocument, aBratAnnotatorModel.getMode(),
-//                        aBratAnnotatorModel.getUser().getUsername());
+                // repository.upgradeCasAndSave(aDocument, aBratAnnotatorModel.getMode(),
+                // aBratAnnotatorModel.getUser().getUsername());
                 mergeJCas = repository.getCurationDocumentContent(aDocument);
             }
         }
@@ -331,7 +340,8 @@ public class CurationBuilder
         }
     }
 
-    public static List<Type> getEntryTypes(JCas mergeJCas, List<AnnotationLayer> aLayers)
+    public static List<Type> getEntryTypes(JCas mergeJCas, List<AnnotationLayer> aLayers,
+            AnnotationService aAnnotationService)
     {
         List<Type> entryTypes = new LinkedList<Type>();
 
@@ -342,7 +352,8 @@ public class CurationBuilder
             if (layer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
                 continue;
             }
-            entryTypes.add(getAdapter(annotationService, layer).getAnnotationType(mergeJCas.getCas()));
+            entryTypes.add(getAdapter(aAnnotationService, layer).getAnnotationType(
+                    mergeJCas.getCas()));
         }
         return entryTypes;
     }
@@ -350,18 +361,28 @@ public class CurationBuilder
     /**
      * For the first time a curation page is opened, create a MergeCas that contains only agreeing
      * annotations Using the CAS of the curator user.
-     * 
-     * @param mergeJCas the merge CAS.
-     * @param randomAnnotationDocument an annotation document. 
-     * @param jCases the JCases
-     * @param aBegin the begin offset.
-     * @param aEnd the end offset.
-     * @param aAnnotationLayers the layers.
+     *
+     * @param mergeJCas
+     *            the merge CAS.
+     * @param randomAnnotationDocument
+     *            an annotation document.
+     * @param jCases
+     *            the JCases
+     * @param aBegin
+     *            the begin offset.
+     * @param aEnd
+     *            the end offset.
+     * @param aAnnotationLayers
+     *            the layers.
      * @return the JCas.
-     * @throws IOException if an I/O error occurs.
-     * @throws ClassNotFoundException hum?
-     * @throws UIMAException hum?
-     * @throws BratAnnotationException hum?
+     * @throws IOException
+     *             if an I/O error occurs.
+     * @throws ClassNotFoundException
+     *             hum?
+     * @throws UIMAException
+     *             hum?
+     * @throws BratAnnotationException
+     *             hum?
      */
     public JCas createCurationCas(JCas mergeJCas, AnnotationDocument randomAnnotationDocument,
             Map<String, JCas> jCases, int aBegin, int aEnd, List<AnnotationLayer> aAnnotationLayers)
@@ -374,7 +395,7 @@ public class CurationBuilder
         int numUsers = jCases.size();
         mergeJCas = repository.getAnnotationDocumentContent(randomAnnotationDocument);
 
-        entryTypes = getEntryTypes(mergeJCas, aAnnotationLayers);
+        entryTypes = getEntryTypes(mergeJCas, aAnnotationLayers,annotationService);
         jCases.put(CurationPanel.CURATION_USER, mergeJCas);
 
         List<AnnotationOption> annotationOptions = null;
