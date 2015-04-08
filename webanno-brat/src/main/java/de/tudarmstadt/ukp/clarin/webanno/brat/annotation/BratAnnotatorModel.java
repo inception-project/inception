@@ -159,10 +159,10 @@ public class BratAnnotatorModel
     private String selectedText;
 
     //id of the select annotation layer
-    private int selectedAnnotationId;
+    private int selectedAnnotationId = -1;
 
     // the selected annotation layer
-    private AnnotationLayer  selectedAnnotationLayer;
+    private AnnotationLayer selectedAnnotationLayer;
 
     // is the annotation span or arc annotation
     private boolean isRelationAnno;

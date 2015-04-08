@@ -1207,6 +1207,8 @@ public class AnnotationDetailEditorPanel
             // at the moment we allow one layer per relation annotation (first
             // source/target span layer should be selected!)
             setNullValid(annotationFeatureForm.getModelObject().isRelationAnno());
+            // Only allow layer selection on new annotations
+            setEnabled(annotationFeatureForm.getModelObject().getSelectedAnnotationId() == -1);
         }
     }
 
