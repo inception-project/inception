@@ -629,6 +629,11 @@ public class AnnotationDetailEditorPanel
         if (!aBModel.isRelationAnno() && aBModel.isSlotArmed()) {
             List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) selectedFeatureValues
                     .get(aBModel.getArmedFeature());
+            if (links == null) {
+                links = new ArrayList<>();
+                selectedFeatureValues.put(aBModel.getArmedFeature(),
+                        (ArrayList<LinkWithRoleModel>) links);
+            }
             LinkWithRoleModel link = links.get(aBModel.getArmedSlot());
             link.targetAddr = aAnnotationId;
             link.label = selectByAddr(aJCas, aAnnotationId).getCoveredText();
