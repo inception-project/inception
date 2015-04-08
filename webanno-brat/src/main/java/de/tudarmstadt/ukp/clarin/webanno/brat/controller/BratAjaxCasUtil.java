@@ -709,17 +709,19 @@ public class BratAjaxCasUtil
                 // FIXME: actually we could re-use existing link link feature structures 
                 List<FeatureStructure> linkFSes = new ArrayList<FeatureStructure>();
                 List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) aValue;
-                for (LinkWithRoleModel e : links) {
-                    // Skip links that have been added in the UI but where the target has not yet been
-                    // set
-                    if (e.targetAddr == -1) {
-                        continue;
+                if (links != null) {
+                    for (LinkWithRoleModel e : links) {
+                        // Skip links that have been added in the UI but where the target has not yet been
+                        // set
+                        if (e.targetAddr == -1) {
+                            continue;
+                        }
+                        
+                        FeatureStructure link = aFS.getCAS().createFS(linkType);
+                        link.setStringValue(roleFeat, e.role);
+                        link.setFeatureValue(targetFeat, selectByAddr(aFS.getCAS(), e.targetAddr));
+                        linkFSes.add(link);
                     }
-                    
-                    FeatureStructure link = aFS.getCAS().createFS(linkType);
-                    link.setStringValue(roleFeat, e.role);
-                    link.setFeatureValue(targetFeat, selectByAddr(aFS.getCAS(), e.targetAddr));
-                    linkFSes.add(link);
                 }
                 
                 // Create a new array if size differs otherwise re-use existing one

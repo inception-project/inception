@@ -194,11 +194,14 @@ public class BratAnnotator
                     }
                     else if (action.equals(SpanAnnotationResponse.COMMAND)) {
                         JCas jCas = getCas(getModelObject());
-                        if (getModelObject().isSlotArmed() && request.getParameterValue(PARAM_ID) != null) {
+                        if (getModelObject().isSlotArmed() && !request.getParameterValue(PARAM_ID).isEmpty()) {
                             annotationDetailEditorPanel.setSlot(jCas, getModelObject(), request
                                     .getParameterValue(PARAM_ID).toInt());
                         }
                         else {
+                            // Doing anything but filling an armed slot will unarm it
+                            getModelObject().clearArmedSlot();
+                            
                             getModelObject().setRelationAnno(false);
                             if (request.getParameterValue(PARAM_ID).toString() == null) {
                                 getModelObject().setSelectedAnnotationId(-1);
