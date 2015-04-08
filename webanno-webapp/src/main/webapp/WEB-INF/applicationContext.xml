@@ -91,6 +91,11 @@
 		class="de.tudarmstadt.ukp.clarin.webanno.webapp.standalone.StandaloneShutdownDialog"
 		lazy-init="false"></bean>
 
+    <!-- Poor man's database migration -->
+    <bean id="fixCoreferenceMigration"
+        class="de.tudarmstadt.ukp.clarin.webanno.webapp.migration.FixCoreferenceFeatures"
+        lazy-init="false"></bean>
+
 	<bean id="systemPrereqs"
 		class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
 		<property name="targetObject" value="#{@systemProperties}" />

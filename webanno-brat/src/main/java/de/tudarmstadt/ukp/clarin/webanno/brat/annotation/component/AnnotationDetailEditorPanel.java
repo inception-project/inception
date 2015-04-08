@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdap
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -170,6 +171,9 @@ public class AnnotationDetailEditorPanel
                     setVisible(!featuresModel.isEmpty());
                 }
             };
+            // Add placeholder since wmc might start out invisible. Without the placeholder we
+            // cannot make it visible in an AJAX call
+            wmc.setOutputMarkupPlaceholderTag(true);
             wmc.setOutputMarkupId(true);
             wmc.add(featureValues);
             add(wmc);
@@ -310,21 +314,7 @@ public class AnnotationDetailEditorPanel
         if (aBModel.getSelectedAnnotationLayer() != null) {
             for (AnnotationFeature feature : aAnnotationService.listAnnotationFeature(aBModel
                     .getSelectedAnnotationLayer())) {
-                if (!feature.isEnabled()) {
-                    continue;
-                }
-
-                if (aBModel.isRelationAnno()
-                        && aBModel.getSelectedAnnotationLayer().getType()
-                                .equals(WebAnnoConst.CHAIN_TYPE)
-                        && feature.getName().equals(WebAnnoConst.COREFERENCE_TYPE_FEATURE)) {
-                    continue;
-                }
-
-                if (!aBModel.isRelationAnno()
-                        && aBModel.getSelectedAnnotationLayer().getType()
-                                .equals(WebAnnoConst.CHAIN_TYPE)
-                        && feature.getName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
+                if (!feature.isEnabled() || isSuppressedFeature(aBModel, feature)) {
                     continue;
                 }
 
@@ -770,11 +760,13 @@ public class AnnotationDetailEditorPanel
         String featName = aFeature.getName();
         
         if (WebAnnoConst.CHAIN_TYPE.equals(aFeature.getLayer().getType())) {
+//            return WebAnnoConst.COREFERENCE_RELATION_FEATURE.equals(featName) || 
+//                    WebAnnoConst.COREFERENCE_TYPE_FEATURE.equals(featName);            
             if (aBModel.isRelationAnno()) {
-                return WebAnnoConst.COREFERENCE_RELATION_FEATURE.equals(featName);
+                return WebAnnoConst.COREFERENCE_TYPE_FEATURE.equals(featName);
             }
             else {
-                return WebAnnoConst.COREFERENCE_TYPE_FEATURE.equals(featName);
+                return WebAnnoConst.COREFERENCE_RELATION_FEATURE.equals(featName);
             }
         }
         
@@ -1053,16 +1045,21 @@ public class AnnotationDetailEditorPanel
                 @Override
                 protected Iterator<IModel<LinkWithRoleModel>> getItemModels()
                 {
-                    ModelIteratorAdapter<LinkWithRoleModel> i = new ModelIteratorAdapter<LinkWithRoleModel>(
-                            LinkFeatureEditor.this.getModelObject())
-                    {
-                        @Override
-                        protected IModel<LinkWithRoleModel> model(LinkWithRoleModel aObject)
+                    if (LinkFeatureEditor.this.getModelObject() == null) {
+                        return Collections.EMPTY_LIST.iterator();
+                    }
+                    else {
+                        ModelIteratorAdapter<LinkWithRoleModel> i = new ModelIteratorAdapter<LinkWithRoleModel>(
+                                LinkFeatureEditor.this.getModelObject())
                         {
-                            return Model.of(aObject);
-                        }
-                    };
-                    return i;
+                            @Override
+                            protected IModel<LinkWithRoleModel> model(LinkWithRoleModel aObject)
+                            {
+                                return Model.of(aObject);
+                            }
+                        };
+                        return i;
+                    }
                 }
 
                 @Override
@@ -1129,6 +1126,10 @@ public class AnnotationDetailEditorPanel
                 protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
                 {
                     List<LinkWithRoleModel> links = LinkFeatureEditor.this.getModelObject();
+                    if (links == null) {
+                        links = new ArrayList<>();
+                        LinkFeatureEditor.this.setModelObject(links);
+                    }
                     LinkWithRoleModel m = new LinkWithRoleModel();
                     m.role = (String) text.getModelObject();
                     links.add(m);
@@ -1160,6 +1161,11 @@ public class AnnotationDetailEditorPanel
                     aTarget.add(LinkFeatureEditor.this.getParent());
                 }
             });                            
+        }
+        
+        public void setModelObject(List<LinkWithRoleModel> aModel)
+        {
+            setDefaultModelObject(aModel);
         }
         
         @SuppressWarnings("unchecked")
@@ -1200,16 +1206,10 @@ public class AnnotationDetailEditorPanel
                     for (AnnotationFeature feature : annotationService.listAnnotationFeature(model
                             .getSelectedAnnotationLayer())) {
 
-                        if (!feature.isEnabled()) {
+                        if (!feature.isEnabled() || isSuppressedFeature(model, feature)) {
                             continue;
                         }
-                        if (model.getSelectedAnnotationLayer().getType()
-                                .equals(WebAnnoConst.CHAIN_TYPE)
-                                && feature.getName().equals(
-                                        WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
-                            continue;
-                        }
-
+                        
                         featuresModel.add(feature);
 
                         IModel<Serializable> tagModel = Model.of();
