@@ -112,10 +112,10 @@ public class BratAnnotator
 
     @SpringBean(name = "jsonConverter")
     private MappingJacksonHttpMessageConverter jsonConverter;
-    
+
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
-    
+
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
 
@@ -194,14 +194,15 @@ public class BratAnnotator
                     }
                     else if (action.equals(SpanAnnotationResponse.COMMAND)) {
                         JCas jCas = getCas(getModelObject());
-                        if (getModelObject().isSlotArmed() && !request.getParameterValue(PARAM_ID).isEmpty()) {
+                        if (getModelObject().isSlotArmed()
+                                && !request.getParameterValue(PARAM_ID).isEmpty()) {
                             annotationDetailEditorPanel.setSlot(jCas, getModelObject(), request
                                     .getParameterValue(PARAM_ID).toInt());
                         }
                         else {
                             // Doing anything but filling an armed slot will unarm it
                             getModelObject().clearArmedSlot();
-                            
+
                             getModelObject().setRelationAnno(false);
                             if (request.getParameterValue(PARAM_ID).toString() == null) {
                                 getModelObject().setSelectedAnnotationId(-1);
@@ -220,11 +221,11 @@ public class BratAnnotator
                                 annotationDetailEditorPanel.setLayerAndFeatureModels(jCas,
                                         getModelObject());
                             }
-    
+
                             offsets = request.getParameterValue(PARAM_OFFSETS).toString();
                             OffsetsList offsetLists = jsonConverter.getObjectMapper().readValue(
                                     offsets, OffsetsList.class);
-    
+
                             if (getModelObject().getSelectedAnnotationId() == -1) {
                                 Sentence sentence = BratAjaxCasUtil.selectSentenceAt(jCas,
                                         getModelObject().getSentenceBeginOffset(), getModelObject()
@@ -235,27 +236,30 @@ public class BratAnnotator
                                         sentence.getBegin()
                                                 + offsetLists.get(offsetLists.size() - 1).getEnd());
                             }
-    
+
                             // get the begin/end from the annotation, no need to re-calculate
                             else {
-                                AnnotationFS fs = BratAjaxCasUtil.selectByAddr(jCas, getModelObject()
-                                        .getSelectedAnnotationId());
+                                AnnotationFS fs = BratAjaxCasUtil.selectByAddr(jCas,
+                                        getModelObject().getSelectedAnnotationId());
                                 getModelObject().setBeginOffset(fs.getBegin());
                                 getModelObject().setEndOffset(fs.getEnd());
                             }
-    
+
                             getModelObject().setSelectedText(
                                     request.getParameterValue(PARAM_SPAN_TEXT).toString());
-    
-                            if (BratAnnotatorUtility.isDocumentFinished(repository, getModelObject())) {
+
+                            if (BratAnnotatorUtility.isDocumentFinished(repository,
+                                    getModelObject())) {
                                 error("This document is already closed. Please ask your project "
                                         + "manager to re-open it via the Montoring page");
                             }
                             if (getModelObject().getSelectedAnnotationId() == -1) {
-                                bratRenderHighlight(aTarget, getModelObject().getSelectedAnnotationId());
+                                bratRenderHighlight(aTarget, getModelObject()
+                                        .getSelectedAnnotationId());
                                 bratRender(aTarget, jCas);
-                                ghostSpanAnnotationRender(aTarget, jCas, offsetLists.get(0).getBegin(),
-                                        offsetLists.get(offsetLists.size() - 1).getEnd());
+                                ghostSpanAnnotationRender(aTarget, jCas, offsetLists.get(0)
+                                        .getBegin(), offsetLists.get(offsetLists.size() - 1)
+                                        .getEnd());
                             }
                         }
                     }
@@ -354,8 +358,8 @@ public class BratAnnotator
         add(vis);
         add(controller);
 
-        annotationDetailEditorPanel = new AnnotationDetailEditorPanel("annotationDetailEditorPanel",
-                new Model<BratAnnotatorModel>(getModelObject()))
+        annotationDetailEditorPanel = new AnnotationDetailEditorPanel(
+                "annotationDetailEditorPanel", new Model<BratAnnotatorModel>(getModelObject()))
         {
             private static final long serialVersionUID = 2857345299480098279L;
 
@@ -372,10 +376,15 @@ public class BratAnnotator
                     error("Error reading CAS " + e.getMessage());
                     return;
                 }
-                
+
                 bratRenderHighlight(aTarget, aBModel.getSelectedAnnotationId());
-                
+
                 BratAnnotator.this.onChange(aTarget, aBModel);
+                onAnnotate(aTarget, aBModel, aBModel.getBeginOffset(), aBModel.getEndOffset());
+                if (!aBModel.isAnnotate()) {
+                    onDelete(aTarget, aBModel, aBModel.getBeginOffset(), aBModel.getEndOffset());
+                }
+
             }
         };
 
@@ -619,12 +628,14 @@ public class BratAnnotator
 
     }
 
-    protected void onAnnotate(BratAnnotatorModel aModel, int aStart, int aEnd)
+    protected void onAnnotate(AjaxRequestTarget aTarget, BratAnnotatorModel aModel, int aStart,
+            int aEnd)
     {
         // Overriden in AutomationPage
     }
 
-    protected void onDelete(BratAnnotatorModel aModel, int aStart, int aEnd)
+    protected void onDelete(AjaxRequestTarget aTarget, BratAnnotatorModel aModel, int aStart,
+            int aEnd)
     {
         // Overriden in AutomationPage
     }
