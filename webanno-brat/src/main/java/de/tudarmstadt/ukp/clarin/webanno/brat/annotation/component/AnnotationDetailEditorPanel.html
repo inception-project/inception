@@ -74,17 +74,18 @@
 									<table class="hfill">
 										<tr wicket:id="slots">
 											<td><span wicket:id="role"></span></td>
-											<td><span class="hfill k-textbox" style="background: 0; line-height: 2.13em; padding-left: 0.3em; padding-right:0.3em" wicket:id="label"></span></td>
+											<td><span class="hfill k-textbox" style="background: 0; line-height: 2.13em; padding-left: 0.3em; padding-right:0.3em; width: 100%;" wicket:id="label"></span></td>
 										</tr>
 										<tr>
                                             <td colspan="2" class="hfill">
                                                 <table class="hfill">
                                                     <tr>
-                                                        <td>
-                                                            <input class="hfill" wicket:id="newRole"></input>
+                                                        <td class="hfill">
+                                                            <input style="width: 100%" wicket:id="newRole" placeholder="Add new slot"></input>
                                                         </td>
                                                         <td>
                                                             <button style="k-button" wicket:id="add">Add</button>
+                                                            <button style="k-button" wicket:id="del">Del</button>
                                                         </td>
                                                     </tr>
                                                 </table>

@@ -422,7 +422,7 @@ public class AnnotationDetailEditorPanel
 
             adapter.updateFeature(jCas, feature, aBModel.getSelectedAnnotationId(),
                     featureValueModels.get(i).getObject());
-            selectedFeatureValues.put(feature, featureValueModels.get(i));
+            selectedFeatureValues.put(feature, featureValueModels.get(i).getObject());
         }
 
         // update timestamp now
@@ -1128,10 +1128,34 @@ public class AnnotationDetailEditorPanel
                 @Override
                 protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
                 {
-                    List<LinkWithRoleModel> links = LinkFeatureEditor.this.getModelObject();;
+                    List<LinkWithRoleModel> links = LinkFeatureEditor.this.getModelObject();
                     LinkWithRoleModel m = new LinkWithRoleModel();
                     m.role = (String) text.getModelObject();
                     links.add(m);
+                    
+                    aTarget.add(LinkFeatureEditor.this.getParent());
+                }
+            });                            
+            
+            // Add a new empty slot with the specified role
+            add(new AjaxButton("del") {
+                private static final long serialVersionUID = 1L;
+                
+                @Override
+                protected void onConfigure()
+                {
+                    BratAnnotatorModel model = annotationFeatureForm.getModelObject();
+                    setEnabled(model.isSlotArmed() && feature.equals(model.getArmedFeature()));
+                }
+                
+                @Override
+                protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
+                {
+                    List<LinkWithRoleModel> links = LinkFeatureEditor.this.getModelObject();
+                    
+                    BratAnnotatorModel model = annotationFeatureForm.getModelObject();
+                    links.remove(model.getArmedSlot());
+                    model.clearArmedSlot();
                     
                     aTarget.add(LinkFeatureEditor.this.getParent());
                 }
