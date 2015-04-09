@@ -1095,7 +1095,7 @@ public class ProjectLayersPanel
             aFeature.setLinkMode(LinkMode.WITH_ROLE);
             aFeature.setLinkTypeRoleFeatureName("role");
             aFeature.setLinkTypeTargetFeatureName("target");
-            aFeature.setLinkTypeName(aFeature.getLayer().getName()+WordUtils.capitalize(aFeature.getName()));
+            aFeature.setLinkTypeName(aFeature.getLayer().getName()+WordUtils.capitalize(aFeature.getName())+"Link");
         }
 
         annotationService.createFeature(aFeature);
