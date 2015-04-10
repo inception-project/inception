@@ -810,9 +810,10 @@ public class AnnotationDetailEditorPanel
             }
             item.add(frag);
             // whenever it is updating an annotation, it updates automatically when a component for
-            // the feature
-            // lost focus - but updating is for every component edited
-            if (fm.bModel.getSelectedAnnotationId() != -1) {
+            // the feature lost focus - but updating is for every component edited
+            // LinkFeatureEditors must be excluded because the auto-update will break the ability
+            // to add slots. Adding a slot is NOT an annotation action.
+            if (fm.bModel.getSelectedAnnotationId() != -1 && !(frag instanceof LinkFeatureEditor)) {
                 if (frag.isDropOrchoice()) {
                     updateFeature(fm, frag, "onchange");
                 }
@@ -1071,7 +1072,7 @@ public class AnnotationDetailEditorPanel
                                 annotationFeatureForm.getModelObject().setArmedSlot(aModel.feature,
                                         aItem.getIndex());
                             }
-                            aTarget.add(LinkFeatureEditor.this.getParent());
+                            aTarget.add(wmc);
                         }
                     });
                     label.add(new AttributeAppender("style", new Model<String>()
@@ -1119,7 +1120,7 @@ public class AnnotationDetailEditorPanel
                     m.role = (String) text.getModelObject();
                     links.add(m);
 
-                    aTarget.add(LinkFeatureEditor.this.getParent());
+                    aTarget.add(wmc);
                 }
             });
 
@@ -1146,7 +1147,7 @@ public class AnnotationDetailEditorPanel
                     links.remove(model.getArmedSlot());
                     model.clearArmedSlot();
 
-                    aTarget.add(LinkFeatureEditor.this.getParent());
+                    aTarget.add(wmc);
                 }
             });
         }
