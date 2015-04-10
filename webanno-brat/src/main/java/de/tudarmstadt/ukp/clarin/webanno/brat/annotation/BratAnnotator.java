@@ -366,7 +366,7 @@ public class BratAnnotator
             @Override
             protected void onChange(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
             {
-                aTarget.add(annotationDetailEditorPanel); // Mark edited annotation in UI
+                aTarget.addChildren(getPage(), FeedbackPanel.class);
 
                 try {
                     bratRender(aTarget, getCas(aBModel));

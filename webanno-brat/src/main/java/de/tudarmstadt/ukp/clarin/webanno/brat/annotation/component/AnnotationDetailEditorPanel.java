@@ -419,8 +419,6 @@ public class AnnotationDetailEditorPanel
                     false));
         }
 
-        setLayerAndFeatureModels(jCas, aBModel);
-
         onChange(aTarget, aBModel);
     }
 
@@ -496,7 +494,10 @@ public class AnnotationDetailEditorPanel
         aBModel.setSelectedAnnotationId(-1);
 
         setLayerAndFeatureModels(jCas, aBModel);
-
+        
+        aTarget.add(wmc);
+        aTarget.add(deleteButton);
+        aTarget.add(reverseButton);
         onChange(aTarget, aBModel);
     }
 
