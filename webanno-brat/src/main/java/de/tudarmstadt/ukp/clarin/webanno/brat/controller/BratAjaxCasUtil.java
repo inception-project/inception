@@ -92,35 +92,6 @@ public class BratAjaxCasUtil
         return false;
     }
 
-    // public static boolean isSame(Annotation a, Annotation b)
-    // {
-    // return a.getBegin() == b.getBegin() && a.getEnd() == b.getEnd();
-    // }
-
-    // public static boolean isAt(Annotation a, int begin, int end)
-    // {
-    // return a.getBegin() == begin && a.getEnd() == end;
-    // }
-
-    /*
-     * public static void deleteCoreference(BratAnnotatorModel aBratAnnotatorModel, String aType,
-     * BratAnnotatorUIData aUIData) {
-     *
-     * CoreferenceChain newChain = new CoreferenceChain(aUIData.getjCas()); boolean found = false;
-     *
-     * CoreferenceLink originCorefType = selectAnnotationByAddress(aUIData.getjCas(),
-     * CoreferenceLink.class, aUIData.getOrigin()); for (CoreferenceChain chain :
-     * select(aUIData.getjCas(), CoreferenceChain.class)) { CoreferenceLink link = chain.getFirst();
-     *
-     * if (found) { break; } while (link != null && !found) { if (link.getBegin() ==
-     * originCorefType.getBegin()) { newChain.setFirst(link.getNext()); link.setNext(null); found =
-     * true; break; } link = link.getNext(); } } newChain.addToIndexes();
-     *
-     * // removeInvalidChain(aUIData.getjCas());
-     *
-     * }
-     */
-
     public static int getAddr(FeatureStructure aFS)
     {
         return ((CASImpl) aFS.getCAS()).ll_getFSRef(aFS);
