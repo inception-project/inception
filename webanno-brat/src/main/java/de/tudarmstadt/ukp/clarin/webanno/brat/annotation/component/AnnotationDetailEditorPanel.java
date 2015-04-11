@@ -17,7 +17,11 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component;
 
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getCurrentSentence;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getSentenceBeginAddress;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.*;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
 
 import java.io.IOException;
@@ -389,7 +393,7 @@ public class AnnotationDetailEditorPanel
         }
 
         // update timestamp now
-        int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas, aBModel.getBeginOffset());
+        int sentenceNumber = getSentenceNumber(jCas, aBModel.getBeginOffset());
         aBModel.getDocument().setSentenceAccessed(sentenceNumber);
         repository.updateTimeStamp(aBModel.getDocument(), aBModel.getUser(), aBModel.getMode());
 
@@ -413,7 +417,7 @@ public class AnnotationDetailEditorPanel
         if (aBModel.getSelectedAnnotationId() != -1) {
             String bratLabelText = TypeUtil
                     .getBratLabelText(adapter,
-                            BratAjaxCasUtil.selectByAddr(jCas, aBModel.getSelectedAnnotationId()),
+                            selectByAddr(jCas, aBModel.getSelectedAnnotationId()),
                             features);
             info(BratAnnotator.generateMessage(aBModel.getSelectedAnnotationLayer(), bratLabelText,
                     false));
@@ -447,7 +451,7 @@ public class AnnotationDetailEditorPanel
                 continue;
             }
             if (tn.equals(attachTypeName)) {
-                Sentence thisSentence = BratAjaxCasUtil.getCurrentSentence(jCas,
+                Sentence thisSentence = getCurrentSentence(jCas,
                         aBModel.getBeginOffset(), aBModel.getEndOffset());
                 ad.deleteBySpan(jCas, fs, thisSentence.getBegin(), thisSentence.getEnd());
                 break;
@@ -458,7 +462,7 @@ public class AnnotationDetailEditorPanel
                 continue;
             }
             if (fn.equals(attachFeatureName)) {
-                Sentence thisSentence = BratAjaxCasUtil.getCurrentSentence(jCas,
+                Sentence thisSentence = getCurrentSentence(jCas,
                         aBModel.getBeginOffset(), aBModel.getEndOffset());
                 ad.deleteBySpan(jCas, fs, thisSentence.getBegin(), thisSentence.getEnd());
                 break;
@@ -473,7 +477,7 @@ public class AnnotationDetailEditorPanel
 
         repository.updateJCas(aBModel.getMode(), aBModel.getDocument(), aBModel.getUser(), jCas);
         // update timestamp now
-        int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas, aBModel.getBeginOffset());
+        int sentenceNumber = getSentenceNumber(jCas, aBModel.getBeginOffset());
         aBModel.getDocument().setSentenceAccessed(sentenceNumber);
         repository.updateTimeStamp(aBModel.getDocument(), aBModel.getUser(), aBModel.getMode());
 
@@ -528,7 +532,7 @@ public class AnnotationDetailEditorPanel
 
         // persist changes
         repository.updateJCas(aBModel.getMode(), aBModel.getDocument(), aBModel.getUser(), jCas);
-        int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas, originFs.getBegin());
+        int sentenceNumber = getSentenceNumber(jCas, originFs.getBegin());
         aBModel.getDocument().setSentenceAccessed(sentenceNumber);
         repository.updateTimeStamp(aBModel.getDocument(), aBModel.getUser(), aBModel.getMode());
 
@@ -568,9 +572,9 @@ public class AnnotationDetailEditorPanel
 
     private void autoScroll(JCas jCas, BratAnnotatorModel aBModel)
     {
-        int address = BratAjaxCasUtil.selectSentenceAt(jCas, aBModel.getSentenceBeginOffset(),
-                aBModel.getSentenceEndOffset()).getAddress();
-        aBModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(jCas, address,
+        int address = getAddr(selectSentenceAt(jCas, aBModel.getSentenceBeginOffset(),
+                aBModel.getSentenceEndOffset()));
+        aBModel.setSentenceAddress(getSentenceBeginAddress(jCas, address,
                 aBModel.getBeginOffset(), aBModel.getProject(), aBModel.getDocument(),
                 aBModel.getWindowSize()));
 
@@ -646,7 +650,7 @@ public class AnnotationDetailEditorPanel
 
             // populate feature value
             if (aBModel.getSelectedAnnotationId() != -1) {
-                AnnotationFS annoFs = BratAjaxCasUtil.selectByAddr(aJCas,
+                AnnotationFS annoFs = selectByAddr(aJCas,
                         aBModel.getSelectedAnnotationId());
 
                 populateFeatures(aBModel, annoFs);
@@ -671,7 +675,7 @@ public class AnnotationDetailEditorPanel
         }
         // Existing (span) annotation was selected
         else if (aBModel.getSelectedAnnotationId() != -1) {
-            AnnotationFS annoFs = BratAjaxCasUtil.selectByAddr(aJCas,
+            AnnotationFS annoFs = selectByAddr(aJCas,
                     aBModel.getSelectedAnnotationId());
             String type = annoFs.getType().getName();
 

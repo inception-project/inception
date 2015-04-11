@@ -17,6 +17,7 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.automation.util;
 
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.*;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
@@ -573,8 +574,7 @@ public class AutomationUtil
 
             if (aLayerFeature != null) {
                 if (aLayerFeature.getLayer().isMultipleTokens()) {
-                    tag = multAnno.get(token.getAddress()) == null ? "O" : multAnno.get(token
-                            .getAddress());
+                    tag = multAnno.get(getAddr(token)) == null ? "O" : multAnno.get(getAddr(token));
                 }
                 else {
                     tag = annotations.size() == 0 ? NILL : annotations.get(i);

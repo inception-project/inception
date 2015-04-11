@@ -17,7 +17,11 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model;
 
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getFirstSentenceNumber;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectSentenceAt;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
@@ -38,7 +42,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationOption;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
@@ -137,7 +140,7 @@ public class CurationBuilder
         segmentAdress.put(CurationPanel.CURATION_USER, new HashMap<Integer, Integer>());
         for (Sentence sentence : selectCovered(mergeJCas, Sentence.class, begin, end)) {
             segmentAdress.get(CurationPanel.CURATION_USER).put(sentence.getBegin(),
-                    sentence.getAddress());
+                    getAddr(sentence));
         }
 
         if (entryTypes == null) {
@@ -317,18 +320,18 @@ public class CurationBuilder
 
         int windowSize = aBratAnnotatorModel.getWindowSize();
 
-        Sentence firstSentence = BratAjaxCasUtil.selectSentenceAt(jCas,
+        Sentence firstSentence = selectSentenceAt(jCas,
                 aBratAnnotatorModel.getSentenceBeginOffset(),
                 aBratAnnotatorModel.getSentenceEndOffset());
         Sentence lastSentence = selectByAddr(
                 jCas,
                 Sentence.class,
-                BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(jCas,
-                        firstSentence.getAddress(), windowSize));
+                getLastSentenceAddressInDisplayWindow(jCas,
+                        getAddr(firstSentence), windowSize));
 
         begin = firstSentence.getBegin();
         end = lastSentence.getEnd();
-        sentenceNumber = BratAjaxCasUtil.getFirstSentenceNumber(jCas, firstSentence.getAddress());
+        sentenceNumber = getFirstSentenceNumber(jCas, getAddr(firstSentence));
         segmentAdress.put(username, new HashMap<Integer, Integer>());
 
         for (Sentence sentence : selectCovered(jCas, Sentence.class, begin, end)) {
@@ -336,7 +339,7 @@ public class CurationBuilder
             segmentBeginEnd.put(sentence.getBegin(), sentence.getEnd());
             segmentText.put(sentence.getBegin(), sentence.getCoveredText().toString());
             segmentNumber.put(sentence.getBegin(), sentenceNumber);
-            segmentAdress.get(username).put(sentence.getBegin(), sentence.getAddress());
+            segmentAdress.get(username).put(sentence.getBegin(), getAddr(sentence));
         }
     }
 

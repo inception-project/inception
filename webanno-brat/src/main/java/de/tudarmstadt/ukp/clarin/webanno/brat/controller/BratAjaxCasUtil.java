@@ -23,6 +23,7 @@ import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.CAS;
@@ -30,6 +31,7 @@ import org.apache.uima.cas.FSIterator;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
+import org.apache.uima.cas.impl.CASImpl;
 import org.apache.uima.cas.impl.FeatureStructureImpl;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.cas.text.AnnotationIndex;
@@ -121,7 +123,7 @@ public class BratAjaxCasUtil
 
     public static int getAddr(FeatureStructure aFS)
     {
-        return ((FeatureStructureImpl) aFS).getAddress();
+        return ((CASImpl) aFS.getCAS()).ll_getFSRef(aFS);
     }
     
     public static AnnotationFS selectByAddr(JCas aJCas, int aAddress)
@@ -248,7 +250,7 @@ public class BratAjaxCasUtil
         int firstSentenceAddress = -1;
 
         for (Sentence selectedSentence : select(aJcas, Sentence.class)) {
-            firstSentenceAddress = selectedSentence.getAddress();
+            firstSentenceAddress = getAddr(selectedSentence);
             break;
         }
         return firstSentenceAddress;
@@ -259,7 +261,7 @@ public class BratAjaxCasUtil
         int lastSentenceAddress = -1;
 
         for (Sentence selectedSentence : select(aJcas, Sentence.class)) {
-            lastSentenceAddress = selectedSentence.getAddress();
+            lastSentenceAddress = getAddr(selectedSentence);
         }
         return lastSentenceAddress;
     }
@@ -311,7 +313,7 @@ public class BratAjaxCasUtil
             count ++;
         }
         
-        return s.getAddress();
+        return getAddr(s);
     }
 
     /**
@@ -385,7 +387,7 @@ public class BratAjaxCasUtil
             count++;
         }
         
-        return s.getAddress();
+        return getAddr(s);
     }
 
     /**
@@ -492,7 +494,7 @@ public class BratAjaxCasUtil
         int j = 0;
         for (Sentence sentence : select(aJcas, Sentence.class)) {
             if (j % aWindowSize == 0) {
-                beginningAddresses.add(sentence.getAddress());
+                beginningAddresses.add(getAddr(sentence));
             }
             j++;
         }
@@ -513,7 +515,7 @@ public class BratAjaxCasUtil
     {
         int sentenceNumber = 0;
         for (Sentence sentence : select(aJcas, Sentence.class)) {
-            if (sentence.getAddress() == aSentenceAddress) {
+            if (getAddr(sentence) == aSentenceAddress) {
                 break;
             }
             sentenceNumber++;
@@ -556,10 +558,10 @@ public class BratAjaxCasUtil
         }
         for (Sentence sentence : select(aJcas, Sentence.class)) {
             if (i == aSentenceNumber) {
-                address = sentence.getAddress();
+                address = getAddr(sentence);
                 break;
             }
-            address = sentence.getAddress();
+            address = getAddr(sentence);
             i++;
         }
         if (aSentenceNumber > i) {

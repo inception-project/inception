@@ -17,6 +17,14 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getFeatureFS;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.isSameSentence;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectSentenceAt;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.setFeature;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.setFeatureFS;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
@@ -147,15 +155,15 @@ public class ArcAdapter
             ColoringStrategy aColoringStrategy)
     {
         // The first sentence address in the display window!
-        Sentence firstSentence = BratAjaxCasUtil.selectSentenceAt(aJcas,
+        Sentence firstSentence = selectSentenceAt(aJcas,
                 aBratAnnotatorModel.getSentenceBeginOffset(),
                 aBratAnnotatorModel.getSentenceEndOffset());
 
-        int lastAddressInPage = BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(aJcas,
-                firstSentence.getAddress(), aBratAnnotatorModel.getWindowSize());
+        int lastAddressInPage = getLastSentenceAddressInDisplayWindow(aJcas,
+                getAddr(firstSentence), aBratAnnotatorModel.getWindowSize());
 
         // the last sentence address in the display window
-        Sentence lastSentenceInPage = (Sentence) BratAjaxCasUtil.selectByAddr(aJcas,
+        Sentence lastSentenceInPage = (Sentence) selectByAddr(aJcas,
                 FeatureStructure.class, lastAddressInPage);
 
         Type type = getType(aJcas.getCas(), annotationTypeName);
@@ -185,7 +193,7 @@ public class ArcAdapter
             String bratTypeName = TypeUtil.getBratTypeName(this);
             String color = aColoringStrategy.getColor(fs, bratLabelText);
 
-            aResponse.addRelation(new Relation(((FeatureStructureImpl) fs).getAddress(),
+            aResponse.addRelation(new Relation(getAddr(fs),
                     bratTypeName, argumentList, bratLabelText, color));
         }
     }
@@ -213,18 +221,18 @@ public class ArcAdapter
             JCas aJCas, BratAnnotatorModel aBratAnnotatorModel, AnnotationFeature aFeature, Object aLabelValue)
         throws BratAnnotationException
     {
-        Sentence sentence = BratAjaxCasUtil.selectSentenceAt(aJCas,
+        Sentence sentence = selectSentenceAt(aJCas,
                 aBratAnnotatorModel.getSentenceBeginOffset(),
                 aBratAnnotatorModel.getSentenceEndOffset());
 
         int beginOffset = sentence.getBegin();
-        int endOffset = BratAjaxCasUtil.selectByAddr(
+        int endOffset = selectByAddr(
                 aJCas,
                 Sentence.class,
-                BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(aJCas, sentence.getAddress(),
+                getLastSentenceAddressInDisplayWindow(aJCas, getAddr(sentence),
                         aBratAnnotatorModel.getWindowSize())).getEnd();
         if (crossMultipleSentence
-                || BratAjaxCasUtil.isSameSentence(aJCas, aOriginFs.getBegin(), aTargetFs.getEnd())) {
+                || isSameSentence(aJCas, aOriginFs.getBegin(), aTargetFs.getEnd())) {
             return updateCas(aJCas, beginOffset, endOffset, aOriginFs, aTargetFs, aLabelValue,
                     aFeature);
         }
@@ -275,8 +283,8 @@ public class ArcAdapter
                         aTargetFs) && (aValue == null || !aValue.equals(WebAnnoConst.ROOT))) {
 
                     if (!allowStacking) {
-                        BratAjaxCasUtil.setFeature(fs, aFeature, aValue);
-                        return ((FeatureStructureImpl) fs).getAddress();
+                        setFeature(fs, aFeature, aValue);
+                        return getAddr(fs);
                     }
                 }
             }
@@ -311,28 +319,28 @@ public class ArcAdapter
             // position of the last token.
             newAnnotation.setFeatureValue(dependentFeature, dependentFs);
             newAnnotation.setFeatureValue(governorFeature, governorFs);
-            BratAjaxCasUtil.setFeature(newAnnotation, aFeature, aValue);
+            setFeature(newAnnotation, aFeature, aValue);
 
             // BEGIN HACK - ISSUE 953 - Special treatment for ROOT in DKPro Core dependency layer
             // If the dependency type is set to "ROOT" the create a loop arc
             if (aFeature != null) {
                 if (Dependency.class.getName().equals(layer.getName())
                         && "DependencyType".equals(aFeature.getName()) && "ROOT".equals(aValue)) {
-                    FeatureStructure source = BratAjaxCasUtil.getFeatureFS(newAnnotation,
+                    FeatureStructure source = getFeatureFS(newAnnotation,
                             sourceFeatureName);
-                    BratAjaxCasUtil.setFeatureFS(newAnnotation, targetFeatureName, source);
+                    setFeatureFS(newAnnotation, targetFeatureName, source);
                 }
             }
             // END HACK - ISSUE 953 - Special treatment for ROOT in DKPro Core dependency layer
 
             aJCas.addFsToIndexes(newAnnotation);
-            return ((FeatureStructureImpl) newAnnotation).getAddress();
+            return getAddr(newAnnotation);
     }
 
     @Override
     public void delete(JCas aJCas, int aAddress)
     {
-        FeatureStructure fs = BratAjaxCasUtil.selectByAddr(aJCas, FeatureStructure.class, aAddress);
+        FeatureStructure fs = selectByAddr(aJCas, FeatureStructure.class, aAddress);
         aJCas.removeFsFromIndexes(fs);
     }
 
@@ -353,26 +361,22 @@ public class ArcAdapter
             if (attacheFeatureName != null) {
                 FeatureStructure dependentFs = fs.getFeatureValue(targetFeature).getFeatureValue(
                         arcSpanFeature);
-                if (((FeatureStructureImpl) afs).getAddress() == ((FeatureStructureImpl) dependentFs)
-                        .getAddress()) {
+                if (getAddr(afs) == getAddr(dependentFs)) {
                     fsToDelete.add(fs);
                 }
                 FeatureStructure governorFs = fs.getFeatureValue(sourceFeature).getFeatureValue(
                         arcSpanFeature);
-                if (((FeatureStructureImpl) afs).getAddress() == ((FeatureStructureImpl) governorFs)
-                        .getAddress()) {
+                if (getAddr(afs) == getAddr(governorFs)) {
                     fsToDelete.add(fs);
                 }
             }
             else {
                 FeatureStructure dependentFs = fs.getFeatureValue(targetFeature);
-                if (((FeatureStructureImpl) afs).getAddress() == ((FeatureStructureImpl) dependentFs)
-                        .getAddress()) {
+                if (getAddr(afs) == getAddr(dependentFs)) {
                     fsToDelete.add(fs);
                 }
                 FeatureStructure governorFs = fs.getFeatureValue(sourceFeature);
-                if (((FeatureStructureImpl) afs).getAddress() == ((FeatureStructureImpl) governorFs)
-                        .getAddress()) {
+                if (getAddr(afs) == getAddr(governorFs)) {
                     fsToDelete.add(fs);
                 }
             }
@@ -380,7 +384,6 @@ public class ArcAdapter
         for (AnnotationFS fs : fsToDelete) {
             aJCas.removeFsFromIndexes(fs);
         }
-
     }
 
     /**
@@ -390,8 +393,8 @@ public class ArcAdapter
      */
     private List<Argument> getArgument(FeatureStructure aGovernorFs, FeatureStructure aDependentFs)
     {
-        return asList(new Argument("Arg1", ((FeatureStructureImpl) aGovernorFs).getAddress()),
-                new Argument("Arg2", ((FeatureStructureImpl) aDependentFs).getAddress()));
+        return asList(new Argument("Arg1", getAddr(aGovernorFs)), new Argument("Arg2",
+                getAddr(aDependentFs)));
     }
 
     private boolean isDuplicate(AnnotationFS aAnnotationFSOldOrigin,
@@ -506,15 +509,15 @@ public class ArcAdapter
     @Override
     public void updateFeature(JCas aJcas, AnnotationFeature aFeature, int aAddress, Object aValue)
     {
-        FeatureStructure fs = BratAjaxCasUtil.selectByAddr(aJcas, FeatureStructure.class, aAddress);
-        BratAjaxCasUtil.setFeature(fs, aFeature, aValue);
+        FeatureStructure fs = selectByAddr(aJcas, FeatureStructure.class, aAddress);
+        setFeature(fs, aFeature, aValue);
 
         // BEGIN HACK - ISSUE 953 - Special treatment for ROOT in DKPro Core dependency layer
         // If the dependency type is set to "ROOT" the create a loop arc
         if (Dependency.class.getName().equals(layer.getName())
                 && "DependencyType".equals(aFeature.getName()) && "ROOT".equals(aValue)) {
-            FeatureStructure source = BratAjaxCasUtil.getFeatureFS(fs, sourceFeatureName);
-            BratAjaxCasUtil.setFeatureFS(fs, targetFeatureName, source);
+            FeatureStructure source = getFeatureFS(fs, sourceFeatureName);
+            setFeatureFS(fs, targetFeatureName, source);
         }
         // END HACK - ISSUE 953 - Special treatment for ROOT in DKPro Core dependency layer
     }

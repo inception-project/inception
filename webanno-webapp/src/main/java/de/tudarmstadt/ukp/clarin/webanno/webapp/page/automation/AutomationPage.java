@@ -17,7 +17,14 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.webapp.page.automation;
 
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getFirstSentenceAddress;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getFirstSentenceNumber;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getNextPageFirstSentenceAddress;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getNumberOfPages;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getSentenceAddress;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectSentenceAt;
 import static org.apache.uima.fit.util.JCasUtil.selectFollowing;
 
 import java.io.FileNotFoundException;
@@ -349,7 +356,7 @@ public class AutomationPage
                                         .getCorrectionDocumentContent(bratAnnotatorModel
                                                 .getDocument());
 
-                                totalNumberOfSentence = BratAjaxCasUtil.getNumberOfPages(mergeJCas);
+                                totalNumberOfSentence = getNumberOfPages(mergeJCas);
 
                                 // If only one page, start displaying from sentence 1
                                 /*
@@ -357,10 +364,10 @@ public class AutomationPage
                                  * bratAnnotatorModel.setSentenceAddress(bratAnnotatorModel
                                  * .getFirstSentenceAddress()); }
                                  */
-                                int address = BratAjaxCasUtil.selectSentenceAt(mergeJCas,
+                                int address = getAddr(selectSentenceAt(mergeJCas,
                                         bratAnnotatorModel.getSentenceBeginOffset(),
-                                        bratAnnotatorModel.getSentenceEndOffset()).getAddress();
-                                sentenceNumber = BratAjaxCasUtil.getFirstSentenceNumber(mergeJCas,
+                                        bratAnnotatorModel.getSentenceEndOffset()));
+                                sentenceNumber = getFirstSentenceNumber(mergeJCas,
                                         address);
                                 int firstSentenceNumber = sentenceNumber + 1;
                                 int lastSentenceNumber;
@@ -568,7 +575,7 @@ public class AutomationPage
                 try {
                     mergeJCas = repository.getCorrectionDocumentContent(bratAnnotatorModel
                             .getDocument());
-                    gotoPageAddress = BratAjaxCasUtil.getSentenceAddress(mergeJCas,
+                    gotoPageAddress = getSentenceAddress(mergeJCas,
                             gotoPageTextField.getModelObject());
                 }
                 catch (UIMAException e) {
@@ -827,10 +834,10 @@ public class AutomationPage
                         aTarget.addChildren(getPage(), FeedbackPanel.class);
                         mergeJCas = repository.getCorrectionDocumentContent(bratAnnotatorModel
                                 .getDocument());
-                        int address = BratAjaxCasUtil.selectSentenceAt(mergeJCas,
+                        int address = getAddr(selectSentenceAt(mergeJCas,
                                 bratAnnotatorModel.getSentenceBeginOffset(),
-                                bratAnnotatorModel.getSentenceEndOffset()).getAddress();
-                        int nextSentenceAddress = BratAjaxCasUtil.getNextPageFirstSentenceAddress(
+                                bratAnnotatorModel.getSentenceEndOffset()));
+                        int nextSentenceAddress = getNextPageFirstSentenceAddress(
                                 mergeJCas, address, bratAnnotatorModel.getWindowSize());
                         if (address != nextSentenceAddress) {
                             bratAnnotatorModel.setSentenceAddress(nextSentenceAddress);
@@ -946,10 +953,10 @@ public class AutomationPage
                         mergeJCas = repository.getCorrectionDocumentContent(bratAnnotatorModel
                                 .getDocument());
 
-                        int address = BratAjaxCasUtil.selectSentenceAt(mergeJCas,
+                        int address = getAddr(selectSentenceAt(mergeJCas,
                                 bratAnnotatorModel.getSentenceBeginOffset(),
-                                bratAnnotatorModel.getSentenceEndOffset()).getAddress();
-                        int firstAddress = BratAjaxCasUtil.getFirstSentenceAddress(mergeJCas);
+                                bratAnnotatorModel.getSentenceEndOffset()));
+                        int firstAddress = getFirstSentenceAddress(mergeJCas);
 
                         if (firstAddress != address) {
                             bratAnnotatorModel.setSentenceAddress(firstAddress);
@@ -1153,9 +1160,9 @@ public class AutomationPage
         JCas jCas = repository.readJCas(bratAnnotatorModel.getDocument(),
                 bratAnnotatorModel.getProject(), bratAnnotatorModel.getUser());
 
-        final int sentenceAddress = BratAjaxCasUtil.selectSentenceAt(jCas,
+        final int sentenceAddress = getAddr(selectSentenceAt(jCas,
                 bratAnnotatorModel.getSentenceBeginOffset(),
-                bratAnnotatorModel.getSentenceEndOffset()).getAddress();
+                bratAnnotatorModel.getSentenceEndOffset()));
 
         final Sentence sentence = selectByAddr(jCas, Sentence.class, sentenceAddress);
         List<Sentence> followingSentences = selectFollowing(jCas, Sentence.class, sentence,
@@ -1190,9 +1197,9 @@ public class AutomationPage
             error(e.getMessage());
         }
 
-        gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(correctionDocument,
+        gotoPageTextField.setModelObject(getFirstSentenceNumber(correctionDocument,
                 bratAnnotatorModel.getSentenceAddress()) + 1);
-        gotoPageAddress = BratAjaxCasUtil.getSentenceAddress(correctionDocument,
+        gotoPageAddress = getSentenceAddress(correctionDocument,
                 gotoPageTextField.getModelObject());
 
         target.add(gotoPageTextField);

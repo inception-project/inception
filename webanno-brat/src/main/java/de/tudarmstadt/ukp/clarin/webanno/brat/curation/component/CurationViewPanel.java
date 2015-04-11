@@ -17,7 +17,7 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.curation.component;
 
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.*;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
 
 import java.io.IOException;
@@ -293,16 +293,16 @@ public class CurationViewPanel extends WebMarkupContainer {
                 aBratAnnotatorModel.getUser(), aMergeJCas);
 
         // update timestamp
-        int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(clickedJCas,
+        int sentenceNumber = getSentenceNumber(clickedJCas,
                 fsClicked.getBegin());
         aBratAnnotatorModel.getDocument().setSentenceAccessed(sentenceNumber);
         repository.updateTimeStamp(aBratAnnotatorModel.getDocument(),
                 aBratAnnotatorModel.getUser(), aBratAnnotatorModel.getMode());
 
         if (aBratAnnotatorModel.isScrollPage()) {
-            int address = BratAjaxCasUtil.selectSentenceAt(clickedJCas,
+            int address = getAddr(selectSentenceAt(clickedJCas,
                     aBratAnnotatorModel.getSentenceBeginOffset(),
-                    aBratAnnotatorModel.getSentenceEndOffset()).getAddress();
+                    aBratAnnotatorModel.getSentenceEndOffset()));
             aBratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil
                     .getSentenceBeginAddress(clickedJCas, address,
                             fsClicked.getBegin(),
@@ -376,11 +376,11 @@ public class CurationViewPanel extends WebMarkupContainer {
         AnnotationFS originFsClicked = selectByAddr(clickedJCas, addressOrigin);
         AnnotationFS targetFsClicked = selectByAddr(clickedJCas, addressTarget);
 
-        AnnotationFS originFs = BratAjaxCasUtil.selectSingleFsAt(aJcas,
+        AnnotationFS originFs = selectSingleFsAt(aJcas,
                 originFsClicked.getType(), originFsClicked.getBegin(),
                 originFsClicked.getEnd());
 
-        AnnotationFS targetFs = BratAjaxCasUtil.selectSingleFsAt(aJcas,
+        AnnotationFS targetFs = selectSingleFsAt(aJcas,
                 targetFsClicked.getType(), targetFsClicked.getBegin(),
                 targetFsClicked.getEnd());
         try {
@@ -417,7 +417,7 @@ public class CurationViewPanel extends WebMarkupContainer {
                     .getBratAnnotatorModel().getUser(), aJcas);
 
             // update timestamp
-            int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(clickedJCas,
+            int sentenceNumber = getSentenceNumber(clickedJCas,
                     originFs.getBegin());
             aCurationUserSegment.getBratAnnotatorModel().getDocument()
                     .setSentenceAccessed(sentenceNumber);
@@ -430,14 +430,14 @@ public class CurationViewPanel extends WebMarkupContainer {
         }
 
         if (aCurationUserSegment.getBratAnnotatorModel().isScrollPage()) {
-            int address = BratAjaxCasUtil.selectSentenceAt(
+            int address = getAddr(selectSentenceAt(
                     aJcas,
                     aCurationUserSegment.getBratAnnotatorModel()
                             .getSentenceBeginOffset(),
                     aCurationUserSegment.getBratAnnotatorModel()
-                            .getSentenceEndOffset()).getAddress();
+                            .getSentenceEndOffset()));
             aCurationUserSegment.getBratAnnotatorModel().setSentenceAddress(
-                    BratAjaxCasUtil.getSentenceBeginAddress(aJcas, address,
+                    getSentenceBeginAddress(aJcas, address,
                             originFs.getBegin(), aCurationUserSegment
                                     .getBratAnnotatorModel().getProject(),
                             aCurationUserSegment.getBratAnnotatorModel()

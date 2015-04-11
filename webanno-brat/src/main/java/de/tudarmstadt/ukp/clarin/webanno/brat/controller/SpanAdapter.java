@@ -17,7 +17,7 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.*;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getFeature;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getFirstSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
@@ -187,7 +187,7 @@ public class SpanAdapter
                 aBratAnnotatorModel.getSentenceEndOffset());
 
         int lastAddressInPage = getLastSentenceAddressInDisplayWindow(aJcas,
-                firstSentence.getAddress(), aBratAnnotatorModel.getWindowSize());
+                getAddr(firstSentence), aBratAnnotatorModel.getWindowSize());
 
         // the last sentence address in the display window
         Sentence lastSentenceInPage;
@@ -284,8 +284,8 @@ public class SpanAdapter
      */
     private List<Argument> getArgument(FeatureStructure aGovernorFs, FeatureStructure aDependentFs)
     {
-        return asList(new Argument("Arg1", ((FeatureStructureImpl) aGovernorFs).getAddress()),
-                new Argument("Arg2", ((FeatureStructureImpl) aDependentFs).getAddress()));
+        return asList(new Argument("Arg1", getAddr(aGovernorFs)), new Argument("Arg2",
+                getAddr(aDependentFs)));
     }
 
     public static void renderTokenAndSentence(JCas aJcas, GetDocumentResponse aResponse,
@@ -297,7 +297,7 @@ public class SpanAdapter
                 aBratAnnotatorModel.getSentenceEndOffset());
 
         int lastAddressInPage = getLastSentenceAddressInDisplayWindow(aJcas,
-                firstSentence.getAddress(), aBratAnnotatorModel.getWindowSize());
+                getAddr(firstSentence), aBratAnnotatorModel.getWindowSize());
 
         // the last sentence address in the display window
         Sentence lastSentenceInPage;
@@ -309,8 +309,7 @@ public class SpanAdapter
                     FeatureStructure.class, lastAddressInPage);
         }
 
-        int sentenceNumber = getFirstSentenceNumber(aJcas,
-                firstSentence.getAddress());
+        int sentenceNumber = getFirstSentenceNumber(aJcas, getAddr(firstSentence));
         aResponse.setSentenceNumberOffset(sentenceNumber);
 
         int aFirstSentenceOffset = firstSentence.getBegin();
@@ -393,7 +392,7 @@ public class SpanAdapter
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
                 if (!allowStacking) {
                     setFeature(fs, aFeature, aValue);
-                    return ((FeatureStructureImpl) fs).getAddress();
+                    return getAddr(fs);
                 }
             }
         }
@@ -414,7 +413,7 @@ public class SpanAdapter
                     .setFeatureValue(attachFeature, newAnnotation);
         }
         aCas.addFsToIndexes(newAnnotation);
-        return ((FeatureStructureImpl) newAnnotation).getAddress();
+        return getAddr(newAnnotation);
     }
 
     @Override
@@ -445,7 +444,7 @@ public class SpanAdapter
 
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
                 if (ObjectUtils.equals(getFeature(fs, aFeature), aValue)) {
-                    delete(aJCas, ((FeatureStructureImpl) fs).getAddress());
+                    delete(aJCas, getAddr(fs));
                 }
             }
         }
@@ -526,14 +525,14 @@ public class SpanAdapter
             Feature labelFeature = fs.getType().getFeatureByBaseName(aFeature.getName());
             for (Token token : selectCovered(sentence.getCAS().getJCas(), Token.class,
                     fs.getBegin(), fs.getEnd())) {
-                if (multAnno.get(token.getAddress()) == null) {
+                if (multAnno.get(getAddr(token)) == null) {
                     if (isBegin) {
-                        multAnno.put(token.getAddress(),
+                        multAnno.put(getAddr(token),
                                 "B-" + fs.getFeatureValueAsString(labelFeature));
                         isBegin = false;
                     }
                     else {
-                        multAnno.put(token.getAddress(),
+                        multAnno.put(getAddr(token),
                                 "I-" + fs.getFeatureValueAsString(labelFeature));
                     }
                 }

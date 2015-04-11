@@ -17,7 +17,9 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.util;
 
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectSentenceAt;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
 
 import java.io.IOException;
@@ -48,7 +50,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
@@ -284,7 +285,7 @@ public class CuratorUtil
                     @Override
                     public String getColor(FeatureStructure aFS, String aLabel)
                     {
-                        int address = BratAjaxCasUtil.getAddr(aFS);
+                        int address = getAddr(aFS);
                         AnnotationSelection annotationSelection = annotationSelectionByAddress
                                 .get(address);
                         AnnotationState newState = null;
@@ -330,13 +331,13 @@ public class CuratorUtil
     private static int getSentenceAddress(BratAnnotatorModel aBratAnnotatorModel, JCas jCas,
             JCas userJCas)
     {
-        int sentenceAddress = BratAjaxCasUtil.selectSentenceAt(userJCas,
+        int sentenceAddress = getAddr(selectSentenceAt(userJCas,
                 aBratAnnotatorModel.getSentenceBeginOffset(),
-                aBratAnnotatorModel.getSentenceEndOffset()).getAddress();
+                aBratAnnotatorModel.getSentenceEndOffset()));
         Sentence sentence = selectByAddr(userJCas, Sentence.class, sentenceAddress);
         List<Sentence> sentences = JCasUtil.selectCovered(jCas, Sentence.class,
                 sentence.getBegin(), sentence.getEnd());
-        return sentences.get(0).getAddress();
+        return getAddr(sentences.get(0));
     }
 
     private static int getLastSentenceAddress(BratAnnotatorModel aBratAnnotatorModel, JCas jCas,
@@ -346,7 +347,7 @@ public class CuratorUtil
                 aBratAnnotatorModel.getLastSentenceAddress());
         List<Sentence> sentences = JCasUtil.selectCovered(jCas, Sentence.class,
                 sentence.getBegin(), sentence.getEnd());
-        return sentences.get(0).getAddress();
+        return getAddr(sentences.get(0));
     }
 
     private static String render(JCas aJcas, AnnotationService aAnnotationService,

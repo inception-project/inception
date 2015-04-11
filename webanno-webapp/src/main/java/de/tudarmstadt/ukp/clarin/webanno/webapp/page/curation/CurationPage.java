@@ -17,7 +17,14 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation;
 
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getFirstSentenceAddress;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getFirstSentenceNumber;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getNextPageFirstSentenceAddress;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getNumberOfPages;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getSentenceAddress;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectSentenceAt;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -150,7 +157,7 @@ public class CurationPage
                                         .getCurationDocumentContent(bratAnnotatorModel
                                                 .getDocument());
 
-                                totalNumberOfSentence = BratAjaxCasUtil.getNumberOfPages(mergeJCas);
+                                totalNumberOfSentence = getNumberOfPages(mergeJCas);
 
                                 // If only one page, start displaying from
                                 // sentence 1
@@ -158,7 +165,7 @@ public class CurationPage
                                     bratAnnotatorModel.setSentenceAddress(bratAnnotatorModel
                                             .getFirstSentenceAddress());
                                 }
-                                sentenceNumber = BratAjaxCasUtil.getFirstSentenceNumber(mergeJCas,
+                                sentenceNumber = getFirstSentenceNumber(mergeJCas,
                                         bratAnnotatorModel.getSentenceAddress());
                                 int firstSentenceNumber = sentenceNumber + 1;
                                 int lastSentenceNumber;
@@ -473,7 +480,7 @@ public class CurationPage
                     aTarget.add(getFeedbackPanel());
                     mergeJCas = repository.getCurationDocumentContent(bratAnnotatorModel
                             .getDocument());
-                    gotoPageAddress = BratAjaxCasUtil.getSentenceAddress(mergeJCas,
+                    gotoPageAddress = getSentenceAddress(mergeJCas,
                             gotoPageTextField.getModelObject());
 
                 }
@@ -694,7 +701,7 @@ public class CurationPage
                     try {
                         mergeJCas = repository.getCurationDocumentContent(bratAnnotatorModel
                                 .getDocument());
-                        int nextSentenceAddress = BratAjaxCasUtil.getNextPageFirstSentenceAddress(
+                        int nextSentenceAddress = getNextPageFirstSentenceAddress(
                                 mergeJCas, bratAnnotatorModel.getSentenceAddress(),
                                 bratAnnotatorModel.getWindowSize());
                         if (bratAnnotatorModel.getSentenceAddress() != nextSentenceAddress) {
@@ -814,10 +821,10 @@ public class CurationPage
                         mergeJCas = repository.getCurationDocumentContent(bratAnnotatorModel
                                 .getDocument());
 
-                        int address = BratAjaxCasUtil.selectSentenceAt(mergeJCas,
+                        int address = getAddr(selectSentenceAt(mergeJCas,
                                 bratAnnotatorModel.getSentenceBeginOffset(),
-                                bratAnnotatorModel.getSentenceEndOffset()).getAddress();
-                        int firstAddress = BratAjaxCasUtil.getFirstSentenceAddress(mergeJCas);
+                                bratAnnotatorModel.getSentenceEndOffset()));
+                        int firstAddress = getFirstSentenceAddress(mergeJCas);
 
                         if (firstAddress != address) {
                             bratAnnotatorModel.setSentenceAddress(firstAddress);
@@ -961,17 +968,17 @@ public class CurationPage
                     error(e.getMessage());
                 }
                 aTarget.add(numberOfPages);
-                gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(mergeJCas,
+                gotoPageTextField.setModelObject(getFirstSentenceNumber(mergeJCas,
                         bratAnnotatorModel.getSentenceAddress()) + 1);
-                gotoPageAddress = BratAjaxCasUtil.getSentenceAddress(mergeJCas,
+                gotoPageAddress = getSentenceAddress(mergeJCas,
                         gotoPageTextField.getModelObject());
                 aTarget.add(gotoPageTextField);
             }
         };
 
-        gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(mergeJCas,
+        gotoPageTextField.setModelObject(getFirstSentenceNumber(mergeJCas,
                 bratAnnotatorModel.getSentenceAddress()) + 1);
-        gotoPageAddress = BratAjaxCasUtil.getSentenceAddress(mergeJCas,
+        gotoPageAddress = getSentenceAddress(mergeJCas,
                 gotoPageTextField.getModelObject());
         curationPanel.setOutputMarkupId(true);
         aTarget.add(gotoPageTextField);
