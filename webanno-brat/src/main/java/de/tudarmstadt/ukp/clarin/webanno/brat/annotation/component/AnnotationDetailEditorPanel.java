@@ -311,7 +311,7 @@ public class AnnotationDetailEditorPanel
         }
     }
 
-    private void actionAnnotate(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
+    public void actionAnnotate(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
         if (aBModel.getSelectedAnnotationLayer() == null) {
@@ -580,7 +580,8 @@ public class AnnotationDetailEditorPanel
     }
 
     @SuppressWarnings("unchecked")
-    public void setSlot(JCas aJCas, final BratAnnotatorModel aBModel, int aAnnotationId)
+    public void setSlot(AjaxRequestTarget aTarget, JCas aJCas, final BratAnnotatorModel aBModel,
+            int aAnnotationId)
     {
         // Set an armed slot
         if (!aBModel.isRelationAnno() && aBModel.isSlotArmed()) {
@@ -590,7 +591,21 @@ public class AnnotationDetailEditorPanel
             link.targetAddr = aAnnotationId;
             link.label = selectByAddr(aJCas, aAnnotationId).getCoveredText();
             aBModel.clearArmedSlot();
-            return;
+        }
+        
+        // Auto-commit if working on existing annotation
+        if (annotationFeatureForm.getModelObject().getSelectedAnnotationId() != -1) {
+            try {
+                actionAnnotate(aTarget, annotationFeatureForm.getModelObject());
+            }
+            catch (BratAnnotationException e) {
+                error(e.getMessage());
+                LOG.error(ExceptionUtils.getRootCauseMessage(e), e);
+            }
+            catch (Exception e) {
+                error(ExceptionUtils.getRootCauseMessage(e));
+                LOG.error(ExceptionUtils.getRootCauseMessage(e), e);
+            }
         }
     }
 
@@ -650,8 +665,8 @@ public class AnnotationDetailEditorPanel
                     continue;
                 }
 
-                featureModels.add(new FeatureModel(aBModel, feature, aBModel
-                        .getRememberedSpanFeatures().get(feature)));
+                featureModels.add(new FeatureModel(feature, aBModel.getRememberedSpanFeatures()
+                        .get(feature)));
             }
         }
         // Existing (span) annotation was selected
@@ -677,7 +692,7 @@ public class AnnotationDetailEditorPanel
                     continue;
                 }
 
-                featureModels.add(new FeatureModel(aBModel, feature, (Serializable) BratAjaxCasUtil
+                featureModels.add(new FeatureModel(feature, (Serializable) BratAjaxCasUtil
                         .getFeature(annoFs, feature)));
             }
         }
@@ -814,7 +829,8 @@ public class AnnotationDetailEditorPanel
             // the feature lost focus - but updating is for every component edited
             // LinkFeatureEditors must be excluded because the auto-update will break the ability
             // to add slots. Adding a slot is NOT an annotation action.
-            if (fm.bModel.getSelectedAnnotationId() != -1 && !(frag instanceof LinkFeatureEditor)) {
+            if (annotationFeatureForm.getModelObject().getSelectedAnnotationId() != -1
+                    && !(frag instanceof LinkFeatureEditor)) {
                 if (frag.isDropOrchoice()) {
                     updateFeature(fm, frag, "onchange");
                 }
@@ -839,7 +855,7 @@ public class AnnotationDetailEditorPanel
                 protected void onUpdate(AjaxRequestTarget aTarget)
                 {
                     try {
-                        actionAnnotate(aTarget, aFm.bModel);
+                        actionAnnotate(aTarget, annotationFeatureForm.getModelObject());
                     }
                     catch (BratAnnotationException e) {
                         error(e.getMessage());
@@ -849,7 +865,6 @@ public class AnnotationDetailEditorPanel
                         error(ExceptionUtils.getRootCauseMessage(e));
                         LOG.error(ExceptionUtils.getRootCauseMessage(e), e);
                     }
-
                 }
             });
         }
@@ -1149,6 +1164,21 @@ public class AnnotationDetailEditorPanel
                     model.clearArmedSlot();
 
                     aTarget.add(wmc);
+                    
+                    // Auto-commit if working on existing annotation
+                    if (annotationFeatureForm.getModelObject().getSelectedAnnotationId() != -1) {
+                        try {
+                            actionAnnotate(aTarget, annotationFeatureForm.getModelObject());
+                        }
+                        catch (BratAnnotationException e) {
+                            error(e.getMessage());
+                            LOG.error(ExceptionUtils.getRootCauseMessage(e), e);
+                        }
+                        catch (Exception e) {
+                            error(ExceptionUtils.getRootCauseMessage(e));
+                            LOG.error(ExceptionUtils.getRootCauseMessage(e), e);
+                        }
+                    }
                 }
             });
         }
@@ -1188,7 +1218,7 @@ public class AnnotationDetailEditorPanel
                     continue;
                 }
 
-                featureModels.add(new FeatureModel(aBModel, feature, (Serializable) BratAjaxCasUtil
+                featureModels.add(new FeatureModel(feature, (Serializable) BratAjaxCasUtil
                         .getFeature(aFS, feature)));
             }
         }
@@ -1200,7 +1230,7 @@ public class AnnotationDetailEditorPanel
                     continue;
                 }
 
-                featureModels.add(new FeatureModel(aBModel, feature, aBModel
+                featureModels.add(new FeatureModel(feature, aBModel
                         .getRememberedSpanFeatures().get(feature)));
             }
         }
@@ -1212,7 +1242,7 @@ public class AnnotationDetailEditorPanel
                     continue;
                 }
 
-                featureModels.add(new FeatureModel(aBModel, feature, aBModel
+                featureModels.add(new FeatureModel(feature, aBModel
                         .getRememberedArcFeatures().get(feature)));
             }
         }
@@ -1286,14 +1316,11 @@ public class AnnotationDetailEditorPanel
         private static final long serialVersionUID = 3512979848975446735L;
         public final AnnotationFeature feature;
         public Serializable value;
-        public BratAnnotatorModel bModel;
 
-        public FeatureModel(BratAnnotatorModel aBModel, AnnotationFeature aFeature,
-                Serializable aValue)
+        public FeatureModel(AnnotationFeature aFeature, Serializable aValue)
         {
             feature = aFeature;
             value = aValue;
-            bModel = aBModel;
 
             // Avoid having null here because otherwise we have to handle null in zillion places!
             if (value == null && MultiValueMode.ARRAY.equals(aFeature.getMultiValueMode())) {

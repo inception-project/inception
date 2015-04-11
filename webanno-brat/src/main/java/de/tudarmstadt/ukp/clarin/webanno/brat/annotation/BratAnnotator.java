@@ -55,6 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Argument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Offsets;
@@ -196,8 +197,8 @@ public class BratAnnotator
                         JCas jCas = getCas(getModelObject());
                         if (getModelObject().isSlotArmed()
                                 && !request.getParameterValue(PARAM_ID).isEmpty()) {
-                            annotationDetailEditorPanel.setSlot(jCas, getModelObject(), request
-                                    .getParameterValue(PARAM_ID).toInt());
+                            annotationDetailEditorPanel.setSlot(aTarget, jCas, getModelObject(),
+                                    request.getParameterValue(PARAM_ID).toInt());
                         }
                         else {
                             // Doing anything but filling an armed slot will unarm it
