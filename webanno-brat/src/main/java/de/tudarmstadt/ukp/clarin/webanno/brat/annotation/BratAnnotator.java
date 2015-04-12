@@ -351,7 +351,7 @@ public class BratAnnotator
                 }
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
                 annotationDetailEditorPanel.setAnnotationLayers(getModelObject());
-                aTarget.add(annotationDetailEditorPanel);
+               aTarget.add(annotationDetailEditorPanel);
             }
         };
 

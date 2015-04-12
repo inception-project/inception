@@ -17,11 +17,12 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component;
 
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getCurrentSentence;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getSentenceBeginAddress;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.*;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectSentenceAt;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
 
 import java.io.IOException;
@@ -121,9 +122,7 @@ public class AnnotationDetailEditorPanel
     private RefreshingView<FeatureModel> featureValues;
     private WebMarkupContainer wmc;
     private AjaxButton annotateButton;
-    @SuppressWarnings("unused")
     private AjaxSubmitLink deleteButton;
-    @SuppressWarnings("unused")
     private AjaxSubmitLink reverseButton;
 
     private List<AnnotationLayer> annotationLayers = new ArrayList<AnnotationLayer>();
@@ -150,19 +149,18 @@ public class AnnotationDetailEditorPanel
             super(id, new CompoundPropertyModel<BratAnnotatorModel>(aBModel));
 
             featureModels = new ArrayList<>();
-
-            selectedTextLabel = new Label("selectedText");
-            selectedTextLabel.setOutputMarkupId(true);
-            add(selectedTextLabel);
-
-            add(layers = new LayerSelector("selectedAnnotationLayer", annotationLayers));
-
             if (aBModel.getSelectedAnnotationId() == -1) {
 
             }
             else {
                 // FIXME where to load from?
             }
+
+            selectedTextLabel = new Label("selectedText");
+            selectedTextLabel.setOutputMarkupId(true);
+            add(selectedTextLabel);
+            // setAnnotationLayers(aBModel);
+            add(layers = new LayerSelector("selectedAnnotationLayer", annotationLayers));
 
             featureValues = new FeatureEditorPanel("featureValues");
 
@@ -228,14 +226,10 @@ public class AnnotationDetailEditorPanel
 
                     BratAnnotatorModel model = AnnotationFeatureForm.this.getModelObject();
 
-                    if (model.isRelationAnno()) {
-                        setEnabled(true);
-                    }
-                    else {
-                        setEnabled(model.getSelectedText() != null
-                                && !model.getSelectedText().equals("")
-                                && model.getSelectedAnnotationId() == -1);
-                    }
+                    setEnabled(model.getSelectedText() != null
+                            && !model.getSelectedText().equals("")
+                            && model.getSelectedAnnotationId() == -1);
+
                 }
             };
 
@@ -415,10 +409,8 @@ public class AnnotationDetailEditorPanel
 
         aBModel.setAnnotate(true);
         if (aBModel.getSelectedAnnotationId() != -1) {
-            String bratLabelText = TypeUtil
-                    .getBratLabelText(adapter,
-                            selectByAddr(jCas, aBModel.getSelectedAnnotationId()),
-                            features);
+            String bratLabelText = TypeUtil.getBratLabelText(adapter,
+                    selectByAddr(jCas, aBModel.getSelectedAnnotationId()), features);
             info(BratAnnotator.generateMessage(aBModel.getSelectedAnnotationLayer(), bratLabelText,
                     false));
         }
@@ -451,8 +443,8 @@ public class AnnotationDetailEditorPanel
                 continue;
             }
             if (tn.equals(attachTypeName)) {
-                Sentence thisSentence = getCurrentSentence(jCas,
-                        aBModel.getBeginOffset(), aBModel.getEndOffset());
+                Sentence thisSentence = getCurrentSentence(jCas, aBModel.getBeginOffset(),
+                        aBModel.getEndOffset());
                 ad.deleteBySpan(jCas, fs, thisSentence.getBegin(), thisSentence.getEnd());
                 break;
             }
@@ -462,8 +454,8 @@ public class AnnotationDetailEditorPanel
                 continue;
             }
             if (fn.equals(attachFeatureName)) {
-                Sentence thisSentence = getCurrentSentence(jCas,
-                        aBModel.getBeginOffset(), aBModel.getEndOffset());
+                Sentence thisSentence = getCurrentSentence(jCas, aBModel.getBeginOffset(),
+                        aBModel.getEndOffset());
                 ad.deleteBySpan(jCas, fs, thisSentence.getBegin(), thisSentence.getEnd());
                 break;
             }
@@ -498,7 +490,7 @@ public class AnnotationDetailEditorPanel
         aBModel.setSelectedAnnotationId(-1);
 
         setLayerAndFeatureModels(jCas, aBModel);
-        
+
         aTarget.add(wmc);
         aTarget.add(deleteButton);
         aTarget.add(reverseButton);
@@ -574,9 +566,8 @@ public class AnnotationDetailEditorPanel
     {
         int address = getAddr(selectSentenceAt(jCas, aBModel.getSentenceBeginOffset(),
                 aBModel.getSentenceEndOffset()));
-        aBModel.setSentenceAddress(getSentenceBeginAddress(jCas, address,
-                aBModel.getBeginOffset(), aBModel.getProject(), aBModel.getDocument(),
-                aBModel.getWindowSize()));
+        aBModel.setSentenceAddress(getSentenceBeginAddress(jCas, address, aBModel.getBeginOffset(),
+                aBModel.getProject(), aBModel.getDocument(), aBModel.getWindowSize()));
 
         Sentence sentence = selectByAddr(jCas, Sentence.class, aBModel.getSentenceAddress());
         aBModel.setSentenceBeginOffset(sentence.getBegin());
@@ -596,7 +587,7 @@ public class AnnotationDetailEditorPanel
             link.label = selectByAddr(aJCas, aAnnotationId).getCoveredText();
             aBModel.clearArmedSlot();
         }
-        
+
         // Auto-commit if working on existing annotation
         if (annotationFeatureForm.getModelObject().getSelectedAnnotationId() != -1) {
             try {
@@ -650,8 +641,7 @@ public class AnnotationDetailEditorPanel
 
             // populate feature value
             if (aBModel.getSelectedAnnotationId() != -1) {
-                AnnotationFS annoFs = selectByAddr(aJCas,
-                        aBModel.getSelectedAnnotationId());
+                AnnotationFS annoFs = selectByAddr(aJCas, aBModel.getSelectedAnnotationId());
 
                 populateFeatures(aBModel, annoFs);
             }
@@ -675,8 +665,7 @@ public class AnnotationDetailEditorPanel
         }
         // Existing (span) annotation was selected
         else if (aBModel.getSelectedAnnotationId() != -1) {
-            AnnotationFS annoFs = selectByAddr(aJCas,
-                    aBModel.getSelectedAnnotationId());
+            AnnotationFS annoFs = selectByAddr(aJCas, aBModel.getSelectedAnnotationId());
             String type = annoFs.getType().getName();
 
             if (type.endsWith(ChainAdapter.CHAIN)) {
@@ -700,9 +689,8 @@ public class AnnotationDetailEditorPanel
                         .getFeature(annoFs, feature)));
             }
         }
-        // No annotation possible
         else {
-            aBModel.setSelectedAnnotationLayer(new AnnotationLayer());
+            setInitSpanLayers(aBModel);
         }
     }
 
@@ -730,7 +718,7 @@ public class AnnotationDetailEditorPanel
 
     public void setAnnotationLayers(BratAnnotatorModel aBModel)
     {
-        loadSpanLayers(aBModel);
+        setInitSpanLayers(aBModel);
         if (annotationLayers.size() == 0) {
             aBModel.setSelectedAnnotationLayer(new AnnotationLayer());
         }
@@ -742,9 +730,28 @@ public class AnnotationDetailEditorPanel
                 aBModel.setSelectedAnnotationLayer(aBModel.getRememberedSpanLayer());
             }
         }
+        setInitSpanFeatures(aBModel);
     }
 
-    private void loadSpanLayers(BratAnnotatorModel aBModel)
+    private void setInitSpanFeatures(BratAnnotatorModel aBModel)
+    {
+        featureModels.clear();
+        for (AnnotationFeature feature : annotationService.listAnnotationFeature(aBModel
+                .getSelectedAnnotationLayer())) {
+            if (!feature.isEnabled() || isSuppressedFeature(aBModel, feature)) {
+                continue;
+            }
+            if (feature.getTagset() != null) {
+                featureModels.add(new FeatureModel(feature, annotationService
+                        .listTags(feature.getTagset()).get(0).getName()));
+            }
+            else {
+                featureModels.add(new FeatureModel(feature, null));
+            }
+        }
+    }
+
+    private void setInitSpanLayers(BratAnnotatorModel aBModel)
     {
         annotationLayers.clear();
         if (aBModel.isRelationAnno()) {
@@ -1168,7 +1175,7 @@ public class AnnotationDetailEditorPanel
                     model.clearArmedSlot();
 
                     aTarget.add(wmc);
-                    
+
                     // Auto-commit if working on existing annotation
                     if (annotationFeatureForm.getModelObject().getSelectedAnnotationId() != -1) {
                         try {
@@ -1234,8 +1241,8 @@ public class AnnotationDetailEditorPanel
                     continue;
                 }
 
-                featureModels.add(new FeatureModel(feature, aBModel
-                        .getRememberedSpanFeatures().get(feature)));
+                featureModels.add(new FeatureModel(feature, aBModel.getRememberedSpanFeatures()
+                        .get(feature)));
             }
         }
         else if (aBModel.isRelationAnno() && aBModel.getRememberedArcFeatures() != null) {
@@ -1246,8 +1253,8 @@ public class AnnotationDetailEditorPanel
                     continue;
                 }
 
-                featureModels.add(new FeatureModel(feature, aBModel
-                        .getRememberedArcFeatures().get(feature)));
+                featureModels.add(new FeatureModel(feature, aBModel.getRememberedArcFeatures().get(
+                        feature)));
             }
         }
     }
