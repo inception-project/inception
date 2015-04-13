@@ -726,7 +726,7 @@ public class RepositoryServiceDbData
     public JCas getAnnotationDocumentContent(AnnotationDocument aAnnotationDocument)
         throws IOException, UIMAException, ClassNotFoundException
     {
-        return getAnnotationContent(aAnnotationDocument.getDocument(),
+        return readCas(aAnnotationDocument.getDocument(),
                 aAnnotationDocument.getUser());
     }
 
@@ -1624,7 +1624,7 @@ public class RepositoryServiceDbData
     public JCas getCorrectionDocumentContent(SourceDocument aDocument)
         throws UIMAException, IOException, ClassNotFoundException
     {
-        return getAnnotationContent(aDocument, WebAnnoConst.CORRECTION_USER);
+        return readCas(aDocument, WebAnnoConst.CORRECTION_USER);
     }
 
     @Override
@@ -1632,7 +1632,7 @@ public class RepositoryServiceDbData
         throws UIMAException, IOException, ClassNotFoundException
     {
 
-        return getAnnotationContent(aDocument, WebAnnoConst.CURATION_USER);
+        return readCas(aDocument, WebAnnoConst.CURATION_USER);
     }
 
     /**
@@ -1811,7 +1811,7 @@ public class RepositoryServiceDbData
      * @param aUsername
      *            the {@link User} who annotates the {@link SourceDocument} or the CURATION_USER
      */
-    private JCas getAnnotationContent(SourceDocument aDocument, String aUsername)
+    private JCas readCas(SourceDocument aDocument, String aUsername)
         throws IOException
     {
         if (log.isDebugEnabled()) {
