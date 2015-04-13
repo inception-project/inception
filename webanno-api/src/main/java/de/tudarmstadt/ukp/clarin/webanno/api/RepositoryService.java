@@ -398,7 +398,7 @@ public interface RepositoryService
      * @throws IOException
      *             if an I/O error occurs.
      */
-    boolean existsAnnotationCas(SourceDocument sourceDocument, String username)
+    boolean existsCas(SourceDocument sourceDocument, String username)
         throws IOException;
 
     /**
@@ -409,7 +409,7 @@ public interface RepositoryService
      *            the source document.
      * @return if an automation document exists.
      */
-    boolean existsAutomatedDocument(SourceDocument sourceDocument);
+    boolean existsCorrectionCas(SourceDocument sourceDocument);
 
     /**
      * Exports an {@link AnnotationDocument } CAS Object as TCF/TXT/XMI... file formats.
@@ -452,7 +452,7 @@ public interface RepositoryService
      *            the username.
      * @return the serialized CAS file.
      */
-    File exportserializedCas(SourceDocument document, String user);
+    File getCasFile(SourceDocument document, String user);
 
     /**
      * Get an {@link AnnotationDocument} object from the database using the {@link SourceDocument}

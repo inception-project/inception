@@ -393,20 +393,15 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public boolean existsAnnotationCas(SourceDocument aSourceDocument, String aUsername)
+    public boolean existsCas(SourceDocument aSourceDocument, String aUsername)
         throws IOException
     {
-        if (new File(getAnnotationFolder(aSourceDocument), aUsername + ".ser").exists()) {
-            return true;
-        }
-        else {
-            return false;
-        }
+        return new File(getAnnotationFolder(aSourceDocument), aUsername + ".ser").exists();
     }
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public boolean existsAutomatedDocument(SourceDocument aSourceDocument)
+    public boolean existsCorrectionCas(SourceDocument aSourceDocument)
     {
 
         try {
@@ -586,7 +581,7 @@ public class RepositoryServiceDbData
         // Read file
         File serializedCasFile = new File(annotationFolder, serializedCasFileName);
         if (!serializedCasFile.exists()) {
-            throw new FileNotFoundException("Annotation file [" + serializedCasFileName
+            throw new FileNotFoundException("CAS file [" + serializedCasFileName
                     + "] not found in [" + annotationFolder + "]");
         }
         
@@ -684,7 +679,7 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public File exportserializedCas(SourceDocument aDocument, String aUser)
+    public File getCasFile(SourceDocument aDocument, String aUser)
     {
         File documentUri = new File(dir.getAbsolutePath() + PROJECT
                 + aDocument.getProject().getId() + DOCUMENT + aDocument.getId() + ANNOTATION);
@@ -1876,6 +1871,7 @@ public class RepositoryServiceDbData
     }
 
     @Override
+    @Deprecated
     public void upgradeCasAndSave(SourceDocument aDocument, Mode aMode, String aUsername)
         throws IOException
     {
@@ -1987,7 +1983,7 @@ public class RepositoryServiceDbData
         
         // Make sure we have a CAS
         JCas jcas;
-        if (!existsAnnotationCas(aDocument, aUser.getUsername())) {
+        if (!existsCas(aDocument, aUser.getUsername())) {
             // Initial conversion
             try {
                 jcas = convertSourceDocumentToCas(getSourceDocumentFile(aDocument),

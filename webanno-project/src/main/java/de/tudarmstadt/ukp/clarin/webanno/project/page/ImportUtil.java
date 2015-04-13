@@ -666,7 +666,7 @@ public class ImportUtil
                 fileName = fileName.replace(FilenameUtils.getName(fileName), "").replace("/", "");
                 de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument = aRepository
                         .getSourceDocument(aProject, fileName);
-                File annotationFilePath = aRepository.exportserializedCas(sourceDocument, username);
+                File annotationFilePath = aRepository.getCasFile(sourceDocument, username);
 
                 FileUtils.copyInputStreamToFile(zip.getInputStream(entry), annotationFilePath);
                 
@@ -706,7 +706,7 @@ public class ImportUtil
                 fileName = fileName.replace(FilenameUtils.getName(fileName), "").replace("/", "");
                 de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument = aRepository
                         .getSourceDocument(aProject, fileName);
-                File annotationFilePath = aRepository.exportserializedCas(sourceDocument, username);
+                File annotationFilePath = aRepository.getCasFile(sourceDocument, username);
 
                 FileUtils.copyInputStreamToFile(zip.getInputStream(entry), annotationFilePath);
                 

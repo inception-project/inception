@@ -1116,7 +1116,7 @@ public class AutomationPage
             jCas = repository.readAnnotationCas(bratAnnotatorModel.getDocument(), logedInUser);
             // This is the auto annotation, save it under CORRECTION_USER, Only if it is not created
             // by another annotater
-            if (!repository.existsAutomatedDocument(bratAnnotatorModel.getDocument())) {
+            if (!repository.existsCorrectionCas(bratAnnotatorModel.getDocument())) {
                 repository.writeCorrectionCas(jCas, bratAnnotatorModel.getDocument(),
                         logedInUser);
             }
@@ -1125,7 +1125,7 @@ public class AutomationPage
             jCas = repository.readAnnotationCas(bratAnnotatorModel.getDocument(), logedInUser);
             // This is the auto annotation, save it under CORRECTION_USER, Only if it is not created
             // by another annotater
-            if (!repository.existsAutomatedDocument(bratAnnotatorModel.getDocument())) {
+            if (!repository.existsCorrectionCas(bratAnnotatorModel.getDocument())) {
                 repository.writeCorrectionCas(jCas, bratAnnotatorModel.getDocument(),
                         logedInUser);
             }

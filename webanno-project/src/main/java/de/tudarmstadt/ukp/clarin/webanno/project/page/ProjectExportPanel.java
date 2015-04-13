@@ -201,7 +201,7 @@ public class ProjectExportPanel extends Panel {
             // If the curation document is exist (either finished or in progress
             if (sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)
                     || sourceDocument.getState().equals(SourceDocumentState.CURATION_IN_PROGRESS)) {
-                File curationCasFile = repository.exportserializedCas(sourceDocument,
+                File curationCasFile = repository.getCasFile(sourceDocument,
                         CURATION_USER);
                 if (curationCasFile.exists()) {
                     // Copy CAS - this is used when importing the project again
@@ -760,7 +760,7 @@ public class ProjectExportPanel extends Panel {
                         FileUtils.forceMkdir(annotationDocumentAsSerialisedCasDir);
                         FileUtils.forceMkdir(annotationDocumentDir);
 
-                        File annotationFileAsSerialisedCas = repository.exportserializedCas(
+                        File annotationFileAsSerialisedCas = repository.getCasFile(
                                 sourceDocument, annotationDocument.getUser());
 
                         File annotationFile = null;
@@ -786,7 +786,7 @@ public class ProjectExportPanel extends Panel {
                 // folder as CURATION_FOLDER
                 if (aModel.project.getMode().equals(Mode.AUTOMATION)
                         || aModel.project.getMode().equals(Mode.CORRECTION)) {
-                    File correctionCasFile = repository.exportserializedCas(sourceDocument,
+                    File correctionCasFile = repository.getCasFile(sourceDocument,
                             CORRECTION_USER);
                     if (correctionCasFile.exists()) {
                         // Copy CAS - this is used when importing the project again
