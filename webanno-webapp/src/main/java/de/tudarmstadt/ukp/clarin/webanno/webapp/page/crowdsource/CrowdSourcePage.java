@@ -1039,7 +1039,7 @@ public class CrowdSourcePage
         try {
             if (repository.existsAnnotationDocument(sourceDocument, user)) {
 
-                jCas = repository.readJCas(sourceDocument, selectedProject, user);
+                jCas = repository.convertSourceDocumentToCas(sourceDocument, selectedProject, user);
 
                 jCases.add(jCas);
             }

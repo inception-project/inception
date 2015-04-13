@@ -664,7 +664,7 @@ public class BratAnnotator
                 || aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)
                 || aBratAnnotatorModel.getMode().equals(Mode.CORRECTION_MERGE)) {
 
-            return repository.readJCas(aBratAnnotatorModel.getDocument(),
+            return repository.convertSourceDocumentToCas(aBratAnnotatorModel.getDocument(),
                     aBratAnnotatorModel.getProject(), aBratAnnotatorModel.getUser());
         }
         else {

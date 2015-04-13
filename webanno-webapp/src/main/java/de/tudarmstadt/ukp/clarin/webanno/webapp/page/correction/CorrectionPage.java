@@ -1063,7 +1063,7 @@ public class CorrectionPage
                         bratAnnotatorModel.getDocument(), logedInUser, repository);
             }
             else {
-                jCas = repository.readJCas(bratAnnotatorModel.getDocument(), bratAnnotatorModel
+                jCas = repository.convertSourceDocumentToCas(bratAnnotatorModel.getDocument(), bratAnnotatorModel
                         .getDocument().getProject(), logedInUser);
                 // This is the auto annotation, save it under CURATION_USER
                 repository.writeCorrectionCas(jCas, bratAnnotatorModel.getDocument(),
@@ -1099,7 +1099,7 @@ public class CorrectionPage
                         bratAnnotatorModel.getDocument(), logedInUser, repository);
             }
             else {
-                jCas = repository.readJCas(bratAnnotatorModel.getDocument(), bratAnnotatorModel
+                jCas = repository.convertSourceDocumentToCas(bratAnnotatorModel.getDocument(), bratAnnotatorModel
                         .getDocument().getProject(), logedInUser);
                 // This is the auto annotation, save it under CURATION_USER
                 repository.writeCorrectionCas(jCas, bratAnnotatorModel.getDocument(),
@@ -1133,7 +1133,7 @@ public class CorrectionPage
     private void setCurationSegmentBeginEnd()
         throws UIMAException, ClassNotFoundException, IOException
     {
-        JCas jCas = repository.readJCas(bratAnnotatorModel.getDocument(),
+        JCas jCas = repository.convertSourceDocumentToCas(bratAnnotatorModel.getDocument(),
                 bratAnnotatorModel.getProject(), bratAnnotatorModel.getUser());
 
         final int sentenceAddress = getAddr(selectSentenceAt(jCas,

@@ -1118,7 +1118,7 @@ public interface RepositoryService
      * @throws ClassNotFoundException
      *             if a DKPro Core reader/writer cannot be loaded.
      */
-    JCas readJCas(SourceDocument document, Project project, User user)
+    JCas convertSourceDocumentToCas(SourceDocument document, Project project, User user)
         throws UIMAException, IOException, ClassNotFoundException;
 
     /**

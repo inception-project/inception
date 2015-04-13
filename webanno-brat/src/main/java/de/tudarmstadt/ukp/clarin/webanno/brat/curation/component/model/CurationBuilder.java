@@ -441,7 +441,7 @@ public class CurationBuilder
     {
         User userLoggedIn = repository.getUser(SecurityContextHolder.getContext()
                 .getAuthentication().getName());
-        mergeJCas = repository.readJCas(aBratAnnotatorModel.getDocument(), aBratAnnotatorModel
+        mergeJCas = repository.convertSourceDocumentToCas(aBratAnnotatorModel.getDocument(), aBratAnnotatorModel
                 .getDocument().getProject(), userLoggedIn);
         repository.writeCorrectionCas(mergeJCas,
                 randomAnnotationDocument.getDocument(), userLoggedIn);

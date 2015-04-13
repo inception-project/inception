@@ -1953,7 +1953,7 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public JCas readJCas(SourceDocument aDocument, Project aProject, User aUser)
+    public JCas convertSourceDocumentToCas(SourceDocument aDocument, Project aProject, User aUser)
         throws UIMAException, IOException, ClassNotFoundException
     {
         AnnotationDocument annotationDocument = null;

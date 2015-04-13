@@ -650,7 +650,7 @@ public class AnnotationPage
         String labelText = "";
         if (bratAnnotatorModel.getDocument() != null) {
             JCas jCas1 = null;
-            jCas1 = repository.readJCas(bratAnnotatorModel.getDocument(), bratAnnotatorModel.getProject(), bratAnnotatorModel.getUser());
+            jCas1 = repository.convertSourceDocumentToCas(bratAnnotatorModel.getDocument(), bratAnnotatorModel.getProject(), bratAnnotatorModel.getUser());
             JCas jCas = jCas1;
             totalNumberOfSentence = BratAjaxCasUtil.getNumberOfPages(jCas);
 
