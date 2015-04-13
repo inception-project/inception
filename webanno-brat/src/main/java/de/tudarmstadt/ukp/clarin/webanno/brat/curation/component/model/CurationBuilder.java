@@ -208,7 +208,7 @@ public class CurationBuilder
         // of the open dialog - it must not happen during editing because the CAS addresses
         // are used as IDs in the UI
         // repository.upgradeCasAndSave(aDocument, aMode, user.getUsername());
-        JCas jCas = repository.getAnnotationDocumentContent(randomAnnotationDocument);
+        JCas jCas = repository.readAnnotationCas(randomAnnotationDocument);
         jCases.put(user.getUsername(), jCas);
         return jCases;
     }
@@ -233,7 +233,7 @@ public class CurationBuilder
             // of the open dialog - it must not happen during editing because the CAS addresses
             // are used as IDs in the UI
             // repository.upgradeCasAndSave(annotationDocument.getDocument(), aMode, username);
-            JCas jCas = repository.getAnnotationDocumentContent(annotationDocument);
+            JCas jCas = repository.readAnnotationCas(annotationDocument);
             jCases.put(username, jCas);
         }
         return jCases;
@@ -275,7 +275,7 @@ public class CurationBuilder
                 // are used as IDs in the UI
                 // repository.upgradeCasAndSave(aDocument, aBratAnnotatorModel.getMode(),
                 // aBratAnnotatorModel.getUser().getUsername());
-                mergeJCas = repository.getCorrectionDocumentContent(aDocument);
+                mergeJCas = repository.readCorrectionCas(aDocument);
             }
             else {
                 // Upgrading should be an explicit action during the opening of a document at the
@@ -284,7 +284,7 @@ public class CurationBuilder
                 // are used as IDs in the UI
                 // repository.upgradeCasAndSave(aDocument, aBratAnnotatorModel.getMode(),
                 // aBratAnnotatorModel.getUser().getUsername());
-                mergeJCas = repository.getCurationDocumentContent(aDocument);
+                mergeJCas = repository.readCurationCas(aDocument);
             }
         }
         // Create jcas, if it could not be loaded from the file system
@@ -396,7 +396,7 @@ public class CurationBuilder
 
         List<Type> entryTypes = null;
         int numUsers = jCases.size();
-        mergeJCas = repository.getAnnotationDocumentContent(randomAnnotationDocument);
+        mergeJCas = repository.readAnnotationCas(randomAnnotationDocument);
 
         entryTypes = getEntryTypes(mergeJCas, aAnnotationLayers,annotationService);
         jCases.put(CurationPanel.CURATION_USER, mergeJCas);
@@ -430,7 +430,7 @@ public class CurationBuilder
             }
         }
 
-        repository.createCurationDocumentContent(mergeJCas, randomAnnotationDocument.getDocument(),
+        repository.writeCurationCas(mergeJCas, randomAnnotationDocument.getDocument(),
                 userLoggedIn);
         return mergeJCas;
     }
@@ -443,7 +443,7 @@ public class CurationBuilder
                 .getAuthentication().getName());
         mergeJCas = repository.readJCas(aBratAnnotatorModel.getDocument(), aBratAnnotatorModel
                 .getDocument().getProject(), userLoggedIn);
-        repository.createCorrectionDocumentContent(mergeJCas,
+        repository.writeCorrectionCas(mergeJCas,
                 randomAnnotationDocument.getDocument(), userLoggedIn);
         return mergeJCas;
     }

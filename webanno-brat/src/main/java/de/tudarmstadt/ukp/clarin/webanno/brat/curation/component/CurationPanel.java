@@ -254,7 +254,7 @@ public class CurationPanel
                                         bratAnnotatorModel.getUser());
                             }
                             else {
-                                jCas = repository.getCurationDocumentContent(bratAnnotatorModel
+                                jCas = repository.readCurationCas(bratAnnotatorModel
                                         .getDocument());
                             }
 

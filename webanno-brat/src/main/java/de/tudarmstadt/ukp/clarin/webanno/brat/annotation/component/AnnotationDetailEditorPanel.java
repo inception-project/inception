@@ -558,7 +558,7 @@ public class AnnotationDetailEditorPanel
                     aBModel.getUser());
         }
         else {
-            return repository.getCurationDocumentContent(aBModel.getDocument());
+            return repository.readCurationCas(aBModel.getDocument());
         }
     }
 

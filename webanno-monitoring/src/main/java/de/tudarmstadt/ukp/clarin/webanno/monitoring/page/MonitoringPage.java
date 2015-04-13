@@ -1092,7 +1092,7 @@ public class MonitoringPage
                         try {
                             repository.upgradeCasAndSave(document, document.getProject().getMode(),
                                     user.getUsername());
-                            JCas jCas = repository.getAnnotationDocumentContent(annotationDocument);
+                            JCas jCas = repository.readAnnotationCas(annotationDocument);
                             jCases.put(user, jCas);
                         }
                         catch (UIMAException e) {

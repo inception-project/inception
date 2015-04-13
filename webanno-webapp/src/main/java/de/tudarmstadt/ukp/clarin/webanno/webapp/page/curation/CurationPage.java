@@ -154,7 +154,7 @@ public class CurationPage
                             JCas mergeJCas = null;
                             try {
                                 mergeJCas = repository
-                                        .getCurationDocumentContent(bratAnnotatorModel
+                                        .readCurationCas(bratAnnotatorModel
                                                 .getDocument());
 
                                 totalNumberOfSentence = getNumberOfPages(mergeJCas);
@@ -431,7 +431,7 @@ public class CurationPage
                 JCas mergeJCas = null;
                 try {
                     aTarget.add(getFeedbackPanel());
-                    mergeJCas = repository.getCurationDocumentContent(bratAnnotatorModel
+                    mergeJCas = repository.readCurationCas(bratAnnotatorModel
                             .getDocument());
                     if (bratAnnotatorModel.getSentenceAddress() != gotoPageAddress) {
                         bratAnnotatorModel.setSentenceAddress(gotoPageAddress);
@@ -478,7 +478,7 @@ public class CurationPage
                 JCas mergeJCas = null;
                 try {
                     aTarget.add(getFeedbackPanel());
-                    mergeJCas = repository.getCurationDocumentContent(bratAnnotatorModel
+                    mergeJCas = repository.readCurationCas(bratAnnotatorModel
                             .getDocument());
                     gotoPageAddress = getSentenceAddress(mergeJCas,
                             gotoPageTextField.getModelObject());
@@ -517,7 +517,7 @@ public class CurationPage
                 JCas mergeJCas = null;
                 try {
                     aTarget.add(getFeedbackPanel());
-                    mergeJCas = repository.getCurationDocumentContent(bratAnnotatorModel
+                    mergeJCas = repository.readCurationCas(bratAnnotatorModel
                             .getDocument());
                     if (bratAnnotatorModel.getSentenceAddress() != gotoPageAddress) {
                         bratAnnotatorModel.setSentenceAddress(gotoPageAddress);
@@ -699,7 +699,7 @@ public class CurationPage
                 if (bratAnnotatorModel.getDocument() != null) {
                     JCas mergeJCas = null;
                     try {
-                        mergeJCas = repository.getCurationDocumentContent(bratAnnotatorModel
+                        mergeJCas = repository.readCurationCas(bratAnnotatorModel
                                 .getDocument());
                         int nextSentenceAddress = getNextPageFirstSentenceAddress(
                                 mergeJCas, bratAnnotatorModel.getSentenceAddress(),
@@ -761,7 +761,7 @@ public class CurationPage
                     JCas mergeJCas = null;
                     try {
                         aTarget.add(getFeedbackPanel());
-                        mergeJCas = repository.getCurationDocumentContent(bratAnnotatorModel
+                        mergeJCas = repository.readCurationCas(bratAnnotatorModel
                                 .getDocument());
                         int previousSentenceAddress = BratAjaxCasUtil
                                 .getPreviousDisplayWindowSentenceBeginAddress(mergeJCas,
@@ -818,7 +818,7 @@ public class CurationPage
                     JCas mergeJCas = null;
                     try {
                         aTarget.add(getFeedbackPanel());
-                        mergeJCas = repository.getCurationDocumentContent(bratAnnotatorModel
+                        mergeJCas = repository.readCurationCas(bratAnnotatorModel
                                 .getDocument());
 
                         int address = getAddr(selectSentenceAt(mergeJCas,
@@ -878,7 +878,7 @@ public class CurationPage
                     JCas mergeJCas = null;
                     try {
                         aTarget.add(getFeedbackPanel());
-                        mergeJCas = repository.getCurationDocumentContent(bratAnnotatorModel
+                        mergeJCas = repository.readCurationCas(bratAnnotatorModel
                                 .getDocument());
                         int lastDisplayWindowBeginingSentenceAddress = BratAjaxCasUtil
                                 .getLastDisplayWindowFirstSentenceAddress(mergeJCas,
@@ -933,7 +933,7 @@ public class CurationPage
     {
         JCas mergeJCas = null;
         try {
-            mergeJCas = repository.getCurationDocumentContent(bratAnnotatorModel.getDocument());
+            mergeJCas = repository.readCurationCas(bratAnnotatorModel.getDocument());
         }
         catch (UIMAException e) {
             error(e.getMessage());
@@ -955,7 +955,7 @@ public class CurationPage
             {
                 JCas mergeJCas = null;
                 try {
-                    mergeJCas = repository.getCurationDocumentContent(bratAnnotatorModel
+                    mergeJCas = repository.readCurationCas(bratAnnotatorModel
                             .getDocument());
                 }
                 catch (UIMAException e) {

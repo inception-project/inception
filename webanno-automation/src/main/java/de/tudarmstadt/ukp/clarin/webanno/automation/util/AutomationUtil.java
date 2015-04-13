@@ -92,11 +92,11 @@ public class AutomationUtil
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
         SourceDocument sourceDocument = aModel.getDocument();
-        JCas jCas = aRepository.getCorrectionDocumentContent(sourceDocument);
+        JCas jCas = aRepository.readCorrectionCas(sourceDocument);
 
         AnnotationDocument annoDoc = aRepository.getAnnotationDocument(sourceDocument,
                 aModel.getUser());
-        JCas annoCas = aRepository.getAnnotationDocumentContent(annoDoc);
+        JCas annoCas = aRepository.readAnnotationCas(annoDoc);
 
         // get selected text, concatenations of tokens
         String selectedText = BratAjaxCasUtil.getSelectedText(annoCas, aStart, aEnd);
@@ -132,7 +132,7 @@ public class AutomationUtil
                 }
             }
         }
-        aRepository.createCorrectionDocumentContent(jCas, aModel.getDocument(), user);
+        aRepository.writeCorrectionCas(jCas, aModel.getDocument(), user);
     }
 
     public static void deleteAnnotation(BratAnnotatorModel aModel, RepositoryService aRepository,
@@ -141,11 +141,11 @@ public class AutomationUtil
     {
 
         SourceDocument sourceDocument = aModel.getDocument();
-        JCas jCas = aRepository.getCorrectionDocumentContent(sourceDocument);
+        JCas jCas = aRepository.readCorrectionCas(sourceDocument);
 
         AnnotationDocument annoDoc = aRepository.getAnnotationDocument(sourceDocument,
                 aModel.getUser());
-        JCas annoCas = aRepository.getAnnotationDocumentContent(annoDoc);
+        JCas annoCas = aRepository.readAnnotationCas(annoDoc);
         // get selected text, concatenations of tokens
         String selectedText = BratAjaxCasUtil.getSelectedText(annoCas, aStart, aEnd);
 
@@ -179,7 +179,7 @@ public class AutomationUtil
                 }
             }
         }
-        aRepository.createCorrectionDocumentContent(jCas, aModel.getDocument(), user);
+        aRepository.writeCorrectionCas(jCas, aModel.getDocument(), user);
     }
 
     // generates training document that will be used to predict the training document
@@ -425,7 +425,7 @@ public class AutomationUtil
                 }
             }
             else if (sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
-                JCas jCas = aRepository.getCurationDocumentContent(sourceDocument);
+                JCas jCas = aRepository.readCurationCas(sourceDocument);
                 for (Sentence sentence : select(jCas, Sentence.class)) {
                     if (aBase) {// base training document
                         trainOut.append(getMiraLine(sentence, null, adapter).toString() + "\n");
@@ -500,7 +500,7 @@ public class AutomationUtil
                 BufferedWriter predOut = new BufferedWriter(new FileWriter(predFile));
                 JCas jCas;
                 try {
-                    jCas = aRepository.getCorrectionDocumentContent(document);
+                    jCas = aRepository.readCorrectionCas(document);
                 }
                 catch (Exception e) {
                     jCas = aRepository.readJCas(document, document.getProject(), user);
@@ -1475,14 +1475,14 @@ public class AutomationUtil
                 try {
                     AnnotationDocument annoDocument = aRepository.getAnnotationDocument(document,
                             user);
-                    jCas = aRepository.getAnnotationDocumentContent(annoDocument);
+                    jCas = aRepository.readAnnotationCas(annoDocument);
                 }
                 catch (DataRetrievalFailureException e) {
 
                 }
                 automate(jCas, layerFeature, annotations);
                 LOG.info("Predictions found are written to the CAS");
-                aRepository.createCorrectionDocumentContent(jCas, document, user);
+                aRepository.writeCorrectionCas(jCas, document, user);
                 document.setProcessed(true);
                 status.setAnnoDocs(status.getAnnoDocs() - 1);
             }

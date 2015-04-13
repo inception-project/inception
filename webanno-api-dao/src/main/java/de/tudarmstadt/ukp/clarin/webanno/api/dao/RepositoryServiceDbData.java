@@ -369,7 +369,7 @@ public class RepositoryServiceDbData
     {
 
         try {
-            getCorrectionDocumentContent(aDocument);
+            readCorrectionCas(aDocument);
             return true;
         }
         catch (Exception ex) {
@@ -410,7 +410,7 @@ public class RepositoryServiceDbData
     {
 
         try {
-            getCorrectionDocumentContent(aSourceDocument);
+            readCorrectionCas(aSourceDocument);
             return true;
         }
         catch (UIMAException e) {
@@ -723,11 +723,10 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public JCas getAnnotationDocumentContent(AnnotationDocument aAnnotationDocument)
+    public JCas readAnnotationCas(AnnotationDocument aAnnotationDocument)
         throws IOException, UIMAException, ClassNotFoundException
     {
-        return readCas(aAnnotationDocument.getDocument(),
-                aAnnotationDocument.getUser());
+        return readCas(aAnnotationDocument.getDocument(), aAnnotationDocument.getUser());
     }
 
     @Override
@@ -886,7 +885,7 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public File getSourceDocumentContent(SourceDocument aDocument)
+    public File getSourceDocumentFile(SourceDocument aDocument)
     {
         String path = dir.getAbsolutePath() + PROJECT + aDocument.getProject().getId() + DOCUMENT
                 + aDocument.getId() + SOURCE;
@@ -1606,7 +1605,7 @@ public class RepositoryServiceDbData
 
     @Override
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    public void createCorrectionDocumentContent(JCas aJcas, SourceDocument aDocument, User aUser)
+    public void writeCorrectionCas(JCas aJcas, SourceDocument aDocument, User aUser)
         throws IOException
     {
         writeCas(aDocument, aJcas, WebAnnoConst.CORRECTION_USER, aUser);
@@ -1614,24 +1613,23 @@ public class RepositoryServiceDbData
 
     @Override
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    public void createCurationDocumentContent(JCas aJcas, SourceDocument aDocument, User aUser)
+    public void writeCurationCas(JCas aJcas, SourceDocument aDocument, User aUser)
         throws IOException
     {
         writeCas(aDocument, aJcas, WebAnnoConst.CURATION_USER, aUser);
     }
 
     @Override
-    public JCas getCorrectionDocumentContent(SourceDocument aDocument)
+    public JCas readCorrectionCas(SourceDocument aDocument)
         throws UIMAException, IOException, ClassNotFoundException
     {
         return readCas(aDocument, WebAnnoConst.CORRECTION_USER);
     }
 
     @Override
-    public JCas getCurationDocumentContent(SourceDocument aDocument)
+    public JCas readCurationCas(SourceDocument aDocument)
         throws UIMAException, IOException, ClassNotFoundException
     {
-
         return readCas(aDocument, WebAnnoConst.CURATION_USER);
     }
 
@@ -1890,7 +1888,7 @@ public class RepositoryServiceDbData
             
             AnnotationDocument annotationDocument = getAnnotationDocument(aDocument, user);
             try {
-                CAS cas = getAnnotationDocumentContent(annotationDocument).getCas();
+                CAS cas = readAnnotationCas(annotationDocument).getCas();
                 upgrade(cas, aDocument.getProject());
                 createAnnotationDocumentContent(cas.getJCas(),
                         annotationDocument.getDocument(), user);
@@ -1899,14 +1897,14 @@ public class RepositoryServiceDbData
                     // In this case we only need to upgrade to annotation document
                 }
                 else if (aMode.equals(Mode.AUTOMATION) || aMode.equals(Mode.CORRECTION)) {
-                    CAS corrCas = getCorrectionDocumentContent(aDocument).getCas();
+                    CAS corrCas = readCorrectionCas(aDocument).getCas();
                     upgrade(corrCas, aDocument.getProject());
-                    createCorrectionDocumentContent(corrCas.getJCas(), aDocument, user);
+                    writeCorrectionCas(corrCas.getJCas(), aDocument, user);
                 }
                 else {
-                    CAS curCas = getCurationDocumentContent(aDocument).getCas();
+                    CAS curCas = readCurationCas(aDocument).getCas();
                     upgrade(curCas, aDocument.getProject());
-                    createCurationDocumentContent(curCas.getJCas(), aDocument, user);
+                    writeCurationCas(curCas.getJCas(), aDocument, user);
                 }
 
             }
@@ -1967,7 +1965,7 @@ public class RepositoryServiceDbData
                 jCas = createJCas(aDocument, annotationDocument, aProject, aUser);
             }
             else {
-                jCas = getAnnotationDocumentContent(annotationDocument);
+                jCas = readAnnotationCas(annotationDocument);
             }
 
         }
@@ -1991,7 +1989,7 @@ public class RepositoryServiceDbData
             createAnnotationDocumentContent(aJcas, aSourceDocument, aUser);
         }
         else if (aMode.equals(Mode.CURATION) || aMode.equals(Mode.CURATION_MERGE)) {
-            createCurationDocumentContent(aJcas, aSourceDocument, aUser);
+            writeCurationCas(aJcas, aSourceDocument, aUser);
         }
     }
 
@@ -2007,7 +2005,7 @@ public class RepositoryServiceDbData
                 .transition(SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
 
         try {
-            jCas = convertSourceDocumentToCas(getSourceDocumentContent(aDocument),
+            jCas = convertSourceDocumentToCas(getSourceDocumentFile(aDocument),
                     getReadableFormats().get(aDocument.getFormat()), aDocument);
 
             if (!existsAnnotationDocument(aDocument, aUser)) {

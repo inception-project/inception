@@ -125,7 +125,7 @@ public class BratAnnotationDocumentVisualizer
         // Get CAS from the repository
         JCas jCas = null;
         try {
-            jCas = repository.getAnnotationDocumentContent(getModelObject());
+            jCas = repository.readAnnotationCas(getModelObject());
         }
         catch (UIMAException e) {
             error(ExceptionUtils.getRootCauseMessage(e));

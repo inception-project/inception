@@ -256,7 +256,7 @@ public interface RepositoryService
      *            The {@link SourceDocument} to be examined
      * @return the Directory path of the source document
      */
-    File getSourceDocumentContent(SourceDocument document);
+    File getSourceDocumentFile(SourceDocument document);
 
     /**
      * List all source documents in a project. The source documents are the original TCF documents
@@ -482,7 +482,7 @@ public interface RepositoryService
      * @throws ClassNotFoundException
      *             if the DKPro Core reader/writer could not be loaded.
      */
-    JCas getAnnotationDocumentContent(AnnotationDocument annotationDocument)
+    JCas readAnnotationCas(AnnotationDocument annotationDocument)
         throws UIMAException, IOException, ClassNotFoundException;
 
     /**
@@ -573,10 +573,10 @@ public interface RepositoryService
      *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void createCorrectionDocumentContent(JCas jCas, SourceDocument document, User user)
+    void writeCorrectionCas(JCas jCas, SourceDocument document, User user)
         throws IOException;
 
-    JCas getCorrectionDocumentContent(SourceDocument document)
+    JCas readCorrectionCas(SourceDocument document)
         throws UIMAException, IOException, ClassNotFoundException;
 
     // --------------------------------------------------------------------------------------------
@@ -596,7 +596,7 @@ public interface RepositoryService
      *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void createCurationDocumentContent(JCas jCas, SourceDocument document, User user)
+    void writeCurationCas(JCas jCas, SourceDocument document, User user)
         throws IOException;
 
     /**
@@ -612,7 +612,7 @@ public interface RepositoryService
      * @throws ClassNotFoundException
      *             if the DKPro Core reader/writer cannot be loaded.
      */
-    JCas getCurationDocumentContent(SourceDocument document)
+    JCas readCurationCas(SourceDocument document)
         throws UIMAException, IOException, ClassNotFoundException;
 
     /**

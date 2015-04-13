@@ -162,11 +162,11 @@ public class CurationViewPanel extends WebMarkupContainer {
                                         .equals(Mode.AUTOMATION) || curationUserSegment
                                         .getBratAnnotatorModel().getMode()
                                         .equals(Mode.CORRECTION)) ? repository
-                                        .getAnnotationDocumentContent(repository
+                                        .readAnnotationCas(repository
                                                 .getAnnotationDocument(
                                                         sourceDocument, user))
                                         : repository
-                                                .getCurationDocumentContent(sourceDocument);
+                                                .readCurationCas(sourceDocument);
                                 StringValue action = request
                                         .getParameterValue("action");
                                 // check if clicked on a span
@@ -458,10 +458,10 @@ public class CurationViewPanel extends WebMarkupContainer {
         try {
             if (aModel.getMode().equals(Mode.AUTOMATION)
                     || aModel.getMode().equals(Mode.CORRECTION)) {
-                return repository.getCorrectionDocumentContent(aModel
+                return repository.readCorrectionCas(aModel
                         .getDocument());
             } else {
-                return repository.getAnnotationDocumentContent(aDocument);
+                return repository.readAnnotationCas(aDocument);
             }
         } catch (UIMAException e) {
             throw new IOException(e);

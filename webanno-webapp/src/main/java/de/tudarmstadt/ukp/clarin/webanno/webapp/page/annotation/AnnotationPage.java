@@ -708,7 +708,7 @@ public class AnnotationPage
         AnnotationDocument annotationDocument = repository.getAnnotationDocument(aDocument, user);
         
         // If there is no CAS yet for the annotation document, create one.
-        return repository.getAnnotationDocumentContent(annotationDocument);
+        return repository.readAnnotationCas(annotationDocument);
     }
 
     private void loadDocumentAction(AjaxRequestTarget aTarget)
@@ -755,14 +755,14 @@ public class AnnotationPage
                         .transition(SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
 
                 // Convert the source file into an annotation CAS
-                jcas = repository.convertSourceDocumentToCas(repository.getSourceDocumentContent(
+                jcas = repository.convertSourceDocumentToCas(repository.getSourceDocumentFile(
                         bratAnnotatorModel.getDocument()), 
                         repository.getReadableFormats().get(bratAnnotatorModel.getDocument().getFormat()), 
                         bratAnnotatorModel.getDocument());
             }
             else {
                 // Update the annotation document CAS
-                jcas = repository.getAnnotationDocumentContent(annotationDocument);
+                jcas = repository.readAnnotationCas(annotationDocument);
                 repository.upgrade(jcas.getCas(), bratAnnotatorModel.getDocument().getProject());
             }
             

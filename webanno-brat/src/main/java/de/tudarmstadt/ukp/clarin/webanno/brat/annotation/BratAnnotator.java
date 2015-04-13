@@ -668,7 +668,7 @@ public class BratAnnotator
                     aBratAnnotatorModel.getProject(), aBratAnnotatorModel.getUser());
         }
         else {
-            return repository.getCurationDocumentContent(aBratAnnotatorModel.getDocument());
+            return repository.readCurationCas(aBratAnnotatorModel.getDocument());
         }
     }
 

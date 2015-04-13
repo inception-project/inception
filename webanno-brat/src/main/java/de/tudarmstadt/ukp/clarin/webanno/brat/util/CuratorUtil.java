@@ -114,7 +114,7 @@ public class CuratorUtil
             String username = annotationDocument.getUser();
             if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)
                     || username.equals(CURATION_USER)) {
-                JCas jCas = aRepository.getAnnotationDocumentContent(annotationDocument);
+                JCas jCas = aRepository.readAnnotationCas(annotationDocument);
                 aJCases.put(username, jCas);
 
                 // cleanup annotationSelections
@@ -531,14 +531,14 @@ public class CuratorUtil
             // is the only document we compare with.
 
             // The CAS the user can edit is the one from the virtual CORRECTION USER
-            annotatorCas = aRepository.getCorrectionDocumentContent(sourceDocument);
+            annotatorCas = aRepository.readCorrectionCas(sourceDocument);
 
             User user = aRepository.getUser(SecurityContextHolder.getContext().getAuthentication()
                     .getName());
             AnnotationDocument annotationDocument = aRepository.getAnnotationDocument(
                     sourceDocument, user);
             jCases.put(user.getUsername(),
-                    aRepository.getAnnotationDocumentContent(annotationDocument));
+                    aRepository.readAnnotationCas(annotationDocument));
             aAnnotationSelectionByUsernameAndAddress.put(CURATION_USER,
                     new HashMap<Integer, AnnotationSelection>());
         }
@@ -547,7 +547,7 @@ public class CuratorUtil
             // active users.
 
             // The CAS the user can edit is the one from the virtual CURATION USER
-            annotatorCas = aRepository.getCurationDocumentContent(sourceDocument);
+            annotatorCas = aRepository.readCurationCas(sourceDocument);
 
             // Now we get all the other CASes from the repository
             List<AnnotationDocument> annotationDocuments = aRepository
@@ -556,7 +556,7 @@ public class CuratorUtil
                 String username = annotationDocument.getUser();
                 if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)
                         || username.equals(CuratorUtil.CURATION_USER)) {
-                    JCas jCas = aRepository.getAnnotationDocumentContent(annotationDocument);
+                    JCas jCas = aRepository.readAnnotationCas(annotationDocument);
                     jCases.put(username, jCas);
 
                     // cleanup annotationSelections
