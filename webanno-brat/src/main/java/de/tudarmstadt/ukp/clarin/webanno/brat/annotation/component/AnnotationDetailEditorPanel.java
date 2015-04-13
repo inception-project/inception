@@ -735,10 +735,19 @@ public class AnnotationDetailEditorPanel
 
     private void setInitSpanFeatures(BratAnnotatorModel aBModel)
     {
-        featureModels.clear();
+        List<FeatureModel> nonLinkFModels = new ArrayList<FeatureModel>();
+        for (FeatureModel nonLinkF : featureModels) {
+            if (nonLinkF.feature.getLinkTypeName() == null) {
+                nonLinkFModels.add(nonLinkF);
+            }
+        }
+        featureModels.removeAll(nonLinkFModels);
         for (AnnotationFeature feature : annotationService.listAnnotationFeature(aBModel
                 .getSelectedAnnotationLayer())) {
             if (!feature.isEnabled() || isSuppressedFeature(aBModel, feature)) {
+                continue;
+            }
+            if (feature.getLinkTypeName() != null) {
                 continue;
             }
             if (feature.getTagset() != null) {
