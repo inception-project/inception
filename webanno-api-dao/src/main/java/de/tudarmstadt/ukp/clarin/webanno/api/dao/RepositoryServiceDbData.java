@@ -671,11 +671,17 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public File exportSourceDocument(SourceDocument aDocument)
+    public File getSourceDocumentFile(SourceDocument aDocument)
     {
         File documentUri = new File(dir.getAbsolutePath() + PROJECT
                 + aDocument.getProject().getId() + DOCUMENT + aDocument.getId() + SOURCE);
         return new File(documentUri, aDocument.getName());
+    }
+
+    @Override
+    public File exportSourceDocument(SourceDocument aDocument)
+    {
+        return getSourceDocumentFile(aDocument);
     }
 
     @Override
@@ -687,19 +693,19 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public File exportProjectLog(Project aProject)
+    public File getProjectLogFile(Project aProject)
     {
         return new File(dir.getAbsolutePath() + PROJECT + "project-" + aProject.getId() + ".log");
     }
 
     @Override
-    public File exportGuidelines(Project aProject)
+    public File getGuidelinesFile(Project aProject)
     {
         return new File(dir.getAbsolutePath() + PROJECT + aProject.getId() + GUIDELINE);
     }
 
     @Override
-    public File exportProjectMetaInf(Project aProject)
+    public File getMetaInfFolder(Project aProject)
     {
         return new File(dir.getAbsolutePath() + PROJECT + aProject.getId() + META_INF);
     }
@@ -876,15 +882,6 @@ public class RepositoryServiceDbData
                 .createQuery("FROM SourceDocument WHERE name = :name AND project =:project",
                         SourceDocument.class).setParameter("name", aDocumentName)
                 .setParameter("project", aProject).getSingleResult();
-    }
-
-    @Override
-    @Transactional
-    public File getSourceDocumentFile(SourceDocument aDocument)
-    {
-        String path = dir.getAbsolutePath() + PROJECT + aDocument.getProject().getId() + DOCUMENT
-                + aDocument.getId() + SOURCE;
-        return new File(path + "/" + aDocument.getName());
     }
 
     @Override

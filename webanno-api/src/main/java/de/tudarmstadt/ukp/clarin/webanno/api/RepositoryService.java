@@ -686,9 +686,9 @@ public interface RepositoryService
      *            the project.
      * @return the log file.
      */
-    File exportProjectLog(Project project);
+    File getProjectLogFile(Project project);
 
-    File exportProjectMetaInf(Project project);
+    File getMetaInfFolder(Project project);
 
     /**
      * Save some properties file associated to a project, such as meta-data.properties
@@ -819,7 +819,7 @@ public interface RepositoryService
      *            the project.
      * @return the file.
      */
-    File exportGuidelines(Project project);
+    File getGuidelinesFile(Project project);
 
     /**
      * List annotation guideline document already uploaded

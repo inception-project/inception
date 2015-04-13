@@ -737,7 +737,7 @@ public class ImportUtil
             
             if (entryName.startsWith(GUIDELINE)) {
                 String filename = FilenameUtils.getName(entry.getName());
-                File guidelineDir = aRepository.exportGuidelines(aProject);
+                File guidelineDir = aRepository.getGuidelinesFile(aProject);
                 FileUtils.forceMkdir(guidelineDir);
                 FileUtils.copyInputStreamToFile(zip.getInputStream(entry), new File(guidelineDir,
                         filename));
@@ -767,7 +767,7 @@ public class ImportUtil
             String entryName = normalizeEntryName(entry);
 
             if (entryName.startsWith(META_INF)) {
-                File metaInfDir = new File(aRepository.exportProjectMetaInf(aProject),
+                File metaInfDir = new File(aRepository.getMetaInfFolder(aProject),
                         FilenameUtils.getPath(entry.getName().replace(META_INF, "")));
                 // where the file reside in the META-INF/... directory
                 FileUtils.forceMkdir(metaInfDir);
@@ -799,7 +799,7 @@ public class ImportUtil
             
             if (entryName.startsWith(LOG_DIR)) {
                 FileUtils.copyInputStreamToFile(zip.getInputStream(entry),
-                        aRepository.exportProjectLog(aProject));
+                        aRepository.getProjectLogFile(aProject));
                 LOG.info("Imported log for project [" + aProject.getName() + "] with id ["
                         + aProject.getId() + "]");
             }

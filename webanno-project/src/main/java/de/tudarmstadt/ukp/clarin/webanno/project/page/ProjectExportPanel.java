@@ -819,8 +819,8 @@ public class ProjectExportPanel extends Panel {
         {
             File logDir = new File(aCopyDir + LOG_FOLDER);
             FileUtils.forceMkdir(logDir);
-            if (repository.exportProjectLog(aProject).exists()) {
-                FileUtils.copyFileToDirectory(repository.exportProjectLog(aProject), logDir);
+            if (repository.getProjectLogFile(aProject).exists()) {
+                FileUtils.copyFileToDirectory(repository.getProjectLogFile(aProject), logDir);
             }
         }
 
@@ -832,7 +832,7 @@ public class ProjectExportPanel extends Panel {
         {
             File guidelineDir = new File(aCopyDir + GUIDELINES_FOLDER);
             FileUtils.forceMkdir(guidelineDir);
-            File annotationGuidlines = repository.exportGuidelines(aProject);
+            File annotationGuidlines = repository.getGuidelinesFile(aProject);
             if (annotationGuidlines.exists()) {
                 for (File annotationGuideline : annotationGuidlines.listFiles()) {
                     FileUtils.copyFileToDirectory(annotationGuideline, guidelineDir);
@@ -848,7 +848,7 @@ public class ProjectExportPanel extends Panel {
         {
             File metaInfDir = new File(aCopyDir + META_INF);
             FileUtils.forceMkdir(metaInfDir);
-            File metaInf = repository.exportProjectMetaInf(aProject);
+            File metaInf = repository.getMetaInfFolder(aProject);
             if (metaInf.exists()) {
                 FileUtils.copyDirectory(metaInf, metaInfDir);
             }
