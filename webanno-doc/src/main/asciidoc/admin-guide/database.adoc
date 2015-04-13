@@ -34,6 +34,18 @@ being used. Theoretically, it should be possible to use any JDBC-compatible data
 corresponding driver to the classpath and configuring WebAnno to use the driver in the
 `settings.properties` file.
 
+If you plan to use UTF-8 encoding for project name and tagset/tag name, make sure either of the following settings for MySQL databse
+a) in the `settings.properties` file, make sure that  `database.url` includes 
+
+----
+useUnicode=true&characterEncoding=UTF-8
+----
+
+b) change the `my.conf` MySQL databse configuration file to include the following line
+
+----
+character-set-server = utf8
+----
 
 === Using HSQLDB in production
 

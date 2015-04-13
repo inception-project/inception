@@ -37,7 +37,7 @@
 | database.url
 | JDBC connection string
 | _location in WebAnno home_
-| jdbc:mysql://localhost:3306/weblab
+| jdbc:mysql://localhost:3306/weblab?useUnicode=true&characterEncoding=UTF-8
 
 | database.username
 | Database username
