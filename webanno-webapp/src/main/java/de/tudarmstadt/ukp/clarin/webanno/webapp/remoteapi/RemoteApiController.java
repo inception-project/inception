@@ -198,6 +198,6 @@ public class RemoteApiController
         // Meta data entry to the database
         projectRepository.createSourceDocument(document, user);
         // Import source document to the project repository folder
-        projectRepository.uploadSourceDocument(zipStream, document, user);
+        projectRepository.uploadSourceDocument(zipStream, document);
     }
 }

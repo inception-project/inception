@@ -139,7 +139,7 @@ public class ProjectDocumentsPanel
                                 .getModelObject());
                         document.setFormat(reader);
                         repository.createSourceDocument(document, user);
-                        repository.uploadSourceDocument(uploadFile, document, user);
+                        repository.uploadSourceDocument(uploadFile, document);
                         info("File [" + fileName + "] has been imported successfully!");
                     }
                     catch (ClassNotFoundException e) {
@@ -201,7 +201,7 @@ public class ProjectDocumentsPanel
                                 .getName();
                         User user = repository.getUser(username);
                         repository.removeSourceDocument(
-                                repository.getSourceDocument(project, document), user);
+                                repository.getSourceDocument(project, document));
                     }
                     catch (IOException e) {
                         error("Error while removing a document document "

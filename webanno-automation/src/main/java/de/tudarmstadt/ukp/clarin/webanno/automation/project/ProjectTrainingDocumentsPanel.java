@@ -185,7 +185,7 @@ public class ProjectTrainingDocumentsPanel
                             document.setFormat(reader);
                         }
                         repository.createSourceDocument(document, user);
-                        repository.uploadSourceDocument(uploadFile, document, user);
+                        repository.uploadSourceDocument(uploadFile, document);
                         info("File [" + fileName + "] has been imported successfully!");
                     }
                     catch (ClassNotFoundException e) {
@@ -268,7 +268,7 @@ public class ProjectTrainingDocumentsPanel
                         if(srDoc.isTrainingDocument()){
                         	isTrain = true;
                         }
-                        repository.removeSourceDocument(srDoc, user);
+                        repository.removeSourceDocument(srDoc);
                     }
                     catch (IOException e) {
                         error("Error while removing a document document "

@@ -273,17 +273,15 @@ public interface RepositoryService
      *
      * @param document
      *            the source document to be deleted
-     * @param user
-     *            The User who perform this operation
      * @throws IOException
      *             If the source document searched for deletion is not available
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER', 'ROLE_REMOTE')")
-    void removeSourceDocument(SourceDocument document, User user)
+    void removeSourceDocument(SourceDocument document)
         throws IOException;
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER','ROLE_REMOTE')")
-    void uploadSourceDocument(File file, SourceDocument document, User user)
+    void uploadSourceDocument(File file, SourceDocument document)
         throws IOException, UIMAException;
 
     /**
@@ -294,15 +292,13 @@ public interface RepositoryService
      *            the file.
      * @param document
      *            the source document.
-     * @param user
-     *            he user.
      * @throws IOException
      *             if an I/O error occurs.
      * @throws UIMAException
      *             if a conversion error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER','ROLE_REMOTE')")
-    void uploadSourceDocument(InputStream file, SourceDocument document, User user)
+    void uploadSourceDocument(InputStream file, SourceDocument document)
         throws IOException, UIMAException;
 
     /**

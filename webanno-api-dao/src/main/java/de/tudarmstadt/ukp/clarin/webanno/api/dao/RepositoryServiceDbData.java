@@ -103,6 +103,7 @@ import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -1161,11 +1162,11 @@ public class RepositoryServiceDbData
             removeCrowdJob(crowdJob);
         }
         for (SourceDocument document : listSourceDocuments(aProject)) {
-            removeSourceDocument(document, aUser);
+            removeSourceDocument(document);
         }
 
         for (SourceDocument document : listTabSepDocuments(aProject)) {
-            removeSourceDocument(document, aUser);
+            removeSourceDocument(document);
         }
 
         for (MiraTemplate template : listMiraTemplates(aProject)) {
@@ -1269,7 +1270,7 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public void removeSourceDocument(SourceDocument aDocument, User aUser)
+    public void removeSourceDocument(SourceDocument aDocument)
         throws IOException
     {
 
@@ -1292,10 +1293,11 @@ public class RepositoryServiceDbData
         if (new File(path).exists()) {
             FileUtils.forceDelete(new File(path));
         }
-        createLog(aDocument.getProject(), aUser.getUsername()).info(
+        
+        createLog(aDocument.getProject(), getLogUser()).info(
                 " Removed Document [" + aDocument.getName() + "] with ID [" + aDocument.getId()
                         + "] from Project [" + aDocument.getProject().getId() + "]");
-        createLog(aDocument.getProject(), aUser.getUsername()).removeAllAppenders();
+        createLog(aDocument.getProject(), getLogUser()).removeAllAppenders();
 
     }
 
@@ -1400,13 +1402,12 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public void uploadSourceDocument(File aFile, SourceDocument aDocument, User aUser)
+    public void uploadSourceDocument(File aFile, SourceDocument aDocument)
         throws IOException
     {
         try {
             if (aDocument.getFormat().equals(WebAnnoConst.TAB_SEP)) {
                 if (!isTabSepFileFormatCorrect(aFile)) {
-                    removeSourceDocument(aDocument, aUser);
                     throw new IOException(
                             "This TAB-SEP file is not in correct format. It should have two columns separated by TAB!");
                 }
@@ -1416,40 +1417,28 @@ public class RepositoryServiceDbData
             }
         }
         catch (IOException e) {
+            removeSourceDocument(aDocument);
             throw e;
         }
         catch (Exception e) {
-            removeSourceDocument(aDocument, aUser);
+            removeSourceDocument(aDocument);
             throw new IOException(e.getMessage(), e);
         }
 
-        String path = dir.getAbsolutePath() + PROJECT + aDocument.getProject().getId() + DOCUMENT
-                + aDocument.getId() + SOURCE;
-        FileUtils.forceMkdir(new File(path));
-        File newTcfFile = new File(path, aDocument.getName());
-
-        InputStream is = null;
-        OutputStream os = null;
-        try {
-            os = new FileOutputStream(newTcfFile);
-            is = new FileInputStream(aFile);
-            copyLarge(is, os);
-        }
-        finally {
-            closeQuietly(os);
-            closeQuietly(is);
-        }
-
-        createLog(aDocument.getProject(), aUser.getUsername()).info(
+        File targetFile = getSourceDocumentFile(aDocument);
+        FileUtils.forceMkdir(targetFile.getParentFile());
+        FileUtils.copyFile(aFile, targetFile);
+        
+        createLog(aDocument.getProject(), getLogUser()).info(
                 " Imported file [" + aDocument.getName() + "] with ID [" + aDocument.getId()
                         + "] to Project [" + aDocument.getProject().getId() + "]");
-        createLog(aDocument.getProject(), aUser.getUsername()).removeAllAppenders();
+        createLog(aDocument.getProject(), getLogUser()).removeAllAppenders();
 
     }
 
     @Override
     @Transactional
-    public void uploadSourceDocument(InputStream aIs, SourceDocument aDocument, User aUser)
+    public void uploadSourceDocument(InputStream aIs, SourceDocument aDocument)
         throws IOException
     {
         String path = dir.getAbsolutePath() + PROJECT + aDocument.getProject().getId() + DOCUMENT
@@ -1467,10 +1456,10 @@ public class RepositoryServiceDbData
             closeQuietly(aIs);
         }
 
-        createLog(aDocument.getProject(), aUser.getUsername()).info(
+        createLog(aDocument.getProject(), getLogUser()).info(
                 " Imported file [" + aDocument.getName() + "] with ID [" + aDocument.getId()
                         + "] to Project [" + aDocument.getProject().getId() + "]");
-        createLog(aDocument.getProject(), aUser.getUsername()).removeAllAppenders();
+        createLog(aDocument.getProject(), getLogUser()).removeAllAppenders();
 
     }
 
@@ -2442,6 +2431,17 @@ public class RepositoryServiceDbData
         }
         catch (ClassNotFoundException e) {
             throw new IOException(e);
+        }
+    }
+    
+    private String getLogUser()
+    {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null) {
+            return authentication.getName();
+        }
+        else {
+            return "SYSTEM";
         }
     }
 }
