@@ -18,6 +18,9 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CORRECTION_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static org.apache.commons.io.IOUtils.closeQuietly;
@@ -1405,6 +1408,8 @@ public class RepositoryServiceDbData
     public void uploadSourceDocument(File aFile, SourceDocument aDocument)
         throws IOException
     {
+        // Check if the file has a valid format / can be converted without error
+        JCas cas = null;
         try {
             if (aDocument.getFormat().equals(WebAnnoConst.TAB_SEP)) {
                 if (!isTabSepFileFormatCorrect(aFile)) {
@@ -1413,7 +1418,8 @@ public class RepositoryServiceDbData
                 }
             }
             else {
-                convertSourceDocumentToCas(aFile, getReadableFormats().get(aDocument.getFormat()), aDocument);
+                cas = convertSourceDocumentToCas(aFile,
+                        getReadableFormats().get(aDocument.getFormat()), aDocument);
             }
         }
         catch (IOException e) {
@@ -1425,30 +1431,34 @@ public class RepositoryServiceDbData
             throw new IOException(e.getMessage(), e);
         }
 
+        // Copy the original file into the repository
         File targetFile = getSourceDocumentFile(aDocument);
         FileUtils.forceMkdir(targetFile.getParentFile());
         FileUtils.copyFile(aFile, targetFile);
+        
+        // Copy the initial conversion of the file into the repository
+        if (cas != null) {
+            writeSerializedCas(cas, getCasFile(aDocument, INITIAL_CAS_PSEUDO_USER));
+        }
         
         createLog(aDocument.getProject(), getLogUser()).info(
                 " Imported file [" + aDocument.getName() + "] with ID [" + aDocument.getId()
                         + "] to Project [" + aDocument.getProject().getId() + "]");
         createLog(aDocument.getProject(), getLogUser()).removeAllAppenders();
-
     }
 
     @Override
     @Transactional
+    @Deprecated
     public void uploadSourceDocument(InputStream aIs, SourceDocument aDocument)
         throws IOException
     {
-        String path = dir.getAbsolutePath() + PROJECT + aDocument.getProject().getId() + DOCUMENT
-                + aDocument.getId() + SOURCE;
-        FileUtils.forceMkdir(new File(path));
-        File newTcfFile = new File(path, aDocument.getName());
-
+        File targetFile = getSourceDocumentFile(aDocument);
+        FileUtils.forceMkdir(targetFile.getParentFile());
+        
         OutputStream os = null;
         try {
-            os = new FileOutputStream(newTcfFile);
+            os = new FileOutputStream(targetFile);
             copyLarge(aIs, os);
         }
         finally {
@@ -1583,7 +1593,7 @@ public class RepositoryServiceDbData
     public void writeCorrectionCas(JCas aJcas, SourceDocument aDocument, User aUser)
         throws IOException
     {
-        writeCas(aDocument, aJcas, WebAnnoConst.CORRECTION_USER, aUser);
+        writeCas(aDocument, aJcas, CORRECTION_USER, aUser);
     }
 
     @Override
@@ -1591,21 +1601,21 @@ public class RepositoryServiceDbData
     public void writeCurationCas(JCas aJcas, SourceDocument aDocument, User aUser)
         throws IOException
     {
-        writeCas(aDocument, aJcas, WebAnnoConst.CURATION_USER, aUser);
+        writeCas(aDocument, aJcas, CURATION_USER, aUser);
     }
 
     @Override
     public JCas readCorrectionCas(SourceDocument aDocument)
         throws UIMAException, IOException, ClassNotFoundException
     {
-        return readCas(aDocument, WebAnnoConst.CORRECTION_USER);
+        return readCas(aDocument, CORRECTION_USER);
     }
 
     @Override
     public JCas readCurationCas(SourceDocument aDocument)
         throws UIMAException, IOException, ClassNotFoundException
     {
-        return readCas(aDocument, WebAnnoConst.CURATION_USER);
+        return readCas(aDocument, CURATION_USER);
     }
 
     /**

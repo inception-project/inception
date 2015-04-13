@@ -47,4 +47,5 @@ public class WebAnnoConst
 
     public static final String CURATION_USER = "CURATION_USER";
     public static final String CORRECTION_USER = "CORRECTION_USER";
+    public static final String INITIAL_CAS_PSEUDO_USER = "INITIAL_CAS";
 }
