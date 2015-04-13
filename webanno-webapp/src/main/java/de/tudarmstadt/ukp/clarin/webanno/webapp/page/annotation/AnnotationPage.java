@@ -767,7 +767,7 @@ public class AnnotationPage
             }
             
             // After creating an new CAS or upgrading the CAS, we need to save it
-            repository.createAnnotationDocumentContent(jcas.getCas().getJCas(),
+            repository.writeAnnotationCas(jcas.getCas().getJCas(),
                     annotationDocument.getDocument(), user);
 
             // (Re)initialize brat model after potential creating / upgrading CAS

@@ -278,7 +278,7 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public void createAnnotationDocumentContent(JCas aJcas, SourceDocument aDocument, User aUser)
+    public void writeAnnotationCas(JCas aJcas, SourceDocument aDocument, User aUser)
         throws IOException
     {
         writeCas(aDocument, aJcas, aUser.getUsername(), aUser);
@@ -1890,7 +1890,7 @@ public class RepositoryServiceDbData
             try {
                 CAS cas = readAnnotationCas(annotationDocument).getCas();
                 upgradeCas(cas, aDocument.getProject());
-                createAnnotationDocumentContent(cas.getJCas(),
+                writeAnnotationCas(cas.getJCas(),
                         annotationDocument.getDocument(), user);
                 
                 if (aMode.equals(Mode.ANNOTATION)) {
@@ -1981,12 +1981,12 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public void updateJCas(Mode aMode, SourceDocument aSourceDocument, User aUser, JCas aJcas)
+    public void writeCas(Mode aMode, SourceDocument aSourceDocument, User aUser, JCas aJcas)
         throws IOException
     {
         if (aMode.equals(Mode.ANNOTATION) || aMode.equals(Mode.AUTOMATION)
                 || aMode.equals(Mode.CORRECTION) || aMode.equals(Mode.CORRECTION_MERGE)) {
-            createAnnotationDocumentContent(aJcas, aSourceDocument, aUser);
+            writeAnnotationCas(aJcas, aSourceDocument, aUser);
         }
         else if (aMode.equals(Mode.CURATION) || aMode.equals(Mode.CURATION_MERGE)) {
             writeCurationCas(aJcas, aSourceDocument, aUser);
@@ -2028,7 +2028,7 @@ public class RepositoryServiceDbData
                     : "This is an invalid file. The reader for the document " + aDocument.getName()
                             + " can't read this " + aDocument.getFormat() + " file type");
         }
-        createAnnotationDocumentContent(jCas, aDocument, aUser);
+        writeAnnotationCas(jCas, aDocument, aUser);
         return jCas;
     }
 

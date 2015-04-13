@@ -288,7 +288,7 @@ public class CurationViewPanel extends WebMarkupContainer {
                         fsClicked.getFeatureValueAsString(uimaFeature));
             }
         }
-        repository.updateJCas(aBratAnnotatorModel.getMode(),
+        repository.writeCas(aBratAnnotatorModel.getMode(),
                 aBratAnnotatorModel.getDocument(),
                 aBratAnnotatorModel.getUser(), aMergeJCas);
 
@@ -411,7 +411,7 @@ public class CurationViewPanel extends WebMarkupContainer {
                 }
             }
 
-            repository.updateJCas(aCurationUserSegment.getBratAnnotatorModel()
+            repository.writeCas(aCurationUserSegment.getBratAnnotatorModel()
                     .getMode(), aCurationUserSegment.getBratAnnotatorModel()
                     .getDocument(), aCurationUserSegment
                     .getBratAnnotatorModel().getUser(), aJcas);

@@ -359,7 +359,7 @@ public interface RepositoryService
      *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void createAnnotationDocumentContent(JCas jCas, SourceDocument document, User user)
+    void writeAnnotationCas(JCas jCas, SourceDocument document, User user)
         throws IOException;
 
     /**
@@ -1135,7 +1135,7 @@ public interface RepositoryService
      * @throws IOException
      *             if an I/O error occurs.
      */
-    void updateJCas(Mode mode, SourceDocument document, User user, JCas jCas)
+    void writeCas(Mode mode, SourceDocument document, User user, JCas jCas)
         throws IOException;
 
     JCas convertSourceDocumentToCas(SourceDocument document, AnnotationDocument annoDoc, Project project, User user)

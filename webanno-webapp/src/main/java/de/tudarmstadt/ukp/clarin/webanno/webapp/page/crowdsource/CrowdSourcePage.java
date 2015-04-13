@@ -958,7 +958,7 @@ public class CrowdSourcePage
                         i = 0;
                         for (JCas cas : jCases) {
                             SourceDocument document = sourceDocuments.get(i);
-                            repository.createAnnotationDocumentContent(cas, document, user);
+                            repository.writeAnnotationCas(cas, document, user);
                             i++;
                         }
                         int omittedEntities = namedEntityTaskManager.getOmittedEntities();
@@ -1055,7 +1055,7 @@ public class CrowdSourcePage
                 jCas = repository.convertSourceDocumentToCas(repository
                         .getSourceDocumentFile(sourceDocument), repository.getReadableFormats()
                         .get(sourceDocument.getFormat()), sourceDocument);
-                repository.createAnnotationDocumentContent(jCas, sourceDocument, user);
+                repository.writeAnnotationCas(jCas, sourceDocument, user);
                 jCases.add(jCas);
             }
         }

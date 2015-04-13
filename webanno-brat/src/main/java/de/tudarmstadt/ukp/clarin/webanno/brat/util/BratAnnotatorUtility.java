@@ -126,7 +126,7 @@ public class BratAnnotatorUtility
         }
 
         
-        repository.createAnnotationDocumentContent(target, aSourceDocument, aUser);
+        repository.writeAnnotationCas(target, aSourceDocument, aUser);
         return target;
     }
 
@@ -143,7 +143,7 @@ public class BratAnnotatorUtility
         for (Annotation annotation : annotationsToRemove) {
             aJCas.removeFsFromIndexes(annotation);
         }
-        repository.createAnnotationDocumentContent(aJCas, aSourceDocument, aUser);
+        repository.writeAnnotationCas(aJCas, aSourceDocument, aUser);
     }
 
     public static void clearAnnotations(JCas aJCas, Type aType)

@@ -392,7 +392,7 @@ public class AnnotationDetailEditorPanel
         repository.updateTimeStamp(aBModel.getDocument(), aBModel.getUser(), aBModel.getMode());
 
         // persist changes
-        repository.updateJCas(aBModel.getMode(), aBModel.getDocument(), aBModel.getUser(), jCas);
+        repository.writeCas(aBModel.getMode(), aBModel.getDocument(), aBModel.getUser(), jCas);
 
         if (aBModel.isScrollPage()) {
             autoScroll(jCas, aBModel);
@@ -467,7 +467,7 @@ public class AnnotationDetailEditorPanel
         // END HACK - Issue 933
         adapter.delete(jCas, aBModel.getSelectedAnnotationId());
 
-        repository.updateJCas(aBModel.getMode(), aBModel.getDocument(), aBModel.getUser(), jCas);
+        repository.writeCas(aBModel.getMode(), aBModel.getDocument(), aBModel.getUser(), jCas);
         // update timestamp now
         int sentenceNumber = getSentenceNumber(jCas, aBModel.getBeginOffset());
         aBModel.getDocument().setSentenceAccessed(sentenceNumber);
@@ -523,7 +523,7 @@ public class AnnotationDetailEditorPanel
         }
 
         // persist changes
-        repository.updateJCas(aBModel.getMode(), aBModel.getDocument(), aBModel.getUser(), jCas);
+        repository.writeCas(aBModel.getMode(), aBModel.getDocument(), aBModel.getUser(), jCas);
         int sentenceNumber = getSentenceNumber(jCas, originFs.getBegin());
         aBModel.getDocument().setSentenceAccessed(sentenceNumber);
         repository.updateTimeStamp(aBModel.getDocument(), aBModel.getUser(), aBModel.getMode());
