@@ -17,10 +17,7 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.StringTokenizer;
 
 import javax.persistence.NoResultException;
 
