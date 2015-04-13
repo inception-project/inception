@@ -554,8 +554,7 @@ public class AnnotationDetailEditorPanel
                 || aBModel.getMode().equals(Mode.CORRECTION)
                 || aBModel.getMode().equals(Mode.CORRECTION_MERGE)) {
 
-            return repository.convertSourceDocumentToCas(aBModel.getDocument(), aBModel.getProject(),
-                    aBModel.getUser());
+            return repository.readAnnotationCas(aBModel.getDocument(), aBModel.getUser());
         }
         else {
             return repository.readCurationCas(aBModel.getDocument());

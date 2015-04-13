@@ -1113,8 +1113,7 @@ public class AutomationPage
         //
         catch (DataRetrievalFailureException e) {
 
-            jCas = repository.convertSourceDocumentToCas(bratAnnotatorModel.getDocument(), bratAnnotatorModel
-                    .getDocument().getProject(), logedInUser);
+            jCas = repository.readAnnotationCas(bratAnnotatorModel.getDocument(), logedInUser);
             // This is the auto annotation, save it under CORRECTION_USER, Only if it is not created
             // by another annotater
             if (!repository.existsAutomatedDocument(bratAnnotatorModel.getDocument())) {
@@ -1123,8 +1122,7 @@ public class AutomationPage
             }
         }
         catch (NoResultException e) {
-            jCas = repository.convertSourceDocumentToCas(bratAnnotatorModel.getDocument(), bratAnnotatorModel
-                    .getDocument().getProject(), logedInUser);
+            jCas = repository.readAnnotationCas(bratAnnotatorModel.getDocument(), logedInUser);
             // This is the auto annotation, save it under CORRECTION_USER, Only if it is not created
             // by another annotater
             if (!repository.existsAutomatedDocument(bratAnnotatorModel.getDocument())) {
@@ -1157,8 +1155,8 @@ public class AutomationPage
     private void setCurationSegmentBeginEnd()
         throws UIMAException, ClassNotFoundException, IOException
     {
-        JCas jCas = repository.convertSourceDocumentToCas(bratAnnotatorModel.getDocument(),
-                bratAnnotatorModel.getProject(), bratAnnotatorModel.getUser());
+        JCas jCas = repository.readAnnotationCas(bratAnnotatorModel.getDocument(),
+                bratAnnotatorModel.getUser());
 
         final int sentenceAddress = getAddr(selectSentenceAt(jCas,
                 bratAnnotatorModel.getSentenceBeginOffset(),

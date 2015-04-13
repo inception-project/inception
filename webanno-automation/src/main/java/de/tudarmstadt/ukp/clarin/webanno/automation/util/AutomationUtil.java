@@ -216,8 +216,7 @@ public class AutomationUtil
                     .getProject())) {
                 if ((sourceDocument.isTrainingDocument() && sourceDocument.getFeature() != null && sourceDocument
                         .getFeature().equals(feature))) {
-                    JCas jCas = aRepository.convertSourceDocumentToCas(sourceDocument, sourceDocument.getProject(),
-                            user);
+                    JCas jCas = aRepository.readAnnotationCas(sourceDocument, user);
                     for (Sentence sentence : select(jCas, Sentence.class)) {
                         trainOut.append(getMiraLine(sentence, feature, adapter).toString() + "\n");
                     }
@@ -250,8 +249,7 @@ public class AutomationUtil
                     .getProject())) {
 
                 if ((sourceDocument.isTrainingDocument())) {
-                    JCas jCas = aRepository.convertSourceDocumentToCas(sourceDocument, sourceDocument.getProject(),
-                            user);
+                    JCas jCas = aRepository.readAnnotationCas(sourceDocument, user);
                     for (Sentence sentence : select(jCas, Sentence.class)) {
 
                         if (aFeature.getLayer().isMultipleTokens()) {
@@ -270,7 +268,7 @@ public class AutomationUtil
             aPredictions.add(annotations);
         }
         else {
-            JCas jCas = aRepository.convertSourceDocumentToCas(aSourceDocument, aSourceDocument.getProject(), user);
+            JCas jCas = aRepository.readAnnotationCas(aSourceDocument, user);
             for (Sentence sentence : select(jCas, Sentence.class)) {
 
                 if (aFeature.getLayer().isMultipleTokens()) {
@@ -410,7 +408,7 @@ public class AutomationUtil
         for (SourceDocument sourceDocument : aRepository.listSourceDocuments(feature.getProject())) {
             if ((sourceDocument.isTrainingDocument() && sourceDocument.getFeature() != null && sourceDocument
                     .getFeature().equals(feature))) {
-                JCas jCas = aRepository.convertSourceDocumentToCas(sourceDocument, sourceDocument.getProject(), user);
+                JCas jCas = aRepository.readAnnotationCas(sourceDocument, user);
                 for (Sentence sentence : select(jCas, Sentence.class)) {
                     if (aBase) {// base training document
                         trainOut.append(getMiraLine(sentence, null, adapter).toString() + "\n");
@@ -503,7 +501,7 @@ public class AutomationUtil
                     jCas = aRepository.readCorrectionCas(document);
                 }
                 catch (Exception e) {
-                    jCas = aRepository.convertSourceDocumentToCas(document, document.getProject(), user);
+                    jCas = aRepository.readAnnotationCas(document, user);
                 }
 
                 for (Sentence sentence : select(jCas, Sentence.class)) {

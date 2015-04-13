@@ -594,7 +594,7 @@ public class RepositoryServiceDbData
         readSerializedCas(cas.getJCas(), serializedCasFile);
         
         // Update type system the CAS
-        upgradeCas(cas, aDocument.getProject());
+        upgradeCas(cas, aDocument, aUser, aMode);
         
         // Update the source file name in case it is changed for some reason
         Project project = aDocument.getProject();
@@ -1889,7 +1889,7 @@ public class RepositoryServiceDbData
             AnnotationDocument annotationDocument = getAnnotationDocument(aDocument, user);
             try {
                 CAS cas = readAnnotationCas(annotationDocument).getCas();
-                upgradeCas(cas, aDocument.getProject());
+                upgradeCas(cas, annotationDocument, aMode);
                 writeAnnotationCas(cas.getJCas(),
                         annotationDocument.getDocument(), user);
                 
@@ -1898,12 +1898,12 @@ public class RepositoryServiceDbData
                 }
                 else if (aMode.equals(Mode.AUTOMATION) || aMode.equals(Mode.CORRECTION)) {
                     CAS corrCas = readCorrectionCas(aDocument).getCas();
-                    upgradeCas(corrCas, aDocument.getProject());
+                    upgradeCas(corrCas, annotationDocument, aMode);
                     writeCorrectionCas(corrCas.getJCas(), aDocument, user);
                 }
                 else {
                     CAS curCas = readCurationCas(aDocument).getCas();
-                    upgradeCas(curCas, aDocument.getProject());
+                    upgradeCas(curCas, annotationDocument, aMode);
                     writeCurationCas(curCas.getJCas(), aDocument, user);
                 }
 
@@ -1922,13 +1922,18 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public void upgradeCas(CAS aCas, Project aProject)
+    public void upgradeCas(CAS aCas, AnnotationDocument aAnnotationDocument, Mode aMode)
         throws UIMAException, IOException
     {
-
+        upgradeCas(aCas, aAnnotationDocument.getDocument(), aAnnotationDocument.getUser(), aMode);
+    }
+    
+    private void upgradeCas(CAS aCas, SourceDocument aSourceDocument, String aUser, Mode aMode)
+        throws UIMAException, IOException
+    {
         TypeSystemDescription builtInTypes = TypeSystemDescriptionFactory
                 .createTypeSystemDescription();
-        List<TypeSystemDescription> projectTypes = getProjectTypes(aProject);
+        List<TypeSystemDescription> projectTypes = getProjectTypes(aSourceDocument.getProject());
         projectTypes.add(builtInTypes);
         TypeSystemDescription allTypes = CasCreationUtils.mergeTypeSystems(projectTypes);
 
@@ -1949,34 +1954,65 @@ public class RepositoryServiceDbData
         // Restore CAS data to new type system
         Serialization.deserializeCAS(aCas, new ByteArrayInputStream(os2.toByteArray()),
                 oldTypeSystem, null);
+
+        createLog(aSourceDocument.getProject(), aUser).info(
+                "Upgraded CAS of user [" + aUser + "] for document [" + aSourceDocument.getName()
+                        + "] " + " in project ID [" + aSourceDocument.getProject().getId()
+                        + "] in mode [" + aMode + "]");
+        createLog(aSourceDocument.getProject(), aUser).removeAllAppenders();
     }
 
     @Override
     @Transactional
-    public JCas convertSourceDocumentToCas(SourceDocument aDocument, Project aProject, User aUser)
+    public JCas readAnnotationCas(SourceDocument aDocument, User aUser)
         throws UIMAException, IOException, ClassNotFoundException
     {
+        // Change the state of the source document to in progress
+        aDocument.setState(SourceDocumentStateTransition
+                .transition(SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
+        
+        // Make sure we have an AnnotationDocument in the database
         AnnotationDocument annotationDocument = null;
-        JCas jCas = null;
-        try {
+        if (!existsAnnotationDocument(aDocument, aUser)) {
+            annotationDocument = new AnnotationDocument();
+            annotationDocument.setDocument(aDocument);
+            annotationDocument.setName(aDocument.getName());
+            annotationDocument.setUser(aUser.getUsername());
+            annotationDocument.setProject(aDocument.getProject());
+            createAnnotationDocument(annotationDocument);
+        }
+        else {
             annotationDocument = getAnnotationDocument(aDocument, aUser);
-            if (annotationDocument.getState().equals(AnnotationDocumentState.NEW)
-                    && !existsAnnotationCas(aDocument, aUser.getUsername())) {
-                jCas = convertSourceDocumentToCas(aDocument, annotationDocument, aProject, aUser);
+        }
+        
+        // Make sure we have a CAS
+        JCas jcas;
+        if (!existsAnnotationCas(aDocument, aUser.getUsername())) {
+            // Initial conversion
+            try {
+                jcas = convertSourceDocumentToCas(getSourceDocumentFile(aDocument),
+                        getReadableFormats().get(aDocument.getFormat()), aDocument);
             }
-            else {
-                jCas = readAnnotationCas(annotationDocument);
+            catch (UIMAException e) {
+                throw new IOException(e);
             }
-
+            catch (ClassNotFoundException e) {
+                throw new IOException(e);
+            }
+            catch (Exception e) {
+                throw new IOException(e.getMessage() != null ? e.getMessage()
+                        : "This is an invalid file. The reader for the document "
+                                + aDocument.getName() + " can't read this " + aDocument.getFormat()
+                                + " file type");
+            }
+            writeAnnotationCas(jcas, aDocument, aUser);
         }
-        // it is new, create it and get CAS object
-        catch (NoResultException ex) {
-            jCas = convertSourceDocumentToCas(aDocument, annotationDocument, aProject, aUser);
+        else {
+            // Read existing
+            jcas =  readCas(annotationDocument.getDocument(), annotationDocument.getUser());
         }
-        catch (DataRetrievalFailureException e) {
-            throw e;
-        }
-        return jCas;
+        
+        return jcas;
     }
 
     @Override
@@ -1991,45 +2027,6 @@ public class RepositoryServiceDbData
         else if (aMode.equals(Mode.CURATION) || aMode.equals(Mode.CURATION_MERGE)) {
             writeCurationCas(aJcas, aSourceDocument, aUser);
         }
-    }
-
-    @Override
-    @Transactional
-    public JCas convertSourceDocumentToCas(SourceDocument aDocument,
-            AnnotationDocument aAnnotationDocument, Project aProject, User aUser)
-        throws IOException
-    {
-        JCas jCas;
-        // change the state of the source document to in progress
-        aDocument.setState(SourceDocumentStateTransition
-                .transition(SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
-
-        try {
-            jCas = convertSourceDocumentToCas(getSourceDocumentFile(aDocument),
-                    getReadableFormats().get(aDocument.getFormat()), aDocument);
-
-            if (!existsAnnotationDocument(aDocument, aUser)) {
-                aAnnotationDocument = new AnnotationDocument();
-                aAnnotationDocument.setDocument(aDocument);
-                aAnnotationDocument.setName(aDocument.getName());
-                aAnnotationDocument.setUser(aUser.getUsername());
-                aAnnotationDocument.setProject(aProject);
-                createAnnotationDocument(aAnnotationDocument);
-            }
-        }
-        catch (UIMAException e) {
-            throw new IOException(e);
-        }
-        catch (ClassNotFoundException e) {
-            throw new IOException(e);
-        }
-        catch (Exception e) {
-            throw new IOException(e.getMessage() != null ? e.getMessage()
-                    : "This is an invalid file. The reader for the document " + aDocument.getName()
-                            + " can't read this " + aDocument.getFormat() + " file type");
-        }
-        writeAnnotationCas(jCas, aDocument, aUser);
-        return jCas;
     }
 
     @Override

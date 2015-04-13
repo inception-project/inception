@@ -1085,7 +1085,9 @@ public interface RepositoryService
     File getDir();
 
     /**
-     * Upgrade JCAS
+     * Load the CAS for the specified source document and user, upgrade it, and save it again.
+     * Depending on the mode parameter, the automation/correction and curation CASes are also
+     * upgraded.
      *
      * @param aDocument
      *            the source document.
@@ -1095,7 +1097,11 @@ public interface RepositoryService
      *            the username.
      * @throws IOException
      *             if an I/O error occurs.
+     * @deprecated Read CAS e.g. using {@link #readAnnotationCas(SourceDocument, User)} then use 
+     *             {@link #upgradeCas(CAS, AnnotationDocument, Mode)} and then write the CAS e.g.
+     *             using {@link #writeAnnotationCas(JCas, SourceDocument, User)}
      */
+    @Deprecated
     void upgradeCasAndSave(SourceDocument aDocument, Mode aMode, String username)
         throws IOException;
 
@@ -1106,8 +1112,6 @@ public interface RepositoryService
      * 
      * @param document
      *            the source document.
-     * @param project
-     *            the project.
      * @param user
      *            the user.
      * @return the JCas.
@@ -1118,7 +1122,7 @@ public interface RepositoryService
      * @throws ClassNotFoundException
      *             if a DKPro Core reader/writer cannot be loaded.
      */
-    JCas convertSourceDocumentToCas(SourceDocument document, Project project, User user)
+    JCas readAnnotationCas(SourceDocument document, User user)
         throws UIMAException, IOException, ClassNotFoundException;
 
     /**
@@ -1136,9 +1140,6 @@ public interface RepositoryService
      *             if an I/O error occurs.
      */
     void writeCas(Mode mode, SourceDocument document, User user, JCas jCas)
-        throws IOException;
-
-    JCas convertSourceDocumentToCas(SourceDocument document, AnnotationDocument annoDoc, Project project, User user)
         throws IOException;
 
     /**
@@ -1245,7 +1246,7 @@ public interface RepositoryService
 
     AutomationStatus getAutomationStatus(MiraTemplate template);
 
-    void upgradeCas(CAS aCurCas, Project aProject)
+    void upgradeCas(CAS aCurCas, AnnotationDocument aAnnotationDocument, Mode aMode)
         throws UIMAException, IOException;
     
     /**

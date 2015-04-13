@@ -249,8 +249,7 @@ public class CurationPanel
                                     || bratAnnotatorModel.getMode().equals(Mode.CORRECTION)
                                     || bratAnnotatorModel.getMode().equals(Mode.CORRECTION_MERGE)) {
 
-                                jCas = repository.convertSourceDocumentToCas(bratAnnotatorModel.getDocument(),
-                                        bratAnnotatorModel.getProject(),
+                                jCas = repository.readAnnotationCas(bratAnnotatorModel.getDocument(),
                                         bratAnnotatorModel.getUser());
                             }
                             else {

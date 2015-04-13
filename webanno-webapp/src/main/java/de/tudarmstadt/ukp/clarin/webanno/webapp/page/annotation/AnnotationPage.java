@@ -650,7 +650,7 @@ public class AnnotationPage
         String labelText = "";
         if (bratAnnotatorModel.getDocument() != null) {
             JCas jCas1 = null;
-            jCas1 = repository.convertSourceDocumentToCas(bratAnnotatorModel.getDocument(), bratAnnotatorModel.getProject(), bratAnnotatorModel.getUser());
+            jCas1 = repository.readAnnotationCas(bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser());
             JCas jCas = jCas1;
             totalNumberOfSentence = BratAjaxCasUtil.getNumberOfPages(jCas);
 
@@ -763,7 +763,7 @@ public class AnnotationPage
             else {
                 // Update the annotation document CAS
                 jcas = repository.readAnnotationCas(annotationDocument);
-                repository.upgradeCas(jcas.getCas(), bratAnnotatorModel.getDocument().getProject());
+                repository.upgradeCas(jcas.getCas(), annotationDocument, bratAnnotatorModel.getMode());
             }
             
             // After creating an new CAS or upgrading the CAS, we need to save it
