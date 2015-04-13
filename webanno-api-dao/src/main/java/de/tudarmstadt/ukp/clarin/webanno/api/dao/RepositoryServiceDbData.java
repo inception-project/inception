@@ -1489,22 +1489,6 @@ public class RepositoryServiceDbData
 
     }
 
-    private void writeContent(SourceDocument aDocument, JCas aJcas, String aUsername)
-        throws IOException
-    {
-        DocumentMetaData md;
-        try {
-            md = DocumentMetaData.get(aJcas);
-        }
-        catch (IllegalArgumentException e) {
-            md = DocumentMetaData.create(aJcas);
-        }
-        md.setDocumentId(aUsername);
-        
-        File targetPath = getAnnotationFolder(aDocument);
-        writeSerializedCas(aJcas, new File(targetPath, aUsername+".ser"));
-    }
-
     @Override
     public List<String> getReadableFormatLabels()
         throws ClassNotFoundException
