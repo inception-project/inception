@@ -700,7 +700,7 @@ public class ProjectExportPanel extends Panel {
             documents.addAll(repository.listTabSepDocuments(aProject));
             int i = 1;
             for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
-                FileUtils.copyFileToDirectory(repository.exportSourceDocument(sourceDocument),
+                FileUtils.copyFileToDirectory(repository.getSourceDocumentFile(sourceDocument),
                         sourceDocumentDir);
                 progress = (int) Math.ceil(((double) i) / documents.size() * 10.0);
                 i++;

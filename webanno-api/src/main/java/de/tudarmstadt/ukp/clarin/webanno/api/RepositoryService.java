@@ -225,16 +225,6 @@ public interface RepositoryService
     boolean existsSourceDocument(Project project, String fileName);
 
     /**
-     * Exports source documents of a given Project. This is used to copy projects from one
-     * application/release to another.
-     * 
-     * @param document
-     *            the source document.
-     * @return the source document file.
-     */
-    File exportSourceDocument(SourceDocument document);
-
-    /**
      * Get meta data information about {@link SourceDocument} from the database. This method is
      * called either for {@link AnnotationDocument} object creation or
      * {@link RepositoryService#createSourceDocument(SourceDocument, User)}

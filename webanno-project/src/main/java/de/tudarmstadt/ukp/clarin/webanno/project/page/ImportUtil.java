@@ -627,7 +627,7 @@ public class ImportUtil
                 String fileName = FilenameUtils.getName(entryName);
                 de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument = aRepository
                         .getSourceDocument(aProject, fileName);
-                File sourceFilePath = aRepository.exportSourceDocument(sourceDocument);
+                File sourceFilePath = aRepository.getSourceDocumentFile(sourceDocument);
                 FileUtils.copyInputStreamToFile(zip.getInputStream(entry), sourceFilePath);
                 
                 LOG.info("Imported source document content for source document ["

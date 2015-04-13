@@ -679,12 +679,6 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public File exportSourceDocument(SourceDocument aDocument)
-    {
-        return getSourceDocumentFile(aDocument);
-    }
-
-    @Override
     public File getCasFile(SourceDocument aDocument, String aUser)
     {
         File documentUri = new File(dir.getAbsolutePath() + PROJECT
