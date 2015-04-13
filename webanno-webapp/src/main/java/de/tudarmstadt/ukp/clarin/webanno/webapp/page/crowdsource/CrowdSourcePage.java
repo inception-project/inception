@@ -1052,7 +1052,7 @@ public class CrowdSourcePage
                 annotationDocument.setName(sourceDocument.getName());
                 repository.createAnnotationDocument(annotationDocument);
 
-                jCas = repository.getJCasFromFile(repository
+                jCas = repository.convertSourceDocumentToCas(repository
                         .getSourceDocumentContent(sourceDocument), repository.getReadableFormats()
                         .get(sourceDocument.getFormat()), sourceDocument);
                 repository.createAnnotationDocumentContent(jCas, sourceDocument, user);

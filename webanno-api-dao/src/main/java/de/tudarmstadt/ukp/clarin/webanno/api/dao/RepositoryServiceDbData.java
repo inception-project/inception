@@ -1427,7 +1427,7 @@ public class RepositoryServiceDbData
                 }
             }
             else {
-                getJCasFromFile(aFile, getReadableFormats().get(aDocument.getFormat()), aDocument);
+                convertSourceDocumentToCas(aFile, getReadableFormats().get(aDocument.getFormat()), aDocument);
             }
         }
         catch (IOException e) {
@@ -2016,7 +2016,7 @@ public class RepositoryServiceDbData
                 .transition(SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
 
         try {
-            jCas = getJCasFromFile(getSourceDocumentContent(aDocument),
+            jCas = convertSourceDocumentToCas(getSourceDocumentContent(aDocument),
                     getReadableFormats().get(aDocument.getFormat()), aDocument);
 
             if (!existsAnnotationDocument(aDocument, aUser)) {
@@ -2045,41 +2045,40 @@ public class RepositoryServiceDbData
 
     @Override
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public JCas getJCasFromFile(File aFile, Class aReader, SourceDocument aDocument)
+    public JCas convertSourceDocumentToCas(File aFile, Class aReader, SourceDocument aDocument)
         throws UIMAException, IOException
     {
+        // Prepare a CAS with the project type system
         TypeSystemDescription builtInTypes = TypeSystemDescriptionFactory
                 .createTypeSystemDescription();
         List<TypeSystemDescription> projectTypes = getProjectTypes(aDocument.getProject());
         projectTypes.add(builtInTypes);
         TypeSystemDescription allTypes = CasCreationUtils.mergeTypeSystems(projectTypes);
-
         CAS cas = JCasFactory.createJCas(allTypes).getCas();
 
-        /*
-         * List<AnnotationLayer> layers =
-         * annotationService.listAnnotationLayer(aDocument.getProject()); List<String> multipleSpans
-         * = new ArrayList<String>(); for(AnnotationLayer layer:layers){
-         * if(layer.isMultipleTokens()) multipleSpans.add(layer.getName()); }
-         */
+        // Convert the source document to CAS
         CollectionReader reader = CollectionReaderFactory.createReader(aReader,
-                ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION, aFile.getParentFile()
-                        .getAbsolutePath(), ResourceCollectionReaderBase.PARAM_PATTERNS,
-                new String[] { "[+]" + aFile.getName() }/* , "multipleSpans", multipleSpans */);
+                ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION, aFile.getParentFile().getAbsolutePath(), 
+                ResourceCollectionReaderBase.PARAM_PATTERNS, new String[] { "[+]" + aFile.getName() });
         if (!reader.hasNext()) {
             throw new FileNotFoundException("Annotation file [" + aFile.getName()
                     + "] not found in [" + aFile.getPath() + "]");
         }
         reader.getNext(cas);
         JCas jCas = cas.getJCas();
+        
+        // Create sentence / token annotations if they are missing
         boolean hasTokens = JCasUtil.exists(jCas, Token.class);
         boolean hasSentences = JCasUtil.exists(jCas, Sentence.class);
+        
         if (!hasTokens || !hasSentences) {
             AnalysisEngine pipeline = createEngine(createEngineDescription(
-                    BreakIteratorSegmenter.class, BreakIteratorSegmenter.PARAM_WRITE_TOKEN,
-                    !hasTokens, BreakIteratorSegmenter.PARAM_WRITE_SENTENCE, !hasSentences));
+                    BreakIteratorSegmenter.class, 
+                    BreakIteratorSegmenter.PARAM_WRITE_TOKEN, !hasTokens, 
+                    BreakIteratorSegmenter.PARAM_WRITE_SENTENCE, !hasSentences));
             pipeline.process(cas.getJCas());
         }
+        
         return jCas;
     }
 

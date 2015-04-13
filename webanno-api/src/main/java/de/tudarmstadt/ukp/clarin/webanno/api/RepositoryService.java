@@ -1157,7 +1157,7 @@ public interface RepositoryService
      *             if an I/O error occurs.
      */
     @SuppressWarnings("rawtypes")
-    JCas getJCasFromFile(File file, Class reader, SourceDocument aDocument)
+    JCas convertSourceDocumentToCas(File file, Class reader, SourceDocument aDocument)
         throws UIMAException, IOException;
 
     void updateTimeStamp(SourceDocument document, User user, Mode mode)

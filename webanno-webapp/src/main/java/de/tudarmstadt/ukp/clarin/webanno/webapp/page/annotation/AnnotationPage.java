@@ -755,7 +755,7 @@ public class AnnotationPage
                         .transition(SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
 
                 // Convert the source file into an annotation CAS
-                jcas = repository.getJCasFromFile(repository.getSourceDocumentContent(
+                jcas = repository.convertSourceDocumentToCas(repository.getSourceDocumentContent(
                         bratAnnotatorModel.getDocument()), 
                         repository.getReadableFormats().get(bratAnnotatorModel.getDocument().getFormat()), 
                         bratAnnotatorModel.getDocument());
