@@ -594,7 +594,7 @@ public class RepositoryServiceDbData
         readSerializedCas(cas.getJCas(), serializedCasFile);
         
         // Update type system the CAS
-        upgrade(cas, aDocument.getProject());
+        upgradeCas(cas, aDocument.getProject());
         
         // Update the source file name in case it is changed for some reason
         Project project = aDocument.getProject();
@@ -1889,7 +1889,7 @@ public class RepositoryServiceDbData
             AnnotationDocument annotationDocument = getAnnotationDocument(aDocument, user);
             try {
                 CAS cas = readAnnotationCas(annotationDocument).getCas();
-                upgrade(cas, aDocument.getProject());
+                upgradeCas(cas, aDocument.getProject());
                 createAnnotationDocumentContent(cas.getJCas(),
                         annotationDocument.getDocument(), user);
                 
@@ -1898,12 +1898,12 @@ public class RepositoryServiceDbData
                 }
                 else if (aMode.equals(Mode.AUTOMATION) || aMode.equals(Mode.CORRECTION)) {
                     CAS corrCas = readCorrectionCas(aDocument).getCas();
-                    upgrade(corrCas, aDocument.getProject());
+                    upgradeCas(corrCas, aDocument.getProject());
                     writeCorrectionCas(corrCas.getJCas(), aDocument, user);
                 }
                 else {
                     CAS curCas = readCurationCas(aDocument).getCas();
-                    upgrade(curCas, aDocument.getProject());
+                    upgradeCas(curCas, aDocument.getProject());
                     writeCurationCas(curCas.getJCas(), aDocument, user);
                 }
 
@@ -1922,7 +1922,7 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public void upgrade(CAS aCas, Project aProject)
+    public void upgradeCas(CAS aCas, Project aProject)
         throws UIMAException, IOException
     {
 

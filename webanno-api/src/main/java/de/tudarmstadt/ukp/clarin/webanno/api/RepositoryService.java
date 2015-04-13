@@ -1245,7 +1245,7 @@ public interface RepositoryService
 
     AutomationStatus getAutomationStatus(MiraTemplate template);
 
-    void upgrade(CAS aCurCas, Project aProject)
+    void upgradeCas(CAS aCurCas, Project aProject)
         throws UIMAException, IOException;
     
     /**
