@@ -393,7 +393,7 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public boolean existsAnnotationDocumentContent(SourceDocument aSourceDocument, String aUsername)
+    public boolean existsAnnotationCas(SourceDocument aSourceDocument, String aUsername)
         throws IOException
     {
         if (new File(getAnnotationFolder(aSourceDocument), aUsername + ".ser").exists()) {
@@ -1961,8 +1961,8 @@ public class RepositoryServiceDbData
         try {
             annotationDocument = getAnnotationDocument(aDocument, aUser);
             if (annotationDocument.getState().equals(AnnotationDocumentState.NEW)
-                    && !existsAnnotationDocumentContent(aDocument, aUser.getUsername())) {
-                jCas = createJCas(aDocument, annotationDocument, aProject, aUser);
+                    && !existsAnnotationCas(aDocument, aUser.getUsername())) {
+                jCas = convertSourceDocumentToCas(aDocument, annotationDocument, aProject, aUser);
             }
             else {
                 jCas = readAnnotationCas(annotationDocument);
@@ -1971,7 +1971,7 @@ public class RepositoryServiceDbData
         }
         // it is new, create it and get CAS object
         catch (NoResultException ex) {
-            jCas = createJCas(aDocument, annotationDocument, aProject, aUser);
+            jCas = convertSourceDocumentToCas(aDocument, annotationDocument, aProject, aUser);
         }
         catch (DataRetrievalFailureException e) {
             throw e;
@@ -1995,8 +1995,8 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public JCas createJCas(SourceDocument aDocument, AnnotationDocument aAnnotationDocument,
-            Project aProject, User aUser)
+    public JCas convertSourceDocumentToCas(SourceDocument aDocument,
+            AnnotationDocument aAnnotationDocument, Project aProject, User aUser)
         throws IOException
     {
         JCas jCas;

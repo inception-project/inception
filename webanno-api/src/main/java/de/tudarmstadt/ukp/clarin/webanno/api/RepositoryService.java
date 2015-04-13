@@ -398,7 +398,7 @@ public interface RepositoryService
      * @throws IOException
      *             if an I/O error occurs.
      */
-    boolean existsAnnotationDocumentContent(SourceDocument sourceDocument, String username)
+    boolean existsAnnotationCas(SourceDocument sourceDocument, String username)
         throws IOException;
 
     /**
@@ -1138,7 +1138,7 @@ public interface RepositoryService
     void updateJCas(Mode mode, SourceDocument document, User user, JCas jCas)
         throws IOException;
 
-    JCas createJCas(SourceDocument document, AnnotationDocument annoDoc, Project project, User user)
+    JCas convertSourceDocumentToCas(SourceDocument document, AnnotationDocument annoDoc, Project project, User user)
         throws IOException;
 
     /**

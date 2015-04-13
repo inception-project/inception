@@ -745,7 +745,7 @@ public class AnnotationPage
             
             // If there is no CAS yet for the annotation document, create one.
             JCas jcas;
-            if (!repository.existsAnnotationDocumentContent(bratAnnotatorModel.getDocument(), user.getUsername())) {
+            if (!repository.existsAnnotationCas(bratAnnotatorModel.getDocument(), user.getUsername())) {
                 // If there is no CAS yet, then the document must be in state new!
                 assert !annotationDocument.getState().equals(AnnotationDocumentState.NEW);
                
