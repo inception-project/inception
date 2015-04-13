@@ -281,7 +281,7 @@ public class RepositoryServiceDbData
     public void createAnnotationDocumentContent(JCas aJcas, SourceDocument aDocument, User aUser)
         throws IOException
     {
-        createAnnotationContent(aDocument, aJcas, aUser.getUsername(), aUser);
+        writeCas(aDocument, aJcas, aUser.getUsername(), aUser);
     }
 
     @Override
@@ -1609,7 +1609,7 @@ public class RepositoryServiceDbData
     public void createCorrectionDocumentContent(JCas aJcas, SourceDocument aDocument, User aUser)
         throws IOException
     {
-        createAnnotationContent(aDocument, aJcas, WebAnnoConst.CORRECTION_USER, aUser);
+        writeCas(aDocument, aJcas, WebAnnoConst.CORRECTION_USER, aUser);
     }
 
     @Override
@@ -1617,7 +1617,7 @@ public class RepositoryServiceDbData
     public void createCurationDocumentContent(JCas aJcas, SourceDocument aDocument, User aUser)
         throws IOException
     {
-        createAnnotationContent(aDocument, aJcas, WebAnnoConst.CURATION_USER, aUser);
+        writeCas(aDocument, aJcas, WebAnnoConst.CURATION_USER, aUser);
     }
 
     @Override
@@ -1651,8 +1651,7 @@ public class RepositoryServiceDbData
      * @throws IOException
      */
 
-    private void createAnnotationContent(SourceDocument aDocument, JCas aJcas, String aUserName,
-            User aUser)
+    private void writeCas(SourceDocument aDocument, JCas aJcas, String aUserName, User aUser)
         throws IOException
     {
         log.debug("Updating annotation document [" + aDocument.getName() + "] " + "with ID ["
@@ -1671,14 +1670,12 @@ public class RepositoryServiceDbData
 
             // Save current version
             try {
-                // Make a backup of the current version of the file before
-                // overwriting
+                // Make a backup of the current version of the file before overwriting
                 if (currentVersion.exists()) {
                     renameFile(currentVersion, oldVersion);
                 }
 
-                // Now write the new version to "<username>.ser" or
-                // CURATION_USER.ser
+                // Now write the new version to "<username>.ser" or CURATION_USER.ser
                 DocumentMetaData md;
                 try {
                     md = DocumentMetaData.get(aJcas);
@@ -1706,8 +1703,7 @@ public class RepositoryServiceDbData
             catch (IOException e) {
                 // If we could not save the new version, restore the old one.
                 FileUtils.forceDelete(currentVersion);
-                // If this is the first version, there is no old version, so do
-                // not restore anything
+                // If this is the first version, there is no old version, so do not restore anything
                 if (oldVersion.exists()) {
                     renameFile(oldVersion, currentVersion);
                 }
@@ -1717,8 +1713,7 @@ public class RepositoryServiceDbData
 
             // Manage history
             if (backupInterval > 0) {
-                // Determine the reference point in time based on the current
-                // version
+                // Determine the reference point in time based on the current version
                 long now = currentVersion.lastModified();
 
                 // Get all history files for the current user
@@ -1730,8 +1725,7 @@ public class RepositoryServiceDbData
                     @Override
                     public boolean accept(File aFile)
                     {
-                        // Check if the filename matches the pattern given
-                        // above.
+                        // Check if the filename matches the pattern given above.
                         return matcher.reset(aFile.getName()).matches();
                     }
                 });
@@ -1743,15 +1737,13 @@ public class RepositoryServiceDbData
                 boolean historyFileCreated = false;
                 File historyFile = new File(annotationFolder, username + ".ser." + now + ".bak");
                 if (history.length == 0) {
-                    // If there is no history yet but we should keep history,
-                    // then we create a
+                    // If there is no history yet but we should keep history, then we create a
                     // history file in any case.
                     FileUtils.copyFile(currentVersion, historyFile);
                     historyFileCreated = true;
                 }
                 else {
-                    // Check if the newest history file is significantly older
-                    // than the current one
+                    // Check if the newest history file is significantly older than the current one
                     File latestHistory = history[history.length - 1];
                     if (latestHistory.lastModified() + backupInterval < now) {
                         FileUtils.copyFile(currentVersion, historyFile);
@@ -1761,8 +1753,7 @@ public class RepositoryServiceDbData
 
                 // Prune history based on number of backup
                 if (historyFileCreated) {
-                    // The new version is not in the history, so we keep that in
-                    // any case. That
+                    // The new version is not in the history, so we keep that in any case. That
                     // means we need to keep one less.
                     int toKeep = Math.max(backupKeepNumber - 1, 0);
                     if ((backupKeepNumber > 0) && (toKeep < history.length)) {
