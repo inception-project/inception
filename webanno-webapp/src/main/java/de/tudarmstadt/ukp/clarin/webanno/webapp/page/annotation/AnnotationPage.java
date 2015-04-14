@@ -737,7 +737,7 @@ public class AnnotationPage
             JCas jcas = repository.readAnnotationCas(annotationDocument);
             
             // Update the annotation document CAS
-            repository.upgradeCas(jcas.getCas(), annotationDocument, bratAnnotatorModel.getMode());
+            repository.upgradeCas(jcas.getCas(), annotationDocument);
                         
             // After creating an new CAS or upgrading the CAS, we need to save it
             repository.writeAnnotationCas(jcas.getCas().getJCas(),

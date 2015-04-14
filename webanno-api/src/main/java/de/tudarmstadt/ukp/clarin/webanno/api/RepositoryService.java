@@ -1064,7 +1064,7 @@ public interface RepositoryService
      * @throws IOException
      *             if an I/O error occurs.
      * @deprecated Read CAS e.g. using {@link #readAnnotationCas(SourceDocument, User)} then use 
-     *             {@link #upgradeCas(CAS, AnnotationDocument, Mode)} and then write the CAS e.g.
+     *             {@link #upgradeCas(CAS, AnnotationDocument)} and then write the CAS e.g.
      *             using {@link #writeAnnotationCas(JCas, SourceDocument, User)}
      */
     @Deprecated
@@ -1125,7 +1125,7 @@ public interface RepositoryService
      */
     int isCrowdSourceEnabled();
 
-    void upgradeCas(CAS aCurCas, AnnotationDocument aAnnotationDocument, Mode aMode)
+    void upgradeCas(CAS aCurCas, AnnotationDocument aAnnotationDocument)
         throws UIMAException, IOException;
     
     /**

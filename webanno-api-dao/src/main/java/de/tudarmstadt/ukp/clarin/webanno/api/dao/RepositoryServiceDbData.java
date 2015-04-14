@@ -600,7 +600,7 @@ public class RepositoryServiceDbData
         readSerializedCas(cas.getJCas(), serializedCasFile);
         
         // Update type system the CAS
-        upgradeCas(cas, aDocument, aUser, aMode);
+        upgradeCas(cas, aDocument, aUser);
         
         // Update the source file name in case it is changed for some reason
         Project project = aDocument.getProject();
@@ -1856,7 +1856,7 @@ public class RepositoryServiceDbData
             AnnotationDocument annotationDocument = getAnnotationDocument(aDocument, user);
             try {
                 CAS cas = readAnnotationCas(annotationDocument).getCas();
-                upgradeCas(cas, annotationDocument, aMode);
+                upgradeCas(cas, annotationDocument);
                 writeAnnotationCas(cas.getJCas(),
                         annotationDocument.getDocument(), user);
                 
@@ -1865,12 +1865,12 @@ public class RepositoryServiceDbData
                 }
                 else if (aMode.equals(Mode.AUTOMATION) || aMode.equals(Mode.CORRECTION)) {
                     CAS corrCas = readCorrectionCas(aDocument).getCas();
-                    upgradeCas(corrCas, annotationDocument, aMode);
+                    upgradeCas(corrCas, annotationDocument);
                     writeCorrectionCas(corrCas.getJCas(), aDocument, user);
                 }
                 else {
                     CAS curCas = readCurationCas(aDocument).getCas();
-                    upgradeCas(curCas, annotationDocument, aMode);
+                    upgradeCas(curCas, annotationDocument);
                     writeCurationCas(curCas.getJCas(), aDocument, user);
                 }
 
@@ -1889,13 +1889,13 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public void upgradeCas(CAS aCas, AnnotationDocument aAnnotationDocument, Mode aMode)
+    public void upgradeCas(CAS aCas, AnnotationDocument aAnnotationDocument)
         throws UIMAException, IOException
     {
-        upgradeCas(aCas, aAnnotationDocument.getDocument(), aAnnotationDocument.getUser(), aMode);
+        upgradeCas(aCas, aAnnotationDocument.getDocument(), aAnnotationDocument.getUser());
     }
     
-    private void upgradeCas(CAS aCas, SourceDocument aSourceDocument, String aUser, Mode aMode)
+    private void upgradeCas(CAS aCas, SourceDocument aSourceDocument, String aUser)
         throws UIMAException, IOException
     {
         TypeSystemDescription builtInTypes = TypeSystemDescriptionFactory
@@ -1924,8 +1924,7 @@ public class RepositoryServiceDbData
 
         createLog(aSourceDocument.getProject()).info(
                 "Upgraded CAS of user [" + aUser + "] for document [" + aSourceDocument.getName()
-                        + "] " + " in project ID [" + aSourceDocument.getProject().getId()
-                        + "] in mode [" + aMode + "]");
+                        + "] " + " in project ID [" + aSourceDocument.getProject().getId() + "]");
         createLog(aSourceDocument.getProject()).removeAllAppenders();
     }
 
