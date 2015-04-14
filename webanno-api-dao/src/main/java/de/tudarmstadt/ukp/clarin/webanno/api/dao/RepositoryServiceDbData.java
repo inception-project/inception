@@ -756,14 +756,27 @@ public class RepositoryServiceDbData
         throws IOException
     {
         // If there is no CAS yet for the annotation document, create one.
-        JCas jcas;
+        JCas jcas = null;
         SourceDocument aDocument = aAnnotationDocument.getDocument();
         String user = aAnnotationDocument.getUser();
         if (!existsCas(aAnnotationDocument.getDocument(), user)) {
             // Convert the source file into an annotation CAS
             try {
-                jcas = convertSourceDocumentToCas(getSourceDocumentFile(aDocument),
-                        getReadableFormats().get(aDocument.getFormat()), aDocument);
+                if (!existsCas(aAnnotationDocument.getDocument(), INITIAL_CAS_PSEUDO_USER)) {
+                    // Normally, the initial CAS should be created on document import, but after
+                    // adding this feature, the existing projects do not yet have initial CASes, so
+                    // we create them here lazily
+                    jcas = convertSourceDocumentToCas(getSourceDocumentFile(aDocument),
+                            getReadableFormats().get(aDocument.getFormat()), aDocument);
+                    writeSerializedCas(jcas, getCasFile(aDocument, INITIAL_CAS_PSEUDO_USER));
+                }
+                
+                // Ok, so at this point, we either have the lazily converted CAS already loaded
+                // or we know that we can load the existing initial CAS.
+                if (jcas == null) {
+                    jcas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null).getJCas();
+                    readSerializedCas(jcas, getCasFile(aDocument, INITIAL_CAS_PSEUDO_USER));
+                }
             }
             catch (UIMAException e) {
                 throw new IOException(e);
