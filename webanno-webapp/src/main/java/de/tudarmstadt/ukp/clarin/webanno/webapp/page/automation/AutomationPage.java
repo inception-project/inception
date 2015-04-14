@@ -1102,15 +1102,7 @@ public class AutomationPage
             AnnotationDocument logedInUserAnnotationDocument = repository.getAnnotationDocument(
                     bratAnnotatorModel.getDocument(), logedInUser);
             jCas = repository.readAnnotationCas(logedInUserAnnotationDocument);
-
         }
-        catch (UIMAException e) {
-            throw e;
-        }
-        catch (ClassNotFoundException e) {
-            throw e;
-        }
-        // First time the Merge Cas is opened
         catch (IOException e) {
             throw e;
         }

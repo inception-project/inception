@@ -39,6 +39,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
@@ -432,35 +433,50 @@ public interface RepositoryService
     File getCasFile(SourceDocument document, String user);
 
     /**
-     * Get an {@link AnnotationDocument} object from the database using the {@link SourceDocument}
-     * and {@link User} Objects. If {@code getAnnotationDocument} fails, it will be created anew
+     * Get the annotation document.
      * 
      * @param document
      *            the source document.
      * @param user
      *            the user.
      * @return the annotation document.
+     * @throws NoResultException
+     *             if no annotation document exists for the given source/user.
      */
     AnnotationDocument getAnnotationDocument(SourceDocument document, User user);
 
     /**
-     * If already created, returns the CAS object either for document annotation for example in
-     * {@code de.tudarmstadt.ukp.clarin.webanno.brat.ajax.controller.BratAjaxCasController#getDocument}
-     * or for exporting the annotated document as TCF files as in
-     * {@code de.tudarmstadt.ukp.clarin.webanno.brat.ajax.controller.BratAjaxCasController#retrieveStored}
+     * Gets the CAS for the given annotation document. Converts it form the source document if
+     * necessary.
      *
      * @param annotationDocument
      *            the annotation document.
      * @return the JCas.
-     * @throws UIMAException
-     *             if there was a conversion error.
      * @throws IOException
      *             if there was an I/O error.
-     * @throws ClassNotFoundException
-     *             if the DKPro Core reader/writer could not be loaded.
      */
     JCas readAnnotationCas(AnnotationDocument annotationDocument)
-        throws UIMAException, IOException, ClassNotFoundException;
+        throws IOException;
+
+    /**
+     * Gets the CAS for the given annotation document. Converts it form the source document if
+     * necessary. If necessary, no annotation document exists, one is created. The source document
+     * is set into state {@link SourceDocumentState#ANNOTATION_IN_PROGRESS}.
+     * 
+     * @param document
+     *            the source document.
+     * @param user
+     *            the user.
+     * @return the JCas.
+     * @throws IOException
+     *             if there was an I/O error.
+     * @deprecated use {@link #createOrGetAnnotationDocument(SourceDocument, User)} and
+     *             {@link #readAnnotationCas(AnnotationDocument)} instead and manually set source
+     *             document status manually if desired.
+     */
+    @Deprecated
+    JCas readAnnotationCas(SourceDocument document, User user)
+        throws IOException;
 
     /**
      * List all the {@link AnnotationDocument}s, if available for a given {@link SourceDocument} in
@@ -1056,26 +1072,6 @@ public interface RepositoryService
         throws IOException;
 
     /**
-     * Get the CAS object for the document in the project created by the the User. If this is the
-     * first time the user is accessing the annotation document, it will be read from the source
-     * document, and converted to CAS
-     * 
-     * @param document
-     *            the source document.
-     * @param user
-     *            the user.
-     * @return the JCas.
-     * @throws UIMAException
-     *             if a conversion error occurs.
-     * @throws IOException
-     *             if an I/O error occurs.
-     * @throws ClassNotFoundException
-     *             if a DKPro Core reader/writer cannot be loaded.
-     */
-    JCas readAnnotationCas(SourceDocument document, User user)
-        throws UIMAException, IOException, ClassNotFoundException;
-
-    /**
      * Save the modified CAS in the file system as Serialized CAS
      * 
      * @param mode
@@ -1141,4 +1137,7 @@ public interface RepositoryService
 
     boolean existFinishedDocument(
             SourceDocument aSourceDocument, User aUser, Project aProject);
+
+    AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, User aUser)
+        throws IOException;
 }

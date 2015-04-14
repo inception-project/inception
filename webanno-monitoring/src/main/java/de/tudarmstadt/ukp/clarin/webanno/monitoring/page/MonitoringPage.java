@@ -1097,17 +1097,11 @@ public class MonitoringPage
                             JCas jCas = repository.readAnnotationCas(annotationDocument);
                             jCases.put(user, jCas);
                         }
-                        catch (UIMAException e) {
-                            error(ExceptionUtils.getRootCause(e));
-                        }
                         catch (DataRetrievalFailureException e) {
                             error(e.getCause().getMessage());
                         }
                         catch (IOException e) {
-                            error(e.getMessage());
-                        }
-                        catch (ClassNotFoundException e) {
-                            error(e.getMessage());
+                            error(ExceptionUtils.getRootCause(e));
                         }
                     }
                 }

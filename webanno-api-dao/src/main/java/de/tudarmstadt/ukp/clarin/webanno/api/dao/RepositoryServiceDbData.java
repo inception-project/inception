@@ -148,12 +148,15 @@ public class RepositoryServiceDbData
 {
     private final Log log = LogFactory.getLog(getClass());
     
-    public Logger createLog(Project aProject, String aUser)
+    public Logger createLog(Project aProject)
         throws IOException
     {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication != null ? authentication.getName() : "SYSTEM";
+               
         Logger logger = Logger.getLogger(getClass());
         String targetLog = dir.getAbsolutePath() + PROJECT + "project-" + aProject.getId() + ".log";
-        FileAppender apndr = new FileAppender(new PatternLayout("%d [" + aUser + "] %m%n"),
+        FileAppender apndr = new FileAppender(new PatternLayout("%d [" + username + "] %m%n"),
                 targetLog, true);
         logger.addAppender(apndr);
         logger.setLevel(Level.ALL);
@@ -231,14 +234,13 @@ public class RepositoryServiceDbData
             entityManager.merge(aAnnotationDocument);
         }
 
-        createLog(aAnnotationDocument.getProject(), aAnnotationDocument.getUser()).info(
+        createLog(aAnnotationDocument.getProject()).info(
                 " User [" + aAnnotationDocument.getUser()
                         + "] creates annotation document for source document ["
                         + aAnnotationDocument.getDocument().getId() + "] in project ["
                         + aAnnotationDocument.getProject().getId() + "] with id ["
                         + aAnnotationDocument.getId() + "]");
-        createLog(aAnnotationDocument.getProject(), aAnnotationDocument.getUser())
-                .removeAllAppenders();
+        createLog(aAnnotationDocument.getProject()).removeAllAppenders();
     }
 
     /**
@@ -290,7 +292,7 @@ public class RepositoryServiceDbData
     public void writeAnnotationCas(JCas aJcas, SourceDocument aDocument, User aUser)
         throws IOException
     {
-        writeCas(aDocument, aJcas, aUser.getUsername(), aUser);
+        writeCas(aDocument, aJcas, aUser.getUsername());
     }
 
     @Override
@@ -301,10 +303,10 @@ public class RepositoryServiceDbData
         entityManager.persist(aProject);
         String path = dir.getAbsolutePath() + PROJECT + aProject.getId();
         FileUtils.forceMkdir(new File(path));
-        createLog(aProject, aUser.getUsername())
-                .info(" Created  Project [" + aProject.getName() + "] with ID [" + aProject.getId()
+        createLog(aProject)
+                .info("Created  Project [" + aProject.getName() + "] with ID [" + aProject.getId()
                         + "]");
-        createLog(aProject, aUser.getUsername()).removeAllAppenders();
+        createLog(aProject).removeAllAppenders();
     }
 
     @Override
@@ -319,10 +321,10 @@ public class RepositoryServiceDbData
             entityManager.merge(aCrowdJob);
         }
 
-        createLog(aCrowdJob.getProject(), "crowd_user").info(
+        createLog(aCrowdJob.getProject()).info(
                 " Created  crowd job from project [" + aCrowdJob.getProject() + "] with ID ["
                         + aCrowdJob.getId() + "]");
-        createLog(aCrowdJob.getProject(), "crowd_user").removeAllAppenders();
+        createLog(aCrowdJob.getProject()).removeAllAppenders();
     }
 
     @Override
@@ -331,11 +333,11 @@ public class RepositoryServiceDbData
         throws IOException
     {
         entityManager.persist(aPermission);
-        createLog(aPermission.getProject(), aPermission.getUser()).info(
+        createLog(aPermission.getProject()).info(
                 " New Permission created on Project[" + aPermission.getProject().getName()
                         + "] for user [" + aPermission.getUser() + "] with permission ["
                         + aPermission.getLevel() + "]" + "]");
-        createLog(aPermission.getProject(), aPermission.getUser()).removeAllAppenders();
+        createLog(aPermission.getProject()).removeAllAppenders();
     }
 
     @Override
@@ -655,11 +657,11 @@ public class RepositoryServiceDbData
         
         runPipeline(cas, writer);
 
-        createLog(project, aUser).info(
+        createLog(project).info(
                 " Exported annotation file [" + aDocument.getName() + "] with ID ["
                         + aDocument.getId() + "] for user [" + aUser + "] from project ["
                         + project.getId() + "]");
-        createLog(project, aUser).removeAllAppenders();
+        createLog(project).removeAllAppenders();
 
         File exportFile;
         if (exportTempDir.listFiles().length > 1) {
@@ -668,7 +670,7 @@ public class RepositoryServiceDbData
                 ZipUtils.zipFolder(exportTempDir, exportFile);
             }
             catch (Exception e) {
-                createLog(project, aUser).info("Unable to create zip File");
+                createLog(project).info("Unable to create zip File");
             }
         }
         else {
@@ -715,6 +717,29 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
+    public AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, User aUser)
+        throws IOException
+    {
+        // Check if there is an annotation document entry in the database. If there is none, 
+        // create one.
+        AnnotationDocument annotationDocument = null;
+        if (!existsAnnotationDocument(aDocument, aUser)) {
+            annotationDocument = new AnnotationDocument();
+            annotationDocument.setDocument(aDocument);
+            annotationDocument.setName(aDocument.getName());
+            annotationDocument.setUser(aUser.getUsername());
+            annotationDocument.setProject(aDocument.getProject());
+            createAnnotationDocument(annotationDocument);
+        }
+        else {
+            annotationDocument = getAnnotationDocument(aDocument, aUser);
+        }
+
+        return annotationDocument;
+    }
+    
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
     public AnnotationDocument getAnnotationDocument(SourceDocument aDocument, User aUser)
     {
         return entityManager
@@ -728,9 +753,40 @@ public class RepositoryServiceDbData
     @Override
     @Transactional
     public JCas readAnnotationCas(AnnotationDocument aAnnotationDocument)
-        throws IOException, UIMAException, ClassNotFoundException
+        throws IOException
     {
-        return readCas(aAnnotationDocument.getDocument(), aAnnotationDocument.getUser());
+        // If there is no CAS yet for the annotation document, create one.
+        JCas jcas;
+        SourceDocument aDocument = aAnnotationDocument.getDocument();
+        String user = aAnnotationDocument.getUser();
+        if (!existsCas(aAnnotationDocument.getDocument(), user)) {
+            // Convert the source file into an annotation CAS
+            try {
+                jcas = convertSourceDocumentToCas(getSourceDocumentFile(aDocument),
+                        getReadableFormats().get(aDocument.getFormat()), aDocument);
+            }
+            catch (UIMAException e) {
+                throw new IOException(e);
+            }
+            catch (ClassNotFoundException e) {
+                throw new IOException(e);
+            }
+            catch (Exception e) {
+                throw new IOException(e.getMessage() != null ? e.getMessage()
+                        : "This is an invalid file. The reader for the document "
+                                + aDocument.getName() + " can't read this " + aDocument.getFormat()
+                                + " file type");
+            }
+            writeCas(aDocument, jcas, user);
+        }
+        else {
+            // Read existing CAS
+            // We intentionally do not upgrade the CAS here because in general the IDs
+            // must remain stable. If an upgrade is required the caller should do it
+            jcas =  readCas(aDocument, user);
+        }
+        
+        return jcas;
     }
 
     @Override
@@ -845,10 +901,10 @@ public class RepositoryServiceDbData
         copyLarge(new FileInputStream(aContent), new FileOutputStream(new File(guidelinePath
                 + aFileName)));
 
-        createLog(aProject, aUsername).info(
+        createLog(aProject).info(
                 " Created Guideline file[ " + aFileName + "] for Project [" + aProject.getName()
                         + "] with ID [" + aProject.getId() + "]");
-        createLog(aProject, aUsername).removeAllAppenders();
+        createLog(aProject).removeAllAppenders();
     }
 
     @Override
@@ -1142,7 +1198,7 @@ public class RepositoryServiceDbData
             FileUtils.deleteDirectory(new File(path));
         }
         catch (FileNotFoundException e) {
-            createLog(aProject, aUser.getUsername()).warn(
+            createLog(aProject).warn(
                     "Project directory to be deleted was not found: [" + path + "]. Ignoring.");
         }
 
@@ -1151,9 +1207,9 @@ public class RepositoryServiceDbData
         }
         // remove metadata from DB
         entityManager.remove(aProject);
-        createLog(aProject, aUser.getUsername()).info(
+        createLog(aProject).info(
                 " Removed Project [" + aProject.getName() + "] with ID [" + aProject.getId() + "]");
-        createLog(aProject, aUser.getUsername()).removeAllAppenders();
+        createLog(aProject).removeAllAppenders();
 
     }
 
@@ -1170,10 +1226,10 @@ public class RepositoryServiceDbData
     {
         FileUtils.forceDelete(new File(dir.getAbsolutePath() + PROJECT + aProject.getId()
                 + GUIDELINE + aFileName));
-        createLog(aProject, username).info(
+        createLog(aProject).info(
                 " Removed Guideline file from [" + aProject.getName() + "] with ID ["
                         + aProject.getId() + "]");
-        createLog(aProject, username).removeAllAppenders();
+        createLog(aProject).removeAllAppenders();
     }
 
     @Override
@@ -1185,10 +1241,10 @@ public class RepositoryServiceDbData
             FileUtils.forceDelete(new File(getAnnotationFolder(aSourceDocument),
                     WebAnnoConst.CURATION_USER + ".ser"));
 
-            createLog(aSourceDocument.getProject(), aUsername).info(
+            createLog(aSourceDocument.getProject()).info(
                     " Removed Curated document from  project [" + aSourceDocument.getProject()
                             + "] for the source document [" + aSourceDocument.getId());
-            createLog(aSourceDocument.getProject(), aUsername).removeAllAppenders();
+            createLog(aSourceDocument.getProject()).removeAllAppenders();
         }
     }
 
@@ -1198,11 +1254,11 @@ public class RepositoryServiceDbData
         throws IOException
     {
         entityManager.remove(projectPermission);
-        createLog(projectPermission.getProject(), projectPermission.getUser()).info(
+        createLog(projectPermission.getProject()).info(
                 " Removed Project Permission [" + projectPermission.getLevel() + "] for the USer ["
                         + projectPermission.getUser() + "] From project ["
                         + projectPermission.getProject().getId() + "]");
-        createLog(projectPermission.getProject(), projectPermission.getUser()).removeAllAppenders();
+        createLog(projectPermission.getProject()).removeAllAppenders();
 
     }
 
@@ -1232,10 +1288,10 @@ public class RepositoryServiceDbData
             FileUtils.forceDelete(new File(path));
         }
         
-        createLog(aDocument.getProject(), getLogUser()).info(
+        createLog(aDocument.getProject()).info(
                 " Removed Document [" + aDocument.getName() + "] with ID [" + aDocument.getId()
                         + "] from Project [" + aDocument.getProject().getId() + "]");
-        createLog(aDocument.getProject(), getLogUser()).removeAllAppenders();
+        createLog(aDocument.getProject()).removeAllAppenders();
 
     }
 
@@ -1244,11 +1300,6 @@ public class RepositoryServiceDbData
     public void removeAnnotationDocument(AnnotationDocument aAnnotationDocument)
     {
         entityManager.remove(aAnnotationDocument);
-    }
-
-    public void setDir(File aDir)
-    {
-        dir = aDir;
     }
 
     @Override
@@ -1306,11 +1357,11 @@ public class RepositoryServiceDbData
         property.store(new FileOutputStream(new File(propertiesPath,
                 annotationPreferencePropertiesFileName)), null);
 
-        createLog(aProject, aUsername).info(
+        createLog(aProject).info(
                 " Saved preferences file [" + annotationPreferencePropertiesFileName
                         + "] for project [" + aProject.getName() + "] with ID [" + aProject.getId()
                         + "] to location: [" + propertiesPath + "]");
-        createLog(aProject, aUsername).removeAllAppenders();
+        createLog(aProject).removeAllAppenders();
 
     }
 
@@ -1376,10 +1427,10 @@ public class RepositoryServiceDbData
             writeSerializedCas(cas, getCasFile(aDocument, INITIAL_CAS_PSEUDO_USER));
         }
         
-        createLog(aDocument.getProject(), getLogUser()).info(
+        createLog(aDocument.getProject()).info(
                 " Imported file [" + aDocument.getName() + "] with ID [" + aDocument.getId()
                         + "] to Project [" + aDocument.getProject().getId() + "]");
-        createLog(aDocument.getProject(), getLogUser()).removeAllAppenders();
+        createLog(aDocument.getProject()).removeAllAppenders();
     }
 
     @Override
@@ -1401,10 +1452,10 @@ public class RepositoryServiceDbData
             closeQuietly(aIs);
         }
 
-        createLog(aDocument.getProject(), getLogUser()).info(
+        createLog(aDocument.getProject()).info(
                 " Imported file [" + aDocument.getName() + "] with ID [" + aDocument.getId()
                         + "] to Project [" + aDocument.getProject().getId() + "]");
-        createLog(aDocument.getProject(), getLogUser()).removeAllAppenders();
+        createLog(aDocument.getProject()).removeAllAppenders();
 
     }
 
@@ -1528,7 +1579,7 @@ public class RepositoryServiceDbData
     public void writeCorrectionCas(JCas aJcas, SourceDocument aDocument, User aUser)
         throws IOException
     {
-        writeCas(aDocument, aJcas, CORRECTION_USER, aUser);
+        writeCas(aDocument, aJcas, CORRECTION_USER);
     }
 
     @Override
@@ -1536,7 +1587,7 @@ public class RepositoryServiceDbData
     public void writeCurationCas(JCas aJcas, SourceDocument aDocument, User aUser)
         throws IOException
     {
-        writeCas(aDocument, aJcas, CURATION_USER, aUser);
+        writeCas(aDocument, aJcas, CURATION_USER);
     }
 
     @Override
@@ -1564,17 +1615,15 @@ public class RepositoryServiceDbData
      * @param aUserName
      *            the user who annotates the document if it is user's annotation document OR the
      *            CURATION_USER
-     * @param aUser
-     *            The user who annotates the document OR the curator who curates the document
      * @throws IOException
      */
 
-    private void writeCas(SourceDocument aDocument, JCas aJcas, String aUserName, User aUser)
+    private void writeCas(SourceDocument aDocument, JCas aJcas, String aUserName)
         throws IOException
     {
         log.debug("Updating annotation document [" + aDocument.getName() + "] " + "with ID ["
                 + aDocument.getId() + "] in project ID [" + aDocument.getProject().getId()
-                + "] for user [" + aUser.getUsername() + "]");
+                + "]");
         //DebugUtils.smallStack();
        
         synchronized (lock) {
@@ -1606,12 +1655,11 @@ public class RepositoryServiceDbData
                 File targetPath = getAnnotationFolder(aDocument);
                 writeSerializedCas(aJcas, new File(targetPath, aUserName+".ser"));
                 
-                createLog(aDocument.getProject(), aUser.getUsername()).info(
+                createLog(aDocument.getProject()).info(
                         "Updated annotation document [" + aDocument.getName() + "] " + "with ID ["
                                 + aDocument.getId() + "] in project ID ["
-                                + aDocument.getProject().getId() + "] for user ["
-                                + aUser.getUsername() + "]");
-                createLog(aDocument.getProject(), aUser.getUsername()).removeAllAppenders();
+                                + aDocument.getProject().getId() + "]");
+                createLog(aDocument.getProject()).removeAllAppenders();
 
                 // If the saving was successful, we delete the old version
                 if (oldVersion.exists()) {
@@ -1690,13 +1738,12 @@ public class RepositoryServiceDbData
                         // Remove these old files
                         for (File file : toRemove) {
                             FileUtils.forceDelete(file);
-                            createLog(aDocument.getProject(), aUser.getUsername()).info(
+                            createLog(aDocument.getProject()).info(
                                     "Removed surplus history file [" + file.getName() + "] "
                                             + "for document with ID [" + aDocument.getId()
                                             + "] in project ID [" + aDocument.getProject().getId()
                                             + "]");
-                            createLog(aDocument.getProject(), aUser.getUsername())
-                                    .removeAllAppenders();
+                            createLog(aDocument.getProject()).removeAllAppenders();
                         }
                     }
 
@@ -1705,13 +1752,12 @@ public class RepositoryServiceDbData
                         for (File file : history) {
                             if ((file.lastModified() + backupKeepTime) < now) {
                                 FileUtils.forceDelete(file);
-                                createLog(aDocument.getProject(), aUser.getUsername()).info(
+                                createLog(aDocument.getProject()).info(
                                         "Removed outdated history file [" + file.getName() + "] "
                                                 + " for document with ID [" + aDocument.getId()
                                                 + "] in project ID ["
                                                 + aDocument.getProject().getId() + "]");
-                                createLog(aDocument.getProject(), aUser.getUsername())
-                                        .removeAllAppenders();
+                                createLog(aDocument.getProject()).removeAllAppenders();
                             }
                         }
                     }
@@ -1833,12 +1879,12 @@ public class RepositoryServiceDbData
                 // no need to catch, it is acceptable that no curation document
                 // exists to be upgraded while there are annotation documents
             }
-            createLog(aDocument.getProject(), aUsername).info(
+            createLog(aDocument.getProject()).info(
                     "Upgraded annotation document [" + aDocument.getName() + "] " + "with ID ["
                             + aDocument.getId() + "] in project ID ["
                             + aDocument.getProject().getId() + "] for user [" + aUsername
                             + "] in mode [" + aMode + "]");
-            createLog(aDocument.getProject(), aUsername).removeAllAppenders();
+            createLog(aDocument.getProject()).removeAllAppenders();
         }
     }
 
@@ -1876,64 +1922,28 @@ public class RepositoryServiceDbData
         Serialization.deserializeCAS(aCas, new ByteArrayInputStream(os2.toByteArray()),
                 oldTypeSystem, null);
 
-        createLog(aSourceDocument.getProject(), aUser).info(
+        createLog(aSourceDocument.getProject()).info(
                 "Upgraded CAS of user [" + aUser + "] for document [" + aSourceDocument.getName()
                         + "] " + " in project ID [" + aSourceDocument.getProject().getId()
                         + "] in mode [" + aMode + "]");
-        createLog(aSourceDocument.getProject(), aUser).removeAllAppenders();
+        createLog(aSourceDocument.getProject()).removeAllAppenders();
     }
 
     @Override
     @Transactional
+    @Deprecated
     public JCas readAnnotationCas(SourceDocument aDocument, User aUser)
-        throws UIMAException, IOException, ClassNotFoundException
+        throws IOException
     {
         // Change the state of the source document to in progress
         aDocument.setState(SourceDocumentStateTransition
                 .transition(SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
         
-        // Make sure we have an AnnotationDocument in the database
-        AnnotationDocument annotationDocument = null;
-        if (!existsAnnotationDocument(aDocument, aUser)) {
-            annotationDocument = new AnnotationDocument();
-            annotationDocument.setDocument(aDocument);
-            annotationDocument.setName(aDocument.getName());
-            annotationDocument.setUser(aUser.getUsername());
-            annotationDocument.setProject(aDocument.getProject());
-            createAnnotationDocument(annotationDocument);
-        }
-        else {
-            annotationDocument = getAnnotationDocument(aDocument, aUser);
-        }
-        
-        // Make sure we have a CAS
-        JCas jcas;
-        if (!existsCas(aDocument, aUser.getUsername())) {
-            // Initial conversion
-            try {
-                jcas = convertSourceDocumentToCas(getSourceDocumentFile(aDocument),
-                        getReadableFormats().get(aDocument.getFormat()), aDocument);
-            }
-            catch (UIMAException e) {
-                throw new IOException(e);
-            }
-            catch (ClassNotFoundException e) {
-                throw new IOException(e);
-            }
-            catch (Exception e) {
-                throw new IOException(e.getMessage() != null ? e.getMessage()
-                        : "This is an invalid file. The reader for the document "
-                                + aDocument.getName() + " can't read this " + aDocument.getFormat()
-                                + " file type");
-            }
-            writeAnnotationCas(jcas, aDocument, aUser);
-        }
-        else {
-            // Read existing
-            jcas =  readCas(annotationDocument.getDocument(), annotationDocument.getUser());
-        }
-        
-        return jcas;
+        // Check if there is an annotation document entry in the database. If there is none, 
+        // create one.
+        AnnotationDocument annotationDocument = createOrGetAnnotationDocument(aDocument, aUser);
+                
+        return readAnnotationCas(annotationDocument);
     }
 
     @Override
@@ -2243,17 +2253,6 @@ public class RepositoryServiceDbData
         }
         catch (ClassNotFoundException e) {
             throw new IOException(e);
-        }
-    }
-    
-    private String getLogUser()
-    {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null) {
-            return authentication.getName();
-        }
-        else {
-            return "SYSTEM";
         }
     }
 }

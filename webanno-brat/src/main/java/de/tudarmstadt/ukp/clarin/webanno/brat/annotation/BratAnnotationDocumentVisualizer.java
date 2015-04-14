@@ -127,19 +127,11 @@ public class BratAnnotationDocumentVisualizer
         try {
             jCas = repository.readAnnotationCas(getModelObject());
         }
-        catch (UIMAException e) {
-            error(ExceptionUtils.getRootCauseMessage(e));
-            return docData;
-        }
         catch (DataRetrievalFailureException e) {
             error(e.getCause().getMessage());
         }
         catch (IOException e) {
-            error("Unable to find annotation document " + ExceptionUtils.getRootCauseMessage(e));
-        }
-        catch (ClassNotFoundException e) {
-            error("Unable to get the class name for conversion +"
-                    + ExceptionUtils.getRootCauseMessage(e));
+            error("Unable to read annotation document " + ExceptionUtils.getRootCauseMessage(e));
         }
         // Generate BRAT object model from CAS
         GetDocumentResponse response = new GetDocumentResponse();

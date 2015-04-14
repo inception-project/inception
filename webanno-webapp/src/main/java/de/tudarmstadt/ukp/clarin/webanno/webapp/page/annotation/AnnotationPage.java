@@ -649,8 +649,10 @@ public class AnnotationPage
         
         String labelText = "";
         if (bratAnnotatorModel.getDocument() != null) {
-            JCas jCas1 = null;
-            jCas1 = repository.readAnnotationCas(bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser());
+            // FIXME Why do we have to re-load the CAS here? 
+            // bratAnnotatorModel.getUser() is always set to the logged-in user
+            JCas jCas1 = repository.readAnnotationCas(bratAnnotatorModel.getDocument(),
+                    bratAnnotatorModel.getUser());
             JCas jCas = jCas1;
             totalNumberOfSentence = BratAjaxCasUtil.getNumberOfPages(jCas);
 
@@ -728,44 +730,15 @@ public class AnnotationPage
         try {
             // Check if there is an annotation document entry in the database. If there is none, 
             // create one.
-            AnnotationDocument annotationDocument = null;
-            if (!repository.existsAnnotationDocument( bratAnnotatorModel.getDocument(), user)) {
-                // If there is no metadata yet, then the document must be in state new!
-                annotationDocument = new AnnotationDocument();
-                annotationDocument.setDocument(bratAnnotatorModel.getDocument());
-                annotationDocument.setName(bratAnnotatorModel.getDocument().getName());
-                annotationDocument.setUser(user.getUsername());
-                annotationDocument.setProject(bratAnnotatorModel.getProject());
-                repository.createAnnotationDocument(annotationDocument);
-            }
-            else {
-                annotationDocument = repository.getAnnotationDocument(
-                        bratAnnotatorModel.getDocument(), user);
-            }
+            AnnotationDocument annotationDocument = repository.createOrGetAnnotationDocument(
+                    bratAnnotatorModel.getDocument(), user);
             
-            // If there is no CAS yet for the annotation document, create one.
-            JCas jcas;
-            if (!repository.existsCas(bratAnnotatorModel.getDocument(), user.getUsername())) {
-                // If there is no CAS yet, then the document must be in state new!
-                assert !annotationDocument.getState().equals(AnnotationDocumentState.NEW);
-               
-                // When accessing a annotation CAS of a source document, the source document is
-                // transitioned to state IN_PROGRESS.
-                bratAnnotatorModel.getDocument().setState(SourceDocumentStateTransition
-                        .transition(SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
-
-                // Convert the source file into an annotation CAS
-                jcas = repository.convertSourceDocumentToCas(repository.getSourceDocumentFile(
-                        bratAnnotatorModel.getDocument()), 
-                        repository.getReadableFormats().get(bratAnnotatorModel.getDocument().getFormat()), 
-                        bratAnnotatorModel.getDocument());
-            }
-            else {
-                // Update the annotation document CAS
-                jcas = repository.readAnnotationCas(annotationDocument);
-                repository.upgradeCas(jcas.getCas(), annotationDocument, bratAnnotatorModel.getMode());
-            }
+            // Read the CAS
+            JCas jcas = repository.readAnnotationCas(annotationDocument);
             
+            // Update the annotation document CAS
+            repository.upgradeCas(jcas.getCas(), annotationDocument, bratAnnotatorModel.getMode());
+                        
             // After creating an new CAS or upgrading the CAS, we need to save it
             repository.writeAnnotationCas(jcas.getCas().getJCas(),
                     annotationDocument.getDocument(), user);
