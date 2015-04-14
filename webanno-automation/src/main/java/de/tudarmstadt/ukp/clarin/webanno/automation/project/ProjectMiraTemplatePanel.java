@@ -48,6 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.automation.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.automation.util.AutomationException;
 import de.tudarmstadt.ukp.clarin.webanno.automation.util.AutomationUtil;
 import de.tudarmstadt.ukp.clarin.webanno.automation.util.TabSepDocModel;
@@ -76,6 +77,9 @@ public class ProjectMiraTemplatePanel
 
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
+
+    @SpringBean(name = "automationService")
+    private AutomationService automationService;
 
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
@@ -109,7 +113,7 @@ public class ProjectMiraTemplatePanel
         super(id);
         this.selectedProjectModel = aProjectModel;
         System.out.println(repository.getDir());
-        for (MiraTemplate template : repository.listMiraTemplates(selectedProjectModel.getObject())) {
+        for (MiraTemplate template : automationService.listMiraTemplates(selectedProjectModel.getObject())) {
             if (template.isCurrentLayer()) {
                 this.template = template;
                 selectedFeature = template.getTrainFeature();
@@ -213,8 +217,8 @@ public class ProjectMiraTemplatePanel
                 public void onSelectionChanged(AnnotationFeature aNewSelection)
                 {
                     selectedFeature = (AnnotationFeature) aNewSelection;
-                    if (repository.existsMiraTemplate(selectedFeature)) {
-                        template = repository.getMiraTemplate(selectedFeature);
+                    if (automationService.existsMiraTemplate(selectedFeature)) {
+                        template = automationService.getMiraTemplate(selectedFeature);
                     }
                     else {
                         template = new MiraTemplate();
@@ -452,12 +456,12 @@ public class ProjectMiraTemplatePanel
                             sd.setProcessed(false);
                         }
                         template.setTrainFeature(selectedFeature);
-                        repository.createTemplate(template);
+                        automationService.createTemplate(template);
                         featureModel.setObject(MiraTemplateDetailForm.this.getModelObject()
                                 .getTrainFeature());
                     }
                     template.setCurrentLayer(true);
-                    for (MiraTemplate tmp : repository.listMiraTemplates(selectedProjectModel
+                    for (MiraTemplate tmp : automationService.listMiraTemplates(selectedProjectModel
                             .getObject())) {
                         if (tmp.equals(template)) {
                             continue;
@@ -540,7 +544,7 @@ public class ProjectMiraTemplatePanel
                 protected void onSelectionChanged(AnnotationFeature aNewSelection)
                 {
                     miraTemplateDetailForm.getModelObject().getOtherFeatures().add(aNewSelection);
-                    repository.createTemplate(miraTemplateDetailForm.getModelObject());
+                    automationService.createTemplate(miraTemplateDetailForm.getModelObject());
                 }
 
                 @Override
@@ -633,9 +637,7 @@ public class ProjectMiraTemplatePanel
                     MiraTemplate template = miraTemplateDetailForm.getModelObject();
                     AutomationStatus automationStatus = new AutomationStatus();
                     try {
-
-                        // no training document is added / no curation is done
-                        // yet!
+                        // no training document is added / no curation is done yet!
                         boolean existsTrainDocument = false;
                         for (SourceDocument document : repository
                                 .listSourceDocuments(selectedProjectModel.getObject())) {
@@ -647,7 +649,7 @@ public class ProjectMiraTemplatePanel
                             }
                         }
 
-                        for (SourceDocument document : repository
+                        for (SourceDocument document : automationService
                                 .listTabSepDocuments(selectedProjectModel.getObject())) {
                             if (document.isTrainingDocument()) {
                                 existsTrainDocument = true;
@@ -674,7 +676,7 @@ public class ProjectMiraTemplatePanel
                                 break;
                             }
                         }
-                        for (SourceDocument document : repository
+                        for (SourceDocument document : automationService
                                 .listTabSepDocuments(selectedProjectModel.getObject())) {
                             if (!document.isProcessed()) {
                                 existUnprocessedDocument = true;
@@ -701,8 +703,8 @@ public class ProjectMiraTemplatePanel
                             }
                         }
 
-                        automationStatus = repository.existsAutomationStatus(template) ? repository
-                                .getAutomationStatus(template) : automationStatus;
+                        automationStatus = automationService.existsAutomationStatus(template) ? 
+                                automationService.getAutomationStatus(template) : automationStatus;
                         automationStatus.setStartime(new Timestamp(new Date().getTime()));
                         automationStatus.setEndTime(new Timestamp(new Date().getTime()));
                         automationStatus.setTrainDocs(trainDoc);
@@ -710,7 +712,7 @@ public class ProjectMiraTemplatePanel
                         automationStatus.setTotalDocs(annodoc + trainDoc);
                         automationStatus.setTemplate(template);
 
-                        repository.createAutomationStatus(automationStatus);
+                        automationService.createAutomationStatus(automationStatus);
 
                         template.setAutomationStarted(true);
 
@@ -718,56 +720,58 @@ public class ProjectMiraTemplatePanel
                         template.setResult("---");
 
                         AutomationUtil.addOtherFeatureTrainDocument(template, repository,
-                                annotationService);
-                        AutomationUtil.otherFeatureClassifiers(template, repository);
+                                annotationService, automationService);
+                        AutomationUtil.otherFeatureClassifiers(template, repository,
+                                automationService);
 
-                        AutomationUtil.addTabSepTrainDocument(template, repository);
-                        AutomationUtil.tabSepClassifiers(template, repository);
+                        AutomationUtil.addTabSepTrainDocument(template, repository,
+                                automationService);
+                        AutomationUtil.tabSepClassifiers(template, repository, automationService);
 
                         AutomationUtil.generateTrainDocument(template, repository,
-                                annotationService, true);
+                                annotationService, automationService, true);
                         AutomationUtil.generatePredictDocument(template, repository,
-                                annotationService);
+                                annotationService, automationService);
 
                         automationStatus.setStatus(Status.GENERATE_CLASSIFIER);
                         miraTemplateDetailForm.getModelObject().setResult(
                                 AutomationUtil.generateFinalClassifier(template, repository,
-                                        annotationService));
+                                        annotationService, automationService));
                         AutomationUtil.addOtherFeatureToPredictDocument(template, repository,
-                                annotationService);
+                                annotationService, automationService);
 
                         automationStatus.setStatus(Status.PREDICTION);
-                        AutomationUtil.predict(template, repository);
+                        AutomationUtil.predict(template, repository, automationService);
 
                         template.setAutomationStarted(false);
                         automationStatus.setStatus(Status.COMPLETED);
                         automationStatus.setEndTime(new Timestamp(new Date().getTime()));
-                        repository.createTemplate(template);
-                        repository.createAutomationStatus(automationStatus);
+                        automationService.createTemplate(template);
+                        automationService.createAutomationStatus(automationStatus);
 
                     }
                     catch (UIMAException e) {
                         template.setAutomationStarted(false);
                         automationStatus.setStatus(Status.INTERRUPTED);
                         automationStatus.setEndTime(new Timestamp(new Date().getTime()));
-                        repository.createTemplate(template);
-                        repository.createAutomationStatus(automationStatus);
+                        automationService.createTemplate(template);
+                        automationService.createAutomationStatus(automationStatus);
                         aTarget.appendJavaScript("alert('" + ExceptionUtils.getRootCause(e) + "')");
                     }
                     catch (ClassNotFoundException e) {
                         template.setAutomationStarted(false);
                         automationStatus.setStatus(Status.INTERRUPTED);
                         automationStatus.setEndTime(new Timestamp(new Date().getTime()));
-                        repository.createTemplate(template);
-                        repository.createAutomationStatus(automationStatus);
+                        automationService.createTemplate(template);
+                        automationService.createAutomationStatus(automationStatus);
                         aTarget.appendJavaScript("alert('" + e.getMessage() + "')");
                     }
                     catch (IOException e) {
                         template.setAutomationStarted(false);
                         automationStatus.setStatus(Status.INTERRUPTED);
                         automationStatus.setEndTime(new Timestamp(new Date().getTime()));
-                        repository.createTemplate(template);
-                        repository.createAutomationStatus(automationStatus);
+                        automationService.createTemplate(template);
+                        automationService.createAutomationStatus(automationStatus);
                         aTarget.appendJavaScript("alert('" + e.getMessage() + "')");
                     }
                     catch (BratAnnotationException e) {
@@ -777,8 +781,8 @@ public class ProjectMiraTemplatePanel
                         template.setAutomationStarted(false);
                         automationStatus.setStatus(Status.INTERRUPTED);
                         automationStatus.setEndTime(new Timestamp(new Date().getTime()));
-                        repository.createTemplate(template);
-                        repository.createAutomationStatus(automationStatus);
+                        automationService.createTemplate(template);
+                        automationService.createAutomationStatus(automationStatus);
                         aTarget.appendJavaScript("alert('" + e.getMessage() + "')");
                     }
                     // any other exception such as Memmory heap
@@ -786,15 +790,15 @@ public class ProjectMiraTemplatePanel
                         template.setAutomationStarted(false);
                         automationStatus.setStatus(Status.INTERRUPTED);
                         automationStatus.setEndTime(new Timestamp(new Date().getTime()));
-                        repository.createTemplate(template);
-                        repository.createAutomationStatus(automationStatus);
+                        automationService.createTemplate(template);
+                        automationService.createAutomationStatus(automationStatus);
                         aTarget.appendJavaScript("alert('" + e.getMessage() + "')");
                     }
                     finally {
                         automationStatus.setStatus(Status.COMPLETED);
                         automationStatus.setEndTime(new Timestamp(new Date().getTime()));
                         template.setAutomationStarted(false);
-                        repository.createTemplate(template);
+                        automationService.createTemplate(template);
                     }
                 }
 

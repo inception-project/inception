@@ -64,6 +64,7 @@
 				<prop key="backup.interval">0</prop>
 				<prop key="backup.keep.number">0</prop>
 				<prop key="crowdsource.enabled">0</prop>
+                <prop key="webanno.repository">#{systemProperties['webanno.home'] ?: systemProperties['user.home'].concat('/.webanno') }/repository/</prop>
 			</props>
 		</property>
 		<property name="locations">
@@ -78,9 +79,12 @@
 		class="de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationServiceImpl">
 	</bean>
 
+    <bean id="automationService"
+        class="de.tudarmstadt.ukp.clarin.webanno.automation.MiraAutomationServiceImpl">
+    </bean>
+
 	<bean id="documentRepository"
 		class="de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryServiceDbData">
-		<property name="dir" value="#{systemProperties['webanno.home'] ?: systemProperties['user.home'].concat('/.webanno') }/repository/" />
 		<property name="annotationPreferencePropertiesFileName" value="annotation.properties" />
 	</bean>
 

@@ -66,6 +66,7 @@ import wicket.contrib.input.events.InputBehavior;
 import wicket.contrib.input.events.key.KeyType;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.automation.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.automation.util.AutomationUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
@@ -113,8 +114,12 @@ public class AutomationPage
 
     @SpringBean(name = "jsonConverter")
     private MappingJacksonHttpMessageConverter jsonConverter;
+    
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
+
+    @SpringBean(name = "automationService")
+    private AutomationService automationService;
 
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
@@ -252,7 +257,7 @@ public class AutomationPage
                     break;
                 }
                 try {
-                    template = repository.getMiraTemplate(autoFeature);
+                    template = automationService.getMiraTemplate(autoFeature);
                     if (!template.isAnnotateAndPredict()) {
                         return;
                     }
@@ -261,7 +266,7 @@ public class AutomationPage
                      * .getRememberedSpanFeatures().get(autoFeature), autoFeature.getTagset());
                      */
                     AutomationUtil.repeateAnnotation(bratAnnotatorModel, repository,
-                            annotationService, aStart, aEnd, autoFeature);
+                            annotationService, automationService, aStart, aEnd, autoFeature);
                 }
                 catch (UIMAException e) {
                     error(ExceptionUtils.getRootCause(e));
@@ -298,7 +303,7 @@ public class AutomationPage
                     return;
                 }
                 try {
-                    template = repository.getMiraTemplate(autoFeature);
+                    template = automationService.getMiraTemplate(autoFeature);
                     if (!template.isAnnotateAndPredict()) {
                         return;
                     }
@@ -307,7 +312,7 @@ public class AutomationPage
                      * .getRememberedSpanFeatures().get(autoFeature), autoFeature.getTagset());
                      */
                     AutomationUtil.deleteAnnotation(bratAnnotatorModel, repository,
-                            annotationService, aStart, aEnd, autoFeature);
+                            annotationService, automationService, aStart, aEnd, autoFeature);
                 }
                 catch (UIMAException e) {
                     error(ExceptionUtils.getRootCause(e));

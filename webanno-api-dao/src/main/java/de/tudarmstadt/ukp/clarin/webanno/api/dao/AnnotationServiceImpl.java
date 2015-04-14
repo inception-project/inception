@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,8 +30,13 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
+import org.apache.log4j.FileAppender;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PatternLayout;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
@@ -57,6 +63,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 public class AnnotationServiceImpl
     implements AnnotationService
 {
+    @Value(value = "${webanno.repository}")
+    private File dir;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -76,10 +84,10 @@ public class AnnotationServiceImpl
     {
         entityManager.persist(aTag);
 
-        RepositoryServiceDbData.createLog(aTag.getTagSet().getProject(), aUser.getUsername()).info(
+        createLog(aTag.getTagSet().getProject(), aUser.getUsername()).info(
                 " Added tag [" + aTag.getName() + "] with ID [" + aTag.getId() + "] to TagSet ["
                         + aTag.getTagSet().getName() + "]");
-        RepositoryServiceDbData.createLog(aTag.getTagSet().getProject(), aUser.getUsername())
+        createLog(aTag.getTagSet().getProject(), aUser.getUsername())
                 .removeAllAppenders();
     }
 
@@ -95,9 +103,9 @@ public class AnnotationServiceImpl
         else {
             entityManager.merge(aTagSet);
         }
-        RepositoryServiceDbData.createLog(aTagSet.getProject(), aUser.getUsername()).info(
+        createLog(aTagSet.getProject(), aUser.getUsername()).info(
                 " Added tagset [" + aTagSet.getName() + "] with ID [" + aTagSet.getId() + "]");
-        RepositoryServiceDbData.createLog(aTagSet.getProject(), aUser.getUsername())
+        createLog(aTagSet.getProject(), aUser.getUsername())
                 .removeAllAppenders();
     }
 
@@ -112,9 +120,9 @@ public class AnnotationServiceImpl
         else {
             entityManager.merge(aLayer);
         }
-        RepositoryServiceDbData.createLog(aLayer.getProject(), aUser.getUsername()).info(
+        createLog(aLayer.getProject(), aUser.getUsername()).info(
                 " Added layer [" + aLayer.getName() + "] with ID [" + aLayer.getId() + "]");
-        RepositoryServiceDbData.createLog(aLayer.getProject(), aUser.getUsername())
+        createLog(aLayer.getProject(), aUser.getUsername())
                 .removeAllAppenders();
     }
 
@@ -716,5 +724,19 @@ public class AnnotationServiceImpl
     {
         entityManager.remove(aLayer);
 
+    }
+
+    private static final String PROJECT = "/project/";
+
+    private Logger createLog(Project aProject, String aUser)
+        throws IOException
+    {
+        Logger logger = Logger.getLogger(getClass());
+        String targetLog = dir.getAbsolutePath() + PROJECT + "project-" + aProject.getId() + ".log";
+        FileAppender apndr = new FileAppender(new PatternLayout("%d [" + aUser + "] %m%n"),
+                targetLog, true);
+        logger.addAppender(apndr);
+        logger.setLevel(Level.ALL);
+        return logger;
     }
 }

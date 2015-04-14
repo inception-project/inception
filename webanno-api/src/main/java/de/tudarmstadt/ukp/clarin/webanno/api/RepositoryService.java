@@ -32,11 +32,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
-import de.tudarmstadt.ukp.clarin.webanno.model.AutomationStatus;
 import de.tudarmstadt.ukp.clarin.webanno.model.CrowdJob;
-import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -257,15 +254,6 @@ public interface RepositoryService
      * @return list of source documents
      */
     List<SourceDocument> listSourceDocuments(Project aProject);
-
-    /**
-     * Return list of training documents that are in the TOKEN TAB FEAURE formats
-     *
-     * @param aProject
-     *            the project.
-     * @return the source documents.
-     */
-    List<SourceDocument> listTabSepDocuments(Project aProject);
 
     /**
      * ROLE_ADMINs or project admins can remove source documents from a project. removing a a source
@@ -787,9 +775,6 @@ public interface RepositoryService
     void createGuideline(Project project, File content, String fileName, String username)
         throws IOException;
 
-    void createTemplate(Project project, File content, String fileName, String username)
-        throws IOException;
-
     /**
      * get the annotation guideline document from the file system
      *
@@ -820,15 +805,6 @@ public interface RepositoryService
     List<String> listGuidelines(Project project);
 
     /**
-     * List MIRA template files
-     * 
-     * @param project
-     *            the project.
-     * @return the templates.
-     */
-    List<String> listTemplates(Project project);
-
-    /**
      * Remove an annotation guideline document from the file system
      *
      * @param project
@@ -841,21 +817,6 @@ public interface RepositoryService
      *             if an I/O error occurs.
      */
     void removeGuideline(Project project, String fileName, String username)
-        throws IOException;
-
-    /**
-     * Remove an MIRA template
-     * 
-     * @param project
-     *            the project.
-     * @param fileName
-     *            the filename.
-     * @param username
-     *            the username.
-     * @throws IOException
-     *             if an I/O error occurs.
-     */
-    void removeTemplate(Project project, String fileName, String username)
         throws IOException;
 
     // --------------------------------------------------------------------------------------------
@@ -1167,73 +1128,6 @@ public interface RepositoryService
      * @return if crowdsourcing is enabled.
      */
     int isCrowdSourceEnabled();
-
-    /**
-     * Get the a model for a given automation layer or other layers used as feature for the
-     * automation layer. model will be generated per layer
-     * 
-     * @param feature
-     *            the feature.
-     * @param otherLayer
-     *            if this is a primary or secondary feature.
-     * @param document
-     *            the source document.
-     * @return the model.
-     */
-    File getMiraModel(AnnotationFeature feature, boolean otherLayer, SourceDocument document);
-
-    /**
-     * Get the MIRA director where models, templates and training data will be stored
-     * 
-     * @param feature
-     *            the feature.
-     * @return the directory.
-     */
-    File getMiraDir(AnnotationFeature feature);
-
-    /**
-     * Create a MIRA template and save the configurations in a database
-     * 
-     * @param template
-     *            the template.
-     */
-    void createTemplate(MiraTemplate template);
-
-    /**
-     * Get the MIRA template (and hence the template configuration) for a given layer
-     * 
-     * @param feature
-     *            the feature.
-     * @return the template.
-     */
-    MiraTemplate getMiraTemplate(AnnotationFeature feature);
-
-    /**
-     * Check if a MIRA template is already created for this layer
-     * 
-     * @param feature
-     *            the feature.
-     * @return if a template exists.
-     */
-    boolean existsMiraTemplate(AnnotationFeature feature);
-
-    /**
-     * List all the MIRA templates created, hence know which layer do have a training conf already!
-     * 
-     * @param project the project.
-     * @return the templates.
-     */
-    List<MiraTemplate> listMiraTemplates(Project project);
-
-    void removeMiraTemplate(MiraTemplate template);
-
-    void removeAutomationStatus(AutomationStatus status);
-
-    void createAutomationStatus(AutomationStatus status);
-
-    boolean existsAutomationStatus(MiraTemplate template);
-
-    AutomationStatus getAutomationStatus(MiraTemplate template);
 
     void upgradeCas(CAS aCurCas, AnnotationDocument aAnnotationDocument, Mode aMode)
         throws UIMAException, IOException;

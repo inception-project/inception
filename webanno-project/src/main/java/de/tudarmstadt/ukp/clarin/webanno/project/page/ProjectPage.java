@@ -68,15 +68,18 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
+import de.tudarmstadt.ukp.clarin.webanno.automation.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.automation.project.ProjectMiraTemplatePanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
+import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -105,6 +108,9 @@ public class ProjectPage
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
 
+    @SpringBean(name = "automationService")
+    private AutomationService automationService;
+    
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
 
@@ -548,7 +554,17 @@ public class ProjectPage
                                 .getName();
                         User user = repository.getUser(username);
 
-                        repository.removeProject(projectDetailForm.getModelObject(), user);
+                        // BEGIN: Remove automation stuff
+                        for (MiraTemplate template : automationService.listMiraTemplates(project)) {
+                            automationService.removeMiraTemplate(template);
+                        }
+
+                        for (SourceDocument document : automationService.listTabSepDocuments(project)) {
+                            repository.removeSourceDocument(document);
+                        }
+                        // END: Remove automation stuff
+
+                        repository.removeProject(project, user);
                         projectDetailForm.setVisible(false);
                     }
                     catch (IOException e) {
@@ -604,7 +620,7 @@ public class ProjectPage
                                 annotationService);
                 ImportUtil.createSourceDocument(importedProjectSetting, importedProject,
                         repository, featuresMap);
-                ImportUtil.createMiraTemplate(importedProjectSetting, repository, featuresMap);
+                ImportUtil.createMiraTemplate(importedProjectSetting, automationService, featuresMap);
                 ImportUtil.createCrowdJob(importedProjectSetting, repository, importedProject);
 
                 ImportUtil.createAnnotationDocument(importedProjectSetting, importedProject,

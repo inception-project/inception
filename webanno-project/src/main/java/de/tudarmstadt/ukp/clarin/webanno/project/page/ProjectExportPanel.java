@@ -63,6 +63,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
+import de.tudarmstadt.ukp.clarin.webanno.automation.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -108,6 +109,9 @@ public class ProjectExportPanel extends Panel {
 
 	@SpringBean(name = "annotationService")
 	private AnnotationService annotationService;
+
+    @SpringBean(name = "automationService")
+    private AutomationService automationService;
 
 	@SpringBean(name = "documentRepository")
 	private RepositoryService repository;
@@ -574,7 +578,7 @@ public class ProjectExportPanel extends Panel {
             // add source documents to a project
             List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = repository
                     .listSourceDocuments(aProject);
-            documents.addAll(repository.listTabSepDocuments(aProject));
+            documents.addAll(automationService.listTabSepDocuments(aProject));
             for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
 
                 SourceDocument exDocument = new SourceDocument();
@@ -657,7 +661,7 @@ public class ProjectExportPanel extends Panel {
 
             // export automation Mira template
             List<de.tudarmstadt.ukp.clarin.webanno.model.export.MiraTemplate> exTemplates = new ArrayList<>();
-            for (MiraTemplate template : repository.listMiraTemplates(aProject)) {
+            for (MiraTemplate template : automationService.listMiraTemplates(aProject)) {
                 de.tudarmstadt.ukp.clarin.webanno.model.export.MiraTemplate exTemplate = new de.tudarmstadt.ukp.clarin.webanno.model.export.MiraTemplate();
                 exTemplate.setAnnotateAndPredict(template.isAnnotateAndPredict());
                 exTemplate.setAutomationStarted(template.isAutomationStarted());
@@ -697,7 +701,7 @@ public class ProjectExportPanel extends Panel {
             // Get all the source documents from the project
             List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = repository
                     .listSourceDocuments(aProject);
-            documents.addAll(repository.listTabSepDocuments(aProject));
+            documents.addAll(automationService.listTabSepDocuments(aProject));
             int i = 1;
             for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
                 FileUtils.copyFileToDirectory(repository.getSourceDocumentFile(sourceDocument),

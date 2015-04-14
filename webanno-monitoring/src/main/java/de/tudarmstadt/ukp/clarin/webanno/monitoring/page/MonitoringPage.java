@@ -84,6 +84,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
+import de.tudarmstadt.ukp.clarin.webanno.automation.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.CurationPanel;
@@ -144,6 +145,9 @@ public class MonitoringPage
 
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
+
+    @SpringBean(name = "automationService")
+    private AutomationService automationService;
 
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
@@ -810,8 +814,8 @@ public class MonitoringPage
                 protected String load()
                 {
                     MiraTemplate template = selectedTemplate.getModelObject();
-                    if (template != null && repository.existsAutomationStatus(template)) {
-                        return repository.getAutomationStatus(template).getAnnoDocs() + "";
+                    if (template != null && automationService.existsAutomationStatus(template)) {
+                        return automationService.getAutomationStatus(template).getAnnoDocs() + "";
                     }
                     else {
                         return "";
@@ -828,8 +832,8 @@ public class MonitoringPage
                 protected String load()
                 {
                     MiraTemplate template = selectedTemplate.getModelObject();
-                    if (template != null && repository.existsAutomationStatus(template)) {
-                        return repository.getAutomationStatus(template).getTrainDocs() + "";
+                    if (template != null && automationService.existsAutomationStatus(template)) {
+                        return automationService.getAutomationStatus(template).getTrainDocs() + "";
                     }
                     else {
                         return "";
@@ -846,8 +850,8 @@ public class MonitoringPage
                 protected String load()
                 {
                     MiraTemplate template = selectedTemplate.getModelObject();
-                    if (template != null && repository.existsAutomationStatus(template)) {
-                        return repository.getAutomationStatus(template).getTotalDocs() + "";
+                    if (template != null && automationService.existsAutomationStatus(template)) {
+                        return automationService.getAutomationStatus(template).getTotalDocs() + "";
                     }
                     else {
                         return "";
@@ -864,8 +868,8 @@ public class MonitoringPage
                 protected String load()
                 {
                     MiraTemplate template = selectedTemplate.getModelObject();
-                    if (template != null && repository.existsAutomationStatus(template)) {
-                        return repository.getAutomationStatus(template).getStartime().toString();
+                    if (template != null && automationService.existsAutomationStatus(template)) {
+                        return automationService.getAutomationStatus(template).getStartime().toString();
                     }
                     else {
                         return "";
@@ -882,12 +886,12 @@ public class MonitoringPage
                 protected String load()
                 {
                     MiraTemplate template = selectedTemplate.getModelObject();
-                    if (template != null && repository.existsAutomationStatus(template)) {
-                        if (repository.getAutomationStatus(template).getEndTime()
-                                .equals(repository.getAutomationStatus(template).getStartime())) {
+                    if (template != null && automationService.existsAutomationStatus(template)) {
+                        if (automationService.getAutomationStatus(template).getEndTime()
+                                .equals(automationService.getAutomationStatus(template).getStartime())) {
                             return "---";
                         }
-                        return repository.getAutomationStatus(template).getEndTime().toString();
+                        return automationService.getAutomationStatus(template).getEndTime().toString();
                     }
                     else {
                         return "";
@@ -904,8 +908,8 @@ public class MonitoringPage
                 protected String load()
                 {
                     MiraTemplate template = selectedTemplate.getModelObject();
-                    if (template != null && repository.existsAutomationStatus(template)) {
-                        return repository.getAutomationStatus(template).getStatus().getName();
+                    if (template != null && automationService.existsAutomationStatus(template)) {
+                        return automationService.getAutomationStatus(template).getStatus().getName();
                     }
                     else {
                         return "";
@@ -925,10 +929,8 @@ public class MonitoringPage
                         @Override
                         protected List<MiraTemplate> load()
                         {
-
-                            return repository.listMiraTemplates(projectSelectionForm
+                            return automationService.listMiraTemplates(projectSelectionForm
                                     .getModelObject().project);
-
                         }
                     });
                     setChoiceRenderer(new ChoiceRenderer<MiraTemplate>()

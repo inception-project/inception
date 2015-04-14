@@ -42,6 +42,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.automation.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.automation.util.TabSepDocModel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -61,8 +62,12 @@ public class ProjectTrainingDocumentsPanel
 
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
+    
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
+
+    @SpringBean(name = "automationService")
+    private AutomationService automationService;
 
     private ArrayList<String> documents = new ArrayList<String>();
     private ArrayList<String> selectedDocuments = new ArrayList<String>();
@@ -165,7 +170,7 @@ public class ProjectTrainingDocumentsPanel
                             }
                         }
 
-                        for (SourceDocument sd : repository.listTabSepDocuments(project)) {
+                        for (SourceDocument sd : automationService.listTabSepDocuments(project)) {
                             if (!sd.isTrainingDocument()) {
                                 sd.setProcessed(false);
                             }
@@ -218,7 +223,7 @@ public class ProjectTrainingDocumentsPanel
                         documents.clear();
                         if (project.getId() != 0) {
                             if (aTabsDocModel.getObject().isTabSep()) {
-                                for (SourceDocument document : repository
+                                for (SourceDocument document : automationService
                                         .listTabSepDocuments(project)) {
                                     // This is tab-sep training document to the target layer
                                     if (aTabsDocModel.getObject().isTraining()
@@ -279,7 +284,7 @@ public class ProjectTrainingDocumentsPanel
                 // If the deleted document is training document, re-training an automation should be possible again
                 if(isTrain){
                 	List<SourceDocument> docs = repository.listSourceDocuments(project);
-                		docs.addAll(repository.listTabSepDocuments(project));
+                		docs.addAll(automationService.listTabSepDocuments(project));
                 	for(SourceDocument srDoc:docs){
                 		srDoc.setProcessed(false);
                 	}
