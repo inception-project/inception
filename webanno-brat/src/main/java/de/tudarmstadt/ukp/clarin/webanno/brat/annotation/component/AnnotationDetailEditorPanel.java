@@ -546,7 +546,7 @@ public class AnnotationDetailEditorPanel
         onChange(aTarget, aBModel);
     }
 
-    private JCas getCas(BratAnnotatorModel aBModel)
+    protected JCas getCas(BratAnnotatorModel aBModel)
         throws UIMAException, IOException, ClassNotFoundException
     {
 

@@ -35,7 +35,7 @@
 										id="showOpenDocumentModal"> <img
 											src="images/drawer_open.png" title="Open" /><br />Open
 									</a></li>
-		
+
 									<li><a wicket:id="showPreviousDocument"
 										title="press Shift+PgUp"> <img
 											src="images/document_back.png" title="First page" /><br />Prev.
@@ -45,14 +45,14 @@
 											src="images/document_next.png" title="Done" /><br />Next
 									</a></li>
 									<span wicket:id="exportModalPanel" />
-		
+
 									<span wicket:id="annotationLayersModalPanel" />
-		
-		
+
+
 								</ul>
 							</fieldset>
 						</li>
-		
+
 						<li>
 							<fieldset>
 								<legend>Page</legend>
@@ -63,7 +63,7 @@
 									<li><a wicket:id="showPrevious" title="press PgUp"> <img
 											src="images/document_page_previous.png" title="Previous page" /><br />Prev.
 									</a></li>
-		
+
 									<li>
 										<div style="height: 32px;">
 											<form wicket:id="gotoPageTextFieldForm">
@@ -75,7 +75,7 @@
 											<a wicket:id="gotoPageLink">Go to</a>
 										</div>
 									</li>
-		
+
 									<li><a wicket:id="showNext" title="press PgDown"> <img
 											src="images/document_page_next.png" title="Next page" /><br />Next
 									</a></li>
@@ -85,7 +85,7 @@
 								</ul>
 							</fieldset>
 						</li>
-		
+
 						<li>
 							<fieldset>
 								<legend>Help</legend>
@@ -102,25 +102,33 @@
 								</ul>
 							</fieldset>
 						</li>
-		
+
 					</ul>
 				</div>
 				<div class="locationbar">
-				    <span wicket:id="documentNamePanel"></span>
-				    <span style="float: right;">
-				      <span wicket:id="numberOfPages"></span>
-				    </span>
+					<span wicket:id="documentNamePanel"></span> <span
+						style="float: right;"> <span wicket:id="numberOfPages"></span>
+					</span>
 				</div>
 			</div>
 		</div>
+		<table class="hfill">
+			<tr style="vertical-align: top;">
+				<td width="80%">
+					<div class="merge-view" wicket:id="mergeView" />
 
-		<div class="merge-view" wicket:id="mergeView" />
-
-		<div wicket:id="automateView">
-			<div class="sentence-list-view" wicket:id="sentenceListView">
-				<div wicket:id="sentence" />
-			</div>
-		</div>
+					<div wicket:id="automateView">
+						<div class="sentence-list-view" wicket:id="sentenceListView">
+							<div wicket:id="sentence" />
+						</div>
+					</div>
+				</td>
+				<td width="20%">
+					<div id="annotationDetailEditorPanel"
+						wicket:id="annotationDetailEditorPanel"></div>
+				</td>
+			</tr>
+		</table>
 	</wicket:extend>
 </body>
 </html>

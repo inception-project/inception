@@ -17,6 +17,7 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.curation.component;
 
+
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
 
 import java.io.IOException;
@@ -26,6 +27,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
@@ -48,6 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
@@ -71,6 +75,8 @@ public class CurationPanel
 {
     private static final long serialVersionUID = -5128648754044819314L;
 
+    private static final Log LOG = LogFactory.getLog(CurationPanel.class);
+
     @SpringBean(name = "jsonConverter")
     private MappingJacksonHttpMessageConverter jsonConverter;
 
@@ -84,6 +90,7 @@ public class CurationPanel
 
     private CurationViewPanel sentenceOuterView;
     private BratAnnotator mergeVisualizer;
+    private AnnotationDetailEditorPanel annotationDetailEditorPanel;
 
     private BratAnnotatorModel bratAnnotatorModel;
 
@@ -177,14 +184,47 @@ public class CurationPanel
         sentenceOuterView.setOutputMarkupId(true);
         add(sentenceOuterView);
 
+        annotationDetailEditorPanel = new AnnotationDetailEditorPanel(
+                "annotationDetailEditorPanel", new Model<BratAnnotatorModel>(bratAnnotatorModel))
+        {
+            private static final long serialVersionUID = 2857345299480098279L;
+
+            @Override
+            protected void onChange(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
+            {
+                aTarget.addChildren(getPage(), FeedbackPanel.class);
+
+                try {
+                    mergeVisualizer.bratRender(aTarget, getCas(aBModel));
+                }
+                catch (UIMAException | ClassNotFoundException | IOException e) {
+                    LOG.info("Error reading CAS " + e.getMessage());
+                    error("Error reading CAS " + e.getMessage());
+                    return;
+                }
+
+                mergeVisualizer.bratRenderHighlight(aTarget, aBModel.getSelectedAnnotationId());
+
+                mergeVisualizer.onChange(aTarget, aBModel);
+                mergeVisualizer.onAnnotate(aTarget, aBModel, aBModel.getBeginOffset(), aBModel.getEndOffset());
+                if (!aBModel.isAnnotate()) {
+                    mergeVisualizer.onDelete(aTarget, aBModel, aBModel.getBeginOffset(), aBModel.getEndOffset());
+                }
+
+            }
+        };
+
+        annotationDetailEditorPanel.setOutputMarkupId(true);
+        add(annotationDetailEditorPanel);
+
         mergeVisualizer = new BratAnnotator("mergeView", new Model<BratAnnotatorModel>(
-                bratAnnotatorModel))
+                bratAnnotatorModel), annotationDetailEditorPanel)
         {
 
             private static final long serialVersionUID = 7279648231521710155L;
 
             @Override
-            protected void onChange(AjaxRequestTarget aTarget, BratAnnotatorModel bratAnnotatorModel)
+            public void onChange(AjaxRequestTarget aTarget, BratAnnotatorModel bratAnnotatorModel)
             {
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
                 aTarget.add(sentenceOuterView);

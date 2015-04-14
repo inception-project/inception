@@ -22,10 +22,11 @@
 	<wicket:panel>
 		<table class="hfill">
 			<tr style="vertical-align: top;">
-				<td width="33%">
+				<td width="28%">
 					<fieldset class="ui-widget-content ui-corner-all">
 						<legend>Sentences</legend>
-						<table class="hfill" wicket:id="textOuterView" style="border-collapse: collapse;">
+						<table class="hfill" wicket:id="textOuterView"
+							style="border-collapse: collapse;">
 							<tr wicket:id="textListView">
 								<td class="curation-sentence-number" wicket:id="sentenceNumber" />
 								<td class="curation-sentence-item" wicket:id="sentence" />
@@ -33,13 +34,23 @@
 						</table>
 					</fieldset>
 				</td>
-				<td width="66%">
-					<div class="merge-view" wicket:id="mergeView" />
-					<div wicket:id="sentenceOuterView">
-						<div class="sentence-list-view" wicket:id="sentenceListView">
-							<div wicket:id="sentence" />
-						</div>
-					</div>
+				<td width="72%">
+					<table class="hfill">
+						<tr style="vertical-align: top;">
+							<td width="80%">
+								<div class="merge-view" wicket:id="mergeView" />
+								<div wicket:id="sentenceOuterView">
+									<div class="sentence-list-view" wicket:id="sentenceListView">
+										<div wicket:id="sentence" />
+									</div>
+								</div>
+							</td>
+							<td width="20%">
+								<div id="annotationDetailEditorPanel"
+									wicket:id="annotationDetailEditorPanel"></div>
+							</td>
+						</tr>
+					</table>
 				</td>
 			</tr>
 		</table>
