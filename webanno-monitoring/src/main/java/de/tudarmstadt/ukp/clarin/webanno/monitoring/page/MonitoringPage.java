@@ -1092,13 +1092,17 @@ public class MonitoringPage
                             document, user);
                     if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
                         try {
-                            repository.upgradeCasAndSave(document, document.getProject().getMode(),
-                                    user.getUsername());
                             JCas jCas = repository.readAnnotationCas(annotationDocument);
+                            repository.upgradeCas(jCas.getCas(), annotationDocument);
+                            // REC: I think there is no need to write the CASes here. We would not
+                            // want to interfere with currently active annotator users
                             jCases.put(user, jCas);
                         }
                         catch (DataRetrievalFailureException e) {
                             error(e.getCause().getMessage());
+                        }
+                        catch (UIMAException e) {
+                            error(ExceptionUtils.getRootCause(e));
                         }
                         catch (IOException e) {
                             error(ExceptionUtils.getRootCause(e));
