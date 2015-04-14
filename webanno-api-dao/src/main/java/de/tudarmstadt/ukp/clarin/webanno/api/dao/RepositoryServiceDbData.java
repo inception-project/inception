@@ -1959,9 +1959,23 @@ public class RepositoryServiceDbData
         }
     }
 
-    @Override
+    /**
+     * Get CAS object for the first time, from the source document using the provided reader
+     * 
+     * @param file
+     *            the file.
+     * @param reader
+     *            the DKPro Core reader.
+     * @param aDocument
+     *            the source document.
+     * @return the JCas.
+     * @throws UIMAException
+     *             if a conversion error occurs.
+     * @throws IOException
+     *             if an I/O error occurs.
+     */
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public JCas convertSourceDocumentToCas(File aFile, Class aReader, SourceDocument aDocument)
+    private JCas convertSourceDocumentToCas(File aFile, Class aReader, SourceDocument aDocument)
         throws UIMAException, IOException
     {
         // Prepare a CAS with the project type system

@@ -1032,40 +1032,31 @@ public class CrowdSourcePage
             });
         }
     }
+    
     private void addJCas(List<JCas> jCases, User user, SourceDocument sourceDocument)
     {
-        AnnotationDocument annotationDocument;
-        JCas jCas;
         try {
-            if (repository.existsAnnotationDocument(sourceDocument, user)) {
-
-                jCas = repository.readAnnotationCas(sourceDocument, user);
-
-                jCases.add(jCas);
-            }
-            else {
-                annotationDocument = new AnnotationDocument();
-                annotationDocument.setDocument(sourceDocument);
-                annotationDocument.setUser(user.getUsername());
-                annotationDocument.setProject(selectedProject);
-                // annotationDocument.setState(AnnotationDocumentState.IN_PROGRESS);
-                annotationDocument.setName(sourceDocument.getName());
-                repository.createAnnotationDocument(annotationDocument);
-
-                jCas = repository.convertSourceDocumentToCas(repository
-                        .getSourceDocumentFile(sourceDocument), repository.getReadableFormats()
-                        .get(sourceDocument.getFormat()), sourceDocument);
-                repository.writeAnnotationCas(jCas, sourceDocument, user);
-                jCases.add(jCas);
-            }
+            // Check if there is an annotation document entry in the database. If there is none, 
+            // create one.
+            AnnotationDocument annotationDocument = repository.createOrGetAnnotationDocument(
+                    sourceDocument, user);
+            
+            // Read the CAS
+            JCas jcas = repository.readAnnotationCas(annotationDocument);
+            
+            // Update the annotation document CAS
+            repository.upgradeCas(jcas.getCas(), annotationDocument);
+                        
+            // After creating an new CAS or upgrading the CAS, we need to save it
+            repository.writeAnnotationCas(jcas.getCas().getJCas(),
+                    annotationDocument.getDocument(), user);
+            
+            jCases.add(jcas);
         }
         catch (UIMAException e) {
             error(e.getMessage() + " : " + ExceptionUtils.getRootCauseMessage(e));
         }
         catch (IOException e) {
-            error(e.getMessage());
-        }
-        catch (ClassNotFoundException e) {
             error(e.getMessage());
         }
     }

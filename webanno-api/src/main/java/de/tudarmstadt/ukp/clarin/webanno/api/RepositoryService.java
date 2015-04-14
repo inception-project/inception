@@ -1088,25 +1088,6 @@ public interface RepositoryService
     void writeCas(Mode mode, SourceDocument document, User user, JCas jCas)
         throws IOException;
 
-    /**
-     * Get CAS object for the first time, from the source document using the provided reader
-     * 
-     * @param file
-     *            the file.
-     * @param reader
-     *            the DKPro Core reader.
-     * @param aDocument
-     *            the source document.
-     * @return the JCas.
-     * @throws UIMAException
-     *             if a conversion error occurs.
-     * @throws IOException
-     *             if an I/O error occurs.
-     */
-    @SuppressWarnings("rawtypes")
-    JCas convertSourceDocumentToCas(File file, Class reader, SourceDocument aDocument)
-        throws UIMAException, IOException;
-
     void updateTimeStamp(SourceDocument document, User user, Mode mode)
         throws IOException;
 
