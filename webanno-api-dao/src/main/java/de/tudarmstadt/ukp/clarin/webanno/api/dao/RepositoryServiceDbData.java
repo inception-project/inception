@@ -2264,7 +2264,7 @@ public class RepositoryServiceDbData
     private static void writeSerializedCas(JCas aJCas, File aFile)
         throws IOException
     {
-        if (new File(aFile.getParent()).exists()) {
+        if (!new File(aFile.getParent()).exists()) {
             FileUtils.forceMkdir(new File(aFile.getParent()));
         }
 
