@@ -749,7 +749,17 @@ public class AnnotationDetailEditorPanel
             if (feature.getLinkTypeName() != null) {
                 continue;
             }
-            if (feature.getTagset() != null) {
+            if (aBModel.getRememberedSpanFeatures().get(feature) != null) {
+
+                featureModels.add(new FeatureModel(feature, aBModel.getRememberedSpanFeatures()
+                        .get(feature)));
+            }
+            else if (aBModel.getRememberedArcFeatures().get(feature) != null) {
+
+                featureModels.add(new FeatureModel(feature, aBModel.getRememberedArcFeatures().get(
+                        feature)));
+            }
+            else if (feature.getTagset() != null) {
                 featureModels.add(new FeatureModel(feature, annotationService
                         .listTags(feature.getTagset()).get(0).getName()));
             }

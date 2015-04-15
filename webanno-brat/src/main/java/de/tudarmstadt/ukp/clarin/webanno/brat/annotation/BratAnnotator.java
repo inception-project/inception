@@ -195,7 +195,7 @@ public class BratAnnotator
                         JCas jCas = getCas(getModelObject());
                         if (getModelObject().isSlotArmed()
                                 && !request.getParameterValue(PARAM_ID).isEmpty()) {
-                             aAnnotationDetailEditorPanel.setSlot(aTarget, jCas, getModelObject(),
+                            aAnnotationDetailEditorPanel.setSlot(aTarget, jCas, getModelObject(),
                                     request.getParameterValue(PARAM_ID).toInt());
                         }
                         else {
@@ -205,7 +205,7 @@ public class BratAnnotator
                             getModelObject().setRelationAnno(false);
                             if (request.getParameterValue(PARAM_ID).toString() == null) {
                                 getModelObject().setSelectedAnnotationId(-1);
-                                 aAnnotationDetailEditorPanel.setLayerAndFeatureModels(jCas,
+                                aAnnotationDetailEditorPanel.setLayerAndFeatureModels(jCas,
                                         getModelObject());
                             }
                             else if (request.getParameterValue(PARAM_ID).toInt() == -1) {
@@ -217,7 +217,7 @@ public class BratAnnotator
                             else {
                                 getModelObject().setSelectedAnnotationId(
                                         request.getParameterValue(PARAM_ID).toInt());
-                                 aAnnotationDetailEditorPanel.setLayerAndFeatureModels(jCas,
+                                aAnnotationDetailEditorPanel.setLayerAndFeatureModels(jCas,
                                         getModelObject());
                             }
 
@@ -277,7 +277,7 @@ public class BratAnnotator
 
                         if (request.getParameterValue(PARAM_ARC_ID).toString() == null) {
                             getModelObject().setSelectedAnnotationId(-1);
-                             aAnnotationDetailEditorPanel.setLayerAndFeatureModels(jCas,
+                            aAnnotationDetailEditorPanel.setLayerAndFeatureModels(jCas,
                                     getModelObject());
                         }
                         else if (request.getParameterValue(PARAM_ARC_ID).toInt() == -1) {
@@ -289,7 +289,7 @@ public class BratAnnotator
                         else {
                             getModelObject().setSelectedAnnotationId(
                                     request.getParameterValue(PARAM_ARC_ID).toInt());
-                             aAnnotationDetailEditorPanel.setLayerAndFeatureModels(jCas,
+                            aAnnotationDetailEditorPanel.setLayerAndFeatureModels(jCas,
                                     getModelObject());
                         }
 
@@ -349,8 +349,10 @@ public class BratAnnotator
                             + json + ";");
                 }
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
-                 aAnnotationDetailEditorPanel.setAnnotationLayers(getModelObject());
-                aTarget.add( aAnnotationDetailEditorPanel);
+                if (getModelObject().getSelectedAnnotationId() == -1) {
+                    aAnnotationDetailEditorPanel.setAnnotationLayers(getModelObject());
+                }
+                aTarget.add(aAnnotationDetailEditorPanel);
             }
         };
 
