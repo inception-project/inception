@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.curation;
 
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -33,33 +32,39 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.JCas;
 import org.apache.uima.fit.util.CasUtil;
-
+import org.apache.uima.jcas.JCas;
 
 /**
- * Class for finding clusters of equal annotations. Equal annotations are grouped into
- * a {@link AnnotationSelection}. Instances of {@link AnnotationSelection}, which are
- * exchangeble, because they refer to the same annotated unit, are grouped together in
- * an {@link AnnotationOption}.
+ * Class for finding clusters of equal annotations. Equal annotations are grouped into a
+ * {@link AnnotationSelection}. Instances of {@link AnnotationSelection}, which are exchangeble,
+ * because they refer to the same annotated unit, are grouped together in an
+ * {@link AnnotationOption}.
  *
  * @author Andreas Straninger
  */
-public class CasDiff {
+public class CasDiff
+{
 
     /**
      * spot differing annotations by comparing cases of the same source document.
-     * 
-     * @param aEntryTypes the entry types.
+     *
+     * @param aEntryTypes
+     *            the entry types.
      * @param aCasMap
      *            Map of (username, cas)
-     * @param aBegin the begin offset.
-     * @param aEnd the end offset.
+     * @param aBegin
+     *            the begin offset.
+     * @param aEnd
+     *            the end offset.
      * @return List of {@link AnnotationOption}
-     * @throws RangeNameNotCheckedException hum?
+     * @throws RangeNameNotCheckedException
+     *             hum?
      */
-    public static List<AnnotationOption> doDiff(List<Type> aEntryTypes,
-            Map<String, JCas> aCasMap, int aBegin, int aEnd) throws RangeNameNotCheckedException {
+    public static List<AnnotationOption> doDiff(List<Type> aEntryTypes, Map<String, JCas> aCasMap,
+            int aBegin, int aEnd)
+        throws RangeNameNotCheckedException
+    {
         Map<Integer, Map<Integer, Set<AnnotationFS>>> annotationFSsByBeginEnd = new HashMap<Integer, Map<Integer, Set<AnnotationFS>>>();
         List<AnnotationOption> annotationOptions = new LinkedList<AnnotationOption>();
         Map<FeatureStructure, String> usernameByFeatureStructure = new HashMap<FeatureStructure, String>();
@@ -67,37 +72,10 @@ public class CasDiff {
         Set<String> usernames = new HashSet<String>();
 
         for (Type aEntryType : aEntryTypes) {
-            for (String username : aCasMap.keySet()) {
-                usernames.add(username);
-                CAS cas = aCasMap.get(username).getCas();
 
-                // instead cas.getAnnotationIndex(aEntryType) also
-                // cas.getIndexRepository().getAllIndexedFS(aType)
-                // #610 - fetch type by name as type instance may be bound to a different CAS
-                Type localType = CasUtil.getType(cas, aEntryType.getName());
-                List<AnnotationFS> annotationFSs;
-                if(aBegin ==-1) {
-                    annotationFSs =  select(cas,localType);
-                }
-                else{
-                    annotationFSs = selectCovered(cas, localType, aBegin, aEnd);
-                }
-                for (AnnotationFS annotationFS : annotationFSs) {
-                    Integer begin = annotationFS.getBegin();
-                    Integer end = annotationFS.getEnd();
+            addUsersFs(aCasMap, aBegin, aEnd, annotationFSsByBeginEnd, usernameByFeatureStructure,
+                    usernames, aEntryType);
 
-                    if (!annotationFSsByBeginEnd.containsKey(begin)) {
-                        annotationFSsByBeginEnd.put(begin,
-                                new HashMap<Integer, Set<AnnotationFS>>());
-                    }
-                    if (!annotationFSsByBeginEnd.get(begin).containsKey(end)) {
-                        annotationFSsByBeginEnd.get(begin).put(end,
-                                new HashSet<AnnotationFS>());
-                    }
-                    annotationFSsByBeginEnd.get(begin).get(end).add(annotationFS);
-                    usernameByFeatureStructure.put(annotationFS, username);
-                }
-            }
             for (Map<Integer, Set<AnnotationFS>> annotationFSsByEnd : annotationFSsByBeginEnd
                     .values()) {
                 Map<FeatureStructure, AnnotationSelection> annotationSelectionByFeatureStructure = new HashMap<FeatureStructure, AnnotationSelection>();
@@ -105,49 +83,66 @@ public class CasDiff {
                 for (Set<AnnotationFS> annotationFSs : annotationFSsByEnd.values()) {
                     Map<String, AnnotationOption> annotationOptionPerType = new HashMap<String, AnnotationOption>();
                     for (FeatureStructure fsNew : annotationFSs) {
-                        String usernameFSNew = usernameByFeatureStructure
-                                .get(fsNew);
-                        // diffFS1 contains all feature structures of fs1, which do not occur in other cases
+                        String usernameFSNew = usernameByFeatureStructure.get(fsNew);
+                        // diffFS1 contains all feature structures of fs1, which do not occur in
+                        // other cases
                         Set<FeatureStructure> diffFSNew = traverseFS(fsNew);
 
-                        Map<FeatureStructure, AnnotationSelection> annotationSelectionByFeatureStructureNew = new HashMap<FeatureStructure, AnnotationSelection>(annotationSelectionByFeatureStructure);
+                        Map<FeatureStructure, AnnotationSelection> annotationSelectionByFeatureStructureNew = new HashMap<FeatureStructure, AnnotationSelection>(
+                                annotationSelectionByFeatureStructure);
 
-                        for (FeatureStructure fsOld : annotationSelectionByFeatureStructure.keySet()) {
-                            if (fsNew != fsOld && fsNew.getType().toString().equals(fsOld.getType().toString())) {
+                        for (FeatureStructure fsOld : annotationSelectionByFeatureStructure
+                                .keySet()) {
+                            if (fsNew != fsOld
+                                    && fsNew.getType().toString()
+                                            .equals(fsOld.getType().toString())) {
                                 CompareResult compareResult = compareFeatureFS(fsNew.getType(),
                                         fsNew, fsOld, diffFSNew);
-                                for (FeatureStructure compareResultFSNew : compareResult.getAgreements().keySet()) {
-                                    FeatureStructure compareResultFSOld = compareResult.getAgreements().get(compareResultFSNew);
-                                    int addressNew = aCasMap.get(usernameFSNew).getLowLevelCas().ll_getFSRef(compareResultFSNew);
-                                    AnnotationSelection annotationSelection = annotationSelectionByFeatureStructure.get(compareResultFSOld);
-                                    annotationSelection.getAddressByUsername().put(usernameFSNew, addressNew);
-                                    annotationSelectionByFeatureStructureNew.put(compareResultFSNew, annotationSelection);
+                                for (FeatureStructure compareResultFSNew : compareResult
+                                        .getAgreements().keySet()) {
+                                    FeatureStructure compareResultFSOld = compareResult
+                                            .getAgreements().get(compareResultFSNew);
+                                    int addressNew = aCasMap.get(usernameFSNew).getLowLevelCas()
+                                            .ll_getFSRef(compareResultFSNew);
+                                    AnnotationSelection annotationSelection = annotationSelectionByFeatureStructure
+                                            .get(compareResultFSOld);
+                                    annotationSelection.getAddressByUsername().put(usernameFSNew,
+                                            addressNew);
+                                    annotationSelectionByFeatureStructureNew.put(
+                                            compareResultFSNew, annotationSelection);
                                     // Add Debug information
-                                    annotationSelection.getFsStringByUsername().put(usernameFSNew, compareResultFSNew);
+                                    annotationSelection.getFsStringByUsername().put(usernameFSNew,
+                                            compareResultFSNew);
 
                                 }
                             }
                         }
                         annotationSelectionByFeatureStructure = annotationSelectionByFeatureStructureNew;
 
-                        // add featureStructures, that have not been found in existing annotationSelections
+                        // add featureStructures, that have not been found in existing
+                        // annotationSelections
                         for (FeatureStructure subFS1 : diffFSNew) {
-                            if(subFS1.getType().toString().equals(fsNew.getType().toString())){
-                            AnnotationSelection annotationSelection = new AnnotationSelection();
-                            int addressSubFS1 = aCasMap.get(usernameFSNew).getLowLevelCas().ll_getFSRef(subFS1);
-                            annotationSelection.getAddressByUsername().put(usernameFSNew, addressSubFS1);
-                            annotationSelectionByFeatureStructure.put(subFS1, annotationSelection);
-                            String type = subFS1.getType().toString();
-                            if(!annotationOptionPerType.containsKey(type)) {
-                                annotationOptionPerType.put(type, new AnnotationOption());
+                            if (subFS1.getType().toString().equals(fsNew.getType().toString())) {
+                                AnnotationSelection annotationSelection = new AnnotationSelection();
+                                int addressSubFS1 = aCasMap.get(usernameFSNew).getLowLevelCas()
+                                        .ll_getFSRef(subFS1);
+                                annotationSelection.getAddressByUsername().put(usernameFSNew,
+                                        addressSubFS1);
+                                annotationSelectionByFeatureStructure.put(subFS1,
+                                        annotationSelection);
+                                String type = subFS1.getType().toString();
+                                if (!annotationOptionPerType.containsKey(type)) {
+                                    annotationOptionPerType.put(type, new AnnotationOption());
+                                }
+                                AnnotationOption annotationOption = annotationOptionPerType
+                                        .get(type);
+                                // link annotationOption and annotationSelection
+                                annotationSelection.setAnnotationOption(annotationOption);
+                                annotationOption.getAnnotationSelections().add(annotationSelection);
+                                // Add Debug information
+                                annotationSelection.getFsStringByUsername().put(usernameFSNew,
+                                        subFS1);
                             }
-                            AnnotationOption annotationOption = annotationOptionPerType.get(type);
-                            // link annotationOption and annotationSelection
-                            annotationSelection.setAnnotationOption(annotationOption);
-                            annotationOption.getAnnotationSelections().add(annotationSelection);
-                            // Add Debug information
-                            annotationSelection.getFsStringByUsername().put(usernameFSNew, subFS1);
-                        }
                         }
                     }
                     annotationOptions.addAll(annotationOptionPerType.values());
@@ -158,22 +153,46 @@ public class CasDiff {
         return annotationOptions;
     }
 
-    private static List<AnnotationFS> select(CAS cas, Type localType)
+    private static void addUsersFs(Map<String, JCas> aCasMap, int aBegin, int aEnd,
+            Map<Integer, Map<Integer, Set<AnnotationFS>>> annotationFSsByBeginEnd,
+            Map<FeatureStructure, String> usernameByFeatureStructure, Set<String> usernames,
+            Type aEntryType)
     {
-        List<AnnotationFS> annotationFSs = new ArrayList<AnnotationFS>();
-        for(AnnotationFS annotationFS: CasUtil.select(cas, localType)){
-            annotationFSs.add(annotationFS);
+        for (String username : aCasMap.keySet()) {
+            usernames.add(username);
+            CAS cas = aCasMap.get(username).getCas();
+
+            // instead cas.getAnnotationIndex(aEntryType) also
+            // cas.getIndexRepository().getAllIndexedFS(aType)
+            // #610 - fetch type by name as type instance may be bound to a different CAS
+            Type localType = CasUtil.getType(cas, aEntryType.getName());
+            List<AnnotationFS> annotationFSs = selectCovered(cas, localType, aBegin, aEnd);
+            for (AnnotationFS annotationFS : annotationFSs) {
+                Integer begin = annotationFS.getBegin();
+                Integer end = annotationFS.getEnd();
+
+                if (!annotationFSsByBeginEnd.containsKey(begin)) {
+                    annotationFSsByBeginEnd.put(begin,
+                            new HashMap<Integer, Set<AnnotationFS>>());
+                }
+                if (!annotationFSsByBeginEnd.get(begin).containsKey(end)) {
+                    annotationFSsByBeginEnd.get(begin).put(end, new HashSet<AnnotationFS>());
+                }
+                annotationFSsByBeginEnd.get(begin).get(end).add(annotationFS);
+                usernameByFeatureStructure.put(annotationFS, username);
+            }
         }
-        return annotationFSs;
     }
 
-    public static Set<FeatureStructure> traverseFS(FeatureStructure fs) {
+    public static Set<FeatureStructure> traverseFS(FeatureStructure fs)
+    {
         LinkedHashSet<FeatureStructure> nodePlusChildren = new LinkedHashSet<FeatureStructure>();
         nodePlusChildren.add(fs);
         for (Feature feature : fs.getType().getFeatures()) {
             // features are present in both feature structures, fs1 and fs2
             // compare primitive values
-            if (!feature.getRange().isPrimitive() && !feature.toString().equals("uima.cas.AnnotationBase:sofa")) {
+            if (!feature.getRange().isPrimitive()
+                    && !feature.toString().equals("uima.cas.AnnotationBase:sofa")) {
                 // compare composite types
                 // assumtion: if feature is not primitive, it is a composite feature
                 FeatureStructure featureValue = fs.getFeatureValue(feature);
@@ -185,9 +204,10 @@ public class CasDiff {
         return nodePlusChildren;
     }
 
-    private static CompareResult compareFeatureFS(Type aType,
-            FeatureStructure fsNew, FeatureStructure fsOld, Set<FeatureStructure> diffFSNew)
-                    throws RangeNameNotCheckedException {
+    private static CompareResult compareFeatureFS(Type aType, FeatureStructure fsNew,
+            FeatureStructure fsOld, Set<FeatureStructure> diffFSNew)
+        throws RangeNameNotCheckedException
+    {
         CompareResult compareResult = new CompareResult();
 
         // check if types are equal
@@ -202,9 +222,9 @@ public class CasDiff {
         boolean agreeOnSubfeatures = true;
         List<Feature> fsNewFeatures = type.getFeatures();
         List<Feature> fsOldFeatures = oldType.getFeatures();
-       for(int i =0; i<fsNewFeatures.size();i++){
-           Feature feature = fsNewFeatures.get(i);
-           Feature olFeature = fsOldFeatures.get(i);
+        for (int i = 0; i < fsNewFeatures.size(); i++) {
+            Feature feature = fsNewFeatures.get(i);
+            Feature olFeature = fsOldFeatures.get(i);
             // features are present in both feature structures, fs1 and fs2
             // compare primitive values
             if (feature.getRange().isPrimitive()) {
@@ -302,31 +322,34 @@ public class CasDiff {
                 // assumption: if feature is not primitive, it is a composite feature
                 FeatureStructure featureValue1 = fsNew.getFeatureValue(feature);
                 FeatureStructure featureValue2 = fsOld.getFeatureValue(olFeature);
-                if(((AnnotationFS)featureValue1).getBegin()!=((AnnotationFS)featureValue2).getBegin()
-                        ||((AnnotationFS)featureValue1).getEnd()!=((AnnotationFS)featureValue2).getEnd()){
+                if (((AnnotationFS) featureValue1).getBegin() != ((AnnotationFS) featureValue2)
+                        .getBegin()
+                        || ((AnnotationFS) featureValue1).getEnd() != ((AnnotationFS) featureValue2)
+                                .getEnd()) {
                     agreeOnSubfeatures = false;
                 }
-                if (featureValue1 != null && featureValue2 != null &&
-                        (aType.toString().equals(featureValue1.getType().toString()))) {
-                    CompareResult compareResultSubfeatures = compareFeatureFS(aType,
-                            featureValue1, featureValue2, diffFSNew);
+                if (featureValue1 != null && featureValue2 != null
+                        && (aType.toString().equals(featureValue1.getType().toString()))) {
+                    CompareResult compareResultSubfeatures = compareFeatureFS(aType, featureValue1,
+                            featureValue2, diffFSNew);
                     compareResult.getDiffs().putAll(compareResultSubfeatures.getDiffs());
                     compareResult.getAgreements().putAll(compareResultSubfeatures.getAgreements());
-                    if(!compareResult.getDiffs().isEmpty()) {
+                    if (!compareResult.getDiffs().isEmpty()) {
                         agreeOnSubfeatures = false;
                     }
                 }
             }
         }
-        if(agreeOnSubfeatures) {
+        if (agreeOnSubfeatures) {
             compareResult.getAgreements().put(fsNew, fsOld);
             diffFSNew.remove(fsNew);
-        } else {
+        }
+        else {
             compareResult.getDiffs().put(fsNew, fsOld);
         }
 
         // if no diffs, agree (here or elsewhere)?
-        if(compareResult.getDiffs().isEmpty()) {
+        if (compareResult.getDiffs().isEmpty()) {
             compareResult.getAgreements().put(fsNew, fsOld);
             diffFSNew.remove(fsNew);
         }
