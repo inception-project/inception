@@ -147,13 +147,13 @@ public class RepositoryServiceDbData
     implements RepositoryService, InitializingBean
 {
     private final Log log = LogFactory.getLog(getClass());
-    
+
     public Logger createLog(Project aProject)
         throws IOException
     {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication != null ? authentication.getName() : "SYSTEM";
-               
+
         Logger logger = Logger.getLogger(getClass());
         String targetLog = dir.getAbsolutePath() + PROJECT + "project-" + aProject.getId() + ".log";
         FileAppender apndr = new FileAppender(new PatternLayout("%d [" + username + "] %m%n"),
@@ -183,7 +183,7 @@ public class RepositoryServiceDbData
 
     @Value(value = "${webanno.repository}")
     private File dir;
-    
+
     @Resource(name = "formats")
     private Properties readWriteFileFormats;
 
@@ -214,7 +214,7 @@ public class RepositoryServiceDbData
     {
 
     }
-    
+
     @Override
     public void afterPropertiesSet()
         throws Exception
@@ -577,7 +577,7 @@ public class RepositoryServiceDbData
         File annotationFolder = getAnnotationFolder(aDocument);
         String serializedCasFileName;
         // for Correction, it will export the corrected document (of the logged in user)
-        // (CORRECTION_USER.ser is the automated result displayed for the user to correct it, not 
+        // (CORRECTION_USER.ser is the automated result displayed for the user to correct it, not
         // the final result) for automation, it will export either the corrected document
         // (Annotated) or the automated document
         if (aMode.equals(Mode.ANNOTATION) || aMode.equals(Mode.AUTOMATION)
@@ -595,13 +595,13 @@ public class RepositoryServiceDbData
             throw new FileNotFoundException("CAS file [" + serializedCasFileName
                     + "] not found in [" + annotationFolder + "]");
         }
-        
+
         CAS cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
         readSerializedCas(cas.getJCas(), serializedCasFile);
-        
+
         // Update type system the CAS
         upgradeCas(cas, aDocument, aUser);
-        
+
         // Update the source file name in case it is changed for some reason
         Project project = aDocument.getProject();
         File currentDocumentUri = new File(dir.getAbsolutePath() + PROJECT + project.getId()
@@ -614,7 +614,7 @@ public class RepositoryServiceDbData
         documentMetadata.setDocumentUri(new File(dir.getAbsolutePath() + PROJECT + project.getId()
                 + DOCUMENT + aDocument.getId() + SOURCE + "/" + aFileName).toURI().toURL()
                 .toExternalForm());
-        
+
         // update with the correct tagset name
         List<AnnotationFeature> features = annotationService.listAnnotationFeature(project);
         for (AnnotationFeature feature : features) {
@@ -631,7 +631,7 @@ public class RepositoryServiceDbData
         File exportTempDir = File.createTempFile("webanno", "export");
         exportTempDir.delete();
         exportTempDir.mkdirs();
-        
+
         AnalysisEngineDescription writer;
         if (aWriter.getName()
                 .equals("de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoCustomTsvWriter")) {
@@ -646,7 +646,7 @@ public class RepositoryServiceDbData
 
             writer = createEngineDescription(aWriter,
                     JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
-                    JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension, 
+                    JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension,
                     "multipleSpans", multipleSpans);
         }
         else {
@@ -654,7 +654,7 @@ public class RepositoryServiceDbData
                     JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
                     JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension);
         }
-        
+
         runPipeline(cas, writer);
 
         createLog(project).info(
@@ -720,7 +720,7 @@ public class RepositoryServiceDbData
     public AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, User aUser)
         throws IOException
     {
-        // Check if there is an annotation document entry in the database. If there is none, 
+        // Check if there is an annotation document entry in the database. If there is none,
         // create one.
         AnnotationDocument annotationDocument = null;
         if (!existsAnnotationDocument(aDocument, aUser)) {
@@ -737,7 +737,7 @@ public class RepositoryServiceDbData
 
         return annotationDocument;
     }
-    
+
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public AnnotationDocument getAnnotationDocument(SourceDocument aDocument, User aUser)
@@ -770,7 +770,7 @@ public class RepositoryServiceDbData
                             getReadableFormats().get(aDocument.getFormat()), aDocument);
                     writeSerializedCas(jcas, getCasFile(aDocument, INITIAL_CAS_PSEUDO_USER));
                 }
-                
+
                 // Ok, so at this point, we either have the lazily converted CAS already loaded
                 // or we know that we can load the existing initial CAS.
                 if (jcas == null) {
@@ -798,7 +798,7 @@ public class RepositoryServiceDbData
             // must remain stable. If an upgrade is required the caller should do it
             jcas =  readCas(aDocument, user);
         }
-        
+
         return jcas;
     }
 
@@ -1300,7 +1300,7 @@ public class RepositoryServiceDbData
         if (new File(path).exists()) {
             FileUtils.forceDelete(new File(path));
         }
-        
+
         createLog(aDocument.getProject()).info(
                 " Removed Document [" + aDocument.getName() + "] with ID [" + aDocument.getId()
                         + "] from Project [" + aDocument.getProject().getId() + "]");
@@ -1434,12 +1434,12 @@ public class RepositoryServiceDbData
         File targetFile = getSourceDocumentFile(aDocument);
         FileUtils.forceMkdir(targetFile.getParentFile());
         FileUtils.copyFile(aFile, targetFile);
-        
+
         // Copy the initial conversion of the file into the repository
         if (cas != null) {
             writeSerializedCas(cas, getCasFile(aDocument, INITIAL_CAS_PSEUDO_USER));
         }
-        
+
         createLog(aDocument.getProject()).info(
                 " Imported file [" + aDocument.getName() + "] with ID [" + aDocument.getId()
                         + "] to Project [" + aDocument.getProject().getId() + "]");
@@ -1454,7 +1454,7 @@ public class RepositoryServiceDbData
     {
         File targetFile = getSourceDocumentFile(aDocument);
         FileUtils.forceMkdir(targetFile.getParentFile());
-        
+
         OutputStream os = null;
         try {
             os = new FileOutputStream(targetFile);
@@ -1638,7 +1638,7 @@ public class RepositoryServiceDbData
                 + aDocument.getId() + "] in project ID [" + aDocument.getProject().getId()
                 + "]");
         //DebugUtils.smallStack();
-       
+
         synchronized (lock) {
             File annotationFolder = getAnnotationFolder(aDocument);
             FileUtils.forceMkdir(annotationFolder);
@@ -1664,10 +1664,10 @@ public class RepositoryServiceDbData
                     md = DocumentMetaData.create(aJcas);
                 }
                 md.setDocumentId(aUserName);
-                
+
                 File targetPath = getAnnotationFolder(aDocument);
                 writeSerializedCas(aJcas, new File(targetPath, aUserName+".ser"));
-                
+
                 createLog(aDocument.getProject()).info(
                         "Updated annotation document [" + aDocument.getName() + "] " + "with ID ["
                                 + aDocument.getId() + "] in project ID ["
@@ -1796,9 +1796,9 @@ public class RepositoryServiceDbData
                     + aDocument.getId() + "] in project ID [" + aDocument.getProject().getId()
                     + "] for user [" + aUsername + "]");
         }
-        
+
         //DebugUtils.smallStack();
-        
+
         synchronized (lock) {
             File annotationFolder = getAnnotationFolder(aDocument);
 
@@ -1813,7 +1813,7 @@ public class RepositoryServiceDbData
                             + aDocument.getProject().getName() + "] ("
                             + aDocument.getProject().getId() + ")");
                 }
-                
+
                 CAS cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
                 readSerializedCas(cas.getJCas(), serializedCasFile);
                 return cas.getJCas();
@@ -1865,14 +1865,14 @@ public class RepositoryServiceDbData
                     + aDocument.getId() + "] in project ID [" + aDocument.getProject().getId()
                     + "] for user [" + aUsername + "] in mode [" + aMode + "]");
             //DebugUtils.smallStack();
-            
+
             AnnotationDocument annotationDocument = getAnnotationDocument(aDocument, user);
             try {
                 CAS cas = readAnnotationCas(annotationDocument).getCas();
                 upgradeCas(cas, annotationDocument);
                 writeAnnotationCas(cas.getJCas(),
                         annotationDocument.getDocument(), user);
-                
+
                 if (aMode.equals(Mode.ANNOTATION)) {
                     // In this case we only need to upgrade to annotation document
                 }
@@ -1907,7 +1907,7 @@ public class RepositoryServiceDbData
     {
         upgradeCas(aCas, aAnnotationDocument.getDocument(), aAnnotationDocument.getUser());
     }
-    
+
     private void upgradeCas(CAS aCas, SourceDocument aSourceDocument, String aUser)
         throws UIMAException, IOException
     {
@@ -1950,11 +1950,11 @@ public class RepositoryServiceDbData
         // Change the state of the source document to in progress
         aDocument.setState(SourceDocumentStateTransition
                 .transition(SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
-        
-        // Check if there is an annotation document entry in the database. If there is none, 
+
+        // Check if there is an annotation document entry in the database. If there is none,
         // create one.
         AnnotationDocument annotationDocument = createOrGetAnnotationDocument(aDocument, aUser);
-                
+
         return readAnnotationCas(annotationDocument);
     }
 
@@ -1974,7 +1974,7 @@ public class RepositoryServiceDbData
 
     /**
      * Get CAS object for the first time, from the source document using the provided reader
-     * 
+     *
      * @param file
      *            the file.
      * @param reader
@@ -2001,7 +2001,7 @@ public class RepositoryServiceDbData
 
         // Convert the source document to CAS
         CollectionReader reader = CollectionReaderFactory.createReader(aReader,
-                ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION, aFile.getParentFile().getAbsolutePath(), 
+                ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION, aFile.getParentFile().getAbsolutePath(),
                 ResourceCollectionReaderBase.PARAM_PATTERNS, new String[] { "[+]" + aFile.getName() });
         if (!reader.hasNext()) {
             throw new FileNotFoundException("Annotation file [" + aFile.getName()
@@ -2009,19 +2009,19 @@ public class RepositoryServiceDbData
         }
         reader.getNext(cas);
         JCas jCas = cas.getJCas();
-        
+
         // Create sentence / token annotations if they are missing
         boolean hasTokens = JCasUtil.exists(jCas, Token.class);
         boolean hasSentences = JCasUtil.exists(jCas, Sentence.class);
-        
+
         if (!hasTokens || !hasSentences) {
             AnalysisEngine pipeline = createEngine(createEngineDescription(
-                    BreakIteratorSegmenter.class, 
-                    BreakIteratorSegmenter.PARAM_WRITE_TOKEN, !hasTokens, 
+                    BreakIteratorSegmenter.class,
+                    BreakIteratorSegmenter.PARAM_WRITE_TOKEN, !hasTokens,
                     BreakIteratorSegmenter.PARAM_WRITE_SENTENCE, !hasSentences));
             pipeline.process(cas.getJCas());
         }
-        
+
         return jCas;
     }
 
@@ -2116,7 +2116,7 @@ public class RepositoryServiceDbData
 
         return types;
     }
-    
+
     private void generateFeature(TypeSystemDescription aTSD, TypeDescription aTD,
             AnnotationFeature aFeature)
     {
@@ -2169,10 +2169,10 @@ public class RepositoryServiceDbData
         }
         return true;
     }
-    
+
     /**
      * A Helper method to add {@link TagsetDescription} to {@link CAS}
-     * 
+     *
      * @param aCas the CAA.
      * @param aLayer the layer.
      * @param aTagSetName the tagset.
@@ -2205,7 +2205,7 @@ public class RepositoryServiceDbData
             aCas.addFsToIndexes(fs);
         }
     }
-    
+
     @Override
     public List<Project> listAccessibleProjects()
     {
@@ -2233,11 +2233,11 @@ public class RepositoryServiceDbData
         }
         return allowedProject;
     }
-    
+
     /**
      * Return true if there exist at least one annotation document FINISHED for annotation for this
      * {@link SourceDocument}
-     * 
+     *
      * @param aSourceDocument
      *            the source document.
      * @param aUser
@@ -2260,10 +2260,14 @@ public class RepositoryServiceDbData
         }
         return finishedAnnotationDocumentExist;
     }
-    
+
     private static void writeSerializedCas(JCas aJCas, File aFile)
         throws IOException
     {
+        if (new File(aFile.getParent()).exists()) {
+            FileUtils.forceMkdir(new File(aFile.getParent()));
+        }
+
         try (ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(aFile))) {
             CASCompleteSerializer serializer = serializeCASComplete(aJCas.getCasImpl());
             os.writeObject(serializer);
