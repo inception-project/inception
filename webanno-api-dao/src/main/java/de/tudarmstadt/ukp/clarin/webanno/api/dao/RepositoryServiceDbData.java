@@ -2264,9 +2264,7 @@ public class RepositoryServiceDbData
     private static void writeSerializedCas(JCas aJCas, File aFile)
         throws IOException
     {
-        if (!new File(aFile.getParent()).exists()) {
-            FileUtils.forceMkdir(new File(aFile.getParent()));
-        }
+        FileUtils.forceMkdir(aFile.getParentFile());
 
         try (ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(aFile))) {
             CASCompleteSerializer serializer = serializeCASComplete(aJCas.getCasImpl());
