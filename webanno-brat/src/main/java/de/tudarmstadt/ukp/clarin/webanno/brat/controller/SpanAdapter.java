@@ -17,7 +17,7 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.*;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getFeature;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getFirstSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
@@ -34,9 +34,9 @@ import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.uima.cas.CAS;
@@ -44,7 +44,6 @@ import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
-import org.apache.uima.cas.impl.FeatureStructureImpl;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
@@ -55,6 +54,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Argument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Relation;
+import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -105,7 +105,9 @@ public class SpanAdapter
     {
         layer = aLayer;
         
-        features = new LinkedHashMap<String, AnnotationFeature>();
+        // Using a sorted map here so we have reliable positions in the map when iterating. We use
+        // these positions to remember the armed slots!
+        features = new TreeMap<String, AnnotationFeature>();
         for (AnnotationFeature f : aFeatures) {
             features.put(f.getName(), f);
         }
@@ -264,12 +266,8 @@ public class SpanAdapter
                         LinkWithRoleModel link = links.get(li);
                         FeatureStructure targetFS = selectByAddr(fs.getCAS(), link.targetAddr);
                         
-                        // HACK: here we generate a fake address... we MUST find a better mechanism
-                        // before releasing this.
-                        int fakeAddr = -(getAddr(fs) * 100000 + fi * 1000 + li);
-                        
-                        aResponse.addRelation(new Relation(fakeAddr, bratTypeName, getArgument(
-                                fs, targetFS), link.role, color));
+                        aResponse.addRelation(new Relation(new VID(getAddr(fs), fi, li),
+                                bratTypeName, getArgument(fs, targetFS), link.role, color));
                     }
                 }
                 fi++;

@@ -34,10 +34,10 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.BeanAsArraySerializer;
  *
  */
 @JsonSerialize(using = BeanAsArraySerializer.class)
-@JsonPropertyOrder(value = { "id", "type", "arguments", "labelText", "color" })
+@JsonPropertyOrder(value = { "vid", "type", "arguments", "labelText", "color" })
 public class Relation
 {
-    private int id;
+    private VID vid;
 
     /**
      * The type of the relation between two spans
@@ -62,22 +62,39 @@ public class Relation
     public Relation(int aId, String aType, List<Argument> aArguments, String aLabelText,
             String aColor)
     {
-        super();
-        id = aId;
+        this(new VID(aId), aType, aArguments, aLabelText, aColor);
+    }
+
+    public Relation(VID aVid, String aType, List<Argument> aArguments, String aLabelText,
+            String aColor)
+    {
+        vid = aVid;
         type = aType;
         arguments = aArguments;
         labelText = aLabelText;
         color = aColor;
     }
 
+    @Deprecated
     public int getId()
     {
-        return id;
+        return vid.getAnnotationId();
     }
 
+    @Deprecated
     public void setId(int aId)
     {
-        id = aId;
+        vid = new VID(aId);
+    }
+    
+    public VID getVid()
+    {
+        return vid;
+    }
+
+    public void setVid(VID aVid)
+    {
+        vid = aVid;
     }
 
     public String getType()

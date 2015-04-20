@@ -30,12 +30,22 @@ public class JSONUtil
     /**
      * Convert Java objects into JSON format and write it to a file
      *
-     * @param aObject the object.
-     * @param aFile the file
-     * @throws IOException if an I/O error occurs.
+     * @param aObject
+     *            the object.
+     * @param aFile
+     *            the file
+     * @throws IOException
+     *             if an I/O error occurs.
      */
     public static void generateJson(MappingJacksonHttpMessageConverter jsonConverter,
             Object aObject, File aFile)
+        throws IOException
+    {
+        FileUtils.writeStringToFile(aFile, toJsonString(jsonConverter, aObject));
+    }
+
+    public static String toJsonString(MappingJacksonHttpMessageConverter jsonConverter,
+            Object aObject)
         throws IOException
     {
         StringWriter out = new StringWriter();
@@ -44,6 +54,6 @@ public class JSONUtil
                 .createJsonGenerator(out);
 
         jsonGenerator.writeObject(aObject);
-        FileUtils.writeStringToFile(aFile, out.toString());
+        return out.toString();
     }
 }

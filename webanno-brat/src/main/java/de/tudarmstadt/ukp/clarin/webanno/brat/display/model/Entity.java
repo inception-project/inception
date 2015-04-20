@@ -24,7 +24,6 @@ import java.util.List;
 
 import org.codehaus.jackson.annotate.JsonPropertyOrder;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
-
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.BeanAsArraySerializer;
 
 /**
@@ -35,10 +34,10 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.BeanAsArraySerializer;
  * @author Seid Muhie Yimam
  */
 @JsonSerialize(using = BeanAsArraySerializer.class)
-@JsonPropertyOrder(value = { "id", "type", "offsets", "labelText", "color" })
+@JsonPropertyOrder(value = { "vid", "type", "offsets", "labelText", "color" })
 public class Entity
 {
-    private int id;
+    private VID vid;
     private String type;
     private List<Offsets> offsets = new ArrayList<Offsets>();
     // WEBANNO EXTENSION BEGIN
@@ -58,22 +57,43 @@ public class Entity
 
     public Entity(int aId, String aType, List<Offsets> aOffsets, String aLabelText, String aColor)
     {
-        super();
-        id = aId;
+        this(new VID(aId), aType, aOffsets, aLabelText, aColor);
+    }
+
+    public Entity(VID aVid, String aType, Offsets aOffsets, String aLabelText, String aColor)
+    {
+        this(aVid, aType, asList(aOffsets), aLabelText, aColor);
+    }
+
+    public Entity(VID aVid, String aType, List<Offsets> aOffsets, String aLabelText, String aColor)
+    {
+        vid = aVid;
         type = aType;
         offsets = aOffsets;
         labelText = aLabelText;
         color = aColor;
     }
 
+    @Deprecated
     public int getId()
     {
-        return id;
+        return vid.getAnnotationId();
     }
 
+    @Deprecated
     public void setId(int aId)
     {
-        id = aId;
+        vid = new VID(aId);
+    }
+
+    public VID getVid()
+    {
+        return vid;
+    }
+
+    public void setVid(VID aVid)
+    {
+        vid = aVid;
     }
 
     public String getType()

@@ -29,47 +29,36 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.BeanAsArraySerializer;
  * @author Seid Muhie Yimam
  */
 @JsonSerialize(using = BeanAsArraySerializer.class)
-@JsonPropertyOrder(value = { "argument", "token" })
+@JsonPropertyOrder(value = { "label", "target" })
 public class Argument
 {
     /**
-     * Arg1 or Arg2
+     * Argument label.
      */
-    private String argument;
-    
+    private final String label;
+
     /**
-     * the intial/target tokens (Span annotations)
+     * The target span annotation.
      */
-    private int token;
+    private final VID target;
 
-    public Argument()
+    public Argument(String aLabel, int aTarget)
     {
-        // Nothing to do
+        // REC: It is fully ok that we only have "int" as the type for target, since right now only
+        // spans can be the target of an argument. However, we internally wrap this as a VID
+        // in order to always use the same identifier type when talking with brat (VID renders as
+        // as String value, while "int" would render as a numeric value).
+        label = aLabel;
+        target = new VID(aTarget);
     }
 
-    public Argument(String aArgument, int aToken)
+    public String getLabel()
     {
-        argument = aArgument;
-        token = aToken;
+        return label;
     }
 
-    public String getArgument()
+    public VID getTarget()
     {
-        return argument;
-    }
-
-    public void setArgument(String aArgument)
-    {
-        argument = aArgument;
-    }
-
-    public int getToken()
-    {
-        return token;
-    }
-
-    public void setTarget(int aTarget)
-    {
-        token = aTarget;
+        return target;
     }
 }

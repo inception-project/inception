@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import static java.util.Arrays.asList;
-
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -59,6 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.OffsetsList;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Relation;
+import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
@@ -121,7 +121,6 @@ public class BratAnnotator
     private WebMarkupContainer vis;
     private AbstractAjaxBehavior controller;
     private String collection = "";
-    private String offsets;
 
     /**
      * Data models for {@link BratAnnotator}
@@ -183,8 +182,50 @@ public class BratAnnotator
                 BratAjaxCasController controller = new BratAjaxCasController(repository,
                         annotationService);
 
-                final String action = request.getParameterValue(PARAM_ACTION).toString();
+                // Get action
+                String action = request.getParameterValue(PARAM_ACTION).toString();
 
+                // Load the CAS if necessary
+                boolean requiresCasLoading = action.equals(SpanAnnotationResponse.COMMAND)
+                        || action.equals(ArcAnnotationResponse.COMMAND)
+                        || action.equals(GetDocumentResponse.COMMAND);
+                JCas jCas = null;
+                if (requiresCasLoading) {
+                    // Make sure we load the CAS only once here in case of an annotation action.
+                    try {
+                        jCas = getCas(getModelObject());
+                    }
+                    catch (ClassNotFoundException e) {
+                        error("Invalid reader: " + e.getMessage());
+                    }
+                    catch (IOException e) {
+                        error(e.getMessage());
+                    }
+                    catch (UIMAException e) {
+                        error(ExceptionUtils.getRootCauseMessage(e));
+                    }
+                }
+
+                // Parse annotation ID if present in request
+                final VID paramId;
+                if (!request.getParameterValue(PARAM_ID).isEmpty()
+                        && !request.getParameterValue(PARAM_ARC_ID).isEmpty()) {
+                    throw new IllegalStateException(
+                            "[id] and [arcId] cannot be both set at the same time!");
+                }
+                else if (!request.getParameterValue(PARAM_ID).isEmpty()) {
+                    paramId = VID.parseOptional(request.getParameterValue(PARAM_ID).toString());
+                }
+                else {
+                    paramId = VID.parseOptional(request.getParameterValue(PARAM_ARC_ID).toString());
+                }
+
+                // HACK: If an arc was clicked that represents a link feature, then open the
+                // associated span annotation instead.
+                if (paramId.isSlotSet() && action.equals(ArcAnnotationResponse.COMMAND)) {
+                    action = SpanAnnotationResponse.COMMAND;
+                }
+                
                 try {
                     LOG.info("AJAX-RPC CALLED: [" + action + "]");
 
@@ -192,40 +233,39 @@ public class BratAnnotator
                         result = controller.whoami();
                     }
                     else if (action.equals(SpanAnnotationResponse.COMMAND)) {
-                        JCas jCas = getCas(getModelObject());
-                        if (getModelObject().isSlotArmed()
-                                && !request.getParameterValue(PARAM_ID).isEmpty()) {
+                        assert jCas != null;
+                        
+                        if (getModelObject().isSlotArmed() && paramId.isSet()) {
                             aAnnotationDetailEditorPanel.setSlot(aTarget, jCas, getModelObject(),
-                                    request.getParameterValue(PARAM_ID).toInt());
+                                    paramId.getAnnotationId());
                         }
                         else {
                             // Doing anything but filling an armed slot will unarm it
                             getModelObject().clearArmedSlot();
 
                             getModelObject().setRelationAnno(false);
-                            if (request.getParameterValue(PARAM_ID).toString() == null) {
+                            if (paramId == null) {
                                 getModelObject().setSelectedAnnotationId(-1);
                                 aAnnotationDetailEditorPanel.setLayerAndFeatureModels(jCas,
                                         getModelObject());
                             }
-                            else if (request.getParameterValue(PARAM_ID).toInt() == -1) {
+                            else if (paramId.isGhost()) {
                                 LOG.info("This is ghost Annotation, select Layer and Feature to annotate.");
                                 error("This is ghost Annotation, select Layer and Feature to annotate.");
                                 aTarget.addChildren(getPage(), FeedbackPanel.class);
                                 return;
                             }
                             else {
-                                getModelObject().setSelectedAnnotationId(
-                                        request.getParameterValue(PARAM_ID).toInt());
+                                getModelObject().setSelectedAnnotationId(paramId.getAnnotationId());
                                 aAnnotationDetailEditorPanel.setLayerAndFeatureModels(jCas,
                                         getModelObject());
                             }
 
-                            offsets = request.getParameterValue(PARAM_OFFSETS).toString();
-                            OffsetsList offsetLists = jsonConverter.getObjectMapper().readValue(
-                                    offsets, OffsetsList.class);
-
                             if (getModelObject().getSelectedAnnotationId() == -1) {
+                                String offsets = request.getParameterValue(PARAM_OFFSETS).toString();
+                                OffsetsList offsetLists = jsonConverter.getObjectMapper().readValue(
+                                        offsets, OffsetsList.class);
+                                
                                 Sentence sentence = BratAjaxCasUtil.selectSentenceAt(jCas,
                                         getModelObject().getSentenceBeginOffset(), getModelObject()
                                                 .getSentenceEndOffset());
@@ -235,9 +275,8 @@ public class BratAnnotator
                                         sentence.getBegin()
                                                 + offsetLists.get(offsetLists.size() - 1).getEnd());
                             }
-
-                            // get the begin/end from the annotation, no need to re-calculate
                             else {
+                                // get the begin/end from the annotation, no need to re-calculate
                                 AnnotationFS fs = BratAjaxCasUtil.selectByAddr(jCas,
                                         getModelObject().getSelectedAnnotationId());
                                 getModelObject().setBeginOffset(fs.getBegin());
@@ -245,25 +284,27 @@ public class BratAnnotator
                             }
 
                             getModelObject().setSelectedText(
-                                    request.getParameterValue(PARAM_SPAN_TEXT).toString());
+                                    jCas.getDocumentText().substring(
+                                            getModelObject().getBeginOffset(),
+                                            getModelObject().getEndOffset()));
 
                             if (BratAnnotatorUtility.isDocumentFinished(repository,
                                     getModelObject())) {
                                 error("This document is already closed. Please ask your project "
                                         + "manager to re-open it via the Montoring page");
                             }
+                            
                             if (getModelObject().getSelectedAnnotationId() == -1) {
                                 bratRenderHighlight(aTarget, getModelObject()
                                         .getSelectedAnnotationId());
                                 bratRender(aTarget, jCas);
-                                ghostSpanAnnotationRender(aTarget, jCas, offsetLists.get(0)
-                                        .getBegin(), offsetLists.get(offsetLists.size() - 1)
-                                        .getEnd());
+                                bratRenderGhostSpan(aTarget, jCas, getModelObject()
+                                        .getBeginOffset(), getModelObject().getEndOffset());
                             }
                         }
                     }
                     else if (action.equals(ArcAnnotationResponse.COMMAND)) {
-                        JCas jCas = getCas(getModelObject());
+                        assert jCas != null;
                         getModelObject().setRelationAnno(true);
 
                         getModelObject().setOriginSpanType(
@@ -275,20 +316,19 @@ public class BratAnnotator
                         getModelObject().setTargetSpanId(
                                 request.getParameterValue(PARAM_TARGET_SPAN_ID).toInteger());
 
-                        if (request.getParameterValue(PARAM_ARC_ID).toString() == null) {
+                        if (!paramId.isSet()) {
                             getModelObject().setSelectedAnnotationId(-1);
                             aAnnotationDetailEditorPanel.setLayerAndFeatureModels(jCas,
                                     getModelObject());
                         }
-                        else if (request.getParameterValue(PARAM_ARC_ID).toInt() == -1) {
+                        else if (paramId.isGhost()) {
                             LOG.info("This is ghost Annotation, select Layer and Feature to annotate.");
                             error("This is ghost Annotation, select Layer and Feature to annotate.");
                             aTarget.addChildren(getPage(), FeedbackPanel.class);
                             return;
                         }
                         else {
-                            getModelObject().setSelectedAnnotationId(
-                                    request.getParameterValue(PARAM_ARC_ID).toInt());
+                            getModelObject().setSelectedAnnotationId(paramId.getAnnotationId());
                             aAnnotationDetailEditorPanel.setLayerAndFeatureModels(jCas,
                                     getModelObject());
                         }
@@ -316,8 +356,8 @@ public class BratAnnotator
                     }
                     else if (action.equals(GetDocumentResponse.COMMAND)) {
                         if (getModelObject().getProject() != null) {
-                            result = controller.getDocumentResponse(getModelObject(), 0,
-                                    getCas(getModelObject()), true);
+                            result = controller
+                                    .getDocumentResponse(getModelObject(), 0, jCas, true);
                         }
                         else {
                             result = new GetDocumentResponse();
@@ -444,7 +484,7 @@ public class BratAnnotator
                 + "]);";
     }
 
-    public void ghostSpanAnnotationRender(AjaxRequestTarget aTarget, JCas aJCas, int aBeginOffset,
+    public void bratRenderGhostSpan(AjaxRequestTarget aTarget, JCas aJCas, int aBeginOffset,
             int aEndOffset)
     {
         LOG.info("BEGIN ghostAnnoRender");
@@ -452,7 +492,7 @@ public class BratAnnotator
         // SpanAdapter.renderTokenAndSentence(aJCas, response, getModelObject());
         List<Offsets> offsets = new ArrayList<Offsets>();
         offsets.add(new Offsets(aBeginOffset, aEndOffset));
-        response.addEntity(new Entity(-1, GHOST_PLACE_HOLDER, offsets, GHOST_PLACE_HOLDER,
+        response.addEntity(new Entity(VID.GHOST, GHOST_PLACE_HOLDER, offsets, GHOST_PLACE_HOLDER,
                 GHOST_COLOR));
 
         BratAjaxCasController.render(response, getModelObject(), aJCas, annotationService);
@@ -461,7 +501,6 @@ public class BratAnnotator
         aTarget.appendJavaScript("Wicket.$('" + vis.getMarkupId()
                 + "').dispatcher.post('renderData', [" + json + "]);");
         LOG.info("END ghostAnnoRender");
-
     }
 
     public void ghostArcAnnotationRender(AjaxRequestTarget aTarget, JCas aJCas)
@@ -470,8 +509,8 @@ public class BratAnnotator
         GetDocumentResponse response = new GetDocumentResponse();
         List<Argument> argumentList = asList(new Argument("Arg1", getModelObject()
                 .getOriginSpanId()), new Argument("Arg2", getModelObject().getTargetSpanId()));
-        response.addRelation(new Relation(-1, GHOST_PLACE_HOLDER, argumentList, GHOST_PLACE_HOLDER,
-                GHOST_COLOR));
+        response.addRelation(new Relation(VID.GHOST, GHOST_PLACE_HOLDER, argumentList,
+                GHOST_PLACE_HOLDER, GHOST_COLOR));
 
         BratAjaxCasController.render(response, getModelObject(), aJCas, annotationService);
 
@@ -479,7 +518,6 @@ public class BratAnnotator
         aTarget.appendJavaScript("Wicket.$('" + vis.getMarkupId()
                 + "').dispatcher.post('renderData', [" + json + "]);");
         LOG.info("END ghostArcAnnoRender");
-
     }
 
     /**
