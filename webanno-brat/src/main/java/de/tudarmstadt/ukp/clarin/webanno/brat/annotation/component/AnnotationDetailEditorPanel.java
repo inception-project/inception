@@ -66,6 +66,7 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.codehaus.plexus.util.StringUtils;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 
 import com.googlecode.wicket.kendo.ui.form.NumberTextField;
@@ -1171,13 +1172,19 @@ public class AnnotationDetailEditorPanel
                 @Override
                 protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
                 {
-                    List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
-                            .getModelObject().value;
-                    LinkWithRoleModel m = new LinkWithRoleModel();
-                    m.role = (String) text.getModelObject();
-                    links.add(m);
-
-                    aTarget.add(wmc);
+                    if (StringUtils.isBlank((String) text.getModelObject())) {
+                        error("Must set slot label before adding!");
+                        aTarget.addChildren(getPage(), FeedbackPanel.class);
+                    }
+                    else {
+                        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
+                                .getModelObject().value;
+                        LinkWithRoleModel m = new LinkWithRoleModel();
+                        m.role = (String) text.getModelObject();
+                        links.add(m);
+    
+                        aTarget.add(wmc);
+                    }
                 }
             });
 
