@@ -177,11 +177,27 @@ public class BratAnnotator
             {
                 final IRequestParameters request = getRequest().getPostParameters();
 
-                Object result = null;
+                // Parse annotation ID if present in request
+                VID paramId;
+                if (!request.getParameterValue(PARAM_ID).isEmpty()
+                        && !request.getParameterValue(PARAM_ARC_ID).isEmpty()) {
+                    throw new IllegalStateException(
+                            "[id] and [arcId] cannot be both set at the same time!");
+                }
+                else if (!request.getParameterValue(PARAM_ID).isEmpty()) {
+                    paramId = VID.parseOptional(request.getParameterValue(PARAM_ID).toString());
+                }
+                else {
+                    paramId = VID.parseOptional(request.getParameterValue(PARAM_ARC_ID).toString());
+                }
 
-                BratAjaxCasController controller = new BratAjaxCasController(repository,
-                        annotationService);
-
+                // Ignore ghosts
+                if (paramId.isGhost()) {
+                    error("This is a ghost annotation, select layer and feature to annotate.");
+                    aTarget.addChildren(getPage(), FeedbackPanel.class);
+                    return;
+                }
+                
                 // Get action
                 String action = request.getParameterValue(PARAM_ACTION).toString();
 
@@ -206,26 +222,17 @@ public class BratAnnotator
                     }
                 }
 
-                // Parse annotation ID if present in request
-                final VID paramId;
-                if (!request.getParameterValue(PARAM_ID).isEmpty()
-                        && !request.getParameterValue(PARAM_ARC_ID).isEmpty()) {
-                    throw new IllegalStateException(
-                            "[id] and [arcId] cannot be both set at the same time!");
-                }
-                else if (!request.getParameterValue(PARAM_ID).isEmpty()) {
-                    paramId = VID.parseOptional(request.getParameterValue(PARAM_ID).toString());
-                }
-                else {
-                    paramId = VID.parseOptional(request.getParameterValue(PARAM_ARC_ID).toString());
-                }
-
                 // HACK: If an arc was clicked that represents a link feature, then open the
                 // associated span annotation instead.
                 if (paramId.isSlotSet() && action.equals(ArcAnnotationResponse.COMMAND)) {
                     action = SpanAnnotationResponse.COMMAND;
+                    paramId = new VID(paramId.getAnnotationId());
                 }
+
+                BratAjaxCasController controller = new BratAjaxCasController(repository,
+                        annotationService);
                 
+                Object result = null;
                 try {
                     LOG.info("AJAX-RPC CALLED: [" + action + "]");
 
@@ -234,7 +241,7 @@ public class BratAnnotator
                     }
                     else if (action.equals(SpanAnnotationResponse.COMMAND)) {
                         assert jCas != null;
-                        
+
                         if (getModelObject().isSlotArmed() && paramId.isSet()) {
                             aAnnotationDetailEditorPanel.setSlot(aTarget, jCas, getModelObject(),
                                     paramId.getAnnotationId());
@@ -244,28 +251,17 @@ public class BratAnnotator
                             getModelObject().clearArmedSlot();
 
                             getModelObject().setRelationAnno(false);
-                            if (paramId == null) {
-                                getModelObject().setSelectedAnnotationId(-1);
-                                aAnnotationDetailEditorPanel.setLayerAndFeatureModels(jCas,
-                                        getModelObject());
-                            }
-                            else if (paramId.isGhost()) {
-                                LOG.info("This is ghost Annotation, select Layer and Feature to annotate.");
-                                error("This is ghost Annotation, select Layer and Feature to annotate.");
-                                aTarget.addChildren(getPage(), FeedbackPanel.class);
-                                return;
-                            }
-                            else {
-                                getModelObject().setSelectedAnnotationId(paramId.getAnnotationId());
-                                aAnnotationDetailEditorPanel.setLayerAndFeatureModels(jCas,
-                                        getModelObject());
-                            }
 
-                            if (getModelObject().getSelectedAnnotationId() == -1) {
-                                String offsets = request.getParameterValue(PARAM_OFFSETS).toString();
-                                OffsetsList offsetLists = jsonConverter.getObjectMapper().readValue(
-                                        offsets, OffsetsList.class);
-                                
+                            getModelObject().setSelectedAnnotationId(paramId);
+                            aAnnotationDetailEditorPanel.setLayerAndFeatureModels(jCas,
+                                    getModelObject());
+
+                            if (getModelObject().getSelectedAnnotationId().isNotSet()) {
+                                String offsets = request.getParameterValue(PARAM_OFFSETS)
+                                        .toString();
+                                OffsetsList offsetLists = jsonConverter.getObjectMapper()
+                                        .readValue(offsets, OffsetsList.class);
+
                                 Sentence sentence = BratAjaxCasUtil.selectSentenceAt(jCas,
                                         getModelObject().getSentenceBeginOffset(), getModelObject()
                                                 .getSentenceEndOffset());
@@ -278,7 +274,8 @@ public class BratAnnotator
                             else {
                                 // get the begin/end from the annotation, no need to re-calculate
                                 AnnotationFS fs = BratAjaxCasUtil.selectByAddr(jCas,
-                                        getModelObject().getSelectedAnnotationId());
+                                        getModelObject().getSelectedAnnotationId()
+                                                .getAnnotationId());
                                 getModelObject().setBeginOffset(fs.getBegin());
                                 getModelObject().setEndOffset(fs.getEnd());
                             }
@@ -293,13 +290,17 @@ public class BratAnnotator
                                 error("This document is already closed. Please ask your project "
                                         + "manager to re-open it via the Montoring page");
                             }
-                            
-                            if (getModelObject().getSelectedAnnotationId() == -1) {
-                                bratRenderHighlight(aTarget, getModelObject()
-                                        .getSelectedAnnotationId());
-                                bratRender(aTarget, jCas);
+
+                            bratRenderHighlight(aTarget, getModelObject()
+                                    .getSelectedAnnotationId());
+
+                            if (getModelObject().getSelectedAnnotationId().isNotSet()) {
                                 bratRenderGhostSpan(aTarget, jCas, getModelObject()
                                         .getBeginOffset(), getModelObject().getEndOffset());
+                            }
+                            else {
+                                bratRender(aTarget, jCas);
+                                result = new SpanAnnotationResponse();
                             }
                         }
                     }
@@ -316,30 +317,23 @@ public class BratAnnotator
                         getModelObject().setTargetSpanId(
                                 request.getParameterValue(PARAM_TARGET_SPAN_ID).toInteger());
 
-                        if (!paramId.isSet()) {
-                            getModelObject().setSelectedAnnotationId(-1);
-                            aAnnotationDetailEditorPanel.setLayerAndFeatureModels(jCas,
-                                    getModelObject());
-                        }
-                        else if (paramId.isGhost()) {
-                            LOG.info("This is ghost Annotation, select Layer and Feature to annotate.");
-                            error("This is ghost Annotation, select Layer and Feature to annotate.");
-                            aTarget.addChildren(getPage(), FeedbackPanel.class);
-                            return;
-                        }
-                        else {
-                            getModelObject().setSelectedAnnotationId(paramId.getAnnotationId());
-                            aAnnotationDetailEditorPanel.setLayerAndFeatureModels(jCas,
-                                    getModelObject());
-                        }
+                        getModelObject().setSelectedAnnotationId(paramId);
+                        aAnnotationDetailEditorPanel.setLayerAndFeatureModels(jCas,
+                                getModelObject());
 
                         if (BratAnnotatorUtility.isDocumentFinished(repository, getModelObject())) {
                             error("This document is already closed. Please ask admin to re-open");
                         }
-                        if (getModelObject().getSelectedAnnotationId() == -1) {
-                            bratRenderHighlight(aTarget, getModelObject().getSelectedAnnotationId());
+                        
+                        bratRenderHighlight(aTarget, getModelObject()
+                                .getSelectedAnnotationId());
+
+                        if (getModelObject().getSelectedAnnotationId().isNotSet()) {
+                            bratRenderGhostArc(aTarget, jCas);
+                        }
+                        else {
                             bratRender(aTarget, jCas);
-                            ghostArcAnnotationRender(aTarget, jCas);
+                            result = new ArcAnnotationResponse();
                         }
                     }
                     else if (action.equals(LoadConfResponse.COMMAND)) {
@@ -389,7 +383,7 @@ public class BratAnnotator
                             + json + ";");
                 }
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
-                if (getModelObject().getSelectedAnnotationId() == -1) {
+                if (getModelObject().getSelectedAnnotationId().isNotSet()) {
                     aAnnotationDetailEditorPanel.setAnnotationLayers(getModelObject());
                 }
                 aTarget.add(aAnnotationDetailEditorPanel);
@@ -503,7 +497,7 @@ public class BratAnnotator
         LOG.info("END ghostAnnoRender");
     }
 
-    public void ghostArcAnnotationRender(AjaxRequestTarget aTarget, JCas aJCas)
+    public void bratRenderGhostArc(AjaxRequestTarget aTarget, JCas aJCas)
     {
         LOG.info("BEGIN ghostArcAnnoRender");
         GetDocumentResponse response = new GetDocumentResponse();
@@ -600,9 +594,9 @@ public class BratAnnotator
      * @param aAnnotationId
      *            the annotation ID to highlight.
      */
-    public void bratRenderHighlight(AjaxRequestTarget aTarget, int aAnnotationId)
+    public void bratRenderHighlight(AjaxRequestTarget aTarget, VID aAnnotationId)
     {
-        if (aAnnotationId < 0) {
+        if (!aAnnotationId.isSet()) {
             aTarget.appendJavaScript("Wicket.$('" + vis.getMarkupId()
                     + "').dispatcher.post('current', " + "['" + getCollection()
                     + "', '1234', {edited:[]}, false]);");
@@ -610,7 +604,7 @@ public class BratAnnotator
         else {
             aTarget.appendJavaScript("Wicket.$('" + vis.getMarkupId()
                     + "').dispatcher.post('current', " + "['" + getCollection()
-                    + "', '1234', {edited:[[" + aAnnotationId + "]]}, false]);");
+                    + "', '1234', {edited:[[\"" + aAnnotationId + "\"]]}, false]);");
         }
     }
 

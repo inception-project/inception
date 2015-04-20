@@ -30,6 +30,7 @@ import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel.FeatureModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -160,7 +161,7 @@ public class BratAnnotatorModel
     private String selectedText;
 
     //id of the select annotation layer
-    private int selectedAnnotationId = -1;
+    private VID selectedAnnotationId = VID.NONE_ID;
 
     // the selected annotation layer
     private AnnotationLayer selectedAnnotationLayer;
@@ -448,12 +449,12 @@ public class BratAnnotatorModel
         this.selectedText = selectedText;
     }
 
-    public int getSelectedAnnotationId()
+    public VID getSelectedAnnotationId()
     {
         return selectedAnnotationId;
     }
 
-    public void setSelectedAnnotationId(int selectedAnnotationId)
+    public void setSelectedAnnotationId(VID selectedAnnotationId)
     {
         this.selectedAnnotationId = selectedAnnotationId;
     }

@@ -17,6 +17,7 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.display.model;
 
+import java.io.Serializable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,13 +30,17 @@ import org.codehaus.jackson.map.ser.std.ToStringSerializer;
  */
 @JsonSerialize(using = ToStringSerializer.class)
 public class VID
+    implements Serializable
 {
+    private static final long serialVersionUID = -8490129995678288943L;
+    
     public static final Pattern PATTERN_VID = Pattern.compile("(\\d+)(?:\\.(\\d+))?(?:\\.(\\d+))?");
     public static final int NONE = -1;
     public static final int GHOST = -2;
-    
+
     public static final VID GHOST_ID = new VID(GHOST);
-    
+    public static final VID NONE_ID = new VID(NONE);
+
     private final int annotationId;
     private final int attribute;
     private final int slot;
@@ -56,12 +61,17 @@ public class VID
         attribute = aAttribute;
         slot = aSlot;
     }
-    
+
     public boolean isSet()
     {
         return annotationId >= 0;
     }
     
+    public boolean isNotSet()
+    {
+        return !isSet();
+    }
+
     public boolean isGhost()
     {
         return annotationId == GHOST;
@@ -81,7 +91,7 @@ public class VID
     {
         return slot;
     }
-    
+
     public boolean isSlotSet()
     {
         return slot >= 0;
@@ -96,7 +106,7 @@ public class VID
             return new VID(NONE);
         }
     }
-    
+
     public static VID parse(String aVid)
     {
         Matcher m = PATTERN_VID.matcher(aVid);
@@ -123,7 +133,7 @@ public class VID
         StringBuilder sb = new StringBuilder();
 
         sb.append(annotationId);
-        
+
         if (attribute >= 0) {
             sb.append('.');
             sb.append(attribute);
