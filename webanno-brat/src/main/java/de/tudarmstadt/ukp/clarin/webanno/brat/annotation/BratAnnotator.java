@@ -17,7 +17,9 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
 import static java.util.Arrays.asList;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -28,6 +30,7 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
@@ -44,6 +47,8 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.codehaus.jackson.JsonGenerator;
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.JsonMappingException;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 
 import com.googlecode.wicket.jquery.ui.resource.JQueryUIResourceReference;
@@ -53,6 +58,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Argument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Offsets;
@@ -232,6 +239,12 @@ public class BratAnnotator
                 BratAjaxCasController controller = new BratAjaxCasController(repository,
                         annotationService);
                 
+                // Doing anything but a span annotation when a slot is armed will unarm it
+                if (getModelObject().isSlotArmed()
+                        && !action.equals(SpanAnnotationResponse.COMMAND)) {
+                    getModelObject().clearArmedSlot();
+                }
+                
                 Object result = null;
                 try {
                     LOG.info("AJAX-RPC CALLED: [" + action + "]");
@@ -242,9 +255,36 @@ public class BratAnnotator
                     else if (action.equals(SpanAnnotationResponse.COMMAND)) {
                         assert jCas != null;
 
-                        if (getModelObject().isSlotArmed() && paramId.isSet()) {
-                            aAnnotationDetailEditorPanel.setSlot(aTarget, jCas, getModelObject(),
-                                    paramId.getAnnotationId());
+                        if (getModelObject().isSlotArmed()) {
+                            if (paramId.isSet()) {
+                                // Fill slot with existing annotation
+                                aAnnotationDetailEditorPanel.setSlot(aTarget, jCas, getModelObject(),
+                                        paramId.getAnnotationId());
+                            }
+                            else if (!CAS.TYPE_NAME_ANNOTATION.equals(getModelObject().getArmedFeature().getType())) {
+                                // Fill slot with new annotation (only works if a concret type is
+                                // set for the link feature!
+                                SpanAdapter adapter = (SpanAdapter) getAdapter(annotationService,
+                                        annotationService.getLayer(getModelObject()
+                                                .getArmedFeature().getType(), getModelObject()
+                                                .getProject()));
+
+                                Offsets offsets = getSpanOffsets(request, jCas, paramId);
+                                
+                                try {
+                                    int id = adapter.add(jCas, offsets.getBegin(),
+                                            offsets.getEnd(), null, null);
+                                    aAnnotationDetailEditorPanel.setSlot(aTarget, jCas,
+                                            getModelObject(), id);
+                                }
+                                catch (BratAnnotationException e) {
+                                    error(e.getMessage());
+                                    LOG.error(ExceptionUtils.getRootCauseMessage(e), e);
+                                }
+                            }
+                            else {
+                                error("Cannot auto-create targets for generic links.");
+                            }
                         }
                         else {
                             // Doing anything but filling an armed slot will unarm it
@@ -256,30 +296,9 @@ public class BratAnnotator
                             aAnnotationDetailEditorPanel.setLayerAndFeatureModels(jCas,
                                     getModelObject());
 
-                            if (getModelObject().getSelectedAnnotationId().isNotSet()) {
-                                String offsets = request.getParameterValue(PARAM_OFFSETS)
-                                        .toString();
-                                OffsetsList offsetLists = jsonConverter.getObjectMapper()
-                                        .readValue(offsets, OffsetsList.class);
-
-                                Sentence sentence = BratAjaxCasUtil.selectSentenceAt(jCas,
-                                        getModelObject().getSentenceBeginOffset(), getModelObject()
-                                                .getSentenceEndOffset());
-                                getModelObject().setBeginOffset(
-                                        sentence.getBegin() + offsetLists.get(0).getBegin());
-                                getModelObject().setEndOffset(
-                                        sentence.getBegin()
-                                                + offsetLists.get(offsetLists.size() - 1).getEnd());
-                            }
-                            else {
-                                // get the begin/end from the annotation, no need to re-calculate
-                                AnnotationFS fs = BratAjaxCasUtil.selectByAddr(jCas,
-                                        getModelObject().getSelectedAnnotationId()
-                                                .getAnnotationId());
-                                getModelObject().setBeginOffset(fs.getBegin());
-                                getModelObject().setEndOffset(fs.getEnd());
-                            }
-
+                            Offsets offsets = getSpanOffsets(request, jCas, paramId);
+                            getModelObject().setBeginOffset(offsets.getBegin());
+                            getModelObject().setEndOffset(offsets.getEnd());
                             getModelObject().setSelectedText(
                                     jCas.getDocumentText().substring(
                                             getModelObject().getBeginOffset(),
@@ -394,6 +413,28 @@ public class BratAnnotator
         add(controller);
     }
 
+    private Offsets getSpanOffsets(IRequestParameters request, JCas jCas, VID aVid)
+        throws JsonParseException, JsonMappingException, IOException
+    {
+        if (aVid.isNotSet()) {
+            // Create new span annotation
+            String offsets = request.getParameterValue(PARAM_OFFSETS).toString();
+            OffsetsList offsetLists = jsonConverter.getObjectMapper().readValue(offsets,
+                    OffsetsList.class);
+
+            Sentence sentence = BratAjaxCasUtil.selectSentenceAt(jCas, getModelObject()
+                    .getSentenceBeginOffset(), getModelObject().getSentenceEndOffset());
+            return new Offsets(sentence.getBegin() + offsetLists.get(0).getBegin(),
+                    sentence.getBegin() + offsetLists.get(offsetLists.size() - 1).getEnd());
+        }
+        else {
+            // Edit existing span annotation
+            AnnotationFS fs = BratAjaxCasUtil.selectByAddr(jCas, getModelObject()
+                    .getSelectedAnnotationId().getAnnotationId());
+            return new Offsets(fs.getBegin(), fs.getEnd());
+        }
+   }
+    
     @Override
     protected void onConfigure()
     {

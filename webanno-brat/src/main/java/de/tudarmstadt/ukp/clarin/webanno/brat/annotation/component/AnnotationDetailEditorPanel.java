@@ -313,6 +313,17 @@ public class AnnotationDetailEditorPanel
     public void actionAnnotate(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
+        // If there is no annotation yet, create one. During creation, the adapter
+        // may notice that it would create a duplicate and return the address of
+        // an existing annotation instead of a new one.
+        JCas jCas = getCas(aBModel);
+        
+        actionAnnotate(aTarget, aBModel, jCas);
+    }
+
+    public void actionAnnotate(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel, JCas jCas)
+        throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
+    {
         if (aBModel.getSelectedAnnotationLayer() == null) {
             error("No layer is selected. First select a layer");
             return;
@@ -333,10 +344,6 @@ public class AnnotationDetailEditorPanel
             }
         }
 
-        // If there is no annotation yet, create one. During creation, the adapter
-        // may notice that it would create a duplicate and return the address of
-        // an existing annotation instead of a new one.
-        JCas jCas = getCas(aBModel);
         TypeAdapter adapter = getAdapter(annotationService, aBModel.getSelectedAnnotationLayer());
 
         if (aBModel.getSelectedAnnotationId().isNotSet()) {
@@ -593,7 +600,7 @@ public class AnnotationDetailEditorPanel
         // Auto-commit if working on existing annotation
         if (annotationFeatureForm.getModelObject().getSelectedAnnotationId().isSet()) {
             try {
-                actionAnnotate(aTarget, annotationFeatureForm.getModelObject());
+                actionAnnotate(aTarget, annotationFeatureForm.getModelObject(), aJCas);
             }
             catch (BratAnnotationException e) {
                 error(e.getMessage());
