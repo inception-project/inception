@@ -119,14 +119,13 @@ public interface TypeAdapter
      * @param aAddress
      *            the low-level address of the span annotation.
      */
-    public void delete(JCas aJCas, int aAddress);
+    void delete(JCas aJCas, int aAddress);
 
-    // delete based on the begin,end, and type of annotation
-    void delete(JCas aJCas, AnnotationFeature feature, int aBegin, int aEnd, Object aValue);
-
+    /**
+     * @deprecated use {@link #delete(JCas, int)} instead.
+     */
+    @Deprecated
     void deleteBySpan(JCas aJCas, AnnotationFS fs, int aBegin, int aEnd);
-
-    List<String> getAnnotation(JCas aJcas, AnnotationFeature feature, int begin, int end);
 
     AnnotationLayer getLayer();
     

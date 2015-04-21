@@ -71,7 +71,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  * @author Richard Eckart de Castilho
  */
 public class SpanAdapter
-    implements TypeAdapter
+    implements TypeAdapter, AutomationTypeAdapter
 {
     /**
      * The minimum offset of the annotation is on token, and the annotation can't span multiple

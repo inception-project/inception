@@ -59,6 +59,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.automation.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AutomationTypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
@@ -152,7 +153,8 @@ public class AutomationUtil
         // get selected text, concatenations of tokens
         String selectedText = BratAjaxCasUtil.getSelectedText(annoCas, aStart, aEnd);
 
-        TypeAdapter adapter = getAdapter(aAnnotationService, aFeature.getLayer());
+        AutomationTypeAdapter adapter = (AutomationTypeAdapter) getAdapter(aAnnotationService,
+                aFeature.getLayer());
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = aRepository.getUser(username);
 
@@ -215,7 +217,8 @@ public class AutomationUtil
             }
 
             BufferedWriter trainOut = new BufferedWriter(new FileWriter(trainFile));
-            TypeAdapter adapter = TypeUtil.getAdapter(aAnnotationService, feature.getLayer());
+            AutomationTypeAdapter adapter = (AutomationTypeAdapter) TypeUtil.getAdapter(
+                    aAnnotationService, feature.getLayer());
             for (SourceDocument sourceDocument : aRepository.listSourceDocuments(feature
                     .getProject())) {
                 if ((sourceDocument.isTrainingDocument() && sourceDocument.getFeature() != null && sourceDocument
@@ -244,7 +247,8 @@ public class AutomationUtil
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = aRepository.getUser(username);
-        TypeAdapter adapter = TypeUtil.getAdapter(aAnnotationService, aFeature.getLayer());
+        AutomationTypeAdapter adapter = (AutomationTypeAdapter) TypeUtil.getAdapter(
+                aAnnotationService, aFeature.getLayer());
         List<String> annotations = new ArrayList<String>();
         if (aSourceDocument == null) {// this is training - all sources documents will be converted
                                       // to a single
@@ -408,7 +412,8 @@ public class AutomationUtil
         AutomationStatus status = aAutomationService.getAutomationStatus(aTemplate);
 
         BufferedWriter trainOut = new BufferedWriter(new FileWriter(trainFile));
-        TypeAdapter adapter = TypeUtil.getAdapter(aAnnotationService, feature.getLayer());
+        AutomationTypeAdapter adapter = (AutomationTypeAdapter) TypeUtil.getAdapter(
+                aAnnotationService, feature.getLayer());
         // Training documents (Curated or webanno-compatible imported ones - read using UIMA)
         for (SourceDocument sourceDocument : aRepository.listSourceDocuments(feature.getProject())) {
             if ((sourceDocument.isTrainingDocument() && sourceDocument.getFeature() != null && sourceDocument
@@ -497,7 +502,8 @@ public class AutomationUtil
         if (!documentChanged) {
             return;
         }
-        TypeAdapter adapter = TypeUtil.getAdapter(aAnnotationService, feature.getLayer());
+        AutomationTypeAdapter adapter = (AutomationTypeAdapter) TypeUtil.getAdapter(
+                aAnnotationService, feature.getLayer());
         for (SourceDocument document : aRepository.listSourceDocuments(feature.getProject())) {
             if (!document.isProcessed() && !document.isTrainingDocument()) {
                 File predFile = new File(miraDir, document.getId() + ".pred.ft");
@@ -519,7 +525,7 @@ public class AutomationUtil
     }
 
     private static StringBuffer getMiraLine(Sentence sentence, AnnotationFeature aLayerFeature,
-            TypeAdapter aAdapter)
+            AutomationTypeAdapter aAdapter)
         throws CASException
     {
         StringBuffer sb = new StringBuffer();

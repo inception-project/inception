@@ -55,7 +55,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  * @author Seid Muhie Yimam
  */
 public class ChainAdapter
-    implements TypeAdapter
+    implements TypeAdapter, AutomationTypeAdapter
 {
 //    private final Log log = LogFactory.getLog(getClass());
 
