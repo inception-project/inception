@@ -237,8 +237,7 @@ public class CorrectionPage
             private static final long serialVersionUID = 7279648231521710155L;
 
             @Override
-            public void onChange(AjaxRequestTarget aTarget,
-                    BratAnnotatorModel aBratAnnotatorModel)
+            public void onChange(AjaxRequestTarget aTarget, BratAnnotatorModel aBratAnnotatorModel)
             {
                 try {
                     aTarget.addChildren(getPage(), FeedbackPanel.class);
@@ -1171,11 +1170,13 @@ public class CorrectionPage
 
     private void update(AjaxRequestTarget target)
     {
-        JCas correctionDocument = null;
+        JCas jCas = null;
         try {
-            correctionDocument = CuratorUtil.updatePanel(target, automateView, curationContainer,
-                    mergeVisualizer, repository, annotationSelectionByUsernameAndAddress,
-                    curationSegment, annotationService, jsonConverter);
+            CuratorUtil.updatePanel(target, automateView, curationContainer, mergeVisualizer,
+                    repository, annotationSelectionByUsernameAndAddress, curationSegment,
+                    annotationService, jsonConverter);
+
+            jCas = repository.readCorrectionCas(bratAnnotatorModel.getDocument());
         }
         catch (UIMAException e) {
             error(ExceptionUtils.getRootCauseMessage(e));
@@ -1190,9 +1191,9 @@ public class CorrectionPage
             error(e.getMessage());
         }
 
-        gotoPageTextField.setModelObject(getFirstSentenceNumber(correctionDocument,
+        gotoPageTextField.setModelObject(getFirstSentenceNumber(jCas,
                 bratAnnotatorModel.getSentenceAddress()) + 1);
-        gotoPageAddress = getSentenceAddress(correctionDocument, gotoPageTextField.getModelObject());
+        gotoPageAddress = getSentenceAddress(jCas, gotoPageTextField.getModelObject());
 
         target.add(gotoPageTextField);
         target.add(automateView);
