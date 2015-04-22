@@ -81,6 +81,7 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
@@ -2278,6 +2279,11 @@ public class RepositoryServiceDbData
         try (ObjectInputStream is = new ObjectInputStream(new FileInputStream(aFile))) {
             CASCompleteSerializer serializer = (CASCompleteSerializer) is.readObject();
             deserializeCASComplete(serializer, aJCas.getCasImpl());
+            // Initialize the JCas sub-system which is the most often used API in DKPro Core components
+            aJCas.getCas().getJCas();
+        }
+        catch (CASException e) {
+            throw new IOException(e);
         }
         catch (ClassNotFoundException e) {
             throw new IOException(e);
