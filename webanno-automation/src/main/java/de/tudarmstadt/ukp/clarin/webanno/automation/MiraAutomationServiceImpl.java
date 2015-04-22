@@ -77,6 +77,7 @@ public class MiraAutomationServiceImpl
     }
 
     @Override
+    @Transactional
     public List<MiraTemplate> listMiraTemplates(Project aProject)
     {
         List<MiraTemplate> allTenplates = entityManager.createQuery(
@@ -157,6 +158,7 @@ public class MiraAutomationServiceImpl
     }
 
     @Override
+    @Transactional
     public AutomationStatus getAutomationStatus(MiraTemplate aTemplate)
     {
         return entityManager
