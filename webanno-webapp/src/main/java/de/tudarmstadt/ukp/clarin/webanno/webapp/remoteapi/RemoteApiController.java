@@ -32,6 +32,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -44,6 +45,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -71,6 +73,9 @@ public class RemoteApiController
 
     @Resource(name = "annotationService")
     private AnnotationService annotationService;
+
+    @SpringBean(name = "userRepository")
+    private UserDao userRepository;
 
     private final Log LOG = LogFactory.getLog(getClass());
 
@@ -106,7 +111,7 @@ public class RemoteApiController
 
         // Get current user
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = projectRepository.getUser(username);
+        User user = userRepository.get(username);
         Project project = null;
 
         // Configure project

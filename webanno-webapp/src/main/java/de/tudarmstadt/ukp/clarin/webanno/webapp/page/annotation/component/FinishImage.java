@@ -25,6 +25,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -42,6 +43,9 @@ public class FinishImage
 
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
+
+    @SpringBean(name = "userRepository")
+    private UserDao userRepository;
 
     WebMarkupContainer finish;
 
@@ -80,7 +84,7 @@ public class FinishImage
             protected String load()
             {
                 String username = SecurityContextHolder.getContext().getAuthentication().getName();
-                User user = repository.getUser(username);
+                User user = userRepository.get(username);
 
                 if (aModel.getObject().getProject() != null
                         && aModel.getObject().getDocument() != null) {

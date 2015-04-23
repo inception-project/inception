@@ -40,6 +40,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
@@ -71,17 +72,19 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  */
 public class CurationBuilder
 {
-
     private final AnnotationService annotationService;
     private final RepositoryService repository;
+    private final UserDao userRepository;
 
     int sentenceNumber;
     int begin, end;
 
-    public CurationBuilder(RepositoryService repository, AnnotationService aAnnotationService)
+    public CurationBuilder(RepositoryService repository, AnnotationService aAnnotationService,
+            UserDao aUserDao)
     {
         this.repository = repository;
         this.annotationService = aAnnotationService;
+        userRepository = aUserDao;
     }
 
     public CurationContainer buildCurationContainer(BratAnnotatorModel aBratAnnotatorModel)
@@ -200,7 +203,7 @@ public class CurationBuilder
         throws UIMAException, ClassNotFoundException, IOException
     {
         Map<String, JCas> jCases = new HashMap<String, JCas>();
-        User user = repository.getUser(SecurityContextHolder.getContext().getAuthentication()
+        User user = userRepository.get(SecurityContextHolder.getContext().getAuthentication()
                 .getName());
         randomAnnotationDocument = repository.getAnnotationDocument(aDocument, user);
 
@@ -391,7 +394,7 @@ public class CurationBuilder
             Map<String, JCas> jCases, int aBegin, int aEnd, List<AnnotationLayer> aAnnotationLayers)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
-        User userLoggedIn = repository.getUser(SecurityContextHolder.getContext()
+        User userLoggedIn = userRepository.get(SecurityContextHolder.getContext()
                 .getAuthentication().getName());
 
         List<Type> entryTypes = null;
@@ -439,7 +442,7 @@ public class CurationBuilder
             AnnotationDocument randomAnnotationDocument)
         throws UIMAException, ClassNotFoundException, IOException
     {
-        User userLoggedIn = repository.getUser(SecurityContextHolder.getContext()
+        User userLoggedIn = userRepository.get(SecurityContextHolder.getContext()
                 .getAuthentication().getName());
         mergeJCas = repository.readAnnotationCas(aBratAnnotatorModel.getDocument(), userLoggedIn);
         repository.writeCorrectionCas(mergeJCas,

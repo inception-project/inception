@@ -25,7 +25,6 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
@@ -71,7 +70,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.automation.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.automation.project.ProjectMiraTemplatePanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
@@ -509,7 +507,7 @@ public class ProjectPage
                     try {
                         String username = SecurityContextHolder.getContext().getAuthentication()
                                 .getName();
-                        User user = repository.getUser(username);
+                        User user = userRepository.get(username);
                         repository.createProject(project, user);
                         
                         // If the project was created by a user (not a global admin), then add this
@@ -552,7 +550,7 @@ public class ProjectPage
                     try {
                         String username = SecurityContextHolder.getContext().getAuthentication()
                                 .getName();
-                        User user = repository.getUser(username);
+                        User user = userRepository.get(username);
 
                         // BEGIN: Remove automation stuff
                         for (MiraTemplate template : automationService.listMiraTemplates(project)) {
@@ -613,13 +611,14 @@ public class ProjectPage
                         .getObjectMapper().readValue(text,
                                 de.tudarmstadt.ukp.clarin.webanno.model.export.Project.class);
 
-                importedProject = ImportUtil.createProject(importedProjectSetting, repository);
+                importedProject = ImportUtil.createProject(importedProjectSetting, repository,
+                        userRepository);
 
                 Map<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature, AnnotationFeature> featuresMap = ImportUtil
-                        .createLayer(importedProject, importedProjectSetting, repository,
+                        .createLayer(importedProject, importedProjectSetting, userRepository, 
                                 annotationService);
                 ImportUtil.createSourceDocument(importedProjectSetting, importedProject,
-                        repository, featuresMap);
+                        repository, userRepository, featuresMap);
                 ImportUtil.createMiraTemplate(importedProjectSetting, automationService, featuresMap);
                 ImportUtil.createCrowdJob(importedProjectSetting, repository, importedProject);
 

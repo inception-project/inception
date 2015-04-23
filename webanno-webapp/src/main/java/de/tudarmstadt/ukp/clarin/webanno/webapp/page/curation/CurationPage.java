@@ -56,6 +56,7 @@ import wicket.contrib.input.events.InputBehavior;
 import wicket.contrib.input.events.key.KeyType;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
@@ -99,6 +100,9 @@ public class CurationPage
 
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
+
+    @SpringBean(name = "userRepository")
+    private UserDao userRepository;
 
     private CurationPanel curationPanel;
 
@@ -234,7 +238,7 @@ public class CurationPage
                             return;
                         }
 
-                        User user = repository.getUser(username);
+                        User user = userRepository.get(username);
                         // Update source document state to
                         // CURRATION_INPROGRESS, if it was not
                         // ANNOTATION_FINISHED
@@ -270,7 +274,8 @@ public class CurationPage
             @Override
             protected void onChange(AjaxRequestTarget aTarget)
             {
-                CurationBuilder builder = new CurationBuilder(repository, annotationService);
+                CurationBuilder builder = new CurationBuilder(repository, annotationService,
+                        userRepository);
                 try {
 
                     aTarget.add(getFeedbackPanel());
@@ -314,7 +319,7 @@ public class CurationPage
                         .listSourceDocuments(bratAnnotatorModel.getProject());
 
                 String username = SecurityContextHolder.getContext().getAuthentication().getName();
-                User user = repository.getUser(username);
+                User user = userRepository.get(username);
 
                 List<SourceDocument> sourceDocumentsinIgnorState = new ArrayList<SourceDocument>();
                 for (SourceDocument sourceDocument : listOfSourceDocuements) {
@@ -370,7 +375,7 @@ public class CurationPage
                         .listSourceDocuments(bratAnnotatorModel.getProject());
 
                 String username = SecurityContextHolder.getContext().getAuthentication().getName();
-                User user = repository.getUser(username);
+                User user = userRepository.get(username);
 
                 List<SourceDocument> sourceDocumentsinIgnorState = new ArrayList<SourceDocument>();
                 for (SourceDocument sourceDocument : listOfSourceDocuements) {
@@ -440,7 +445,8 @@ public class CurationPage
                         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                        CurationBuilder builder = new CurationBuilder(repository, annotationService);
+                        CurationBuilder builder = new CurationBuilder(repository,
+                                annotationService, userRepository);
                         curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                         curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
 
@@ -526,7 +532,8 @@ public class CurationPage
                         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                        CurationBuilder builder = new CurationBuilder(repository, annotationService);
+                        CurationBuilder builder = new CurationBuilder(repository,
+                                annotationService, userRepository);
                         curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                         curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
 
@@ -714,7 +721,7 @@ public class CurationPage
                             bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
                             CurationBuilder builder = new CurationBuilder(repository,
-                                    annotationService);
+                                    annotationService, userRepository);
 
                             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
 
@@ -776,7 +783,7 @@ public class CurationPage
                             bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
                             CurationBuilder builder = new CurationBuilder(repository,
-                                    annotationService);
+                                    annotationService, userRepository);
                             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                             curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
 
@@ -835,7 +842,7 @@ public class CurationPage
                             bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
                             CurationBuilder builder = new CurationBuilder(repository,
-                                    annotationService);
+                                    annotationService, userRepository);
                             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                             curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
 
@@ -894,7 +901,7 @@ public class CurationPage
                             bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
                             CurationBuilder builder = new CurationBuilder(repository,
-                                    annotationService);
+                                    annotationService, userRepository);
                             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                             curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
 
@@ -1005,7 +1012,7 @@ public class CurationPage
     {
         try {
             String username = SecurityContextHolder.getContext().getAuthentication().getName();
-            User userLoggedIn = repository.getUser(SecurityContextHolder.getContext()
+            User userLoggedIn = userRepository.get(SecurityContextHolder.getContext()
                     .getAuthentication().getName());
             bratAnnotatorModel.setUser(userLoggedIn);
 
@@ -1018,7 +1025,7 @@ public class CurationPage
                 }
             }
 
-            CurationBuilder cb = new CurationBuilder(repository, annotationService);
+            CurationBuilder cb = new CurationBuilder(repository, annotationService, userRepository);
             AnnotationDocument randomAnnotationDocument = null;
             if (finishedAnnotationDocuments.size() > 0) {
                 randomAnnotationDocument = finishedAnnotationDocuments.get(0);
@@ -1043,7 +1050,7 @@ public class CurationPage
 
             currentprojectId = bratAnnotatorModel.getProject().getId();
 
-            CurationBuilder builder = new CurationBuilder(repository, annotationService);
+            CurationBuilder builder = new CurationBuilder(repository, annotationService, userRepository);
             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
             curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
 

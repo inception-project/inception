@@ -173,11 +173,11 @@ public class ImportUtil
     public static Map<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature, AnnotationFeature> createLayer(
             Project aProjecct,
             de.tudarmstadt.ukp.clarin.webanno.model.export.Project aImportedProjectSetting,
-            RepositoryService aRepository, AnnotationService aAnnotationService)
+            UserDao aRepository, AnnotationService aAnnotationService)
         throws IOException
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = aRepository.getUser(username);
+        User user = aRepository.get(username);
         List<de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet> importedTagSet = aImportedProjectSetting
                 .getTagSets();
         if (aImportedProjectSetting.getVersion() == 0) {// this is projects prio
@@ -387,11 +387,11 @@ public class ImportUtil
      */
     public static Project createProject(
             de.tudarmstadt.ukp.clarin.webanno.model.export.Project aProject,
-            RepositoryService aRepository)
+            RepositoryService aRepository, UserDao aUserDao)
         throws IOException
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = aRepository.getUser(username);
+        User user = aUserDao.get(username);
         Project project = new Project();
         String projectName = aProject.getName();
         if (aRepository.existsProject(projectName)) {
@@ -447,12 +447,12 @@ public class ImportUtil
     public static void createSourceDocument(
             de.tudarmstadt.ukp.clarin.webanno.model.export.Project aImportedProjectSetting,
             Project aImportedProject,
-            RepositoryService aRepository,
+            RepositoryService aRepository, UserDao aUserDao,
             Map<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature, AnnotationFeature> aFeatureMap)
         throws IOException
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = aRepository.getUser(username);
+        User user = aUserDao.get(username);
         for (de.tudarmstadt.ukp.clarin.webanno.model.export.SourceDocument importedSourceDocument : aImportedProjectSetting
                 .getSourceDocuments()) {
             SourceDocument sourceDocument = new SourceDocument();

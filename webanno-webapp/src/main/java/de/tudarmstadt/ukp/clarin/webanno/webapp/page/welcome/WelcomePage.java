@@ -28,6 +28,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -63,6 +64,9 @@ public class WelcomePage
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
 
+    @SpringBean(name = "userRepository")
+    private UserDao userRepository;
+
     private AjaxLink<Void> projectSettings;
     private AjaxLink<Void> curation;
     private AjaxLink<Void> annotation;
@@ -81,7 +85,7 @@ public class WelcomePage
         // the user is deleted while the session is not expired
         User user = null;
         try {
-            user = repository.getUser(username);
+            user = userRepository.get(username);
         }
         // redirect to login page (if no usr is found, admin/admin will be created)
         catch (NoResultException e) {

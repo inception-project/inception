@@ -22,6 +22,7 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
+import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.dao.DataAccessException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -31,6 +32,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
 
 /**
@@ -46,11 +48,14 @@ public class AnyUserDetailsService
     @Resource(name = "documentRepository")
     private RepositoryService projectRepository;
 
+    @SpringBean(name = "userRepository")
+    private UserDao userRepository;
+
     @Override
     public UserDetails loadUserByUsername(String aUsername)
         throws UsernameNotFoundException, DataAccessException
     {
-        de.tudarmstadt.ukp.clarin.webanno.model.User user = projectRepository.getUser(aUsername);
+        de.tudarmstadt.ukp.clarin.webanno.model.User user = userRepository.get(aUsername);
 
         List<Authority> authorityList = projectRepository.listAuthorities(user);
 

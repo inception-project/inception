@@ -61,6 +61,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
@@ -82,8 +83,13 @@ public class ProjectTagSetsPanel
 
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
+
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
+    
+    @SpringBean(name = "userRepository")
+    private UserDao userRepository;
+
     @SpringBean(name = "jsonConverter")
     private MappingJacksonHttpMessageConverter jsonConverter;
 
@@ -247,7 +253,7 @@ public class ProjectTagSetsPanel
                     Project project = selectedProjectModel.getObject();
                     String username = SecurityContextHolder.getContext().getAuthentication()
                             .getName();
-                    User user = repository.getUser(username);
+                    User user = userRepository.get(username);
 
                     if (isEmpty(uploadedFiles)) {
                         error("Please choose file with tagset before uploading");
@@ -416,7 +422,7 @@ public class ProjectTagSetsPanel
                         else {
                             String username = SecurityContextHolder.getContext()
                                     .getAuthentication().getName();
-                            User user = repository.getUser(username);
+                            User user = userRepository.get(username);
 
                             tagSet.setProject(selectedProjectModel.getObject());
                             try {
@@ -617,7 +623,7 @@ public class ProjectTagSetsPanel
 
                             String username = SecurityContextHolder.getContext()
                                     .getAuthentication().getName();
-                            User user = repository.getUser(username);
+                            User user = userRepository.get(username);
 
                             try {
                                 annotationService.createTag(tag, user);

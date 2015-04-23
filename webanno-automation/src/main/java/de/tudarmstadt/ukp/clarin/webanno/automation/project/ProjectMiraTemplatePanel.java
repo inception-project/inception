@@ -720,7 +720,7 @@ public class ProjectMiraTemplatePanel
                         template.setResult("---");
 
                         AutomationUtil.addOtherFeatureTrainDocument(template, repository,
-                                annotationService, automationService);
+                                annotationService, automationService, userRepository);
                         AutomationUtil.otherFeatureClassifiers(template, repository,
                                 automationService);
 
@@ -729,19 +729,19 @@ public class ProjectMiraTemplatePanel
                         AutomationUtil.tabSepClassifiers(template, repository, automationService);
 
                         AutomationUtil.generateTrainDocument(template, repository,
-                                annotationService, automationService, true);
+                                annotationService, automationService, userRepository, true);
                         AutomationUtil.generatePredictDocument(template, repository,
-                                annotationService, automationService);
+                                annotationService, automationService, userRepository);
 
                         automationStatus.setStatus(Status.GENERATE_CLASSIFIER);
                         miraTemplateDetailForm.getModelObject().setResult(
                                 AutomationUtil.generateFinalClassifier(template, repository,
-                                        annotationService, automationService));
+                                        annotationService, automationService, userRepository));
                         AutomationUtil.addOtherFeatureToPredictDocument(template, repository,
-                                annotationService, automationService);
+                                annotationService, automationService, userRepository);
 
                         automationStatus.setStatus(Status.PREDICTION);
-                        AutomationUtil.predict(template, repository, automationService);
+                        AutomationUtil.predict(template, repository, automationService, userRepository);
 
                         template.setAutomationStarted(false);
                         automationStatus.setStatus(Status.COMPLETED);

@@ -46,6 +46,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
@@ -144,10 +145,10 @@ public class CuratorUtil
      */
     public static BratAnnotatorModel setBratAnnotatorModel(SourceDocument aSourceDocument,
             RepositoryService aRepository, CurationViewForSourceDocument aCurationSegment,
-            AnnotationService aAnnotationService)
+            AnnotationService aAnnotationService, UserDao aUserDao)
         throws BeansException, IOException
     {
-        User userLoggedIn = aRepository.getUser(SecurityContextHolder.getContext()
+        User userLoggedIn = aUserDao.get(SecurityContextHolder.getContext()
                 .getAuthentication().getName());
         BratAnnotatorModel bratAnnotatorModel = new BratAnnotatorModel();// .getModelObject();
         bratAnnotatorModel.setDocument(aSourceDocument);
@@ -514,7 +515,7 @@ public class CuratorUtil
             RepositoryService aRepository,
             Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
             CurationViewForSourceDocument aCurationSegment, AnnotationService aAnnotationService,
-            MappingJacksonHttpMessageConverter aJsonConverter)
+            UserDao aUserDao, MappingJacksonHttpMessageConverter aJsonConverter)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
         SourceDocument sourceDocument = aCurationContainer.getBratAnnotatorModel().getDocument();
@@ -522,7 +523,7 @@ public class CuratorUtil
 
         // This is the CAS that the user can actively edit
         JCas annotatorCas = getAnnotatorCase(aCurationContainer.getBratAnnotatorModel(),
-                aRepository, aAnnotationSelectionByUsernameAndAddress, sourceDocument, jCases);
+                aRepository, aUserDao, aAnnotationSelectionByUsernameAndAddress, sourceDocument, jCases);
 
         // We store the CAS that the user will edit as the "CURATION USER"
         jCases.put(CURATION_USER, annotatorCas);
@@ -551,7 +552,7 @@ public class CuratorUtil
                 .getBratAnnotatorModel().getMode().equals(Mode.CORRECTION))) {
             // update sentence address, offsets,... per sentence/per user in the curation view
             bratAnnotatorModel = CuratorUtil.setBratAnnotatorModel(sourceDocument, aRepository,
-                    aCurationSegment, aAnnotationService);
+                    aCurationSegment, aAnnotationService, aUserDao);
         }
         else {
             bratAnnotatorModel = aCurationContainer.getBratAnnotatorModel();
@@ -573,6 +574,7 @@ public class CuratorUtil
     public static JCas getAnnotatorCase(
             BratAnnotatorModel aBModel,
             RepositoryService aRepository,
+            UserDao aUserDao,
             Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
             SourceDocument sourceDocument, Map<String, JCas> jCases)
         throws UIMAException, IOException, ClassNotFoundException
@@ -587,7 +589,7 @@ public class CuratorUtil
             // The CAS the user can edit is the one from the virtual CORRECTION USER
             annotatorCas = aRepository.readCorrectionCas(sourceDocument);
 
-            User user = aRepository.getUser(SecurityContextHolder.getContext().getAuthentication()
+            User user = aUserDao.get(SecurityContextHolder.getContext().getAuthentication()
                     .getName());
             AnnotationDocument annotationDocument = aRepository.getAnnotationDocument(
                     sourceDocument, user);

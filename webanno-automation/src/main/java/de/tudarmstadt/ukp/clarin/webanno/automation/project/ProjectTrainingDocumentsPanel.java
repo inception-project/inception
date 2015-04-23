@@ -41,6 +41,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.automation.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.automation.util.TabSepDocModel;
@@ -69,6 +70,9 @@ public class ProjectTrainingDocumentsPanel
     @SpringBean(name = "automationService")
     private AutomationService automationService;
 
+    @SpringBean(name = "userRepository")
+    private UserDao userRepository;
+    
     private ArrayList<String> documents = new ArrayList<String>();
     private ArrayList<String> selectedDocuments = new ArrayList<String>();
 
@@ -154,7 +158,7 @@ public class ProjectTrainingDocumentsPanel
 
                         String username = SecurityContextHolder.getContext().getAuthentication()
                                 .getName();
-                        User user = repository.getUser(username);
+                        User user = userRepository.get(username);
 
                         SourceDocument document = new SourceDocument();
                         document.setName(fileName);
@@ -268,7 +272,7 @@ public class ProjectTrainingDocumentsPanel
                     try {
                         String username = SecurityContextHolder.getContext().getAuthentication()
                                 .getName();
-                        User user = repository.getUser(username);
+                        User user = userRepository.get(username);
                         SourceDocument srDoc = repository.getSourceDocument(project, document);
                         if(srDoc.isTrainingDocument()){
                         	isTrain = true;

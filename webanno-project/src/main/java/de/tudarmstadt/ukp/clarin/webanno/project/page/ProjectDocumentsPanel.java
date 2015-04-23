@@ -42,6 +42,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -61,8 +62,12 @@ public class ProjectDocumentsPanel
 
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
+    
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
+
+    @SpringBean(name = "userRepository")
+    private UserDao userRepository;
 
     private ArrayList<String> documents = new ArrayList<String>();
     private ArrayList<String> selectedDocuments = new ArrayList<String>();
@@ -129,7 +134,7 @@ public class ProjectDocumentsPanel
 
                         String username = SecurityContextHolder.getContext().getAuthentication()
                                 .getName();
-                        User user = repository.getUser(username);
+                        User user = userRepository.get(username);
 
                         SourceDocument document = new SourceDocument();
                         document.setName(fileName);
@@ -199,7 +204,7 @@ public class ProjectDocumentsPanel
                     try {
                         String username = SecurityContextHolder.getContext().getAuthentication()
                                 .getName();
-                        User user = repository.getUser(username);
+                        User user = userRepository.get(username);
                         repository.removeSourceDocument(
                                 repository.getSourceDocument(project, document));
                     }

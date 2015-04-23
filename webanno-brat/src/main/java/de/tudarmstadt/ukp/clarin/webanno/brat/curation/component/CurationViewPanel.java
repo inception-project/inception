@@ -45,6 +45,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
@@ -84,6 +85,9 @@ public class CurationViewPanel extends WebMarkupContainer {
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
 
+    @SpringBean(name = "userRepository")
+    private UserDao userRepository;
+    
     /**
      * Data models for {@link BratAnnotator}
      * 
@@ -151,7 +155,7 @@ public class CurationViewPanel extends WebMarkupContainer {
                                         .getContext().getAuthentication()
                                         .getName();
 
-                                User user = repository.getUser(username);
+                                User user = userRepository.get(username);
 
                                 SourceDocument sourceDocument = curationUserSegment
                                         .getBratAnnotatorModel().getDocument();

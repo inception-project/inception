@@ -65,6 +65,7 @@ import wicket.contrib.input.events.InputBehavior;
 import wicket.contrib.input.events.key.KeyType;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel;
@@ -110,11 +111,15 @@ public class CorrectionPage
 
     @SpringBean(name = "jsonConverter")
     private MappingJacksonHttpMessageConverter jsonConverter;
+
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
 
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
+
+    @SpringBean(name = "userRepository")
+    private UserDao userRepository;
 
     private CurationContainer curationContainer;
     private BratAnnotatorModel bratAnnotatorModel;
@@ -173,7 +178,7 @@ public class CorrectionPage
 
                     CuratorUtil.updatePanel(aTarget, this, curationContainer, mergeVisualizer,
                             repository, annotationSelectionByUsernameAndAddress, curationSegment,
-                            annotationService, jsonConverter);
+                            annotationService, userRepository, jsonConverter);
                 }
                 catch (UIMAException e) {
                     error(ExceptionUtils.getRootCause(e));
@@ -243,14 +248,15 @@ public class CorrectionPage
                     aTarget.addChildren(getPage(), FeedbackPanel.class);
                     // info(bratAnnotatorModel.getMessage());
                     bratAnnotatorModel = aBratAnnotatorModel;
-                    CurationBuilder builder = new CurationBuilder(repository, annotationService);
+                    CurationBuilder builder = new CurationBuilder(repository, annotationService,
+                            userRepository);
                     curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                     setCurationSegmentBeginEnd();
                     curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
 
                     CuratorUtil.updatePanel(aTarget, automateView, curationContainer, this,
                             repository, annotationSelectionByUsernameAndAddress, curationSegment,
-                            annotationService, jsonConverter);
+                            annotationService, userRepository, jsonConverter);
                     aTarget.add(automateView);
                     aTarget.add(numberOfPages);
                 }
@@ -472,7 +478,8 @@ public class CorrectionPage
                         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                        CurationBuilder builder = new CurationBuilder(repository, annotationService);
+                        CurationBuilder builder = new CurationBuilder(repository,
+                                annotationService, userRepository);
                         curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                         setCurationSegmentBeginEnd();
                         curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
@@ -552,7 +559,8 @@ public class CorrectionPage
                         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                        CurationBuilder builder = new CurationBuilder(repository, annotationService);
+                        CurationBuilder builder = new CurationBuilder(repository,
+                                annotationService, userRepository);
                         curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                         setCurationSegmentBeginEnd();
                         curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
@@ -609,7 +617,7 @@ public class CorrectionPage
                 List<SourceDocument> listOfSourceDocuements = repository
                         .listSourceDocuments(bratAnnotatorModel.getProject());
 
-                User user = repository.getUser(SecurityContextHolder.getContext()
+                User user = userRepository.get(SecurityContextHolder.getContext()
                         .getAuthentication().getName());
 
                 List<SourceDocument> sourceDocumentsinIgnorState = new ArrayList<SourceDocument>();
@@ -683,7 +691,7 @@ public class CorrectionPage
                         .listSourceDocuments(bratAnnotatorModel.getProject());
 
                 String username = SecurityContextHolder.getContext().getAuthentication().getName();
-                User user = repository.getUser(username);
+                User user = userRepository.get(username);
 
                 List<SourceDocument> sourceDocumentsinIgnorState = new ArrayList<SourceDocument>();
                 for (SourceDocument sourceDocument : listOfSourceDocuements) {
@@ -772,7 +780,7 @@ public class CorrectionPage
                             bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
                             CurationBuilder builder = new CurationBuilder(repository,
-                                    annotationService);
+                                    annotationService, userRepository);
                             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                             setCurationSegmentBeginEnd();
                             curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
@@ -838,7 +846,7 @@ public class CorrectionPage
                             bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
                             CurationBuilder builder = new CurationBuilder(repository,
-                                    annotationService);
+                                    annotationService, userRepository);
 
                             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                             setCurationSegmentBeginEnd();
@@ -904,7 +912,7 @@ public class CorrectionPage
                             bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
                             CurationBuilder builder = new CurationBuilder(repository,
-                                    annotationService);
+                                    annotationService, userRepository);
                             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                             setCurationSegmentBeginEnd();
                             curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
@@ -968,7 +976,7 @@ public class CorrectionPage
                             bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
                             CurationBuilder builder = new CurationBuilder(repository,
-                                    annotationService);
+                                    annotationService, userRepository);
                             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                             setCurationSegmentBeginEnd();
                             curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
@@ -1038,7 +1046,7 @@ public class CorrectionPage
     private void loadDocumentAction()
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
-        User logedInUser = repository.getUser(SecurityContextHolder.getContext()
+        User logedInUser = userRepository.get(SecurityContextHolder.getContext()
                 .getAuthentication().getName());
 
         bratAnnotatorModel.setUser(logedInUser);
@@ -1174,7 +1182,7 @@ public class CorrectionPage
         try {
             CuratorUtil.updatePanel(target, automateView, curationContainer, mergeVisualizer,
                     repository, annotationSelectionByUsernameAndAddress, curationSegment,
-                    annotationService, jsonConverter);
+                    annotationService, userRepository, jsonConverter);
 
             jCas = repository.readCorrectionCas(bratAnnotatorModel.getDocument());
         }

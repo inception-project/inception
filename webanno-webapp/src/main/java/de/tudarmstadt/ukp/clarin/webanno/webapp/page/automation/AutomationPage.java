@@ -66,6 +66,7 @@ import wicket.contrib.input.events.InputBehavior;
 import wicket.contrib.input.events.key.KeyType;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.automation.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.automation.util.AutomationUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
@@ -125,6 +126,9 @@ public class AutomationPage
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
 
+    @SpringBean(name = "userRepository")
+    private UserDao userRepository;
+
     private CurationContainer curationContainer;
     private BratAnnotatorModel bratAnnotatorModel;
 
@@ -183,7 +187,7 @@ public class AutomationPage
 
                     CuratorUtil.updatePanel(aTarget, this, curationContainer, mergeVisualizer,
                             repository, annotationSelectionByUsernameAndAddress, curationSegment,
-                            annotationService, jsonConverter);
+                            annotationService, userRepository, jsonConverter);
                 }
                 catch (UIMAException e) {
                     error(ExceptionUtils.getRootCause(e));
@@ -254,14 +258,15 @@ public class AutomationPage
                     // info(bratAnnotatorModel.getMessage());
                     aTarget.addChildren(getPage(), FeedbackPanel.class);
                     bratAnnotatorModel = aBratAnnotatorModel;
-                    CurationBuilder builder = new CurationBuilder(repository, annotationService);
+                    CurationBuilder builder = new CurationBuilder(repository, annotationService,
+                            userRepository);
                     curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                     setCurationSegmentBeginEnd();
                     curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
 
                     CuratorUtil.updatePanel(aTarget, automateView, curationContainer, this,
                             repository, annotationSelectionByUsernameAndAddress, curationSegment,
-                            annotationService, jsonConverter);
+                            annotationService, userRepository, jsonConverter);
                     aTarget.add(automateView);
                     aTarget.add(numberOfPages);
                 }
@@ -301,7 +306,7 @@ public class AutomationPage
                      * Tag tag = annotationService.getTag(bratAnnotatorModel
                      * .getRememberedSpanFeatures().get(autoFeature), autoFeature.getTagset());
                      */
-                    AutomationUtil.repeateAnnotation(bratAnnotatorModel, repository,
+                    AutomationUtil.repeateAnnotation(bratAnnotatorModel, repository, userRepository,
                             annotationService, automationService, aStart, aEnd, autoFeature);
                 }
                 catch (UIMAException e) {
@@ -348,7 +353,8 @@ public class AutomationPage
                      * .getRememberedSpanFeatures().get(autoFeature), autoFeature.getTagset());
                      */
                     AutomationUtil.deleteAnnotation(bratAnnotatorModel, repository,
-                            annotationService, automationService, aStart, aEnd, autoFeature);
+                            annotationService, automationService, userRepository, aStart, aEnd,
+                            autoFeature);
                 }
                 catch (UIMAException e) {
                     error(ExceptionUtils.getRootCause(e));
@@ -575,7 +581,8 @@ public class AutomationPage
                         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                        CurationBuilder builder = new CurationBuilder(repository, annotationService);
+                        CurationBuilder builder = new CurationBuilder(repository,
+                                annotationService, userRepository);
                         curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                         setCurationSegmentBeginEnd();
                         curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
@@ -655,7 +662,8 @@ public class AutomationPage
                         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                        CurationBuilder builder = new CurationBuilder(repository, annotationService);
+                        CurationBuilder builder = new CurationBuilder(repository,
+                                annotationService, userRepository);
                         curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                         setCurationSegmentBeginEnd();
                         curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
@@ -713,7 +721,7 @@ public class AutomationPage
                         .listSourceDocuments(bratAnnotatorModel.getProject());
 
                 String username = SecurityContextHolder.getContext().getAuthentication().getName();
-                User user = repository.getUser(username);
+                User user = userRepository.get(username);
 
                 List<SourceDocument> sourceDocumentsinIgnorState = new ArrayList<SourceDocument>();
                 for (SourceDocument sourceDocument : listOfSourceDocuements) {
@@ -792,7 +800,7 @@ public class AutomationPage
                         .listSourceDocuments(bratAnnotatorModel.getProject());
 
                 String username = SecurityContextHolder.getContext().getAuthentication().getName();
-                User user = repository.getUser(username);
+                User user = userRepository.get(username);
 
                 List<SourceDocument> sourceDocumentsinIgnorState = new ArrayList<SourceDocument>();
                 for (SourceDocument sourceDocument : listOfSourceDocuements) {
@@ -883,7 +891,7 @@ public class AutomationPage
                             bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
                             CurationBuilder builder = new CurationBuilder(repository,
-                                    annotationService);
+                                    annotationService, userRepository);
                             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                             setCurationSegmentBeginEnd();
                             curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
@@ -941,7 +949,7 @@ public class AutomationPage
                             bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
                             CurationBuilder builder = new CurationBuilder(repository,
-                                    annotationService);
+                                    annotationService, userRepository);
 
                             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                             setCurationSegmentBeginEnd();
@@ -1000,7 +1008,7 @@ public class AutomationPage
                             bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
                             CurationBuilder builder = new CurationBuilder(repository,
-                                    annotationService);
+                                    annotationService, userRepository);
                             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                             setCurationSegmentBeginEnd();
                             curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
@@ -1056,7 +1064,7 @@ public class AutomationPage
                             bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
                             CurationBuilder builder = new CurationBuilder(repository,
-                                    annotationService);
+                                    annotationService, userRepository);
                             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                             setCurationSegmentBeginEnd();
                             curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
@@ -1119,7 +1127,7 @@ public class AutomationPage
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User logedInUser = repository.getUser(SecurityContextHolder.getContext()
+        User logedInUser = userRepository.get(SecurityContextHolder.getContext()
                 .getAuthentication().getName());
 
         bratAnnotatorModel.setUser(logedInUser);
@@ -1202,7 +1210,7 @@ public class AutomationPage
         try {
             CuratorUtil.updatePanel(target, automateView, curationContainer, mergeVisualizer,
                     repository, annotationSelectionByUsernameAndAddress, curationSegment,
-                    annotationService, jsonConverter);
+                    annotationService, userRepository, jsonConverter);
 
             jCas = repository.readCorrectionCas(bratAnnotatorModel.getDocument());
         }

@@ -50,6 +50,7 @@ import wicket.contrib.input.events.InputBehavior;
 import wicket.contrib.input.events.key.KeyType;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel;
@@ -84,6 +85,7 @@ public class AnnotationPage
     private static final Log LOG = LogFactory.getLog(AnnotationPage.class);
 
     private static final long serialVersionUID = 1378872465851908515L;
+
     @SpringBean(name = "jsonConverter")
     private MappingJacksonHttpMessageConverter jsonConverter;
 
@@ -92,6 +94,9 @@ public class AnnotationPage
 
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
+
+    @SpringBean(name = "userRepository")
+    private UserDao userRepository;
 
     private BratAnnotator annotator;
 
@@ -300,7 +305,7 @@ public class AnnotationPage
                         .listSourceDocuments(bratAnnotatorModel.getProject());
 
                 String username = SecurityContextHolder.getContext().getAuthentication().getName();
-                User user = repository.getUser(username);
+                User user = userRepository.get(username);
 
                 List<SourceDocument> sourceDocumentsinIgnorState = new ArrayList<SourceDocument>();
                 for (SourceDocument sourceDocument : listOfSourceDocuements) {
@@ -348,7 +353,7 @@ public class AnnotationPage
                         .listSourceDocuments(bratAnnotatorModel.getProject());
 
                 String username = SecurityContextHolder.getContext().getAuthentication().getName();
-                User user = repository.getUser(username);
+                User user = userRepository.get(username);
 
                 List<SourceDocument> sourceDocumentsinIgnorState = new ArrayList<SourceDocument>();
                 for (SourceDocument sourceDocument : listOfSourceDocuements) {
@@ -737,7 +742,7 @@ public class AnnotationPage
         throws UIMAException, IOException, ClassNotFoundException
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = repository.getUser(username);
+        User user = userRepository.get(username);
 
         SourceDocument aDocument = bratAnnotatorModel.getDocument();
 
@@ -757,9 +762,9 @@ public class AnnotationPage
         aTarget.add(documentNamePanel);
 
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = repository.getUser(username);
+        User user = userRepository.get(username);
 
-        bratAnnotatorModel.setUser(repository.getUser(username));
+        bratAnnotatorModel.setUser(userRepository.get(username));
 
         try {
             // Check if there is an annotation document entry in the database. If there is none,

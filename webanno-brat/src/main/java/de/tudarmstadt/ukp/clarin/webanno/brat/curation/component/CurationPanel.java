@@ -49,6 +49,7 @@ import org.springframework.http.converter.json.MappingJacksonHttpMessageConverte
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel;
@@ -85,6 +86,9 @@ public class CurationPanel
 
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
+
+    @SpringBean(name = "userRepository")
+    private UserDao userRepository;
 
     public final static String CURATION_USER = "CURATION_USER";
 
@@ -163,8 +167,8 @@ public class CurationPanel
             {
                 try {
                     CuratorUtil.updatePanel(aTarget, this, curationContainer, mergeVisualizer,
-                            repository, annotationSelectionByUsernameAndAddress, curationView,
-                            annotationService, jsonConverter);
+                            repository, annotationSelectionByUsernameAndAddress,
+                            curationView, annotationService, userRepository, jsonConverter);
                 }
                 catch (UIMAException e) {
                     error(ExceptionUtils.getRootCause(e));
@@ -231,7 +235,7 @@ public class CurationPanel
                 try {
                     CuratorUtil.updatePanel(aTarget, sentenceOuterView, curationContainer, this,
                             repository, annotationSelectionByUsernameAndAddress, curationView,
-                            annotationService, jsonConverter);
+                            annotationService, userRepository, jsonConverter);
                 }
                 catch (UIMAException e) {
                     error(ExceptionUtils.getRootCause(e));
@@ -275,7 +279,7 @@ public class CurationPanel
                             CuratorUtil.updatePanel(aTarget, sentenceOuterView, curationContainer,
                                     mergeVisualizer, repository,
                                     annotationSelectionByUsernameAndAddress, curationView,
-                                    annotationService, jsonConverter);
+                                    annotationService, userRepository, jsonConverter);
 
                             List<CurationViewForSourceDocument> views = curationContainer
                                     .getCurationViews();
@@ -312,7 +316,7 @@ public class CurationPanel
                                 bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
                                 CurationBuilder builder = new CurationBuilder(repository,
-                                        annotationService);
+                                        annotationService, userRepository);
                                 curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
                                 textListView.setModelObject(builder.buildCurationContainer(
                                         bratAnnotatorModel).getCurationViews());

@@ -82,6 +82,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.automation.AutomationService;
@@ -152,6 +153,9 @@ public class MonitoringPage
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
 
+    @SpringBean(name = "userRepository")
+    private UserDao userRepository;
+    
     private final ProjectSelectionForm projectSelectionForm;
     private final MonitoringDetailForm monitoringDetailForm;
     private final Image annotatorsProgressImage;
@@ -277,7 +281,7 @@ public class MonitoringPage
 
                             String username = SecurityContextHolder.getContext()
                                     .getAuthentication().getName();
-                            User user = repository.getUser(username);
+                            User user = userRepository.get(username);
 
                             List<Project> allProjects = repository.listProjects();
                             List<Authority> authorities = repository.listAuthorities(user);
@@ -596,7 +600,7 @@ public class MonitoringPage
     {
         Map<String, Integer> overallProjectProgress = new LinkedHashMap<String, Integer>();
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = repository.getUser(username);
+        User user = userRepository.get(username);
         for (Project project : repository.listProjects()) {
             if (SecurityUtil.isCurator(project, repository, user)
                     || SecurityUtil.isProjectAdmin(project, repository, user)) {
@@ -1162,7 +1166,7 @@ public class MonitoringPage
     public class DocumentStatusColumnMetaData
         extends AbstractColumn<List<String>, Object>
     {
-        private RepositoryService projectRepositoryService;
+//        private RepositoryService projectRepositoryService;
 
         private static final long serialVersionUID = 1L;
         private int columnNumber;
@@ -1185,7 +1189,7 @@ public class MonitoringPage
             });
             columnNumber = colNumber;
             project = aProject;
-            projectRepositoryService = aProjectreRepositoryService;
+//            projectRepositoryService = aProjectreRepositoryService;
         }
 
         @Override
@@ -1194,7 +1198,7 @@ public class MonitoringPage
         {
             String username = SecurityContextHolder.getContext().getAuthentication()
                     .getName();
-            final User user = projectRepositoryService.getUser(username);
+            final User user = userRepository.get(username);
 
             int rowNumber = aCellItem.getIndex();
             aCellItem.setOutputMarkupId(true);
@@ -1208,7 +1212,7 @@ public class MonitoringPage
                 aCellItem.add(AttributeModifier.append("class", "centering"));
             }
             else if (value.substring(0, value.indexOf(":")).equals(CurationPanel.CURATION_USER)) {
-                SourceDocument document = projectRepositoryService.getSourceDocument(project,
+                SourceDocument document = repository.getSourceDocument(project,
                         value.substring(value.indexOf(":") + 1));
                 SourceDocumentState state = document.getState();
                 String iconNameForState = SourceDocumentState.NEW.toString();
@@ -1257,7 +1261,7 @@ public class MonitoringPage
                     @Override
                     protected void onEvent(AjaxRequestTarget aTarget)
                     {
-                        SourceDocument document = projectRepositoryService.getSourceDocument(project,
+                        SourceDocument document = repository.getSourceDocument(project,
                                 value.substring(value.indexOf(":") + 1));
                         SourceDocumentState state = document.getState();
                         if (state.toString().equals(
@@ -1291,14 +1295,14 @@ public class MonitoringPage
                 });
             }
             else {
-                SourceDocument document = projectRepositoryService.getSourceDocument(project,
+                SourceDocument document = repository.getSourceDocument(project,
                         value.substring(value.indexOf(":") + 1));
-                User annotator = projectRepositoryService.getUser(value.substring(0, value.indexOf(":")));
+                User annotator = userRepository.get(value.substring(0, value.indexOf(":")));
 
                 AnnotationDocumentState state;
                 AnnotationDocument annoDoc = null;
-                if (projectRepositoryService.existsAnnotationDocument(document, annotator)) {
-                    annoDoc = projectRepositoryService.getAnnotationDocument(document, annotator);
+                if (repository.existsAnnotationDocument(document, annotator)) {
+                    annoDoc = repository.getAnnotationDocument(document, annotator);
                     state = annoDoc.getState();
                 }
                 // user didn't even start working on it
@@ -1311,7 +1315,7 @@ public class MonitoringPage
                     annotationDocument.setUser(annotator.getUsername());
                     annotationDocument.setState(state);
                     try {
-                        projectRepositoryService.createAnnotationDocument(annotationDocument);
+                        repository.createAnnotationDocument(annotationDocument);
                     }
                     catch (IOException e) {
                         LOG.info("Unable to get the LOG file");
@@ -1350,14 +1354,14 @@ public class MonitoringPage
                     @Override
                     protected void onEvent(AjaxRequestTarget aTarget)
                     {
-                        SourceDocument document = projectRepositoryService.getSourceDocument(project,
+                        SourceDocument document = repository.getSourceDocument(project,
                                 value.substring(value.indexOf(":") + 1));
-                        User user = projectRepositoryService.getUser(value.substring(0,
+                        User user = userRepository.get(value.substring(0,
                                 value.indexOf(":")));
 
                         AnnotationDocumentState state;
-                        if (projectRepositoryService.existsAnnotationDocument(document, user)) {
-                            AnnotationDocument annoDoc = projectRepositoryService
+                        if (repository.existsAnnotationDocument(document, user)) {
+                            AnnotationDocument annoDoc = repository
                                     .getAnnotationDocument(document, user);
                             state = annoDoc.getState();
                             if (state.toString()
@@ -1387,8 +1391,7 @@ public class MonitoringPage
                             annotationDocument.setState(AnnotationDocumentStateTransition
                                     .transition(NEW_TO_ANNOTATION_IN_PROGRESS));
                             try {
-                                projectRepositoryService
-                                        .createAnnotationDocument(annotationDocument);
+                                repository.createAnnotationDocument(annotationDocument);
                             }
                             catch (IOException e) {
                                 LOG.info("Unable to get the LOG file");
@@ -1464,12 +1467,12 @@ public class MonitoringPage
                 AnnotationDocumentStateTransition aAnnotationDocumentStateTransition)
         {
 
-            AnnotationDocument annotationDocument = projectRepositoryService.getAnnotationDocument(
+            AnnotationDocument annotationDocument = repository.getAnnotationDocument(
                     aSourceDocument, aUser);
             annotationDocument.setState(AnnotationDocumentStateTransition
                     .transition(aAnnotationDocumentStateTransition));
             try {
-                projectRepositoryService.createAnnotationDocument(annotationDocument);
+                repository.createAnnotationDocument(annotationDocument);
             }
             catch (IOException e) {
                 LOG.info("Unable to get the LOG file");
@@ -1491,7 +1494,7 @@ public class MonitoringPage
         {
             aSourceDocument.setState(SourceDocumentStateTransition
                     .transition(aSourceDocumentStateTransition));
-            projectRepositoryService.createSourceDocument(aSourceDocument, aUser);
+            repository.createSourceDocument(aSourceDocument, aUser);
         }
     }
 }

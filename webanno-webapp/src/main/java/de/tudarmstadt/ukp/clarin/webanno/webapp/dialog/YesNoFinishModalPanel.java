@@ -30,6 +30,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
@@ -51,6 +52,9 @@ public class YesNoFinishModalPanel
 
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
+
+    @SpringBean(name = "userRepository")
+    private UserDao userRepository;
 
     private YesNoButtonsForm yesNoButtonsForm;
 
@@ -85,7 +89,7 @@ public class YesNoFinishModalPanel
                     String username = SecurityContextHolder.getContext().getAuthentication()
                             .getName();
 
-                    User user = repository.getUser(username);
+                    User user = userRepository.get(username);
 
                     if (aSubject.equals(Mode.ANNOTATION)) {
                         AnnotationDocument annotationDocument = repository.getAnnotationDocument(
