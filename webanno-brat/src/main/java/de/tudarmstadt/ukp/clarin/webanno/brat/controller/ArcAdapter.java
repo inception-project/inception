@@ -38,6 +38,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
@@ -65,6 +67,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 public class ArcAdapter
     implements TypeAdapter, AutomationTypeAdapter
 {
+    private final Log log = LogFactory.getLog(getClass());
+    
     private final long typeId;
 
     /**
@@ -186,6 +190,12 @@ public class ArcAdapter
                 governorFs = fs.getFeatureValue(governorFeature);
             }
 
+            if (dependentFs == null || governorFs == null) {
+                log.warn("Relation [" + layer.getName() + "] with id [" + getAddr(fs)
+                        + "] has loose ends - cannot render.");
+                continue;
+            }
+                
             List<Argument> argumentList = getArgument(governorFs, dependentFs);
 
             String bratLabelText = TypeUtil.getBratLabelText(this, fs, aFeatures);
@@ -531,5 +541,15 @@ public class ArcAdapter
     public Collection<AnnotationFeature> listFeatures()
     {
         return features.values();
+    }
+
+    public String getSourceFeatureName()
+    {
+        return sourceFeatureName;
+    }
+
+    public String getTargetFeatureName()
+    {
+        return targetFeatureName;
     }
 }

@@ -18,28 +18,30 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getCurrentSentence;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getSentenceBeginAddress;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getSentenceNumber;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.isSame;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectAt;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectSentenceAt;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.*;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
@@ -308,6 +310,7 @@ public class AnnotationDetailEditorPanel
                     }
                 }
             });
+            reverseButton.setOutputMarkupPlaceholderTag(true);
         }
     }
 
@@ -434,56 +437,152 @@ public class AnnotationDetailEditorPanel
     {
         JCas jCas = getCas(aBModel);
         AnnotationFS fs = selectByAddr(jCas, aBModel.getSelectedAnnotationId().getAnnotationId());
-        TypeAdapter adapter = getAdapter(annotationService, aBModel.getSelectedAnnotationLayer());
-        String attachFeatureName = adapter.getAttachFeatureName();
-        String attachTypeName = adapter.getAnnotationTypeName();
 
-        Set<TypeAdapter> typeAdapters = new HashSet<TypeAdapter>();
+        // TODO We assume here that the selected annotation layer corresponds to the type of the
+        // FS to be deleted. It would be more robust if we could get the layer from the FS itself.
+        AnnotationLayer layer = aBModel.getSelectedAnnotationLayer();
+        TypeAdapter adapter = getAdapter(annotationService, layer);
 
-        for (AnnotationLayer layer : annotationService.listAnnotationLayer(aBModel.getProject())) {
+        // == DELETE ATTACHED RELATIONS ==
+        // If the deleted FS is a span, we must delete all relations that
+        // point to it directly or indirectly via the attachFeature.
+        //
+        // NOTE: It is important that this happens before UNATTACH SPANS since the attach feature
+        // is no longer set after UNATTACH SPANS!
+        if (adapter instanceof SpanAdapter) {
+            for (AnnotationLayer relationLayer : annotationService.listAttachedRelationLayers(layer)) {
+                ArcAdapter relationAdapter = (ArcAdapter) getAdapter(annotationService, relationLayer);
+                Type relationType = CasUtil.getType(jCas.getCas(), relationLayer.getName());
+                Feature sourceFeature = relationType.getFeatureByBaseName(
+                        relationAdapter.getSourceFeatureName());
+                Feature targetFeature = relationType.getFeatureByBaseName(
+                        relationAdapter.getTargetFeatureName());
 
-            typeAdapters.add(getAdapter(annotationService, layer));
+                // This code is already prepared for the day that relations can go between
+                // different layers and may have different attach features for the source and
+                // target layers.
+                Feature relationSourceAttachFeature = null;
+                Feature relationTargetAttachFeature = null;
+                if (relationAdapter.getAttachFeatureName() != null) {
+                    relationSourceAttachFeature = sourceFeature.getRange().getFeatureByBaseName(
+                            relationAdapter.getAttachFeatureName());
+                    relationTargetAttachFeature = targetFeature.getRange().getFeatureByBaseName(
+                            relationAdapter.getAttachFeatureName());
+                }
+                
+                List<AnnotationFS> toBeDeleted = new ArrayList<AnnotationFS>();
+                for (AnnotationFS relationFS : CasUtil.select(jCas.getCas(), relationType)) {
+                    // Here we get the annotations that the relation is pointing to in the UI
+                    FeatureStructure sourceFS;
+                    if (relationSourceAttachFeature != null) {
+                        sourceFS = relationFS.getFeatureValue(sourceFeature).getFeatureValue(
+                                relationSourceAttachFeature);
+                    }
+                    else {
+                        sourceFS = relationFS.getFeatureValue(sourceFeature);
+                    }
+
+                    FeatureStructure targetFS;
+                    if (relationTargetAttachFeature != null) {
+                        targetFS = relationFS.getFeatureValue(targetFeature).getFeatureValue(
+                                relationTargetAttachFeature);
+                    }
+                    else {
+                        targetFS = relationFS.getFeatureValue(targetFeature);
+                    }
+
+                    if (isSame(sourceFS, fs) || isSame(targetFS, fs)) {
+                        toBeDeleted.add(relationFS);
+                        LOG.debug("Deleted relation [" + getAddr(relationFS) + "] from layer ["
+                                + relationLayer.getName() + "]");
+                    }
+                }
+                
+                for (AnnotationFS attachedFs : toBeDeleted) {
+                    jCas.getCas().removeFsFromIndexes(attachedFs);
+                }
+            }
         }
-        // delete associated relation annotation
-        for (TypeAdapter ad : typeAdapters) {
-            if (adapter.getAnnotationTypeName().equals(ad.getAnnotationTypeName())) {
-                continue;
-            }
-            String tn = ad.getAttachTypeName();
-            if (tn == null) {
-                continue;
-            }
-            if (tn.equals(attachTypeName)) {
-                Sentence thisSentence = getCurrentSentence(jCas, aBModel.getBeginOffset(),
-                        aBModel.getEndOffset());
-                ad.deleteBySpan(jCas, fs, thisSentence.getBegin(), thisSentence.getEnd());
-                break;
-            }
+        
+        // == DELETE ATTACHED SPANS ==
+        // This case is currently not implemented because WebAnno currently does not allow to 
+        // create spans that attach to other spans. The only span type for which this is relevant
+        // is the Token type which cannot be deleted.
+        
+        // == UNATTACH SPANS ==
+        // If the deleted FS is a span that is attached to another span, the 
+        // attachFeature in the other span must be set to null. Typical example: POS is deleted, so 
+        // the pos feature of Token must be set to null. This is a quick case, because we only need
+        // to look at span annotations that have the same offsets as the FS to be deleted.
+        if (adapter instanceof SpanAdapter && layer.getAttachType() != null) {
+            Type spanType = CasUtil.getType(jCas.getCas(), layer.getAttachType().getName());
+            Feature attachFeature = spanType.getFeatureByBaseName(layer.getAttachFeature()
+                    .getName());
 
-            String fn = ad.getAttachFeatureName();
-            if (fn == null) {
-                continue;
-            }
-            if (fn.equals(attachFeatureName)) {
-                Sentence thisSentence = getCurrentSentence(jCas, aBModel.getBeginOffset(),
-                        aBModel.getEndOffset());
-                ad.deleteBySpan(jCas, fs, thisSentence.getBegin(), thisSentence.getEnd());
-                break;
+            for (AnnotationFS attachedFs : selectAt(jCas.getCas(), spanType, fs.getBegin(),
+                    fs.getEnd())) {
+                if (isSame(attachedFs.getFeatureValue(attachFeature), fs)) {
+                    attachedFs.setFeatureValue(attachFeature, null);
+                    LOG.debug("Unattached [" + attachFeature.getShortName() + "] on annotation ["
+                            + getAddr(attachedFs) + "]");
+                }
             }
         }
+            
+        // == CLEAN UP LINK FEATURES ==
+        // If the deleted FS is a span that is the target of a link feature, we must unset that
+        // link and delete the slot if it is a multi-valued link. Here, we have to scan all 
+        // annotations from layers that have link features that could point to the FS
+        // to be deleted: the link feature must be the type of the FS or it must be generic.
+        if (adapter instanceof SpanAdapter) {
+            for (AnnotationFeature linkFeature : annotationService.listAttachedLinkFeatures(layer)) {
+                Type linkType = CasUtil.getType(jCas.getCas(), linkFeature.getLayer().getName());
+                
+                for (AnnotationFS linkFS : CasUtil.select(jCas.getCas(), linkType)) {
+                    List<LinkWithRoleModel> links = getFeature(linkFS, linkFeature);
+                    Iterator<LinkWithRoleModel> i = links.iterator();
+                    boolean modified = false;
+                    while (i.hasNext()) {
+                        LinkWithRoleModel link = i.next();
+                        if (link.targetAddr == getAddr(fs)) {
+                            i.remove();
+                            LOG.debug("Cleared slot [" + link.role + "] in feature ["
+                                    + linkFeature.getName() + "] on annotation ["
+                                    + getAddr(linkFS) + "]");
+                            modified = true;
+                        }
+                    }
+                    if (modified) {
+                        setFeature(linkFS, linkFeature, links);
+                    }
+                }
+            }            
+        }
+        
+        // If the deleted FS is a relation, we don't have to do anything. Nothing can point to a
+        // relation.
+        if (adapter instanceof ArcAdapter) {
+            // Do nothing ;)
+        }
+        
         // BEGIN HACK - Issue 933
         if (adapter instanceof ChainAdapter) {
             ((ChainAdapter) adapter).setArc(false);
         }
         // END HACK - Issue 933
+        
+        // Actually delete annotation
         adapter.delete(jCas, aBModel.getSelectedAnnotationId().getAnnotationId());
 
+        // Store CAS again
         repository.writeCas(aBModel.getMode(), aBModel.getDocument(), aBModel.getUser(), jCas);
-        // update timestamp now
+
+        // Update timestamp now
         int sentenceNumber = getSentenceNumber(jCas, aBModel.getBeginOffset());
         aBModel.getDocument().setSentenceAccessed(sentenceNumber);
         repository.updateTimeStamp(aBModel.getDocument(), aBModel.getUser(), aBModel.getMode());
 
+        // Auto-scroll
         if (aBModel.isScrollPage()) {
             autoScroll(jCas, aBModel);
         }

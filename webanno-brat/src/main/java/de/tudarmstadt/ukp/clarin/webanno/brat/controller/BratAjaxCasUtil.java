@@ -22,6 +22,7 @@ import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.lang.ObjectUtils;
@@ -32,9 +33,9 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.impl.CASImpl;
-import org.apache.uima.cas.impl.FeatureStructureImpl;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.cas.text.AnnotationIndex;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
@@ -135,6 +136,23 @@ public class BratAjaxCasUtil
                 return null;
             }
         }
+    }
+
+    public static List<AnnotationFS> selectAt(CAS aJcas, final Type type,
+            int aBegin, int aEnd)
+    {
+        List<AnnotationFS> covered = CasUtil.selectCovered(aJcas, type, aBegin, aEnd);
+        
+        // Remove all that do not have the exact same offset
+        Iterator<AnnotationFS> i = covered.iterator();
+        while (i.hasNext()) {
+            AnnotationFS cur = i.next();
+            if (!(cur.getBegin() == aBegin && cur.getEnd() == aEnd)) {
+                i.remove();
+            }
+        }
+        
+        return covered;
     }
 
     /**

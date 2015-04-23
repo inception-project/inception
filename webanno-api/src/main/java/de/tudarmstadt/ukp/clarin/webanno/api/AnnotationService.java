@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.uima.cas.CAS;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -273,7 +274,29 @@ public interface AnnotationService
      * @return the layers.
      */
     List<AnnotationLayer> listAnnotationLayer(Project project);
-
+    
+    /**
+     * List all relation layers that are attached directly or indirectly (via a attach feature) to
+     * the given layer. This method is useful to identify relation layers affected by a span delete
+     * operation.
+     * 
+     * @param layer
+     *            typically a span layer to be deleted.
+     * @return the relation layers attaching directly or indirectly to the given layer.
+     */
+    List<AnnotationLayer> listAttachedRelationLayers(AnnotationLayer layer);
+    
+    /**
+     * List all link features that could potentially link to the annotations of the given layer.
+     * These include link features that have the given layer as a target type as well as link
+     * features that have {@link CAS#TYPE_NAME_ANNOTATION} as the target type.
+     * 
+     * @param layer
+     *            the target layer.
+     * @return the possible link features.
+     */
+    List<AnnotationFeature> listAttachedLinkFeatures(AnnotationLayer layer);
+     
     /**
      * List all the features in a {@link AnnotationLayer} for this {@link Project}
      * 

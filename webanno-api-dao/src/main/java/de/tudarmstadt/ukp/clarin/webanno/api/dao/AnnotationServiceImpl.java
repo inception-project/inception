@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static java.util.Arrays.asList;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,6 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -631,6 +633,35 @@ public class AnnotationServiceImpl
                 .createQuery("FROM AnnotationLayer WHERE project =:project ORDER BY uiName",
                         AnnotationLayer.class).setParameter("project", aProject).getResultList();
     }
+    
+    @Override
+    @Transactional
+    public List<AnnotationLayer> listAttachedRelationLayers(AnnotationLayer aLayer)
+    {
+        // FIXME - Ok, this doesn't do yet what it is supposed to do.
+        return entityManager
+                .createQuery(
+                        "FROM AnnotationLayer WHERE type = :type AND (attachType = :attachType OR "
+                                + "attachFeature.type = :attachTypeName) ORDER BY uiName",
+                        AnnotationLayer.class).setParameter("type", RELATION_TYPE)
+                .setParameter("attachType", aLayer)
+                .setParameter("attachTypeName", aLayer.getName()).getResultList();
+    }
+
+    @Override
+    @Transactional
+    public List<AnnotationFeature> listAttachedLinkFeatures(AnnotationLayer aLayer)
+    {
+        return entityManager
+                .createQuery(
+                        "FROM AnnotationFeature WHERE linkMode in (:modes) AND project = :project AND "
+                                + "type in (:attachType) ORDER BY uiName", AnnotationFeature.class)
+                .setParameter("modes", asList(LinkMode.SIMPLE, LinkMode.WITH_ROLE))
+                .setParameter("attachType", asList(aLayer.getName(), CAS.TYPE_NAME_ANNOTATION))
+                // Checking for project is necessary because type match is string-based
+                .setParameter("project", aLayer.getProject()) 
+                .getResultList();
+   }
 
     @Override
     @Transactional
