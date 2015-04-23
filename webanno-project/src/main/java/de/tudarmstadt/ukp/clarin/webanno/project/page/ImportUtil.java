@@ -594,7 +594,7 @@ public class ImportUtil
         
         if (aGenerateUsers) {
             for (String user : users) {
-                if (!aRepository.existsUser(user)) {
+                if (!aUserDao.exists(user)) {
                     User u = new User();
                     u.setUsername(user);
                     u.setEnabled(false);

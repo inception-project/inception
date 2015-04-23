@@ -327,7 +327,7 @@ public class ProjectUsersPanel
                         @Override
                         protected List<User> load()
                         {
-                            List<User> allUSers = projectRepository.listUsers();
+                            List<User> allUSers = userRepository.list();
                             allUSers.removeAll(projectRepository
                                     .listProjectUsersWithPermissions(selectedProject.getObject()));
                             // add this User in the List that can be used as virtual user for

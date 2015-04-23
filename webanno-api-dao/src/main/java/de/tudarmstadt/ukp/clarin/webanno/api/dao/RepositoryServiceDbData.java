@@ -535,19 +535,6 @@ public class RepositoryServiceDbData
         }
     }
 
-    @Override
-    public boolean existsUser(String username)
-    {
-
-        try {
-            getUser(username);
-            return true;
-        }
-        catch (NoResultException e) {
-            return false;
-        }
-    }
-
     /**
      * A new directory is created using UUID so that every exported file will reside in its own
      * directory. This is useful as the written file can have multiple extensions based on the
@@ -855,8 +842,8 @@ public class RepositoryServiceDbData
         List<User> users = new ArrayList<User>();
 
         for (String username : usernames) {
-            if (existsUser(username)) {
-                users.add(getUser(username));
+            if (userRepository.exists(username)) {
+                users.add(userRepository.get(username));
             }
         }
         return users;
@@ -874,8 +861,8 @@ public class RepositoryServiceDbData
                 .setParameter("level", aPermissionLevel).getResultList();
         List<User> users = new ArrayList<User>();
         for (String username : usernames) {
-            if (existsUser(username)) {
-                users.add(getUser(username));
+            if (userRepository.exists(username)) {
+                users.add(userRepository.get(username));
             }
         }
         return users;
@@ -959,14 +946,6 @@ public class RepositoryServiceDbData
         return entityManager
                 .createQuery("SELECT max(timestamp) FROM SourceDocument WHERE project = :project",
                         Date.class).setParameter("project", aProject).getSingleResult();
-    }
-
-    @Override
-    @Transactional(noRollbackFor = NoResultException.class)
-    public User getUser(String aUsername)
-    {
-        return entityManager.createQuery("FROM User WHERE username =:username", User.class)
-                .setParameter("username", aUsername).getSingleResult();
     }
 
     @Override
@@ -1144,13 +1123,6 @@ public class RepositoryServiceDbData
         }
         sourceDocuments.removeAll(tabSepDocuments);
         return sourceDocuments;
-    }
-
-    @Override
-    @Transactional
-    public List<User> listUsers()
-    {
-        return entityManager.createQuery("FROM User", User.class).getResultList();
     }
 
     @Override
@@ -1860,7 +1832,7 @@ public class RepositoryServiceDbData
     public void upgradeCasAndSave(SourceDocument aDocument, Mode aMode, String aUsername)
         throws IOException
     {
-        User user = getUser(aUsername);
+        User user = userRepository.get(aUsername);
         if (existsAnnotationDocument(aDocument, user)) {
             log.debug("Upgrading annotation document [" + aDocument.getName() + "] " + "with ID ["
                     + aDocument.getId() + "] in project ID [" + aDocument.getProject().getId()
@@ -2214,7 +2186,7 @@ public class RepositoryServiceDbData
 
         String username = SecurityContextHolder.getContext()
                 .getAuthentication().getName();
-        User user = getUser(username);
+        User user = userRepository.get(username);
 
         List<Project> allProjects = listProjects();
         List<Authority> authorities = listAuthorities(user);

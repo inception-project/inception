@@ -54,37 +54,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 public interface RepositoryService
 {
     // --------------------------------------------------------------------------------------------
-    // Methods related to users
-    // --------------------------------------------------------------------------------------------
-
-    /**
-     * If the user is in the database (exclude some historical users that have annotations in the
-     * system)
-     * 
-     * @param username
-     *            the username.
-     *
-     * @return if the user exists.
-     */
-    boolean existsUser(String username);
-
-    /**
-     * Get a {@link User} object from the database based on the username.
-     *
-     * @param username
-     *            the username to be searched in the database
-     * @return a Single {@code User} object
-     */
-    User getUser(String username);
-
-    /**
-     * Lists all users in the application.
-     *
-     * @return list of users
-     */
-    List<User> listUsers();
-
-    // --------------------------------------------------------------------------------------------
     // Methods related to permissions
     // --------------------------------------------------------------------------------------------
 
