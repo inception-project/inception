@@ -73,7 +73,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.CurationViewPanel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationBuilder;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.SuggestionBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationUserSegmentForAnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationViewForSourceDocument;
@@ -248,7 +248,7 @@ public class CorrectionPage
                     aTarget.addChildren(getPage(), FeedbackPanel.class);
                     // info(bratAnnotatorModel.getMessage());
                     bratAnnotatorModel = aBratAnnotatorModel;
-                    CurationBuilder builder = new CurationBuilder(repository, annotationService,
+                    SuggestionBuilder builder = new SuggestionBuilder(repository, annotationService,
                             userRepository);
                     curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                     setCurationSegmentBeginEnd();
@@ -478,7 +478,7 @@ public class CorrectionPage
                         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                        CurationBuilder builder = new CurationBuilder(repository,
+                        SuggestionBuilder builder = new SuggestionBuilder(repository,
                                 annotationService, userRepository);
                         curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                         setCurationSegmentBeginEnd();
@@ -559,7 +559,7 @@ public class CorrectionPage
                         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                        CurationBuilder builder = new CurationBuilder(repository,
+                        SuggestionBuilder builder = new SuggestionBuilder(repository,
                                 annotationService, userRepository);
                         curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                         setCurationSegmentBeginEnd();
@@ -779,7 +779,7 @@ public class CorrectionPage
                             bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                             bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                            CurationBuilder builder = new CurationBuilder(repository,
+                            SuggestionBuilder builder = new SuggestionBuilder(repository,
                                     annotationService, userRepository);
                             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                             setCurationSegmentBeginEnd();
@@ -845,7 +845,7 @@ public class CorrectionPage
                             bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                             bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                            CurationBuilder builder = new CurationBuilder(repository,
+                            SuggestionBuilder builder = new SuggestionBuilder(repository,
                                     annotationService, userRepository);
 
                             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
@@ -911,7 +911,7 @@ public class CorrectionPage
                             bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                             bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                            CurationBuilder builder = new CurationBuilder(repository,
+                            SuggestionBuilder builder = new SuggestionBuilder(repository,
                                     annotationService, userRepository);
                             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                             setCurationSegmentBeginEnd();
@@ -975,7 +975,7 @@ public class CorrectionPage
                             bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                             bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                            CurationBuilder builder = new CurationBuilder(repository,
+                            SuggestionBuilder builder = new SuggestionBuilder(repository,
                                     annotationService, userRepository);
                             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                             setCurationSegmentBeginEnd();

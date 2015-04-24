@@ -57,7 +57,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.CurationViewPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.AnnotationState;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationBuilder;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.SuggestionBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationUserSegmentForAnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationViewForSourceDocument;
@@ -469,7 +469,7 @@ public class CuratorUtil
         jCases.put(CURATION_USER, annotatorCas);
 
         // get differing feature structures
-        List<Type> entryTypes = CurationBuilder.getEntryTypes(annotatorCas, aCurationContainer
+        List<Type> entryTypes = SuggestionBuilder.getEntryTypes(annotatorCas, aCurationContainer
                 .getBratAnnotatorModel().getAnnotationLayers(), aAnnotationService);
         List<AnnotationOption> annotationOptions = null;
         try {

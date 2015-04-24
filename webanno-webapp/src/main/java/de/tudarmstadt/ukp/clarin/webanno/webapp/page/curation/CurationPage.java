@@ -61,7 +61,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.CurationPanel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationBuilder;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.SuggestionBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.project.PreferencesUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -274,7 +274,7 @@ public class CurationPage
             @Override
             protected void onChange(AjaxRequestTarget aTarget)
             {
-                CurationBuilder builder = new CurationBuilder(repository, annotationService,
+                SuggestionBuilder builder = new SuggestionBuilder(repository, annotationService,
                         userRepository);
                 try {
 
@@ -445,7 +445,7 @@ public class CurationPage
                         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                        CurationBuilder builder = new CurationBuilder(repository,
+                        SuggestionBuilder builder = new SuggestionBuilder(repository,
                                 annotationService, userRepository);
                         curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                         curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
@@ -532,7 +532,7 @@ public class CurationPage
                         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                        CurationBuilder builder = new CurationBuilder(repository,
+                        SuggestionBuilder builder = new SuggestionBuilder(repository,
                                 annotationService, userRepository);
                         curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                         curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
@@ -720,7 +720,7 @@ public class CurationPage
                             bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                             bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                            CurationBuilder builder = new CurationBuilder(repository,
+                            SuggestionBuilder builder = new SuggestionBuilder(repository,
                                     annotationService, userRepository);
 
                             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
@@ -782,7 +782,7 @@ public class CurationPage
                             bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                             bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                            CurationBuilder builder = new CurationBuilder(repository,
+                            SuggestionBuilder builder = new SuggestionBuilder(repository,
                                     annotationService, userRepository);
                             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                             curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
@@ -841,7 +841,7 @@ public class CurationPage
                             bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                             bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                            CurationBuilder builder = new CurationBuilder(repository,
+                            SuggestionBuilder builder = new SuggestionBuilder(repository,
                                     annotationService, userRepository);
                             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                             curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
@@ -900,7 +900,7 @@ public class CurationPage
                             bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
                             bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
 
-                            CurationBuilder builder = new CurationBuilder(repository,
+                            SuggestionBuilder builder = new SuggestionBuilder(repository,
                                     annotationService, userRepository);
                             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
                             curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
@@ -1025,7 +1025,7 @@ public class CurationPage
                 }
             }
 
-            CurationBuilder cb = new CurationBuilder(repository, annotationService, userRepository);
+            SuggestionBuilder cb = new SuggestionBuilder(repository, annotationService, userRepository);
             AnnotationDocument randomAnnotationDocument = null;
             if (finishedAnnotationDocuments.size() > 0) {
                 randomAnnotationDocument = finishedAnnotationDocuments.get(0);
@@ -1050,7 +1050,7 @@ public class CurationPage
 
             currentprojectId = bratAnnotatorModel.getProject().getId();
 
-            CurationBuilder builder = new CurationBuilder(repository, annotationService, userRepository);
+            SuggestionBuilder builder = new SuggestionBuilder(repository, annotationService, userRepository);
             curationContainer = builder.buildCurationContainer(bratAnnotatorModel);
             curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
 

@@ -57,7 +57,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.AnnotationState;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.BratCurationVisualizer;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.BratSuggestionVisualizer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationUserSegmentForAnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.NoOriginOrTargetAnnotationSelectedException;
@@ -126,7 +126,7 @@ public class CurationViewPanel extends WebMarkupContainer {
                     ListItem<CurationUserSegmentForAnnotationDocument> item2) {
                 final CurationUserSegmentForAnnotationDocument curationUserSegment = item2
                         .getModelObject();
-                BratCurationVisualizer curationVisualizer = new BratCurationVisualizer(
+                BratSuggestionVisualizer curationVisualizer = new BratSuggestionVisualizer(
                         "sentence",
                         new Model<CurationUserSegmentForAnnotationDocument>(
                                 curationUserSegment)) {

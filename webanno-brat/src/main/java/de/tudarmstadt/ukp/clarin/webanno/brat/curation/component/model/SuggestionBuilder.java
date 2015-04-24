@@ -70,7 +70,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  * @author Andreas Straninger
  * @author Seid Muhie Yimam
  */
-public class CurationBuilder
+public class SuggestionBuilder
 {
     private final AnnotationService annotationService;
     private final RepositoryService repository;
@@ -79,7 +79,7 @@ public class CurationBuilder
     int sentenceNumber;
     int begin, end;
 
-    public CurationBuilder(RepositoryService repository, AnnotationService aAnnotationService,
+    public SuggestionBuilder(RepositoryService repository, AnnotationService aAnnotationService,
             UserDao aUserDao)
     {
         this.repository = repository;

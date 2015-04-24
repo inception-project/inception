@@ -52,13 +52,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
  *
  * @author Andreas Straninger
  */
-public class BratCurationVisualizer
+public class BratSuggestionVisualizer
     extends BratVisualizer
 {
 	private static final long serialVersionUID = 6653508018500736430L;
 	private AbstractDefaultAjaxBehavior controller;
 
-	public BratCurationVisualizer(String id, IModel<CurationUserSegmentForAnnotationDocument> aModel) {
+	public BratSuggestionVisualizer(String id, IModel<CurationUserSegmentForAnnotationDocument> aModel) {
 		super(id, aModel);
 		String username;
 		if(getModelObject().getBratAnnotatorModel().getMode().equals(Mode.AUTOMATION)
