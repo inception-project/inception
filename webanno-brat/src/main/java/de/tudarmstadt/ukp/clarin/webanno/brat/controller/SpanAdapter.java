@@ -59,7 +59,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -95,7 +94,7 @@ public class SpanAdapter
     private boolean deletable;
 
     private AnnotationLayer layer;
-    
+
     private Map<String, AnnotationFeature> features;
 
     // value NILL for a token when the training file do not have annotations provided
@@ -104,7 +103,7 @@ public class SpanAdapter
     public SpanAdapter(AnnotationLayer aLayer, Collection<AnnotationFeature> aFeatures)
     {
         layer = aLayer;
-        
+
         // Using a sorted map here so we have reliable positions in the map when iterating. We use
         // these positions to remember the armed slots!
         features = new TreeMap<String, AnnotationFeature>();
@@ -119,7 +118,8 @@ public class SpanAdapter
      * the specified type will be created for each token. If this is not set, a single annotation
      * covering all tokens is created.
      *
-     * @param aSingleTokenBehavior whether to enable the behavior.
+     * @param aSingleTokenBehavior
+     *            whether to enable the behavior.
      */
     public void setLockToTokenOffsets(boolean aSingleTokenBehavior)
     {
@@ -192,14 +192,8 @@ public class SpanAdapter
                 getAddr(firstSentence), aBratAnnotatorModel.getWindowSize());
 
         // the last sentence address in the display window
-        Sentence lastSentenceInPage;
-        if (aBratAnnotatorModel.getMode().equals(Mode.CURATION)) {
-            lastSentenceInPage = firstSentence;
-        }
-        else {
-            lastSentenceInPage = (Sentence) selectByAddr(aJcas, FeatureStructure.class,
-                    lastAddressInPage);
-        }
+        Sentence lastSentenceInPage = (Sentence) selectByAddr(aJcas, FeatureStructure.class,
+                lastAddressInPage);
 
         Type type = getType(aJcas.getCas(), getAnnotationTypeName());
         int aFirstSentenceOffset = firstSentence.getBegin();
@@ -226,7 +220,7 @@ public class SpanAdapter
                     break;
                 }
             }
-            
+
             List<Sentence> sentences = selectCovered(aJcas, Sentence.class, beginSent.getBegin(),
                     endSent.getEnd());
             List<Offsets> offsets = new ArrayList<Offsets>();
@@ -245,9 +239,9 @@ public class SpanAdapter
                                 sentence.getEnd() - aFirstSentenceOffset));
                     }
                 }
-            aResponse
-                    .addEntity(new Entity(getAddr(fs), bratTypeName, offsets, bratLabelText, color));
-                        }
+                aResponse.addEntity(new Entity(getAddr(fs), bratTypeName, offsets, bratLabelText,
+                        color));
+            }
             else {
                 // FIXME It should be possible to remove this case and the if clause because
                 // the case that a FS is inside a single sentence is just a special case
@@ -255,7 +249,7 @@ public class SpanAdapter
                         - aFirstSentenceOffset, fs.getEnd() - aFirstSentenceOffset), bratLabelText,
                         color));
             }
-                
+
             // Render slots
             int fi = 0;
             for (AnnotationFeature feat : listFeatures()) {
@@ -265,7 +259,7 @@ public class SpanAdapter
                     for (int li = 0; li < links.size(); li++) {
                         LinkWithRoleModel link = links.get(li);
                         FeatureStructure targetFS = selectByAddr(fs.getCAS(), link.targetAddr);
-                        
+
                         aResponse.addRelation(new Relation(new VID(getAddr(fs), fi, li),
                                 bratTypeName, getArgument(fs, targetFS), link.role, color));
                     }
@@ -298,14 +292,8 @@ public class SpanAdapter
                 getAddr(firstSentence), aBratAnnotatorModel.getWindowSize());
 
         // the last sentence address in the display window
-        Sentence lastSentenceInPage;
-        if (aBratAnnotatorModel.getMode().equals(Mode.CURATION)) {
-            lastSentenceInPage = firstSentence;
-        }
-        else {
-            lastSentenceInPage = (Sentence) selectByAddr(aJcas,
-                    FeatureStructure.class, lastAddressInPage);
-        }
+        Sentence lastSentenceInPage = (Sentence) selectByAddr(aJcas, FeatureStructure.class,
+                lastAddressInPage);
 
         int sentenceNumber = getFirstSentenceNumber(aJcas, getAddr(firstSentence));
         aResponse.setSentenceNumberOffset(sentenceNumber);
@@ -351,8 +339,7 @@ public class SpanAdapter
     {
         if (crossMultipleSentence || isSameSentence(aJcas, aBegin, aEnd)) {
             if (lockToTokenOffsets) {
-                List<Token> tokens = selectOverlapping(aJcas, Token.class, aBegin,
-                        aEnd);
+                List<Token> tokens = selectOverlapping(aJcas, Token.class, aBegin, aEnd);
 
                 if (tokens.isEmpty()) {
                     throw new BratAnnotationException("No token is found to annotate");
@@ -362,8 +349,7 @@ public class SpanAdapter
 
             }
             else if (allowMultipleToken) {
-                List<Token> tokens = selectOverlapping(aJcas, Token.class, aBegin,
-                        aEnd);
+                List<Token> tokens = selectOverlapping(aJcas, Token.class, aBegin, aEnd);
                 // update the begin and ends (no sub token selection
                 aBegin = tokens.get(0).getBegin();
                 aEnd = tokens.get(tokens.size() - 1).getEnd();
@@ -561,7 +547,7 @@ public class SpanAdapter
     {
         return layer;
     }
-    
+
     @Override
     public Collection<AnnotationFeature> listFeatures()
     {

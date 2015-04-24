@@ -18,8 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.util;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectSentenceAt;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
 
 import java.io.IOException;
@@ -36,7 +34,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
-import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.codehaus.jackson.JsonGenerator;
@@ -148,8 +145,8 @@ public class CuratorUtil
             AnnotationService aAnnotationService, UserDao aUserDao)
         throws BeansException, IOException
     {
-        User userLoggedIn = aUserDao.get(SecurityContextHolder.getContext()
-                .getAuthentication().getName());
+        User userLoggedIn = aUserDao.get(SecurityContextHolder.getContext().getAuthentication()
+                .getName());
         BratAnnotatorModel bratAnnotatorModel = new BratAnnotatorModel();// .getModelObject();
         bratAnnotatorModel.setDocument(aSourceDocument);
         bratAnnotatorModel.setProject(aSourceDocument.getProject());
@@ -255,31 +252,7 @@ public class CuratorUtil
                     }
                 }
 
-                LOG.debug("suggestion CAS is for user [" + username + "]");
                 JCas jCas = aJCases.get(username);
-                JCas userJCas = aJCases.get(annotatorCasUser);
-
-                // Save window location (WTF?!)
-                int sentenceAddress = aBratAnnotatorModel.getSentenceAddress();
-                int lastSentenceAddress = aBratAnnotatorModel.getLastSentenceAddress();
-
-                // Override window location
-                LOG.debug("Temporarily reconfiguring BratAnnotatorModel for user [" + username
-                        + "] currently is still f:["
-                        + aBratAnnotatorModel.getFirstSentenceAddress() + "] l:["
-                        + aBratAnnotatorModel.getLastSentenceAddress() + "] s:["
-                        + aBratAnnotatorModel.getSentenceAddress() + "]");
-
-                aBratAnnotatorModel.setSentenceAddress(getSentenceAddress(aBratAnnotatorModel,
-                        jCas, userJCas));
-                aBratAnnotatorModel.setLastSentenceAddress(getLastSentenceAddress(
-                        aBratAnnotatorModel, jCas, userJCas));
-
-                LOG.debug("Temporarily reconfigured BratAnnotatorModel as user [" + username
-                        + "] f:[" + aBratAnnotatorModel.getFirstSentenceAddress() + "] l:["
-                        + aBratAnnotatorModel.getLastSentenceAddress() + "] s:["
-                        + aBratAnnotatorModel.getSentenceAddress() + "]");
-
                 // Set up coloring strategy
                 ColoringStrategy curationColoringStrategy = new ColoringStrategy()
                 {
@@ -313,42 +286,8 @@ public class CuratorUtil
                 curationUserSegment2
                         .setAnnotationSelectionByUsernameAndAddress(aAnnotationSelectionByUsernameAndAddress);
                 aSentences.add(curationUserSegment2);
-
-                // Restore window location
-                aBratAnnotatorModel.setSentenceAddress(sentenceAddress);
-                aBratAnnotatorModel.setLastSentenceAddress(lastSentenceAddress);
-
-                LOG.debug("Restoring BratAnnotatorModel for user [??? maybe " + annotatorCasUser
-                        + "] f:[" + aBratAnnotatorModel.getFirstSentenceAddress() + "] l:["
-                        + aBratAnnotatorModel.getLastSentenceAddress() + "] s:["
-                        + aBratAnnotatorModel.getSentenceAddress() + "]");
             }
         }
-    }
-
-    /**
-     * Get the sentence address for jCas from userJCas.
-     */
-    private static int getSentenceAddress(BratAnnotatorModel aBratAnnotatorModel, JCas jCas,
-            JCas userJCas)
-    {
-        int sentenceAddress = getAddr(selectSentenceAt(userJCas,
-                aBratAnnotatorModel.getSentenceBeginOffset(),
-                aBratAnnotatorModel.getSentenceEndOffset()));
-        Sentence sentence = selectByAddr(userJCas, Sentence.class, sentenceAddress);
-        List<Sentence> sentences = JCasUtil.selectCovered(jCas, Sentence.class,
-                sentence.getBegin(), sentence.getEnd());
-        return getAddr(sentences.get(0));
-    }
-
-    private static int getLastSentenceAddress(BratAnnotatorModel aBratAnnotatorModel, JCas jCas,
-            JCas userJCas)
-    {
-        Sentence sentence = selectByAddr(userJCas, Sentence.class,
-                aBratAnnotatorModel.getLastSentenceAddress());
-        List<Sentence> sentences = JCasUtil.selectCovered(jCas, Sentence.class,
-                sentence.getBegin(), sentence.getEnd());
-        return getAddr(sentences.get(0));
     }
 
     private static String render(JCas aJcas, AnnotationService aAnnotationService,
@@ -523,7 +462,8 @@ public class CuratorUtil
 
         // This is the CAS that the user can actively edit
         JCas annotatorCas = getAnnotatorCase(aCurationContainer.getBratAnnotatorModel(),
-                aRepository, aUserDao, aAnnotationSelectionByUsernameAndAddress, sourceDocument, jCases);
+                aRepository, aUserDao, aAnnotationSelectionByUsernameAndAddress, sourceDocument,
+                jCases);
 
         // We store the CAS that the user will edit as the "CURATION USER"
         jCases.put(CURATION_USER, annotatorCas);
@@ -547,16 +487,7 @@ public class CuratorUtil
 
         LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<CurationUserSegmentForAnnotationDocument>();
 
-        BratAnnotatorModel bratAnnotatorModel = null;
-        if (!(aCurationContainer.getBratAnnotatorModel().getMode().equals(Mode.AUTOMATION) || aCurationContainer
-                .getBratAnnotatorModel().getMode().equals(Mode.CORRECTION))) {
-            // update sentence address, offsets,... per sentence/per user in the curation view
-            bratAnnotatorModel = CuratorUtil.setBratAnnotatorModel(sourceDocument, aRepository,
-                    aCurationSegment, aAnnotationService, aUserDao);
-        }
-        else {
-            bratAnnotatorModel = aCurationContainer.getBratAnnotatorModel();
-        }
+        BratAnnotatorModel bratAnnotatorModel = aCurationContainer.getBratAnnotatorModel();
 
         CuratorUtil.populateCurationSentences(jCases, sentences, bratAnnotatorModel,
                 annotationOptions, aAnnotationSelectionByUsernameAndAddress, aJsonConverter,
@@ -564,10 +495,10 @@ public class CuratorUtil
 
         // update sentence list on the right side
         aParent.setModelObject(sentences);
-        if (aCurationContainer.getBratAnnotatorModel().getMode().equals(Mode.CURATION)) {
+     /*   if (aCurationContainer.getBratAnnotatorModel().getMode().equals(Mode.CURATION)) {
             aMergeVisualizer.setModelObject(bratAnnotatorModel);
             aMergeVisualizer.bratRenderLater(aTarget);
-        }
+        }*/
         aTarget.add(aParent);
     }
 

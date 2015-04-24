@@ -17,8 +17,10 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.curation.component;
 
-
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectSentenceAt;
+import static org.apache.uima.fit.util.JCasUtil.selectFollowing;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -60,6 +62,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationB
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationUserSegmentForAnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationViewForSourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.SentenceState;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.CuratorUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -157,18 +160,35 @@ public class CurationPanel
             curationUserSegmentForAnnotationDocument.setBratAnnotatorModel(bratAnnotatorModel);
             sentences.add(curationUserSegmentForAnnotationDocument);
         }
+
         sentenceOuterView = new CurationViewPanel("sentenceOuterView",
                 new Model<LinkedList<CurationUserSegmentForAnnotationDocument>>(sentences))
         {
             private static final long serialVersionUID = 2583509126979792202L;
 
             @Override
-            protected void onChange(AjaxRequestTarget aTarget)
+            public void onChange(AjaxRequestTarget aTarget)
             {
                 try {
+                    // update begin/end of the curationsegment based on bratAnnotatorModel changes
+                    // (like sentence change in auto-scroll mode,....
+                    aTarget.addChildren(getPage(), FeedbackPanel.class);
+
+                    CurationBuilder builder = new CurationBuilder(repository, annotationService,
+                            userRepository);
+                    curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
+                    textListView.setModelObject(builder.buildCurationContainer(bratAnnotatorModel)
+                            .getCurationViews());
+
+                    setCurationSegmentBeginEnd();
+
                     CuratorUtil.updatePanel(aTarget, this, curationContainer, mergeVisualizer,
-                            repository, annotationSelectionByUsernameAndAddress,
-                            curationView, annotationService, userRepository, jsonConverter);
+                            repository, annotationSelectionByUsernameAndAddress, curationView,
+                            annotationService, userRepository, jsonConverter);
+
+                    mergeVisualizer.bratRenderLater(aTarget);
+                    textOuterView.addOrReplace(textListView);
+                    aTarget.add(textOuterView);
                 }
                 catch (UIMAException e) {
                     error(ExceptionUtils.getRootCause(e));
@@ -210,9 +230,11 @@ public class CurationPanel
                 mergeVisualizer.bratRenderHighlight(aTarget, aBModel.getSelectedAnnotationId());
 
                 mergeVisualizer.onChange(aTarget, aBModel);
-                mergeVisualizer.onAnnotate(aTarget, aBModel, aBModel.getBeginOffset(), aBModel.getEndOffset());
+                mergeVisualizer.onAnnotate(aTarget, aBModel, aBModel.getBeginOffset(),
+                        aBModel.getEndOffset());
                 if (!aBModel.isAnnotate()) {
-                    mergeVisualizer.onDelete(aTarget, aBModel, aBModel.getBeginOffset(), aBModel.getEndOffset());
+                    mergeVisualizer.onDelete(aTarget, aBModel, aBModel.getBeginOffset(),
+                            aBModel.getEndOffset());
                 }
 
             }
@@ -233,9 +255,20 @@ public class CurationPanel
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
                 aTarget.add(sentenceOuterView);
                 try {
+                    aTarget.addChildren(getPage(), FeedbackPanel.class);
+
+                    CurationBuilder builder = new CurationBuilder(repository, annotationService,
+                            userRepository);
+                    curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
+                    textListView.setModelObject(builder.buildCurationContainer(bratAnnotatorModel)
+                            .getCurationViews());
+                    setCurationSegmentBeginEnd();
+
                     CuratorUtil.updatePanel(aTarget, sentenceOuterView, curationContainer, this,
                             repository, annotationSelectionByUsernameAndAddress, curationView,
                             annotationService, userRepository, jsonConverter);
+                    textOuterView.addOrReplace(textListView);
+                    aTarget.add(textOuterView);
                 }
                 catch (UIMAException e) {
                     error(ExceptionUtils.getRootCause(e));
@@ -276,35 +309,25 @@ public class CurationPanel
                     {
                         curationView = curationViewItem;
                         try {
-                            CuratorUtil.updatePanel(aTarget, sentenceOuterView, curationContainer,
-                                    mergeVisualizer, repository,
-                                    annotationSelectionByUsernameAndAddress, curationView,
-                                    annotationService, userRepository, jsonConverter);
-
-                            List<CurationViewForSourceDocument> views = curationContainer
-                                    .getCurationViews();
-                            for (CurationViewForSourceDocument segment : views) {
-                                segment.setCurrentSentence(curationViewItem.getSentenceNumber()
-                                        .equals(segment.getSentenceNumber()));
-                            }
-
                             JCas jCas = null;
                             if (bratAnnotatorModel.getMode().equals(Mode.ANNOTATION)
                                     || bratAnnotatorModel.getMode().equals(Mode.CORRECTION)
                                     || bratAnnotatorModel.getMode().equals(Mode.CORRECTION_MERGE)) {
 
-                                jCas = repository.readAnnotationCas(bratAnnotatorModel.getDocument(),
+                                jCas = repository.readAnnotationCas(
+                                        bratAnnotatorModel.getDocument(),
                                         bratAnnotatorModel.getUser());
                             }
                             else {
-                                jCas = repository.readCurationCas(bratAnnotatorModel
-                                        .getDocument());
+                                jCas = repository.readCurationCas(bratAnnotatorModel.getDocument());
                             }
 
                             if (bratAnnotatorModel.isScrollPage()) {
+                                int currentSentAddress = getAddr(selectSentenceAt(jCas,
+                                        bratAnnotatorModel.getSentenceBeginOffset(),
+                                        bratAnnotatorModel.getSentenceEndOffset()));
                                 bratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil
-                                        .getSentenceBeginAddress(jCas,
-                                                bratAnnotatorModel.getSentenceAddress(),
+                                        .getSentenceBeginAddress(jCas, currentSentAddress,
                                                 curationViewItem.getBegin(),
                                                 bratAnnotatorModel.getProject(),
                                                 bratAnnotatorModel.getDocument(),
@@ -321,6 +344,19 @@ public class CurationPanel
                                 textListView.setModelObject(builder.buildCurationContainer(
                                         bratAnnotatorModel).getCurationViews());
                                 onChange(aTarget);
+                            }
+
+                            setCurationSegmentBeginEnd();
+                            CuratorUtil.updatePanel(aTarget, sentenceOuterView, curationContainer,
+                                    mergeVisualizer, repository,
+                                    annotationSelectionByUsernameAndAddress, curationView,
+                                    annotationService, userRepository, jsonConverter);
+
+                            List<CurationViewForSourceDocument> views = curationContainer
+                                    .getCurationViews();
+                            for (CurationViewForSourceDocument segment : views) {
+                                segment.setCurrentSentence(curationViewItem.getSentenceNumber()
+                                        .equals(segment.getSentenceNumber()));
                             }
 
                             // textListView.setModelObject(views);
@@ -357,6 +393,10 @@ public class CurationPanel
                 item.add(click);
                 String colorCode = curationViewItem.getSentenceState().getColorCode();
 
+                if (curationViewItem.isCurrentSentence()) {
+                    item.add(AttributeModifier.append("style", "background-color: "
+                            + SentenceState.SELECTED.getColorCode() + ";"));
+                }
                 if (colorCode != null) {
                     item.add(AttributeModifier.append("style", "background-color: " + colorCode
                             + ";"));
@@ -374,6 +414,29 @@ public class CurationPanel
         // add subcomponents to the component
         textListView.setOutputMarkupId(true);
         textOuterView.add(textListView);
+    }
+
+    private void setCurationSegmentBeginEnd()
+        throws UIMAException, ClassNotFoundException, IOException
+    {
+        JCas jCas = repository.readAnnotationCas(bratAnnotatorModel.getDocument(),
+                bratAnnotatorModel.getUser());
+
+        final int sentenceAddress = getAddr(selectSentenceAt(jCas,
+                bratAnnotatorModel.getSentenceBeginOffset(),
+                bratAnnotatorModel.getSentenceEndOffset()));
+        bratAnnotatorModel.setSentenceAddress(sentenceAddress);
+
+        final Sentence sentence = selectByAddr(jCas, Sentence.class, sentenceAddress);
+        List<Sentence> followingSentences = selectFollowing(jCas, Sentence.class, sentence,
+                bratAnnotatorModel.getWindowSize());
+        // Check also, when getting the last sentence address in the display window, if this is the
+        // last sentence or the ONLY sentence in the document
+        Sentence lastSentenceAddressInDisplayWindow = followingSentences.size() == 0 ? sentence
+                : followingSentences.get(followingSentences.size() - 1);
+        curationView.setBegin(sentence.getBegin());
+        curationView.setEnd(lastSentenceAddressInDisplayWindow.getEnd());
+
     }
 
     protected void onChange(AjaxRequestTarget aTarget)
