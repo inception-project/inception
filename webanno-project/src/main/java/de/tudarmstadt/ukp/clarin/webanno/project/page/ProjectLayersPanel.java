@@ -80,6 +80,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -105,10 +106,15 @@ public class ProjectLayersPanel
     private static final long serialVersionUID = -7870526462864489252L;
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
+
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
+
     @SpringBean(name = "jsonConverter")
     private MappingJacksonHttpMessageConverter jsonConverter;
+
+    @SpringBean(name = "userRepository")
+    private UserDao userRepository;
 
     private ModalWindow openHelpDialog;
 
@@ -317,7 +323,7 @@ public class ProjectLayersPanel
                     Project project = selectedProjectModel.getObject();
                     String username = SecurityContextHolder.getContext().getAuthentication()
                             .getName();
-                    User user = repository.getUser(username);
+                    User user = userRepository.get(username);
 
                     if (isEmpty(uploadedFiles)) {
                         error("Please choose file with layer details before uploading");
@@ -835,7 +841,7 @@ public class ProjectLayersPanel
 
                         String username = SecurityContextHolder.getContext().getAuthentication()
                                 .getName();
-                        User user = repository.getUser(username);
+                        User user = userRepository.get(username);
 
                         layer.setProject(project);
                         try {
@@ -1095,7 +1101,8 @@ public class ProjectLayersPanel
             aFeature.setLinkMode(LinkMode.WITH_ROLE);
             aFeature.setLinkTypeRoleFeatureName("role");
             aFeature.setLinkTypeTargetFeatureName("target");
-            aFeature.setLinkTypeName(aFeature.getLayer().getName()+WordUtils.capitalize(aFeature.getName())+"Link");
+            aFeature.setLinkTypeName(aFeature.getLayer().getName()
+                    + WordUtils.capitalize(aFeature.getName()) + "Link");
         }
 
         annotationService.createFeature(aFeature);
