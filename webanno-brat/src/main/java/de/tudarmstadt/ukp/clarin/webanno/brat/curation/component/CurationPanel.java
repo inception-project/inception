@@ -58,11 +58,11 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDet
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.SuggestionBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationUserSegmentForAnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationViewForSourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.SentenceState;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.SuggestionBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.CuratorUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -95,7 +95,7 @@ public class CurationPanel
 
     public final static String CURATION_USER = "CURATION_USER";
 
-    private CurationViewPanel sentenceOuterView;
+    private SuggestionViewPanel suggestionViewPanel;
     private BratAnnotator mergeVisualizer;
     private AnnotationDetailEditorPanel annotationDetailEditorPanel;
 
@@ -161,7 +161,7 @@ public class CurationPanel
             sentences.add(curationUserSegmentForAnnotationDocument);
         }
 
-        sentenceOuterView = new CurationViewPanel("sentenceOuterView",
+        suggestionViewPanel = new SuggestionViewPanel("suggestionViewPanel",
                 new Model<LinkedList<CurationUserSegmentForAnnotationDocument>>(sentences))
         {
             private static final long serialVersionUID = 2583509126979792202L;
@@ -205,8 +205,8 @@ public class CurationPanel
             }
         };
 
-        sentenceOuterView.setOutputMarkupId(true);
-        add(sentenceOuterView);
+        suggestionViewPanel.setOutputMarkupId(true);
+        add(suggestionViewPanel);
 
         annotationDetailEditorPanel = new AnnotationDetailEditorPanel(
                 "annotationDetailEditorPanel", new Model<BratAnnotatorModel>(bModel))
@@ -253,7 +253,7 @@ public class CurationPanel
             public void onChange(AjaxRequestTarget aTarget, BratAnnotatorModel bratAnnotatorModel)
             {
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
-                aTarget.add(sentenceOuterView);
+                aTarget.add(suggestionViewPanel);
                 try {
                     aTarget.addChildren(getPage(), FeedbackPanel.class);
 
@@ -264,7 +264,7 @@ public class CurationPanel
                             .getCurationViews());
                     setCurationSegmentBeginEnd();
 
-                    CuratorUtil.updatePanel(aTarget, sentenceOuterView, curationContainer, this,
+                    CuratorUtil.updatePanel(aTarget, suggestionViewPanel, curationContainer, this,
                             repository, annotationSelectionByUsernameAndAddress, curationView,
                             annotationService, userRepository, jsonConverter);
                     textOuterView.addOrReplace(textListView);
@@ -347,7 +347,7 @@ public class CurationPanel
                             }
 
                             setCurationSegmentBeginEnd();
-                            CuratorUtil.updatePanel(aTarget, sentenceOuterView, curationContainer,
+                            CuratorUtil.updatePanel(aTarget, suggestionViewPanel, curationContainer,
                                     mergeVisualizer, repository,
                                     annotationSelectionByUsernameAndAddress, curationView,
                                     annotationService, userRepository, jsonConverter);
@@ -362,7 +362,7 @@ public class CurationPanel
                             // textListView.setModelObject(views);
                             textOuterView.addOrReplace(textListView);
                             aTarget.add(textOuterView);
-                            aTarget.add(sentenceOuterView);
+                            aTarget.add(suggestionViewPanel);
 
                             // Wicket-level rendering of annotator because it becomes visible
                             // after selecting a document

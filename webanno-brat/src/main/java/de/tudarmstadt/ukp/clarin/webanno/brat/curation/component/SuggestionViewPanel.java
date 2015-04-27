@@ -81,7 +81,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
  * @author Seid Muhie Yimam
  *
  */
-public class CurationViewPanel
+public class SuggestionViewPanel
     extends WebMarkupContainer
 {
     private static final long serialVersionUID = 8736268179612831795L;
@@ -123,7 +123,7 @@ public class CurationViewPanel
         return (LinkedList<CurationUserSegmentForAnnotationDocument>) getDefaultModelObject();
     }
 
-    public CurationViewPanel(String id,
+    public SuggestionViewPanel(String id,
             IModel<LinkedList<CurationUserSegmentForAnnotationDocument>> aModel)
     {
         super(id, aModel);
