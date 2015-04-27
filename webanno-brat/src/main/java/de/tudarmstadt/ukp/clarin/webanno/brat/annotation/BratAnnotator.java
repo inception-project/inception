@@ -204,7 +204,7 @@ public class BratAnnotator
                     aTarget.addChildren(getPage(), FeedbackPanel.class);
                     return;
                 }
-                
+
                 // Get action
                 String action = request.getParameterValue(PARAM_ACTION).toString();
 
@@ -238,13 +238,13 @@ public class BratAnnotator
 
                 BratAjaxCasController controller = new BratAjaxCasController(repository,
                         annotationService);
-                
+
                 // Doing anything but a span annotation when a slot is armed will unarm it
                 if (getModelObject().isSlotArmed()
                         && !action.equals(SpanAnnotationResponse.COMMAND)) {
                     getModelObject().clearArmedSlot();
                 }
-                
+
                 Object result = null;
                 try {
                     LOG.info("AJAX-RPC CALLED: [" + action + "]");
@@ -258,10 +258,11 @@ public class BratAnnotator
                         if (getModelObject().isSlotArmed()) {
                             if (paramId.isSet()) {
                                 // Fill slot with existing annotation
-                                aAnnotationDetailEditorPanel.setSlot(aTarget, jCas, getModelObject(),
-                                        paramId.getAnnotationId());
+                                aAnnotationDetailEditorPanel.setSlot(aTarget, jCas,
+                                        getModelObject(), paramId.getAnnotationId());
                             }
-                            else if (!CAS.TYPE_NAME_ANNOTATION.equals(getModelObject().getArmedFeature().getType())) {
+                            else if (!CAS.TYPE_NAME_ANNOTATION.equals(getModelObject()
+                                    .getArmedFeature().getType())) {
                                 // Fill slot with new annotation (only works if a concret type is
                                 // set for the link feature!
                                 SpanAdapter adapter = (SpanAdapter) getAdapter(annotationService,
@@ -270,10 +271,11 @@ public class BratAnnotator
                                                 .getProject()));
 
                                 Offsets offsets = getSpanOffsets(request, jCas, paramId);
-                                
+
                                 try {
                                     int id = adapter.add(jCas, offsets.getBegin(),
-                                            offsets.getEnd(), null, null);
+                                            offsets.getEnd(), null, null, getModelObject()
+                                                    .isEllipsis());
                                     aAnnotationDetailEditorPanel.setSlot(aTarget, jCas,
                                             getModelObject(), id);
                                 }
@@ -310,8 +312,7 @@ public class BratAnnotator
                                         + "manager to re-open it via the Montoring page");
                             }
 
-                            bratRenderHighlight(aTarget, getModelObject()
-                                    .getSelectedAnnotationId());
+                            bratRenderHighlight(aTarget, getModelObject().getSelectedAnnotationId());
 
                             if (getModelObject().getSelectedAnnotationId().isNotSet()) {
                                 bratRenderGhostSpan(aTarget, jCas, getModelObject()
@@ -343,9 +344,8 @@ public class BratAnnotator
                         if (BratAnnotatorUtility.isDocumentFinished(repository, getModelObject())) {
                             error("This document is already closed. Please ask admin to re-open");
                         }
-                        
-                        bratRenderHighlight(aTarget, getModelObject()
-                                .getSelectedAnnotationId());
+
+                        bratRenderHighlight(aTarget, getModelObject().getSelectedAnnotationId());
 
                         if (getModelObject().getSelectedAnnotationId().isNotSet()) {
                             bratRenderGhostArc(aTarget, jCas);
@@ -421,11 +421,18 @@ public class BratAnnotator
             String offsets = request.getParameterValue(PARAM_OFFSETS).toString();
             OffsetsList offsetLists = jsonConverter.getObjectMapper().readValue(offsets,
                     OffsetsList.class);
-
             Sentence sentence = BratAjaxCasUtil.selectSentenceAt(jCas, getModelObject()
                     .getSentenceBeginOffset(), getModelObject().getSentenceEndOffset());
-            return new Offsets(sentence.getBegin() + offsetLists.get(0).getBegin(),
-                    sentence.getBegin() + offsetLists.get(offsetLists.size() - 1).getEnd());
+            // if ellipsis annotation, add ellipsis at the beginning of the sentences
+            int annotationBegin = sentence.getBegin() + offsetLists.get(0).getBegin();
+            int annotationEnd = sentence.getBegin()
+                    + offsetLists.get(offsetLists.size() - 1).getEnd();
+            if (getModelObject().isEllipsis()) {
+                Sentence ellipsisSentence = BratAjaxCasUtil.getCurrentSentence(jCas,
+                        annotationBegin, annotationEnd);
+                return new Offsets(ellipsisSentence.getBegin(), ellipsisSentence.getBegin());
+            }
+            return new Offsets(annotationBegin, annotationEnd);
         }
         else {
             // Edit existing span annotation
@@ -433,8 +440,8 @@ public class BratAnnotator
                     .getSelectedAnnotationId().getAnnotationId());
             return new Offsets(fs.getBegin(), fs.getEnd());
         }
-   }
-    
+    }
+
     @Override
     protected void onConfigure()
     {

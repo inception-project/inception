@@ -169,6 +169,9 @@ public class BratAnnotatorModel
     // is the annotation span or arc annotation
     private boolean isRelationAnno;
 
+    // if the annotation element is missed, add an ellipsis at position 0,0
+    private boolean ellipsis;
+
     public Project getProject()
     {
         return project;
@@ -479,6 +482,16 @@ public class BratAnnotatorModel
         this.isRelationAnno = isRelationAnno;
     }
 
+    public boolean isEllipsis()
+    {
+        return ellipsis;
+    }
+
+    public void setEllipsis(boolean ellipsis)
+    {
+        this.ellipsis = ellipsis;
+    }
+
     public void initForProject()
     {
         setRememberedArcFeatures(null);
@@ -507,7 +520,7 @@ public class BratAnnotatorModel
 
     private AnnotationFeature armedFeature;
     private int armedSlot = -1;
-    
+
     public void setArmedSlot(AnnotationFeature aName, int aIndex)
     {
         armedFeature = aName;
@@ -518,7 +531,7 @@ public class BratAnnotatorModel
     {
         return ObjectUtils.equals(aName, armedFeature) && aIndex == armedSlot;
     }
-    
+
     public void clearArmedSlot()
     {
         armedFeature = null;

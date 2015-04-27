@@ -303,6 +303,10 @@ public class SpanAdapter
         // Render token + texts
         for (AnnotationFS fs : selectCovered(aJcas, Token.class, firstSentence.getBegin(),
                 lastSentenceInPage.getEnd())) {
+            // attache type such as POS adds non existing token element for ellipsis annotation
+            if(fs.getBegin()==fs.getEnd()){
+                continue;
+            }
             aResponse.addToken(fs.getBegin() - aFirstSentenceOffset, fs.getEnd()
                     - aFirstSentenceOffset);
         }
@@ -334,9 +338,14 @@ public class SpanAdapter
      * @throws BratAnnotationException
      *             if the annotation cannot be created/updated.
      */
-    public Integer add(JCas aJcas, int aBegin, int aEnd, AnnotationFeature aFeature, Object aValue)
+    public Integer add(JCas aJcas, int aBegin, int aEnd, AnnotationFeature aFeature, Object aValue,
+            boolean aEllipsis)
         throws BratAnnotationException
     {
+
+        if (aEllipsis) {
+            return updateCas(aJcas.getCas(), aBegin, aEnd, aFeature, aValue);
+        }
         if (crossMultipleSentence || isSameSentence(aJcas, aBegin, aEnd)) {
             if (lockToTokenOffsets) {
                 List<Token> tokens = selectOverlapping(aJcas, Token.class, aBegin, aEnd);

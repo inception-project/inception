@@ -30,6 +30,10 @@
 							<button class="buttons" wicket:id="reverse">Reverse</button>
 						</td>
 					</tr>
+					<tr>
+						<td>Ellipsis to missed annotation element</td>
+						<td><input type="checkbox" wicket:id="ellipsis" /></td>
+					</tr>
 				</table>
 			</fieldset>
 			<fieldset>
@@ -74,22 +78,23 @@
 									<table class="hfill">
 										<tr wicket:id="slots">
 											<td><span wicket:id="role"></span></td>
-											<td><span class="hfill k-textbox" style="background: 0; line-height: 2.13em; padding-left: 0.3em; padding-right:0.3em; width: 100%;" wicket:id="label"></span></td>
+											<td><span class="hfill k-textbox"
+												style="background: 0; line-height: 2.13em; padding-left: 0.3em; padding-right: 0.3em; width: 100%;"
+												wicket:id="label"></span></td>
 										</tr>
 										<tr>
-                                            <td colspan="2" class="hfill">
-                                                <table class="hfill">
-                                                    <tr>
-                                                        <td class="hfill">
-                                                            <input style="width: 100%" wicket:id="newRole" placeholder="Add new slot"></input>
-                                                        </td>
-                                                        <td>
-                                                            <button style="k-button" wicket:id="add">Add</button>
-                                                            <button style="k-button" wicket:id="del">Del</button>
-                                                        </td>
-                                                    </tr>
-                                                </table>
-                                            </td>
+											<td colspan="2" class="hfill">
+												<table class="hfill">
+													<tr>
+														<td class="hfill"><input style="width: 100%"
+															wicket:id="newRole" placeholder="Add new slot"></input></td>
+														<td>
+															<button style="" wicket:id="add">Add</button>
+															<button style="" wicket:id="del">Del</button>
+														</td>
+													</tr>
+												</table>
+											</td>
 										</tr>
 									</table>
 								</fieldset>
