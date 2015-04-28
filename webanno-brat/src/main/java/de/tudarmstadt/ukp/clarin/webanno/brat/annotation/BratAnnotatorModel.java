@@ -160,7 +160,7 @@ public class BratAnnotatorModel
     // selected span text
     private String selectedText;
 
-    //id of the select annotation layer
+    // id of the select annotation layer
     private VID selectedAnnotationId = VID.NONE_ID;
 
     // the selected annotation layer
@@ -171,6 +171,9 @@ public class BratAnnotatorModel
 
     // if the annotation element is missed, add an ellipsis at position 0,0
     private boolean ellipsis;
+
+    // enable automatic forward annotations
+    private boolean forwardAnnotation;
 
     public Project getProject()
     {
@@ -490,6 +493,16 @@ public class BratAnnotatorModel
     public void setEllipsis(boolean ellipsis)
     {
         this.ellipsis = ellipsis;
+    }
+
+    public boolean isForwardAnnotation()
+    {
+        return forwardAnnotation;
+    }
+
+    public void setForwardAnnotation(boolean forwardAnnotation)
+    {
+        this.forwardAnnotation = forwardAnnotation;
     }
 
     public void initForProject()

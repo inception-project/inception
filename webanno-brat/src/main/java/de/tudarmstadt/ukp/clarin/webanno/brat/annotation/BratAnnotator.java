@@ -289,6 +289,9 @@ public class BratAnnotator
                             }
                         }
                         else {
+                            if(paramId.isSet()){
+                                getModelObject().setForwardAnnotation(false);
+                            }
                             // Doing anything but filling an armed slot will unarm it
                             getModelObject().clearArmedSlot();
 
@@ -519,6 +522,20 @@ public class BratAnnotator
     {
         LOG.info("BEGIN bratRenderCommand");
         GetDocumentResponse response = new GetDocumentResponse();
+
+        if (getModelObject().isForwardAnnotation()) {
+            AnnotationFS nextToken = BratAjaxCasUtil.getNextToken(aJCas, getModelObject()
+                    .getBeginOffset(), getModelObject().getEndOffset());
+
+            response = addGhost(nextToken.getBegin(), nextToken.getEnd());
+
+            getModelObject().setSelectedAnnotationId(VID.NONE_ID);
+            getModelObject().setBeginOffset(nextToken.getBegin());
+            getModelObject().setEndOffset(nextToken.getEnd());
+            getModelObject().setSelectedText(
+                    aJCas.getDocumentText().substring(getModelObject().getBeginOffset(),
+                            getModelObject().getEndOffset()));
+        }
         BratAjaxCasController.render(response, getModelObject(), aJCas, annotationService);
         String json = toJson(response);
         LOG.info("END bratRenderCommand");
@@ -530,12 +547,7 @@ public class BratAnnotator
             int aEndOffset)
     {
         LOG.info("BEGIN ghostAnnoRender");
-        GetDocumentResponse response = new GetDocumentResponse();
-        // SpanAdapter.renderTokenAndSentence(aJCas, response, getModelObject());
-        List<Offsets> offsets = new ArrayList<Offsets>();
-        offsets.add(new Offsets(aBeginOffset, aEndOffset));
-        response.addEntity(new Entity(VID.GHOST, GHOST_PLACE_HOLDER, offsets, GHOST_PLACE_HOLDER,
-                GHOST_COLOR));
+        GetDocumentResponse response = addGhost(aBeginOffset, aEndOffset);
 
         BratAjaxCasController.render(response, getModelObject(), aJCas, annotationService);
 
@@ -543,6 +555,17 @@ public class BratAnnotator
         aTarget.appendJavaScript("Wicket.$('" + vis.getMarkupId()
                 + "').dispatcher.post('renderData', [" + json + "]);");
         LOG.info("END ghostAnnoRender");
+    }
+
+    private GetDocumentResponse addGhost(int aBeginOffset, int aEndOffset)
+    {
+        GetDocumentResponse response = new GetDocumentResponse();
+        // SpanAdapter.renderTokenAndSentence(aJCas, response, getModelObject());
+        List<Offsets> offsets = new ArrayList<Offsets>();
+        offsets.add(new Offsets(aBeginOffset, aEndOffset));
+        response.addEntity(new Entity(VID.GHOST, GHOST_PLACE_HOLDER, offsets, GHOST_PLACE_HOLDER,
+                GHOST_COLOR));
+        return response;
     }
 
     public void bratRenderGhostArc(AjaxRequestTarget aTarget, JCas aJCas)

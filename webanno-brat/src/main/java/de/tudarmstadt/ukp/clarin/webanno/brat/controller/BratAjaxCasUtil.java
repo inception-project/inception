@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
+import static org.apache.uima.fit.util.JCasUtil.selectFollowing;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -62,8 +63,10 @@ public class BratAjaxCasUtil
      * Annotation a and annotation b are the same if the have the same address ( used for
      * {@link CoreferenceChain})
      *
-     * @param a a FS.
-     * @param b a FS.
+     * @param a
+     *            a FS.
+     * @param b
+     *            a FS.
      * @return if both FSes are the same.
      */
     public static boolean isSame(FeatureStructure a, FeatureStructure b)
@@ -71,15 +74,19 @@ public class BratAjaxCasUtil
         if (a == null || b == null) {
             return false;
         }
-        
+
         return getAddr(a) == getAddr(b);
     }
 
     /**
      * Check if the start/end offsets of an annotation belongs to the same sentence.
-     * @param aJcas the JCAs.
-     * @param aStartOffset the start offset.
-     * @param aEndOffset the end offset.
+     *
+     * @param aJcas
+     *            the JCAs.
+     * @param aStartOffset
+     *            the start offset.
+     * @param aEndOffset
+     *            the end offset.
      * @return if start and end offsets are within the same sentence.
      */
     public static boolean isSameSentence(JCas aJcas, int aStartOffset, int aEndOffset)
@@ -97,7 +104,7 @@ public class BratAjaxCasUtil
     {
         return ((CASImpl) aFS.getCAS()).ll_getFSRef(aFS);
     }
-    
+
     public static AnnotationFS selectByAddr(JCas aJCas, int aAddress)
     {
         return selectByAddr(aJCas, AnnotationFS.class, aAddress);
@@ -108,8 +115,7 @@ public class BratAjaxCasUtil
         return selectByAddr(aCas, FeatureStructure.class, aAddress);
     }
 
-    public static <T extends FeatureStructure> T selectByAddr(CAS aCas, Class<T> aType,
-            int aAddress)
+    public static <T extends FeatureStructure> T selectByAddr(CAS aCas, Class<T> aType, int aAddress)
     {
         return aType.cast(aCas.getLowLevelCAS().ll_getFSForRef(aAddress));
     }
@@ -138,11 +144,10 @@ public class BratAjaxCasUtil
         }
     }
 
-    public static List<AnnotationFS> selectAt(CAS aJcas, final Type type,
-            int aBegin, int aEnd)
+    public static List<AnnotationFS> selectAt(CAS aJcas, final Type type, int aBegin, int aEnd)
     {
         List<AnnotationFS> covered = CasUtil.selectCovered(aJcas, type, aBegin, aEnd);
-        
+
         // Remove all that do not have the exact same offset
         Iterator<AnnotationFS> i = covered.iterator();
         while (i.hasNext()) {
@@ -151,17 +156,21 @@ public class BratAjaxCasUtil
                 i.remove();
             }
         }
-        
+
         return covered;
     }
 
     /**
      * Get an annotation using the begin/offsets and its type
-     * 
-     * @param aJcas the JCas.
-     * @param aType the type.
-     * @param aBegin the begin offset.
-     * @param aEnd the end offset.
+     *
+     * @param aJcas
+     *            the JCas.
+     * @param aType
+     *            the type.
+     * @param aBegin
+     *            the begin offset.
+     * @param aEnd
+     *            the end offset.
      * @return the annotation FS.
      */
     public static AnnotationFS selectSingleFsAt(JCas aJcas, Type aType, int aBegin, int aEnd)
@@ -177,10 +186,13 @@ public class BratAjaxCasUtil
     /**
      * Get the sentence for this CAS based on the begin and end offsets. This is basically used to
      * transform sentence address in one CAS to other sentence address for different CAS
-     * 
-     * @param aJcas the JCas.
-     * @param aBegin the begin offset.
-     * @param aEnd the end offset.
+     *
+     * @param aJcas
+     *            the JCas.
+     * @param aBegin
+     *            the begin offset.
+     * @param aEnd
+     *            the end offset.
      * @return the sentence.
      */
     public static Sentence selectSentenceAt(JCas aJcas, int aBegin, int aEnd)
@@ -254,12 +266,16 @@ public class BratAjaxCasUtil
         }
         return lastSentenceAddress;
     }
+
     /**
      * Get the current sentence based on the anotation begin/end offset
-     * 
-     * @param aJCas the JCas.
-     * @param aBegin the begin offset.
-     * @param aEnd the end offset.
+     *
+     * @param aJCas
+     *            the JCas.
+     * @param aBegin
+     *            the begin offset.
+     * @param aEnd
+     *            the end offset.
      * @return the sentence.
      */
     public static Sentence getCurrentSentence(JCas aJCas, int aBegin, int aEnd)
@@ -272,6 +288,19 @@ public class BratAjaxCasUtil
             }
         }
         return currentSentence;
+    }
+
+    public static Token getNextToken(JCas aJCas, int aBegin, int aEnd)
+    {
+
+        AnnotationFS currentToken = selectSingleAt(aJCas, Token.class, aBegin, aEnd);
+        Token nextToken = null;
+
+        for (Token token : selectFollowing(Token.class, currentToken, 1)) {
+            nextToken = token;
+        }
+
+        return nextToken;
     }
 
     /**
@@ -299,15 +328,15 @@ public class BratAjaxCasUtil
             else {
                 break;
             }
-            count ++;
+            count++;
         }
-        
+
         return getAddr(s);
     }
 
     /**
      * Get an iterator position at the annotation with the specified address.
-     * 
+     *
      * @param aJcas
      *            the CAS object
      * @param aType
@@ -347,7 +376,7 @@ public class BratAjaxCasUtil
             Project aProject, SourceDocument aDocument, int aWindowSize)
     {
         FSIterator<Sentence> si = seekByAddress(aJcas, Sentence.class, aSentenceAddress);
-        
+
         // Seek the sentence that contains the current focus
         Sentence s = si.get();
         while (si.isValid()) {
@@ -365,7 +394,7 @@ public class BratAjaxCasUtil
             }
             s = si.get();
         }
-        
+
         // Center sentence
         int count = 0;
         while (si.isValid() && count < (aWindowSize / 2)) {
@@ -375,13 +404,13 @@ public class BratAjaxCasUtil
             }
             count++;
         }
-        
+
         return getAddr(s);
     }
 
     /**
      * Move to the next page of size display window.
-     * 
+     *
      * @param aJcas
      *            the JCas.
      * @param aCurrenSentenceBeginAddress
@@ -390,8 +419,8 @@ public class BratAjaxCasUtil
      *            the window size.
      * @return the Beginning address of the next window
      */
-    public static int getNextPageFirstSentenceAddress(JCas aJcas,
-            int aCurrenSentenceBeginAddress, int aWindowSize)
+    public static int getNextPageFirstSentenceAddress(JCas aJcas, int aCurrenSentenceBeginAddress,
+            int aWindowSize)
     {
         List<Integer> beginningAddresses = getDisplayWindowBeginningSentenceAddresses(aJcas,
                 aWindowSize);
@@ -402,7 +431,7 @@ public class BratAjaxCasUtil
                 beginningAddress = beginningAddresses.get(i);
                 break;
             }
-            
+
             if (beginningAddresses.get(i) == aCurrenSentenceBeginAddress) {
                 beginningAddress = beginningAddresses.get(i + 1);
                 break;
@@ -414,17 +443,20 @@ public class BratAjaxCasUtil
                 break;
             }
         }
-        
+
         return beginningAddress;
     }
 
     /**
      * Return the beginning position of the Sentence for the previous display window
-     * @param aJcas the JCas.
+     *
+     * @param aJcas
+     *            the JCas.
      *
      * @param aCurrenSentenceBeginAddress
      *            The beginning address of the current sentence of the display window
-     * @param aWindowSize the window size.
+     * @param aWindowSize
+     *            the window size.
      * @return hum?
      */
     public static int getPreviousDisplayWindowSentenceBeginAddress(JCas aJcas,
@@ -460,8 +492,9 @@ public class BratAjaxCasUtil
 
     /**
      * Get the total number of sentences
-     * 
-     * @param aJcas the JCas.
+     *
+     * @param aJcas
+     *            the JCas.
      * @return the number of sentences.
      */
     public static int getNumberOfPages(JCas aJcas)
@@ -471,9 +504,11 @@ public class BratAjaxCasUtil
 
     /**
      * Returns the beginning address of all pages. This is used properly display<b> Page X of Y </b>
-     * 
-     * @param aJcas the JCas.
-     * @param aWindowSize the window size.
+     *
+     * @param aJcas
+     *            the JCas.
+     * @param aWindowSize
+     *            the window size.
      * @return hum?
      */
     public static List<Integer> getDisplayWindowBeginningSentenceAddresses(JCas aJcas,
@@ -494,9 +529,11 @@ public class BratAjaxCasUtil
     /**
      * Get the ordinal sentence number in the display window. This will be sent to brat so that it
      * will adjust the sentence number to display accordingly
-     * 
-     * @param aJcas the JCas.
-     * @param aSentenceAddress the sentence ID.
+     *
+     * @param aJcas
+     *            the JCas.
+     * @param aSentenceAddress
+     *            the sentence ID.
      * @return the sentence number.
      *
      */
@@ -515,8 +552,11 @@ public class BratAjaxCasUtil
 
     /**
      * Get the sentence number at this specific position
-     * @param aJcas the JCas.
-     * @param aBeginOffset the begin offset.
+     *
+     * @param aJcas
+     *            the JCas.
+     * @param aBeginOffset
+     *            the begin offset.
      * @return the sentence number.
      */
     public static int getSentenceNumber(JCas aJcas, int aBeginOffset)
@@ -534,8 +574,11 @@ public class BratAjaxCasUtil
 
     /**
      * Get Sentence address for this ordinal sentence number. Used to go to specific sentence number
-     * @param aJcas the JCas.
-     * @param aSentenceNumber the sentence number. 
+     *
+     * @param aJcas
+     *            the JCas.
+     * @param aSentenceNumber
+     *            the sentence number.
      * @return the ID.
      */
     public static int getSentenceAddress(JCas aJcas, int aSentenceNumber)
@@ -564,10 +607,13 @@ public class BratAjaxCasUtil
      * aware of what is being annotated, based on
      * {@link BratAjaxCasUtil#selectOverlapping(JCas, Class, int, int)} ISSUE - Affected text not
      * correctly displayed in annotation dialog (Bug #272)
-     * 
-     * @param aJcas the JCas.
-     * @param aBeginOffset the begin offset.
-     * @param aEndOffset the end offset.
+     *
+     * @param aJcas
+     *            the JCas.
+     * @param aBeginOffset
+     *            the begin offset.
+     * @param aEndOffset
+     *            the end offset.
      * @return the selected text.
      */
     public static String getSelectedText(JCas aJcas, int aBeginOffset, int aEndOffset)
@@ -580,7 +626,7 @@ public class BratAjaxCasUtil
         }
         return seletedTextSb.toString();
     }
-    
+
     public static <T> T getFeature(FeatureStructure aFS, AnnotationFeature aFeature)
     {
         Feature feature = aFS.getType().getFeatureByBaseName(aFeature.getName());
@@ -593,7 +639,7 @@ public class BratAjaxCasUtil
                         + feature.getRange().getName() + "]does not match expected feature type ["
                         + aFeature.getType() + "].");
             }
-            
+
             switch (aFeature.getType()) {
             case CAS.TYPE_NAME_STRING:
                 return (T) aFS.getStringValue(feature);
@@ -604,8 +650,8 @@ public class BratAjaxCasUtil
             case CAS.TYPE_NAME_INTEGER:
                 return (T) (Integer) aFS.getIntValue(feature);
             default:
-                throw new IllegalArgumentException("Cannot get value of feature [" + aFeature.getName()
-                        + "] with type [" + feature.getRange().getName() + "]");
+                throw new IllegalArgumentException("Cannot get value of feature ["
+                        + aFeature.getName() + "] with type [" + feature.getRange().getName() + "]");
             }
         }
         case ARRAY: {
@@ -614,8 +660,10 @@ public class BratAjaxCasUtil
                 // Get type and features - we need them later in the loop
                 Feature linkFeature = aFS.getType().getFeatureByBaseName(aFeature.getName());
                 Type linkType = aFS.getCAS().getTypeSystem().getType(aFeature.getLinkTypeName());
-                Feature roleFeat = linkType.getFeatureByBaseName(aFeature.getLinkTypeRoleFeatureName());
-                Feature targetFeat = linkType.getFeatureByBaseName(aFeature.getLinkTypeTargetFeatureName());
+                Feature roleFeat = linkType.getFeatureByBaseName(aFeature
+                        .getLinkTypeRoleFeatureName());
+                Feature targetFeat = linkType.getFeatureByBaseName(aFeature
+                        .getLinkTypeTargetFeatureName());
 
                 List<LinkWithRoleModel> links = new ArrayList<>();
                 ArrayFS array = (ArrayFS) aFS.getFeatureValue(linkFeature);
@@ -624,15 +672,17 @@ public class BratAjaxCasUtil
                         LinkWithRoleModel m = new LinkWithRoleModel();
                         m.role = link.getStringValue(roleFeat);
                         m.targetAddr = getAddr(link.getFeatureValue(targetFeat));
-                        m.label = ((AnnotationFS) link.getFeatureValue(targetFeat)).getCoveredText();
+                        m.label = ((AnnotationFS) link.getFeatureValue(targetFeat))
+                                .getCoveredText();
                         links.add(m);
                     }
                 }
                 return (T) links;
             }
             default:
-                throw new IllegalArgumentException("Cannot get value of feature [" + aFeature.getName()
-                        + "] with link mode [" + aFeature.getMultiValueMode() + "]");
+                throw new IllegalArgumentException("Cannot get value of feature ["
+                        + aFeature.getName() + "] with link mode [" + aFeature.getMultiValueMode()
+                        + "]");
             }
         }
         default:
@@ -643,7 +693,7 @@ public class BratAjaxCasUtil
 
     /**
      * Set a feature value.
-     * 
+     *
      * @param aFS
      *            the feature structure.
      * @param aFeature
@@ -657,7 +707,7 @@ public class BratAjaxCasUtil
         if (aFeature == null) {
             return;
         }
-        
+
         Feature feature = aFS.getType().getFeatureByBaseName(aFeature.getName());
 
         switch (aFeature.getMultiValueMode()) {
@@ -668,7 +718,7 @@ public class BratAjaxCasUtil
                         + feature.getRange().getName() + "]does not match expected feature type ["
                         + aFeature.getType() + "].");
             }
-            
+
             switch (aFeature.getType()) {
             case CAS.TYPE_NAME_STRING:
                 aFS.setStringValue(feature, (String) aValue);
@@ -683,8 +733,9 @@ public class BratAjaxCasUtil
                 aFS.setIntValue(feature, aValue != null ? (int) aValue : 0);
                 break;
             default:
-                throw new IllegalArgumentException("Cannot set value of feature [" + aFeature.getName()
-                        + "] with type [" + feature.getRange().getName() + "] to [" + aValue + "]");
+                throw new IllegalArgumentException("Cannot set value of feature ["
+                        + aFeature.getName() + "] with type [" + feature.getRange().getName()
+                        + "] to [" + aValue + "]");
             }
             break;
         }
@@ -693,28 +744,31 @@ public class BratAjaxCasUtil
             case WITH_ROLE: {
                 // Get type and features - we need them later in the loop
                 Type linkType = aFS.getCAS().getTypeSystem().getType(aFeature.getLinkTypeName());
-                Feature roleFeat = linkType.getFeatureByBaseName(aFeature.getLinkTypeRoleFeatureName());
-                Feature targetFeat = linkType.getFeatureByBaseName(aFeature.getLinkTypeTargetFeatureName());
+                Feature roleFeat = linkType.getFeatureByBaseName(aFeature
+                        .getLinkTypeRoleFeatureName());
+                Feature targetFeat = linkType.getFeatureByBaseName(aFeature
+                        .getLinkTypeTargetFeatureName());
 
                 // Create all the links
-                // FIXME: actually we could re-use existing link link feature structures 
+                // FIXME: actually we could re-use existing link link feature structures
                 List<FeatureStructure> linkFSes = new ArrayList<FeatureStructure>();
                 List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) aValue;
                 if (links != null) {
                     for (LinkWithRoleModel e : links) {
-                        // Skip links that have been added in the UI but where the target has not yet been
+                        // Skip links that have been added in the UI but where the target has not
+                        // yet been
                         // set
                         if (e.targetAddr == -1) {
                             continue;
                         }
-                        
+
                         FeatureStructure link = aFS.getCAS().createFS(linkType);
                         link.setStringValue(roleFeat, e.role);
                         link.setFeatureValue(targetFeat, selectByAddr(aFS.getCAS(), e.targetAddr));
                         linkFSes.add(link);
                     }
                 }
-                
+
                 // Create a new array if size differs otherwise re-use existing one
                 ArrayFS array = (ArrayFS) BratAjaxCasUtil.getFeatureFS(aFS, aFeature.getName());
                 if (array == null || (array.size() != linkFSes.size())) {
@@ -724,9 +778,9 @@ public class BratAjaxCasUtil
                 // Fill in links
                 array.copyFromArray(linkFSes.toArray(new FeatureStructure[linkFSes.size()]), 0, 0,
                         linkFSes.size());
-                
+
                 aFS.setFeatureValue(feature, array);
-                break;                
+                break;
             }
             default:
                 throw new IllegalArgumentException("Unsupported link mode ["
@@ -735,14 +789,14 @@ public class BratAjaxCasUtil
             break;
         }
         default:
-            throw new IllegalArgumentException("Unsupported multi-value mode [" + aFeature.getMultiValueMode()
-                    + "] on feature [" + aFeature.getName() + "]");
+            throw new IllegalArgumentException("Unsupported multi-value mode ["
+                    + aFeature.getMultiValueMode() + "] on feature [" + aFeature.getName() + "]");
         }
     }
 
     /**
      * Set a feature value.
-     * 
+     *
      * @param aFS
      *            the feature structure.
      * @param aFeatureName
@@ -756,10 +810,10 @@ public class BratAjaxCasUtil
         Feature labelFeature = aFS.getType().getFeatureByBaseName(aFeatureName);
         aFS.setFeatureValue(labelFeature, aValue);
     }
-    
+
     /**
      * Get a feature value.
-     * 
+     *
      * @param aFS
      *            the feature structure.
      * @param aFeatureName

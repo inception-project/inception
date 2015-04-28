@@ -124,6 +124,7 @@ public class AnnotationDetailEditorPanel
     private AnnotationFeatureForm annotationFeatureForm;
     private Label selectedTextLabel;
     private CheckBox ellipsis;
+    private CheckBox forwardAnnotation;
     @SuppressWarnings("unused")
     private DropDownChoice<AnnotationLayer> layers;
     private RefreshingView<FeatureModel> featureValues;
@@ -196,7 +197,44 @@ public class AnnotationDetailEditorPanel
             });
 
             ellipsis.setOutputMarkupId(true);
-            // setAnnotationLayers(aBModel);
+
+            add(forwardAnnotation = new CheckBox("forwardAnnotation")
+            {
+                private static final long serialVersionUID = 8908304272310098353L;
+
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+
+                    BratAnnotatorModel model = AnnotationFeatureForm.this.getModelObject();
+
+                    setEnabled(model.getSelectedAnnotationLayer() != null
+                            && model.getSelectedAnnotationLayer().getType()
+                                    .equals(WebAnnoConst.SPAN_TYPE));
+
+                }
+            });
+            forwardAnnotation.add(new AjaxFormComponentUpdatingBehavior("onchange")
+            {
+                private static final long serialVersionUID = 5179816588460867471L;
+
+                @Override
+                protected void onUpdate(AjaxRequestTarget aTarget)
+                {
+                    if (getModelObject().getSelectedAnnotationId().isSet()) {
+                        getModelObject().setForwardAnnotation(false);// this is editing
+                        aTarget.add(forwardAnnotation);
+                    }
+                    else {
+                        getModelObject().setForwardAnnotation(
+                                getModelObject().isForwardAnnotation());
+                    }
+                }
+            });
+
+            forwardAnnotation.setOutputMarkupId(true);
+
             add(layers = new LayerSelector("selectedAnnotationLayer", annotationLayers));
 
             featureValues = new FeatureEditorPanel("featureValues");
