@@ -304,7 +304,7 @@ public class SpanAdapter
         for (AnnotationFS fs : selectCovered(aJcas, Token.class, firstSentence.getBegin(),
                 lastSentenceInPage.getEnd())) {
             // attache type such as POS adds non existing token element for ellipsis annotation
-            if(fs.getBegin()==fs.getEnd()){
+            if (fs.getBegin() == fs.getEnd()) {
                 continue;
             }
             aResponse.addToken(fs.getBegin() - aFirstSentenceOffset, fs.getEnd()
@@ -344,7 +344,10 @@ public class SpanAdapter
     {
 
         if (aEllipsis) {
-            return updateCas(aJcas.getCas(), aBegin, aEnd, aFeature, aValue);
+            // make sure ellipsis annotation is made on the sentence beginning.
+            Sentence ellipsisSentence = BratAjaxCasUtil.getCurrentSentence(aJcas, aBegin, aEnd);
+            return updateCas(aJcas.getCas(), ellipsisSentence.getBegin(),
+                    ellipsisSentence.getBegin(), aFeature, aValue);
         }
         if (crossMultipleSentence || isSameSentence(aJcas, aBegin, aEnd)) {
             if (lockToTokenOffsets) {
