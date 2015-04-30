@@ -85,9 +85,9 @@ public class AnnotationPreferenceModalPanel
                     new AnnotationLayerDetailFormModel()));
 
             // Import current settings from the annotator
-            getModelObject().numberOfSentences = bModel.getWindowSize();
-            getModelObject().scrollPage = bModel.isScrollPage();
-            getModelObject().staticColor = bModel.isStaticColor();
+            getModelObject().numberOfSentences = bModel.getPreferences().getWindowSize();
+            getModelObject().scrollPage = bModel.getPreferences().isScrollPage();
+            getModelObject().staticColor = bModel.getPreferences().isStaticColor();
             for (AnnotationLayer layer : bModel.getAnnotationLayers()) {
                 getModelObject().annotationLayers.add(layer);
             }
@@ -153,10 +153,10 @@ public class AnnotationPreferenceModalPanel
                 @Override
                 protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
                 {
-                    bModel.setScrollPage(getModelObject().scrollPage);
+                    bModel.getPreferences().setScrollPage(getModelObject().scrollPage);
                     bModel.setAnnotationLayers(getModelObject().annotationLayers);
-                    bModel.setWindowSize(getModelObject().numberOfSentences);
-                    bModel.setStaticColor(getModelObject().staticColor);
+                    bModel.getPreferences().setWindowSize(getModelObject().numberOfSentences);
+                    bModel.getPreferences().setStaticColor(getModelObject().staticColor);
                     try {
                         PreferencesUtil.savePreference(bModel, repository);
                     }

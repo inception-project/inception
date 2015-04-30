@@ -189,7 +189,7 @@ public class SpanAdapter
                 aBratAnnotatorModel.getSentenceEndOffset());
 
         int lastAddressInPage = getLastSentenceAddressInDisplayWindow(aJcas,
-                getAddr(firstSentence), aBratAnnotatorModel.getWindowSize());
+                getAddr(firstSentence), aBratAnnotatorModel.getPreferences().getWindowSize());
 
         // the last sentence address in the display window
         Sentence lastSentenceInPage = (Sentence) selectByAddr(aJcas, FeatureStructure.class,
@@ -289,7 +289,7 @@ public class SpanAdapter
                 aBratAnnotatorModel.getSentenceEndOffset());
 
         int lastAddressInPage = getLastSentenceAddressInDisplayWindow(aJcas,
-                getAddr(firstSentence), aBratAnnotatorModel.getWindowSize());
+                getAddr(firstSentence), aBratAnnotatorModel.getPreferences().getWindowSize());
 
         // the last sentence address in the display window
         Sentence lastSentenceInPage = (Sentence) selectByAddr(aJcas, FeatureStructure.class,

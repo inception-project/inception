@@ -17,7 +17,8 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
-import java.util.ArrayList;
+import java.io.Serializable;
+import java.util.List;
 
 /**
  * This is a class representing the bean objects to store users preference of annotation settings
@@ -27,39 +28,58 @@ import java.util.ArrayList;
  * @author Seid Muhie Yimam
  */
 public class AnnotationPreference
+    implements Serializable
 {
+    private static final long serialVersionUID = 2202236699782758271L;
+    
     // Id of annotation layers, to be stored in the properties file comma separated: 12, 34,....
-    private ArrayList<Long> annotationLayers;
-    private int windowSize = 10;
-    private boolean scrollPage;
+    private List<Long> annotationLayers;
 
-    private boolean staticColor;
+    private int windowSize = 5;
+    
+    private boolean scrollPage = true;
 
-    public ArrayList<Long> getAnnotationLayers()
+    // determine if static color for annotations will be used or we shall
+    // dynamically generate one
+    private boolean staticColor = true;
+
+    public List<Long> getAnnotationLayers()
     {
         return annotationLayers;
     }
 
-    public void setAnnotationLayers(ArrayList<Long> aAnnotationLayers)
+    public void setAnnotationLayers(List<Long> aAnnotationLayers)
     {
         annotationLayers = aAnnotationLayers;
     }
 
+    /**
+     * The number of sentences to be displayed at a time
+     */
     public int getWindowSize()
     {
         return windowSize;
     }
 
+    /**
+     * The number of sentences to be displayed at a time
+     */
     public void setWindowSize(int aWindowSize)
     {
         windowSize = aWindowSize;
     }
 
+    /**
+     * Used to enable/disable auto-scrolling while annotation
+     */
     public boolean isScrollPage()
     {
         return scrollPage;
     }
 
+    /**
+     * Used to enable/disable auto-scrolling while annotation
+     */
     public void setScrollPage(boolean aScrollPage)
     {
         scrollPage = aScrollPage;

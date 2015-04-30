@@ -304,12 +304,12 @@ public class SuggestionViewPanel
         aBModel.getDocument().setSentenceAccessed(sentenceNumber);
         repository.updateTimeStamp(aBModel.getDocument(), aBModel.getUser(), aBModel.getMode());
 
-        if (aBModel.isScrollPage()) {
+        if (aBModel.getPreferences().isScrollPage()) {
             int address = getAddr(selectSentenceAt(clickedJCas, aBModel.getSentenceBeginOffset(),
                     aBModel.getSentenceEndOffset()));
             aBModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(clickedJCas,
                     address, fsClicked.getBegin(), aBModel.getProject(), aBModel.getDocument(),
-                    aBModel.getWindowSize()));
+                    aBModel.getPreferences().getWindowSize()));
 
             Sentence sentence = selectByAddr(clickedJCas, Sentence.class,
                     aBModel.getSentenceAddress());
@@ -419,7 +419,7 @@ public class SuggestionViewPanel
             throw new IOException();
         }
 
-        if (aCurationUserSegment.getBratAnnotatorModel().isScrollPage()) {
+        if (aCurationUserSegment.getBratAnnotatorModel().getPreferences().isScrollPage()) {
             int address = getAddr(selectSentenceAt(aJcas, aCurationUserSegment
                     .getBratAnnotatorModel().getSentenceBeginOffset(), aCurationUserSegment
                     .getBratAnnotatorModel().getSentenceEndOffset()));
@@ -427,7 +427,8 @@ public class SuggestionViewPanel
                     getSentenceBeginAddress(aJcas, address, originFs.getBegin(),
                             aCurationUserSegment.getBratAnnotatorModel().getProject(),
                             aCurationUserSegment.getBratAnnotatorModel().getDocument(),
-                            aCurationUserSegment.getBratAnnotatorModel().getWindowSize()));
+                            aCurationUserSegment.getBratAnnotatorModel().getPreferences()
+                                    .getWindowSize()));
             Sentence sentence = selectByAddr(aJcas, Sentence.class, aCurationUserSegment
                     .getBratAnnotatorModel().getSentenceAddress());
             aCurationUserSegment.getBratAnnotatorModel()

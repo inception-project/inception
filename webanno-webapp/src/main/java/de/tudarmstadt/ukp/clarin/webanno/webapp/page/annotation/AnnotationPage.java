@@ -144,11 +144,12 @@ public class AnnotationPage
                 annotator.bratRenderHighlight(aTarget, aBModel.getSelectedAnnotationId());
 
                 annotator.onChange(aTarget, aBModel);
-                annotator.onAnnotate(aTarget, aBModel, aBModel.getBeginOffset(), aBModel.getEndOffset());
-                if (!aBModel.isAnnotate()) {
-                    annotator.onDelete(aTarget, aBModel, aBModel.getBeginOffset(), aBModel.getEndOffset());
+                annotator.onAnnotate(aTarget, aBModel, aBModel.getCommand().getBeginOffset(),
+                        aBModel.getCommand().getEndOffset());
+                if (!aBModel.getCommand().isAnnotate()) {
+                    annotator.onDelete(aTarget, aBModel, aBModel.getCommand().getBeginOffset(),
+                            aBModel.getCommand().getEndOffset());
                 }
-
             }
         };
 
@@ -402,7 +403,7 @@ public class AnnotationPage
                         int nextSentenceAddress = BratAjaxCasUtil
                                 .getNextPageFirstSentenceAddress(jCas,
                                         bratAnnotatorModel.getSentenceAddress(),
-                                        bratAnnotatorModel.getWindowSize());
+                                        bratAnnotatorModel.getPreferences().getWindowSize());
                         if (bratAnnotatorModel.getSentenceAddress() != nextSentenceAddress) {
                             bratAnnotatorModel.setSentenceAddress(nextSentenceAddress);
 
@@ -447,7 +448,7 @@ public class AnnotationPage
                         int previousSentenceAddress = BratAjaxCasUtil
                                 .getPreviousDisplayWindowSentenceBeginAddress(jCas,
                                         bratAnnotatorModel.getSentenceAddress(),
-                                        bratAnnotatorModel.getWindowSize());
+                                        bratAnnotatorModel.getPreferences().getWindowSize());
                         if (bratAnnotatorModel.getSentenceAddress() != previousSentenceAddress) {
                             bratAnnotatorModel.setSentenceAddress(previousSentenceAddress);
 
@@ -532,9 +533,8 @@ public class AnnotationPage
                         JCas jCas = getJCas();
 
                         int lastDisplayWindowBeginingSentenceAddress = BratAjaxCasUtil
-                                .getLastDisplayWindowFirstSentenceAddress(
-                                        jCas,
-                                        bratAnnotatorModel.getWindowSize());
+                                .getLastDisplayWindowFirstSentenceAddress(jCas, bratAnnotatorModel
+                                        .getPreferences().getWindowSize());
                         if (lastDisplayWindowBeginingSentenceAddress != bratAnnotatorModel
                                 .getSentenceAddress()) {
                             bratAnnotatorModel
@@ -704,9 +704,9 @@ public class AnnotationPage
                     bratAnnotatorModel.getSentenceAddress());
             int firstSentenceNumber = sentenceNumber + 1;
             int lastSentenceNumber;
-            if (firstSentenceNumber + bratAnnotatorModel.getWindowSize() - 1 < totalNumberOfSentence) {
+            if (firstSentenceNumber + bratAnnotatorModel.getPreferences().getWindowSize() - 1 < totalNumberOfSentence) {
                 lastSentenceNumber = firstSentenceNumber
-                        + bratAnnotatorModel.getWindowSize() - 1;
+                        + bratAnnotatorModel.getPreferences().getWindowSize() - 1;
             }
             else {
                 lastSentenceNumber = totalNumberOfSentence;

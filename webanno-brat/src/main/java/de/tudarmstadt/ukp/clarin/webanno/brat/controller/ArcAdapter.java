@@ -163,7 +163,7 @@ public class ArcAdapter
                 aBratAnnotatorModel.getSentenceEndOffset());
 
         int lastAddressInPage = getLastSentenceAddressInDisplayWindow(aJcas,
-                getAddr(firstSentence), aBratAnnotatorModel.getWindowSize());
+                getAddr(firstSentence), aBratAnnotatorModel.getPreferences().getWindowSize());
 
         // the last sentence address in the display window
         Sentence lastSentenceInPage = (Sentence) selectByAddr(aJcas,
@@ -239,7 +239,7 @@ public class ArcAdapter
                 aJCas,
                 Sentence.class,
                 getLastSentenceAddressInDisplayWindow(aJCas, getAddr(sentence),
-                        aBratAnnotatorModel.getWindowSize())).getEnd();
+                        aBratAnnotatorModel.getPreferences().getWindowSize())).getEnd();
         if (crossMultipleSentence
                 || isSameSentence(aJCas, aOriginFs.getBegin(), aTargetFs.getEnd())) {
             return updateCas(aJCas, beginOffset, endOffset, aOriginFs, aTargetFs, aLabelValue,

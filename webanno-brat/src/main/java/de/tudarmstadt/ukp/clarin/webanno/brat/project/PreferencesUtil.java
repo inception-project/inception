@@ -100,9 +100,7 @@ public class PreferencesUtil
                     }
                 }
             }
-            aBModel.setWindowSize(preference.getWindowSize());
-            aBModel.setScrollPage(preference.isScrollPage());
-            aBModel.setStaticColor(preference.isStaticColor());
+            aBModel.setPreferences(preference);
 
             // Get tagset using the id, from the properties file
             aBModel.getAnnotationLayers().clear();
@@ -143,10 +141,7 @@ public class PreferencesUtil
     public static void savePreference(BratAnnotatorModel aBModel, RepositoryService aRepository)
         throws FileNotFoundException, IOException
     {
-        AnnotationPreference preference = new AnnotationPreference();
-        preference.setScrollPage(aBModel.isScrollPage());
-        preference.setWindowSize(aBModel.getWindowSize());
-        preference.setStaticColor(aBModel.isStaticColor());
+        AnnotationPreference preference = aBModel.getPreferences();
         ArrayList<Long> layers = new ArrayList<Long>();
 
         for (AnnotationLayer layer : aBModel.getAnnotationLayers()) {

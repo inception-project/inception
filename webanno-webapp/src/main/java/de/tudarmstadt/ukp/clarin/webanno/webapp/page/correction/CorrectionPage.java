@@ -223,11 +223,11 @@ public class CorrectionPage
                 mergeVisualizer.bratRenderHighlight(aTarget, aBModel.getSelectedAnnotationId());
 
                 mergeVisualizer.onChange(aTarget, aBModel);
-                mergeVisualizer.onAnnotate(aTarget, aBModel, aBModel.getBeginOffset(),
-                        aBModel.getEndOffset());
-                if (!aBModel.isAnnotate()) {
-                    mergeVisualizer.onDelete(aTarget, aBModel, aBModel.getBeginOffset(),
-                            aBModel.getEndOffset());
+                mergeVisualizer.onAnnotate(aTarget, aBModel, aBModel.getCommand().getBeginOffset(),
+                        aBModel.getCommand().getEndOffset());
+                if (!aBModel.getCommand().isAnnotate()) {
+                    mergeVisualizer.onDelete(aTarget, aBModel, aBModel.getCommand()
+                            .getBeginOffset(), aBModel.getCommand().getEndOffset());
                 }
 
             }
@@ -316,11 +316,13 @@ public class CorrectionPage
                                 sentenceNumber = getFirstSentenceNumber(mergeJCas, address);
                                 int firstSentenceNumber = sentenceNumber + 1;
                                 int lastSentenceNumber;
-                                if (firstSentenceNumber + bratAnnotatorModel.getWindowSize() - 1 < totalNumberOfSentence) {
+                                if (firstSentenceNumber
+                                        + bratAnnotatorModel.getPreferences().getWindowSize() - 1 < totalNumberOfSentence) {
                                     lastSentenceNumber = firstSentenceNumber
-                                            + bratAnnotatorModel.getWindowSize() - 1;
+                                            + bratAnnotatorModel.getPreferences().getWindowSize()
+                                            - 1;
                                 }
-                                else {
+                               else {
                                     lastSentenceNumber = totalNumberOfSentence;
                                 }
 
@@ -770,7 +772,7 @@ public class CorrectionPage
                                 bratAnnotatorModel.getSentenceBeginOffset(),
                                 bratAnnotatorModel.getSentenceEndOffset()));
                         int nextSentenceAddress = getNextPageFirstSentenceAddress(mergeJCas,
-                                address, bratAnnotatorModel.getWindowSize());
+                                address, bratAnnotatorModel.getPreferences().getWindowSize());
                         if (address != nextSentenceAddress) {
                             bratAnnotatorModel.setSentenceAddress(nextSentenceAddress);
 
@@ -836,7 +838,7 @@ public class CorrectionPage
                         int previousSentenceAddress = BratAjaxCasUtil
                                 .getPreviousDisplayWindowSentenceBeginAddress(mergeJCas,
                                         bratAnnotatorModel.getSentenceAddress(),
-                                        bratAnnotatorModel.getWindowSize());
+                                        bratAnnotatorModel.getPreferences().getWindowSize());
                         if (bratAnnotatorModel.getSentenceAddress() != previousSentenceAddress) {
                             bratAnnotatorModel.setSentenceAddress(previousSentenceAddress);
 
@@ -964,7 +966,7 @@ public class CorrectionPage
                         mergeJCas = repository.readCorrectionCas(bratAnnotatorModel.getDocument());
                         int lastDisplayWindowBeginingSentenceAddress = BratAjaxCasUtil
                                 .getLastDisplayWindowFirstSentenceAddress(mergeJCas,
-                                        bratAnnotatorModel.getWindowSize());
+                                        bratAnnotatorModel.getPreferences().getWindowSize());
                         if (lastDisplayWindowBeginingSentenceAddress != bratAnnotatorModel
                                 .getSentenceAddress()) {
                             bratAnnotatorModel
@@ -1166,7 +1168,7 @@ public class CorrectionPage
 
         final Sentence sentence = selectByAddr(jCas, Sentence.class, sentenceAddress);
         List<Sentence> followingSentences = selectFollowing(jCas, Sentence.class, sentence,
-                bratAnnotatorModel.getWindowSize());
+                bratAnnotatorModel.getPreferences().getWindowSize());
         // Check also, when getting the last sentence address in the display window, if this is the
         // last sentence or the ONLY sentence in the document
         Sentence lastSentenceAddressInDisplayWindow = followingSentences.size() == 0 ? sentence

@@ -186,7 +186,7 @@ public class CasToBratJsonTest
                 .add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFRELTYPE);
 
         BratAnnotatorModel bratannotatorModel = new BratAnnotatorModel();
-        bratannotatorModel.setWindowSize(10);
+        bratannotatorModel.getPreferences().setWindowSize(10);
         bratannotatorModel.setSentenceAddress(BratAjaxCasUtil.getFirstSentenceAddress(jCas));
         bratannotatorModel.setLastSentenceAddress(BratAjaxCasUtil.getLastSentenceAddress(jCas));
 

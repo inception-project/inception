@@ -321,7 +321,7 @@ public class SuggestionBuilder
         throws UIMAException, ClassNotFoundException, IOException
     {
 
-        int windowSize = aBratAnnotatorModel.getWindowSize();
+        int windowSize = aBratAnnotatorModel.getPreferences().getWindowSize();
 
         Sentence firstSentence = selectSentenceAt(jCas,
                 aBratAnnotatorModel.getSentenceBeginOffset(),

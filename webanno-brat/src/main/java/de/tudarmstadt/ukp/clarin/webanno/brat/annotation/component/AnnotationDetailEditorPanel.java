@@ -275,7 +275,7 @@ public class AnnotationDetailEditorPanel
                         return;
                     }
 
-                    if (!model.isRelationAnno() && model.getSelectedText().isEmpty()
+                    if (!model.getCommand().isRelationAnno() && model.getSelectedText().isEmpty()
                             && !model.isEllipsis()) {
                         error("There is no text selected to annotate");
                         LOG.error("There is no text selected to annotate");
@@ -357,7 +357,7 @@ public class AnnotationDetailEditorPanel
                 {
                     super.onConfigure();
                     BratAnnotatorModel model = AnnotationFeatureForm.this.getModelObject();
-                    setVisible(model.isRelationAnno() && model.getSelectedAnnotationId().isSet());
+                    setVisible(model.getCommand().isRelationAnno() && model.getSelectedAnnotationId().isSet());
                 }
 
                 @Override
@@ -423,9 +423,9 @@ public class AnnotationDetailEditorPanel
         TypeAdapter adapter = getAdapter(annotationService, aBModel.getSelectedAnnotationLayer());
 
         if (aBModel.getSelectedAnnotationId().isNotSet()) {
-            if (aBModel.isRelationAnno()) {
-                AnnotationFS originFs = selectByAddr(jCas, aBModel.getOriginSpanId());
-                AnnotationFS targetFs = selectByAddr(jCas, aBModel.getTargetSpanId());
+            if (aBModel.getCommand().isRelationAnno()) {
+                AnnotationFS originFs = selectByAddr(jCas, aBModel.getCommand().getOriginSpanId());
+                AnnotationFS targetFs = selectByAddr(jCas, aBModel.getCommand().getTargetSpanId());
                 if (adapter instanceof ArcAdapter) {
                     aBModel.setSelectedAnnotationId(new VID(((ArcAdapter) adapter).add(originFs,
                             targetFs, jCas, aBModel, null, null)));
@@ -434,16 +434,17 @@ public class AnnotationDetailEditorPanel
                     aBModel.setSelectedAnnotationId(new VID(((ChainAdapter) adapter).addArc(jCas,
                             originFs, targetFs, null, null)));
                 }
-                aBModel.setBeginOffset(originFs.getBegin());
+                aBModel.getCommand().setBeginOffset(originFs.getBegin());
             }
             else if (adapter instanceof SpanAdapter) {
-                aBModel.setSelectedAnnotationId(new VID(((SpanAdapter) adapter).add(jCas,
-                        aBModel.getBeginOffset(), aBModel.getEndOffset(), null, null,
-                        aBModel.isEllipsis())));
+                aBModel.setSelectedAnnotationId(new VID(((SpanAdapter) adapter).add(jCas, aBModel
+                        .getCommand().getBeginOffset(), aBModel.getCommand().getEndOffset(), null,
+                        null, aBModel.isEllipsis())));
             }
             else {
                 aBModel.setSelectedAnnotationId(new VID(((ChainAdapter) adapter).addSpan(jCas,
-                        aBModel.getBeginOffset(), aBModel.getEndOffset(), null, null)));
+                        aBModel.getCommand().getBeginOffset(), aBModel.getCommand().getEndOffset(),
+                        null, null)));
             }
         }
 
@@ -473,18 +474,18 @@ public class AnnotationDetailEditorPanel
         }
 
         // update timestamp now
-        int sentenceNumber = getSentenceNumber(jCas, aBModel.getBeginOffset());
+        int sentenceNumber = getSentenceNumber(jCas, aBModel.getCommand().getBeginOffset());
         aBModel.getDocument().setSentenceAccessed(sentenceNumber);
         repository.updateTimeStamp(aBModel.getDocument(), aBModel.getUser(), aBModel.getMode());
 
         // persist changes
         repository.writeCas(aBModel.getMode(), aBModel.getDocument(), aBModel.getUser(), jCas);
 
-        if (aBModel.isScrollPage()) {
+        if (aBModel.getPreferences().isScrollPage()) {
             autoScroll(jCas, aBModel);
         }
 
-        if (aBModel.isRelationAnno()) {
+        if (aBModel.getCommand().isRelationAnno()) {
             aBModel.setRememberedArcLayer(aBModel.getSelectedAnnotationLayer());
             aBModel.setRememberedArcFeatures(featureModels);
         }
@@ -493,7 +494,7 @@ public class AnnotationDetailEditorPanel
             aBModel.setRememberedSpanFeatures(featureModels);
         }
 
-        aBModel.setAnnotate(true);
+        aBModel.getCommand().setAnnotate(true);
         if (aBModel.getSelectedAnnotationId().isSet()) {
             String bratLabelText = TypeUtil.getBratLabelText(adapter,
                     selectByAddr(jCas, aBModel.getSelectedAnnotationId().getAnnotationId()),
@@ -653,17 +654,17 @@ public class AnnotationDetailEditorPanel
         repository.writeCas(aBModel.getMode(), aBModel.getDocument(), aBModel.getUser(), jCas);
 
         // Update timestamp now
-        int sentenceNumber = getSentenceNumber(jCas, aBModel.getBeginOffset());
+        int sentenceNumber = getSentenceNumber(jCas, aBModel.getCommand().getBeginOffset());
         aBModel.getDocument().setSentenceAccessed(sentenceNumber);
         repository.updateTimeStamp(aBModel.getDocument(), aBModel.getUser(), aBModel.getMode());
 
         // Auto-scroll
-        if (aBModel.isScrollPage()) {
+        if (aBModel.getPreferences().isScrollPage()) {
             autoScroll(jCas, aBModel);
         }
 
         aBModel.setRememberedSpanLayer(aBModel.getSelectedAnnotationLayer());
-        aBModel.setAnnotate(false);
+        aBModel.getCommand().setAnnotate(false);
 
         info(BratAnnotator.generateMessage(aBModel.getSelectedAnnotationLayer(), null, true));
 
@@ -692,8 +693,8 @@ public class AnnotationDetailEditorPanel
 
         jCas.removeFsFromIndexes(idFs);
 
-        AnnotationFS originFs = selectByAddr(jCas, aBModel.getOriginSpanId());
-        AnnotationFS targetFs = selectByAddr(jCas, aBModel.getTargetSpanId());
+        AnnotationFS originFs = selectByAddr(jCas, aBModel.getCommand().getOriginSpanId());
+        AnnotationFS targetFs = selectByAddr(jCas, aBModel.getCommand().getTargetSpanId());
 
         TypeAdapter adapter = getAdapter(annotationService, aBModel.getSelectedAnnotationLayer());
         if (adapter instanceof ArcAdapter) {
@@ -713,7 +714,7 @@ public class AnnotationDetailEditorPanel
         aBModel.getDocument().setSentenceAccessed(sentenceNumber);
         repository.updateTimeStamp(aBModel.getDocument(), aBModel.getUser(), aBModel.getMode());
 
-        if (aBModel.isScrollPage()) {
+        if (aBModel.getPreferences().isScrollPage()) {
             autoScroll(jCas, aBModel);
         }
 
@@ -722,9 +723,9 @@ public class AnnotationDetailEditorPanel
         aBModel.setRememberedArcFeatures(featureModels);
 
         // in case the user re-reverse it
-        int temp = aBModel.getOriginSpanId();
-        aBModel.setOriginSpanId(aBModel.getTargetSpanId());
-        aBModel.setTargetSpanId(temp);
+        int temp = aBModel.getCommand().getOriginSpanId();
+        aBModel.getCommand().setOriginSpanId(aBModel.getCommand().getTargetSpanId());
+        aBModel.getCommand().setTargetSpanId(temp);
 
         setLayerAndFeatureModels(jCas, aBModel);
 
@@ -750,8 +751,9 @@ public class AnnotationDetailEditorPanel
     {
         int address = getAddr(selectSentenceAt(jCas, aBModel.getSentenceBeginOffset(),
                 aBModel.getSentenceEndOffset()));
-        aBModel.setSentenceAddress(getSentenceBeginAddress(jCas, address, aBModel.getBeginOffset(),
-                aBModel.getProject(), aBModel.getDocument(), aBModel.getWindowSize()));
+        aBModel.setSentenceAddress(getSentenceBeginAddress(jCas, address, aBModel.getCommand()
+                .getBeginOffset(), aBModel.getProject(), aBModel.getDocument(), aBModel
+                .getPreferences().getWindowSize()));
 
         Sentence sentence = selectByAddr(jCas, Sentence.class, aBModel.getSentenceAddress());
         aBModel.setSentenceBeginOffset(sentence.getBegin());
@@ -763,7 +765,7 @@ public class AnnotationDetailEditorPanel
             int aAnnotationId)
     {
         // Set an armed slot
-        if (!aBModel.isRelationAnno() && aBModel.isSlotArmed()) {
+        if (!aBModel.getCommand().isRelationAnno() && aBModel.isSlotArmed()) {
             List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) getFeatureModel(aBModel
                     .getArmedFeature()).value;
             LinkWithRoleModel link = links.get(aBModel.getArmedSlot());
@@ -795,8 +797,8 @@ public class AnnotationDetailEditorPanel
         featureModels = new ArrayList<>();
 
         // Dragging an arc
-        if (aBModel.isRelationAnno()) {
-            long layerId = TypeUtil.getLayerId(aBModel.getOriginSpanType());
+        if (aBModel.getCommand().isRelationAnno()) {
+            long layerId = TypeUtil.getLayerId(aBModel.getCommand().getOriginSpanType());
             AnnotationLayer spanLayer = annotationService.getLayer(layerId);
 
             // If we drag an arc between POS annotations, then the relation must be a dependency
@@ -886,7 +888,7 @@ public class AnnotationDetailEditorPanel
         String featName = aFeature.getName();
 
         if (WebAnnoConst.CHAIN_TYPE.equals(aFeature.getLayer().getType())) {
-            if (aBModel.isRelationAnno()) {
+            if (aBModel.getCommand().isRelationAnno()) {
                 return WebAnnoConst.COREFERENCE_TYPE_FEATURE.equals(featName);
             }
             else {
@@ -959,7 +961,7 @@ public class AnnotationDetailEditorPanel
     private void setInitSpanLayers(BratAnnotatorModel aBModel)
     {
         annotationLayers.clear();
-        if (aBModel.isRelationAnno()) {
+        if (aBModel.getCommand().isRelationAnno()) {
             annotationLayers.add(aBModel.getSelectedAnnotationLayer());
             return;
         }
@@ -1444,7 +1446,7 @@ public class AnnotationDetailEditorPanel
                         .getFeature(aFS, feature)));
             }
         }
-        else if (!aBModel.isRelationAnno() && aBModel.getRememberedSpanFeatures() != null) {
+        else if (!aBModel.getCommand().isRelationAnno() && aBModel.getRememberedSpanFeatures() != null) {
             // Populate from remembered values
             for (AnnotationFeature feature : annotationService.listAnnotationFeature(aBModel
                     .getSelectedAnnotationLayer())) {
@@ -1456,7 +1458,7 @@ public class AnnotationDetailEditorPanel
                         .get(feature)));
             }
         }
-        else if (aBModel.isRelationAnno() && aBModel.getRememberedArcFeatures() != null) {
+        else if (aBModel.getCommand().isRelationAnno() && aBModel.getRememberedArcFeatures() != null) {
             // Populate from remembered values
             for (AnnotationFeature feature : annotationService.listAnnotationFeature(aBModel
                     .getSelectedAnnotationLayer())) {
@@ -1505,7 +1507,7 @@ public class AnnotationDetailEditorPanel
             super.onConfigure();
             // at the moment we allow one layer per relation annotation (first
             // source/target span layer should be selected!)
-            setNullValid(annotationFeatureForm.getModelObject().isRelationAnno());
+            setNullValid(annotationFeatureForm.getModelObject().getCommand().isRelationAnno());
             // Only allow layer selection on new annotations
             setEnabled(annotationFeatureForm.getModelObject().getSelectedAnnotationId().isNotSet());
         }

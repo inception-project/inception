@@ -230,13 +230,12 @@ public class CurationPanel
                 mergeVisualizer.bratRenderHighlight(aTarget, aBModel.getSelectedAnnotationId());
 
                 mergeVisualizer.onChange(aTarget, aBModel);
-                mergeVisualizer.onAnnotate(aTarget, aBModel, aBModel.getBeginOffset(),
-                        aBModel.getEndOffset());
-                if (!aBModel.isAnnotate()) {
-                    mergeVisualizer.onDelete(aTarget, aBModel, aBModel.getBeginOffset(),
-                            aBModel.getEndOffset());
+                mergeVisualizer.onAnnotate(aTarget, aBModel, aBModel.getCommand().getBeginOffset(),
+                        aBModel.getCommand().getEndOffset());
+                if (!aBModel.getCommand().isAnnotate()) {
+                    mergeVisualizer.onDelete(aTarget, aBModel, aBModel.getCommand()
+                            .getBeginOffset(), aBModel.getCommand().getEndOffset());
                 }
-
             }
         };
 
@@ -322,7 +321,7 @@ public class CurationPanel
                                 jCas = repository.readCurationCas(bModel.getDocument());
                             }
 
-                            if (bModel.isScrollPage()) {
+                            if (bModel.getPreferences().isScrollPage()) {
                                 int currentSentAddress = getAddr(selectSentenceAt(jCas,
                                         bModel.getSentenceBeginOffset(),
                                         bModel.getSentenceEndOffset()));
@@ -331,7 +330,7 @@ public class CurationPanel
                                                 curationViewItem.getBegin(),
                                                 bModel.getProject(),
                                                 bModel.getDocument(),
-                                                bModel.getWindowSize()));
+                                                bModel.getPreferences().getWindowSize()));
 
                                 Sentence sentence = selectByAddr(jCas, Sentence.class,
                                         bModel.getSentenceAddress());
@@ -429,7 +428,7 @@ public class CurationPanel
 
         final Sentence sentence = selectByAddr(jCas, Sentence.class, sentenceAddress);
         List<Sentence> followingSentences = selectFollowing(jCas, Sentence.class, sentence,
-                bModel.getWindowSize());
+                bModel.getPreferences().getWindowSize());
         // Check also, when getting the last sentence address in the display window, if this is the
         // last sentence or the ONLY sentence in the document
         Sentence lastSentenceAddressInDisplayWindow = followingSentences.size() == 0 ? sentence

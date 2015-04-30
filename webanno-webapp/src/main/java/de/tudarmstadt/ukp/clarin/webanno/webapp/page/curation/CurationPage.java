@@ -173,9 +173,10 @@ public class CurationPage
                                         bratAnnotatorModel.getSentenceAddress());
                                 int firstSentenceNumber = sentenceNumber + 1;
                                 int lastSentenceNumber;
-                                if (firstSentenceNumber + bratAnnotatorModel.getWindowSize() - 1 < totalNumberOfSentence) {
+                                if (firstSentenceNumber
+                                        + bratAnnotatorModel.getPreferences().getWindowSize() - 1 < totalNumberOfSentence) {
                                     lastSentenceNumber = firstSentenceNumber
-                                            + bratAnnotatorModel.getWindowSize() - 1;
+                                            + bratAnnotatorModel.getPreferences().getWindowSize() - 1;
                                 }
                                 else {
                                     lastSentenceNumber = totalNumberOfSentence;
@@ -710,7 +711,7 @@ public class CurationPage
                                 .getDocument());
                         int nextSentenceAddress = getNextPageFirstSentenceAddress(
                                 mergeJCas, bratAnnotatorModel.getSentenceAddress(),
-                                bratAnnotatorModel.getWindowSize());
+                                bratAnnotatorModel.getPreferences().getWindowSize());
                         if (bratAnnotatorModel.getSentenceAddress() != nextSentenceAddress) {
                             aTarget.add(getFeedbackPanel());
                             bratAnnotatorModel.setSentenceAddress(nextSentenceAddress);
@@ -773,7 +774,7 @@ public class CurationPage
                         int previousSentenceAddress = BratAjaxCasUtil
                                 .getPreviousDisplayWindowSentenceBeginAddress(mergeJCas,
                                         bratAnnotatorModel.getSentenceAddress(),
-                                        bratAnnotatorModel.getWindowSize());
+                                        bratAnnotatorModel.getPreferences().getWindowSize());
                         if (bratAnnotatorModel.getSentenceAddress() != previousSentenceAddress) {
                             bratAnnotatorModel.setSentenceAddress(previousSentenceAddress);
 
@@ -889,7 +890,7 @@ public class CurationPage
                                 .getDocument());
                         int lastDisplayWindowBeginingSentenceAddress = BratAjaxCasUtil
                                 .getLastDisplayWindowFirstSentenceAddress(mergeJCas,
-                                        bratAnnotatorModel.getWindowSize());
+                                        bratAnnotatorModel.getPreferences().getWindowSize());
                         if (lastDisplayWindowBeginingSentenceAddress != bratAnnotatorModel
                                 .getSentenceAddress()) {
                             bratAnnotatorModel

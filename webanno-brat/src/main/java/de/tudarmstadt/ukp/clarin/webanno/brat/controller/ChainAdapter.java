@@ -129,7 +129,7 @@ public class ChainAdapter
         int windowEnd = BratAjaxCasUtil.selectByAddr(aJcas, Sentence.class,
                 BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(aJcas,
                         aBratAnnotatorModel.getSentenceAddress(),
-                        aBratAnnotatorModel.getWindowSize())).getEnd();
+                        aBratAnnotatorModel.getPreferences().getWindowSize())).getEnd();
 
         // Find the features for the arc and span labels - it is possible that we do not find a
         // feature for arc/span labels because they may have been disabled.

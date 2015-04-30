@@ -164,11 +164,11 @@ public class BratAjaxCasController
         // Maybe this section should be moved elsewehere and the aIsGetDocument parameter should
         // be removed, so that this method really only renders and does not additionally update
         // the BratAnnotatorModel state? -- REC
-        if (aBratAnnotatorModel.isScrollPage() && !aIsGetDocument) {
+        if (aBratAnnotatorModel.getPreferences().isScrollPage() && !aIsGetDocument) {
             aBratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(aJCas,
                     aBratAnnotatorModel.getSentenceAddress(), aAnnotationOffsetStart,
                     aBratAnnotatorModel.getProject(), aBratAnnotatorModel.getDocument(),
-                    aBratAnnotatorModel.getWindowSize()));
+                    aBratAnnotatorModel.getPreferences().getWindowSize()));
         }
 
         render(aResponse, aBratAnnotatorModel, aJCas, annotationService);

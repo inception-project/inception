@@ -65,7 +65,7 @@ public abstract class ColoringStrategy
     {
         // Decide on coloring strategy for the current layer
         ColoringStrategy coloringStrategy;
-        if (aBratAnnotatorModel.isStaticColor()) {
+        if (aBratAnnotatorModel.getPreferences().isStaticColor()) {
             String[] palette;
             
             if (WebAnnoConst.SPAN_TYPE.equals(aLayer.getType())) {

@@ -151,11 +151,11 @@ public class CuratorUtil
         bratAnnotatorModel.setDocument(aSourceDocument);
         bratAnnotatorModel.setProject(aSourceDocument.getProject());
         bratAnnotatorModel.setUser(userLoggedIn);
+        bratAnnotatorModel.setSentenceAddress(aCurationSegment.getSentenceAddress().get(
+                CURATION_USER));
         bratAnnotatorModel.setFirstSentenceAddress(aCurationSegment.getSentenceAddress().get(
                 CURATION_USER));
         bratAnnotatorModel.setLastSentenceAddress(aCurationSegment.getSentenceAddress().get(
-                CURATION_USER));
-        bratAnnotatorModel.setSentenceAddress(aCurationSegment.getSentenceAddress().get(
                 CURATION_USER));
 
         bratAnnotatorModel.setSentenceBeginOffset(aCurationSegment.getBegin());

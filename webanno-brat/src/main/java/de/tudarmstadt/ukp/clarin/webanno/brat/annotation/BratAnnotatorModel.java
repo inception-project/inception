@@ -28,6 +28,7 @@ import java.util.Map;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.uima.jcas.JCas;
 
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.command.Command;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel.FeatureModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.VID;
@@ -98,16 +99,22 @@ public class BratAnnotatorModel
      */
     private List<AnnotationLayer> annotationLayers = new ArrayList<AnnotationLayer>();
 
-    /**
-     * The number of sentences to be displayed at a time
-     */
-    private int windowSize = 5;
+//    /**
+//     * The number of sentences to be displayed at a time
+//     */
+//    private int windowSize = 5;
+//
+//    /**
+//     * Used to enable/disable auto-scrolling while annotation
+//     */
+//    private boolean scrollPage = true;
+//
+//    // determine if static color for annotations will be used or we shall
+//    // dynamically generate one
+//    private boolean staticColor = true;
 
-    /**
-     * Used to enable/disable auto-scrolling while annotation
-     */
-    private boolean scrollPage = true;
-
+    private AnnotationPreference preferences = new AnnotationPreference();
+    
     /**
      * If the document is opened through the next/previous buttons on the annotation page, not with
      * the open dialog method, used to change {@link #document}
@@ -130,33 +137,6 @@ public class BratAnnotatorModel
     private Map<AnnotationFeature, Serializable> rememberedSpanFeatures = new HashMap<AnnotationFeature, Serializable>();
     private Map<AnnotationFeature, Serializable> rememberedArcFeatures = new HashMap<AnnotationFeature, Serializable>();
 
-    private boolean annotationCleared = false;
-
-    // determine if static color for annotations will be used or we shall
-    // dynamically generate one
-    private boolean staticColor = true;
-
-    // if it is annotation or delete operation
-    private boolean isAnnotate;
-
-    // the span id of the dependent in arc annotation
-    private int originSpanId;
-
-    // The type of the dependent in the arc annotation
-    private String originSpanType;
-
-    // The type of the governor in the arc annotation
-    private String targetSpanType;
-
-    // The span id of the governor in arc annotation
-    private int targetSpanId;
-
-    // the begin offset of a span annotation
-    private int beginOffset;
-
-    // the end offset of a span annotation
-    private int endOffset;
-
     // selected span text
     private String selectedText;
 
@@ -166,14 +146,18 @@ public class BratAnnotatorModel
     // the selected annotation layer
     private AnnotationLayer selectedAnnotationLayer;
 
-    // is the annotation span or arc annotation
-    private boolean isRelationAnno;
-
     // if the annotation element is missed, add an ellipsis at position 0,0
     private boolean ellipsis;
 
     // enable automatic forward annotations
     private boolean forwardAnnotation;
+
+    private final Command command = new Command();
+    
+    public Command getCommand()
+    {
+        return command;
+    }
 
     public Project getProject()
     {
@@ -245,26 +229,16 @@ public class BratAnnotatorModel
         annotationLayers = aAnnotationLayers;
     }
 
-    public int getWindowSize()
+    public AnnotationPreference getPreferences()
     {
-        return windowSize;
+        return preferences;
     }
-
-    public void setWindowSize(int aWindowSize)
+    
+    public void setPreferences(AnnotationPreference aPreferences)
     {
-        windowSize = aWindowSize;
+        preferences = aPreferences;
     }
-
-    public boolean isScrollPage()
-    {
-        return scrollPage;
-    }
-
-    public void setScrollPage(boolean aScrollPage)
-    {
-        scrollPage = aScrollPage;
-    }
-
+    
     public String getDocumentName()
     {
         return documentName;
@@ -355,96 +329,6 @@ public class BratAnnotatorModel
         this.sentenceEndOffset = sentenceEndOffset;
     }
 
-    public boolean isAnnotationCleared()
-    {
-        return annotationCleared;
-    }
-
-    public void setAnnotationCleared(boolean annotationCleared)
-    {
-        this.annotationCleared = annotationCleared;
-    }
-
-    public boolean isStaticColor()
-    {
-        return staticColor;
-    }
-
-    public void setStaticColor(boolean staticColor)
-    {
-        this.staticColor = staticColor;
-    }
-
-    public boolean isAnnotate()
-    {
-        return isAnnotate;
-    }
-
-    public void setAnnotate(boolean isAnnotate)
-    {
-        this.isAnnotate = isAnnotate;
-    }
-
-    public int getOriginSpanId()
-    {
-        return originSpanId;
-    }
-
-    public void setOriginSpanId(int originSpanId)
-    {
-        this.originSpanId = originSpanId;
-    }
-
-    public String getOriginSpanType()
-    {
-        return originSpanType;
-    }
-
-    public void setOriginSpanType(String originSpanType)
-    {
-        this.originSpanType = originSpanType;
-    }
-
-    public String getTargetSpanType()
-    {
-        return targetSpanType;
-    }
-
-    public void setTargetSpanType(String targetSpanType)
-    {
-        this.targetSpanType = targetSpanType;
-    }
-
-    public int getTargetSpanId()
-    {
-        return targetSpanId;
-    }
-
-    public void setTargetSpanId(int targetSpanId)
-    {
-        this.targetSpanId = targetSpanId;
-    }
-
-    public int getBeginOffset()
-    {
-        return beginOffset;
-    }
-
-    public void setBeginOffset(int beginOffset)
-    {
-        this.beginOffset = beginOffset;
-    }
-
-    public int getEndOffset()
-    {
-        return endOffset;
-    }
-
-    public void setEndOffset(int endOffset)
-    {
-        this.endOffset = endOffset;
-    }
-
     public String getSelectedText()
     {
         return selectedText;
@@ -473,16 +357,6 @@ public class BratAnnotatorModel
     public void setSelectedAnnotationLayer(AnnotationLayer selectedAnnotationLayer)
     {
         this.selectedAnnotationLayer = selectedAnnotationLayer;
-    }
-
-    public boolean isRelationAnno()
-    {
-        return isRelationAnno;
-    }
-
-    public void setRelationAnno(boolean isRelationAnno)
-    {
-        this.isRelationAnno = isRelationAnno;
     }
 
     public boolean isEllipsis()
@@ -517,9 +391,9 @@ public class BratAnnotatorModel
     {
         // (Re)initialize brat model after potential creating / upgrading CAS
         setSentenceAddress(BratAjaxCasUtil.getFirstSentenceAddress(aJCas));
-        setFirstSentenceAddress(getSentenceAddress());
+        setFirstSentenceAddress(BratAjaxCasUtil.getFirstSentenceAddress(aJCas));
         setLastSentenceAddress(BratAjaxCasUtil.getLastSentenceAddress(aJCas));
-        setWindowSize(5);
+        getPreferences().setWindowSize(5);
 
         Sentence sentence = selectByAddr(aJCas, Sentence.class, getSentenceAddress());
         setSentenceBeginOffset(sentence.getBegin());
