@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.automation.util;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
+import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
@@ -1359,7 +1360,7 @@ public class AutomationUtil
         int end = 0;
         // remove existing annotations of this type, after all it is an
         // automation, no care
-        BratAnnotatorUtility.clearAnnotations(aJcas, type);
+        clearAnnotations(aJcas, type);
 
         if (!aFeature.getLayer().isLockToTokenOffset() || aFeature.getLayer().isMultipleTokens()) {
             for (Token token : select(aJcas, Token.class)) {
@@ -1509,6 +1510,18 @@ public class AutomationUtil
                 status.setAnnoDocs(status.getAnnoDocs() - 1);
             }
         }
+    }
+    
+    public static void clearAnnotations(JCas aJCas, Type aType)
+        throws IOException
+    {
+        List<AnnotationFS> annotationsToRemove = new ArrayList<AnnotationFS>();
+        for (AnnotationFS a : select(aJCas.getCas(), aType)) {
+            annotationsToRemove.add(a);
 
+        }
+        for (AnnotationFS annotation : annotationsToRemove) {
+            aJCas.removeFsFromIndexes(annotation);
+        }
     }
 }
