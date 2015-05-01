@@ -216,10 +216,20 @@ rect.Normalized {
 }
 
 rect.shadow_EditHighlight {
-  fill: #ffff99;
+/*
+WEBANNO EXTENSION BEGIN - Issue #1319 - Glowing highlight causes 100% CPU load
+	fill: #ffff99;
+WEBANNO EXTENSION END - Issue #1319 - Glowing highlight causes 100% CPU load
+*/
+    fill: orange;
 }
 .shadow_EditHighlight_arc {
-  stroke: #ffff99;
+/*
+WEBANNO EXTENSION BEGIN - Issue #1319 - Glowing highlight causes 100% CPU load
+	stroke: #ffff99;
+WEBANNO EXTENSION END - Issue #1319 - Glowing highlight causes 100% CPU load
+*/
+    stroke: orange;
 }
 
 .span path {
