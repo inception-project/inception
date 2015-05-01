@@ -79,24 +79,38 @@ public class BratAjaxCasUtil
     }
 
     /**
-     * Check if the start/end offsets of an annotation belongs to the same sentence.
+     * Check if the two given offsets are within the same sentence.
      *
      * @param aJcas
      *            the JCAs.
-     * @param aStartOffset
-     *            the start offset.
-     * @param aEndOffset
-     *            the end offset.
-     * @return if start and end offsets are within the same sentence.
+     * @param aReferenceOffset
+     *            the reference offset.
+     * @param aCompareOffset
+     *            the comparison offset.
+     * @return if the two offsets are within the same sentence.
      */
-    public static boolean isSameSentence(JCas aJcas, int aStartOffset, int aEndOffset)
+    public static boolean isSameSentence(JCas aJcas, int aReferenceOffset, int aCompareOffset)
     {
-        for (Sentence sentence : select(aJcas, Sentence.class)) {
-            if ((sentence.getBegin() <= aStartOffset && sentence.getEnd() > aStartOffset)
-                    && aEndOffset <= sentence.getEnd()) {
-                return true;
+        // Trivial case
+        if (aReferenceOffset == aCompareOffset) {
+            return true;
+        }
+        
+        // Scanning through sentences
+        Iterator<Sentence> si = JCasUtil.iterator(aJcas, Sentence.class);
+        while (si.hasNext()) {
+            Sentence s = si.next();
+            if (s.getBegin() <= aReferenceOffset && aReferenceOffset <= aCompareOffset) {
+                return s.getBegin() <= aCompareOffset && aCompareOffset <= aCompareOffset;
+            }
+            
+            // Sentences are sorted. When we hit the first sentence that is beyond the reference
+            // offset, we will never again find a sentence that contains it.
+            if (aReferenceOffset < s.getBegin()) {
+                return false;
             }
         }
+        
         return false;
     }
 

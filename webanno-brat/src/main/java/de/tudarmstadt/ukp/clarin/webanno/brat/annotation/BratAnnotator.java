@@ -273,8 +273,7 @@ public class BratAnnotator
 
                                 try {
                                     int id = adapter.add(jCas, offsets.getBegin(),
-                                            offsets.getEnd(), null, null, getModelObject()
-                                                    .isEllipsis());
+                                            offsets.getEnd(), null, null);
                                     aAnnotationDetailEditorPanel.setSlot(aTarget, jCas,
                                             getModelObject(), id);
                                 }
@@ -429,11 +428,6 @@ public class BratAnnotator
             int annotationBegin = sentence.getBegin() + offsetLists.get(0).getBegin();
             int annotationEnd = sentence.getBegin()
                     + offsetLists.get(offsetLists.size() - 1).getEnd();
-            if (getModelObject().isEllipsis()) {
-                Sentence ellipsisSentence = BratAjaxCasUtil.getCurrentSentence(jCas,
-                        annotationBegin, annotationEnd);
-                return new Offsets(ellipsisSentence.getBegin(), ellipsisSentence.getBegin());
-            }
             return new Offsets(annotationBegin, annotationEnd);
         }
         else {

@@ -333,16 +333,6 @@ public class BratAnnotatorModel
         this.selectedAnnotationLayer = selectedAnnotationLayer;
     }
 
-    public boolean isEllipsis()
-    {
-        return ellipsis;
-    }
-
-    public void setEllipsis(boolean ellipsis)
-    {
-        this.ellipsis = ellipsis;
-    }
-
     public boolean isForwardAnnotation()
     {
         return forwardAnnotation;

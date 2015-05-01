@@ -132,7 +132,7 @@ public class AutomationUtil
                             aFeature.getLayer());
                     Object value = aModel.getRememberedSpanFeatures().get(aFeature);
                     adapter.add(jCas, sentence.getBegin() + i, sentence.getBegin() + i
-                            + selectedText.length() - 1, aFeature, value,false);
+                            + selectedText.length() - 1, aFeature, value);
 
                 }
             }

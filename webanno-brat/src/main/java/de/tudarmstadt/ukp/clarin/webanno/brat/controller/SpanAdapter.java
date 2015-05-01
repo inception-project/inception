@@ -338,17 +338,9 @@ public class SpanAdapter
      * @throws BratAnnotationException
      *             if the annotation cannot be created/updated.
      */
-    public Integer add(JCas aJcas, int aBegin, int aEnd, AnnotationFeature aFeature, Object aValue,
-            boolean aEllipsis)
+    public Integer add(JCas aJcas, int aBegin, int aEnd, AnnotationFeature aFeature, Object aValue)
         throws BratAnnotationException
     {
-
-        if (aEllipsis) {
-            // make sure ellipsis annotation is made on the sentence beginning.
-            Sentence ellipsisSentence = BratAjaxCasUtil.getCurrentSentence(aJcas, aBegin, aEnd);
-            return updateCas(aJcas.getCas(), ellipsisSentence.getBegin(),
-                    ellipsisSentence.getBegin(), aFeature, aValue);
-        }
         if (crossMultipleSentence || isSameSentence(aJcas, aBegin, aEnd)) {
             if (lockToTokenOffsets) {
                 List<Token> tokens = selectOverlapping(aJcas, Token.class, aBegin, aEnd);

@@ -47,11 +47,28 @@ image::annotation3.jpg[align="center"]
 
 The arrow buttons *first page*, *next page*, *previous page*, *last page*, and *go to page* allow you to navigate accordingly. The *Prev.* and *Next* buttons in the *Document* frame allow you to go to the previous or next document on your project list. You can also use the following keyboard assignments in order to navigate only using your keyboard.
 
-  * *HOME*: jump to first sentence
-  * *END*: jump to last sentence
-  * *PAGE DOWN*: move to the next page, if not in the last page already
-  * *PAGE UP*: move to previous page , if not already in the first page
-  * *SHIFT+PgUp* and *SHIFT+PgDn*: go to previous/next document in project, if available
+.Navigation key bindings
+|====
+| Key | Action |
+
+| *HOME*
+| jump to first sentence
+
+| *END*
+| jump to last sentence
+
+| *PAGE DOWN*
+| move to the next page, if not in the last page already
+
+| *PAGE UP*
+| move to previous page, if not already in the first page
+
+| *SHIFT+PAGE DOWN*
+| go to next document in project, if available
+
+| *SHIFT+PAGE UP* 
+| go to previous document in project, if available
+|====
 
 A click on the *Help* button displays the Guidelines for the tool and *The Annotator's Guide to NER-Annotation*.
 When you are finished with annotating or curating a document, please click on the *Done*
@@ -82,10 +99,28 @@ The document will be saved to your local disk, and can be re-imported via adding
 
 === Making annotations
 
-Concerning annotation, WebAnno offers six pre-defined layers:
-Span annotations support NE, lemma, POS, and co-referance. Several annotation layers may be selected. 
+To create annotations in WebAnno, you have mainly two options:
 
-Moreover, additional custom layers may be created, as described in <<sect_projects_layers>> in detail.
+* select a span of text to create a span annotation
+* click on an existing span annotation and drag an arc to another span annotation
+
+The definition of layers is covered in section <<sect_projects_layers>>.
+
+==== Spans
+
+To create an annotation over a span of text, click with the mouse on the text and drag the mouse to
+create a selection. When you release the mouse, the annotation detail editor is updated to display
+the text you have currently selected and to offer a choice on which layer the annotation is to be
+created. The annotation is finally created when you press the *Create* button.
+
+To avoid accidental creations of zero-length annotations, a simple single-click triggers no action
+by default. To create a zero-length annotation, hold *SHIFT* and click on the position where you
+wish to create the annotation.
+
+To abort the creation of an annotation, hold *CTRL* when you release the mouse button.
+
+Depending on the layer behavior configuration, spans annotations can have any length, can overlap,
+can stack, can nest, and can cross sentence boundaries. 
 
 For example, for NE annotation, select the options as shown below (red check mark):
 
@@ -105,11 +140,62 @@ image::annotation_pos.jpg[align="center"]
 
 link:http://en.wikipedia.org/wiki/Coreference[Co-reference] annotation can be made over several tokens within one sentence. A single token sequence have several co-ref spans simultaneously.
 
-// FIXME Make examples 
+==== Relations
 
-The other kind of annotation that is supported by WebAnno is Arc. The arcs can be made within one sentence and their types are chosen out of a tagset. Dependency arcs are defined between POS. Every POS is allowed to have only one head. Co-reference arcs are defined between co-reference-anchors. All transitively combined anchors build a colour-coded lexical chain.
+To create a relation annotation, click on a span annotation and drag the mouse to another span
+annotation. While you drag, an arc is drawn. It is not possible to create arbitrary relation 
+annotations. In order to create one, a corresponding relation layer needs to be defined between
+the source and target spans.
+
+To abort the creation of an annotation, hold *CTRL* when you release the mouse button.
+
+Depending on the layer behavior configuration, relation annotations can stack, can cross each other,
+cross sentence boundaries. 
+
+NOTE: Currently, there can be at most one relation layer per span layer and relation between spans
+      of different layers are not supported.
+
+NOTE: A special behavior for the built-in *Dependency* layer is the handling of the dependency 
+      root. To mark a token as the *ROOT* of the dependency tree, create a dependency relation from
+      the POS tag a to itself (a circle). This behavior is not active for custom relation layers!
+
+NOTE: Not all arcs displayed in the annotation view are belonging to chain or relation layers. Some
+      are induced by <<sect_annotation_link_features>>.
 
 image::annotation_span_many.jpg[align="center"]
+
+==== Chains
+
+A chain layer includes both, span and relation annotations into a single structural layer. Creating
+a span annotation in a chain layer basically creates a chain of length one. Creating a relation 
+between two chain elements has different effects depending on whether the *linked list* behavior
+is enabled for the chain layer or not.
+
+To abort the creation of an annotation, hold *CTRL* when you release the mouse button.
+
+.Chain behavior
+|====
+| Linked List | Condition | Result
+
+| disabled
+| the two spans are already in the same chain
+| nothing happens
+
+| disabled
+| the two spans are in different chains
+| the two chains are merged FIXME
+
+| enabled
+| the two spans are already in the same chains
+| the chain will be re-linked such that a chain link points from the source to the target span, 
+  potentially creating new chains in the process.
+
+| enabled
+| the two spans are in different chains
+| the chains will be re-linked such that a chain link points from the source to the target span, 
+  merging the two chains and potentially creating new chains from the remaining prefix and suffix
+  of the original chains.
+|====
 
 ==== Primitive features
 
@@ -118,6 +204,7 @@ Boolean features are displayed as a checkbox that can either be marked or unmark
 float features are displayed using a number field. String features are displayed using a text field
 or - in case they have a tagset - using a combobox.
 
+[[sect_annotation_link_features]]
 ==== Link features
 
 Link features can be used to link one annotation to others. Before a link can be made, a slot with 

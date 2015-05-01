@@ -122,7 +122,6 @@ public class AnnotationDetailEditorPanel
 
     private AnnotationFeatureForm annotationFeatureForm;
     private Label selectedTextLabel;
-    private CheckBox ellipsis;
     private CheckBox forwardAnnotation;
     @SuppressWarnings("unused")
     private DropDownChoice<AnnotationLayer> layers;
@@ -167,36 +166,6 @@ public class AnnotationDetailEditorPanel
                     "selection.text"));
             selectedTextLabel.setOutputMarkupId(true);
             add(selectedTextLabel);
-
-            add(ellipsis = new CheckBox("ellipsis")
-            {
-                private static final long serialVersionUID = 8908304272310098353L;
-
-                @Override
-                protected void onConfigure()
-                {
-                    super.onConfigure();
-
-                    BratAnnotatorModel model = AnnotationFeatureForm.this.getModelObject();
-
-                    setEnabled(model.getSelectedAnnotationLayer() != null
-                            && model.getSelectedAnnotationLayer().getType()
-                                    .equals(WebAnnoConst.SPAN_TYPE));
-
-                }
-            });
-            ellipsis.add(new AjaxFormComponentUpdatingBehavior("onchange")
-            {
-                private static final long serialVersionUID = 5179816588460867471L;
-
-                @Override
-                protected void onUpdate(AjaxRequestTarget aTarget)
-                {
-                    getModelObject().setEllipsis(getModelObject().isEllipsis());
-                }
-            });
-
-            ellipsis.setOutputMarkupId(true);
 
             add(forwardAnnotation = new CheckBox("forwardAnnotation")
             {
@@ -275,14 +244,6 @@ public class AnnotationDetailEditorPanel
                         return;
                     }
 
-                    if (!model.getSelection().isRelationAnno()
-                            && StringUtils.isEmpty(model.getSelection().getText())
-                            && !model.isEllipsis()) {
-                        error("There is no text selected to annotate");
-                        LOG.error("There is no text selected to annotate");
-                        return;
-                    }
-
                     try {
                         actionAnnotate(aTarget, model);
                     }
@@ -303,10 +264,7 @@ public class AnnotationDetailEditorPanel
 
                     BratAnnotatorModel model = AnnotationFeatureForm.this.getModelObject();
 
-                    setEnabled((StringUtils.isNotEmpty(model.getSelection().getText())
-                            || (model.isEllipsis()) || model.getSelection().isRelationAnno())
-                            && model.getSelection().getAnnotation().isNotSet());
-
+                    setEnabled(model.getSelection().getAnnotation().isNotSet());
                 }
             };
 
@@ -441,10 +399,8 @@ public class AnnotationDetailEditorPanel
                 selection.setBegin(originFs.getBegin());
             }
             else if (adapter instanceof SpanAdapter) {
-                selection
-                        .setAnnotation(new VID(((SpanAdapter) adapter).add(jCas,
-                                selection.getBegin(), selection.getEnd(), null, null,
-                                aBModel.isEllipsis())));
+                selection.setAnnotation(new VID(((SpanAdapter) adapter).add(jCas,
+                        selection.getBegin(), selection.getEnd(), null, null)));
             }
             else {
                 selection.setAnnotation(new VID(((ChainAdapter) adapter).addSpan(jCas,
@@ -1499,7 +1455,6 @@ public class AnnotationDetailEditorPanel
 
                     aTarget.add(wmc);
                     aTarget.add(annotateButton);
-                    aTarget.add(ellipsis);
                 }
             });
         }

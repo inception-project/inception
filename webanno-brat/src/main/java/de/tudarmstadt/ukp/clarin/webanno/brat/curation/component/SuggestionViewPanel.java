@@ -283,7 +283,7 @@ public class SuggestionViewPanel
 
         // Add annotation - we set no feature values yet.
         int selectedSpanId = adapter.add(aMergeJCas, fsClicked.getBegin(), fsClicked.getEnd(),
-                null, null, aBModel.isEllipsis());
+                null, null);
 
         // Set the feature values
         for (AnnotationFeature feature : annotationService.listAnnotationFeature(layer)) {
