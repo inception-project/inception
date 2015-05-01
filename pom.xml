@@ -29,7 +29,7 @@
   </licenses>
 	<properties>
 		<jackson.version>1.9.6</jackson.version>
-		<uima.version>2.6.0</uima.version>
+		<uima.version>2.7.0</uima.version>
 		<uimafit.version>2.1.0</uimafit.version>
 		<spring.version>3.1.4.RELEASE</spring.version>
 		<spring.security.version>3.1.4.RELEASE</spring.security.version>
