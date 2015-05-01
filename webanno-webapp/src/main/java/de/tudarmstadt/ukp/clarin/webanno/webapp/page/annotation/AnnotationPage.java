@@ -86,9 +86,6 @@ public class AnnotationPage
 
     private static final long serialVersionUID = 1378872465851908515L;
 
-    @SpringBean(name = "jsonConverter")
-    private MappingJacksonHttpMessageConverter jsonConverter;
-
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
 

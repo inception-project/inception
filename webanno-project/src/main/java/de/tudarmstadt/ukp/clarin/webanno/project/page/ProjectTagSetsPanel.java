@@ -90,9 +90,6 @@ public class ProjectTagSetsPanel
     @SpringBean(name = "userRepository")
     private UserDao userRepository;
 
-    @SpringBean(name = "jsonConverter")
-    private MappingJacksonHttpMessageConverter jsonConverter;
-
     private List<FileUpload> uploadedFiles;
     private FileUploadField fileUpload;
     DropDownChoice<String> importTagsetFormat;
@@ -271,9 +268,8 @@ public class ProjectTagSetsPanel
                                 tagInputStream = tagFile.getInputStream();
                                 String text = IOUtils.toString(tagInputStream, "UTF-8");
 
-                                MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
-                                TagSet importedTagSet = jsonConverter.getObjectMapper().readValue(
-                                        text, TagSet.class);
+                                TagSet importedTagSet = JSONUtil.getJsonConverter()
+                                        .getObjectMapper().readValue(text, TagSet.class);
                                 createTagSet(project, user, importedTagSet);
 
                             }
@@ -529,7 +525,7 @@ public class ProjectTagSetsPanel
                             exTagSet.setTags(exportedTags);
 
                             try {
-                                JSONUtil.generateJson(jsonConverter, exTagSet, exportFile);
+                                JSONUtil.generateJson(exTagSet, exportFile);
                             }
                             catch (IOException e) {
                                 error("File Path not found or No permision to save the file!");

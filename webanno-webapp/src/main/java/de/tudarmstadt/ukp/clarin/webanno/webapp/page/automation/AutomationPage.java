@@ -114,9 +114,6 @@ public class AutomationPage
 
     private static final long serialVersionUID = 1378872465851908515L;
 
-    @SpringBean(name = "jsonConverter")
-    private MappingJacksonHttpMessageConverter jsonConverter;
-
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
 
@@ -187,7 +184,7 @@ public class AutomationPage
 
                     CuratorUtil.updatePanel(aTarget, this, curationContainer, mergeVisualizer,
                             repository, annotationSelectionByUsernameAndAddress, curationSegment,
-                            annotationService, userRepository, jsonConverter);
+                            annotationService, userRepository);
                 }
                 catch (UIMAException e) {
                     error(ExceptionUtils.getRootCause(e));
@@ -267,7 +264,7 @@ public class AutomationPage
 
                     CuratorUtil.updatePanel(aTarget, automateView, curationContainer, this,
                             repository, annotationSelectionByUsernameAndAddress, curationSegment,
-                            annotationService, userRepository, jsonConverter);
+                            annotationService, userRepository);
                     aTarget.add(automateView);
                     aTarget.add(numberOfPages);
                 }
@@ -1213,7 +1210,7 @@ public class AutomationPage
         try {
             CuratorUtil.updatePanel(target, automateView, curationContainer, mergeVisualizer,
                     repository, annotationSelectionByUsernameAndAddress, curationSegment,
-                    annotationService, userRepository, jsonConverter);
+                    annotationService, userRepository);
 
             jCas = repository.readCorrectionCas(bratAnnotatorModel.getDocument());
         }

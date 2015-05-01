@@ -119,9 +119,6 @@ public class ProjectExportPanel extends Panel {
 	@SpringBean(name = "userRepository")
 	private UserDao userRepository;
 
-    @SpringBean(name = "jsonConverter")
-    private MappingJacksonHttpMessageConverter jsonConverter;
-
 	private int progress = 0;
 	private ProgressBar fileGenerationProgress;
 	@SuppressWarnings("unused")
@@ -682,7 +679,7 @@ public class ProjectExportPanel extends Panel {
             exProjekt.setMiraTemplates(exTemplates);
 
             try {
-                JSONUtil.generateJson(jsonConverter, exProjekt, aProjectSettings);
+                JSONUtil.generateJson(exProjekt, aProjectSettings);
                 FileUtils.copyFileToDirectory(aProjectSettings, aExportTempDir);
             }
             catch (IOException e) {

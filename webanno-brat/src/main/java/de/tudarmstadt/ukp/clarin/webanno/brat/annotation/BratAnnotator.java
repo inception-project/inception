@@ -89,6 +89,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.resource.WebfontResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
@@ -116,9 +117,6 @@ public class BratAnnotator
 
     private static final String GHOST_PLACE_HOLDER = "###";
     private static final String GHOST_COLOR = "orange";
-
-    @SpringBean(name = "jsonConverter")
-    private MappingJacksonHttpMessageConverter jsonConverter;
 
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
@@ -423,8 +421,8 @@ public class BratAnnotator
         if (aVid.isNotSet()) {
             // Create new span annotation
             String offsets = request.getParameterValue(PARAM_OFFSETS).toString();
-            OffsetsList offsetLists = jsonConverter.getObjectMapper().readValue(offsets,
-                    OffsetsList.class);
+            OffsetsList offsetLists = JSONUtil.getJsonConverter().getObjectMapper()
+                    .readValue(offsets, OffsetsList.class);
             Sentence sentence = BratAjaxCasUtil.selectSentenceAt(jCas, getModelObject()
                     .getSentenceBeginOffset(), getModelObject().getSentenceEndOffset());
             // if ellipsis annotation, add ellipsis at the beginning of the sentences
@@ -714,7 +712,7 @@ public class BratAnnotator
         StringWriter out = new StringWriter();
         JsonGenerator jsonGenerator = null;
         try {
-            jsonGenerator = jsonConverter.getObjectMapper().getJsonFactory()
+            jsonGenerator = JSONUtil.getJsonConverter().getObjectMapper().getJsonFactory()
                     .createJsonGenerator(out);
             jsonGenerator.writeObject(result);
         }

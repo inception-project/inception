@@ -27,6 +27,7 @@ import org.codehaus.jackson.JsonGenerator;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 
 /**
  * Displays a BRAT visualization and fills it with data from an BRAT object model.
@@ -41,9 +42,6 @@ public class BratModelVisualizer
 	private boolean dirty = true;
 
 	private String docData = EMPTY_DOC;
-
-    @SpringBean(name = "jsonConverter")
-    private MappingJacksonHttpMessageConverter jsonConverter;
 
 	public BratModelVisualizer(String id, IModel<GetDocumentResponse> aModel)
 	{
@@ -92,8 +90,8 @@ public class BratModelVisualizer
         // Serialize BRAT object model to JSON
 		try {
 			StringWriter out = new StringWriter();
-			JsonGenerator jsonGenerator = jsonConverter.getObjectMapper().getJsonFactory()
-					.createJsonGenerator(out);
+            JsonGenerator jsonGenerator = JSONUtil.getJsonConverter().getObjectMapper()
+                    .getJsonFactory().createJsonGenerator(out);
 	        jsonGenerator.writeObject(response);
 			docData = out.toString();
 		}

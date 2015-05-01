@@ -71,6 +71,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
@@ -206,7 +207,6 @@ public class CuratorUtil
             BratAnnotatorModel aBratAnnotatorModel,
             final List<AnnotationOption> aAnnotationOptions,
             Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
-            MappingJacksonHttpMessageConverter aJsonConverter,
             AnnotationService aAnnotationService, CurationContainer aCurationContainer)
         throws IOException
     {
@@ -277,10 +277,10 @@ public class CuratorUtil
 
                 // Create curation view for the current user
                 CurationUserSegmentForAnnotationDocument curationUserSegment2 = new CurationUserSegmentForAnnotationDocument();
-                curationUserSegment2.setCollectionData(getCollectionInformation(aJsonConverter,
+                curationUserSegment2.setCollectionData(getCollectionInformation(
                         aAnnotationService, aCurationContainer));
                 curationUserSegment2.setDocumentResponse(render(jCas, aAnnotationService,
-                        aBratAnnotatorModel, aJsonConverter, curationColoringStrategy));
+                        aBratAnnotatorModel, curationColoringStrategy));
                 curationUserSegment2.setUsername(username);
                 curationUserSegment2.setBratAnnotatorModel(aBratAnnotatorModel);
                 curationUserSegment2
@@ -292,7 +292,6 @@ public class CuratorUtil
 
     private static String render(JCas aJcas, AnnotationService aAnnotationService,
             BratAnnotatorModel aBratAnnotatorModel,
-            MappingJacksonHttpMessageConverter aJsonConverter,
             ColoringStrategy aCurationColoringStrategy)
         throws IOException
     {
@@ -323,15 +322,14 @@ public class CuratorUtil
         }
 
         StringWriter out = new StringWriter();
-        JsonGenerator jsonGenerator = aJsonConverter.getObjectMapper().getJsonFactory()
+        JsonGenerator jsonGenerator = JSONUtil.getJsonConverter().getObjectMapper().getJsonFactory()
                 .createJsonGenerator(out);
         jsonGenerator.writeObject(response);
         return out.toString();
     }
 
-    private static String getCollectionInformation(
-            MappingJacksonHttpMessageConverter aJsonConverter,
-            AnnotationService aAnnotationService, CurationContainer aCurationContainer)
+    private static String getCollectionInformation(AnnotationService aAnnotationService,
+            CurationContainer aCurationContainer)
         throws IOException
     {
         GetCollectionInformationResponse info = new GetCollectionInformationResponse();
@@ -339,7 +337,7 @@ public class CuratorUtil
                 .getBratAnnotatorModel().getAnnotationLayers(), aAnnotationService));
 
         StringWriter out = new StringWriter();
-        JsonGenerator jsonGenerator = aJsonConverter.getObjectMapper().getJsonFactory()
+        JsonGenerator jsonGenerator = JSONUtil.getJsonConverter().getObjectMapper().getJsonFactory()
                 .createJsonGenerator(out);
         jsonGenerator.writeObject(info);
         return out.toString();
@@ -454,7 +452,7 @@ public class CuratorUtil
             RepositoryService aRepository,
             Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
             CurationViewForSourceDocument aCurationSegment, AnnotationService aAnnotationService,
-            UserDao aUserDao, MappingJacksonHttpMessageConverter aJsonConverter)
+            UserDao aUserDao)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
         SourceDocument sourceDocument = aCurationContainer.getBratAnnotatorModel().getDocument();
@@ -490,7 +488,7 @@ public class CuratorUtil
         BratAnnotatorModel bratAnnotatorModel = aCurationContainer.getBratAnnotatorModel();
 
         CuratorUtil.populateCurationSentences(jCases, sentences, bratAnnotatorModel,
-                annotationOptions, aAnnotationSelectionByUsernameAndAddress, aJsonConverter,
+                annotationOptions, aAnnotationSelectionByUsernameAndAddress,
                 aAnnotationService, aCurationContainer);
 
         // update sentence list on the right side

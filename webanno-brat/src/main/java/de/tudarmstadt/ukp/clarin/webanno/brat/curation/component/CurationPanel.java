@@ -65,6 +65,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.SentenceS
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.SuggestionBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.CuratorUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
@@ -80,9 +81,6 @@ public class CurationPanel
     private static final long serialVersionUID = -5128648754044819314L;
 
     private static final Log LOG = LogFactory.getLog(CurationPanel.class);
-
-    @SpringBean(name = "jsonConverter")
-    private MappingJacksonHttpMessageConverter jsonConverter;
 
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
@@ -184,7 +182,7 @@ public class CurationPanel
 
                     CuratorUtil.updatePanel(aTarget, this, curationContainer, mergeVisualizer,
                             repository, annotationSelectionByUsernameAndAddress, curationView,
-                            annotationService, userRepository, jsonConverter);
+                            annotationService, userRepository);
 
                     mergeVisualizer.bratRenderLater(aTarget);
                     textOuterView.addOrReplace(textListView);
@@ -266,7 +264,7 @@ public class CurationPanel
 
                     CuratorUtil.updatePanel(aTarget, suggestionViewPanel, curationContainer, this,
                             repository, annotationSelectionByUsernameAndAddress, curationView,
-                            annotationService, userRepository, jsonConverter);
+                            annotationService, userRepository);
                     textOuterView.addOrReplace(textListView);
                     aTarget.add(textOuterView);
                 }
@@ -350,7 +348,7 @@ public class CurationPanel
                             CuratorUtil.updatePanel(aTarget, suggestionViewPanel, curationContainer,
                                     mergeVisualizer, repository,
                                     annotationSelectionByUsernameAndAddress, curationView,
-                                    annotationService, userRepository, jsonConverter);
+                                    annotationService, userRepository);
 
                             List<CurationViewForSourceDocument> views = curationContainer
                                     .getCurationViews();

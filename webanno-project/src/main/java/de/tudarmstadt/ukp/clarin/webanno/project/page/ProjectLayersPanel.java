@@ -110,9 +110,6 @@ public class ProjectLayersPanel
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
 
-    @SpringBean(name = "jsonConverter")
-    private MappingJacksonHttpMessageConverter jsonConverter;
-
     @SpringBean(name = "userRepository")
     private UserDao userRepository;
 
@@ -339,8 +336,8 @@ public class ProjectLayersPanel
                             tagInputStream = tagFile.getInputStream();
                             String text = IOUtils.toString(tagInputStream, "UTF-8");
 
-                            MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
-                            de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer exLayer = jsonConverter
+                            de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer exLayer = JSONUtil
+                                    .getJsonConverter()
                                     .getObjectMapper()
                                     .readValue(
                                             text,
@@ -910,7 +907,7 @@ public class ProjectLayersPanel
                     }
 
                     try {
-                        JSONUtil.generateJson(jsonConverter, exLayer, exportFile);
+                        JSONUtil.generateJson(exLayer, exportFile);
                     }
                     catch (IOException e) {
                         error("File Path not found or No permision to save the file!");

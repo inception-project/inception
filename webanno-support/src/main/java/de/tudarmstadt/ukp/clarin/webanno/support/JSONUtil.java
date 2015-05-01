@@ -22,8 +22,11 @@ import java.io.IOException;
 import java.io.StringWriter;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.wicket.Application;
 import org.codehaus.jackson.JsonGenerator;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.support.spring.ApplicationContextProvider;
 
 public class JSONUtil
 {
@@ -44,6 +47,12 @@ public class JSONUtil
         FileUtils.writeStringToFile(aFile, toJsonString(jsonConverter, aObject));
     }
 
+    public static void generateJson(Object aObject, File aFile)
+        throws IOException
+    {
+        FileUtils.writeStringToFile(aFile, toJsonString(aObject));
+    }
+
     public static String toJsonString(MappingJacksonHttpMessageConverter jsonConverter,
             Object aObject)
         throws IOException
@@ -55,5 +64,17 @@ public class JSONUtil
 
         jsonGenerator.writeObject(aObject);
         return out.toString();
+    }
+
+    public static String toJsonString(Object aObject)
+        throws IOException
+    {
+        return toJsonString(getJsonConverter(), aObject);
+    }
+    
+    public static MappingJacksonHttpMessageConverter getJsonConverter()
+    {
+        return ApplicationContextProvider.getApplicationContext().getBean("jsonConverter",
+                MappingJacksonHttpMessageConverter.class);
     }
 }

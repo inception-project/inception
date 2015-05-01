@@ -82,6 +82,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.home.page.ApplicationPageBase;
 
 /**
@@ -606,9 +607,10 @@ public class ProjectPage
                 // projectInputStream =
                 // uploadedFile.getInputStream();
                 String text = IOUtils.toString(projectInputStream, "UTF-8");
-                MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
-                de.tudarmstadt.ukp.clarin.webanno.model.export.Project importedProjectSetting = jsonConverter
-                        .getObjectMapper().readValue(text,
+                de.tudarmstadt.ukp.clarin.webanno.model.export.Project importedProjectSetting = JSONUtil
+                        .getJsonConverter()
+                        .getObjectMapper()
+                        .readValue(text,
                                 de.tudarmstadt.ukp.clarin.webanno.model.export.Project.class);
 
                 importedProject = ImportUtil.createProject(importedProjectSetting, repository,

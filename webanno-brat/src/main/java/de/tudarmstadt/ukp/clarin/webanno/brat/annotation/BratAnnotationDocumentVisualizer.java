@@ -43,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
@@ -61,9 +62,6 @@ public class BratAnnotationDocumentVisualizer
     private boolean dirty = true;
 
     private String docData = EMPTY_DOC;
-
-    @SpringBean(name = "jsonConverter")
-    private MappingJacksonHttpMessageConverter jsonConverter;
 
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
@@ -165,8 +163,8 @@ public class BratAnnotationDocumentVisualizer
         // Serialize BRAT object model to JSON
         try {
             StringWriter out = new StringWriter();
-            JsonGenerator jsonGenerator = jsonConverter.getObjectMapper().getJsonFactory()
-                    .createJsonGenerator(out);
+            JsonGenerator jsonGenerator = JSONUtil.getJsonConverter().getObjectMapper()
+                    .getJsonFactory().createJsonGenerator(out);
             jsonGenerator.writeObject(response);
             docData = out.toString();
         }
