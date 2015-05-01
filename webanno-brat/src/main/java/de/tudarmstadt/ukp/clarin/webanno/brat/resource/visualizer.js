@@ -1758,6 +1758,8 @@ Util.profileStart('chunks');
                   rx: markedSpanSize,
                   ry: markedSpanSize,
               });
+// WEBANNO EXTENSION BEGIN - Issue #1319 - Glowing highlight causes 100% CPU load
+/*
               svg.other(markedRect, 'animate', {
                 'data-type': span.marked,
                 attributeName: 'fill',
@@ -1767,6 +1769,8 @@ Util.profileStart('chunks');
                 repeatCount: 'indefinite',
                 begin: 'indefinite'
               });
+*/
+// WEBANNO EXTENSION END - Issue #1319 - Glowing highlight causes 100% CPU load
               chunkFrom = Math.min(bx - markedSpanSize, chunkFrom);
               chunkTo = Math.max(bx + bw + markedSpanSize, chunkTo);
               fragmentHeight = Math.max(bh + 2 * markedSpanSize, fragmentHeight);
@@ -2635,6 +2639,8 @@ Util.profileStart('arcs');
                       rx: markedArcSize,
                       ry: markedArcSize,
                 });
+// WEBANNO EXTENSION BEGIN - Issue #1319 - Glowing highlight causes 100% CPU load
+/*                
                 svg.other(markedRect, 'animate', {
                   'data-type': arc.marked,
                   attributeName: 'fill',
@@ -2644,6 +2650,8 @@ Util.profileStart('arcs');
                   repeatCount: 'indefinite',
                   begin: 'indefinite'
                 });
+*/
+// WEBANNO EXTENSION END - Issue #1319 - Glowing highlight causes 100% CPU load
               }
               if (arc.shadowClass) {
                 svg.rect(shadowGroup,
@@ -2759,6 +2767,8 @@ Util.profileStart('arcs');
                     strokeWidth: markedArcStroke,
                     'strokeDashArray': dashArray,
                 });
+// WEBANNO EXTENSION BEGIN - Issue #1319 - Glowing highlight causes 100% CPU load
+/*                
                 svg.other(markedRect, 'animate', {
                   'data-type': arc.marked,
                   attributeName: 'fill',
@@ -2768,6 +2778,8 @@ Util.profileStart('arcs');
                   repeatCount: 'indefinite',
                   begin: 'indefinite'
                 });
+*/                
+// WEBANNO EXTENSION END - Issue #1319 - Glowing highlight causes 100% CPU load
               }
               if (arc.shadowClass) {
                 svg.path(shadowGroup, path, {
@@ -3260,6 +3272,8 @@ Util.profileStart('chunkFinish');
           // different-colored highlights
           // TODO: entirely different settings for non-animations?
           var markedType = textRowDesc[3];
+// WEBANNO EXTENSION BEGIN - Issue #1319 - Glowing highlight causes 100% CPU load
+/*          
           svg.other(textHighlight, 'animate', {
             'data-type': markedType,
             attributeName: 'fill',
@@ -3269,6 +3283,8 @@ Util.profileStart('chunkFinish');
             repeatCount: 'indefinite',
             begin: 'indefinite'
           });
+*/          
+// WEBANNO EXTENSION END - Issue #1319 - Glowing highlight causes 100% CPU load
         });
 
 
