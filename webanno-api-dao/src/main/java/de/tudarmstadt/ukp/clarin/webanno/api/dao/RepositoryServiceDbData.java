@@ -1943,6 +1943,8 @@ public class RepositoryServiceDbData
         else if (aMode.equals(Mode.CURATION) || aMode.equals(Mode.CURATION_MERGE)) {
             writeCurationCas(aJcas, aSourceDocument, aUser);
         }
+        
+        updateTimeStamp(aSourceDocument, aUser, aMode);
     }
 
     /**
@@ -1998,9 +2000,8 @@ public class RepositoryServiceDbData
         return jCas;
     }
 
-    @Override
     @Transactional
-    public void updateTimeStamp(SourceDocument aDocument, User aUser, Mode aMode)
+    private void updateTimeStamp(SourceDocument aDocument, User aUser, Mode aMode)
         throws IOException
     {
         if (aMode.equals(Mode.CURATION)) {

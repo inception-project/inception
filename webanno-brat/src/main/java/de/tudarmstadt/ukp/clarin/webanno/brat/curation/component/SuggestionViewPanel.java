@@ -302,7 +302,6 @@ public class SuggestionViewPanel
         // update timestamp
         int sentenceNumber = getSentenceNumber(clickedJCas, fsClicked.getBegin());
         aBModel.getDocument().setSentenceAccessed(sentenceNumber);
-        repository.updateTimeStamp(aBModel.getDocument(), aBModel.getUser(), aBModel.getMode());
 
         if (aBModel.getPreferences().isScrollPage()) {
             int address = getAddr(selectSentenceAt(clickedJCas, aBModel.getSentenceBeginOffset(),
@@ -411,9 +410,6 @@ public class SuggestionViewPanel
             int sentenceNumber = getSentenceNumber(clickedJCas, originFs.getBegin());
             aCurationUserSegment.getBratAnnotatorModel().getDocument()
                     .setSentenceAccessed(sentenceNumber);
-            repository.updateTimeStamp(aCurationUserSegment.getBratAnnotatorModel().getDocument(),
-                    aCurationUserSegment.getBratAnnotatorModel().getUser(), aCurationUserSegment
-                            .getBratAnnotatorModel().getMode());
         }
         catch (IOException e) {
             throw new IOException();

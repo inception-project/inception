@@ -477,10 +477,9 @@ public class AnnotationDetailEditorPanel
                     .getId(), fm.value);
         }
 
-        // update timestamp now
+        // Update progress information
         int sentenceNumber = getSentenceNumber(jCas, aBModel.getSelection().getBegin());
         aBModel.getDocument().setSentenceAccessed(sentenceNumber);
-        repository.updateTimeStamp(aBModel.getDocument(), aBModel.getUser(), aBModel.getMode());
 
         // persist changes
         repository.writeCas(aBModel.getMode(), aBModel.getDocument(), aBModel.getUser(), jCas);
@@ -658,10 +657,9 @@ public class AnnotationDetailEditorPanel
         // Store CAS again
         repository.writeCas(aBModel.getMode(), aBModel.getDocument(), aBModel.getUser(), jCas);
 
-        // Update timestamp now
+        // Update progress information
         int sentenceNumber = getSentenceNumber(jCas, aBModel.getSelection().getBegin());
         aBModel.getDocument().setSentenceAccessed(sentenceNumber);
-        repository.updateTimeStamp(aBModel.getDocument(), aBModel.getUser(), aBModel.getMode());
 
         // Auto-scroll
         if (aBModel.getPreferences().isScrollPage()) {
@@ -717,7 +715,6 @@ public class AnnotationDetailEditorPanel
         repository.writeCas(aBModel.getMode(), aBModel.getDocument(), aBModel.getUser(), jCas);
         int sentenceNumber = getSentenceNumber(jCas, originFs.getBegin());
         aBModel.getDocument().setSentenceAccessed(sentenceNumber);
-        repository.updateTimeStamp(aBModel.getDocument(), aBModel.getUser(), aBModel.getMode());
 
         if (aBModel.getPreferences().isScrollPage()) {
             autoScroll(jCas, aBModel);

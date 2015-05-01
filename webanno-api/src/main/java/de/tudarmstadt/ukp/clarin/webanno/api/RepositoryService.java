@@ -1057,9 +1057,6 @@ public interface RepositoryService
     void writeCas(Mode mode, SourceDocument document, User user, JCas jCas)
         throws IOException;
 
-    void updateTimeStamp(SourceDocument document, User user, Mode mode)
-        throws IOException;
-
     /**
      * Get the name of the database driver in use.
      * 
