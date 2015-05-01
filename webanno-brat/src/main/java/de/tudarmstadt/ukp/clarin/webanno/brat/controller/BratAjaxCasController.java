@@ -202,7 +202,8 @@ public class BratAjaxCasController
                 continue;
             }
 
-            ColoringStrategy coloringStrategy = ColoringStrategy.getBestStrategy(layer, aBModel, i);
+            ColoringStrategy coloringStrategy = ColoringStrategy.getBestStrategy(layer,
+                    aBModel.getPreferences(), i);
 
             List<AnnotationFeature> features = aAnnotationService.listAnnotationFeature(layer);
             List<AnnotationFeature> invisibleFeatures = new ArrayList<AnnotationFeature>();

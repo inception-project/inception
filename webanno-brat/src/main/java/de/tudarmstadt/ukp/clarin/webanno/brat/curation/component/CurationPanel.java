@@ -228,7 +228,7 @@ public class CurationPanel
                 }
 
                 mergeVisualizer.bratRenderHighlight(aTarget, aBModel.getSelection()
-                        .getSelectedAnnotationId());
+                        .getAnnotation());
 
                 mergeVisualizer.onChange(aTarget, aBModel);
                 mergeVisualizer.onAnnotate(aTarget, aBModel, aBModel.getSelection().getBegin(),

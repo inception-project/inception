@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.uima.cas.FeatureStructure;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
@@ -61,11 +62,11 @@ public abstract class ColoringStrategy
     }
     
     public static ColoringStrategy getBestStrategy(AnnotationLayer aLayer,
-            BratAnnotatorModel aBratAnnotatorModel, int aLayerIndex)
+            AnnotationPreference aPreferences, int aLayerIndex)
     {
         // Decide on coloring strategy for the current layer
         ColoringStrategy coloringStrategy;
-        if (aBratAnnotatorModel.getPreferences().isStaticColor()) {
+        if (aPreferences.isStaticColor()) {
             String[] palette;
             
             if (WebAnnoConst.SPAN_TYPE.equals(aLayer.getType())) {

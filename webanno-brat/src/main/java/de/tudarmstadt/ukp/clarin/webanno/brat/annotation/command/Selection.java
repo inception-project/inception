@@ -78,42 +78,42 @@ public class Selection
         this.isAnnotate = isAnnotate;
     }
     
-    public int getOriginSpanId()
+    public int getOrigin()
     {
         return originSpanId;
     }
 
-    public void setOriginSpanId(int originSpanId)
+    public void setOrigin(int originSpanId)
     {
         this.originSpanId = originSpanId;
     }
 
-    public String getOriginSpanType()
+    public String getOriginType()
     {
         return originSpanType;
     }
 
-    public void setOriginSpanType(String originSpanType)
+    public void setOriginType(String originSpanType)
     {
         this.originSpanType = originSpanType;
     }
 
-    public String getTargetSpanType()
+    public String getTargetType()
     {
         return targetSpanType;
     }
 
-    public void setTargetSpanType(String targetSpanType)
+    public void setTargetType(String targetSpanType)
     {
         this.targetSpanType = targetSpanType;
     }
 
-    public int getTargetSpanId()
+    public int getTarget()
     {
         return targetSpanId;
     }
 
-    public void setTargetSpanId(int targetSpanId)
+    public void setTarget(int targetSpanId)
     {
         this.targetSpanId = targetSpanId;
     }
@@ -148,12 +148,12 @@ public class Selection
         this.text = selectedText;
     }
     
-    public VID getSelectedAnnotationId()
+    public VID getAnnotation()
     {
         return selectedAnnotationId;
     }
 
-    public void setSelectedAnnotationId(VID selectedAnnotationId)
+    public void setAnnotation(VID selectedAnnotationId)
     {
         this.selectedAnnotationId = selectedAnnotationId;
     }
@@ -161,7 +161,7 @@ public class Selection
     public void clear()
     {
         setText("");
-        setSelectedAnnotationId(VID.NONE_ID);
+        setAnnotation(VID.NONE_ID);
         // 
         // getCommand().setBeginOffset(-1);
         // getCommand().setEndOffset(-1);

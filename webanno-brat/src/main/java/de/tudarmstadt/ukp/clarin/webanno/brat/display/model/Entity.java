@@ -77,7 +77,7 @@ public class Entity
     @Deprecated
     public int getId()
     {
-        return vid.getAnnotationId();
+        return vid.getId();
     }
 
     @Deprecated

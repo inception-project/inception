@@ -55,6 +55,7 @@ import com.googlecode.wicket.jquery.ui.resource.JQueryUIResourceReference;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.command.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
@@ -233,7 +234,7 @@ public class BratAnnotator
                 // associated span annotation instead.
                 if (paramId.isSlotSet() && action.equals(ArcAnnotationResponse.COMMAND)) {
                     action = SpanAnnotationResponse.COMMAND;
-                    paramId = new VID(paramId.getAnnotationId());
+                    paramId = new VID(paramId.getId());
                 }
 
                 BratAjaxCasController controller = new BratAjaxCasController(repository,
@@ -259,7 +260,7 @@ public class BratAnnotator
                             if (paramId.isSet()) {
                                 // Fill slot with existing annotation
                                 aAnnotationDetailEditorPanel.setSlot(aTarget, jCas,
-                                        getModelObject(), paramId.getAnnotationId());
+                                        getModelObject(), paramId.getId());
                             }
                             else if (!CAS.TYPE_NAME_ANNOTATION.equals(getModelObject()
                                     .getArmedFeature().getType())) {
@@ -294,13 +295,14 @@ public class BratAnnotator
                             }
                             // Doing anything but filling an armed slot will unarm it
                             getModelObject().clearArmedSlot();
+                            
+                            Selection selection = getModelObject().getSelection();
 
-                            getModelObject().getSelection().setRelationAnno(false);
+                            selection.setRelationAnno(false);
 
                             Offsets offsets = getSpanOffsets(request, jCas, paramId);
-                            getModelObject().getSelection().setSelectedAnnotationId(paramId);
-                            getModelObject().getSelection().set(jCas, offsets.getBegin(),
-                                    offsets.getEnd());
+                            selection.setAnnotation(paramId);
+                            selection.set(jCas, offsets.getBegin(), offsets.getEnd());
                             
                             aAnnotationDetailEditorPanel.setLayerAndFeatureModels(jCas,
                                     getModelObject());
@@ -311,13 +313,11 @@ public class BratAnnotator
                                         + "manager to re-open it via the Montoring page");
                             }
 
-                            bratRenderHighlight(aTarget, getModelObject().getSelection()
-                                    .getSelectedAnnotationId());
+                            bratRenderHighlight(aTarget, selection.getAnnotation());
 
-                            if (getModelObject().getSelection().getSelectedAnnotationId().isNotSet()) {
-                                bratRenderGhostSpan(aTarget, jCas, getModelObject().getSelection()
-                                        .getBegin(), getModelObject().getSelection()
-                                        .getEnd());
+                            if (selection.getAnnotation().isNotSet()) {
+                                bratRenderGhostSpan(aTarget, jCas, selection.getBegin(),
+                                        selection.getEnd());
                             }
                             else {
                                 bratRender(aTarget, jCas);
@@ -327,18 +327,20 @@ public class BratAnnotator
                     }
                     else if (action.equals(ArcAnnotationResponse.COMMAND)) {
                         assert jCas != null;
-                        getModelObject().getSelection().setRelationAnno(true);
+                        
+                        Selection selection = getModelObject().getSelection();
 
-                        getModelObject().getSelection().setOriginSpanType(
-                                request.getParameterValue(PARAM_ORIGIN_TYPE).toString());
-                        getModelObject().getSelection().setOriginSpanId(
-                                request.getParameterValue(PARAM_ORIGIN_SPAN_ID).toInteger());
-                        getModelObject().getSelection().setTargetSpanType(
-                                request.getParameterValue(PARAM_TARGET_TYPE).toString());
-                        getModelObject().getSelection().setTargetSpanId(
-                                request.getParameterValue(PARAM_TARGET_SPAN_ID).toInteger());
+                        selection.setRelationAnno(true);
+                        selection.setAnnotation(paramId);
+                        selection.setOriginType(request.getParameterValue(PARAM_ORIGIN_TYPE)
+                                .toString());
+                        selection.setOrigin(request.getParameterValue(PARAM_ORIGIN_SPAN_ID)
+                                .toInteger());
+                        selection.setTargetType(request.getParameterValue(PARAM_TARGET_TYPE)
+                                .toString());
+                        selection.setTarget(request.getParameterValue(PARAM_TARGET_SPAN_ID)
+                                .toInteger());
 
-                        getModelObject().getSelection().setSelectedAnnotationId(paramId);
                         aAnnotationDetailEditorPanel.setLayerAndFeatureModels(jCas,
                                 getModelObject());
 
@@ -347,9 +349,9 @@ public class BratAnnotator
                         }
 
                         bratRenderHighlight(aTarget, getModelObject().getSelection()
-                                .getSelectedAnnotationId());
+                                .getAnnotation());
 
-                        if (getModelObject().getSelection().getSelectedAnnotationId().isNotSet()) {
+                        if (getModelObject().getSelection().getAnnotation().isNotSet()) {
                             bratRenderGhostArc(aTarget, jCas);
                         }
                         else {
@@ -404,7 +406,7 @@ public class BratAnnotator
                             + json + ";");
                 }
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
-                if (getModelObject().getSelection().getSelectedAnnotationId().isNotSet()) {
+                if (getModelObject().getSelection().getAnnotation().isNotSet()) {
                     aAnnotationDetailEditorPanel.setAnnotationLayers(getModelObject());
                 }
                 aTarget.add(aAnnotationDetailEditorPanel);
@@ -439,7 +441,7 @@ public class BratAnnotator
         else {
             // Edit existing span annotation
             AnnotationFS fs = BratAjaxCasUtil.selectByAddr(jCas, getModelObject()
-                    .getSelection().getSelectedAnnotationId().getAnnotationId());
+                    .getSelection().getAnnotation().getId());
             return new Offsets(fs.getBegin(), fs.getEnd());
         }
     }
@@ -523,13 +525,15 @@ public class BratAnnotator
         GetDocumentResponse response = new GetDocumentResponse();
 
         if (getModelObject().isForwardAnnotation()) {
-            AnnotationFS nextToken = BratAjaxCasUtil.getNextToken(aJCas, getModelObject()
-                    .getSelection().getBegin(), getModelObject().getSelection().getEnd());
+            Selection selection = getModelObject().getSelection();
+            
+            AnnotationFS nextToken = BratAjaxCasUtil.getNextToken(aJCas, selection.getBegin(),
+                    selection.getEnd());
 
             response = addGhost(nextToken.getBegin(), nextToken.getEnd());
 
-            getModelObject().getSelection().clear();
-            getModelObject().getSelection().set(aJCas, nextToken.getBegin(), nextToken.getEnd());
+            selection.clear();
+            selection.set(aJCas, nextToken.getBegin(), nextToken.getEnd());
         }
         BratAjaxCasController.render(response, getModelObject(), aJCas, annotationService);
         String json = toJson(response);
@@ -568,8 +572,8 @@ public class BratAnnotator
         LOG.info("BEGIN ghostArcAnnoRender");
         GetDocumentResponse response = new GetDocumentResponse();
         List<Argument> argumentList = asList(new Argument("Arg1", getModelObject().getSelection()
-                .getOriginSpanId()), new Argument("Arg2", getModelObject().getSelection()
-                .getTargetSpanId()));
+                .getOrigin()), new Argument("Arg2", getModelObject().getSelection()
+                .getTarget()));
         response.addRelation(new Relation(VID.GHOST, GHOST_PLACE_HOLDER, argumentList,
                 GHOST_PLACE_HOLDER, GHOST_COLOR));
 

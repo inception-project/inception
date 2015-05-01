@@ -155,7 +155,7 @@ public class BratAnnotationDocumentVisualizer
             features.removeAll(invisibleFeatures);
 
             ColoringStrategy coloringStrategy = ColoringStrategy.getBestStrategy(layer,
-                    bratAnnotatorModel, i);
+                    bratAnnotatorModel.getPreferences(), i);
 
             getAdapter(annotationService, layer)
                     .render(jCas, features, response, bratAnnotatorModel, coloringStrategy);

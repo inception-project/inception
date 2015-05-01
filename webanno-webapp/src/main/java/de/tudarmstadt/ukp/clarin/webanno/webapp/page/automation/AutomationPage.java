@@ -230,7 +230,7 @@ public class AutomationPage
                 }
 
                 mergeVisualizer.bratRenderHighlight(aTarget, aBModel.getSelection()
-                        .getSelectedAnnotationId());
+                        .getAnnotation());
 
                 mergeVisualizer.onChange(aTarget, aBModel);
                 mergeVisualizer.onAnnotate(aTarget, aBModel, aBModel.getSelection().getBegin(),

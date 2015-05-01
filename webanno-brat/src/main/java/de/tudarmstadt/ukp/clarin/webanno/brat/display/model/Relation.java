@@ -78,7 +78,7 @@ public class Relation
     @Deprecated
     public int getId()
     {
-        return vid.getAnnotationId();
+        return vid.getId();
     }
 
     @Deprecated

@@ -77,7 +77,7 @@ public class VID
         return annotationId == GHOST;
     }
 
-    public int getAnnotationId()
+    public int getId()
     {
         return annotationId;
     }
