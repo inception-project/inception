@@ -22,16 +22,17 @@ import java.io.IOException;
 import java.io.StringWriter;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.wicket.Application;
 import org.codehaus.jackson.JsonGenerator;
 import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.support.spring.ApplicationContextProvider;
 
 public class JSONUtil
 {
     /**
      * Convert Java objects into JSON format and write it to a file
-     * 
-     * @param jsonConverter
-     *            converter.
+     *
      * @param aObject
      *            the object.
      * @param aFile
@@ -43,12 +44,37 @@ public class JSONUtil
             Object aObject, File aFile)
         throws IOException
     {
+        FileUtils.writeStringToFile(aFile, toJsonString(jsonConverter, aObject));
+    }
+
+    public static void generateJson(Object aObject, File aFile)
+        throws IOException
+    {
+        FileUtils.writeStringToFile(aFile, toJsonString(aObject));
+    }
+
+    public static String toJsonString(MappingJacksonHttpMessageConverter jsonConverter,
+            Object aObject)
+        throws IOException
+    {
         StringWriter out = new StringWriter();
 
         JsonGenerator jsonGenerator = jsonConverter.getObjectMapper().getJsonFactory()
                 .createJsonGenerator(out);
 
         jsonGenerator.writeObject(aObject);
-        FileUtils.writeStringToFile(aFile, out.toString());
+        return out.toString();
+    }
+
+    public static String toJsonString(Object aObject)
+        throws IOException
+    {
+        return toJsonString(getJsonConverter(), aObject);
+    }
+    
+    public static MappingJacksonHttpMessageConverter getJsonConverter()
+    {
+        return ApplicationContextProvider.getApplicationContext().getBean("jsonConverter",
+                MappingJacksonHttpMessageConverter.class);
     }
 }

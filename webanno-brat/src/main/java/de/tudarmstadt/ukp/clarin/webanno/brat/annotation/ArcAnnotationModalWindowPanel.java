@@ -54,7 +54,6 @@ import org.apache.wicket.markup.repeater.RefreshingView;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 
 import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
 
@@ -94,9 +93,6 @@ public class ArcAnnotationModalWindowPanel
 
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
-
-    @SpringBean(name = "jsonConverter")
-    private MappingJacksonHttpMessageConverter jsonConverter;
 
     // A flag to keep checking if new annotation is to be made or an existing
     // annotation is double

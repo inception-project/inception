@@ -51,7 +51,6 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.dao.DataRetrievalFailureException;
-import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import wicket.contrib.input.events.EventType;
@@ -104,8 +103,6 @@ public class AutomationPage
 
     private static final long serialVersionUID = 1378872465851908515L;
 
-    @SpringBean(name = "jsonConverter")
-    private MappingJacksonHttpMessageConverter jsonConverter;
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
 
@@ -169,7 +166,7 @@ public class AutomationPage
 
                     CuratorUtil.updatePanel(aTarget, this, curationContainer, mergeVisualizer,
                             repository, annotationSelectionByUsernameAndAddress, curationSegment,
-                            annotationService, jsonConverter);
+                            annotationService);
                 }
                 catch (UIMAException e) {
                     error(ExceptionUtils.getRootCause(e));
@@ -213,7 +210,7 @@ public class AutomationPage
 
                     CuratorUtil.updatePanel(aTarget, automateView, curationContainer, this,
                             repository, annotationSelectionByUsernameAndAddress, curationSegment,
-                            annotationService, jsonConverter);
+                            annotationService);
                     aTarget.add(automateView);
                     aTarget.add(numberOfPages);
                 }
@@ -1170,7 +1167,7 @@ public class AutomationPage
         try {
             correctionDocument = CuratorUtil.updatePanel(target, automateView, curationContainer,
                     mergeVisualizer, repository, annotationSelectionByUsernameAndAddress,
-                    curationSegment, annotationService, jsonConverter);
+                    curationSegment, annotationService);
         }
         catch (UIMAException e) {
             error(ExceptionUtils.getRootCauseMessage(e));

@@ -42,7 +42,6 @@ import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.dao.DataRetrievalFailureException;
-import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import wicket.contrib.input.events.EventType;
@@ -84,9 +83,7 @@ public class AnnotationPage
     private static final Log LOG = LogFactory.getLog(AnnotationPage.class);    
     
     private static final long serialVersionUID = 1378872465851908515L;
-    @SpringBean(name = "jsonConverter")
-    private MappingJacksonHttpMessageConverter jsonConverter;
-
+    
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
 

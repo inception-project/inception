@@ -42,7 +42,6 @@ import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
@@ -70,9 +69,6 @@ public class CurationPanel
     extends Panel
 {
     private static final long serialVersionUID = -5128648754044819314L;
-
-    @SpringBean(name = "jsonConverter")
-    private MappingJacksonHttpMessageConverter jsonConverter;
 
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
@@ -157,7 +153,7 @@ public class CurationPanel
                 try {
                     CuratorUtil.updatePanel(aTarget, this, curationContainer,
                             mergeVisualizer, repository, annotationSelectionByUsernameAndAddress,
-                            curationView, annotationService, jsonConverter);
+                            curationView, annotationService);
                 }
                 catch (UIMAException e) {
                     error(ExceptionUtils.getRootCause(e));
@@ -191,7 +187,7 @@ public class CurationPanel
                 try {
                     CuratorUtil.updatePanel(aTarget, sentenceOuterView, curationContainer,
                             this, repository, annotationSelectionByUsernameAndAddress,
-                            curationView, annotationService, jsonConverter);
+                            curationView, annotationService);
                 }
                 catch (UIMAException e) {
                     error(ExceptionUtils.getRootCause(e));
@@ -235,7 +231,7 @@ public class CurationPanel
                             CuratorUtil.updatePanel(aTarget, sentenceOuterView,
                                     curationContainer, mergeVisualizer, repository,
                                     annotationSelectionByUsernameAndAddress, curationView,
-                                    annotationService, jsonConverter);
+                                    annotationService);
 
                             List<CurationViewForSourceDocument> views = curationContainer
                                     .getCurationViews();

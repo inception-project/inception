@@ -74,13 +74,11 @@ import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
-import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -101,12 +99,12 @@ public class ProjectLayersPanel
     extends Panel
 {
     private static final long serialVersionUID = -7870526462864489252L;
+    
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
+
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
-    @SpringBean(name = "jsonConverter")
-    private MappingJacksonHttpMessageConverter jsonConverter;
 
     private ModalWindow openHelpDialog;
 
@@ -330,8 +328,8 @@ public class ProjectLayersPanel
                             tagInputStream = tagFile.getInputStream();
                             String text = IOUtils.toString(tagInputStream, "UTF-8");
 
-                            MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
-                            de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer exLayer = jsonConverter
+                            de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer exLayer = JSONUtil
+                                    .getJsonConverter()
                                     .getObjectMapper()
                                     .readValue(
                                             text,
@@ -898,7 +896,7 @@ public class ProjectLayersPanel
                     }
 
                     try {
-                        JSONUtil.generateJson(jsonConverter, exLayer, exportFile);
+                        JSONUtil.generateJson(exLayer, exportFile);
                     }
                     catch (IOException e) {
                         error("File Path not found or No permision to save the file!");

@@ -56,7 +56,6 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
@@ -82,11 +81,10 @@ public class ProjectTagSetsPanel
 
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
+
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
-    @SpringBean(name = "jsonConverter")
-    private MappingJacksonHttpMessageConverter jsonConverter;
-
+    
     private List<FileUpload> uploadedFiles;
     private FileUploadField fileUpload;
     DropDownChoice<String> importTagsetFormat;
@@ -265,9 +263,8 @@ public class ProjectTagSetsPanel
                                 tagInputStream = tagFile.getInputStream();
                                 String text = IOUtils.toString(tagInputStream, "UTF-8");
 
-                                MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
-                                TagSet importedTagSet = jsonConverter.getObjectMapper().readValue(
-                                        text, TagSet.class);
+                                TagSet importedTagSet = JSONUtil.getJsonConverter()
+                                        .getObjectMapper().readValue(text, TagSet.class);
                                 createTagSet(project, user, importedTagSet);
 
                             }
@@ -523,7 +520,7 @@ public class ProjectTagSetsPanel
                             exTagSet.setTags(exportedTags);
 
                             try {
-                                JSONUtil.generateJson(jsonConverter, exTagSet, exportFile);
+                                JSONUtil.generateJson(exTagSet, exportFile);
                             }
                             catch (IOException e) {
                                 error("File Path not found or No permision to save the file!");

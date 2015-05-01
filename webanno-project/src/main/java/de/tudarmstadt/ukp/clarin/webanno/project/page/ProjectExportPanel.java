@@ -51,7 +51,6 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 import org.wicketstuff.progressbar.ProgressBar;
 import org.wicketstuff.progressbar.Progression;
 import org.wicketstuff.progressbar.ProgressionModel;
@@ -62,7 +61,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.ZipUtils;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -114,9 +112,6 @@ public class ProjectExportPanel extends Panel {
 
 	@SpringBean(name = "userRepository")
 	private UserDao userRepository;
-
-    @SpringBean(name = "jsonConverter")
-    private MappingJacksonHttpMessageConverter jsonConverter;
 
 	private int progress = 0;
 	private ProgressBar fileGenerationProgress;
@@ -678,7 +673,7 @@ public class ProjectExportPanel extends Panel {
             exProjekt.setMiraTemplates(exTemplates);
 
             try {
-                JSONUtil.generateJson(jsonConverter, exProjekt, aProjectSettings);
+                JSONUtil.generateJson(exProjekt, aProjectSettings);
                 FileUtils.copyFileToDirectory(aProjectSettings, aExportTempDir);
             }
             catch (IOException e) {

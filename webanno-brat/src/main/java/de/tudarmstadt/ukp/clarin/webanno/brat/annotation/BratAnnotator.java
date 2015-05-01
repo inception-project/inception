@@ -42,7 +42,6 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.codehaus.jackson.JsonGenerator;
-import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 
 import com.googlecode.wicket.jquery.ui.resource.JQueryUIResourceReference;
 
@@ -79,6 +78,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
@@ -108,9 +108,6 @@ public class BratAnnotator
     private WebMarkupContainer vis;
 
     private AbstractAjaxBehavior controller;
-
-    @SpringBean(name = "jsonConverter")
-    private MappingJacksonHttpMessageConverter jsonConverter;
 
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
@@ -230,8 +227,8 @@ public class BratAnnotator
                         }
 
                         offsets = request.getParameterValue(PARAM_OFFSETS).toString();
-                        OffsetsList offsetLists = jsonConverter.getObjectMapper().readValue(
-                                offsets, OffsetsList.class);
+                        OffsetsList offsetLists = JSONUtil.getJsonConverter().getObjectMapper()
+                                .readValue(offsets, OffsetsList.class);
 
                         JCas jCas = getJCas();
                         if (selectedSpanID == -1) {
@@ -643,7 +640,7 @@ public class BratAnnotator
         StringWriter out = new StringWriter();
         JsonGenerator jsonGenerator = null;
         try {
-            jsonGenerator = jsonConverter.getObjectMapper().getJsonFactory()
+            jsonGenerator = JSONUtil.getJsonConverter().getObjectMapper().getJsonFactory()
                     .createJsonGenerator(out);
             jsonGenerator.writeObject(result);
         }
