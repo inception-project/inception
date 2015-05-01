@@ -440,8 +440,7 @@ public class BratAnnotator
         }
         else {
             // Edit existing span annotation
-            AnnotationFS fs = BratAjaxCasUtil.selectByAddr(jCas, getModelObject()
-                    .getSelection().getAnnotation().getId());
+            AnnotationFS fs = BratAjaxCasUtil.selectByAddr(jCas, aVid.getId());
             return new Offsets(fs.getBegin(), fs.getEnd());
         }
     }

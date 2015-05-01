@@ -226,7 +226,7 @@ public class ArcAdapter
      * @throws BratAnnotationException
      *             if the annotation could not be created/updated.
      */
-    public Integer add(AnnotationFS aOriginFs, AnnotationFS aTargetFs,
+    public AnnotationFS add(AnnotationFS aOriginFs, AnnotationFS aTargetFs,
             JCas aJCas, BratAnnotatorModel aBratAnnotatorModel, AnnotationFeature aFeature, Object aLabelValue)
         throws BratAnnotationException
     {
@@ -254,7 +254,7 @@ public class ArcAdapter
     /**
      * A Helper method to {@link #addToCas(String, BratAnnotatorUIData)}
      */
-    private Integer updateCas(JCas aJCas, int aBegin, int aEnd, AnnotationFS aOriginFs,
+    private AnnotationFS updateCas(JCas aJCas, int aBegin, int aEnd, AnnotationFS aOriginFs,
             AnnotationFS aTargetFs, Object aValue, AnnotationFeature aFeature)
     {
         Type type = getType(aJCas.getCas(), annotationTypeName);
@@ -265,6 +265,7 @@ public class ArcAdapter
 
         AnnotationFS dependentFs = null;
         AnnotationFS governorFs = null;
+        
         // List all sentence in this display window
         List<Sentence> sentences = selectCovered(aJCas, Sentence.class, aBegin, aEnd);
         for (Sentence sentence : sentences) {
@@ -284,62 +285,68 @@ public class ArcAdapter
                     governorFs = (AnnotationFS) fs.getFeatureValue(governorFeature);
                 }
 
+                if (dependentFs == null || governorFs == null) {
+                    log.warn("Relation [" + layer.getName() + "] with id [" + getAddr(fs)
+                            + "] has loose ends - ignoring during while checking for duplicates.");
+                    continue;
+                }
+                
                 if (isDuplicate((AnnotationFS) governorFs, aOriginFs, (AnnotationFS) dependentFs,
                         aTargetFs) && (aValue == null || !aValue.equals(WebAnnoConst.ROOT))) {
 
                     if (!allowStacking) {
                         setFeature(fs, aFeature, aValue);
-                        return getAddr(fs);
+                        return fs;
                     }
                 }
             }
         }
+        
         // It is new ARC annotation, create it
-            dependentFs = aTargetFs;
-            governorFs = aOriginFs;
+        dependentFs = aTargetFs;
+        governorFs = aOriginFs;
 
-            // for POS annotation, since custom span layers do not have attach feature
-            if (attachFeatureName != null) {
-                dependentFs = selectCovered(aJCas.getCas(), spanType, dependentFs.getBegin(),
-                        dependentFs.getEnd()).get(0);
-                governorFs = selectCovered(aJCas.getCas(), spanType, governorFs.getBegin(),
-                        governorFs.getEnd()).get(0);
+        // for POS annotation, since custom span layers do not have attach feature
+        if (attachFeatureName != null) {
+            dependentFs = selectCovered(aJCas.getCas(), spanType, dependentFs.getBegin(),
+                    dependentFs.getEnd()).get(0);
+            governorFs = selectCovered(aJCas.getCas(), spanType, governorFs.getBegin(),
+                    governorFs.getEnd()).get(0);
+        }
+
+        // if span A has (start,end)= (20, 26) and B has (start,end)= (30, 36)
+        // arc drawn from A to B, dependency will have (start, end) = (20, 36)
+        // arc drawn from B to A, still dependency will have (start, end) = (20, 36)
+        AnnotationFS newAnnotation;
+        if (dependentFs.getEnd() <= governorFs.getEnd()) {
+            newAnnotation = aJCas.getCas().createAnnotation(type, dependentFs.getBegin(),
+                    governorFs.getEnd());
+        }
+        else {
+            newAnnotation = aJCas.getCas().createAnnotation(type, governorFs.getBegin(),
+                    dependentFs.getEnd());
+        }
+
+        // If origin and target spans are multiple tokens, dependentFS.getBegin will be the
+        // the begin position of the first token and dependentFS.getEnd will be the End
+        // position of the last token.
+        newAnnotation.setFeatureValue(dependentFeature, dependentFs);
+        newAnnotation.setFeatureValue(governorFeature, governorFs);
+        setFeature(newAnnotation, aFeature, aValue);
+
+        // BEGIN HACK - ISSUE 953 - Special treatment for ROOT in DKPro Core dependency layer
+        // If the dependency type is set to "ROOT" the create a loop arc
+        if (aFeature != null) {
+            if (Dependency.class.getName().equals(layer.getName())
+                    && "DependencyType".equals(aFeature.getName()) && "ROOT".equals(aValue)) {
+                FeatureStructure source = getFeatureFS(newAnnotation, sourceFeatureName);
+                setFeatureFS(newAnnotation, targetFeatureName, source);
             }
+        }
+        // END HACK - ISSUE 953 - Special treatment for ROOT in DKPro Core dependency layer
 
-            // if span A has (start,end)= (20, 26) and B has (start,end)= (30, 36)
-            // arc drawn from A to B, dependency will have (start, end) = (20, 36)
-            // arc drawn from B to A, still dependency will have (start, end) = (20, 36)
-            AnnotationFS newAnnotation;
-            if (dependentFs.getEnd() <= governorFs.getEnd()) {
-                newAnnotation = aJCas.getCas().createAnnotation(type, dependentFs.getBegin(),
-                        governorFs.getEnd());
-            }
-            else {
-                newAnnotation = aJCas.getCas().createAnnotation(type, governorFs.getBegin(),
-                        dependentFs.getEnd());
-            }
-
-            // If origin and target spans are multiple tokens, dependentFS.getBegin will be the
-            // the begin position of the first token and dependentFS.getEnd will be the End
-            // position of the last token.
-            newAnnotation.setFeatureValue(dependentFeature, dependentFs);
-            newAnnotation.setFeatureValue(governorFeature, governorFs);
-            setFeature(newAnnotation, aFeature, aValue);
-
-            // BEGIN HACK - ISSUE 953 - Special treatment for ROOT in DKPro Core dependency layer
-            // If the dependency type is set to "ROOT" the create a loop arc
-            if (aFeature != null) {
-                if (Dependency.class.getName().equals(layer.getName())
-                        && "DependencyType".equals(aFeature.getName()) && "ROOT".equals(aValue)) {
-                    FeatureStructure source = getFeatureFS(newAnnotation,
-                            sourceFeatureName);
-                    setFeatureFS(newAnnotation, targetFeatureName, source);
-                }
-            }
-            // END HACK - ISSUE 953 - Special treatment for ROOT in DKPro Core dependency layer
-
-            aJCas.addFsToIndexes(newAnnotation);
-            return getAddr(newAnnotation);
+        aJCas.addFsToIndexes(newAnnotation);
+        return newAnnotation;
     }
 
     @Override

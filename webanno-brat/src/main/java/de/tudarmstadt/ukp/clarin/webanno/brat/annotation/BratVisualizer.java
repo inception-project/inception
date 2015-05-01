@@ -66,9 +66,6 @@ public abstract class BratVisualizer
 
 	protected AbstractAjaxBehavior docProvider;
 
-    @SpringBean(name = "jsonConverter")
-    private MappingJacksonHttpMessageConverter jsonConverter;
-
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
 

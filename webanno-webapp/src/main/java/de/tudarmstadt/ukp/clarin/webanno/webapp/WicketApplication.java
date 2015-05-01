@@ -60,11 +60,10 @@ public class WicketApplication
     @Override
     protected void init()
     {
+        super.init();
+        getComponentInstantiationListeners().add(new SpringComponentInjector(this));
+        
         if (!isInitialized) {
-            super.init();
-            getComponentInstantiationListeners().add(new SpringComponentInjector(this));
-            setListeners();
-
             // Enable dynamic switching between JQuery 1 and JQuery 2 based on the browser
             // identification. 
             getJavaScriptLibrarySettings().setJQueryReference(
@@ -120,11 +119,6 @@ public class WicketApplication
     public Class<? extends Page> getHomePage()
     {
         return WelcomePage.class;
-    }
-
-    private void setListeners()
-    {
-        getComponentInstantiationListeners().add(new SpringComponentInjector(this));
     }
 
     @Override

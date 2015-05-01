@@ -387,8 +387,8 @@ public class SuggestionViewPanel
             ArcAdapter adapter = (ArcAdapter) getAdapter(annotationService, layer);
 
             // Add annotation - we set no feature values yet.
-            int selectedSpanId = adapter.add(originFs, targetFs, aJcas,
-                    aCurationUserSegment.getBratAnnotatorModel(), null, null);
+            int selectedSpanId = getAddr(adapter.add(originFs, targetFs, aJcas,
+                    aCurationUserSegment.getBratAnnotatorModel(), null, null));
 
             // Set the feature values
             for (AnnotationFeature feature : annotationService.listAnnotationFeature(layer)) {

@@ -114,9 +114,6 @@ public class AnnotationDetailEditorPanel
     private static final long serialVersionUID = 7324241992353693848L;
     private static final Log LOG = LogFactory.getLog(AnnotationDetailEditorPanel.class);
 
-    @SpringBean(name = "jsonConverter")
-    private MappingJacksonHttpMessageConverter jsonConverter;
-
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
 
@@ -433,8 +430,9 @@ public class AnnotationDetailEditorPanel
                 AnnotationFS originFs = selectByAddr(jCas, selection.getOrigin());
                 AnnotationFS targetFs = selectByAddr(jCas, selection.getTarget());
                 if (adapter instanceof ArcAdapter) {
-                    selection.setAnnotation(new VID(((ArcAdapter) adapter).add(originFs,
-                            targetFs, jCas, aBModel, null, null)));
+                    AnnotationFS arc = ((ArcAdapter) adapter).add(originFs, targetFs, jCas,
+                            aBModel, null, null);
+                    selection.setAnnotation(new VID(getAddr(arc)));
                 }
                 else {
                     selection.setAnnotation(new VID(((ChainAdapter) adapter).addArc(jCas,
@@ -695,8 +693,7 @@ public class AnnotationDetailEditorPanel
         JCas jCas;
         jCas = getCas(aBModel);
 
-        AnnotationFS idFs = selectByAddr(jCas, aBModel.getSelection().getAnnotation()
-                .getId());
+        AnnotationFS idFs = selectByAddr(jCas, aBModel.getSelection().getAnnotation().getId());
 
         jCas.removeFsFromIndexes(idFs);
 
@@ -706,9 +703,9 @@ public class AnnotationDetailEditorPanel
         TypeAdapter adapter = getAdapter(annotationService, aBModel.getSelectedAnnotationLayer());
         if (adapter instanceof ArcAdapter) {
             for (FeatureModel fm : featureModels) {
-                aBModel.getSelection().setAnnotation(
-                        new VID(((ArcAdapter) adapter).add(targetFs, originFs, jCas, aBModel,
-                                fm.feature, fm.value)));
+                AnnotationFS arc = ((ArcAdapter) adapter).add(targetFs, originFs, jCas, aBModel,
+                        fm.feature, fm.value);
+                aBModel.getSelection().setAnnotation(new VID(getAddr(arc)));
             }
         }
         else {
