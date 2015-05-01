@@ -141,14 +141,14 @@ public class AnnotationPage
                     return;
                 }
 
-                annotator.bratRenderHighlight(aTarget, aBModel.getSelectedAnnotationId());
+                annotator.bratRenderHighlight(aTarget, aBModel.getSelection().getSelectedAnnotationId());
 
                 annotator.onChange(aTarget, aBModel);
-                annotator.onAnnotate(aTarget, aBModel, aBModel.getCommand().getBeginOffset(),
-                        aBModel.getCommand().getEndOffset());
-                if (!aBModel.getCommand().isAnnotate()) {
-                    annotator.onDelete(aTarget, aBModel, aBModel.getCommand().getBeginOffset(),
-                            aBModel.getCommand().getEndOffset());
+                annotator.onAnnotate(aTarget, aBModel, aBModel.getSelection().getBegin(),
+                        aBModel.getSelection().getEnd());
+                if (!aBModel.getSelection().isAnnotate()) {
+                    annotator.onDelete(aTarget, aBModel, aBModel.getSelection().getBegin(),
+                            aBModel.getSelection().getEnd());
                 }
             }
         };

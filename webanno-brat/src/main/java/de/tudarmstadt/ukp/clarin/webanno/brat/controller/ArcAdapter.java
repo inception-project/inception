@@ -99,7 +99,7 @@ public class ArcAdapter
      * The feature of an UIMA annotation containing the label to be used as origin/target spans for
      * arc annotations
      */
-    private final String attacheFeatureName;
+    private final String attachFeatureName;
 
     /**
      * as Governor and Dependent of Dependency annotation type are based on Token, we need the UIMA
@@ -130,7 +130,7 @@ public class ArcAdapter
         sourceFeatureName = aSourceFeatureName;
         targetFeatureName = aTargetFeatureName;
         // arcSpanType = aArcSpanType;
-        attacheFeatureName = aAttacheFeatureName;
+        attachFeatureName = aAttacheFeatureName;
         attachType = aAttachType;
 
         features = new LinkedHashMap<String, AnnotationFeature>();
@@ -174,14 +174,14 @@ public class ArcAdapter
         Feature governorFeature = type.getFeatureByBaseName(sourceFeatureName);
 
         Type spanType = getType(aJcas.getCas(), attachType);
-        Feature arcSpanFeature = spanType.getFeatureByBaseName(attacheFeatureName);
+        Feature arcSpanFeature = spanType.getFeatureByBaseName(attachFeatureName);
 
         FeatureStructure dependentFs;
         FeatureStructure governorFs;
 
         for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, firstSentence.getBegin(),
                 lastSentenceInPage.getEnd())) {
-            if (attacheFeatureName != null) {
+            if (attachFeatureName != null) {
                 dependentFs = fs.getFeatureValue(dependentFeature).getFeatureValue(arcSpanFeature);
                 governorFs = fs.getFeatureValue(governorFeature).getFeatureValue(arcSpanFeature);
             }
@@ -257,16 +257,11 @@ public class ArcAdapter
     private Integer updateCas(JCas aJCas, int aBegin, int aEnd, AnnotationFS aOriginFs,
             AnnotationFS aTargetFs, Object aValue, AnnotationFeature aFeature)
     {
-        boolean duplicate = false;
-
         Type type = getType(aJCas.getCas(), annotationTypeName);
         Feature dependentFeature = type.getFeatureByBaseName(targetFeatureName);
         Feature governorFeature = type.getFeatureByBaseName(sourceFeatureName);
 
         Type spanType = getType(aJCas.getCas(), attachType);
-        Feature arcSpanFeature = spanType.getFeatureByBaseName(attacheFeatureName);
-
-        Type tokenType = getType(aJCas.getCas(), attachType);
 
         AnnotationFS dependentFs = null;
         AnnotationFS governorFs = null;
@@ -277,7 +272,8 @@ public class ArcAdapter
             for (AnnotationFS fs : selectCovered(aJCas.getCas(), type, sentence.getBegin(),
                     sentence.getEnd())) {
 
-                if (attacheFeatureName != null) {
+                if (attachFeatureName != null) {
+                    Feature arcSpanFeature = spanType.getFeatureByBaseName(attachFeatureName);
                     dependentFs = (AnnotationFS) fs.getFeatureValue(dependentFeature)
                             .getFeatureValue(arcSpanFeature);
                     governorFs = (AnnotationFS) fs.getFeatureValue(governorFeature)
@@ -303,10 +299,10 @@ public class ArcAdapter
             governorFs = aOriginFs;
 
             // for POS annotation, since custom span layers do not have attach feature
-            if (attacheFeatureName != null) {
-                dependentFs = selectCovered(aJCas.getCas(), tokenType, dependentFs.getBegin(),
+            if (attachFeatureName != null) {
+                dependentFs = selectCovered(aJCas.getCas(), spanType, dependentFs.getBegin(),
                         dependentFs.getEnd()).get(0);
-                governorFs = selectCovered(aJCas.getCas(), tokenType, governorFs.getBegin(),
+                governorFs = selectCovered(aJCas.getCas(), spanType, governorFs.getBegin(),
                         governorFs.getEnd()).get(0);
             }
 
@@ -361,13 +357,13 @@ public class ArcAdapter
         Feature sourceFeature = type.getFeatureByBaseName(sourceFeatureName);
 
         Type spanType = getType(aJCas.getCas(), attachType);
-        Feature arcSpanFeature = spanType.getFeatureByBaseName(attacheFeatureName);
+        Feature arcSpanFeature = spanType.getFeatureByBaseName(attachFeatureName);
 
         Set<AnnotationFS> fsToDelete = new HashSet<AnnotationFS>();
 
         for (AnnotationFS fs : selectCovered(aJCas.getCas(), type, aBegin, aEnd)) {
 
-            if (attacheFeatureName != null) {
+            if (attachFeatureName != null) {
                 FeatureStructure dependentFs = fs.getFeatureValue(targetFeature).getFeatureValue(
                         arcSpanFeature);
                 if (getAddr(afs) == getAddr(dependentFs)) {
@@ -448,7 +444,7 @@ public class ArcAdapter
     @Override
     public String getAttachFeatureName()
     {
-        return attacheFeatureName;
+        return attachFeatureName;
     }
 
     @Override

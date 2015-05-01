@@ -28,7 +28,7 @@ import java.util.Map;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.uima.jcas.JCas;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.command.Command;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.command.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel.FeatureModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.VID;
@@ -137,12 +137,6 @@ public class BratAnnotatorModel
     private Map<AnnotationFeature, Serializable> rememberedSpanFeatures = new HashMap<AnnotationFeature, Serializable>();
     private Map<AnnotationFeature, Serializable> rememberedArcFeatures = new HashMap<AnnotationFeature, Serializable>();
 
-    // selected span text
-    private String selectedText;
-
-    // id of the select annotation layer
-    private VID selectedAnnotationId = VID.NONE_ID;
-
     // the selected annotation layer
     private AnnotationLayer selectedAnnotationLayer;
 
@@ -152,11 +146,11 @@ public class BratAnnotatorModel
     // enable automatic forward annotations
     private boolean forwardAnnotation;
 
-    private final Command command = new Command();
+    private final Selection selection = new Selection();
     
-    public Command getCommand()
+    public Selection getSelection()
     {
-        return command;
+        return selection;
     }
 
     public Project getProject()
@@ -327,26 +321,6 @@ public class BratAnnotatorModel
     public void setSentenceEndOffset(int sentenceEndOffset)
     {
         this.sentenceEndOffset = sentenceEndOffset;
-    }
-
-    public String getSelectedText()
-    {
-        return selectedText;
-    }
-
-    public void setSelectedText(String selectedText)
-    {
-        this.selectedText = selectedText;
-    }
-
-    public VID getSelectedAnnotationId()
-    {
-        return selectedAnnotationId;
-    }
-
-    public void setSelectedAnnotationId(VID selectedAnnotationId)
-    {
-        this.selectedAnnotationId = selectedAnnotationId;
     }
 
     public AnnotationLayer getSelectedAnnotationLayer()

@@ -229,14 +229,15 @@ public class AutomationPage
                     return;
                 }
 
-                mergeVisualizer.bratRenderHighlight(aTarget, aBModel.getSelectedAnnotationId());
+                mergeVisualizer.bratRenderHighlight(aTarget, aBModel.getSelection()
+                        .getSelectedAnnotationId());
 
                 mergeVisualizer.onChange(aTarget, aBModel);
-                mergeVisualizer.onAnnotate(aTarget, aBModel, aBModel.getCommand().getBeginOffset(),
-                        aBModel.getCommand().getEndOffset());
-                if (!aBModel.getCommand().isAnnotate()) {
-                    mergeVisualizer.onDelete(aTarget, aBModel, aBModel.getCommand().getBeginOffset(),
-                            aBModel.getCommand().getEndOffset());
+                mergeVisualizer.onAnnotate(aTarget, aBModel, aBModel.getSelection().getBegin(),
+                        aBModel.getSelection().getEnd());
+                if (!aBModel.getSelection().isAnnotate()) {
+                    mergeVisualizer.onDelete(aTarget, aBModel, aBModel.getSelection().getBegin(),
+                            aBModel.getSelection().getEnd());
                 }
 
             }

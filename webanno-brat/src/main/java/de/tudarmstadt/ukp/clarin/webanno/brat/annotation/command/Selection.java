@@ -19,7 +19,11 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation.command;
 
 import java.io.Serializable;
 
-public class Command
+import org.apache.uima.jcas.JCas;
+
+import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.VID;
+
+public class Selection
     implements Serializable
 {
     private static final long serialVersionUID = 2257223261821341371L;
@@ -48,6 +52,12 @@ public class Command
     // the end offset of a span annotation
     private int endOffset;
     
+    // id of the select annotation layer
+    private VID selectedAnnotationId = VID.NONE_ID;
+
+    // selected span text
+    private String text;
+
     public boolean isRelationAnno()
     {
         return isRelationAnno;
@@ -108,23 +118,59 @@ public class Command
         this.targetSpanId = targetSpanId;
     }
 
-    public int getBeginOffset()
+    public int getBegin()
     {
         return beginOffset;
     }
 
-    public void setBeginOffset(int beginOffset)
+    public void setBegin(int beginOffset)
     {
         this.beginOffset = beginOffset;
     }
 
-    public int getEndOffset()
+    public int getEnd()
     {
         return endOffset;
     }
 
-    public void setEndOffset(int endOffset)
+    public void setEnd(int endOffset)
     {
         this.endOffset = endOffset;
+    }
+    
+    public String getText()
+    {
+        return text;
+    }
+
+    public void setText(String selectedText)
+    {
+        this.text = selectedText;
+    }
+    
+    public VID getSelectedAnnotationId()
+    {
+        return selectedAnnotationId;
+    }
+
+    public void setSelectedAnnotationId(VID selectedAnnotationId)
+    {
+        this.selectedAnnotationId = selectedAnnotationId;
+    }
+    
+    public void clear()
+    {
+        setText("");
+        setSelectedAnnotationId(VID.NONE_ID);
+        // 
+        // getCommand().setBeginOffset(-1);
+        // getCommand().setEndOffset(-1);
+    }
+
+    public void set(JCas aJCas, int aBegin, int aEnd)
+    {
+        setBegin(aBegin);
+        setEnd(aEnd);
+        setText(aJCas.getDocumentText().substring(aBegin, aEnd));
     }
 }
