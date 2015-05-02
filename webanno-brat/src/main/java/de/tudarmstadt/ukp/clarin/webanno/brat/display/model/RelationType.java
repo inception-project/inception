@@ -64,9 +64,9 @@ public class RelationType
 //    }
     
     public RelationType(String aName, String aLabel, String aType, String aTarget, String aColor,
-            String aArrowHead)
+            String aArrowHead, String aDashArray)
     {
-        this(aColor, aArrowHead, Arrays.asList(aLabel), aType, Arrays.asList(aTarget), "");
+        this(aColor, aArrowHead, Arrays.asList(aLabel), aType, Arrays.asList(aTarget), aDashArray);
     }
     
     private RelationType(String aColor, String aArrowHead, List<String> aLabels, String aType,

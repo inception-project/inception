@@ -17,7 +17,7 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.*;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
 import static java.util.Arrays.asList;
 
@@ -195,7 +195,7 @@ public class BratAjaxCasController
         for (AnnotationLayer layer : aBModel.getAnnotationLayers()) {
             if (layer.getName().equals(Token.class.getName())
                     || layer.getName().equals(Sentence.class.getName())
-                    || (layer.getType().equals(WebAnnoConst.CHAIN_TYPE) && (aBModel.getProject()
+                    || (layer.getType().equals(CHAIN_TYPE) && (aBModel.getProject()
                             .getMode().equals(Mode.AUTOMATION)
                             || aBModel.getProject().getMode().equals(Mode.CORRECTION) || aBModel
                             .getProject().getMode().equals(Mode.CURATION)))) {
@@ -296,28 +296,47 @@ public class BratAjaxCasController
     private static RelationType configureRelationType(AnnotationLayer aLayer,
             AnnotationLayer aAttachingLayer)
     {
+        // For link features, we also need to configure the arcs, even though there is no arc
+        // layer here.
+        if (aAttachingLayer == null) {
+            String bratTypeName = getBratTypeName(aLayer);
+            RelationType arc = new RelationType(aLayer.getName(), aLayer.getUiName(), bratTypeName,
+                    bratTypeName, null, null, "3,3");
+            return arc;
+        }
+        
         String attachingLayerBratTypeName = TypeUtil.getBratTypeName(aAttachingLayer);
         // FIXME this is a hack because the chain layer consists of two UIMA types, a "Chain"
         // and a "Link" type. ChainAdapter always seems to use "Chain" but some places also
         // still use "Link" - this should be cleaned up so that knowledge about "Chain" and
         // "Link" types is local to the ChainAdapter and not known outside it!
-        if (aLayer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
+        if (aLayer.getType().equals(CHAIN_TYPE)) {
             attachingLayerBratTypeName += ChainAdapter.CHAIN;
         }
         
         // Handle arrow-head styles depending on linkedListBehavior
         String arrowHead;
-        if (aLayer.getType().equals(WebAnnoConst.CHAIN_TYPE) && !aLayer.isLinkedListBehavior()) {
+        if (aLayer.getType().equals(CHAIN_TYPE) && !aLayer.isLinkedListBehavior()) {
             arrowHead = "none";
         }
         else {
             arrowHead = "triangle,5";
         }
         
+        String dashArray;
+        switch (aLayer.getType()) {
+        case CHAIN_TYPE:
+            dashArray = "5,1";
+            break;
+        default:
+            dashArray = "";
+            break;
+        }
+        
         String bratTypeName = getBratTypeName(aLayer);
         RelationType arc = new RelationType(aAttachingLayer.getName(),
                 aAttachingLayer.getUiName(), attachingLayerBratTypeName, bratTypeName, null,
-                arrowHead);
+                arrowHead, dashArray);
         return arc;
     }
     
@@ -329,7 +348,7 @@ public class BratAjaxCasController
         // and a "Link" type. ChainAdapter always seems to use "Chain" but some places also
         // still use "Link" - this should be cleaned up so that knowledge about "Chain" and
         // "Link" types is local to the ChainAdapter and not known outside it!
-        if (aLayer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
+        if (aLayer.getType().equals(CHAIN_TYPE)) {
             bratTypeName += ChainAdapter.CHAIN;
         } 
         return bratTypeName;
