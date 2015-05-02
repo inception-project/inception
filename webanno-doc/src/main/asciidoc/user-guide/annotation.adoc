@@ -117,6 +117,8 @@ To avoid accidental creations of zero-length annotations, a simple single-click 
 by default. To create a zero-length annotation, hold *SHIFT* and click on the position where you
 wish to create the annotation.
 
+NOTE: The *lock to token* behavior cancels the ability to create zero-length annotations.
+
 To abort the creation of an annotation, hold *CTRL* when you release the mouse button.
 
 Depending on the layer behavior configuration, spans annotations can have any length, can overlap,
