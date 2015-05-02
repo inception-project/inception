@@ -27,22 +27,31 @@ import org.apache.uima.cas.FeatureStructure;
  *
  * @author Andreas Straninger
  */
-public class CompareResult {
-	// fs1, fs2
-	private Map<FeatureStructure, FeatureStructure> diffs = new HashMap<FeatureStructure, FeatureStructure>();
-	// fs1, fs2
-	private Map<FeatureStructure, FeatureStructure> agreements = new HashMap<FeatureStructure, FeatureStructure>();
+public class CompareResult
+{
+    // fs1, fs2
+    private Map<FeatureStructure, FeatureStructure> diffs = new HashMap<>();
+    
+    // fs1, fs2
+    private Map<FeatureStructure, FeatureStructure> agreements = new HashMap<>();
 
-	public Map<FeatureStructure, FeatureStructure> getDiffs() {
-		return diffs;
-	}
-	public void setDiffs(Map<FeatureStructure, FeatureStructure> diffs) {
-		this.diffs = diffs;
-	}
-	public Map<FeatureStructure, FeatureStructure> getAgreements() {
-		return agreements;
-	}
-	public void setAgreements(Map<FeatureStructure, FeatureStructure> agreements) {
-		this.agreements = agreements;
-	}
+    public Map<FeatureStructure, FeatureStructure> getDiffs()
+    {
+        return diffs;
+    }
+
+    public void setDiffs(Map<FeatureStructure, FeatureStructure> diffs)
+    {
+        this.diffs = diffs;
+    }
+
+    public Map<FeatureStructure, FeatureStructure> getAgreements()
+    {
+        return agreements;
+    }
+
+    public void setAgreements(Map<FeatureStructure, FeatureStructure> agreements)
+    {
+        this.agreements = agreements;
+    }
 }

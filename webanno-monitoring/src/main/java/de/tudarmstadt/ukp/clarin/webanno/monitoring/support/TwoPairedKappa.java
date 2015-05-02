@@ -17,7 +17,8 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.monitoring.support;
 
-import java.util.Arrays;
+import static java.util.Arrays.asList;
+
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -29,8 +30,8 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.JCas;
 import org.apache.uima.fit.util.CasUtil;
+import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -182,23 +183,20 @@ public class TwoPairedKappa
     {
         Set<String> annotationPositions = new HashSet<String>();
 
-        for (User user : Arrays.asList(new User[] { user1, user2 })) {
-
+        for (User user : asList(user1, user2)) {
             JCas jCas = JCases.get(user);
             annotationPositions.addAll(getAnnotationPositions(jCas, aDocument.getId(), aType));
-
         }
 
         if (annotationPositions.size() != 0) {
             Map<String, Map<String, String>> userAnnotations = initializeAnnotations(
-                    Arrays.asList(new User[] { user1, user2 }), annotationPositions);
-            for (User user : Arrays.asList(new User[] { user1, user2 })) {
+                    asList(user1, user2), annotationPositions);
+            for (User user : asList(user1, user2)) {
                 updateUserAnnotations(user, userAnnotations, aDocument.getId(), aType, featureName,
                         JCases.get(user));
             }
 
-            // merge annotations from different object for this
-            // user
+            // merge annotations from different object for this user
             for (String username : userAnnotations.keySet()) {
                 if (allUserAnnotations.get(username) != null) {
                     allUserAnnotations.get(username).putAll(userAnnotations.get(username));
@@ -207,7 +205,7 @@ public class TwoPairedKappa
                     allUserAnnotations.put(username, userAnnotations.get(username));
                 }
             }
-            for (User user : Arrays.asList(new User[] { user1, user2 })) {
+            for (User user : asList(user1, user2)) {
                 allUserAnnotations.get(user.getUsername()).putAll(
                         userAnnotations.get(user.getUsername()));
             }

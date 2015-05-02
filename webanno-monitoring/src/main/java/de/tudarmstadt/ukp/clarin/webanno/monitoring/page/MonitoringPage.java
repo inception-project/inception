@@ -1018,28 +1018,26 @@ public class MonitoringPage
             }
             int userInColumn = 0;
             for (User user2 : users) {
-                if (user1.getUsername().equals(user2.getUsername())) {// no need
-                                                                      // to
-                                                                      // compute
+                // no need to compute
+                if (user1.getUsername().equals(user2.getUsername())) {
                     // with itself, diagonal one
                     results[userInRow][userInColumn] = 1.0;
                     userInColumn++;
                     continue;
                 }
-                else if (rowUsers.contains(user2)) {// already done, upper
-                                                    // part of
-                                                    // matrix
+                // already done, upper part of matrix
+                else if (rowUsers.contains(user2)) {
                     userInColumn++;
                     continue;
                 }
 
-                Map<String, Map<String, String>> allUserAnnotations = new TreeMap<String, Map<String, String>>();
+                Map<String, Map<String, String>> allUserAnnotations = new TreeMap<>();
 
                 if (finishedDocumentLists.get(user2).size() != 0) {
-                    List<SourceDocument> user1Documents = new ArrayList<SourceDocument>();
+                    List<SourceDocument> user1Documents = new ArrayList<>();
                     user1Documents.addAll(finishedDocumentLists.get(user1));
 
-                    List<SourceDocument> user2Documents = new ArrayList<SourceDocument>();
+                    List<SourceDocument> user2Documents = new ArrayList<>();
                     user2Documents.addAll(finishedDocumentLists.get(user2));
 
                     // sameDocuments finished (intersection of anno docs)
@@ -1048,7 +1046,6 @@ public class MonitoringPage
                         twoPairedKappa.getStudy(adapter.getAnnotationTypeName(), aLabelFeatureName,
                                 user1, user2, allUserAnnotations, document,
                                 documentJCases.get(document));
-
                     }
                 }
 

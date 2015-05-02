@@ -65,9 +65,9 @@ public class CasDiff
             int aBegin, int aEnd)
         throws RangeNameNotCheckedException
     {
-        Map<Integer, Map<Integer, Set<AnnotationFS>>> annotationFSsByBeginEnd = new HashMap<Integer, Map<Integer, Set<AnnotationFS>>>();
-        List<AnnotationOption> annotationOptions = new LinkedList<AnnotationOption>();
-        Map<FeatureStructure, String> usernameByFeatureStructure = new HashMap<FeatureStructure, String>();
+        Map<Integer, Map<Integer, Set<AnnotationFS>>> annotationFSsByBeginEnd = new HashMap<>();
+        List<AnnotationOption> annotationOptions = new LinkedList<>();
+        Map<FeatureStructure, String> usernameByFeatureStructure = new HashMap<>();
 
         Set<String> usernames = new HashSet<String>();
 
@@ -78,17 +78,17 @@ public class CasDiff
 
             for (Map<Integer, Set<AnnotationFS>> annotationFSsByEnd : annotationFSsByBeginEnd
                     .values()) {
-                Map<FeatureStructure, AnnotationSelection> annotationSelectionByFeatureStructure = new HashMap<FeatureStructure, AnnotationSelection>();
+                Map<FeatureStructure, AnnotationSelection> annotationSelectionByFeatureStructure = new HashMap<>();
 
                 for (Set<AnnotationFS> annotationFSs : annotationFSsByEnd.values()) {
-                    Map<String, AnnotationOption> annotationOptionPerType = new HashMap<String, AnnotationOption>();
+                    Map<String, AnnotationOption> annotationOptionPerType = new HashMap<>();
                     for (FeatureStructure fsNew : annotationFSs) {
                         String usernameFSNew = usernameByFeatureStructure.get(fsNew);
                         // diffFS1 contains all feature structures of fs1, which do not occur in
                         // other cases
                         Set<FeatureStructure> diffFSNew = traverseFS(fsNew);
 
-                        Map<FeatureStructure, AnnotationSelection> annotationSelectionByFeatureStructureNew = new HashMap<FeatureStructure, AnnotationSelection>(
+                        Map<FeatureStructure, AnnotationSelection> annotationSelectionByFeatureStructureNew = new HashMap<>(
                                 annotationSelectionByFeatureStructure);
 
                         for (FeatureStructure fsOld : annotationSelectionByFeatureStructure
@@ -172,8 +172,7 @@ public class CasDiff
                 Integer end = annotationFS.getEnd();
 
                 if (!annotationFSsByBeginEnd.containsKey(begin)) {
-                    annotationFSsByBeginEnd.put(begin,
-                            new HashMap<Integer, Set<AnnotationFS>>());
+                    annotationFSsByBeginEnd.put(begin, new HashMap<Integer, Set<AnnotationFS>>());
                 }
                 if (!annotationFSsByBeginEnd.get(begin).containsKey(end)) {
                     annotationFSsByBeginEnd.get(begin).put(end, new HashSet<AnnotationFS>());
@@ -186,15 +185,14 @@ public class CasDiff
 
     public static Set<FeatureStructure> traverseFS(FeatureStructure fs)
     {
-        LinkedHashSet<FeatureStructure> nodePlusChildren = new LinkedHashSet<FeatureStructure>();
+        Set<FeatureStructure> nodePlusChildren = new LinkedHashSet<>();
         nodePlusChildren.add(fs);
         for (Feature feature : fs.getType().getFeatures()) {
-            // features are present in both feature structures, fs1 and fs2
-            // compare primitive values
+            // features are present in both feature structures, fs1 and fs2 compare primitive values
             if (!feature.getRange().isPrimitive()
                     && !feature.toString().equals("uima.cas.AnnotationBase:sofa")) {
                 // compare composite types
-                // assumtion: if feature is not primitive, it is a composite feature
+                // assumption: if feature is not primitive, it is a composite feature
                 FeatureStructure featureValue = fs.getFeatureValue(feature);
                 if (featureValue != null) {
                     nodePlusChildren.addAll(traverseFS(featureValue));
