@@ -18,34 +18,28 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.curation;
 
 import java.io.Serializable;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- * This class comprises instances of {@link AnnotationSelection}, each representing
- * a possible choice of disagreeing annotation sets.
+ * This class comprises instances of {@link AnnotationSelection}, each representing a possible
+ * choice of disagreeing annotation sets.
  *
  * @author Andreas Straninger
  */
-public class AnnotationOption implements Serializable {
-	/**
-	 *
-	 */
-	private static final long serialVersionUID = -688656645133996937L;
-	private List<AnnotationSelection> annotationSelections = new LinkedList<AnnotationSelection>();
+public class AnnotationOption
+    implements Serializable
+{
+    private static final long serialVersionUID = -688656645133996937L;
+    private List<AnnotationSelection> annotationSelections = new ArrayList<AnnotationSelection>();
 
-	public List<AnnotationSelection> getAnnotationSelections() {
-		return annotationSelections;
-	}
+    public List<AnnotationSelection> getAnnotationSelections()
+    {
+        return annotationSelections;
+    }
 
-	public void setAnnotationSelections(
-			List<AnnotationSelection> annotationSelections) {
-		this.annotationSelections = annotationSelections;
-	}
-
-	@Override
-    public String toString() {
-		return annotationSelections.toString();
-	}
-
+    public void setAnnotationSelections(List<AnnotationSelection> annotationSelections)
+    {
+        this.annotationSelections = annotationSelections;
+    }
 }

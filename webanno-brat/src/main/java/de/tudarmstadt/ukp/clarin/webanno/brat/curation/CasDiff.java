@@ -19,8 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.curation;
 
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -65,11 +64,11 @@ public class CasDiff
             int aBegin, int aEnd)
         throws RangeNameNotCheckedException
     {
-        Map<Integer, Map<Integer, Set<AnnotationFS>>> annotationFSsByBeginEnd = new HashMap<>();
+        Map<Integer, Map<Integer, Set<AnnotationFS>>> annotationFSsByBeginEnd = new LinkedHashMap<>();
         List<AnnotationOption> annotationOptions = new LinkedList<>();
-        Map<FeatureStructure, String> usernameByFeatureStructure = new HashMap<>();
+        Map<FeatureStructure, String> usernameByFeatureStructure = new LinkedHashMap<>();
 
-        Set<String> usernames = new HashSet<String>();
+        Set<String> usernames = new LinkedHashSet<>();
 
         for (Type aEntryType : aEntryTypes) {
 
@@ -78,17 +77,17 @@ public class CasDiff
 
             for (Map<Integer, Set<AnnotationFS>> annotationFSsByEnd : annotationFSsByBeginEnd
                     .values()) {
-                Map<FeatureStructure, AnnotationSelection> annotationSelectionByFeatureStructure = new HashMap<>();
+                Map<FeatureStructure, AnnotationSelection> annotationSelectionByFeatureStructure = new LinkedHashMap<>();
 
                 for (Set<AnnotationFS> annotationFSs : annotationFSsByEnd.values()) {
-                    Map<String, AnnotationOption> annotationOptionPerType = new HashMap<>();
+                    Map<String, AnnotationOption> annotationOptionPerType = new LinkedHashMap<>();
                     for (FeatureStructure fsNew : annotationFSs) {
                         String usernameFSNew = usernameByFeatureStructure.get(fsNew);
                         // diffFS1 contains all feature structures of fs1, which do not occur in
                         // other cases
                         Set<FeatureStructure> diffFSNew = traverseFS(fsNew);
 
-                        Map<FeatureStructure, AnnotationSelection> annotationSelectionByFeatureStructureNew = new HashMap<>(
+                        Map<FeatureStructure, AnnotationSelection> annotationSelectionByFeatureStructureNew = new LinkedHashMap<>(
                                 annotationSelectionByFeatureStructure);
 
                         for (FeatureStructure fsOld : annotationSelectionByFeatureStructure
@@ -110,9 +109,9 @@ public class CasDiff
                                             addressNew);
                                     annotationSelectionByFeatureStructureNew.put(
                                             compareResultFSNew, annotationSelection);
-                                    // Add Debug information
-                                    annotationSelection.getFsStringByUsername().put(usernameFSNew,
-                                            compareResultFSNew);
+//                                    // Add Debug information
+//                                    annotationSelection.getFsStringByUsername().put(usernameFSNew,
+//                                            compareResultFSNew);
 
                                 }
                             }
@@ -139,9 +138,9 @@ public class CasDiff
                                 // link annotationOption and annotationSelection
                                 annotationSelection.setAnnotationOption(annotationOption);
                                 annotationOption.getAnnotationSelections().add(annotationSelection);
-                                // Add Debug information
-                                annotationSelection.getFsStringByUsername().put(usernameFSNew,
-                                        subFS1);
+//                                // Add Debug information
+//                                annotationSelection.getFsStringByUsername().put(usernameFSNew,
+//                                        subFS1);
                             }
                         }
                     }
@@ -172,10 +171,10 @@ public class CasDiff
                 Integer end = annotationFS.getEnd();
 
                 if (!annotationFSsByBeginEnd.containsKey(begin)) {
-                    annotationFSsByBeginEnd.put(begin, new HashMap<Integer, Set<AnnotationFS>>());
+                    annotationFSsByBeginEnd.put(begin, new LinkedHashMap<Integer, Set<AnnotationFS>>());
                 }
                 if (!annotationFSsByBeginEnd.get(begin).containsKey(end)) {
-                    annotationFSsByBeginEnd.get(begin).put(end, new HashSet<AnnotationFS>());
+                    annotationFSsByBeginEnd.get(begin).put(end, new LinkedHashSet<AnnotationFS>());
                 }
                 annotationFSsByBeginEnd.get(begin).get(end).add(annotationFS);
                 usernameByFeatureStructure.put(annotationFS, username);

@@ -75,6 +75,10 @@ public class BratAjaxCasUtil
             return false;
         }
 
+        if (a.getCAS() != b.getCAS()) {
+            return false;
+        }
+        
         return getAddr(a) == getAddr(b);
     }
 
@@ -641,6 +645,30 @@ public class BratAjaxCasUtil
         return seletedTextSb.toString();
     }
 
+    public static <T> T getFeature(FeatureStructure aFS, String aFeatureName)
+    {
+        Feature feature = aFS.getType().getFeatureByBaseName(aFeatureName);
+        
+        if (feature == null) {
+            throw new IllegalArgumentException("Type [" + aFS.getType().getName()
+                    + "] has no feature called [" + aFeatureName + "]");
+        }
+        
+        switch (feature.getRange().getName()) {
+        case CAS.TYPE_NAME_STRING:
+            return (T) aFS.getStringValue(feature);
+        case CAS.TYPE_NAME_BOOLEAN:
+            return (T) (Boolean) aFS.getBooleanValue(feature);
+        case CAS.TYPE_NAME_FLOAT:
+            return (T) (Float) aFS.getFloatValue(feature);
+        case CAS.TYPE_NAME_INTEGER:
+            return (T) (Integer) aFS.getIntValue(feature);
+        default:
+            throw new IllegalArgumentException("Cannot get value of feature ["
+                    + feature.getName() + "] with type [" + feature.getRange().getName() + "]");
+        }
+    }
+    
     public static <T> T getFeature(FeatureStructure aFS, AnnotationFeature aFeature)
     {
         Feature feature = aFS.getType().getFeatureByBaseName(aFeature.getName());
@@ -654,19 +682,20 @@ public class BratAjaxCasUtil
                         + aFeature.getType() + "].");
             }
 
-            switch (aFeature.getType()) {
-            case CAS.TYPE_NAME_STRING:
-                return (T) aFS.getStringValue(feature);
-            case CAS.TYPE_NAME_BOOLEAN:
-                return (T) (Boolean) aFS.getBooleanValue(feature);
-            case CAS.TYPE_NAME_FLOAT:
-                return (T) (Float) aFS.getFloatValue(feature);
-            case CAS.TYPE_NAME_INTEGER:
-                return (T) (Integer) aFS.getIntValue(feature);
-            default:
-                throw new IllegalArgumentException("Cannot get value of feature ["
-                        + aFeature.getName() + "] with type [" + feature.getRange().getName() + "]");
-            }
+//            switch (aFeature.getType()) {
+//            case CAS.TYPE_NAME_STRING:
+//                return (T) aFS.getStringValue(feature);
+//            case CAS.TYPE_NAME_BOOLEAN:
+//                return (T) (Boolean) aFS.getBooleanValue(feature);
+//            case CAS.TYPE_NAME_FLOAT:
+//                return (T) (Float) aFS.getFloatValue(feature);
+//            case CAS.TYPE_NAME_INTEGER:
+//                return (T) (Integer) aFS.getIntValue(feature);
+//            default:
+//                throw new IllegalArgumentException("Cannot get value of feature ["
+//                        + aFeature.getName() + "] with type [" + feature.getRange().getName() + "]");
+//            }
+            return getFeature(aFS, aFeature.getName());
         }
         case ARRAY: {
             switch (aFeature.getLinkMode()) {

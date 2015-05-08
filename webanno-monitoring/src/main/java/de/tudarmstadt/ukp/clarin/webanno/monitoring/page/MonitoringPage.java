@@ -1056,8 +1056,7 @@ public class MonitoringPage
                     // u1 1.0
                     // we took it as it is
                     if (allUserAnnotations.keySet().size() == 1) {
-                        results[userInRow][userInColumn] = (double) Math
-                                .round(thisResults[0][0] * 100) / 100;
+                        results[userInRow][userInColumn] = thisResults[0][0];
                     }
                     else {
                         // in result for the two users will be in the form of
@@ -1066,8 +1065,7 @@ public class MonitoringPage
                         // u1 1.0 0.84
                         // u2 0.84 1.0
                         // only value from first row, second column is important
-                        results[userInRow][userInColumn] = (double) Math
-                                .round(thisResults[0][1] * 100) / 100;
+                        results[userInRow][userInColumn] = thisResults[0][1];
                     }
                     rowUsers.add(user1);
                 }

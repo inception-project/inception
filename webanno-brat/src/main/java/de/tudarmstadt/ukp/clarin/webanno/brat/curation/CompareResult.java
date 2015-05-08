@@ -17,7 +17,7 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.curation;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.uima.cas.FeatureStructure;
@@ -30,10 +30,10 @@ import org.apache.uima.cas.FeatureStructure;
 public class CompareResult
 {
     // fs1, fs2
-    private Map<FeatureStructure, FeatureStructure> diffs = new HashMap<>();
+    private Map<FeatureStructure, FeatureStructure> diffs = new LinkedHashMap<>();
     
     // fs1, fs2
-    private Map<FeatureStructure, FeatureStructure> agreements = new HashMap<>();
+    private Map<FeatureStructure, FeatureStructure> agreements = new LinkedHashMap<>();
 
     public Map<FeatureStructure, FeatureStructure> getDiffs()
     {

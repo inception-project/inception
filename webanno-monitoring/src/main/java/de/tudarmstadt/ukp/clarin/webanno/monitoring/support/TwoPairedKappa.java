@@ -64,7 +64,7 @@ public class TwoPairedKappa
      * @param aType the layer.
      * @return the positions.
      */
-    public Set<String> getAnnotationPositions(JCas aJCas, Long docId, String aType)
+    private Set<String> getAnnotationPositions(JCas aJCas, Long docId, String aType)
     {
         // Set of start+end offsets for all annotations in the document
         Set<String> annotationPositions = new HashSet<String>();
@@ -99,7 +99,7 @@ public class TwoPairedKappa
      *            {@link #getAnnotationPositions}
      * @return the annotations.
      */
-    public Map<String, Map<String, String>> initializeAnnotations(List<User> aUsers,
+    private Map<String, Map<String, String>> initializeAnnotations(List<User> aUsers,
             Set<String> aAnnotationPositions)
     {
         Map<String, Map<String, String>> userAnnotations = new TreeMap<String, Map<String, String>>();
@@ -127,7 +127,7 @@ public class TwoPairedKappa
      * @param aJcas the JCas.
      * @return an updated user annotations
      */
-    public Map<String, Map<String, String>> updateUserAnnotations(User aUser,
+    private Map<String, Map<String, String>> updateUserAnnotations(User aUser,
             Map<String, Map<String, String>> aUserAnnotations, Long docId, String aType,
             String aLableFeatureName, JCas aJcas)
     {
