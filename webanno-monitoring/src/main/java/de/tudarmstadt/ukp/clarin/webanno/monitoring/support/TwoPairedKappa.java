@@ -33,6 +33,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AgreementUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -238,6 +239,9 @@ public class TwoPairedKappa
                     study.addItem(user1Annotation.get(annotationOffset), aAnnotationStudy
                             .get(user2).get(annotationOffset));
                 }
+                
+                AgreementUtils.dumpStudy(System.out, study);
+                
                 TwoRaterKappaAgreement kappaAgreement = new TwoRaterKappaAgreement(study);
                 results[i][j] = kappaAgreement.calculateAgreement();
                 j++;

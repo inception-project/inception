@@ -19,11 +19,16 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.curation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getFeature;
 
+import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.jcas.JCas;
 
@@ -33,35 +38,69 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.Position;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.AnnotationStudy;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.IAnnotationStudy;
+import de.tudarmstadt.ukp.dkpro.statistics.agreement.IAnnotationStudy.IAnnotationItem;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.TwoRaterKappaAgreement;
 
 public class AgreementUtils
 {
+    public static AgreementResult[][] getPairwiseTwoRaterAgreement(DiffResult aDiff, String aType,
+            String aFeature, Map<String, List<JCas>> aCasMap)
+    {
+        AgreementResult[][] result = new AgreementResult[aCasMap.size()][aCasMap.size()];
+        List<Entry<String, List<JCas>>> entryList = new ArrayList<>(aCasMap.entrySet());
+        for (int m = 0; m < entryList.size(); m++) {
+            for (int n = 0; n < entryList.size(); n++) {
+                // Diagonal
+                if (m == n) {
+                    result[m][n] = new AgreementResult();
+                    result[m][n].setAgreement(1.0d);
+                }
+                
+                // Triangle matrix mirrored
+                if (n < m) {
+                    Map<String, List<JCas>> pairwiseCasMap = new LinkedHashMap<>();
+                    pairwiseCasMap.put(entryList.get(m).getKey(), entryList.get(m).getValue());
+                    pairwiseCasMap.put(entryList.get(n).getKey(), entryList.get(n).getValue());
+                    result[m][n] = getTwoRaterAgreement(aDiff, aType, aFeature, pairwiseCasMap);
+                    result[n][m] = result[m][n];
+                }
+            }
+        }
+        return result;
+    }
+    
     public static AgreementResult getTwoRaterAgreement(DiffResult aDiff, String aType,
-            String aFeature, Map<String, JCas> aCasMap)
+            String aFeature, Map<String, List<JCas>> aCasMap)
     {
         if (aCasMap.size() != 2) {
             throw new IllegalArgumentException("CAS map must contain exactly two CASes");
         }
         
         AgreementResult agreementResult = AgreementUtils.makeStudy(aDiff, aType, aFeature, aCasMap);
-        TwoRaterKappaAgreement agreement = new TwoRaterKappaAgreement(agreementResult.study);
-        agreementResult.setAgreement( agreement.calculateAgreement());
-        return agreementResult;
+        try {
+            TwoRaterKappaAgreement agreement = new TwoRaterKappaAgreement(agreementResult.study);
+            agreementResult.setAgreement( agreement.calculateAgreement());
+            return agreementResult;
+        }
+        catch (RuntimeException e) {
+            // FIXME
+            AgreementUtils.dumpAgreementStudy(System.out, agreementResult);
+            throw e;
+        }
     }
     
     private static AgreementResult makeStudy(DiffResult aDiff, String aType, String aFeature,
-            Map<String, JCas> aCasMap)
+            Map<String, List<JCas>> aCasMap)
     {
-        List<String> users = new ArrayList<String>(aCasMap.keySet());
-        Collections.sort(users);
-        return makeStudy(aDiff, users, aType, aFeature, aCasMap);
+        return makeStudy(aDiff, aCasMap.keySet(), aType, aFeature, aCasMap);
     }
     
-    private static AgreementResult makeStudy(DiffResult aDiff, List<String> aUsers,
-            String aType, String aFeature, Map<String, JCas> aCasMap)
+    private static AgreementResult makeStudy(DiffResult aDiff, Collection<String> aUsers,
+            String aType, String aFeature, Map<String, List<JCas>> aCasMap)
     {
-        List<ConfigurationSet> incompleteSets = new ArrayList<>();
+        List<ConfigurationSet> completeSets = new ArrayList<>();
+        List<ConfigurationSet> incompleteSetsByPosition = new ArrayList<>();
+        List<ConfigurationSet> incompleteSetsByLabel = new ArrayList<>();
         AnnotationStudy study = new AnnotationStudy(aUsers.size());
         nextPosition: for (Position p : aDiff.getPositions()) {
             ConfigurationSet cfgSet = aDiff.getConfigurtionSet(p);
@@ -76,8 +115,8 @@ public class AgreementUtils
             for (String user : aUsers) {
                 // Set has to include all users, otherwise we cannot calculate the agreement for
                 // this configuration set.
-                if (!cfgSet.getCasIds().contains(user)) {
-                    incompleteSets.add(cfgSet);
+                if (!cfgSet.getCasGroupIds().contains(user)) {
+                    incompleteSetsByPosition.add(cfgSet);
                     continue nextPosition;
                 }
                 
@@ -93,27 +132,114 @@ public class AgreementUtils
                 }
                 
                 // Only calculate agreement for the given feature
-                FeatureStructure fs = cfgs.get(0).getFs(user, aCasMap);
+                FeatureStructure fs = cfgs.get(0).getFs(user, p.getCasId(), aCasMap);
                 values[i] = getFeature(fs, aFeature);
+                
+                // "null" cannot be used in agreement calculations. We treat these as incomplete
+                if (values[i] == null) {
+                    incompleteSetsByLabel.add(cfgSet);
+                    continue nextPosition;
+                }
+                
                 i++;
             }
-            
+
+            completeSets.add(cfgSet);
             study.addItemAsArray(values);
         }
         
-        return new AgreementResult(study, incompleteSets);
+        return new AgreementResult(aDiff, study, completeSets, incompleteSetsByPosition,
+                incompleteSetsByLabel);
     }
     
+    public static void dumpAgreementStudy(PrintStream aOut, AgreementResult aAgreement)
+    {
+        try {
+            aOut.printf("Category count: %d%n", aAgreement.getStudy().getCategoryCount());
+        }
+        catch (Throwable e) {
+            aOut.printf("Category count: %s%n", ExceptionUtils.getRootCauseMessage(e));
+        }
+        try {
+            aOut.printf("Item count: %d%n", aAgreement.getStudy().getItemCount());
+        }
+        catch (Throwable e) {
+            aOut.printf("Item count: %s%n", ExceptionUtils.getRootCauseMessage(e));
+        }
+        
+        List<ConfigurationSet> completeSets = aAgreement.getCompleteSets();
+        int i = 0;
+        for (IAnnotationItem item : aAgreement.getStudy().getItems()) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(completeSets.get(i).getPosition());
+            for (Object obj : item.getAnnotations()) {
+                if (sb.length() > 0) {
+                    sb.append(" \t");
+                }
+                sb.append(obj);
+            }
+            aOut.println(sb);
+            i++;
+        }
+    }
+
+    public static void dumpStudy(PrintStream aOut, IAnnotationStudy aStudy)
+    {
+        try {
+            aOut.printf("Category count: %d%n", aStudy.getCategoryCount());
+        }
+        catch (Throwable e) {
+            aOut.printf("Category count: %s%n", ExceptionUtils.getRootCauseMessage(e));
+        }
+        try {
+            aOut.printf("Item count: %d%n", aStudy.getItemCount());
+        }
+        catch (Throwable e) {
+            aOut.printf("Item count: %s%n", ExceptionUtils.getRootCauseMessage(e));
+        }
+        
+        for (IAnnotationItem item : aStudy.getItems()) {
+            StringBuilder sb = new StringBuilder();
+            for (Object obj : item.getAnnotations()) {
+                if (sb.length() > 0) {
+                    sb.append(" \t");
+                }
+                sb.append(obj);
+            }
+            aOut.println(sb);
+        }
+    }
+
     public static class AgreementResult
     {
+        private final DiffResult diff;
         private final IAnnotationStudy study;
-        private final List<ConfigurationSet> incompleteSets;
+        private final List<ConfigurationSet> completeSets;
+        private final List<ConfigurationSet> incompleteSetsByPosition;
+        private final List<ConfigurationSet> incompleteSetsByLabel;
         private double agreement;
-        
-        public AgreementResult(IAnnotationStudy aStudy, List<ConfigurationSet> aIncomplete)
+
+        public AgreementResult()
         {
+            diff = null;
+            study = null;
+            completeSets = null;
+            incompleteSetsByPosition = null;
+            incompleteSetsByLabel = null;
+        }
+
+        public AgreementResult(DiffResult aDiff, IAnnotationStudy aStudy,
+                List<ConfigurationSet> aComplete,
+                List<ConfigurationSet> aIncompleteByPosition,
+                List<ConfigurationSet> aIncompleteByLabel)
+        {
+            diff = aDiff;
             study = aStudy;
-            incompleteSets = Collections.unmodifiableList(new ArrayList<>(aIncomplete));
+            completeSets = Collections.unmodifiableList(new ArrayList<>(aComplete));
+            incompleteSetsByPosition = Collections.unmodifiableList(new ArrayList<>(
+                    aIncompleteByPosition));
+            incompleteSetsByLabel = Collections
+                    .unmodifiableList(new ArrayList<>(aIncompleteByLabel));
         }
         
         private void setAgreement(double aAgreement)
@@ -121,9 +247,40 @@ public class AgreementUtils
             agreement = aAgreement;
         }
         
-        public List<ConfigurationSet> getIncompleteSets()
+        /**
+         * Positions that were not seen in all CAS groups.
+         */
+        public List<ConfigurationSet> getIncompleteSetsByPosition()
         {
-            return incompleteSets;
+            return incompleteSetsByPosition;
+        }
+
+        /**
+         * Positions that were  seen in all CAS groups, but labels are unset (null).
+         */
+        public List<ConfigurationSet> getIncompleteSetsByLabel()
+        {
+            return incompleteSetsByLabel;
+        }
+
+        public List<ConfigurationSet> getCompleteSets()
+        {
+            return completeSets;
+        }
+        
+        public int getIncompleteSetCount()
+        {
+            return incompleteSetsByPosition.size() + incompleteSetsByLabel.size();
+        }
+        
+        public Object getCompleteSetCount()
+        {
+            return completeSets.size();
+        }
+
+        public int getTotalSetCount()
+        {
+            return diff.getPositions().size();
         }
         
         public double getAgreement()
@@ -135,11 +292,16 @@ public class AgreementUtils
         {
             return study;
         }
+        
+        public DiffResult getDiff()
+        {
+            return diff;
+        }
 
         @Override
         public String toString()
         {
-            return "AgreementResult [incompleteSets=" + incompleteSets.size() + ", agreement="
+            return "AgreementResult [incompleteSets=" + incompleteSetsByPosition.size() + ", agreement="
                     + agreement + "]";
         }
     }

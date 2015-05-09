@@ -67,3 +67,32 @@ As there is only one curator for one document, curation is not divided into indi
 Scrolling down, two further frames become visible. The left one, named *Layer*, allows you to chose a layer in which pairwise kappa agreement between annotators will be calculated.
 
 image::monitoring_agreement.jpg[align="center"]
+
+=== Agreement ===
+
+Agreement can be inspected on a per-feature basis and it is calculates pair-wise between all 
+annotators across all document. Agreement is calculated using Cohen's kappa as implemented in
+DKPro Statistics.
+
+The first time a feature is selected for agreement inspection, it takes a moment to calculate the
+differences between the annotated documents. Switching between different features subsequently
+is much faster.
+
+Agreement is calculated in two steps:
+
+. *Generation of positions and configuration sets* - all documents are scanned for annotations and 
+   annotations located at the same positions are collected in configuration sets. To determine if
+   two annotations are at the same position, different approaches are used depending on the layer
+   type. For a span layer, the begin and end offsets are used. For a relation layer, the begin/end
+   offsets of the source and target annotation are used. Chains are currently not supported. 
+. *Calculation of pairwise agreement* - based on the generated configuration sets, agreement is calculated.
+  There are two cases where a configuration set may be omitted from the pairwise agreement calculation:
+.. one of the users did not make an annotation at the position;
+.. one or both of the users did not assign a value to the feature on which agreement is calculated
+   at the position.
+
+The lower part of the agreement matrix displays how many configuration sets were used to calculate
+agreement and how many were found in total. The upper part of the agreement matrix displays the
+pairwise Cohen's kappa scores.
+  
+

@@ -36,11 +36,8 @@ import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AgreementUtils.AgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.ArcDiffAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.Configuration;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.DiffResult;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.Position;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.SpanDiffAdapter;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -58,11 +55,11 @@ public class CasDiff2Test
         
         List<DiffAdapter> diffAdapters = new ArrayList<>();
 
-        Map<String, JCas> casByUser = new LinkedHashMap<>();
+        Map<String, List<JCas>> casByUser = new LinkedHashMap<>();
 
         DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters, casByUser);
         
-        print(result);
+        result.print(System.out);
         
         assertEquals(0, result.size());
         assertEquals(0, result.getDifferingConfigurations().size());
@@ -78,8 +75,8 @@ public class CasDiff2Test
         JCas user1Cas = JCasFactory.createJCas();
         user1Cas.setDocumentText(text);
         
-        Map<String, JCas> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", user1Cas);
+        Map<String, List<JCas>> casByUser = new LinkedHashMap<>();
+        casByUser.put("user1", asList(user1Cas));
 
         List<String> entryTypes = asList(Token.class.getName());
 
@@ -87,7 +84,7 @@ public class CasDiff2Test
 
         DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters, casByUser);
         
-        print(result);
+        result.print(System.out);
         
         assertEquals(0, result.size());
         assertEquals(0, result.getDifferingConfigurations().size());
@@ -105,9 +102,9 @@ public class CasDiff2Test
         JCas user2Cas = JCasFactory.createJCas();
         user2Cas.setDocumentText(text);
 
-        Map<String, JCas> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", user1Cas);
-        casByUser.put("user2", user2Cas);
+        Map<String, List<JCas>> casByUser = new LinkedHashMap<>();
+        casByUser.put("user1", asList(user1Cas));
+        casByUser.put("user2", asList(user2Cas));
 
         List<String> entryTypes = asList(Token.class.getName());
 
@@ -115,7 +112,7 @@ public class CasDiff2Test
 
         DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters, casByUser);
         
-        print(result);
+        result.print(System.out);
         
         assertEquals(0, result.size());
         assertEquals(0, result.getDifferingConfigurations().size());
@@ -124,14 +121,14 @@ public class CasDiff2Test
         AgreementResult agreement = AgreementUtils.getTwoRaterAgreement(result, entryTypes.get(0),
                 "PosValue", casByUser);
         assertEquals(Double.NaN, agreement.getAgreement(), 0.000001d);
-        assertEquals(0, agreement.getIncompleteSets().size());
+        assertEquals(0, agreement.getIncompleteSetsByPosition().size());
     }
 
     @Test
     public void noDifferencesPosTest()
         throws Exception
     {
-        Map<String, JCas> casByUser = load(
+        Map<String, List<JCas>> casByUser = load(
                 "casdiff/noDifferences/data.conll",
                 "casdiff/noDifferences/data.conll");
 
@@ -141,7 +138,7 @@ public class CasDiff2Test
 
         DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters, casByUser);
         
-        print(result);
+        result.print(System.out);
         
         assertEquals(26, result.size());
         assertEquals(0, result.getDifferingConfigurations().size());
@@ -150,14 +147,14 @@ public class CasDiff2Test
         AgreementResult agreement = AgreementUtils.getTwoRaterAgreement(result, entryTypes.get(0),
                 "PosValue", casByUser);
         assertEquals(1.0d, agreement.getAgreement(), 0.000001d);
-        assertEquals(0, agreement.getIncompleteSets().size());
+        assertEquals(0, agreement.getIncompleteSetsByPosition().size());
     }
 
     @Test
     public void noDifferencesDependencyTest()
         throws Exception
     {
-        Map<String, JCas> casByUser = load(
+        Map<String, List<JCas>> casByUser = load(
                 "casdiff/noDifferences/data.conll",
                 "casdiff/noDifferences/data.conll");
 
@@ -167,7 +164,7 @@ public class CasDiff2Test
 
         DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters, casByUser);
         
-        print(result);
+        result.print(System.out);
         
         assertEquals(26, result.size());
         assertEquals(0, result.getDifferingConfigurations().size());
@@ -176,14 +173,14 @@ public class CasDiff2Test
         AgreementResult agreement = AgreementUtils.getTwoRaterAgreement(result, entryTypes.get(0),
                 "DependencyType", casByUser);
         assertEquals(1.0d, agreement.getAgreement(), 0.000001d);
-        assertEquals(0, agreement.getIncompleteSets().size());
+        assertEquals(0, agreement.getIncompleteSetsByPosition().size());
     }
 
     @Test
     public void noDifferencesPosDependencyTest()
         throws Exception
     {
-        Map<String, JCas> casByUser = load(
+        Map<String, List<JCas>> casByUser = load(
                 "casdiff/noDifferences/data.conll",
                 "casdiff/noDifferences/data.conll");
 
@@ -195,7 +192,7 @@ public class CasDiff2Test
 
         DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters, casByUser);
         
-        print(result);
+        result.print(System.out);
         
         assertEquals(52, result.size());
         assertEquals(26, result.size(POS.class.getName()));
@@ -206,14 +203,14 @@ public class CasDiff2Test
         AgreementResult agreement = AgreementUtils.getTwoRaterAgreement(result, entryTypes.get(0),
                 "PosValue", casByUser);
         assertEquals(1.0d, agreement.getAgreement(), 0.000001d);
-        assertEquals(0, agreement.getIncompleteSets().size());
+        assertEquals(0, agreement.getIncompleteSetsByPosition().size());
     }
 
     @Test
     public void singleDifferencesTest()
         throws Exception
     {
-        Map<String, JCas> casByUser = load(
+        Map<String, List<JCas>> casByUser = load(
                 "casdiff/singleSpanDifference/user1.conll",
                 "casdiff/singleSpanDifference/user2.conll");
 
@@ -223,7 +220,7 @@ public class CasDiff2Test
 
         DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters, casByUser);
         
-        print(result);
+        result.print(System.out);
         
         assertEquals(1, result.size());
         assertEquals(1, result.getDifferingConfigurations().size());
@@ -232,14 +229,14 @@ public class CasDiff2Test
         AgreementResult agreement = AgreementUtils.getTwoRaterAgreement(result, entryTypes.get(0),
                 "PosValue", casByUser);
         assertEquals(0.0d, agreement.getAgreement(), 0.000001d);
-        assertEquals(0, agreement.getIncompleteSets().size());
+        assertEquals(0, agreement.getIncompleteSetsByPosition().size());
     }
 
     @Test
     public void someDifferencesTest()
         throws Exception
     {
-        Map<String, JCas> casByUser = load(
+        Map<String, List<JCas>> casByUser = load(
                 "casdiff/someDifferences/user1.conll",
                 "casdiff/someDifferences/user2.conll");
 
@@ -249,7 +246,7 @@ public class CasDiff2Test
 
         DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters, casByUser);
         
-        print(result);
+        result.print(System.out);
         
         assertEquals(26, result.size());
         assertEquals(4, result.getDifferingConfigurations().size());
@@ -258,14 +255,14 @@ public class CasDiff2Test
         AgreementResult agreement = AgreementUtils.getTwoRaterAgreement(result, entryTypes.get(0),
                 "PosValue", casByUser);
         assertEquals(0.836477987d, agreement.getAgreement(), 0.000001d);
-        assertEquals(0, agreement.getIncompleteSets().size());
+        assertEquals(0, agreement.getIncompleteSetsByPosition().size());
     }
 
     @Test
     public void singleNoDifferencesTest()
         throws Exception
     {
-        Map<String, JCas> casByUser = load(
+        Map<String, List<JCas>> casByUser = load(
                 "casdiff/singleSpanNoDifference/data.conll",
                 "casdiff/singleSpanNoDifference/data.conll");
 
@@ -276,7 +273,7 @@ public class CasDiff2Test
 
         DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters, casByUser);
         
-        print(result);
+        result.print(System.out);
         
         assertEquals(1, result.size());
         assertEquals(0, result.getDifferingConfigurations().size());
@@ -285,14 +282,14 @@ public class CasDiff2Test
         AgreementResult agreement = AgreementUtils.getTwoRaterAgreement(result, entryTypes.get(0),
                 "PosValue", casByUser);
         assertEquals(Double.NaN, agreement.getAgreement(), 0.000001d);
-        assertEquals(0, agreement.getIncompleteSets().size());
+        assertEquals(0, agreement.getIncompleteSetsByPosition().size());
     }
 
     @Test
     public void relationDistanceTest()
         throws Exception
     {
-        Map<String, JCas> casByUser = load(
+        Map<String, List<JCas>> casByUser = load(
                 "casdiff/relationDistance/user1.conll",
                 "casdiff/relationDistance/user2.conll");
 
@@ -303,7 +300,7 @@ public class CasDiff2Test
 
         DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters, casByUser);
         
-        print(result);
+        result.print(System.out);
         
         assertEquals(27, result.size());
         assertEquals(0, result.getDifferingConfigurations().size());
@@ -312,14 +309,14 @@ public class CasDiff2Test
         AgreementResult agreement = AgreementUtils.getTwoRaterAgreement(result, entryTypes.get(0),
                 "DependencyType", casByUser);
         assertEquals(1.0, agreement.getAgreement(), 0.000001d);
-        assertEquals(2, agreement.getIncompleteSets().size());
+        assertEquals(2, agreement.getIncompleteSetsByPosition().size());
     }
 
     @Test
     public void spanLabelLabelTest()
         throws Exception
     {
-        Map<String, JCas> casByUser = load(
+        Map<String, List<JCas>> casByUser = load(
                 "casdiff/spanLabel/user1.conll",
                 "casdiff/spanLabel/user2.conll");
 
@@ -330,7 +327,7 @@ public class CasDiff2Test
 
         DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters, casByUser);
         
-        print(result);
+        result.print(System.out);
         
         assertEquals(26, result.size());
         assertEquals(1, result.getDifferingConfigurations().size());
@@ -339,14 +336,14 @@ public class CasDiff2Test
         AgreementResult agreement = AgreementUtils.getTwoRaterAgreement(result, entryTypes.get(0),
                 "PosValue", casByUser);
         assertEquals(0.958730d, agreement.getAgreement(), 0.000001d);
-        assertEquals(0, agreement.getIncompleteSets().size());
+        assertEquals(0, agreement.getIncompleteSetsByPosition().size());
     }
 
     @Test
     public void relationLabelTest()
         throws Exception
     {
-        Map<String, JCas> casByUser = load(
+        Map<String, List<JCas>> casByUser = load(
                 "casdiff/relationLabel/user1.conll",
                 "casdiff/relationLabel/user2.conll");
 
@@ -357,7 +354,7 @@ public class CasDiff2Test
 
         DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters, casByUser);
         
-        print(result);
+        result.print(System.out);
         
         assertEquals(26, result.size());
         assertEquals(1, result.getDifferingConfigurations().size());
@@ -366,17 +363,17 @@ public class CasDiff2Test
         AgreementResult agreement = AgreementUtils.getTwoRaterAgreement(result, entryTypes.get(0),
                 "DependencyType", casByUser);
         assertEquals(0.958199d, agreement.getAgreement(), 0.000001d);
-        assertEquals(0, agreement.getIncompleteSets().size());
+        assertEquals(0, agreement.getIncompleteSetsByPosition().size());
     }
 
-    private static Map<String, JCas> load(String... aPaths)
+    private static Map<String, List<JCas>> load(String... aPaths)
         throws UIMAException, IOException
     {
-        Map<String, JCas> casByUser = new LinkedHashMap<>();
+        Map<String, List<JCas>> casByUser = new LinkedHashMap<>();
         int n = 1;
         for (String path : aPaths) {
             JCas cas = read(path);
-            casByUser.put("user"+n, cas);
+            casByUser.put("user"+n, asList(cas));
             n++;
         }
         return casByUser;
@@ -393,23 +390,6 @@ public class CasDiff2Test
         reader.getNext(jcas.getCas());
         
         return jcas;
-    }
-    
-    private static void print(DiffResult aResult)
-    {
-        for (Position p : aResult.getPositions()) {
-            ConfigurationSet configurationSet = aResult.getConfigurtionSet(p);
-            System.out.printf("=== %s -> %s %s%n", p, 
-                    aResult.isAgreement(configurationSet) ? "AGREE" : "DISAGREE",
-                    aResult.isComplete(configurationSet) ? "COMPLETE" : "INCOMPLETE");
-            if (!aResult.isAgreement(configurationSet) || !aResult.isComplete(configurationSet)) {
-                System.out.println();
-                for (Configuration cfg : configurationSet.getConfigurations()) {
-                    System.out.println();
-                    System.out.println(cfg);
-                }
-            }
-        }
     }
     
     @Rule

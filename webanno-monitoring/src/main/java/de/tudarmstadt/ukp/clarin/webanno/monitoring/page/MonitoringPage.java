@@ -17,6 +17,9 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.monitoring.page;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.IGNORE_TO_NEW;
@@ -24,6 +27,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTra
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.NEW_TO_IGNORE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED;
+import static java.util.Arrays.asList;
 
 import java.awt.Color;
 import java.io.IOException;
@@ -33,8 +37,11 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.TreeMap;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -57,6 +64,7 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.markup.html.image.Image;
 import org.apache.wicket.markup.html.image.NonCachingImage;
+import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.AbstractReadOnlyModel;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -86,8 +94,16 @@ import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.automation.AutomationService;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AgreementUtils;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AgreementUtils.AgreementResult;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.ArcDiffAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.DiffAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.DiffResult;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.SpanDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -95,6 +111,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
+import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
@@ -102,7 +119,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
-import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.monitoring.support.ChartImageResource;
 import de.tudarmstadt.ukp.clarin.webanno.monitoring.support.DynamicColumnMetaData;
@@ -112,7 +128,6 @@ import de.tudarmstadt.ukp.clarin.webanno.monitoring.support.TwoPairedKappa;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.home.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.dkpro.statistics.agreement.TwoRaterKappaAgreement;
 
 /**
  * A Page To display different monitoring and statistics measurements tabularly and graphically.
@@ -519,7 +534,13 @@ public class MonitoringPage
                 @Override
                 protected void onUpdate(AjaxRequestTarget aTarget)
                 {
-                    updateAgreementTable(aTarget);
+                    try {
+                        updateAgreementTable(aTarget);
+                    }
+                    catch (Throwable e) {
+                        error(ExceptionUtils.getRootCauseMessage(e));
+                        aTarget.addChildren(getPage(), FeedbackPanel.class);
+                    }
                 }
             }).setOutputMarkupId(true);
         }
@@ -701,7 +722,6 @@ public class MonitoringPage
         Project project = projectSelectionForm.getModelObject().project;
         List<User> users = repository
                 .listProjectUsersWithPermissions(project, PermissionLevel.USER);
-        double[][] results = new double[users.size()][users.size()];
         if (features.getModelObject() != null) {
 
             TypeAdapter adapter = TypeUtil.getAdapter(annotationService, features.getModelObject().getLayer());
@@ -723,8 +743,7 @@ public class MonitoringPage
             }
             sourceDocuments.removeAll(trainingDoc);
 
-            // a map that contains list of finished annotation documents for a
-            // given user
+            // a map that contains list of finished annotation documents for a given user
             Map<User, List<SourceDocument>> finishedDocumentLists = new HashMap<User, List<SourceDocument>>();
             for (User user : users) {
                 List<SourceDocument> finishedDocuments = new ArrayList<SourceDocument>();
@@ -743,29 +762,92 @@ public class MonitoringPage
                 documentJCases = getJCases(users, sourceDocuments);
             }
             
-            results = computeKappa(users, adapter, features.getModelObject().getName(),
-                    finishedDocumentLists, documentJCases);
+//            double[][] results = new double[users.size()][users.size()];
+//            results = computeKappa(users, adapter, features.getModelObject().getName(),
+//                    finishedDocumentLists, documentJCases);
 
             // Users with some annotations of this type
 
-            List<String> usersListAsColumnHeader = new ArrayList<String>();
-            usersListAsColumnHeader.add("users");
-
-            for (User user : users) {
-                usersListAsColumnHeader.add(user.getUsername());
+            // Convert to structure required by CasDiff - FIXME should be removed
+            Map<String, List<JCas>> casMap = new LinkedHashMap<>();
+            for (Entry<SourceDocument, Map<User, JCas>> e1: documentJCases.entrySet()) {
+                for (User user : users) {
+                    List<JCas> casList = casMap.get(user.getUsername());
+                    if (casList == null) {
+                        casList = new ArrayList<>();
+                        casMap.put(user.getUsername(), casList);
+                    }
+                    // The next line can enter null values into the list if a user didn't work
+                    // on a CAS yet.
+                    casList.add(e1.getValue().get(user));
+                }
             }
-            List<List<String>> agreementResults = new ArrayList<List<String>>();
+            
+            List<DiffAdapter> adapters = new ArrayList<>();
+            for (AnnotationLayer layer : annotationService.listAnnotationLayer(project)) {
+                Set<String> labelFeatures = new LinkedHashSet<>();
+                for (AnnotationFeature f : annotationService.listAnnotationFeature(layer)) {
+                    if (!f.isEnabled()) {
+                        continue;
+                    }
+                    
+                    // FIXME Ignoring link features
+                    if (!LinkMode.NONE.equals(f.getLinkMode())) {
+                        continue;
+                    }
+                }
+                
+                switch (layer.getType()) {
+                case SPAN_TYPE: {
+                    SpanDiffAdapter adpt = new SpanDiffAdapter(layer.getName(), labelFeatures);
+                    adapters.add(adpt);
+                    break;
+                }
+                case RELATION_TYPE: {
+                    ArcAdapter typeAdpt = (ArcAdapter) TypeUtil.getAdapter(annotationService, layer);
+                    ArcDiffAdapter adpt = new ArcDiffAdapter(layer.getName(),
+                            typeAdpt.getSourceFeatureName(), typeAdpt.getTargetFeatureName(),
+                            labelFeatures);
+                    adapters.add(adpt);
+                    break;
+                }
+                case CHAIN_TYPE:
+                    // FIXME Currently, these are ignored.
+                    break;
+                }
+            }
+            
+            DiffResult diff = CasDiff2.doDiff(
+                    asList(features.getModelObject().getLayer().getName()), adapters, casMap);
+            AgreementResult[][] agreements = AgreementUtils.getPairwiseTwoRaterAgreement(diff,
+                    features.getModelObject().getLayer().getName(), features.getModelObject()
+                            .getName(), casMap);
+            
+            List<String> usersListAsColumnHeader = new ArrayList<>();
+            usersListAsColumnHeader.add("users");
+            usersListAsColumnHeader.addAll(casMap.keySet());
+            
+            List<List<String>> agreementResults = new ArrayList<>();
             int i = 0;
-            for (User user1 : users) {
-                List<String> agreementResult = new ArrayList<String>();
-                agreementResult.add(user1.getUsername());
+            for (String username : casMap.keySet()) {
+                List<String> agreementResult = new ArrayList<>();
+                agreementResult.add(username);
 
-                for (int j = 0; j < users.size(); j++) {
-                    if (j < i) {
-                        agreementResult.add("");
+                for (int j = 0; j < casMap.size(); j++) {
+                    if (j == i) {
+                        agreementResult.add("-");
+                    }
+                    else if (j < i) {
+                        agreementResult.add(String.format("%d/%d", agreements[i][j]
+                                .getCompleteSetCount(), agreements[i][j].getTotalSetCount()));
                     }
                     else {
-                        agreementResult.add((double) Math.round(results[i][j] * 100) / 100 + "");
+                        if (agreements[i][j].getStudy().getItemCount() == 0) {
+                            agreementResult.add("no data");
+                        }
+                        else {
+                            agreementResult.add(String.format("%.2f", agreements[i][j].getAgreement()));
+                        }
                     }
                 }
                 i++;
@@ -788,7 +870,7 @@ public class MonitoringPage
     }
 
     private class TrainingResultForm
-        extends Form<ResultMOdel>
+        extends Form<ResultModel>
     {
         private static final long serialVersionUID = 1037668483966897381L;
 
@@ -796,7 +878,7 @@ public class MonitoringPage
 
         public TrainingResultForm(String id)
         {
-            super(id, new CompoundPropertyModel<ResultMOdel>(new ResultMOdel()));
+            super(id, new CompoundPropertyModel<ResultModel>(new ResultModel()));
 
             add(new Label("resultLabel", new LoadableDetachableModel<String>()
             {
@@ -976,7 +1058,7 @@ public class MonitoringPage
 
     }
 
-    public class ResultMOdel
+    public class ResultModel
         implements Serializable
     {
         private static final long serialVersionUID = 3611186385198494181L;
@@ -1003,6 +1085,7 @@ public class MonitoringPage
      * @param documentJCases the document JCases.
      * @return the kappa matrix.
      */
+    @Deprecated
     public static double[][] computeKappa(List<User> users, TypeAdapter adapter,
             String aLabelFeatureName, Map<User, List<SourceDocument>> finishedDocumentLists,
             Map<SourceDocument, Map<User, JCas>> documentJCases)
@@ -1049,8 +1132,8 @@ public class MonitoringPage
                     }
                 }
 
-                if (twoPairedKappa.getAgreement(allUserAnnotations).length != 0) {
-                    double[][] thisResults = twoPairedKappa.getAgreement(allUserAnnotations);
+                double[][] thisResults = twoPairedKappa.getAgreement(allUserAnnotations);
+                if (thisResults.length != 0) {
                     // for a user with itself, we have
                     // u1
                     // u1 1.0

@@ -146,7 +146,7 @@ public class CasDiffTest
         List<AnnotationOption> result = CasDiff.doDiff(entryTypes, casByUser, 0, user1Cas
                 .getDocumentText().length());
         
-        assertEquals(26, result.size());
+        assertEquals(1, result.size());
         for (AnnotationOption opt : result) {
             for (AnnotationSelection sel : opt.getAnnotationSelections()) {
                 System.out.println(sel.getAddressByUsername());

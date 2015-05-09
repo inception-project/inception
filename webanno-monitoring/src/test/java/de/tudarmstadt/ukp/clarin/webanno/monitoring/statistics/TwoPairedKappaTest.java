@@ -147,7 +147,7 @@ public class TwoPairedKappaTest
         // Asserts
         System.out.printf("Old agreement: %f%n", results[0][1]);
         System.out.printf("New agreement: %s%n", agreement.toString());
-        print(diff);
+        diff.print(System.out);
         
         assertEquals(1.0d, agreement.getAgreement(), 0.000001);
         assertEquals(9, diff.size());
@@ -156,10 +156,10 @@ public class TwoPairedKappaTest
         assertEquals(results[0][1], 1.0, 0.0005);
     }
 
-    private Map<String, JCas> convert(Map<User, JCas> aMap) {
-        Map<String, JCas> map = new LinkedHashMap<String, JCas>();
+    private Map<String, List<JCas>> convert(Map<User, JCas> aMap) {
+        Map<String, List<JCas>> map = new LinkedHashMap<>();
         for (Entry<User, JCas> e : aMap.entrySet()) {
-            map.put(e.getKey().getUsername(), e.getValue());
+            map.put(e.getKey().getUsername(), asList(e.getValue()));
         }
         return map;
     }
@@ -195,7 +195,7 @@ public class TwoPairedKappaTest
         // Asserts
         System.out.printf("Old agreement: %f%n", results[0][1]);
         System.out.printf("New agreement: %s%n", agreement.toString());
-        print(diff);
+        diff.print(System.out);
         
         assertEquals(0.86153d, agreement.getAgreement(), 0.00001d);
         assertEquals(9, diff.size());
@@ -237,7 +237,7 @@ public class TwoPairedKappaTest
         // Asserts
         System.out.printf("Old agreement: %f%n", results[0][1]);
         System.out.printf("New agreement: %s%n", agreement.toString());
-        print(diff);
+        diff.print(System.out);
         
         assertEquals(0.86153d, agreement.getAgreement(), 0.00001d);
         assertEquals(9, diff.size());
@@ -277,7 +277,8 @@ public class TwoPairedKappaTest
         // Asserts
         System.out.printf("Old agreement: %f%n", results[0][1]);
         System.out.printf("New agreement: %s%n", agreement.toString());
-        print(diff);
+        diff.print(System.out);
+        AgreementUtils.dumpAgreementStudy(System.out, agreement);
         
         assertEquals(0.86153d, agreement.getAgreement(), 0.00001d);
         assertEquals(9, diff.size());
@@ -316,23 +317,23 @@ public class TwoPairedKappaTest
                 asList(SpanDiffAdapter.POS, ArcDiffAdapter.DEPENDENCY), 
                 convert(userCases));
         
-        Map<String, JCas> user1and2 = convert(userCases);
+        Map<String, List<JCas>> user1and2 = convert(userCases);
         user1and2.remove("user3");
         AgreementResult agreement12 = AgreementUtils.getTwoRaterAgreement(diff,
                 Dependency.class.getName(), "DependencyType", user1and2);
 
-        Map<String, JCas> user2and3 = convert(userCases);
+        Map<String, List<JCas>> user2and3 = convert(userCases);
         user2and3.remove("user1");
         AgreementResult agreement23 = AgreementUtils.getTwoRaterAgreement(diff,
                 Dependency.class.getName(), "DependencyType", user2and3);
 
-        Map<String, JCas> user1and3 = convert(userCases);
+        Map<String, List<JCas>> user1and3 = convert(userCases);
         user1and3.remove("user2");
         AgreementResult agreement13 = AgreementUtils.getTwoRaterAgreement(diff,
                 Dependency.class.getName(), "DependencyType", user1and3);
 
         // Asserts
-        print(diff);
+        diff.print(System.out);
         
         System.out.printf("Old agreement 1: %f%n", results[0][1]);
         System.out.printf("Old agreement 2: %f%n", results[0][2]);
@@ -344,23 +345,6 @@ public class TwoPairedKappaTest
         assertEquals(0.94, results[0][1], 0.01); // user1 V user2
         assertEquals(0.64, results[0][2], 0.01); // user1 V user3
         assertEquals(0.58, results[1][2], 0.01); // user2 V user3
-    }
-
-    private static void print(DiffResult aResult)
-    {
-        for (Position p : aResult.getPositions()) {
-            ConfigurationSet configurationSet = aResult.getConfigurtionSet(p);
-            System.out.printf("=== %s -> %s %s%n", p, 
-                    aResult.isAgreement(configurationSet) ? "AGREE" : "DISAGREE",
-                    aResult.isComplete(configurationSet) ? "COMPLETE" : "INCOMPLETE");
-            if (!aResult.isAgreement(configurationSet) || !aResult.isComplete(configurationSet)) {
-                System.out.println();
-                for (Configuration cfg : configurationSet.getConfigurations()) {
-                    System.out.println();
-                    System.out.println(cfg);
-                }
-            }
-        }
     }
 
     @Rule
