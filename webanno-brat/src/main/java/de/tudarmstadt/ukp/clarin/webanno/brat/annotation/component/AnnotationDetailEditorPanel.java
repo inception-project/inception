@@ -1316,7 +1316,9 @@ public class AnnotationDetailEditorPanel
                         LinkWithRoleModel m = new LinkWithRoleModel();
                         m.role = (String) text.getModelObject();
                         links.add(m);
-
+                        annotationFeatureForm.getModelObject().setArmedSlot(
+                                LinkFeatureEditor.this.getModelObject().feature, links.size() - 1);
+                        
                         aTarget.add(wmc);
                     }
                 }
