@@ -172,14 +172,14 @@ public class CasDiff2
         
         CasDiff2 diff = new CasDiff2(aBegin, aEnd, aAdapters);
         
-        for (String type : aEntryTypes) {
-            for (Entry<String, List<JCas>> e : aCasMap.entrySet()) {
-                int casId = 0;
+        for (Entry<String, List<JCas>> e : aCasMap.entrySet()) {
+            int casId = 0;
+            for (String type : aEntryTypes) {
                 for (JCas jcas : e.getValue()) {
                     // null elements in the list can occur if a user has never worked on a CAS
                     diff.addCas(e.getKey(), casId, jcas != null ? jcas.getCas() : null, type);
-                    casId++;
                 }
+                casId++;
             }
         }
         
@@ -249,7 +249,8 @@ public class CasDiff2
             casList = new ArrayList<>();
             cases.put(aCasGroupId, casList);
         }
-        assert casList.size() == aCasId;
+        assert casList.size() == aCasId : "Expected CAS ID [" + casList.size() + "] but was ["
+                + aCasId + "]";
         casList.add(aCas);
         
         // null elements in the list can occur if a user has never worked on a CAS
