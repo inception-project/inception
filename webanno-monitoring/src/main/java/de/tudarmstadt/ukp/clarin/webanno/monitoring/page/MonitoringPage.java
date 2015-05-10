@@ -496,7 +496,8 @@ public class MonitoringPage
                             for (AnnotationFeature feature : features) {
                                 if (feature.getLayer().getName().equals(Token.class.getName())
                                         || feature.getLayer().getName()
-                                                .equals(WebAnnoConst.COREFERENCE_LAYER)) {
+                                                .equals(WebAnnoConst.COREFERENCE_LAYER)
+                                        || !LinkMode.NONE.equals(feature.getLinkMode())) {
                                     unusedFeatures.add(feature);
                                 }
                             }
