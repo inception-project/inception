@@ -249,9 +249,13 @@ public class CasDiff2
             casList = new ArrayList<>();
             cases.put(aCasGroupId, casList);
         }
-        assert casList.size() == aCasId : "Expected CAS ID [" + casList.size() + "] but was ["
-                + aCasId + "]";
-        casList.add(aCas);
+        
+        // Avoid adding same CAS twice in cases where we add multiple types from a CAS.
+        if (!casList.contains(aCas)) {
+            casList.add(aCas);
+        }
+        assert (casList.size() - 1) == aCasId : "Expected CAS ID [" + (casList.size() - 1)
+                + "] but was [" + aCasId + "]";
         
         // null elements in the list can occur if a user has never worked on a CAS
         // We add these to the internal list above, but then we bail out here.
