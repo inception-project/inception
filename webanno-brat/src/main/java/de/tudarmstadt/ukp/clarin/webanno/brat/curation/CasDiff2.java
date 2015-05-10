@@ -174,8 +174,8 @@ public class CasDiff2
         
         for (Entry<String, List<JCas>> e : aCasMap.entrySet()) {
             int casId = 0;
-            for (String type : aEntryTypes) {
-                for (JCas jcas : e.getValue()) {
+            for (JCas jcas : e.getValue()) {
+                for (String type : aEntryTypes) {
                     // null elements in the list can occur if a user has never worked on a CAS
                     diff.addCas(e.getKey(), casId, jcas != null ? jcas.getCas() : null, type);
                 }
