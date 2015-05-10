@@ -325,8 +325,6 @@ public class MonitoringPage
                 @Override
                 protected void onSelectionChanged(Project aNewSelection)
                 {
-                    List<User> users = repository.listProjectUsersWithPermissions(aNewSelection,
-                            PermissionLevel.USER);
                     List<SourceDocument> sourceDocuments = repository
                             .listSourceDocuments(aNewSelection);
 
@@ -389,10 +387,10 @@ public class MonitoringPage
                     documentListAsColumnHeader.add(CURATION);
 
                     // List of users with USER permission level
-                    List<User> usersWithPermissions = repository.listProjectUsersWithPermissions(
+                    List<User> users = repository.listProjectUsersWithPermissions(
                             projectSelectionModel.project, PermissionLevel.USER);
 
-                    for (User user : usersWithPermissions) {
+                    for (User user : users) {
                         documentListAsColumnHeader.add(user.getUsername());
                     }
 
@@ -411,7 +409,7 @@ public class MonitoringPage
                         projectTimeStamp.add(LAST_ACCESS + "__");
                     }
 
-                    for (User user : usersWithPermissions) {
+                    for (User user : users) {
                         if (repository.existsProjectTimeStamp(projectSelectionModel.project, user.getUsername())) {
                             projectTimeStamp.add(LAST_ACCESS
                                     + new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(repository
@@ -432,7 +430,7 @@ public class MonitoringPage
                         userAnnotationDocuments.add(CurationPanel.CURATION_USER + "-" + DOCUMENT
                                 + document.getName());
 
-                        for (User user : usersWithPermissions) {
+                        for (User user : users) {
                             // annotation document status for this annotator
                             userAnnotationDocuments.add(user.getUsername() + "-" + DOCUMENT
                                     + document.getName());
