@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.jcas.JCas;
@@ -52,7 +53,7 @@ public class AgreementUtils
             for (int n = 0; n < entryList.size(); n++) {
                 // Diagonal
                 if (m == n) {
-                    result[m][n] = new AgreementResult();
+                    result[m][n] = new AgreementResult(aType, aFeature);
                     result[m][n].setAgreement(1.0d);
                 }
                 
@@ -99,6 +100,7 @@ public class AgreementUtils
             String aType, String aFeature, Map<String, List<JCas>> aCasMap)
     {
         List<ConfigurationSet> completeSets = new ArrayList<>();
+        List<ConfigurationSet> setsWithDifferences = new ArrayList<>();
         List<ConfigurationSet> incompleteSetsByPosition = new ArrayList<>();
         List<ConfigurationSet> incompleteSetsByLabel = new ArrayList<>();
         AnnotationStudy study = new AnnotationStudy(aUsers.size());
@@ -144,12 +146,16 @@ public class AgreementUtils
                 i++;
             }
 
+            if (ObjectUtils.notEqual(values[0], values[1])) {
+                setsWithDifferences.add(cfgSet);
+            }
+            
             completeSets.add(cfgSet);
             study.addItemAsArray(values);
         }
         
-        return new AgreementResult(aDiff, study, completeSets, incompleteSetsByPosition,
-                incompleteSetsByLabel);
+        return new AgreementResult(aType, aFeature, aDiff, study, completeSets,
+                setsWithDifferences, incompleteSetsByPosition, incompleteSetsByLabel);
     }
     
     public static void dumpAgreementStudy(PrintStream aOut, AgreementResult aAgreement)
@@ -212,29 +218,39 @@ public class AgreementUtils
 
     public static class AgreementResult
     {
+        private final String type;
+        private final String feature;
         private final DiffResult diff;
         private final IAnnotationStudy study;
+        private final List<ConfigurationSet> setsWithDifferences;
         private final List<ConfigurationSet> completeSets;
         private final List<ConfigurationSet> incompleteSetsByPosition;
         private final List<ConfigurationSet> incompleteSetsByLabel;
         private double agreement;
 
-        public AgreementResult()
+        public AgreementResult(String aType, String aFeature)
         {
+            type = aType;
+            feature = aFeature;
             diff = null;
             study = null;
+            setsWithDifferences = null;
             completeSets = null;
             incompleteSetsByPosition = null;
             incompleteSetsByLabel = null;
         }
 
-        public AgreementResult(DiffResult aDiff, IAnnotationStudy aStudy,
-                List<ConfigurationSet> aComplete,
+        public AgreementResult(String aType, String aFeature, DiffResult aDiff,
+                IAnnotationStudy aStudy, List<ConfigurationSet> aComplete,
+                List<ConfigurationSet> aSetsWithDifferences,
                 List<ConfigurationSet> aIncompleteByPosition,
                 List<ConfigurationSet> aIncompleteByLabel)
         {
+            type = aType;
+            feature = aFeature;
             diff = aDiff;
             study = aStudy;
+            setsWithDifferences = aSetsWithDifferences;
             completeSets = Collections.unmodifiableList(new ArrayList<>(aComplete));
             incompleteSetsByPosition = Collections.unmodifiableList(new ArrayList<>(
                     aIncompleteByPosition));
@@ -263,9 +279,22 @@ public class AgreementUtils
             return incompleteSetsByLabel;
         }
 
+        /**
+         * @return sets differing with respect to the type and feature used to calculate agreement.
+         */
+        public List<ConfigurationSet> getSetsWithDifferences()
+        {
+            return setsWithDifferences;
+        }
+        
         public List<ConfigurationSet> getCompleteSets()
         {
             return completeSets;
+        }
+        
+        public int getDiffSetCount()
+        {
+            return setsWithDifferences.size();
         }
         
         public int getIncompleteSetCount()
@@ -297,12 +326,23 @@ public class AgreementUtils
         {
             return diff;
         }
+        
+        public String getType()
+        {
+            return type;
+        }
+        
+        public String getFeature()
+        {
+            return feature;
+        }
 
         @Override
         public String toString()
         {
-            return "AgreementResult [incompleteSets=" + incompleteSetsByPosition.size() + ", agreement="
-                    + agreement + "]";
+            return "AgreementResult [type=" + type + ", feature=" + feature + ", diffs="
+                    + getDiffSetCount() + ", incompleteSets=" + getIncompleteSetCount()
+                    + ", agreement=" + agreement + "]";
         }
     }
 }
