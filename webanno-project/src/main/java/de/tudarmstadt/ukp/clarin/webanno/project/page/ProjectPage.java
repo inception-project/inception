@@ -283,6 +283,7 @@ public class ProjectPage
 
         AbstractTab details;
         AbstractTab users;
+        AbstractTab layers;
         AbstractTab tagSets;
         AbstractTab documents;
         @SuppressWarnings("rawtypes")
@@ -344,7 +345,7 @@ public class ProjectPage
                 }
             });
 
-            tabs.add(tagSets = new AbstractTab(new Model<String>("Layers"))
+            tabs.add(layers = new AbstractTab(new Model<String>("Layers"))
             {
                 private static final long serialVersionUID = 3274065112505097898L;
 
