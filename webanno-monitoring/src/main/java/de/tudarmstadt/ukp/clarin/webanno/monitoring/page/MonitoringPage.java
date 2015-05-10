@@ -532,7 +532,7 @@ public class MonitoringPage
     {
         Map<String, Integer> annotatorsProgress = new HashMap<String, Integer>();
         if (aProject != null) {
-            for (User user : repository.listProjectUsersWithPermissions(aProject)) {
+            for (User user : repository.listProjectUsersWithPermissions(aProject, PermissionLevel.USER)) {
                 for (SourceDocument document : repository.listSourceDocuments(aProject)) {
                     if (repository.isAnnotationFinished(document, user)) {
                         if (annotatorsProgress.get(user.getUsername()) == null) {
@@ -556,7 +556,7 @@ public class MonitoringPage
     {
         Map<String, Integer> annotatorsProgress = new HashMap<String, Integer>();
         if (aProject != null) {
-            for (User user : repository.listProjectUsersWithPermissions(aProject)) {
+            for (User user : repository.listProjectUsersWithPermissions(aProject, PermissionLevel.USER)) {
                 int finished = 0;
                 int ignored = 0;
                 int totalDocs = 0;
