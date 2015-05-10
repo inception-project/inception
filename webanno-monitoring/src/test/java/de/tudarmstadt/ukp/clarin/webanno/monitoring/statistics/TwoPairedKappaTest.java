@@ -119,7 +119,7 @@ public class TwoPairedKappaTest
         // Check against new impl
         DiffResult diff = CasDiff2.doDiff(POS.class, new SpanDiffAdapter(POS.class, "PosValue"),
                 convert(userCases));
-        AgreementResult agreement = AgreementUtils.getTwoRaterAgreement(diff, POS.class.getName(),
+        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff, POS.class.getName(),
                 "PosValue", convert(userCases));
         
         // Asserts
@@ -158,7 +158,7 @@ public class TwoPairedKappaTest
         // Check against new impl
         DiffResult diff = CasDiff2.doDiff(Dependency.class, new ArcDiffAdapter(Dependency.class,
                 "Dependent", "Governor", "DependencyType"), convert(userCases));
-        AgreementResult agreement = AgreementUtils.getTwoRaterAgreement(diff, Dependency.class.getName(),
+        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff, Dependency.class.getName(),
                 "DependencyType", convert(userCases));
         
         // Asserts
@@ -189,7 +189,7 @@ public class TwoPairedKappaTest
         // Check against new impl
         DiffResult diff = CasDiff2.doDiff(POS.class, new SpanDiffAdapter(POS.class, "PosValue"),
                 convert(userCases));
-        AgreementResult agreement = AgreementUtils.getTwoRaterAgreement(diff, POS.class.getName(),
+        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff, POS.class.getName(),
                 "PosValue", convert(userCases));
         
         // Asserts
@@ -220,7 +220,7 @@ public class TwoPairedKappaTest
         // Check against new impl
         DiffResult diff = CasDiff2.doDiff(Dependency.class, new ArcDiffAdapter(Dependency.class,
                 "Dependent", "Governor", "DependencyType"), convert(userCases));
-        AgreementResult agreement = AgreementUtils.getTwoRaterAgreement(diff, Dependency.class.getName(),
+        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff, Dependency.class.getName(),
                 "DependencyType", convert(userCases));
         
         // Asserts
@@ -259,17 +259,17 @@ public class TwoPairedKappaTest
         
         Map<String, List<JCas>> user1and2 = convert(userCases);
         user1and2.remove("user3");
-        AgreementResult agreement12 = AgreementUtils.getTwoRaterAgreement(diff,
+        AgreementResult agreement12 = AgreementUtils.getCohenKappaAgreement(diff,
                 Dependency.class.getName(), "DependencyType", user1and2);
 
         Map<String, List<JCas>> user2and3 = convert(userCases);
         user2and3.remove("user1");
-        AgreementResult agreement23 = AgreementUtils.getTwoRaterAgreement(diff,
+        AgreementResult agreement23 = AgreementUtils.getCohenKappaAgreement(diff,
                 Dependency.class.getName(), "DependencyType", user2and3);
 
         Map<String, List<JCas>> user1and3 = convert(userCases);
         user1and3.remove("user2");
-        AgreementResult agreement13 = AgreementUtils.getTwoRaterAgreement(diff,
+        AgreementResult agreement13 = AgreementUtils.getCohenKappaAgreement(diff,
                 Dependency.class.getName(), "DependencyType", user1and3);
 
         // Asserts

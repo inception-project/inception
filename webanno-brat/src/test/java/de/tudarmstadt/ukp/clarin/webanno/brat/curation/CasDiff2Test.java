@@ -118,7 +118,7 @@ public class CasDiff2Test
         assertEquals(0, result.getDifferingConfigurations().size());
         assertEquals(0, result.getIncompleteConfigurations().size());
 
-        AgreementResult agreement = AgreementUtils.getTwoRaterAgreement(result, entryTypes.get(0),
+        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(result, entryTypes.get(0),
                 "PosValue", casByUser);
         assertEquals(Double.NaN, agreement.getAgreement(), 0.000001d);
         assertEquals(0, agreement.getIncompleteSetsByPosition().size());
@@ -144,7 +144,7 @@ public class CasDiff2Test
         assertEquals(0, result.getDifferingConfigurations().size());
         assertEquals(0, result.getIncompleteConfigurations().size());
 
-        AgreementResult agreement = AgreementUtils.getTwoRaterAgreement(result, entryTypes.get(0),
+        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(result, entryTypes.get(0),
                 "PosValue", casByUser);
         assertEquals(1.0d, agreement.getAgreement(), 0.000001d);
         assertEquals(0, agreement.getIncompleteSetsByPosition().size());
@@ -170,7 +170,7 @@ public class CasDiff2Test
         assertEquals(0, result.getDifferingConfigurations().size());
         assertEquals(0, result.getIncompleteConfigurations().size());
 
-        AgreementResult agreement = AgreementUtils.getTwoRaterAgreement(result, entryTypes.get(0),
+        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(result, entryTypes.get(0),
                 "DependencyType", casByUser);
         assertEquals(1.0d, agreement.getAgreement(), 0.000001d);
         assertEquals(0, agreement.getIncompleteSetsByPosition().size());
@@ -200,7 +200,7 @@ public class CasDiff2Test
         assertEquals(0, result.getDifferingConfigurations().size());
         assertEquals(0, result.getIncompleteConfigurations().size());
 
-        AgreementResult agreement = AgreementUtils.getTwoRaterAgreement(result, entryTypes.get(0),
+        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(result, entryTypes.get(0),
                 "PosValue", casByUser);
         assertEquals(1.0d, agreement.getAgreement(), 0.000001d);
         assertEquals(0, agreement.getIncompleteSetsByPosition().size());
@@ -226,7 +226,7 @@ public class CasDiff2Test
         assertEquals(1, result.getDifferingConfigurations().size());
         assertEquals(0, result.getIncompleteConfigurations().size());
 
-        AgreementResult agreement = AgreementUtils.getTwoRaterAgreement(result, entryTypes.get(0),
+        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(result, entryTypes.get(0),
                 "PosValue", casByUser);
         assertEquals(0.0d, agreement.getAgreement(), 0.000001d);
         assertEquals(0, agreement.getIncompleteSetsByPosition().size());
@@ -252,7 +252,7 @@ public class CasDiff2Test
         assertEquals(4, result.getDifferingConfigurations().size());
         assertEquals(0, result.getIncompleteConfigurations().size());
         
-        AgreementResult agreement = AgreementUtils.getTwoRaterAgreement(result, entryTypes.get(0),
+        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(result, entryTypes.get(0),
                 "PosValue", casByUser);
         assertEquals(0.836477987d, agreement.getAgreement(), 0.000001d);
         assertEquals(0, agreement.getIncompleteSetsByPosition().size());
@@ -279,7 +279,7 @@ public class CasDiff2Test
         assertEquals(0, result.getDifferingConfigurations().size());
         assertEquals(0, result.getIncompleteConfigurations().size());
         
-        AgreementResult agreement = AgreementUtils.getTwoRaterAgreement(result, entryTypes.get(0),
+        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(result, entryTypes.get(0),
                 "PosValue", casByUser);
         assertEquals(Double.NaN, agreement.getAgreement(), 0.000001d);
         assertEquals(0, agreement.getIncompleteSetsByPosition().size());
@@ -306,7 +306,7 @@ public class CasDiff2Test
         assertEquals(0, result.getDifferingConfigurations().size());
         assertEquals(2, result.getIncompleteConfigurations().size());
         
-        AgreementResult agreement = AgreementUtils.getTwoRaterAgreement(result, entryTypes.get(0),
+        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(result, entryTypes.get(0),
                 "DependencyType", casByUser);
         assertEquals(1.0, agreement.getAgreement(), 0.000001d);
         assertEquals(2, agreement.getIncompleteSetsByPosition().size());
@@ -333,7 +333,7 @@ public class CasDiff2Test
         assertEquals(1, result.getDifferingConfigurations().size());
         assertEquals(0, result.getIncompleteConfigurations().size());
         
-        AgreementResult agreement = AgreementUtils.getTwoRaterAgreement(result, entryTypes.get(0),
+        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(result, entryTypes.get(0),
                 "PosValue", casByUser);
         assertEquals(0.958730d, agreement.getAgreement(), 0.000001d);
         assertEquals(0, agreement.getIncompleteSetsByPosition().size());
@@ -360,7 +360,7 @@ public class CasDiff2Test
         assertEquals(1, result.getDifferingConfigurations().size());
         assertEquals(0, result.getIncompleteConfigurations().size());
         
-        AgreementResult agreement = AgreementUtils.getTwoRaterAgreement(result, entryTypes.get(0),
+        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(result, entryTypes.get(0),
                 "DependencyType", casByUser);
         assertEquals(0.958199d, agreement.getAgreement(), 0.000001d);
         assertEquals(0, agreement.getIncompleteSetsByPosition().size());

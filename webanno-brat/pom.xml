@@ -107,8 +107,8 @@
 
         <dependency>
             <groupId>de.tudarmstadt.ukp.dkpro.statistics</groupId>
-            <artifactId>de.tudarmstadt.ukp.dkpro.statistics</artifactId>
-            <version>1.0.2</version>
+            <artifactId>dkpro-statistics-agreement</artifactId>
+            <version>2.0.0</version>
         </dependency>
 
 		<!-- Hibernate dependencies -->

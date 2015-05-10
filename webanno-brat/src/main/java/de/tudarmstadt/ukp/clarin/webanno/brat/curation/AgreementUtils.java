@@ -37,14 +37,16 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.Position;
-import de.tudarmstadt.ukp.dkpro.statistics.agreement.AnnotationStudy;
-import de.tudarmstadt.ukp.dkpro.statistics.agreement.IAnnotationStudy;
-import de.tudarmstadt.ukp.dkpro.statistics.agreement.IAnnotationStudy.IAnnotationItem;
-import de.tudarmstadt.ukp.dkpro.statistics.agreement.TwoRaterKappaAgreement;
+import de.tudarmstadt.ukp.dkpro.statistics.agreement.IAgreementMeasure;
+import de.tudarmstadt.ukp.dkpro.statistics.agreement.IAnnotationUnit;
+import de.tudarmstadt.ukp.dkpro.statistics.agreement.coding.CodingAnnotationStudy;
+import de.tudarmstadt.ukp.dkpro.statistics.agreement.coding.CohenKappaAgreement;
+import de.tudarmstadt.ukp.dkpro.statistics.agreement.coding.ICodingAnnotationItem;
+import de.tudarmstadt.ukp.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;
 
 public class AgreementUtils
 {
-    public static AgreementResult[][] getPairwiseTwoRaterAgreement(DiffResult aDiff, String aType,
+    public static AgreementResult[][] getPairwiseCohenKappaAgreement(DiffResult aDiff, String aType,
             String aFeature, Map<String, List<JCas>> aCasMap)
     {
         AgreementResult[][] result = new AgreementResult[aCasMap.size()][aCasMap.size()];
@@ -62,7 +64,7 @@ public class AgreementUtils
                     Map<String, List<JCas>> pairwiseCasMap = new LinkedHashMap<>();
                     pairwiseCasMap.put(entryList.get(m).getKey(), entryList.get(m).getValue());
                     pairwiseCasMap.put(entryList.get(n).getKey(), entryList.get(n).getValue());
-                    result[m][n] = getTwoRaterAgreement(aDiff, aType, aFeature, pairwiseCasMap);
+                    result[m][n] = getCohenKappaAgreement(aDiff, aType, aFeature, pairwiseCasMap);
                     result[n][m] = result[m][n];
                 }
             }
@@ -70,7 +72,7 @@ public class AgreementUtils
         return result;
     }
     
-    public static AgreementResult getTwoRaterAgreement(DiffResult aDiff, String aType,
+    public static AgreementResult getCohenKappaAgreement(DiffResult aDiff, String aType,
             String aFeature, Map<String, List<JCas>> aCasMap)
     {
         if (aCasMap.size() != 2) {
@@ -79,9 +81,15 @@ public class AgreementUtils
         
         AgreementResult agreementResult = AgreementUtils.makeStudy(aDiff, aType, aFeature, aCasMap);
         try {
-            TwoRaterKappaAgreement agreement = new TwoRaterKappaAgreement(agreementResult.study);
-            agreementResult.setAgreement( agreement.calculateAgreement());
+            IAgreementMeasure agreement = new CohenKappaAgreement(agreementResult.study);
+            if (agreementResult.study.getItemCount() > 0) {
+                agreementResult.setAgreement(agreement.calculateAgreement());
+           }
+            else {
+                agreementResult.setAgreement(Double.NaN);
+            }
             return agreementResult;
+            
         }
         catch (RuntimeException e) {
             // FIXME
@@ -103,7 +111,7 @@ public class AgreementUtils
         List<ConfigurationSet> setsWithDifferences = new ArrayList<>();
         List<ConfigurationSet> incompleteSetsByPosition = new ArrayList<>();
         List<ConfigurationSet> incompleteSetsByLabel = new ArrayList<>();
-        AnnotationStudy study = new AnnotationStudy(aUsers.size());
+        CodingAnnotationStudy study = new CodingAnnotationStudy(aUsers.size());
         nextPosition: for (Position p : aDiff.getPositions()) {
             ConfigurationSet cfgSet = aDiff.getConfigurtionSet(p);
 
@@ -175,21 +183,21 @@ public class AgreementUtils
         
         List<ConfigurationSet> completeSets = aAgreement.getCompleteSets();
         int i = 0;
-        for (IAnnotationItem item : aAgreement.getStudy().getItems()) {
+        for (ICodingAnnotationItem item : aAgreement.getStudy().getItems()) {
             StringBuilder sb = new StringBuilder();
             sb.append(completeSets.get(i).getPosition());
-            for (Object obj : item.getAnnotations()) {
+            for (IAnnotationUnit unit : item.getUnits()) {
                 if (sb.length() > 0) {
                     sb.append(" \t");
                 }
-                sb.append(obj);
+                sb.append(unit.getCategory());
             }
             aOut.println(sb);
             i++;
         }
     }
 
-    public static void dumpStudy(PrintStream aOut, IAnnotationStudy aStudy)
+    public static void dumpStudy(PrintStream aOut, ICodingAnnotationStudy aStudy)
     {
         try {
             aOut.printf("Category count: %d%n", aStudy.getCategoryCount());
@@ -204,13 +212,13 @@ public class AgreementUtils
             aOut.printf("Item count: %s%n", ExceptionUtils.getRootCauseMessage(e));
         }
         
-        for (IAnnotationItem item : aStudy.getItems()) {
+        for (ICodingAnnotationItem item : aStudy.getItems()) {
             StringBuilder sb = new StringBuilder();
-            for (Object obj : item.getAnnotations()) {
+            for (IAnnotationUnit unit : item.getUnits()) {
                 if (sb.length() > 0) {
                     sb.append(" \t");
                 }
-                sb.append(obj);
+                sb.append(unit.getCategory());
             }
             aOut.println(sb);
         }
@@ -221,7 +229,7 @@ public class AgreementUtils
         private final String type;
         private final String feature;
         private final DiffResult diff;
-        private final IAnnotationStudy study;
+        private final ICodingAnnotationStudy study;
         private final List<ConfigurationSet> setsWithDifferences;
         private final List<ConfigurationSet> completeSets;
         private final List<ConfigurationSet> incompleteSetsByPosition;
@@ -241,7 +249,7 @@ public class AgreementUtils
         }
 
         public AgreementResult(String aType, String aFeature, DiffResult aDiff,
-                IAnnotationStudy aStudy, List<ConfigurationSet> aComplete,
+                ICodingAnnotationStudy aStudy, List<ConfigurationSet> aComplete,
                 List<ConfigurationSet> aSetsWithDifferences,
                 List<ConfigurationSet> aIncompleteByPosition,
                 List<ConfigurationSet> aIncompleteByLabel)
@@ -317,7 +325,7 @@ public class AgreementUtils
             return agreement;
         }
         
-        public IAnnotationStudy getStudy()
+        public ICodingAnnotationStudy getStudy()
         {
             return study;
         }

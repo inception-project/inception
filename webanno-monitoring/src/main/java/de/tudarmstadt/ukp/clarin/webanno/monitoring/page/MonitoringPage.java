@@ -812,7 +812,7 @@ public class MonitoringPage
             
             DiffResult diff = CasDiff2.doDiff(
                     asList(features.getModelObject().getLayer().getName()), adapters, casMap);
-            AgreementResult[][] agreements = AgreementUtils.getPairwiseTwoRaterAgreement(diff,
+            AgreementResult[][] agreements = AgreementUtils.getPairwiseCohenKappaAgreement(diff,
                     features.getModelObject().getLayer().getName(), features.getModelObject()
                             .getName(), casMap);
             
