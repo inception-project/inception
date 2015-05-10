@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_REL
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static java.util.Arrays.asList;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isBlank;
 
@@ -123,7 +124,8 @@ public class ProjectLayersPanel
     private final Model<Project> selectedProjectModel;
     private IModel<String> helpDataModel = new Model<String>();
 
-    private List<String> types = new ArrayList<String>();
+    private final static List<String> PRIMITIVE_TYPES = asList(CAS.TYPE_NAME_STRING,
+            CAS.TYPE_NAME_INTEGER, CAS.TYPE_NAME_FLOAT, CAS.TYPE_NAME_BOOLEAN);
     private String layerType = WebAnnoConst.SPAN_TYPE;
     private List<FileUpload> uploadedFiles;
     private FileUploadField fileUpload;
@@ -937,16 +939,13 @@ public class ProjectLayersPanel
             add(new CheckBox("enabled"));
             add(new CheckBox("visible"));
 
-            types.add(CAS.TYPE_NAME_STRING);
-            types.add(CAS.TYPE_NAME_INTEGER);
-            types.add(CAS.TYPE_NAME_FLOAT);
-            types.add(CAS.TYPE_NAME_BOOLEAN);
-
             add(featureType = (DropDownChoice<String>) new DropDownChoice<String>("type")
             {
                 private static final long serialVersionUID = 9029205407108101183L;
 
                 {
+                    setRequired(true);
+                    setNullValid(false);
                     setChoices(new LoadableDetachableModel<List<String>>()
                     {
                         private static final long serialVersionUID = -5732558926576750673L;
@@ -957,25 +956,17 @@ public class ProjectLayersPanel
                             if (getModelObject() != null) {
                                 return Arrays.asList(getModelObject());
                             }
+                            List<String> types = new ArrayList<String>(PRIMITIVE_TYPES);
                             return types;
-
                         }
                     });
-
                 }
 
-                @Override
-                protected CharSequence getDefaultChoice(String aSelectedValue)
+                protected void onConfigure()
                 {
-                    return "";
-                }
-
-                @Override
-                public boolean isEnabled()
-                {
-                    return FeatureDetailForm.this.getModelObject().getId() == 0;
-                }
-            }.setRequired(true));
+                    setEnabled(FeatureDetailForm.this.getModelObject().getId() == 0);
+                };
+           });
             featureType.add(new AjaxFormComponentUpdatingBehavior("onChange")
             {
                 private static final long serialVersionUID = -2904306846882446294L;
@@ -984,14 +975,16 @@ public class ProjectLayersPanel
                 protected void onUpdate(AjaxRequestTarget aTarget)
                 {
                     aTarget.add(tagSet);
-
                 }
             });
             add(tagSet = new DropDownChoice<TagSet>("tagset")
             {
                 private static final long serialVersionUID = -6705445053442011120L;
-
                 {
+                    setOutputMarkupPlaceholderTag(true);
+                    setOutputMarkupId(true);
+                    setChoiceRenderer(new ChoiceRenderer<TagSet>("name"));
+                    setNullValid(true);
                     setChoices(new LoadableDetachableModel<List<TagSet>>()
                     {
                         private static final long serialVersionUID = 1784646746122513331L;
@@ -999,31 +992,22 @@ public class ProjectLayersPanel
                         @Override
                         protected List<TagSet> load()
                         {
-
                             return annotationService.listTagSets(selectedProjectModel.getObject());
-
-                        }
-                    });
-
-                    setChoiceRenderer(new ChoiceRenderer<TagSet>()
-                    {
-                        private static final long serialVersionUID = 8639013729422537472L;
-
-                        @Override
-                        public Object getDisplayValue(TagSet aObject)
-                        {
-                            return aObject.getName();
                         }
                     });
                 }
-
+                
                 @Override
-                public boolean isNullValid()
+                protected void onConfigure()
                 {
-                    return isVisible();
+                    AnnotationFeature feature = FeatureDetailForm.this.getModelObject();
+                    // Only display tagset choice for link features with role and string features
+                    // Since we currently set the LinkRole only when saving, we have to rely on the
+                    // feature type here.
+                    setEnabled(CAS.TYPE_NAME_STRING.equals(feature.getType())
+                            || !PRIMITIVE_TYPES.contains(feature.getType()));
                 }
             });
-            tagSet.setOutputMarkupPlaceholderTag(true);
 
             add(new Button("save", new ResourceModel("label"))
             {
@@ -1055,8 +1039,7 @@ public class ProjectLayersPanel
                             return;
                         }
                         feature.setName(name);
-                        annotationService.createFeature(feature);
-                        featureDetailForm.setVisible(false);
+                        saveFeature(feature);
                     }
                     if (tagSet.getModelObject() != null) {
                         FeatureDetailForm.this.getModelObject().setTagset(tagSet.getModelObject());
@@ -1066,6 +1049,18 @@ public class ProjectLayersPanel
 
         }
     }
+
+    private void saveFeature(AnnotationFeature aFeature)
+    {
+	    // If the feature is not a string feature force the tagset to null
+        if (!(CAS.TYPE_NAME_STRING.equals(aFeature.getType()))) {
+            aFeature.setTagset(null);
+        }
+        
+        annotationService.createFeature(aFeature);
+        featureDetailForm.setVisible(false);
+    }
+
 
     public class FeatureSelectionForm
         extends Form<SelectionModel>
