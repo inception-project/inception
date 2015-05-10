@@ -34,6 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -283,6 +284,10 @@ public class BratAnnotatorModel
         rememberedSpanFeatures = new HashMap<>();
         if (aModels != null) {
             for (FeatureModel fm : aModels) {
+                // Do not remember link features.
+                if (!LinkMode.NONE.equals(fm.feature.getLinkMode())) {
+                    continue;
+                }
                 rememberedSpanFeatures.put(fm.feature, fm.value);
             }
         }
@@ -298,6 +303,10 @@ public class BratAnnotatorModel
         rememberedArcFeatures = new HashMap<>();
         if (aModels != null) {
             for (FeatureModel fm : aModels) {
+                // Do not remember link features.
+                if (!LinkMode.NONE.equals(fm.feature.getLinkMode())) {
+                    continue;
+                }
                 rememberedArcFeatures.put(fm.feature, fm.value);
             }
         }
