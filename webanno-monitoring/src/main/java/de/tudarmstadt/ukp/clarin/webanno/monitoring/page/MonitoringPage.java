@@ -124,7 +124,6 @@ import de.tudarmstadt.ukp.clarin.webanno.monitoring.support.ChartImageResource;
 import de.tudarmstadt.ukp.clarin.webanno.monitoring.support.DynamicColumnMetaData;
 import de.tudarmstadt.ukp.clarin.webanno.monitoring.support.EmbeddableImage;
 import de.tudarmstadt.ukp.clarin.webanno.monitoring.support.TableDataProvider;
-import de.tudarmstadt.ukp.clarin.webanno.monitoring.support.TwoPairedKappa;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.home.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -762,10 +761,6 @@ public class MonitoringPage
                 documentJCases = getJCases(users, sourceDocuments);
             }
             
-//            double[][] results = new double[users.size()][users.size()];
-//            results = computeKappa(users, adapter, features.getModelObject().getName(),
-//                    finishedDocumentLists, documentJCases);
-
             // Users with some annotations of this type
 
             // Convert to structure required by CasDiff - FIXME should be removed
@@ -1070,93 +1065,6 @@ public class MonitoringPage
         public String endTime;
         public String status;
 
-    }
-
-    /**
-     * Compute kappa using the {@link TwoRaterKappaAgreement}. The matrix of kappa result is
-     * computed for a user against every other users if and only if both users have finished the
-     * same document <br>
-     * The result is per {@link AnnotationLayer} for all {@link Tag}s
-     * 
-     * @param users the users.
-     * @param adapter the adapters.
-     * @param aLabelFeatureName the label feature name.
-     * @param finishedDocumentLists the finished documents.
-     * @param documentJCases the document JCases.
-     * @return the kappa matrix.
-     */
-    @Deprecated
-    public static double[][] computeKappa(List<User> users, TypeAdapter adapter,
-            String aLabelFeatureName, Map<User, List<SourceDocument>> finishedDocumentLists,
-            Map<SourceDocument, Map<User, JCas>> documentJCases)
-    {
-        double[][] results = new double[users.size()][users.size()];
-        TwoPairedKappa twoPairedKappa = new TwoPairedKappa();
-        int userInRow = 0;
-        List<User> rowUsers = new ArrayList<User>();
-        for (User user1 : users) {
-            if (finishedDocumentLists.get(user1).size() == 0) {
-                userInRow++;
-                continue;
-            }
-            int userInColumn = 0;
-            for (User user2 : users) {
-                // no need to compute
-                if (user1.getUsername().equals(user2.getUsername())) {
-                    // with itself, diagonal one
-                    results[userInRow][userInColumn] = 1.0;
-                    userInColumn++;
-                    continue;
-                }
-                // already done, upper part of matrix
-                else if (rowUsers.contains(user2)) {
-                    userInColumn++;
-                    continue;
-                }
-
-                Map<String, Map<String, String>> allUserAnnotations = new TreeMap<>();
-
-                if (finishedDocumentLists.get(user2).size() != 0) {
-                    List<SourceDocument> user1Documents = new ArrayList<>();
-                    user1Documents.addAll(finishedDocumentLists.get(user1));
-
-                    List<SourceDocument> user2Documents = new ArrayList<>();
-                    user2Documents.addAll(finishedDocumentLists.get(user2));
-
-                    // sameDocuments finished (intersection of anno docs)
-                    user1Documents.retainAll(user2Documents);
-                    for (SourceDocument document : user1Documents) {
-                        twoPairedKappa.getStudy(adapter.getAnnotationTypeName(), aLabelFeatureName,
-                                user1, user2, allUserAnnotations, document,
-                                documentJCases.get(document));
-                    }
-                }
-
-                double[][] thisResults = twoPairedKappa.getAgreement(allUserAnnotations);
-                if (thisResults.length != 0) {
-                    // for a user with itself, we have
-                    // u1
-                    // u1 1.0
-                    // we took it as it is
-                    if (allUserAnnotations.keySet().size() == 1) {
-                        results[userInRow][userInColumn] = thisResults[0][0];
-                    }
-                    else {
-                        // in result for the two users will be in the form of
-                        // u1 u2
-                        // --------------
-                        // u1 1.0 0.84
-                        // u2 0.84 1.0
-                        // only value from first row, second column is important
-                        results[userInRow][userInColumn] = thisResults[0][1];
-                    }
-                    rowUsers.add(user1);
-                }
-                userInColumn++;
-            }
-            userInRow++;
-        }
-        return results;
     }
 
     /**

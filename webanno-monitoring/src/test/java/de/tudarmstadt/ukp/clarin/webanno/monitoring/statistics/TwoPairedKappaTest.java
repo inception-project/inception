@@ -21,7 +21,6 @@ import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.junit.Assert.assertEquals;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -36,27 +35,17 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AgreementUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AgreementUtils.AgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.ArcDiffAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.Configuration;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.ConfigurationSet;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.DiffResult;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.Position;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.SpanDiffAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.monitoring.page.MonitoringPage;
 import de.tudarmstadt.ukp.clarin.webanno.tcf.TcfReader;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoCustomTsvReader;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 
@@ -65,7 +54,6 @@ import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
  * two users and check the disagreement
  *
  * @author yimam
- *
  */
 public class TwoPairedKappaTest
 {
@@ -117,16 +105,9 @@ public class TwoPairedKappaTest
     public void testTwoUserSameAnnotation()
         throws Exception
     {
-        double[][] results = new double[2][2];
-        AnnotationLayer layer = new AnnotationLayer();
-        layer.setId(0);
-        layer.setName(POS.class.getName());
-        TypeAdapter adapter = new SpanAdapter(layer, Collections.EMPTY_LIST);
-        
         Map<User, List<SourceDocument>> userDocs = new HashMap<>();
         userDocs.put(user1, asList(document));
         userDocs.put(user2, asList(document));
-        
         
         Map<User, JCas> userCases = new HashMap<>();
         userCases.put(user1, kappatestCas.getJCas());
@@ -135,9 +116,6 @@ public class TwoPairedKappaTest
         Map<SourceDocument, Map<User, JCas>> documentJCases = new HashMap<>();
         documentJCases.put(document, userCases);
         
-        results = MonitoringPage.computeKappa(asList(user1, user2), adapter,
-                "PosValue", userDocs, documentJCases);
-        
         // Check against new impl
         DiffResult diff = CasDiff2.doDiff(POS.class, new SpanDiffAdapter(POS.class, "PosValue"),
                 convert(userCases));
@@ -145,15 +123,13 @@ public class TwoPairedKappaTest
                 "PosValue", convert(userCases));
         
         // Asserts
-        System.out.printf("Old agreement: %f%n", results[0][1]);
-        System.out.printf("New agreement: %s%n", agreement.toString());
+        System.out.printf("Agreement: %s%n", agreement.toString());
         diff.print(System.out);
         
         assertEquals(1.0d, agreement.getAgreement(), 0.000001);
         assertEquals(9, diff.size());
         assertEquals(0, diff.getDifferingConfigurations().size());
         assertEquals(0, diff.getIncompleteConfigurations().size());
-        assertEquals(results[0][1], 1.0, 0.0005);
     }
 
     private Map<String, List<JCas>> convert(Map<User, JCas> aMap) {
@@ -168,10 +144,6 @@ public class TwoPairedKappaTest
     public void testTwoUserDiffArcAnnotation()
         throws Exception
     {
-        double[][] results = new double[2][2];
-        TypeAdapter adapter = new ArcAdapter(null, 0, Dependency.class.getName(), "Dependent",
-                "Governor", "pos", Token.class.getName(), Collections.EMPTY_LIST);
-
         Map<User, List<SourceDocument>> userDocs = new HashMap<>();
         userDocs.put(user1, asList(document));
         userDocs.put(user2, asList(document));
@@ -183,9 +155,6 @@ public class TwoPairedKappaTest
         Map<SourceDocument, Map<User, JCas>> documentJCases = new HashMap<>();
         documentJCases.put(document, userCases);
         
-        results = MonitoringPage.computeKappa(asList(user1, user2), adapter,
-                "DependencyType", userDocs, documentJCases);
-
         // Check against new impl
         DiffResult diff = CasDiff2.doDiff(Dependency.class, new ArcDiffAdapter(Dependency.class,
                 "Dependent", "Governor", "DependencyType"), convert(userCases));
@@ -193,27 +162,19 @@ public class TwoPairedKappaTest
                 "DependencyType", convert(userCases));
         
         // Asserts
-        System.out.printf("Old agreement: %f%n", results[0][1]);
-        System.out.printf("New agreement: %s%n", agreement.toString());
+        System.out.printf("Agreement: %s%n", agreement.toString());
         diff.print(System.out);
         
         assertEquals(0.86153d, agreement.getAgreement(), 0.00001d);
         assertEquals(9, diff.size());
         assertEquals(1, diff.getDifferingConfigurations().size());
         assertEquals(0, diff.getIncompleteConfigurations().size());
-        assertEquals(0.82d, results[0][1], 0.01d);
     }
 
     @Test
     public void testTwoUserDiffSpanAnnotation()
         throws Exception
     {
-        double[][] results = new double[2][2];
-        AnnotationLayer layer = new AnnotationLayer();
-        layer.setId(0);
-        layer.setName(POS.class.getName());
-        TypeAdapter adapter = new SpanAdapter(layer, Collections.EMPTY_LIST);
-
         Map<User, List<SourceDocument>> userDocs = new HashMap<>();
         userDocs.put(user1, asList(document));
         userDocs.put(user2, asList(document));
@@ -225,9 +186,6 @@ public class TwoPairedKappaTest
         Map<SourceDocument, Map<User, JCas>> documentJCases = new HashMap<>();
         documentJCases.put(document, userCases);
         
-        results = MonitoringPage.computeKappa(asList(user1, user2), adapter,
-                "PosValue", userDocs, documentJCases);
-
         // Check against new impl
         DiffResult diff = CasDiff2.doDiff(POS.class, new SpanDiffAdapter(POS.class, "PosValue"),
                 convert(userCases));
@@ -235,25 +193,19 @@ public class TwoPairedKappaTest
                 "PosValue", convert(userCases));
         
         // Asserts
-        System.out.printf("Old agreement: %f%n", results[0][1]);
-        System.out.printf("New agreement: %s%n", agreement.toString());
+        System.out.printf("Agreement: %s%n", agreement.toString());
         diff.print(System.out);
         
         assertEquals(0.86153d, agreement.getAgreement(), 0.00001d);
         assertEquals(9, diff.size());
         assertEquals(1, diff.getDifferingConfigurations().size());
         assertEquals(0, diff.getIncompleteConfigurations().size());
-        assertEquals(0.86d, results[0][1], 0.01d);
     }
 
     @Test
     public void testTwoUserDiffArcAndSpanAnnotation()
         throws Exception
     {
-        double[][] results = new double[2][2];
-        TypeAdapter adapter = new ArcAdapter(null, 0, Dependency.class.getName(), "Dependent",
-                "Governor", "pos", Token.class.getName(), Collections.EMPTY_LIST);
-
         Map<User, List<SourceDocument>> userDocs = new HashMap<>();
         userDocs.put(user1, asList(document));
         userDocs.put(user2, asList(document));
@@ -265,9 +217,6 @@ public class TwoPairedKappaTest
         Map<SourceDocument, Map<User, JCas>> documentJCases = new HashMap<>();
         documentJCases.put(document, userCases);
         
-        results = MonitoringPage.computeKappa(asList(user1, user2), adapter,
-                "DependencyType", userDocs, documentJCases);
-
         // Check against new impl
         DiffResult diff = CasDiff2.doDiff(Dependency.class, new ArcDiffAdapter(Dependency.class,
                 "Dependent", "Governor", "DependencyType"), convert(userCases));
@@ -275,8 +224,7 @@ public class TwoPairedKappaTest
                 "DependencyType", convert(userCases));
         
         // Asserts
-        System.out.printf("Old agreement: %f%n", results[0][1]);
-        System.out.printf("New agreement: %s%n", agreement.toString());
+        System.out.printf("Agreement: %s%n", agreement.toString());
         diff.print(System.out);
         AgreementUtils.dumpAgreementStudy(System.out, agreement);
         
@@ -284,17 +232,12 @@ public class TwoPairedKappaTest
         assertEquals(9, diff.size());
         assertEquals(1, diff.getDifferingConfigurations().size());
         assertEquals(0, diff.getIncompleteConfigurations().size());
-        assertEquals(0.64d, results[0][1], 0.01d);
     }
 
     @Test
     public void testThreeUserDiffArcAndSpanAnnotation()
         throws Exception
     {
-        double[][] results = new double[2][2];
-        TypeAdapter adapter = new ArcAdapter(null, 0, Dependency.class.getName(), "Dependent",
-                "Governor", "pos", Token.class.getName(), Collections.EMPTY_LIST);
-
         Map<User, List<SourceDocument>> userDocs = new HashMap<>();
         userDocs.put(user1, asList(document));
         userDocs.put(user2, asList(document));
@@ -307,9 +250,6 @@ public class TwoPairedKappaTest
         
         Map<SourceDocument, Map<User, JCas>> documentJCases = new HashMap<>();
         documentJCases.put(document, userCases);
-
-        results = MonitoringPage.computeKappa(asList(user1, user2, user3),
-                adapter, "DependencyType", userDocs, documentJCases);
 
         // Check against new impl
         DiffResult diff = CasDiff2.doDiff(
@@ -335,16 +275,9 @@ public class TwoPairedKappaTest
         // Asserts
         diff.print(System.out);
         
-        System.out.printf("Old agreement 1: %f%n", results[0][1]);
-        System.out.printf("Old agreement 2: %f%n", results[0][2]);
-        System.out.printf("Old agreement 3: %f%n", results[1][2]);
         System.out.printf("New agreement 1/2: %s%n", agreement12.toString());
         System.out.printf("New agreement 2/3: %s%n", agreement23.toString());
         System.out.printf("New agreement 1/3: %s%n", agreement13.toString());
-
-        assertEquals(0.94, results[0][1], 0.01); // user1 V user2
-        assertEquals(0.64, results[0][2], 0.01); // user1 V user3
-        assertEquals(0.58, results[1][2], 0.01); // user2 V user3
     }
 
     @Rule
