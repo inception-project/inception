@@ -17,8 +17,14 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.model.export;
 
+import javax.persistence.Column;
+
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
+import org.hibernate.annotations.Type;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
+import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 
 /**
  * All required contents of {@link de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature} to be
@@ -54,7 +60,23 @@ public class AnnotationFeature
     private String description;
 
     @JsonProperty("project_name")
-    String projectName;
+    private String projectName;
+
+    @JsonProperty("multi_value_mode")
+    private MultiValueMode multiValueMode;
+
+    @JsonProperty("link_mode")
+    private LinkMode linkMode;
+
+    @JsonProperty("link_type_name")
+    private String linkTypeName;
+    
+    @JsonProperty("link_type_role_feature_name")
+    private String linkTypeRoleFeatureName;
+    
+    @JsonProperty("link_type_target_feature_name")
+    private String linkTypeTargetFeatureName;
+
     public String getName()
     {
         return name;
@@ -133,7 +155,57 @@ public class AnnotationFeature
 		this.projectName = projectName;
 	}
 
-	@Override
+	public MultiValueMode getMultiValueMode()
+    {
+        return multiValueMode;
+    }
+
+    public void setMultiValueMode(MultiValueMode aMultiValueMode)
+    {
+        multiValueMode = aMultiValueMode;
+    }
+
+    public LinkMode getLinkMode()
+    {
+        return linkMode;
+    }
+
+    public void setLinkMode(LinkMode aLinkMode)
+    {
+        linkMode = aLinkMode;
+    }
+
+    public String getLinkTypeName()
+    {
+        return linkTypeName;
+    }
+
+    public void setLinkTypeName(String aLinkTypeName)
+    {
+        linkTypeName = aLinkTypeName;
+    }
+
+    public String getLinkTypeRoleFeatureName()
+    {
+        return linkTypeRoleFeatureName;
+    }
+
+    public void setLinkTypeRoleFeatureName(String aLinkTypeRoleFeatureName)
+    {
+        linkTypeRoleFeatureName = aLinkTypeRoleFeatureName;
+    }
+
+    public String getLinkTypeTargetFeatureName()
+    {
+        return linkTypeTargetFeatureName;
+    }
+
+    public void setLinkTypeTargetFeatureName(String aLinkTypeTargetFeatureName)
+    {
+        linkTypeTargetFeatureName = aLinkTypeTargetFeatureName;
+    }
+
+    @Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;

@@ -36,6 +36,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.codehaus.jackson.annotate.JsonProperty;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
@@ -45,6 +46,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.automation.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
+import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
@@ -374,6 +377,12 @@ public class ImportUtil
         aFeature.setLayer(aFeature.getLayer());
         aFeature.setType(aExFeature.getType());
         aFeature.setName(aExFeature.getName());
+        aFeature.setMode(aExFeature.getMultiValueMode());
+        aFeature.setLinkMode(aExFeature.getLinkMode());
+        aFeature.setLinkTypeName(aExFeature.getLinkTypeName());
+        aFeature.setLinkTypeRoleFeatureName(aExFeature.getLinkTypeRoleFeatureName());
+        aFeature.setLinkTypeTargetFeatureName(aExFeature.getLinkTypeTargetFeatureName());
+
         aAnnotationService.createFeature(aFeature);
     }
 
@@ -838,7 +847,12 @@ public class ImportUtil
             exFeature.setType(feature.getType());
             exFeature.setUiName(feature.getUiName());
             exFeature.setVisible(feature.isVisible());
-
+            exFeature.setMultiValueMode(feature.getMultiValueMode());
+            exFeature.setLinkMode(feature.getLinkMode());
+            exFeature.setLinkTypeName(feature.getLinkTypeName());
+            exFeature.setLinkTypeRoleFeatureName(feature.getLinkTypeRoleFeatureName());
+            exFeature.setLinkTypeTargetFeatureName(feature.getLinkTypeTargetFeatureName());
+            
             if (feature.getTagset() != null) {
                 TagSet tagSet = feature.getTagset();
                 de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet exTagSet = new de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet();
