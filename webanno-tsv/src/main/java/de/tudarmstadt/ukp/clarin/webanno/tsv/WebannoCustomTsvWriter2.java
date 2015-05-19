@@ -26,6 +26,7 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -60,14 +61,14 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  * Export annotations in TAB separated format. Header includes information about the UIMA type and
  * features The number of columns are depend on the number of types/features exist. All the spans
  * will be written first and subsequently all the relations. relation is given in the form of
- * Source--&gt;Target and the RelationType is added to the Target token. The next column indicates the
- * source of the relation (the source of the arc drown)
+ * Source--&gt;Target and the RelationType is added to the Target token. The next column indicates
+ * the source of the relation (the source of the arc drown)
  *
  * @author Seid Muhie Yimam
  *
  */
 
-public class WebannoCustomTsvWriter
+public class WebannoCustomTsvWriter2
     extends JCasFileWriter_ImplBase
 {
 
@@ -90,8 +91,7 @@ public class WebannoCustomTsvWriter
     private final String GOVERNOR = "Governor";
     private final String FIRST = "first";
     private final String NEXT = "next";
-    Map<Integer, String> tokenIds;
-    NavigableMap<Integer, Integer> tokenPositions;
+    NavigableMap<String, String> itemPositions;
 
     @Override
     public void process(JCas aJCas)
@@ -114,16 +114,8 @@ public class WebannoCustomTsvWriter
     private void convertToTsv(JCas aJCas, OutputStream aOs, String aEncoding)
         throws IOException, ResourceInitializationException, CASRuntimeException, CASException
     {
-        tokenIds = new HashMap<Integer, String>();
-        setTokenId(aJCas, tokenIds);
-        tokenPositions = new TreeMap<Integer, Integer>();
-        setTokenPosition(aJCas, tokenPositions);
-
-        Map<Integer, Integer> getTokensPerSentence = new TreeMap<Integer, Integer>();
-        setTokenSentenceAddress(aJCas, getTokensPerSentence);
-
         // list of annotation types
-        Set<Type> allTypes = new LinkedHashSet<Type>();
+        Set<Type> allTypes = new LinkedHashSet<>();
 
         for (Annotation a : select(aJCas, Annotation.class)) {
             if (!(a instanceof Token || a instanceof Sentence || a instanceof DocumentMetaData
@@ -131,7 +123,7 @@ public class WebannoCustomTsvWriter
                 allTypes.add(a.getType());
             }
         }
-        Set<Type> relationTypes = new LinkedHashSet<Type>();
+        Set<Type> relationTypes = new LinkedHashSet<>();
 
         // get all arc types
         for (Type type : allTypes) {
@@ -149,8 +141,11 @@ public class WebannoCustomTsvWriter
 
         allTypes.removeAll(relationTypes);
 
+        List<AnnotationItem> annoItems = new LinkedList<>();
+        itemPositions = new TreeMap<>();
+        setAnnoItems(aJCas, allTypes, annoItems);
         // relation annotations
-        Map<Type, String> relationTypesMap = new HashMap<Type, String>();
+        Map<Type, String> relationTypesMap = new HashMap<>();
         for (Type type : relationTypes) {
             if (type.getName().equals(Dependency.class.getName())) {
                 relationTypesMap.put(type, POS.class.getName());
@@ -167,8 +162,7 @@ public class WebannoCustomTsvWriter
         }
 
         // all span annotation first
-
-        Map<Feature, Type> spanFeatures = new LinkedHashMap<Feature, Type>();
+        Map<Feature, Type> spanFeatures = new LinkedHashMap<>();
         allTypes: for (Type type : allTypes) {
             if (type.getFeatures().size() == 0) {
                 continue;
@@ -192,18 +186,9 @@ public class WebannoCustomTsvWriter
         }
 
         // write all relation annotation first
-        Set<Feature> relationFeatures = new LinkedHashSet<Feature>();
         for (Type type : relationTypes) {
             IOUtils.write(" # " + type.getName(), aOs, aEncoding);
             for (Feature feature : type.getFeatures()) {
-                if (feature.toString().equals("uima.cas.AnnotationBase:sofa")
-                        || feature.toString().equals("uima.tcas.Annotation:begin")
-                        || feature.toString().equals("uima.tcas.Annotation:end")
-                        || feature.getShortName().equals(GOVERNOR)
-                        || feature.getShortName().equals(DEPENDENT)) {
-                    continue;
-                }
-                relationFeatures.add(feature);
                 IOUtils.write(" | " + feature.getShortName(), aOs, aEncoding);
             }
             // Add the attach type for the realtion anotation
@@ -212,7 +197,7 @@ public class WebannoCustomTsvWriter
 
         IOUtils.write("\n", aOs, aEncoding);
 
-        Map<Feature, Map<Integer, String>> allAnnos = new HashMap<Feature, Map<Integer, String>>();
+        Map<Feature, Map<String, String>> allAnnos = new HashMap<>();
         allTypes: for (Type type : allTypes) {
             for (Feature feature : type.getFeatures()) {
                 // coreference annotation not supported
@@ -227,14 +212,14 @@ public class WebannoCustomTsvWriter
                     continue;
                 }
 
-                Map<Integer, String> tokenAnnoMap = new TreeMap<Integer, String>();
-                setTokenAnnos(aJCas.getCas(), tokenAnnoMap, type, feature);
+                Map<String, String> tokenAnnoMap = new TreeMap<>();
+                setTokenAnnos(aJCas.getCas(), tokenAnnoMap, type, feature, annoItems);
                 allAnnos.put(feature, tokenAnnoMap);
 
             }
         }
         // get tokens where dependents are drown to
-        Map<Feature, Map<Integer, String>> relAnnos = new HashMap<Feature, Map<Integer, String>>();
+        Map<Feature, Map<String, String>> relAnnos = new HashMap<>();
         for (Type type : relationTypes) {
             for (Feature feature : type.getFeatures()) {
                 if (feature.toString().equals("uima.cas.AnnotationBase:sofa")
@@ -245,33 +230,39 @@ public class WebannoCustomTsvWriter
                     continue;
                 }
 
-                Map<Integer, String> tokenAnnoMap = new HashMap<Integer, String>();
-                setRelationFeatureAnnos(aJCas.getCas(), tokenAnnoMap, type, feature);
+                Map<String, String> tokenAnnoMap = new HashMap<>();
+                setRelationFeatureAnnos(aJCas.getCas(), tokenAnnoMap, type, feature, annoItems);
                 relAnnos.put(feature, tokenAnnoMap);
             }
         }
 
         // get tokens where dependents are drown from - the governor
-        Map<Type, Map<Integer, String>> governorAnnos = new HashMap<Type, Map<Integer, String>>();
+        Map<Type, Map<String, String>> governorAnnos = new HashMap<>();
         for (Type type : relationTypes) {
 
-            Map<Integer, String> govAnnoMap = new HashMap<Integer, String>();
-            setRelationGovernorPos(aJCas.getCas(), govAnnoMap, type);
+            Map<String, String> govAnnoMap = new HashMap<>();
+            setRelationGovernorPos(aJCas.getCas(), govAnnoMap, type, annoItems);
             governorAnnos.put(type, govAnnoMap);
         }
 
         int sentId = 1;
         for (Sentence sentence : select(aJCas, Sentence.class)) {
-            IOUtils.write("#id=" + sentId++ + "\n", aOs, aEncoding);
+            IOUtils.write("#id=" + sentId + "\n", aOs, aEncoding);
             IOUtils.write("#text=" + sentence.getCoveredText().replace("\n", "") + "\n", aOs,
                     aEncoding);
-            for (Token token : selectCovered(Token.class, sentence)) {
-                IOUtils.write(tokenIds.get(token.getAddress()) + "\t" + token.getCoveredText()
-                        + "\t", aOs, aEncoding);
+            for (AnnotationItem item : annoItems) {
+                if (item.start < sentence.getBegin()) {
+                    continue;
+                }
+                if (item.start > sentence.getEnd()) {
+                    break;
+                }
+                // for (Token token : selectCovered(Token.class, sentence)) {
+                IOUtils.write(item.itemId + "\t" + item.text + "\t", aOs, aEncoding);
 
                 // all span annotations on this token
                 for (Feature feature : spanFeatures.keySet()) {
-                    String annos = allAnnos.get(feature).get(token.getAddress());
+                    String annos = allAnnos.get(feature).get(item.itemId);
                     if (annos == null) {
                         if (multipleSpans.contains(spanFeatures.get(feature).getName())) {
                             IOUtils.write("O\t", aOs, aEncoding);
@@ -295,7 +286,7 @@ public class WebannoCustomTsvWriter
                                 || feature.getShortName().equals(DEPENDENT)) {
                             continue;
                         }
-                        String annos = relAnnos.get(feature).get(token.getAddress());
+                        String annos = relAnnos.get(feature).get(item.itemId);
                         if (annos == null) {
                             IOUtils.write("_\t", aOs, aEncoding);
                         }
@@ -305,109 +296,138 @@ public class WebannoCustomTsvWriter
                     }
 
                     // the governor positions
-                    String govPos = governorAnnos.get(type).get(token.getAddress());
+                    String govPos = governorAnnos.get(type).get(item.itemId);
                     if (govPos == null) {
                         IOUtils.write("_\t", aOs, aEncoding);
                     }
                     else {
-                        IOUtils.write(governorAnnos.get(type).get(token.getAddress()) + "\t", aOs,
+                        IOUtils.write(governorAnnos.get(type).get(item.itemId) + "\t", aOs,
                                 aEncoding);
                     }
                 }
                 IOUtils.write("\n", aOs, aEncoding);
             }
             IOUtils.write("\n", aOs, aEncoding);
+            sentId++;
         }
 
     }
 
-    private void setTokenSentenceAddress(JCas aJCas, Map<Integer, Integer> aTokenListInSentence)
+    private void setAnnoItems(JCas aJCas, Set<Type> allTypes, List<AnnotationItem> aAnnoItems)
     {
-        for (Sentence sentence : select(aJCas, Sentence.class)) {
 
+        int sentId = 1;
+        for (Sentence sentence : select(aJCas, Sentence.class)) {
+            int itemId = 1;
             for (Token token : selectCovered(Token.class, sentence)) {
-                aTokenListInSentence.put(token.getAddress(), sentence.getAddress());
+                AnnotationItem item = new AnnotationItem();
+                item.parentIndex = itemId - 1;
+                item.itemId = sentId + "-" + itemId;
+                item.start = token.getBegin();
+                item.parnetTokenEnd = item.end = token.getEnd();
+                item.text = token.getCoveredText();
+                itemId++;
+                aAnnoItems.add(item);
+                itemPositions.put(item.start + "-" + item.end, item.itemId);
+            }
+            sentId++;
+        }
+
+        for (Type type : allTypes) {
+            for (AnnotationFS annoFs : CasUtil.select(aJCas.getCas(), type)) {
+                int index = annoItemExists(annoFs.getBegin(), annoFs.getEnd(), aAnnoItems);
+                if (index == -1) {
+                    continue;
+                }
+                AnnotationItem item = new AnnotationItem();
+                item.start = annoFs.getBegin();
+                item.end = annoFs.getEnd();
+                item.parentIndex = aAnnoItems.get(index).parentIndex;
+                item.parnetTokenEnd = aAnnoItems.get(index).parnetTokenEnd;
+                item.subItemId = aAnnoItems.get(index).subItemId + 1;
+                item.itemId = aAnnoItems.get(item.parentIndex).itemId + "-" + item.subItemId;
+                item.text = annoFs.getCoveredText();
+                item.isToken = false;
+                aAnnoItems.add(index + 1, item);
+                itemPositions.put(item.start + "-" + item.end, item.itemId);// hence it is not a
+                                                                            // mere begin-end of
+                                                                            // annotations
+            }
+
+        }
+    }
+
+    private int annoItemExists(int aStart, int aEnd, List<AnnotationItem> aItems)
+    {
+        int index = -1;
+        for (AnnotationItem item : aItems) {
+
+            if (item.start == aStart && item.end == aEnd) {
+                return index;
+            }
+            else if ((item.start <= aStart && item.parnetTokenEnd >= aEnd)) {
+                index = aItems.indexOf(item);
+            }
+            else if (item.start > aEnd) {
+                break;
             }
         }
-
+        return index;
     }
 
-    private void setTokenId(JCas aJCas, Map<Integer, String> aTokenAddress)
-    {
-        int sentenceId = 1;
-        for (Sentence sentence : select(aJCas, Sentence.class)) {
-            int tokenId = 1;
-            for (Token token : selectCovered(Token.class, sentence)) {
-                aTokenAddress.put(token.getAddress(), sentenceId + "-" + tokenId++);
-            }
-            sentenceId++;
-        }
-
-    }
-
-    private void setTokenPosition(JCas aJCas, Map<Integer, Integer> aTokenAddress)
-    {
-        for (Token token : select(aJCas, Token.class)) {
-            aTokenAddress.put(token.getBegin(), token.getAddress());
-        }
-    }
-
-    private void setTokenAnnos(CAS aCas, Map<Integer, String> aTokenAnnoMap, Type aType,
-            Feature aFeature)
+    private void setTokenAnnos(CAS aCas, Map<String, String> aTokenAnnoMap, Type aType,
+            Feature aFeature, List<AnnotationItem> aItems)
     {
         for (AnnotationFS annoFs : CasUtil.select(aCas, aType)) {
             boolean first = true;
             boolean previous = false; // exists previous annotation, place-holed O-_ should be kept
-            for (Token token : selectCovered(Token.class, annoFs)) {
-                if (annoFs.getBegin() <= token.getBegin() && annoFs.getEnd() >= token.getEnd()) {
+            for (AnnotationItem item : aItems) {
+                if (annoFs.getBegin() == item.start && annoFs.getEnd() == item.end) {
                     String annotation = annoFs.getFeatureValueAsString(aFeature);
                     if (annotation == null) {
-                        annotation = aType.getName()+"_";
+                        annotation = aType.getName() + "_";
                     }
-                    if (aTokenAnnoMap.get(token.getAddress()) == null) {
+                    if (aTokenAnnoMap.get(item.itemId) == null) {
                         if (previous) {
                             if (!multipleSpans.contains(aType.getName())) {
-                                aTokenAnnoMap.put(token.getAddress(), annotation);
+                                aTokenAnnoMap.put(item.itemId, annotation);
                             }
                             else {
-                                aTokenAnnoMap.put(token.getAddress(), "O-_|"
-                                        + (first ? "B-" : "I-") + annotation);
+                                aTokenAnnoMap.put(item.itemId, "O-_|" + (first ? "B-" : "I-")
+                                        + annotation);
                                 first = false;
                             }
                         }
                         else {
                             if (!multipleSpans.contains(aType.getName())) {
-                                aTokenAnnoMap.put(token.getAddress(), annotation);
+                                aTokenAnnoMap.put(item.itemId, annotation);
                             }
                             else {
-                                aTokenAnnoMap.put(token.getAddress(), (first ? "B-" : "I-")
-                                        + annotation);
+                                aTokenAnnoMap.put(item.itemId, (first ? "B-" : "I-") + annotation);
                                 first = false;
                             }
                         }
                     }
                     else {
                         if (!multipleSpans.contains(aType.getName())) {
-                            aTokenAnnoMap.put(token.getAddress(),
-                                    aTokenAnnoMap.get(token.getAddress()) + "|" + annotation);
+                            aTokenAnnoMap.put(item.itemId, aTokenAnnoMap.get(item) + "|"
+                                    + annotation);
                             previous = true;
                         }
                         else {
-                            aTokenAnnoMap.put(token.getAddress(),
-                                    aTokenAnnoMap.get(token.getAddress()) + "|"
-                                            + (first ? "B-" : "I-") + annotation);
+                            aTokenAnnoMap.put(item.itemId, aTokenAnnoMap.get(item) + "|"
+                                    + (first ? "B-" : "I-") + annotation);
                             first = false;
                             previous = true;
                         }
                     }
-
                 }
             }
         }
     }
 
-    private void setRelationFeatureAnnos(CAS aCas, Map<Integer, String> aRelAnnoMap, Type aType,
-            Feature aFeature)
+    private void setRelationFeatureAnnos(CAS aCas, Map<String, String> aRelAnnoMap, Type aType,
+            Feature aFeature, List<AnnotationItem> aItems)
         throws CASRuntimeException, CASException
     {
         Feature dependent = null;
@@ -423,53 +443,52 @@ public class WebannoCustomTsvWriter
             temp = annoFs;
             annoFs = (AnnotationFS) annoFs.getFeatureValue(dependent);
             boolean first = true;
-            for (Token token : selectCovered(aCas.getJCas(), Token.class, annoFs.getBegin(),
-                    annoFs.getEnd())) {
-                if (annoFs.getBegin() <= token.getBegin() && annoFs.getEnd() >= token.getEnd()) {
+            for (AnnotationItem item : aItems) {
+                if (annoFs.getBegin() <= item.start && annoFs.getEnd() >= item.end) {
                     annoFs = temp;
 
                     String annotation = annoFs.getFeatureValueAsString(aFeature);
                     if (annotation == null) {
-                        annotation = aType.getName()+"_";
+                        annotation = aType.getName() + "_";
                     }
-                    if (aRelAnnoMap.get(token.getAddress()) == null) {
+                    if (aRelAnnoMap.get(item.itemId) == null) {
 
                         if (!multipleSpans.contains(aType.getName())) {
 
-                            aRelAnnoMap.put(token.getAddress(), annotation);
+                            aRelAnnoMap.put(item.itemId, annotation);
                         }
                         else {
 
-                            aRelAnnoMap.put(token.getAddress(), (first ? "B-" : "I-") + annotation);
+                            aRelAnnoMap.put(item.itemId, (first ? "B-" : "I-") + annotation);
                             first = false;
                         }
                     }
                     else {
 
                         if (!multipleSpans.contains(aType.getName())) {
-                            aRelAnnoMap.put(token.getAddress(), aRelAnnoMap.get(token.getAddress())
-                                    + "|" + annotation);
+                            aRelAnnoMap.put(item.itemId, aRelAnnoMap.get(item.itemId) + "|"
+                                    + annotation);
                         }
                         else {
-                            aRelAnnoMap.put(token.getAddress(), aRelAnnoMap.get(token.getAddress())
-                                    + "|" + (first ? "B-" : "I-") + annotation);
+                            aRelAnnoMap.put(item.itemId, aRelAnnoMap.get(item.itemId) + "|"
+                                    + (first ? "B-" : "I-") + annotation);
                             first = false;
                         }
 
                     }
                 }
-                //TODO: remove the B- and I- code in the if/else above. no such a thing of
-               // multiplespan annotation on relations.
+                // TODO: remove the B- and I- code in the if/else above. no such a thing of
+                // multiplespan annotation on relations.
 
                 // if the annotation gov/dep span annotation is on multiple tokens,
-                //we just need an arc to the first token.
-                   break;
+                // we just need an arc to the first token.
+                break;
             }
         }
     }
 
-    private void setRelationGovernorPos(CAS aCas, Map<Integer, String> aRelationGovernorMap,
-            Type aType)
+    private void setRelationGovernorPos(CAS aCas, Map<String, String> aRelationGovernorMap,
+            Type aType, List<AnnotationItem> aItems)
         throws CASRuntimeException, CASException
     {
         Feature governor = null, dependent = null;
@@ -483,35 +502,60 @@ public class WebannoCustomTsvWriter
             }
         }
 
-        for (AnnotationFS anno : CasUtil.select(aCas, aType)) {
-            // relation annotation will be from Governor to Dependent
-            // Entry done on Dependent side
+        for (AnnotationFS anno : CasUtil.select(aCas, aType)) { // relation annotation will be from
+                                                                // Governor to Dependent // Entry
+                                                                // done on Dependent side
             temp = anno;
             anno = (AnnotationFS) anno.getFeatureValue(dependent);
-            for (Token token : selectCovered(aCas.getJCas(), Token.class, anno.getBegin(),
-                    anno.getEnd())) {
-                if (anno.getBegin() <= token.getBegin() && anno.getEnd() >= token.getEnd()) {
+            for (AnnotationItem item : aItems) {
+                if (anno.getBegin() <= item.start && anno.getEnd() >= item.end) {
 
-                    if (aRelationGovernorMap.get(token.getAddress()) == null) {
+                    if (aRelationGovernorMap.get(item.itemId) == null) {
                         AnnotationFS govAnno = (AnnotationFS) temp.getFeatureValue(governor);
-                        aRelationGovernorMap.put(token.getAddress(), tokenIds.get(tokenPositions
-                                .floorEntry(govAnno.getBegin()).getValue()));
+                        aRelationGovernorMap.put(
+                                item.itemId,
+                                itemPositions.floorEntry(
+                                        govAnno.getBegin() + "-" + govAnno.getEnd()).getValue());
                     }
                     else {
                         AnnotationFS govAnno = (AnnotationFS) temp.getFeatureValue(governor);
                         aRelationGovernorMap.put(
-                                token.getAddress(),
-                                aRelationGovernorMap.get(token.getAddress())
+                                item.itemId,
+                                aRelationGovernorMap.get(item.itemId)
                                         + "|"
-                                        + tokenIds.get(tokenPositions
-                                                .floorEntry(govAnno.getBegin()).getValue()));
+                                        + itemPositions.floorEntry(
+                                                govAnno.getBegin() + "-" + govAnno.getEnd())
+                                                .getValue());
                     }
                 }
-             // if the annotation gov/dep span annotation is on multiple tokens,
-             //we just need an arc to the first token.
+                // if the annotation gov/dep span annotation is on multiple tokens,
+                // we just need an arc to the first token.
                 break;
             }
         }
+    }
+
+    /**
+     * An annotation item is an item that carries any UIMA annotation so that can be written on its
+     * own line. An annotation item can, therefore be a token, or a sub-token TODO - check if an
+     * empty annotation item is still possible to be write in a new line
+     *
+     * @author seid
+     *
+     */
+    public static class AnnotationItem
+        implements java.io.Serializable
+    {
+        private static final long serialVersionUID = 6140390142654134042L;
+        int start;
+        int end;
+        int parnetTokenEnd;
+        boolean isToken = true;;
+        String text;
+        String itemId;
+        int subItemId;
+        int parentIndex;
+
     }
 
 }
