@@ -17,7 +17,7 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.*;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
 import static java.util.Arrays.asList;
 
@@ -30,12 +30,13 @@ import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Resource;
+
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
 import org.springframework.security.core.context.SecurityContextHolder;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.EntityType;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.RelationType;
@@ -88,7 +89,7 @@ public class BratAjaxCasController
 
     /**
      * a protocol which returns the logged in user
-     * 
+     *
      * @return the response.
      */
     public WhoamiResponse whoami()
@@ -99,7 +100,7 @@ public class BratAjaxCasController
 
     /**
      * some BRAT UI global configurations such as {@code textBackgrounds}
-     * 
+     *
      * @return the response.
      */
     public LoadConfResponse loadConf()
@@ -112,8 +113,9 @@ public class BratAjaxCasController
      * includes List {@link Tag}s and {@link TagSet}s It includes information about span types
      * {@link POS}, {@link NamedEntity}, and {@link CoreferenceLink#getReferenceType()} and relation
      * types such as {@link Dependency}, {@link CoreferenceChain}
-     * 
-     * @param aAnnotationLayers the layers.
+     *
+     * @param aAnnotationLayers
+     *            the layers.
      * @return the response.
      *
      * @see <a href="http://brat.nlplab.org/index.html">Brat</a>
@@ -128,15 +130,22 @@ public class BratAjaxCasController
 
     /**
      * Returns the JSON representation of the document for brat visualizer
-     * 
-     * @param aBratAnnotatorModel the annotator model.
-     * @param aAnnotationOffsetStart the begin offset.
-     * @param aJCas the JCas.
-     * @param aIsGetDocument hum?
+     *
+     * @param aBratAnnotatorModel
+     *            the annotator model.
+     * @param aAnnotationOffsetStart
+     *            the begin offset.
+     * @param aJCas
+     *            the JCas.
+     * @param aIsGetDocument
+     *            hum?
      * @return the response
-     * @throws UIMAException if a conversion error occurs.
-     * @throws IOException if an I/O error occurs.
-     * @throws ClassNotFoundException if a DKPro Core reader/writer cannotbe loaded.
+     * @throws UIMAException
+     *             if a conversion error occurs.
+     * @throws IOException
+     *             if an I/O error occurs.
+     * @throws ClassNotFoundException
+     *             if a DKPro Core reader/writer cannotbe loaded.
      */
     public GetDocumentResponse getDocumentResponse(BratAnnotatorModel aBratAnnotatorModel,
             int aAnnotationOffsetStart, JCas aJCas, boolean aIsGetDocument)
@@ -150,12 +159,17 @@ public class BratAjaxCasController
 
     /**
      * wrap JSON responses to BRAT visualizer
-     * 
-     * @param aResponse the response.
-     * @param aBratAnnotatorModel the annotator model.
-     * @param aAnnotationOffsetStart the begin offset.
-     * @param aJCas the JCas.
-     * @param aIsGetDocument hum?
+     *
+     * @param aResponse
+     *            the response.
+     * @param aBratAnnotatorModel
+     *            the annotator model.
+     * @param aAnnotationOffsetStart
+     *            the begin offset.
+     * @param aJCas
+     *            the JCas.
+     * @param aIsGetDocument
+     *            hum?
      */
     public static void render(GetDocumentResponse aResponse,
             BratAnnotatorModel aBratAnnotatorModel, int aAnnotationOffsetStart, JCas aJCas,
@@ -176,17 +190,21 @@ public class BratAjaxCasController
 
     /**
      * wrap JSON responses to BRAT visualizer
-     * 
-     * @param aResponse the response.
-     * @param aBModel the annotator model.
-     * @param aJCas the JCas.
-     * @param aAnnotationService the annotation service.s
+     *
+     * @param aResponse
+     *            the response.
+     * @param aBModel
+     *            the annotator model.
+     * @param aJCas
+     *            the JCas.
+     * @param aAnnotationService
+     *            the annotation service.s
      */
     public static void render(GetDocumentResponse aResponse, BratAnnotatorModel aBModel,
             JCas aJCas, AnnotationService aAnnotationService)
     {
         aResponse.setRtlMode(ScriptDirection.RTL.equals(aBModel.getProject().getScriptDirection()));
-        
+
         // Render invisible baseline annotations (sentence, tokens)
         SpanAdapter.renderTokenAndSentence(aJCas, aResponse, aBModel);
 
@@ -195,10 +213,10 @@ public class BratAjaxCasController
         for (AnnotationLayer layer : aBModel.getAnnotationLayers()) {
             if (layer.getName().equals(Token.class.getName())
                     || layer.getName().equals(Sentence.class.getName())
-                    || (layer.getType().equals(CHAIN_TYPE) && (aBModel.getProject()
-                            .getMode().equals(Mode.AUTOMATION)
-                            || aBModel.getProject().getMode().equals(Mode.CORRECTION) || aBModel
-                            .getProject().getMode().equals(Mode.CURATION)))) {
+                    || (layer.getType().equals(CHAIN_TYPE) && (aBModel.getMode().equals(
+                            Mode.AUTOMATION)
+                            || aBModel.getMode().equals(Mode.CORRECTION) || aBModel.getMode()
+                            .equals(Mode.CURATION)))) {
                 continue;
             }
 
@@ -218,12 +236,14 @@ public class BratAjaxCasController
             i++;
         }
     }
-    
+
     /**
      * Generates brat type definitions from the WebAnno layer definitions.
-     * 
-     * @param aAnnotationLayers the layers
-     * @param aAnnotationService the annotation service
+     *
+     * @param aAnnotationLayers
+     *            the layers
+     * @param aAnnotationService
+     *            the annotation service
      * @return the brat type definitions
      */
     public static Set<EntityType> buildEntityTypes(List<AnnotationLayer> aAnnotationLayers,
@@ -245,17 +265,18 @@ public class BratAjaxCasController
         for (AnnotationLayer layer : layers) {
             EntityType entityType = configureEntityType(layer);
 
-            for (AnnotationLayer attachingLayer : getAttachingLayers(layer, layers, aAnnotationService)) {
+            for (AnnotationLayer attachingLayer : getAttachingLayers(layer, layers,
+                    aAnnotationService)) {
                 RelationType arc = configureRelationType(layer, attachingLayer);
                 entityType.setArcs(asList(arc));
             }
-            
+
             entityTypes.add(entityType);
         }
 
         return entityTypes;
     }
-    
+
     /**
      * Scan through the layers once to remember which layers attach to which layers.
      */
@@ -263,12 +284,12 @@ public class BratAjaxCasController
             List<AnnotationLayer> aLayers, AnnotationService aAnnotationService)
     {
         List<AnnotationLayer> attachingLayers = new ArrayList<>();
-        
+
         // Chains always attach to themselves
         if (CHAIN_TYPE.equals(aTarget.getType())) {
             attachingLayers.add(aTarget);
         }
-        
+
         // FIXME This is a hack! Actually we should check the type of the attachFeature when
         // determine which layers attach to with other layers. Currently we only use attachType,
         // but do not follow attachFeature if it is set.
@@ -276,23 +297,23 @@ public class BratAjaxCasController
             attachingLayers.add(aAnnotationService.getLayer(Dependency.class.getName(),
                     aTarget.getProject()));
         }
-        
+
         // Custom layers
         for (AnnotationLayer l : aLayers) {
             if (aTarget.equals(l.getAttachType())) {
                 attachingLayers.add(l);
             }
         }
-        
+
         return attachingLayers;
     }
-    
+
     private static EntityType configureEntityType(AnnotationLayer aLayer)
     {
         String bratTypeName = getBratTypeName(aLayer);
         return new EntityType(aLayer.getName(), aLayer.getUiName(), bratTypeName);
     }
-    
+
     private static RelationType configureRelationType(AnnotationLayer aLayer,
             AnnotationLayer aAttachingLayer)
     {
@@ -304,7 +325,7 @@ public class BratAjaxCasController
                     bratTypeName, null, null, "3,3");
             return arc;
         }
-        
+
         String attachingLayerBratTypeName = TypeUtil.getBratTypeName(aAttachingLayer);
         // FIXME this is a hack because the chain layer consists of two UIMA types, a "Chain"
         // and a "Link" type. ChainAdapter always seems to use "Chain" but some places also
@@ -313,7 +334,7 @@ public class BratAjaxCasController
         if (aLayer.getType().equals(CHAIN_TYPE)) {
             attachingLayerBratTypeName += ChainAdapter.CHAIN;
         }
-        
+
         // Handle arrow-head styles depending on linkedListBehavior
         String arrowHead;
         if (aLayer.getType().equals(CHAIN_TYPE) && !aLayer.isLinkedListBehavior()) {
@@ -322,7 +343,7 @@ public class BratAjaxCasController
         else {
             arrowHead = "triangle,5";
         }
-        
+
         String dashArray;
         switch (aLayer.getType()) {
         case CHAIN_TYPE:
@@ -332,25 +353,24 @@ public class BratAjaxCasController
             dashArray = "";
             break;
         }
-        
+
         String bratTypeName = getBratTypeName(aLayer);
-        RelationType arc = new RelationType(aAttachingLayer.getName(),
-                aAttachingLayer.getUiName(), attachingLayerBratTypeName, bratTypeName, null,
-                arrowHead, dashArray);
+        RelationType arc = new RelationType(aAttachingLayer.getName(), aAttachingLayer.getUiName(),
+                attachingLayerBratTypeName, bratTypeName, null, arrowHead, dashArray);
         return arc;
     }
-    
+
     private static String getBratTypeName(AnnotationLayer aLayer)
     {
         String bratTypeName = TypeUtil.getBratTypeName(aLayer);
-        
+
         // FIXME this is a hack because the chain layer consists of two UIMA types, a "Chain"
         // and a "Link" type. ChainAdapter always seems to use "Chain" but some places also
         // still use "Link" - this should be cleaned up so that knowledge about "Chain" and
         // "Link" types is local to the ChainAdapter and not known outside it!
         if (aLayer.getType().equals(CHAIN_TYPE)) {
             bratTypeName += ChainAdapter.CHAIN;
-        } 
+        }
         return bratTypeName;
     }
 }
