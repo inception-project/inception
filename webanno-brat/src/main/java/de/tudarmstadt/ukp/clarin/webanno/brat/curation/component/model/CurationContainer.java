@@ -29,7 +29,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 /**
- * A model for curation container comprises of {@link CurationViewForSourceDocument}, {@link SourceDocument},
+ * A model for curation container comprises of {@link SourceListView}, {@link SourceDocument},
  * and {@link Project}
  * @author  Andreas Straninger
  * @author  Seid Muhie Yimam
@@ -40,27 +40,27 @@ public class CurationContainer
 {
     private static final long serialVersionUID = -6632707037285383353L;
 
-    private Map<Integer, CurationViewForSourceDocument> curationViewByBegin = new HashMap<Integer, CurationViewForSourceDocument>();
+    private Map<Integer, SourceListView> curationViewByBegin = new HashMap<Integer, SourceListView>();
 
     private BratAnnotatorModel bratAnnotatorModel;
 
-    public List<CurationViewForSourceDocument> getCurationViews()
+    public List<SourceListView> getCurationViews()
     {
         LinkedList<Integer> viewsBegin = new LinkedList<Integer>(curationViewByBegin.keySet());
         Collections.sort(viewsBegin);
-        List<CurationViewForSourceDocument> curationViews = new LinkedList<CurationViewForSourceDocument>();
+        List<SourceListView> curationViews = new LinkedList<SourceListView>();
         for (Integer begin : viewsBegin) {
             curationViews.add(curationViewByBegin.get(begin));
         }
         return curationViews;
     }
 
-    public Map<Integer, CurationViewForSourceDocument> getCurationViewByBegin()
+    public Map<Integer, SourceListView> getCurationViewByBegin()
     {
         return curationViewByBegin;
     }
 
-    public void setCurationSegmentByBegin(Map<Integer, CurationViewForSourceDocument> curationViewByBegin)
+    public void setCurationSegmentByBegin(Map<Integer, SourceListView> curationViewByBegin)
     {
         this.curationViewByBegin = curationViewByBegin;
     }

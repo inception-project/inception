@@ -31,7 +31,6 @@ import org.apache.uima.jcas.JCas;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.command.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel.FeatureModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
@@ -115,7 +114,7 @@ public class BratAnnotatorModel
 //    private boolean staticColor = true;
 
     private AnnotationPreference preferences = new AnnotationPreference();
-    
+
     /**
      * If the document is opened through the next/previous buttons on the annotation page, not with
      * the open dialog method, used to change {@link #document}
@@ -148,7 +147,7 @@ public class BratAnnotatorModel
     private boolean forwardAnnotation;
 
     private final Selection selection = new Selection();
-    
+
     public Selection getSelection()
     {
         return selection;
@@ -228,12 +227,12 @@ public class BratAnnotatorModel
     {
         return preferences;
     }
-    
+
     public void setPreferences(AnnotationPreference aPreferences)
     {
         preferences = aPreferences;
     }
-    
+
     public String getDocumentName()
     {
         return documentName;

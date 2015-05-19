@@ -87,22 +87,21 @@ public class SuggestionBuilder
         userRepository = aUserDao;
     }
 
-    public CurationContainer buildCurationContainer(BratAnnotatorModel aBratAnnotatorModel)
+    public CurationContainer buildCurationContainer(BratAnnotatorModel aBModel)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
         CurationContainer curationContainer = new CurationContainer();
         // initialize Variables
-        SourceDocument sourceDocument = aBratAnnotatorModel.getDocument();
+        SourceDocument sourceDocument = aBModel.getDocument();
         Map<Integer, Integer> segmentBeginEnd = new HashMap<Integer, Integer>();
         Map<Integer, Integer> segmentNumber = new HashMap<Integer, Integer>();
-        Map<Integer, String> segmentText = new HashMap<Integer, String>();
         Map<String, Map<Integer, Integer>> segmentAdress = new HashMap<String, Map<Integer, Integer>>();
         // get annotation documents
 
         List<AnnotationDocument> finishedAnnotationDocuments = new ArrayList<AnnotationDocument>();
 
         for (AnnotationDocument annotationDocument : repository
-                .listAnnotationDocuments(aBratAnnotatorModel.getDocument())) {
+                .listAnnotationDocuments(aBModel.getDocument())) {
             if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
                 finishedAnnotationDocuments.add(annotationDocument);
             }
@@ -113,27 +112,27 @@ public class SuggestionBuilder
         AnnotationDocument randomAnnotationDocument = null;
 
         // get the correction/automation JCas for the logged in user
-        if (aBratAnnotatorModel.getMode().equals(Mode.AUTOMATION)
-                || aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)) {
+        if (aBModel.getMode().equals(Mode.AUTOMATION)
+                || aBModel.getMode().equals(Mode.CORRECTION)) {
             jCases = listJcasesforCorrection(randomAnnotationDocument, sourceDocument,
-                    aBratAnnotatorModel.getMode());
+                    aBModel.getMode());
             String username = jCases.keySet().iterator().next();
-            updateSegment(aBratAnnotatorModel, segmentBeginEnd, segmentNumber, segmentText,
-                    segmentAdress, jCases.get(username), username);
+            updateSegment(aBModel, segmentBeginEnd, segmentNumber, segmentAdress,
+                    jCases.get(username), username, aBModel.getPreferences().getWindowSize());
 
         }
         else {
 
             jCases = listJcasesforCuration(finishedAnnotationDocuments, randomAnnotationDocument,
-                    aBratAnnotatorModel.getMode());
+                    aBModel.getMode());
             for (String username : jCases.keySet()) {
                 JCas jCas = jCases.get(username);
-                updateSegment(aBratAnnotatorModel, segmentBeginEnd, segmentNumber, segmentText,
-                        segmentAdress, jCas, username);
+                updateSegment(aBModel, segmentBeginEnd, segmentNumber, segmentAdress,
+                        jCas, username, aBModel.getPreferences().getCurationWindowSize());
             }
         }
 
-        JCas mergeJCas = getMergeCas(aBratAnnotatorModel, sourceDocument, jCases,
+        JCas mergeJCas = getMergeCas(aBModel, sourceDocument, jCases,
                 randomAnnotationDocument);
 
         int numUsers = jCases.size();
@@ -147,7 +146,7 @@ public class SuggestionBuilder
         }
 
         if (entryTypes == null) {
-            entryTypes = getEntryTypes(mergeJCas, aBratAnnotatorModel.getAnnotationLayers(),
+            entryTypes = getEntryTypes(mergeJCas, aBModel.getAnnotationLayers(),
                     annotationService);
         }
 
@@ -177,7 +176,7 @@ public class SuggestionBuilder
                 }
             }
 
-            CurationViewForSourceDocument curationSegment = new CurationViewForSourceDocument();
+            SourceListView curationSegment = new SourceListView();
             curationSegment.setBegin(begin);
             curationSegment.setEnd(end);
             if (hasDiff) {
@@ -186,7 +185,6 @@ public class SuggestionBuilder
             else {
                 curationSegment.setSentenceState(SentenceState.AGREE);
             }
-            curationSegment.setText(segmentText.get(begin));
             curationSegment.setSentenceNumber(segmentNumber.get(begin));
 
             for (String username : segmentAdress.keySet()) {
@@ -316,21 +314,15 @@ public class SuggestionBuilder
      */
     private void updateSegment(BratAnnotatorModel aBratAnnotatorModel,
             Map<Integer, Integer> segmentBeginEnd, Map<Integer, Integer> segmentNumber,
-            Map<Integer, String> segmentText, Map<String, Map<Integer, Integer>> segmentAdress,
-            JCas jCas, String username)
+            Map<String, Map<Integer, Integer>> segmentAdress, JCas jCas, String username,
+            int aWinSize)
         throws UIMAException, ClassNotFoundException, IOException
     {
-
-        int windowSize = aBratAnnotatorModel.getPreferences().getWindowSize();
-
         Sentence firstSentence = selectSentenceAt(jCas,
                 aBratAnnotatorModel.getSentenceBeginOffset(),
                 aBratAnnotatorModel.getSentenceEndOffset());
-        Sentence lastSentence = selectByAddr(
-                jCas,
-                Sentence.class,
-                getLastSentenceAddressInDisplayWindow(jCas,
-                        getAddr(firstSentence), windowSize));
+        Sentence lastSentence = selectByAddr(jCas, Sentence.class,
+                getLastSentenceAddressInDisplayWindow(jCas, getAddr(firstSentence), aWinSize));
 
         begin = firstSentence.getBegin();
         end = lastSentence.getEnd();
@@ -340,7 +332,6 @@ public class SuggestionBuilder
         for (Sentence sentence : selectCovered(jCas, Sentence.class, begin, end)) {
             sentenceNumber += 1;
             segmentBeginEnd.put(sentence.getBegin(), sentence.getEnd());
-            segmentText.put(sentence.getBegin(), sentence.getCoveredText().toString());
             segmentNumber.put(sentence.getBegin(), sentenceNumber);
             segmentAdress.get(username).put(sentence.getBegin(), getAddr(sentence));
         }
@@ -401,7 +392,7 @@ public class SuggestionBuilder
         int numUsers = jCases.size();
         mergeJCas = repository.readAnnotationCas(randomAnnotationDocument);
 
-        entryTypes = getEntryTypes(mergeJCas, aAnnotationLayers,annotationService);
+        entryTypes = getEntryTypes(mergeJCas, aAnnotationLayers, annotationService);
         jCases.put(CurationPanel.CURATION_USER, mergeJCas);
 
         List<AnnotationOption> annotationOptions = null;
@@ -433,8 +424,8 @@ public class SuggestionBuilder
             }
         }
 
-        repository.writeCurationCas(mergeJCas, randomAnnotationDocument.getDocument(),
-                userLoggedIn);
+        repository
+                .writeCurationCas(mergeJCas, randomAnnotationDocument.getDocument(), userLoggedIn);
         return mergeJCas;
     }
 
@@ -445,8 +436,8 @@ public class SuggestionBuilder
         User userLoggedIn = userRepository.get(SecurityContextHolder.getContext()
                 .getAuthentication().getName());
         mergeJCas = repository.readAnnotationCas(aBratAnnotatorModel.getDocument(), userLoggedIn);
-        repository.writeCorrectionCas(mergeJCas,
-                randomAnnotationDocument.getDocument(), userLoggedIn);
+        repository.writeCorrectionCas(mergeJCas, randomAnnotationDocument.getDocument(),
+                userLoggedIn);
         return mergeJCas;
     }
 }

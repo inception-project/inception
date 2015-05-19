@@ -38,7 +38,6 @@ import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.codehaus.jackson.JsonGenerator;
 import org.springframework.beans.BeansException;
-import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
@@ -57,10 +56,10 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.SuggestionViewPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.AnnotationState;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.SuggestionBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationUserSegmentForAnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationViewForSourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.SourceListView;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.SuggestionBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.project.PreferencesUtil;
@@ -125,7 +124,7 @@ public class CuratorUtil
 
     /**
      * Set different attributes for {@link BratAnnotatorModel} that will be used for the
-     * {@link CurationViewForSourceDocument}
+     * {@link SourceListView}
      *
      * @param aSourceDocument
      *            the source document.
@@ -142,7 +141,7 @@ public class CuratorUtil
      *             if an I/O error occurs.
      */
     public static BratAnnotatorModel setBratAnnotatorModel(SourceDocument aSourceDocument,
-            RepositoryService aRepository, CurationViewForSourceDocument aCurationSegment,
+            RepositoryService aRepository, SourceListView aCurationSegment,
             AnnotationService aAnnotationService, UserDao aUserDao)
         throws BeansException, IOException
     {
@@ -277,8 +276,8 @@ public class CuratorUtil
 
                 // Create curation view for the current user
                 CurationUserSegmentForAnnotationDocument curationUserSegment2 = new CurationUserSegmentForAnnotationDocument();
-                curationUserSegment2.setCollectionData(getCollectionInformation(
-                        aAnnotationService, aCurationContainer));
+                curationUserSegment2.setCollectionData(getCollectionInformation(aAnnotationService,
+                        aCurationContainer));
                 curationUserSegment2.setDocumentResponse(render(jCas, aAnnotationService,
                         aBratAnnotatorModel, curationColoringStrategy));
                 curationUserSegment2.setUsername(username);
@@ -291,8 +290,7 @@ public class CuratorUtil
     }
 
     private static String render(JCas aJcas, AnnotationService aAnnotationService,
-            BratAnnotatorModel aBratAnnotatorModel,
-            ColoringStrategy aCurationColoringStrategy)
+            BratAnnotatorModel aBratAnnotatorModel, ColoringStrategy aCurationColoringStrategy)
         throws IOException
     {
         GetDocumentResponse response = new GetDocumentResponse();
@@ -322,8 +320,8 @@ public class CuratorUtil
         }
 
         StringWriter out = new StringWriter();
-        JsonGenerator jsonGenerator = JSONUtil.getJsonConverter().getObjectMapper().getJsonFactory()
-                .createJsonGenerator(out);
+        JsonGenerator jsonGenerator = JSONUtil.getJsonConverter().getObjectMapper()
+                .getJsonFactory().createJsonGenerator(out);
         jsonGenerator.writeObject(response);
         return out.toString();
     }
@@ -337,8 +335,8 @@ public class CuratorUtil
                 .getBratAnnotatorModel().getAnnotationLayers(), aAnnotationService));
 
         StringWriter out = new StringWriter();
-        JsonGenerator jsonGenerator = JSONUtil.getJsonConverter().getObjectMapper().getJsonFactory()
-                .createJsonGenerator(out);
+        JsonGenerator jsonGenerator = JSONUtil.getJsonConverter().getObjectMapper()
+                .getJsonFactory().createJsonGenerator(out);
         jsonGenerator.writeObject(info);
         return out.toString();
     }
@@ -451,24 +449,24 @@ public class CuratorUtil
             BratAnnotator aMergeVisualizer,
             RepositoryService aRepository,
             Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
-            CurationViewForSourceDocument aCurationSegment, AnnotationService aAnnotationService,
+            SourceListView aCurationSegment, AnnotationService aAnnotationService,
             UserDao aUserDao)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
-        SourceDocument sourceDocument = aCurationContainer.getBratAnnotatorModel().getDocument();
+        BratAnnotatorModel bModel = aCurationContainer.getBratAnnotatorModel();
+        SourceDocument sourceDocument = bModel.getDocument();
         Map<String, JCas> jCases = new HashMap<String, JCas>();
 
         // This is the CAS that the user can actively edit
-        JCas annotatorCas = getAnnotatorCase(aCurationContainer.getBratAnnotatorModel(),
-                aRepository, aUserDao, aAnnotationSelectionByUsernameAndAddress, sourceDocument,
-                jCases);
+        JCas annotatorCas = getAnnotatorCase(bModel, aRepository, aUserDao,
+                aAnnotationSelectionByUsernameAndAddress, sourceDocument, jCases);
 
         // We store the CAS that the user will edit as the "CURATION USER"
         jCases.put(CURATION_USER, annotatorCas);
 
         // get differing feature structures
-        List<Type> entryTypes = SuggestionBuilder.getEntryTypes(annotatorCas, aCurationContainer
-                .getBratAnnotatorModel().getAnnotationLayers(), aAnnotationService);
+        List<Type> entryTypes = SuggestionBuilder.getEntryTypes(annotatorCas,
+                bModel.getAnnotationLayers(), aAnnotationService);
         List<AnnotationOption> annotationOptions = null;
         try {
             annotationOptions = CasDiff.doDiff(entryTypes, jCases, aCurationSegment.getBegin(),
@@ -481,22 +479,23 @@ public class CuratorUtil
         // fill lookup variable for annotation selections
         CuratorUtil.fillLookupVariables(annotationOptions,
                 aAnnotationSelectionByUsernameAndAddress,
-                aCurationContainer.getBratAnnotatorModel());
+                bModel);
 
         LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<CurationUserSegmentForAnnotationDocument>();
 
-        BratAnnotatorModel bratAnnotatorModel = aCurationContainer.getBratAnnotatorModel();
+        BratAnnotatorModel bModel2 = bModel;
 
-        CuratorUtil.populateCurationSentences(jCases, sentences, bratAnnotatorModel,
-                annotationOptions, aAnnotationSelectionByUsernameAndAddress,
-                aAnnotationService, aCurationContainer);
+        CuratorUtil.populateCurationSentences(jCases, sentences, bModel2,
+                annotationOptions, aAnnotationSelectionByUsernameAndAddress, aAnnotationService,
+                aCurationContainer);
 
         // update sentence list on the right side
         aParent.setModelObject(sentences);
-     /*   if (aCurationContainer.getBratAnnotatorModel().getMode().equals(Mode.CURATION)) {
-            aMergeVisualizer.setModelObject(bratAnnotatorModel);
-            aMergeVisualizer.bratRenderLater(aTarget);
-        }*/
+        /*
+         * if (aCurationContainer.getBratAnnotatorModel().getMode().equals(Mode.CURATION)) {
+         * aMergeVisualizer.setModelObject(bratAnnotatorModel);
+         * aMergeVisualizer.bratRenderLater(aTarget); }
+         */
         aTarget.add(aParent);
     }
 

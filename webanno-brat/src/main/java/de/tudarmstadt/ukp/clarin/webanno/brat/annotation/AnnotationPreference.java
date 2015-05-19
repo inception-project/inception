@@ -31,12 +31,14 @@ public class AnnotationPreference
     implements Serializable
 {
     private static final long serialVersionUID = 2202236699782758271L;
-    
+
     // Id of annotation layers, to be stored in the properties file comma separated: 12, 34,....
     private List<Long> annotationLayers;
 
     private int windowSize = 5;
-    
+
+    private int curationWindowSize = 10;
+
     private boolean scrollPage = true;
 
     // determine if static color for annotations will be used or we shall
@@ -67,6 +69,24 @@ public class AnnotationPreference
     public void setWindowSize(int aWindowSize)
     {
         windowSize = aWindowSize;
+    }
+
+    /**
+     * get the number of sentences curation window display at the left side
+     * @return
+     */
+    public int getCurationWindowSize()
+    {
+        return curationWindowSize;
+    }
+
+    /**
+     * set the number of sentences curation window display at the left side
+     *
+     */
+    public void setCurationWindowSize(int curationWindowSize)
+    {
+        this.curationWindowSize = curationWindowSize;
     }
 
     /**

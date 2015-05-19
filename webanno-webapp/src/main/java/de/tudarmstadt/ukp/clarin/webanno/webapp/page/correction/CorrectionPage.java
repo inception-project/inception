@@ -76,7 +76,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.SuggestionViewP
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.SuggestionBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationUserSegmentForAnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationViewForSourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.SourceListView;
 import de.tudarmstadt.ukp.clarin.webanno.brat.project.PreferencesUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.CuratorUtil;
@@ -143,7 +143,7 @@ public class CorrectionPage
 
     private Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress = new HashMap<String, Map<Integer, AnnotationSelection>>();
 
-    private CurationViewForSourceDocument curationSegment = new CurationViewForSourceDocument();
+    private SourceListView curationSegment = new SourceListView();
 
     public CorrectionPage()
     {

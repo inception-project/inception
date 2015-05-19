@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.curation.component;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectSentenceAt;
-import static org.apache.uima.fit.util.JCasUtil.selectFollowing;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -47,7 +46,6 @@ import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
@@ -60,12 +58,11 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationUserSegmentForAnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationViewForSourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.SourceListView;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.SentenceState;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.SuggestionBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.CuratorUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
@@ -107,9 +104,9 @@ public class CurationPanel
      */
     private Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress = new HashMap<String, Map<Integer, AnnotationSelection>>();
 
-    private CurationViewForSourceDocument curationView;
+    private SourceListView curationView;
 
-    ListView<CurationViewForSourceDocument> textListView;
+    ListView<SourceListView> textListView;
 
     /**
      * Class for combining an on click ajax call and a label
@@ -177,8 +174,6 @@ public class CurationPanel
                     curationContainer.setBratAnnotatorModel(bModel);
                     textListView.setModelObject(builder.buildCurationContainer(bModel)
                             .getCurationViews());
-
-                    setCurationSegmentBeginEnd();
 
                     CuratorUtil.updatePanel(aTarget, this, curationContainer, mergeVisualizer,
                             repository, annotationSelectionByUsernameAndAddress, curationView,
@@ -260,7 +255,6 @@ public class CurationPanel
                     curationContainer.setBratAnnotatorModel(bratAnnotatorModel);
                     textListView.setModelObject(builder.buildCurationContainer(bratAnnotatorModel)
                             .getCurationViews());
-                    setCurationSegmentBeginEnd();
 
                     CuratorUtil.updatePanel(aTarget, suggestionViewPanel, curationContainer, this,
                             repository, annotationSelectionByUsernameAndAddress, curationView,
@@ -287,15 +281,15 @@ public class CurationPanel
         mergeVisualizer.setOutputMarkupId(true);
         add(mergeVisualizer);
 
-        textListView = new ListView<CurationViewForSourceDocument>("textListView",
+        textListView = new ListView<SourceListView>("textListView",
                 curationContainer.getCurationViews())
         {
             private static final long serialVersionUID = 8539162089561432091L;
 
             @Override
-            protected void populateItem(ListItem<CurationViewForSourceDocument> item)
+            protected void populateItem(ListItem<SourceListView> item)
             {
-                final CurationViewForSourceDocument curationViewItem = item.getModelObject();
+                final SourceListView curationViewItem = item.getModelObject();
 
                 // ajax call when clicking on a sentence on the left side
                 final AbstractDefaultAjaxBehavior click = new AbstractDefaultAjaxBehavior()
@@ -343,16 +337,14 @@ public class CurationPanel
                                         bModel).getCurationViews());
                                 onChange(aTarget);
                             }
-
-                            setCurationSegmentBeginEnd();
                             CuratorUtil.updatePanel(aTarget, suggestionViewPanel, curationContainer,
                                     mergeVisualizer, repository,
                                     annotationSelectionByUsernameAndAddress, curationView,
                                     annotationService, userRepository);
 
-                            List<CurationViewForSourceDocument> views = curationContainer
+                            List<SourceListView> views = curationContainer
                                     .getCurationViews();
-                            for (CurationViewForSourceDocument segment : views) {
+                            for (SourceListView segment : views) {
                                 segment.setCurrentSentence(curationViewItem.getSentenceNumber()
                                         .equals(segment.getSentenceNumber()));
                             }
@@ -400,8 +392,8 @@ public class CurationPanel
                             + ";"));
                 }
 
-                Label currentSentence = new AjaxLabel("sentence", curationViewItem.getText(), click);
-                item.add(currentSentence);
+              /*  Label currentSentence = new AjaxLabel("sentence", curationViewItem.getText(), click);
+                item.add(currentSentence);*/
 
                 Label sentenceNumber = new AjaxLabel("sentenceNumber", curationViewItem
                         .getSentenceNumber().toString(), click);
@@ -412,29 +404,6 @@ public class CurationPanel
         // add subcomponents to the component
         textListView.setOutputMarkupId(true);
         textOuterView.add(textListView);
-    }
-
-    private void setCurationSegmentBeginEnd()
-        throws UIMAException, ClassNotFoundException, IOException
-    {
-        JCas jCas = repository.readAnnotationCas(bModel.getDocument(),
-                bModel.getUser());
-
-        final int sentenceAddress = getAddr(selectSentenceAt(jCas,
-                bModel.getSentenceBeginOffset(),
-                bModel.getSentenceEndOffset()));
-        bModel.setSentenceAddress(sentenceAddress);
-
-        final Sentence sentence = selectByAddr(jCas, Sentence.class, sentenceAddress);
-        List<Sentence> followingSentences = selectFollowing(jCas, Sentence.class, sentence,
-                bModel.getPreferences().getWindowSize());
-        // Check also, when getting the last sentence address in the display window, if this is the
-        // last sentence or the ONLY sentence in the document
-        Sentence lastSentenceAddressInDisplayWindow = followingSentences.size() == 0 ? sentence
-                : followingSentences.get(followingSentences.size() - 1);
-        curationView.setBegin(sentence.getBegin());
-        curationView.setEnd(lastSentenceAddressInDisplayWindow.getEnd());
-
     }
 
     protected void onChange(AjaxRequestTarget aTarget)

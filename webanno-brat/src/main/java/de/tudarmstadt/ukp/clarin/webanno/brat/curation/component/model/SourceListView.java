@@ -22,39 +22,28 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * A model comprises of Curation Segments comprising of the begin and end of a sentence, {@link SentenceState}
- *  Sentence number and the text (the Sentence content)
+ * A model comprises of Curation Segments comprising of the begin and end of the sentences, {@link SentenceState}
+ *  Sentence number
  * @author  Andreas Straninger
  * @author  Seid Muhie Yimam
  *
  */
-public class CurationViewForSourceDocument
+public class SourceListView
     implements Serializable
 {
 
     private static final long serialVersionUID = 9219600871129699568L;
     private Integer begin;
     private Integer end;
-    private String text;
     private SentenceState sentenceState;
     private Integer sentenceNumber;
     private boolean isCurrentSentence;
 
     private Map<String, Integer> sentenceAddress = new LinkedHashMap<String, Integer>();
 
-    public CurationViewForSourceDocument()
+    public SourceListView()
     {
 
-    }
-
-    public String getText()
-    {
-        return text;
-    }
-
-    public void setText(String text)
-    {
-        this.text = text;
     }
 
     public Integer getBegin()

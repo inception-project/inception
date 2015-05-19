@@ -70,6 +70,7 @@ public class AnnotationPreferenceModalPanel
     private final AnnotationLayerDetailForm tagSelectionForm;
 
     private NumberTextField<Integer> windowSizeField;
+    private NumberTextField<Integer> curationWindowSizeField;
 
     private final BratAnnotatorModel bModel;
 
@@ -85,16 +86,25 @@ public class AnnotationPreferenceModalPanel
                     new AnnotationLayerDetailFormModel()));
 
             // Import current settings from the annotator
-            getModelObject().numberOfSentences = bModel.getPreferences().getWindowSize();
+            getModelObject().windowSize = bModel.getPreferences().getWindowSize();
+            getModelObject().curationWindowSize = bModel.getPreferences().getCurationWindowSize();
             getModelObject().scrollPage = bModel.getPreferences().isScrollPage();
             getModelObject().staticColor = bModel.getPreferences().isStaticColor();
             for (AnnotationLayer layer : bModel.getAnnotationLayers()) {
                 getModelObject().annotationLayers.add(layer);
             }
-            windowSizeField = new NumberTextField<Integer>("numberOfSentences");
+            windowSizeField = new NumberTextField<Integer>("windowSize");
             windowSizeField.setType(Integer.class);
             windowSizeField.setMinimum(1);
             add(windowSizeField);
+
+            curationWindowSizeField = new NumberTextField<Integer>("curationWindowSize");
+            curationWindowSizeField.setType(Integer.class);
+            curationWindowSizeField.setMinimum(1);
+            if (!bModel.getMode().equals(Mode.CURATION)) {
+                curationWindowSizeField.setEnabled(false);
+            }
+            add(curationWindowSizeField);
 
             add(new CheckBoxMultipleChoice<AnnotationLayer>("annotationLayers")
             {
@@ -115,7 +125,7 @@ public class AnnotationPreferenceModalPanel
                             List<AnnotationLayer> corefTagSets = new ArrayList<AnnotationLayer>();
                             List<AnnotationLayer> hideLayer = new ArrayList<AnnotationLayer>();
                             for (AnnotationLayer layer : layers) {
-                                if(!layer.isEnabled()){
+                                if (!layer.isEnabled()) {
                                     hideLayer.add(layer);
                                     continue;
                                 }
@@ -155,7 +165,9 @@ public class AnnotationPreferenceModalPanel
                 {
                     bModel.getPreferences().setScrollPage(getModelObject().scrollPage);
                     bModel.setAnnotationLayers(getModelObject().annotationLayers);
-                    bModel.getPreferences().setWindowSize(getModelObject().numberOfSentences);
+                    bModel.getPreferences().setWindowSize(getModelObject().windowSize);
+                    bModel.getPreferences().setCurationWindowSize(
+                            getModelObject().curationWindowSize);
                     bModel.getPreferences().setStaticColor(getModelObject().staticColor);
                     try {
                         PreferencesUtil.savePreference(bModel, repository);
@@ -201,7 +213,8 @@ public class AnnotationPreferenceModalPanel
         private static final long serialVersionUID = -1L;
         public Project project;
         public SourceDocument document;
-        public int numberOfSentences;
+        public int windowSize;
+        public int curationWindowSize;
         public boolean scrollPage;
         public boolean staticColor;
         public List<AnnotationLayer> annotationLayers = new ArrayList<AnnotationLayer>();

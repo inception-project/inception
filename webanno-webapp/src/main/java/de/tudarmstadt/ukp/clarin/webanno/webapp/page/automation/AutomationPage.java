@@ -79,7 +79,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.SuggestionViewP
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.SuggestionBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationUserSegmentForAnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationViewForSourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.SourceListView;
 import de.tudarmstadt.ukp.clarin.webanno.brat.project.PreferencesUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.CuratorUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -152,7 +152,7 @@ public class AutomationPage
 
     private final Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress = new HashMap<String, Map<Integer, AnnotationSelection>>();
 
-    private final CurationViewForSourceDocument curationSegment = new CurationViewForSourceDocument();
+    private final SourceListView curationSegment = new SourceListView();
 
     public AutomationPage()
     {
