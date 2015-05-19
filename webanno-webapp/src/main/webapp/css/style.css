@@ -609,6 +609,13 @@ div.tabpanel .tab-panel {
     text-align: center;
 }
 
+.curation-sentence-list{
+    width: 50px;
+    height: 450px;
+    overflow: scroll;
+}
+
+
 tr.border_bottom td {
 	border-bottom: 2pt solid green;
 }
