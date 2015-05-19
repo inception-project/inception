@@ -72,8 +72,6 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.codehaus.plexus.util.StringUtils;
-import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
-
 import com.googlecode.wicket.kendo.ui.form.NumberTextField;
 import com.googlecode.wicket.kendo.ui.form.TextField;
 import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
@@ -876,44 +874,7 @@ public class AnnotationDetailEditorPanel
                 aBModel.setSelectedAnnotationLayer(aBModel.getRememberedSpanLayer());
             }
         }
-        setInitSpanFeatures(aBModel);
-    }
-
-    private void setInitSpanFeatures(BratAnnotatorModel aBModel)
-    {
-        List<FeatureModel> nonLinkFModels = new ArrayList<FeatureModel>();
-        for (FeatureModel nonLinkF : featureModels) {
-            if (nonLinkF.feature.getLinkTypeName() == null) {
-                nonLinkFModels.add(nonLinkF);
-            }
-        }
-        featureModels.removeAll(nonLinkFModels);
-        for (AnnotationFeature feature : annotationService.listAnnotationFeature(aBModel
-                .getSelectedAnnotationLayer())) {
-            if (!feature.isEnabled() || isSuppressedFeature(aBModel, feature)) {
-                continue;
-            }
-            if (feature.getLinkTypeName() != null) {
-                continue;
-            }
-            if (aBModel.getRememberedSpanFeatures().get(feature) != null) {
-
-                featureModels.add(new FeatureModel(feature, aBModel.getRememberedSpanFeatures()
-                        .get(feature)));
-            }
-            else if (aBModel.getRememberedArcFeatures().get(feature) != null) {
-
-                featureModels.add(new FeatureModel(feature, aBModel.getRememberedArcFeatures().get(
-                        feature)));
-            }
-            else if (feature.getTagset() != null) {
-                featureModels.add(new FeatureModel(feature, annotationService
-                        .listTags(feature.getTagset()).get(0).getName()));
-            }
-            else {
-                featureModels.add(new FeatureModel(feature, null));
-            }
-        }
+        populateFeatures(aBModel, null);
     }
 
     private void setInitSpanLayers(BratAnnotatorModel aBModel)
