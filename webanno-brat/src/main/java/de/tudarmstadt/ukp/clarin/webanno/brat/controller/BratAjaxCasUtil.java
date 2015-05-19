@@ -100,17 +100,20 @@ public class BratAjaxCasUtil
             return true;
         }
         
+        int offset1 = Math.min(aReferenceOffset, aCompareOffset);
+        int offset2 = Math.max(aReferenceOffset, aCompareOffset);
+        
         // Scanning through sentences
         Iterator<Sentence> si = JCasUtil.iterator(aJcas, Sentence.class);
         while (si.hasNext()) {
             Sentence s = si.next();
-            if (s.getBegin() <= aReferenceOffset && aReferenceOffset <= aCompareOffset) {
-                return s.getBegin() <= aCompareOffset && aCompareOffset <= aCompareOffset;
+            if (s.getBegin() <= offset1 && offset1 <= s.getEnd()) {
+                return s.getBegin() <= offset2 && offset2 <= s.getEnd();
             }
             
             // Sentences are sorted. When we hit the first sentence that is beyond the reference
             // offset, we will never again find a sentence that contains it.
-            if (aReferenceOffset < s.getBegin()) {
+            if (offset1 < s.getBegin()) {
                 return false;
             }
         }

@@ -72,8 +72,6 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.codehaus.plexus.util.StringUtils;
-import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
-
 import com.googlecode.wicket.kendo.ui.form.NumberTextField;
 import com.googlecode.wicket.kendo.ui.form.TextField;
 import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
@@ -876,44 +874,7 @@ public class AnnotationDetailEditorPanel
                 aBModel.setSelectedAnnotationLayer(aBModel.getRememberedSpanLayer());
             }
         }
-        setInitSpanFeatures(aBModel);
-    }
-
-    private void setInitSpanFeatures(BratAnnotatorModel aBModel)
-    {
-        List<FeatureModel> nonLinkFModels = new ArrayList<FeatureModel>();
-        for (FeatureModel nonLinkF : featureModels) {
-            if (nonLinkF.feature.getLinkTypeName() == null) {
-                nonLinkFModels.add(nonLinkF);
-            }
-        }
-        featureModels.removeAll(nonLinkFModels);
-        for (AnnotationFeature feature : annotationService.listAnnotationFeature(aBModel
-                .getSelectedAnnotationLayer())) {
-            if (!feature.isEnabled() || isSuppressedFeature(aBModel, feature)) {
-                continue;
-            }
-            if (feature.getLinkTypeName() != null) {
-                continue;
-            }
-            if (aBModel.getRememberedSpanFeatures().get(feature) != null) {
-
-                featureModels.add(new FeatureModel(feature, aBModel.getRememberedSpanFeatures()
-                        .get(feature)));
-            }
-            else if (aBModel.getRememberedArcFeatures().get(feature) != null) {
-
-                featureModels.add(new FeatureModel(feature, aBModel.getRememberedArcFeatures().get(
-                        feature)));
-            }
-            else if (feature.getTagset() != null) {
-                featureModels.add(new FeatureModel(feature, annotationService
-                        .listTags(feature.getTagset()).get(0).getName()));
-            }
-            else {
-                featureModels.add(new FeatureModel(feature, null));
-            }
-        }
+        populateFeatures(aBModel, null);
     }
 
     private void setInitSpanLayers(BratAnnotatorModel aBModel)
@@ -1248,7 +1209,15 @@ public class AnnotationDetailEditorPanel
                             .getModelObject()));
 
                     aItem.add(new Label("role"));
-                    final Label label = new Label("label");
+                    final Label label;
+                    if (aItem.getModelObject().targetAddr == -1
+                            && annotationFeatureForm.getModelObject().isArmedSlot(aModel.feature,
+                                    aItem.getIndex())) {
+                        label = new Label("label", "<Select to fill>");
+                    }
+                    else {
+                        label = new Label("label");
+                    }
                     label.add(new AjaxEventBehavior("click")
                     {
                         private static final long serialVersionUID = 7633309278417475424L;
@@ -1491,8 +1460,11 @@ public class AnnotationDetailEditorPanel
         implements Serializable
     {
         private static final long serialVersionUID = 2027345278696308900L;
+        
+        public static final String CLICK_HINT = "<Click to activate>";
+        
         public String role;
-        public String label = "<Click to arm>";
+        public String label = CLICK_HINT;
         public int targetAddr = -1;
     }
 
