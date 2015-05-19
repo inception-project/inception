@@ -1209,7 +1209,15 @@ public class AnnotationDetailEditorPanel
                             .getModelObject()));
 
                     aItem.add(new Label("role"));
-                    final Label label = new Label("label");
+                    final Label label;
+                    if (aItem.getModelObject().targetAddr == -1
+                            && annotationFeatureForm.getModelObject().isArmedSlot(aModel.feature,
+                                    aItem.getIndex())) {
+                        label = new Label("label", "<Select to fill>");
+                    }
+                    else {
+                        label = new Label("label");
+                    }
                     label.add(new AjaxEventBehavior("click")
                     {
                         private static final long serialVersionUID = 7633309278417475424L;
@@ -1452,8 +1460,11 @@ public class AnnotationDetailEditorPanel
         implements Serializable
     {
         private static final long serialVersionUID = 2027345278696308900L;
+        
+        public static final String CLICK_HINT = "<Click to activate>";
+        
         public String role;
-        public String label = "<Click to arm>";
+        public String label = CLICK_HINT;
         public int targetAddr = -1;
     }
 
