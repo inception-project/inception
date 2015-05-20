@@ -44,7 +44,9 @@ public enum SentenceState
     /**
      *
      */
-    CONFIRMED(true, "#99FF99");
+    CONFIRMED(true, "#99FF99"),
+    SOLID_BORDER(true, "solid"),
+    BORDER_COLOR(true, "#0000ff");
 
     private boolean hasDiff;
     private String colorCode;
@@ -60,7 +62,7 @@ public enum SentenceState
         return hasDiff;
     }
 
-    public String getColorCode()
+    public String getValue()
     {
         return colorCode;
     }
