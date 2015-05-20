@@ -349,9 +349,6 @@ public class CurationPanel
                                         .equals(segment.getSentenceNumber()));
                             }
 
-                            // textListView.setModelObject(views);
-                            textOuterView.addOrReplace(textListView);
-                            aTarget.add(textOuterView);
                             aTarget.add(suggestionViewPanel);
 
                             // Wicket-level rendering of annotator because it becomes visible
@@ -391,9 +388,6 @@ public class CurationPanel
                     item.add(AttributeModifier.append("style", "background-color: " + colorCode
                             + ";"));
                 }
-
-              /*  Label currentSentence = new AjaxLabel("sentence", curationViewItem.getText(), click);
-                item.add(currentSentence);*/
 
                 Label sentenceNumber = new AjaxLabel("sentenceNumber", curationViewItem
                         .getSentenceNumber().toString(), click);

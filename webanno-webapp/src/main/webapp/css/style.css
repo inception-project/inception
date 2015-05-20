@@ -610,8 +610,8 @@ div.tabpanel .tab-panel {
 }
 
 .curation-sentence-list{
-    width: 50px;
-    height: 450px;
+    width: 90%;
+    height: 550px;
     overflow: scroll;
 }
 

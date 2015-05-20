@@ -593,6 +593,11 @@ public class BratAjaxCasUtil
         return sentenceNumber;
     }
 
+    public static int getSentenceSize(JCas aJcas)
+    {
+        return select(aJcas, Sentence.class).size();
+    }
+
     /**
      * Get Sentence address for this ordinal sentence number. Used to go to specific sentence number
      *
