@@ -298,6 +298,8 @@ public class BratAnnotator
                             selection.setRelationAnno(false);
 
                             Offsets offsets = getSpanOffsets(request, jCas, paramId);
+                            // we lost on the way the actual brat offsets for ghosting!
+                            Offsets bratOffsets = getBratSpanOffsets(request, jCas, paramId);
                             selection.setAnnotation(paramId);
                             selection.set(jCas, offsets.getBegin(), offsets.getEnd());
                             
@@ -313,8 +315,8 @@ public class BratAnnotator
                             bratRenderHighlight(aTarget, selection.getAnnotation());
 
                             if (selection.getAnnotation().isNotSet()) {
-                                bratRenderGhostSpan(aTarget, jCas, selection.getBegin(),
-                                        selection.getEnd());
+                                bratRenderGhostSpan(aTarget, jCas, bratOffsets.getBegin(),
+                                        bratOffsets.getEnd());
                             }
                             else {
                                 bratRender(aTarget, jCas);
@@ -437,6 +439,24 @@ public class BratAnnotator
         }
     }
 
+    private Offsets getBratSpanOffsets(IRequestParameters request, JCas jCas, VID aVid)
+            throws JsonParseException, JsonMappingException, IOException
+    {
+        if (aVid.isNotSet()) {
+            // Create new span annotation
+            String offsets = request.getParameterValue(PARAM_OFFSETS).toString();
+            OffsetsList offsetLists = JSONUtil.getJsonConverter().getObjectMapper()
+                    .readValue(offsets, OffsetsList.class);
+            return new Offsets( offsetLists.get(0).getBegin(),
+                    offsetLists.get(offsetLists.size() - 1).getEnd());
+        }
+        else {
+            // Edit existing span annotation
+            AnnotationFS fs = BratAjaxCasUtil.selectByAddr(jCas, aVid.getId());
+            return new Offsets(fs.getBegin(), fs.getEnd());
+        }
+    }
+
     @Override
     protected void onConfigure()
     {
@@ -521,7 +541,7 @@ public class BratAnnotator
             AnnotationFS nextToken = BratAjaxCasUtil.getNextToken(aJCas, selection.getBegin(),
                     selection.getEnd());
 
-            response = addGhost(nextToken.getBegin(), nextToken.getEnd());
+            response = addGhost(selection.getBegin(), selection.getEnd());
 
             selection.clear();
             selection.set(aJCas, nextToken.getBegin(), nextToken.getEnd());
