@@ -78,7 +78,7 @@ public class BratAjaxCasUtil
         if (a.getCAS() != b.getCAS()) {
             return false;
         }
-        
+
         return getAddr(a) == getAddr(b);
     }
 
@@ -99,10 +99,10 @@ public class BratAjaxCasUtil
         if (aReferenceOffset == aCompareOffset) {
             return true;
         }
-        
+
         int offset1 = Math.min(aReferenceOffset, aCompareOffset);
         int offset2 = Math.max(aReferenceOffset, aCompareOffset);
-        
+
         // Scanning through sentences
         Iterator<Sentence> si = JCasUtil.iterator(aJcas, Sentence.class);
         while (si.hasNext()) {
@@ -110,14 +110,14 @@ public class BratAjaxCasUtil
             if (s.getBegin() <= offset1 && offset1 <= s.getEnd()) {
                 return s.getBegin() <= offset2 && offset2 <= s.getEnd();
             }
-            
+
             // Sentences are sorted. When we hit the first sentence that is beyond the reference
             // offset, we will never again find a sentence that contains it.
             if (offset1 < s.getBegin()) {
                 return false;
             }
         }
-        
+
         return false;
     }
 
@@ -341,7 +341,7 @@ public class BratAjaxCasUtil
         int count = 0;
         FSIterator<Sentence> si = seekByAddress(aJcas, Sentence.class, aFirstSentenceAddress);
         Sentence s = si.get();
-        while (count < aWindowSize) {
+        while (count < aWindowSize-1) {
             si.moveToNext();
             if (si.isValid()) {
                 s = si.get();
@@ -656,12 +656,12 @@ public class BratAjaxCasUtil
     public static <T> T getFeature(FeatureStructure aFS, String aFeatureName)
     {
         Feature feature = aFS.getType().getFeatureByBaseName(aFeatureName);
-        
+
         if (feature == null) {
             throw new IllegalArgumentException("Type [" + aFS.getType().getName()
                     + "] has no feature called [" + aFeatureName + "]");
         }
-        
+
         switch (feature.getRange().getName()) {
         case CAS.TYPE_NAME_STRING:
             return (T) aFS.getStringValue(feature);
@@ -676,7 +676,7 @@ public class BratAjaxCasUtil
                     + feature.getName() + "] with type [" + feature.getRange().getName() + "]");
         }
     }
-    
+
     public static <T> T getFeature(FeatureStructure aFS, AnnotationFeature aFeature)
     {
         Feature feature = aFS.getType().getFeatureByBaseName(aFeature.getName());
