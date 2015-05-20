@@ -1027,6 +1027,12 @@ public class CurationPage
                 randomAnnotationDocument = finishedAnnotationDocuments.get(0);
             }
 
+
+            // upgrade CASes for each user, what if new type is added once the user finished annotation
+            for(AnnotationDocument ad:finishedAnnotationDocuments){
+                repository.upgradeCasAndSave(ad.getDocument(),
+                        Mode.CURATION, ad.getUser());
+            }
             Map<String, JCas> jCases = cb.listJcasesforCuration(finishedAnnotationDocuments,
                     randomAnnotationDocument, Mode.CURATION);
             JCas mergeJCas = cb.getMergeCas(bModel, bModel.getDocument(),
