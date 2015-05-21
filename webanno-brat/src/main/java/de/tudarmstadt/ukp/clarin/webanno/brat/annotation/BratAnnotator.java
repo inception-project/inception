@@ -49,7 +49,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
-import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 
 import com.googlecode.wicket.jquery.ui.resource.JQueryUIResourceReference;
 
@@ -287,12 +286,12 @@ public class BratAnnotator
                             }
                         }
                         else {
-                            if(paramId.isSet()){
+                            if (paramId.isSet()) {
                                 getModelObject().setForwardAnnotation(false);
                             }
                             // Doing anything but filling an armed slot will unarm it
                             getModelObject().clearArmedSlot();
-                            
+
                             Selection selection = getModelObject().getSelection();
 
                             selection.setRelationAnno(false);
@@ -301,11 +300,12 @@ public class BratAnnotator
                             // we lost on the way the actual brat offsets for ghosting!
                             Offsets bratOffsets = getBratSpanOffsets(request, jCas, paramId);
                             selection.setAnnotation(paramId);
-                            selection.set(jCas, offsets.getBegin(), offsets.getEnd());
-                            
+                            selection.set(jCas, offsets.getBegin(), offsets.getEnd(),
+                                    bratOffsets.getBegin(), bratOffsets.getEnd());
+
                             aAnnotationDetailEditorPanel.setLayerAndFeatureModels(jCas,
                                     getModelObject());
-                            
+
                             if (BratAnnotatorUtility.isDocumentFinished(repository,
                                     getModelObject())) {
                                 error("This document is already closed. Please ask your project "
@@ -326,7 +326,7 @@ public class BratAnnotator
                     }
                     else if (action.equals(ArcAnnotationResponse.COMMAND)) {
                         assert jCas != null;
-                        
+
                         Selection selection = getModelObject().getSelection();
 
                         selection.setRelationAnno(true);
@@ -440,15 +440,15 @@ public class BratAnnotator
     }
 
     private Offsets getBratSpanOffsets(IRequestParameters request, JCas jCas, VID aVid)
-            throws JsonParseException, JsonMappingException, IOException
+        throws JsonParseException, JsonMappingException, IOException
     {
         if (aVid.isNotSet()) {
             // Create new span annotation
             String offsets = request.getParameterValue(PARAM_OFFSETS).toString();
             OffsetsList offsetLists = JSONUtil.getJsonConverter().getObjectMapper()
                     .readValue(offsets, OffsetsList.class);
-            return new Offsets( offsetLists.get(0).getBegin(),
-                    offsetLists.get(offsetLists.size() - 1).getEnd());
+            return new Offsets(offsetLists.get(0).getBegin(), offsetLists.get(
+                    offsetLists.size() - 1).getEnd());
         }
         else {
             // Edit existing span annotation
@@ -537,14 +537,21 @@ public class BratAnnotator
 
         if (getModelObject().isForwardAnnotation()) {
             Selection selection = getModelObject().getSelection();
-            
+
             AnnotationFS nextToken = BratAjaxCasUtil.getNextToken(aJCas, selection.getBegin(),
                     selection.getEnd());
+            int tokenSeparatorLength = nextToken.getBegin() - selection.getEnd(); // can be 1 or 0..
+            // begin of the next token where the ghost covers
+            int bratBegin = selection.getBratEnd()  + tokenSeparatorLength;
+            // length of the next token
+            int nextTokenLength = nextToken.getCoveredText().length();
+            // end of the next token
+            int bratEnd = bratBegin + nextTokenLength;
 
-            response = addGhost(selection.getBegin(), selection.getEnd());
+            response = addGhost(bratBegin, bratEnd);
 
             selection.clear();
-            selection.set(aJCas, nextToken.getBegin(), nextToken.getEnd());
+            selection.set(aJCas, nextToken.getBegin(), nextToken.getEnd(), bratBegin, bratEnd);
         }
         BratAjaxCasController.render(response, getModelObject(), aJCas, annotationService);
         String json = toJson(response);
@@ -583,8 +590,7 @@ public class BratAnnotator
         LOG.info("BEGIN ghostArcAnnoRender");
         GetDocumentResponse response = new GetDocumentResponse();
         List<Argument> argumentList = asList(new Argument("Arg1", getModelObject().getSelection()
-                .getOrigin()), new Argument("Arg2", getModelObject().getSelection()
-                .getTarget()));
+                .getOrigin()), new Argument("Arg2", getModelObject().getSelection().getTarget()));
         response.addRelation(new Relation(VID.GHOST, GHOST_PLACE_HOLDER, argumentList,
                 GHOST_PLACE_HOLDER, GHOST_COLOR));
 

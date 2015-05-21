@@ -27,13 +27,13 @@ public class Selection
     implements Serializable
 {
     private static final long serialVersionUID = 2257223261821341371L;
-    
+
     // if it is annotation or delete operation
     private boolean isAnnotate;
 
     // is the annotation span or arc annotation
     private boolean isRelationAnno;
-    
+
     // the span id of the dependent in arc annotation
     private int originSpanId;
 
@@ -51,7 +51,13 @@ public class Selection
 
     // the end offset of a span annotation
     private int endOffset;
-    
+
+    // actual brat offsets - page relative
+    private int bratBegin;
+
+    // actual brat offsets - page relative
+    private int bratEnd;
+
     // id of the select annotation layer
     private VID selectedAnnotationId = VID.NONE_ID;
 
@@ -77,7 +83,7 @@ public class Selection
     {
         this.isAnnotate = isAnnotate;
     }
-    
+
     public int getOrigin()
     {
         return originSpanId;
@@ -137,7 +143,27 @@ public class Selection
     {
         this.endOffset = endOffset;
     }
-    
+
+    public int getBratBegin()
+    {
+        return bratBegin;
+    }
+
+    public void setBratBegin(int bratBegin)
+    {
+        this.bratBegin = bratBegin;
+    }
+
+    public int getBratEnd()
+    {
+        return bratEnd;
+    }
+
+    public void setBratEnd(int bratEnd)
+    {
+        this.bratEnd = bratEnd;
+    }
+
     public String getText()
     {
         return text;
@@ -147,7 +173,7 @@ public class Selection
     {
         this.text = selectedText;
     }
-    
+
     public VID getAnnotation()
     {
         return selectedAnnotationId;
@@ -157,20 +183,22 @@ public class Selection
     {
         this.selectedAnnotationId = selectedAnnotationId;
     }
-    
+
     public void clear()
     {
         setText("");
         setAnnotation(VID.NONE_ID);
-        // 
+        //
         // getCommand().setBeginOffset(-1);
         // getCommand().setEndOffset(-1);
     }
 
-    public void set(JCas aJCas, int aBegin, int aEnd)
+    public void set(JCas aJCas, int aBegin, int aEnd, int aBratBegin, int aBratEnd)
     {
         setBegin(aBegin);
         setEnd(aEnd);
+        setBratBegin(aBratBegin);
+        setBratEnd(aBratEnd);
         setText(aJCas.getDocumentText().substring(aBegin, aEnd));
     }
 }
