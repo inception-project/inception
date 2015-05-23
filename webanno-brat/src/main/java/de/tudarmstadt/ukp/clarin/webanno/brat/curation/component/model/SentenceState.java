@@ -45,7 +45,7 @@ public enum SentenceState
      *
      */
     CONFIRMED(true, "#99FF99"),
-    SOLID_BORDER(true, "solid"),
+    DOTTED_BORDER(true, "dotted"),
     BORDER_COLOR(true, "#0000ff");
 
     private boolean hasDiff;

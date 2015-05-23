@@ -604,15 +604,16 @@ div.tabpanel .tab-panel {
 
 .curation-sentence-number{
     border-bottom:1px outset gray;
-    margin:2px 2px;
-    padding:2px 2px;
-    text-align: center;
+    margin:1px 1px;
+    padding:1px 1px;
+    text-align: justify;
 }
 
 .curation-sentence-list{
     width: 90%;
     height: 550px;
     overflow: scroll;
+    text-align: justify;
 }
 
 

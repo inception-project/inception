@@ -373,11 +373,12 @@ public class CurationPanel
                         && Math.abs(curationViewItem.getSentenceNumber() - currentSentence) <= bModel
                                 .getPreferences().getWindowSize()/2) {
                     item.add(AttributeModifier.append("style", "border-style: "
-                            + SentenceState.SOLID_BORDER.getValue() + ";" + "border-color: "
+                            + SentenceState.DOTTED_BORDER.getValue() + ";" + "border-color: "
                             + SentenceState.BORDER_COLOR.getValue() + ";"));
                 }
 
-                Label sentenceNumber = new AjaxLabel("sentenceNumber", curationViewItem
+                String pad = getPad(curationViewItem);
+                Label sentenceNumber = new AjaxLabel("sentenceNumber", pad+curationViewItem
                         .getSentenceNumber().toString(), click);
                 item.add(sentenceNumber);
             }
@@ -387,6 +388,21 @@ public class CurationPanel
         textListView.setOutputMarkupId(true);
         textOuterView.add(textListView);
     }
+
+    private String getPad(SourceListView curationViewItem)
+    {
+        if(curationViewItem.getSentenceNumber() <10){
+            return "000";
+        }
+        if(curationViewItem.getSentenceNumber() <100){
+            return "00";
+        }
+        if(curationViewItem.getSentenceNumber() <1000){
+            return "0";
+        }
+        return "";
+    }
+
     protected void onChange(AjaxRequestTarget aTarget)
     {
 
