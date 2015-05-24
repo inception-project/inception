@@ -469,8 +469,9 @@ public class CuratorUtil
                 bModel.getAnnotationLayers(), aAnnotationService);
         List<AnnotationOption> annotationOptions = null;
         try {
-            annotationOptions = CasDiff.doDiff(entryTypes, jCases, aCurationSegment.getBegin(),
-                    aCurationSegment.getEnd());
+            // curating multiple sentences
+            annotationOptions = CasDiff.doDiff(entryTypes, jCases, aCurationSegment.getCurationBegin(),
+                    aCurationSegment.getCurationEnd());
         }
         catch (Exception e) {
             throw new CasDiffException(e.getMessage());
@@ -491,11 +492,7 @@ public class CuratorUtil
 
         // update sentence list on the right side
         aParent.setModelObject(sentences);
-        /*
-         * if (aCurationContainer.getBratAnnotatorModel().getMode().equals(Mode.CURATION)) {
-         * aMergeVisualizer.setModelObject(bratAnnotatorModel);
-         * aMergeVisualizer.bratRenderLater(aTarget); }
-         */
+
         aTarget.add(aParent);
     }
 

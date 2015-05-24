@@ -606,7 +606,6 @@ public class BratAnnotator
      * This triggers the loading of the metadata (colors, types, etc.)
      *
      * @return the init script.
-     * @see BratAjaxConfiguration#buildEntityTypes
      */
     protected String bratInitLaterCommand()
     {
@@ -636,18 +635,6 @@ public class BratAnnotator
     {
         aResponse.render(OnLoadHeaderItem.forScript(bratInitLaterCommand()));
         aResponse.render(OnLoadHeaderItem.forScript(bratRenderLaterCommand()));
-    }
-
-    /**
-     * Reload {@link BratAnnotator} when the Correction/Curation page is opened
-     *
-     * @param aTarget
-     *            the AJAX target.
-     */
-    public void bratInitRenderLater(AjaxRequestTarget aTarget)
-    {
-        aTarget.appendJavaScript(bratInitLaterCommand());
-        aTarget.appendJavaScript(bratRenderLaterCommand());
     }
 
     /**
