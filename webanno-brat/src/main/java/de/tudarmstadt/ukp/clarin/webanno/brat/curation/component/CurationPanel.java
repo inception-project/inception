@@ -463,7 +463,7 @@ public class CurationPanel
     public void updatePanel(AjaxRequestTarget aTarget, CurationContainer aCC)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
-        JCas jCas = repository.readAnnotationCas(bModel.getDocument(), bModel.getUser());
+        JCas jCas = repository.readCurationCas(bModel.getDocument());
 
         final int sentenceAddress = getAddr(selectSentenceAt(jCas, bModel.getSentenceBeginOffset(),
                 bModel.getSentenceEndOffset()));
@@ -478,29 +478,15 @@ public class CurationPanel
                 : followingSentences.get(followingSentences.size() - 1);
         curationView.setCurationBegin(sentence.getBegin());
         curationView.setCurationEnd(lastSentenceAddressInDisplayWindow.getEnd());
-        try {
-            jCas = repository.readCurationCas(bModel.getDocument());
-            int ws = bModel.getPreferences().getWindowSize();
-            Sentence fs = BratAjaxCasUtil.selectSentenceAt(jCas, bModel.getSentenceBeginOffset(),
-                    bModel.getSentenceEndOffset());
-            int l = BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(jCas, getAddr(fs), ws);
-            Sentence ls = (Sentence) selectByAddr(jCas, FeatureStructure.class, l);
-            fSn = BratAjaxCasUtil.getSentenceNumber(jCas, fs.getBegin());
-            lSn = BratAjaxCasUtil.getSentenceNumber(jCas, ls.getBegin());
 
-        }
-        catch (UIMAException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        catch (ClassNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        int ws = bModel.getPreferences().getWindowSize();
+        Sentence fs = BratAjaxCasUtil.selectSentenceAt(jCas, bModel.getSentenceBeginOffset(),
+                bModel.getSentenceEndOffset());
+        int l = BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(jCas, getAddr(fs), ws);
+        Sentence ls = (Sentence) selectByAddr(jCas, FeatureStructure.class, l);
+        fSn = BratAjaxCasUtil.getSentenceNumber(jCas, fs.getBegin());
+        lSn = BratAjaxCasUtil.getSentenceNumber(jCas, ls.getBegin());
+
         textOuterView.addOrReplace(textListView);
         aTarget.add(textOuterView);
         aTarget.add(suggestionViewPanel);

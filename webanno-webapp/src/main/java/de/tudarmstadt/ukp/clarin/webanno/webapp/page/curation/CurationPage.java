@@ -696,6 +696,8 @@ public class CurationPage
                                     nextSentenceAddress);
                             bModel.setSentenceBeginOffset(sentence.getBegin());
                             bModel.setSentenceEndOffset(sentence.getEnd());
+                            bModel.setSentenceNumber(BratAjaxCasUtil.getSentenceNumber(mergeJCas,
+                                    sentence.getBegin()));
                             aTarget.add(numberOfPages);
                             curationPanel.updatePanel(aTarget, curationContainer);
                             updatePanel(curationContainer, aTarget);
@@ -749,6 +751,8 @@ public class CurationPage
                                     previousSentenceAddress);
                             bModel.setSentenceBeginOffset(sentence.getBegin());
                             bModel.setSentenceEndOffset(sentence.getEnd());
+                            bModel.setSentenceNumber(BratAjaxCasUtil.getSentenceNumber(mergeJCas,
+                                    sentence.getBegin()));
                             aTarget.add(numberOfPages);
                             curationPanel.updatePanel(aTarget, curationContainer);
                             updatePanel(curationContainer, aTarget);
@@ -800,6 +804,8 @@ public class CurationPage
                                     firstAddress);
                             bModel.setSentenceBeginOffset(sentence.getBegin());
                             bModel.setSentenceEndOffset(sentence.getEnd());
+                            bModel.setSentenceNumber(BratAjaxCasUtil.getSentenceNumber(mergeJCas,
+                                    sentence.getBegin()));
                             aTarget.add(numberOfPages);
                             curationPanel.updatePanel(aTarget, curationContainer);
                             updatePanel(curationContainer, aTarget);
@@ -849,6 +855,8 @@ public class CurationPage
                                     lastDisplayWindowBeginingSentenceAddress);
                             bModel.setSentenceBeginOffset(sentence.getBegin());
                             bModel.setSentenceEndOffset(sentence.getEnd());
+                            bModel.setSentenceNumber(BratAjaxCasUtil.getSentenceNumber(mergeJCas,
+                                    sentence.getBegin()));
                             aTarget.add(numberOfPages);
                             curationPanel.updatePanel(aTarget, curationContainer);
                             updatePanel(curationContainer, aTarget);
