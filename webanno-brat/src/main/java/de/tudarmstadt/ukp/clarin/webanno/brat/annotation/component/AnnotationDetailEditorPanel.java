@@ -72,6 +72,7 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.codehaus.plexus.util.StringUtils;
+
 import com.googlecode.wicket.kendo.ui.form.NumberTextField;
 import com.googlecode.wicket.kendo.ui.form.TextField;
 import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
@@ -433,6 +434,7 @@ public class AnnotationDetailEditorPanel
 
         // Update progress information
         int sentenceNumber = getSentenceNumber(jCas, aBModel.getSelection().getBegin());
+        aBModel.setSentenceNumber(sentenceNumber);
         aBModel.getDocument().setSentenceAccessed(sentenceNumber);
 
         // persist changes
@@ -613,6 +615,7 @@ public class AnnotationDetailEditorPanel
 
         // Update progress information
         int sentenceNumber = getSentenceNumber(jCas, aBModel.getSelection().getBegin());
+        aBModel.setSentenceNumber(sentenceNumber);
         aBModel.getDocument().setSentenceAccessed(sentenceNumber);
 
         // Auto-scroll
@@ -668,6 +671,7 @@ public class AnnotationDetailEditorPanel
         // persist changes
         repository.writeCas(aBModel.getMode(), aBModel.getDocument(), aBModel.getUser(), jCas);
         int sentenceNumber = getSentenceNumber(jCas, originFs.getBegin());
+        aBModel.setSentenceNumber(sentenceNumber);
         aBModel.getDocument().setSentenceAccessed(sentenceNumber);
 
         if (aBModel.getPreferences().isScrollPage()) {
@@ -1287,7 +1291,7 @@ public class AnnotationDetailEditorPanel
                         links.add(m);
                         annotationFeatureForm.getModelObject().setArmedSlot(
                                 LinkFeatureEditor.this.getModelObject().feature, links.size() - 1);
-                        
+
                         aTarget.add(wmc);
                     }
                 }
@@ -1460,9 +1464,9 @@ public class AnnotationDetailEditorPanel
         implements Serializable
     {
         private static final long serialVersionUID = 2027345278696308900L;
-        
+
         public static final String CLICK_HINT = "<Click to activate>";
-        
+
         public String role;
         public String label = CLICK_HINT;
         public int targetAddr = -1;

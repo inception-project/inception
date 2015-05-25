@@ -299,6 +299,7 @@ public class SuggestionViewPanel
 
         // update timestamp
         int sentenceNumber = getSentenceNumber(clickedJCas, fsClicked.getBegin());
+        aBModel.setSentenceNumber(sentenceNumber);
         aBModel.getDocument().setSentenceAccessed(sentenceNumber);
 
         if (aBModel.getPreferences().isScrollPage()) {
@@ -329,7 +330,8 @@ public class SuggestionViewPanel
         // add span for merge
         // get information of the span clicked
         String username = aCurationUserSegment.getUsername();
-        SourceDocument sourceDocument = aCurationUserSegment.getBratAnnotatorModel().getDocument();
+        BratAnnotatorModel bModel = aCurationUserSegment.getBratAnnotatorModel();
+        SourceDocument sourceDocument = bModel.getDocument();
 
         AnnotationSelection annotationSelectionOrigin = aCurationUserSegment
                 .getAnnotationSelectionByUsernameAndAddress().get(username)
@@ -357,8 +359,7 @@ public class SuggestionViewPanel
 
         JCas clickedJCas = null;
         try {
-            clickedJCas = getJCas(aCurationUserSegment.getBratAnnotatorModel(),
-                    clickedAnnotationDocument);
+            clickedJCas = getJCas(bModel, clickedAnnotationDocument);
         }
         catch (IOException e1) {
             throw new IOException();
@@ -384,8 +385,7 @@ public class SuggestionViewPanel
             ArcAdapter adapter = (ArcAdapter) getAdapter(annotationService, layer);
 
             // Add annotation - we set no feature values yet.
-            int selectedSpanId = getAddr(adapter.add(originFs, targetFs, aJcas,
-                    aCurationUserSegment.getBratAnnotatorModel(), null, null));
+            int selectedSpanId = getAddr(adapter.add(originFs, targetFs, aJcas, bModel, null, null));
 
             // Set the feature values
             for (AnnotationFeature feature : annotationService.listAnnotationFeature(layer)) {
@@ -400,34 +400,26 @@ public class SuggestionViewPanel
                 }
             }
 
-            repository.writeCas(aCurationUserSegment.getBratAnnotatorModel().getMode(),
-                    aCurationUserSegment.getBratAnnotatorModel().getDocument(),
-                    aCurationUserSegment.getBratAnnotatorModel().getUser(), aJcas);
+            repository.writeCas(bModel.getMode(), bModel.getDocument(), bModel.getUser(), aJcas);
 
             // update timestamp
             int sentenceNumber = getSentenceNumber(clickedJCas, originFs.getBegin());
-            aCurationUserSegment.getBratAnnotatorModel().getDocument()
-                    .setSentenceAccessed(sentenceNumber);
+            bModel.setSentenceNumber(sentenceNumber);
+            bModel.getDocument().setSentenceAccessed(sentenceNumber);
         }
         catch (IOException e) {
             throw new IOException();
         }
 
-        if (aCurationUserSegment.getBratAnnotatorModel().getPreferences().isScrollPage()) {
-            int address = getAddr(selectSentenceAt(aJcas, aCurationUserSegment
-                    .getBratAnnotatorModel().getSentenceBeginOffset(), aCurationUserSegment
-                    .getBratAnnotatorModel().getSentenceEndOffset()));
-            aCurationUserSegment.getBratAnnotatorModel().setSentenceAddress(
-                    getSentenceBeginAddress(aJcas, address, originFs.getBegin(),
-                            aCurationUserSegment.getBratAnnotatorModel().getProject(),
-                            aCurationUserSegment.getBratAnnotatorModel().getDocument(),
-                            aCurationUserSegment.getBratAnnotatorModel().getPreferences()
-                                    .getWindowSize()));
-            Sentence sentence = selectByAddr(aJcas, Sentence.class, aCurationUserSegment
-                    .getBratAnnotatorModel().getSentenceAddress());
-            aCurationUserSegment.getBratAnnotatorModel()
-                    .setSentenceBeginOffset(sentence.getBegin());
-            aCurationUserSegment.getBratAnnotatorModel().setSentenceEndOffset(sentence.getEnd());
+        if (bModel.getPreferences().isScrollPage()) {
+            int address = getAddr(selectSentenceAt(aJcas, bModel.getSentenceBeginOffset(),
+                    bModel.getSentenceEndOffset()));
+            bModel.setSentenceAddress(getSentenceBeginAddress(aJcas, address, originFs.getBegin(),
+                    bModel.getProject(), bModel.getDocument(), bModel.getPreferences()
+                            .getWindowSize()));
+            Sentence sentence = selectByAddr(aJcas, Sentence.class, bModel.getSentenceAddress());
+            bModel.setSentenceBeginOffset(sentence.getBegin());
+            bModel.setSentenceEndOffset(sentence.getEnd());
         }
     }
 

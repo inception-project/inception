@@ -93,6 +93,10 @@ public class BratAnnotatorModel
      */
     private int sentenceEndOffset;
 
+    /**
+     *  the sentence number where an action occured (selection, modification, clicking)
+     */
+    private int sentenceNumber;
     // Annotation preferences, to be saved in a file system
     /**
      * The annotation layers available in the current project.
@@ -329,6 +333,16 @@ public class BratAnnotatorModel
     public void setSentenceEndOffset(int sentenceEndOffset)
     {
         this.sentenceEndOffset = sentenceEndOffset;
+    }
+
+    public int getSentenceNumber()
+    {
+        return sentenceNumber;
+    }
+
+    public void setSentenceNumber(int sentenceNumber)
+    {
+        this.sentenceNumber = sentenceNumber;
     }
 
     public AnnotationLayer getSelectedAnnotationLayer()

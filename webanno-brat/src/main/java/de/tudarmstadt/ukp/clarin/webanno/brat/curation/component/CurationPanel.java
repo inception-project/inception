@@ -95,10 +95,10 @@ public class CurationPanel
     public SuggestionViewPanel suggestionViewPanel;
     private BratAnnotator mergeVisualizer;
     private AnnotationDetailEditorPanel annotationDetailEditorPanel;
+    private final WebMarkupContainer textOuterView;
 
     private BratAnnotatorModel bModel;
 
-    private int cSn = 0;
     private int fSn = 0;
     private int lSn = 0;
     boolean firstLoad = true;
@@ -169,7 +169,7 @@ public class CurationPanel
     {
         super(id, cCModel);
         // add container for updating ajax
-        final WebMarkupContainer textOuterView = new WebMarkupContainer("textOuterView");
+        textOuterView = new WebMarkupContainer("textOuterView");
         textOuterView.setOutputMarkupId(true);
         add(textOuterView);
 
@@ -201,7 +201,6 @@ public class CurationPanel
                     // (like sentence change in auto-scroll mode,....
                     aTarget.addChildren(getPage(), FeedbackPanel.class);
                     updatePanel(aTarget, curationContainer);
-
                     mergeVisualizer.bratRenderLater(aTarget);
                 }
                 catch (UIMAException e) {
@@ -309,35 +308,6 @@ public class CurationPanel
             @Override
             protected void populateItem(ListItem<SourceListView> item)
             {
-                if (fSn == 0) {
-                    JCas jCas;
-                    try {
-                        jCas = repository.readCurationCas(bModel.getDocument());
-                        int ws = bModel.getPreferences().getWindowSize();
-                        Sentence fs = BratAjaxCasUtil.selectSentenceAt(jCas,
-                                bModel.getSentenceBeginOffset(), bModel.getSentenceEndOffset());
-
-                        int l = BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(jCas,
-                                getAddr(fs), ws);
-                        Sentence ls = (Sentence) selectByAddr(jCas, FeatureStructure.class, l);
-                        fSn = BratAjaxCasUtil.getSentenceNumber(jCas, fs.getBegin());
-                        lSn = BratAjaxCasUtil.getSentenceNumber(jCas, ls.getBegin());
-
-                    }
-                    catch (UIMAException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-                    catch (ClassNotFoundException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-                    catch (IOException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-
-                }
                 final SourceListView curationViewItem = item.getModelObject();
 
                 // ajax call when clicking on a sentence on the left side
@@ -354,8 +324,7 @@ public class CurationPanel
                             JCas jCas = repository.readCurationCas(bModel.getDocument());
                             updateCurationView(cCModel.getObject(), curationViewItem, aTarget, jCas);
                             updatePanel(aTarget, cCModel.getObject());
-                            cSn = curationViewItem.getSentenceNumber();
-
+                            bModel.setSentenceNumber(curationViewItem.getSentenceNumber());
                             textOuterView.addOrReplace(textListView);
                             aTarget.add(textOuterView);
                             aTarget.add(suggestionViewPanel);
@@ -394,7 +363,7 @@ public class CurationPanel
                 }
 
                 // mark current sentence in yellow
-                if (curationViewItem.getSentenceNumber() == cSn) {
+                if (curationViewItem.getSentenceNumber() == bModel.getSentenceNumber()) {
                     item.add(AttributeModifier.append("style", "background-color: "
                             + SentenceState.SELECTED.getValue() + ";"));
                 }
@@ -509,9 +478,35 @@ public class CurationPanel
                 : followingSentences.get(followingSentences.size() - 1);
         curationView.setCurationBegin(sentence.getBegin());
         curationView.setCurationEnd(lastSentenceAddressInDisplayWindow.getEnd());
+        try {
+            jCas = repository.readCurationCas(bModel.getDocument());
+            int ws = bModel.getPreferences().getWindowSize();
+            Sentence fs = BratAjaxCasUtil.selectSentenceAt(jCas, bModel.getSentenceBeginOffset(),
+                    bModel.getSentenceEndOffset());
+            int l = BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(jCas, getAddr(fs), ws);
+            Sentence ls = (Sentence) selectByAddr(jCas, FeatureStructure.class, l);
+            fSn = BratAjaxCasUtil.getSentenceNumber(jCas, fs.getBegin());
+            lSn = BratAjaxCasUtil.getSentenceNumber(jCas, ls.getBegin());
 
+        }
+        catch (UIMAException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        catch (ClassNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        textOuterView.addOrReplace(textListView);
+        aTarget.add(textOuterView);
+        aTarget.add(suggestionViewPanel);
         CuratorUtil.updatePanel(aTarget, suggestionViewPanel, aCC, mergeVisualizer, repository,
                 annotationSelectionByUsernameAndAddress, curationView, annotationService,
                 userRepository);
     }
+
 }
