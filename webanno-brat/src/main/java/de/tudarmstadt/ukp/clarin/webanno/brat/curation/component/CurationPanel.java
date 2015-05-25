@@ -98,6 +98,9 @@ public class CurationPanel
 
     private BratAnnotatorModel bModel;
 
+    private int cSn = 0;
+    private int fSn = 0;
+    private int lSn = 0;
     boolean firstLoad = true;
 
     /**
@@ -302,11 +305,39 @@ public class CurationPanel
         textListView = new ListView<SourceListView>("textListView", sentencesListModel)
         {
             private static final long serialVersionUID = 8539162089561432091L;
-            int currentSentence = 0;
 
             @Override
             protected void populateItem(ListItem<SourceListView> item)
             {
+                if (fSn == 0) {
+                    JCas jCas;
+                    try {
+                        jCas = repository.readCurationCas(bModel.getDocument());
+                        int ws = bModel.getPreferences().getWindowSize();
+                        Sentence fs = BratAjaxCasUtil.selectSentenceAt(jCas,
+                                bModel.getSentenceBeginOffset(), bModel.getSentenceEndOffset());
+
+                        int l = BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(jCas,
+                                getAddr(fs), ws);
+                        Sentence ls = (Sentence) selectByAddr(jCas, FeatureStructure.class, l);
+                        fSn = BratAjaxCasUtil.getSentenceNumber(jCas, fs.getBegin());
+                        lSn = BratAjaxCasUtil.getSentenceNumber(jCas, ls.getBegin());
+
+                    }
+                    catch (UIMAException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                    catch (ClassNotFoundException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                    catch (IOException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+
+                }
                 final SourceListView curationViewItem = item.getModelObject();
 
                 // ajax call when clicking on a sentence on the left side
@@ -318,11 +349,12 @@ public class CurationPanel
                     protected void respond(AjaxRequestTarget aTarget)
                     {
                         curationView = curationViewItem;
+                        fSn = 0;
                         try {
                             JCas jCas = repository.readCurationCas(bModel.getDocument());
                             updateCurationView(cCModel.getObject(), curationViewItem, aTarget, jCas);
                             updatePanel(aTarget, cCModel.getObject());
-                            currentSentence = curationViewItem.getSentenceNumber();
+                            cSn = curationViewItem.getSentenceNumber();
 
                             textOuterView.addOrReplace(textListView);
                             aTarget.add(textOuterView);
@@ -362,14 +394,14 @@ public class CurationPanel
                 }
 
                 // mark current sentence in yellow
-                if (curationViewItem.getSentenceNumber() == currentSentence) {
+                if (curationViewItem.getSentenceNumber() == cSn) {
                     item.add(AttributeModifier.append("style", "background-color: "
                             + SentenceState.SELECTED.getValue() + ";"));
                 }
 
                 // mark border of sentences in the range of windows size in bold
                 try {
-                    markBorder(item, curationViewItem);
+                    markBorder(item, curationViewItem, fSn, lSn);
                 }
                 catch (UIMAException e) {
                     error(ExceptionUtils.getRootCause(e));
@@ -392,23 +424,12 @@ public class CurationPanel
         textOuterView.add(textListView);
     }
 
-    private void markBorder(ListItem<SourceListView> aItem, SourceListView aCurationViewItem)
+    private void markBorder(ListItem<SourceListView> aItem, SourceListView aCurationViewItem,
+            int aFSn, int aLSn)
         throws UIMAException, ClassNotFoundException, IOException
     {
-        JCas jCas = repository.readCurationCas(bModel.getDocument());
-        int ws = bModel.getPreferences().getWindowSize();
-        Sentence fs = BratAjaxCasUtil.selectSentenceAt(jCas, bModel.getSentenceBeginOffset(),
-                bModel.getSentenceEndOffset());
-
-        int l = BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(jCas,
-                getAddr(fs), ws);
-        Sentence ls = (Sentence) selectByAddr(jCas, FeatureStructure.class, l);
-
-        int fsn = BratAjaxCasUtil.getSentenceNumber(jCas, fs.getBegin());
-        int lsn = BratAjaxCasUtil.getSentenceNumber(jCas, ls.getBegin());
-
-        if (aCurationViewItem.getSentenceNumber() >= fsn
-                && aCurationViewItem.getSentenceNumber() <= lsn) {
+        if (aCurationViewItem.getSentenceNumber() >= aFSn
+                && aCurationViewItem.getSentenceNumber() <= aLSn) {
             aItem.add(AttributeModifier.append("style", "border-style: "
                     + SentenceState.DOTTED_BORDER.getValue() + ";" + "border-color: "
                     + SentenceState.BORDER_COLOR.getValue() + ";"));
