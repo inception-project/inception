@@ -32,6 +32,7 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
@@ -367,12 +368,17 @@ public class CurationPanel
                 }
 
                 // mark border of sentences in the range of windows size in bold
-                if (currentSentence > 0
-                        && Math.abs(curationViewItem.getSentenceNumber() - currentSentence) <= bModel
-                                .getPreferences().getWindowSize() / 2) {
-                    item.add(AttributeModifier.append("style", "border-style: "
-                            + SentenceState.DOTTED_BORDER.getValue() + ";" + "border-color: "
-                            + SentenceState.BORDER_COLOR.getValue() + ";"));
+                try {
+                    markBorder(item, curationViewItem);
+                }
+                catch (UIMAException e) {
+                    error(ExceptionUtils.getRootCause(e));
+                }
+                catch (ClassNotFoundException e) {
+                    error(e.getMessage());
+                }
+                catch (IOException e) {
+                    error(e.getMessage());
                 }
 
                 String pad = getPad(curationViewItem);
@@ -380,11 +386,33 @@ public class CurationPanel
                         + curationViewItem.getSentenceNumber().toString(), click);
                 item.add(sentenceNumber);
             }
-
         };
         // add subcomponents to the component
         textListView.setOutputMarkupId(true);
         textOuterView.add(textListView);
+    }
+
+    private void markBorder(ListItem<SourceListView> aItem, SourceListView aCurationViewItem)
+        throws UIMAException, ClassNotFoundException, IOException
+    {
+        JCas jCas = repository.readCurationCas(bModel.getDocument());
+        int ws = bModel.getPreferences().getWindowSize();
+        Sentence fs = BratAjaxCasUtil.selectSentenceAt(jCas, bModel.getSentenceBeginOffset(),
+                bModel.getSentenceEndOffset());
+
+        int l = BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(jCas,
+                getAddr(fs), ws);
+        Sentence ls = (Sentence) selectByAddr(jCas, FeatureStructure.class, l);
+
+        int fsn = BratAjaxCasUtil.getSentenceNumber(jCas, fs.getBegin());
+        int lsn = BratAjaxCasUtil.getSentenceNumber(jCas, ls.getBegin());
+
+        if (aCurationViewItem.getSentenceNumber() >= fsn
+                && aCurationViewItem.getSentenceNumber() <= lsn) {
+            aItem.add(AttributeModifier.append("style", "border-style: "
+                    + SentenceState.DOTTED_BORDER.getValue() + ";" + "border-color: "
+                    + SentenceState.BORDER_COLOR.getValue() + ";"));
+        }
     }
 
     private void updateCurationView(final CurationContainer curationContainer,
