@@ -476,6 +476,9 @@ public class CurationPanel
         // last sentence or the ONLY sentence in the document
         Sentence lastSentenceAddressInDisplayWindow = followingSentences.size() == 0 ? sentence
                 : followingSentences.get(followingSentences.size() - 1);
+        if(curationView==null){
+            curationView = new SourceListView();
+        }
         curationView.setCurationBegin(sentence.getBegin());
         curationView.setCurationEnd(lastSentenceAddressInDisplayWindow.getEnd());
 

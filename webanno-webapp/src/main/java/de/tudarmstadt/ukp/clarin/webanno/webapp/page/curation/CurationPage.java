@@ -927,7 +927,7 @@ public class CurationPage
         response.render(OnLoadHeaderItem.forScript(jQueryString));
     }
 
-    private void loadDocumentAction(AjaxRequestTarget target)
+    private void loadDocumentAction(AjaxRequestTarget aTarget)
     {
         try {
             String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -980,20 +980,20 @@ public class CurationPage
                     userRepository);
             curationContainer = builder.buildCurationContainer(bModel);
             curationContainer.setBratAnnotatorModel(bModel);
-
-            updatePanel(curationContainer, target);
+            curationPanel.updatePanel(aTarget, curationContainer);
+            updatePanel(curationContainer, aTarget);
         }
         catch (Exception e) {
-            target.add(getFeedbackPanel());
+            aTarget.add(getFeedbackPanel());
             error(ExceptionUtils.getRootCause(e));
         }
 
-        target.add(finish);
-        target.add(numberOfPages);
-        target.add(documentNamePanel);
+        aTarget.add(finish);
+        aTarget.add(numberOfPages);
+        aTarget.add(documentNamePanel);
 
         // Bad hack because the current structur doesn't allow for proper AJAX reloads...
         // need to restructure this whole stupid page...
-        target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
+        aTarget.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
     }
 }
