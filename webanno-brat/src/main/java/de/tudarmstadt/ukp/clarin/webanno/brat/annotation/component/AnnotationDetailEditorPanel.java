@@ -178,6 +178,7 @@ public class AnnotationDetailEditorPanel
                     BratAnnotatorModel model = AnnotationFeatureForm.this.getModelObject();
 
                     setEnabled(model.getSelectedAnnotationLayer() != null
+                            &&  model.getSelectedAnnotationLayer().getId()>0
                             && model.getSelectedAnnotationLayer().getType()
                                     .equals(WebAnnoConst.SPAN_TYPE));
 
