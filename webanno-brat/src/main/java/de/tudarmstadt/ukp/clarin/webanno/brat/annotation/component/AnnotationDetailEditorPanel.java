@@ -246,6 +246,7 @@ public class AnnotationDetailEditorPanel
 
                     try {
                         actionAnnotate(aTarget, model);
+                        aTarget.add(AnnotationFeatureForm.this);
                     }
                     catch (BratAnnotationException e) {
                         error(e.getMessage());
