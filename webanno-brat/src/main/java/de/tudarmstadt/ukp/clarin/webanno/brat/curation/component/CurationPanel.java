@@ -201,7 +201,6 @@ public class CurationPanel
                     // (like sentence change in auto-scroll mode,....
                     aTarget.addChildren(getPage(), FeedbackPanel.class);
                     updatePanel(aTarget, curationContainer);
-                    mergeVisualizer.bratRenderLater(aTarget);
                 }
                 catch (UIMAException e) {
                     error(ExceptionUtils.getRootCause(e));
@@ -325,17 +324,6 @@ public class CurationPanel
                             updateCurationView(cCModel.getObject(), curationViewItem, aTarget, jCas);
                             updatePanel(aTarget, cCModel.getObject());
                             bModel.setSentenceNumber(curationViewItem.getSentenceNumber());
-                            textOuterView.addOrReplace(textListView);
-                            aTarget.add(textOuterView);
-                            aTarget.add(suggestionViewPanel);
-
-                            // Wicket-level rendering of annotator because it becomes visible
-                            // after selecting a document
-                            aTarget.add(mergeVisualizer);
-
-                            // brat-level initialization and rendering of document
-                            mergeVisualizer.bratInit(aTarget);
-                            mergeVisualizer.bratRender(aTarget, jCas);
 
                         }
                         catch (UIMAException e) {
@@ -489,6 +477,7 @@ public class CurationPanel
         textOuterView.addOrReplace(textListView);
         aTarget.add(textOuterView);
         aTarget.add(suggestionViewPanel);
+        mergeVisualizer.bratRenderLater(aTarget);
         CuratorUtil.updatePanel(aTarget, suggestionViewPanel, aCC, mergeVisualizer, repository,
                 annotationSelectionByUsernameAndAddress, curationView, annotationService,
                 userRepository);
