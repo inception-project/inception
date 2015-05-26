@@ -28,7 +28,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
-import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -68,7 +67,7 @@ public class ArcAdapter
     implements TypeAdapter, AutomationTypeAdapter
 {
     private final Log log = LogFactory.getLog(getClass());
-    
+
     private final long typeId;
 
     /**
@@ -195,7 +194,7 @@ public class ArcAdapter
                         + "] has loose ends - cannot render.");
                 continue;
             }
-                
+
             List<Argument> argumentList = getArgument(governorFs, dependentFs);
 
             String bratLabelText = TypeUtil.getBratLabelText(this, fs, aFeatures);
@@ -265,13 +264,8 @@ public class ArcAdapter
 
         AnnotationFS dependentFs = null;
         AnnotationFS governorFs = null;
-        
-        // List all sentence in this display window
-        List<Sentence> sentences = selectCovered(aJCas, Sentence.class, aBegin, aEnd);
-        for (Sentence sentence : sentences) {
 
-            for (AnnotationFS fs : selectCovered(aJCas.getCas(), type, sentence.getBegin(),
-                    sentence.getEnd())) {
+            for (AnnotationFS fs : selectCovered(aJCas.getCas(), type,  aBegin, aEnd)) {
 
                 if (attachFeatureName != null) {
                     Feature arcSpanFeature = spanType.getFeatureByBaseName(attachFeatureName);
@@ -290,7 +284,7 @@ public class ArcAdapter
                             + "] has loose ends - ignoring during while checking for duplicates.");
                     continue;
                 }
-                
+
                 if (isDuplicate((AnnotationFS) governorFs, aOriginFs, (AnnotationFS) dependentFs,
                         aTargetFs) && (aValue == null || !aValue.equals(WebAnnoConst.ROOT))) {
 
@@ -300,8 +294,7 @@ public class ArcAdapter
                     }
                 }
             }
-        }
-        
+
         // It is new ARC annotation, create it
         dependentFs = aTargetFs;
         governorFs = aOriginFs;
@@ -539,7 +532,7 @@ public class ArcAdapter
     {
         return layer;
     }
-    
+
     @Override
     public Collection<AnnotationFeature> listFeatures()
     {
