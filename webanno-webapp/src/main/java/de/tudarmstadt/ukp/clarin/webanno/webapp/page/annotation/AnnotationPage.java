@@ -42,7 +42,6 @@ import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.dao.DataRetrievalFailureException;
-import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import wicket.contrib.input.events.EventType;
@@ -59,6 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.project.PreferencesUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenModalWindowPanel;
@@ -562,6 +562,22 @@ public class AnnotationPage
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.End }, EventType.click)));
 
+        add(new AjaxLink<Void>("toggleScriptDirection")
+        {
+            private static final long serialVersionUID = -4332566542278611728L;
+
+            @Override
+            public void onClick(AjaxRequestTarget aTarget)
+            {
+                if (ScriptDirection.LTR.equals(bratAnnotatorModel.getScriptDirection())) {
+                    bratAnnotatorModel.setScriptDirection(ScriptDirection.RTL);
+                }
+                else {
+                    bratAnnotatorModel.setScriptDirection(ScriptDirection.LTR);
+                }
+                annotator.bratRenderLater(aTarget);
+            }
+        });
         add(new GuidelineModalPanel("guidelineModalPanel", new Model<BratAnnotatorModel>(
                 bratAnnotatorModel)));
 

@@ -203,7 +203,7 @@ public class BratAjaxCasController
     public static void render(GetDocumentResponse aResponse, BratAnnotatorModel aBModel,
             JCas aJCas, AnnotationService aAnnotationService)
     {
-        aResponse.setRtlMode(ScriptDirection.RTL.equals(aBModel.getProject().getScriptDirection()));
+        aResponse.setRtlMode(ScriptDirection.RTL.equals(aBModel.getScriptDirection()));
 
         // Render invisible baseline annotations (sentence, tokens)
         SpanAdapter.renderTokenAndSentence(aJCas, aResponse, aBModel);
