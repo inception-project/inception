@@ -197,6 +197,8 @@ public class AnnotationDetailEditorPanel
                     else {
                         getModelObject().setForwardAnnotation(
                                 getModelObject().isForwardAnnotation());
+                        // disable scrolling in forward annotation
+                        getModelObject().getPreferences().setScrollPage(!getModelObject().isForwardAnnotation());
                     }
                 }
             });
