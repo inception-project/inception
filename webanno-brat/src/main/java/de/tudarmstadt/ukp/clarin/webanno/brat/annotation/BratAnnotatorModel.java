@@ -32,6 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -54,6 +55,8 @@ public class BratAnnotatorModel
 	 */
 	private Project project;
 	
+    private ScriptDirection scriptDirection;
+    
 	/**
 	 * The source document the to be annotated
 	 */
@@ -147,6 +150,17 @@ public class BratAnnotatorModel
     public void setProject(Project aProject)
     {
         project = aProject;
+        setScriptDirection(project.getScriptDirection());
+    }
+
+    public ScriptDirection getScriptDirection()
+    {
+        return scriptDirection;
+    }
+
+    public void setScriptDirection(ScriptDirection aScriptDirection)
+    {
+        scriptDirection = aScriptDirection;
     }
 
     public SourceDocument getDocument()
