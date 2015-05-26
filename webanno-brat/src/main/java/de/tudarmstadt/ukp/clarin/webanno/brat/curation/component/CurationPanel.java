@@ -418,10 +418,6 @@ public class CurationPanel
         bModel.setSentenceBeginOffset(sentence.getBegin());
         bModel.setSentenceEndOffset(sentence.getEnd());
 
-        // TODO .selection.setbegin/getbegin... should be used everywhere ..
-        bModel.getSelection().setBegin(sentence.getBegin());
-        bModel.getSelection().setEnd(sentence.getEnd());
-
         curationContainer.setBratAnnotatorModel(bModel);
         onChange(aTarget);
     }

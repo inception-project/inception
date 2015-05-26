@@ -300,8 +300,7 @@ public class BratAnnotator
                             // we lost on the way the actual brat offsets for ghosting!
                             Offsets bratOffsets = getBratSpanOffsets(request, jCas, paramId);
                             selection.setAnnotation(paramId);
-                            selection.set(jCas, offsets.getBegin(), offsets.getEnd(),
-                                    bratOffsets.getBegin(), bratOffsets.getEnd());
+                            selection.set(jCas, offsets.getBegin(), offsets.getEnd());
 
                             aAnnotationDetailEditorPanel.setLayerAndFeatureModels(jCas,
                                     getModelObject());
@@ -540,18 +539,18 @@ public class BratAnnotator
 
             AnnotationFS nextToken = BratAjaxCasUtil.getNextToken(aJCas, selection.getBegin(),
                     selection.getEnd());
-            int tokenSeparatorLength = nextToken.getBegin() - selection.getEnd(); // can be 1 or 0..
-            // begin of the next token where the ghost covers
-            int bratBegin = selection.getBratEnd()  + tokenSeparatorLength;
-            // length of the next token
-            int nextTokenLength = nextToken.getCoveredText().length();
-            // end of the next token
-            int bratEnd = bratBegin + nextTokenLength;
+            // The first sentence address in the display window!
+            Sentence firstSentence = BratAjaxCasUtil.selectSentenceAt(aJCas,
+                    getModelObject().getSentenceBeginOffset(),
+                    getModelObject().getSentenceEndOffset());
+            int bratBegin = nextToken.getBegin() - firstSentence.getBegin();
+
+            int bratEnd = nextToken.getEnd() - firstSentence.getBegin();
 
             response = addGhost(bratBegin, bratEnd);
 
             selection.clear();
-            selection.set(aJCas, nextToken.getBegin(), nextToken.getEnd(), bratBegin, bratEnd);
+            selection.set(aJCas, nextToken.getBegin(), nextToken.getEnd());
         }
         BratAjaxCasController.render(response, getModelObject(), aJCas, annotationService);
         String json = toJson(response);

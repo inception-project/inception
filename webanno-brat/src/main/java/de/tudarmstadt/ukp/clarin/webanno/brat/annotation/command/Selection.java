@@ -52,12 +52,6 @@ public class Selection
     // the end offset of a span annotation
     private int endOffset;
 
-    // actual brat offsets - page relative
-    private int bratBegin;
-
-    // actual brat offsets - page relative
-    private int bratEnd;
-
     // id of the select annotation layer
     private VID selectedAnnotationId = VID.NONE_ID;
 
@@ -144,26 +138,6 @@ public class Selection
         this.endOffset = endOffset;
     }
 
-    public int getBratBegin()
-    {
-        return bratBegin;
-    }
-
-    public void setBratBegin(int bratBegin)
-    {
-        this.bratBegin = bratBegin;
-    }
-
-    public int getBratEnd()
-    {
-        return bratEnd;
-    }
-
-    public void setBratEnd(int bratEnd)
-    {
-        this.bratEnd = bratEnd;
-    }
-
     public String getText()
     {
         return text;
@@ -193,12 +167,10 @@ public class Selection
         // getCommand().setEndOffset(-1);
     }
 
-    public void set(JCas aJCas, int aBegin, int aEnd, int aBratBegin, int aBratEnd)
+    public void set(JCas aJCas, int aBegin, int aEnd)
     {
         setBegin(aBegin);
         setEnd(aEnd);
-        setBratBegin(aBratBegin);
-        setBratEnd(aBratEnd);
         setText(aJCas.getDocumentText().substring(aBegin, aEnd));
     }
 }
