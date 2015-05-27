@@ -991,9 +991,5 @@ public class CurationPage
         aTarget.add(finish);
         aTarget.add(numberOfPages);
         aTarget.add(documentNamePanel);
-
-        // Bad hack because the current structur doesn't allow for proper AJAX reloads...
-        // need to restructure this whole stupid page...
-        aTarget.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
     }
 }
