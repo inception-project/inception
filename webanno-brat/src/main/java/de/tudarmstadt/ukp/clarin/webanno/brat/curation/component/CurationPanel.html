@@ -18,6 +18,43 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html lang="en-US" xml:lang="en-US" xmlns="http://www.w3.org/1999/xhtml"
 	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<head>
+<wicket:head>
+    <style type="text/css">
+.curation-sentence-item{
+    margin:2px 2px;
+    padding:2px 2px;
+}
+
+.curation-sentence-number {
+    margin:1px 1px;
+    padding:1px 1px;
+    display: inline-block;
+    min-width: 4em;
+    max-width: 7.9em;
+    text-align: center;
+}
+
+.curation-sentence-list{
+    width: 90%;
+    height: 550px;
+    overflow: scroll;
+}
+
+.range {
+    border: 1px solid black;
+}
+    
+.agree {
+    background-color: green;
+}
+
+.disagree {
+    background-color: red;
+}
+</style>
+</wicket:head>
+</head>
 <body>
 	<wicket:panel>
 		<table class="hfill">
@@ -27,8 +64,8 @@
 						<legend>Sentences</legend>
 						<span wicket:id="textOuterView"
 							style="border-collapse: collapse;">
-							<span  wicket:id="textListView">
-								<span class="curation-sentence-number" wicket:id="sentenceNumber" />
+							<span  wicket:id="textListView" class="curation-sentence-number">
+								<span wicket:id="sentenceNumber" />
 							</span>
 						</span>
 					</fieldset>

@@ -62,7 +62,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationUserSegmentForAnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.SentenceState;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.SourceListView;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.CuratorUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -347,9 +346,7 @@ public class CurationPanel
                 String cC = curationViewItem.getSentenceState().getValue();
                 // mark current sentence in yellow
                 if (curationViewItem.getSentenceNumber() == bModel.getSentenceNumber()) {
-                    item.add(AttributeModifier.append("style", "background-color: "
-                            + (cC==null?SentenceState.SELECTED_AGREE.getValue():
-                            SentenceState.SELECTED_DISAGREE.getValue() + ";")));
+                    item.add(AttributeModifier.append("class", (cC == null ? "agree" : "disagree")));
                 }
 
                 else
@@ -367,9 +364,8 @@ public class CurationPanel
                         error(e.getMessage());
                     }
 
-                String pad = getPad(curationViewItem);
-                Label sentenceNumber = new AjaxLabel("sentenceNumber", pad
-                        + curationViewItem.getSentenceNumber().toString(), click);
+                Label sentenceNumber = new AjaxLabel("sentenceNumber", curationViewItem
+                        .getSentenceNumber().toString(), click);
                 item.add(sentenceNumber);
             }
         };
@@ -384,12 +380,7 @@ public class CurationPanel
     {
         if (aCurationViewItem.getSentenceNumber() >= aFSn
                 && aCurationViewItem.getSentenceNumber() <= aLSn) {
-            aItem.add(AttributeModifier.append("style", "background-color: "
-                    + SentenceState.SELECTED_RANGE.getValue() + ";" ));
-        }
-        else if (aCC != null) {
-            aItem.add(AttributeModifier.append("style", "background-color: " + aCC
-                    + ";"));
+            aItem.add(AttributeModifier.append("class", "range" ));
         }
     }
 
@@ -408,20 +399,6 @@ public class CurationPanel
 
         curationContainer.setBratAnnotatorModel(bModel);
         onChange(aTarget);
-    }
-
-    private String getPad(SourceListView curationViewItem)
-    {
-        if (curationViewItem.getSentenceNumber() < 10) {
-            return "000";
-        }
-        if (curationViewItem.getSentenceNumber() < 100) {
-            return "00";
-        }
-        if (curationViewItem.getSentenceNumber() < 1000) {
-            return "0";
-        }
-        return "";
     }
 
     protected void onChange(AjaxRequestTarget aTarget)
