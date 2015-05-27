@@ -75,7 +75,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
  * @author Seid Muhie Yimam
  */
 public class CurationPanel
-    extends Panel
+        extends Panel
 {
     private static final long serialVersionUID = -5128648754044819314L;
 
@@ -120,7 +120,7 @@ public class CurationPanel
      * Class for combining an on click ajax call and a label
      */
     class AjaxLabel
-        extends Label
+            extends Label
     {
 
         private static final long serialVersionUID = -4528869530409522295L;
@@ -265,7 +265,6 @@ public class CurationPanel
             public void onChange(AjaxRequestTarget aTarget, BratAnnotatorModel bratAnnotatorModel)
             {
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
-                aTarget.add(suggestionViewPanel);
                 try {
                     aTarget.addChildren(getPage(), FeedbackPanel.class);
                     updatePanel(aTarget, cCModel.getObject());
@@ -344,31 +343,29 @@ public class CurationPanel
 
                 // add subcomponents to the component
                 item.add(click);
-                String colorCode = curationViewItem.getSentenceState().getValue();
-                if (colorCode != null) {
-                    item.add(AttributeModifier.append("style", "background-color: " + colorCode
-                            + ";"));
-                }
 
+                String cC = curationViewItem.getSentenceState().getValue();
                 // mark current sentence in yellow
                 if (curationViewItem.getSentenceNumber() == bModel.getSentenceNumber()) {
                     item.add(AttributeModifier.append("style", "background-color: "
-                            + SentenceState.SELECTED.getValue() + ";"));
+                            + (cC==null?SentenceState.SELECTED_AGREE.getValue():
+                            SentenceState.SELECTED_DISAGREE.getValue() + ";")));
                 }
 
-                // mark border of sentences in the range of windows size in bold
-                try {
-                    markBorder(item, curationViewItem, fSn, lSn);
-                }
-                catch (UIMAException e) {
-                    error(ExceptionUtils.getRootCause(e));
-                }
-                catch (ClassNotFoundException e) {
-                    error(e.getMessage());
-                }
-                catch (IOException e) {
-                    error(e.getMessage());
-                }
+                else
+                    // mark border of sentences in the range of windows size with different BcColor
+                    try {
+                        getBColor(item, curationViewItem, fSn, lSn, cC);
+                    }
+                    catch (UIMAException e) {
+                        error(ExceptionUtils.getRootCause(e));
+                    }
+                    catch (ClassNotFoundException e) {
+                        error(e.getMessage());
+                    }
+                    catch (IOException e) {
+                        error(e.getMessage());
+                    }
 
                 String pad = getPad(curationViewItem);
                 Label sentenceNumber = new AjaxLabel("sentenceNumber", pad
@@ -381,15 +378,18 @@ public class CurationPanel
         textOuterView.add(textListView);
     }
 
-    private void markBorder(ListItem<SourceListView> aItem, SourceListView aCurationViewItem,
-            int aFSn, int aLSn)
-        throws UIMAException, ClassNotFoundException, IOException
+    private void getBColor(ListItem<SourceListView> aItem, SourceListView aCurationViewItem,
+            int aFSn, int aLSn, String aCC)
+            throws UIMAException, ClassNotFoundException, IOException
     {
         if (aCurationViewItem.getSentenceNumber() >= aFSn
                 && aCurationViewItem.getSentenceNumber() <= aLSn) {
-            aItem.add(AttributeModifier.append("style", "border-style: "
-                    + SentenceState.DOTTED_BORDER.getValue() + ";" + "border-color: "
-                    + SentenceState.BORDER_COLOR.getValue() + ";"));
+            aItem.add(AttributeModifier.append("style", "background-color: "
+                    + SentenceState.SELECTED_RANGE.getValue() + ";" ));
+        }
+        else if (aCC != null) {
+            aItem.add(AttributeModifier.append("style", "background-color: " + aCC
+                    + ";"));
         }
     }
 
@@ -445,7 +445,7 @@ public class CurationPanel
     }
 
     public void updatePanel(AjaxRequestTarget aTarget, CurationContainer aCC)
-        throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
+            throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
         JCas jCas = repository.readCurationCas(bModel.getDocument());
 
