@@ -74,7 +74,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
  * @author Seid Muhie Yimam
  */
 public class CurationPanel
-        extends Panel
+    extends Panel
 {
     private static final long serialVersionUID = -5128648754044819314L;
 
@@ -119,7 +119,7 @@ public class CurationPanel
      * Class for combining an on click ajax call and a label
      */
     class AjaxLabel
-            extends Label
+        extends Label
     {
 
         private static final long serialVersionUID = -4528869530409522295L;
@@ -344,25 +344,30 @@ public class CurationPanel
                 item.add(click);
 
                 String cC = curationViewItem.getSentenceState().getValue();
+                if (cC != null) {
+                    item.add(AttributeModifier.append("class", "disagree"));
+                }
                 // mark current sentence in yellow
                 if (curationViewItem.getSentenceNumber() == bModel.getSentenceNumber()) {
-                    item.add(AttributeModifier.append("class", (cC == null ? "agree" : "disagree")));
+                    if(cC!=null) {
+                        item.add(AttributeModifier.append("class", "current-disagree"));
+                    }
                 }
-
-                else
-                    // mark border of sentences in the range of windows size with different BcColor
-                    try {
-                        getBColor(item, curationViewItem, fSn, lSn, cC);
-                    }
-                    catch (UIMAException e) {
-                        error(ExceptionUtils.getRootCause(e));
-                    }
-                    catch (ClassNotFoundException e) {
-                        error(e.getMessage());
-                    }
-                    catch (IOException e) {
-                        error(e.getMessage());
-                    }
+                try {
+                    getBColor(item, curationViewItem, fSn, lSn, cC);
+                }
+                catch (UIMAException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                catch (ClassNotFoundException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
 
                 Label sentenceNumber = new AjaxLabel("sentenceNumber", curationViewItem
                         .getSentenceNumber().toString(), click);
@@ -376,11 +381,11 @@ public class CurationPanel
 
     private void getBColor(ListItem<SourceListView> aItem, SourceListView aCurationViewItem,
             int aFSn, int aLSn, String aCC)
-            throws UIMAException, ClassNotFoundException, IOException
+        throws UIMAException, ClassNotFoundException, IOException
     {
         if (aCurationViewItem.getSentenceNumber() >= aFSn
                 && aCurationViewItem.getSentenceNumber() <= aLSn) {
-            aItem.add(AttributeModifier.append("class", "range" ));
+            aItem.add(AttributeModifier.append("class", "range"));
         }
     }
 
@@ -422,7 +427,7 @@ public class CurationPanel
     }
 
     public void updatePanel(AjaxRequestTarget aTarget, CurationContainer aCC)
-            throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
+        throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
         JCas jCas = repository.readCurationCas(bModel.getDocument());
 
@@ -437,7 +442,7 @@ public class CurationPanel
         // last sentence or the ONLY sentence in the document
         Sentence lastSentenceAddressInDisplayWindow = followingSentences.size() == 0 ? sentence
                 : followingSentences.get(followingSentences.size() - 1);
-        if(curationView==null){
+        if (curationView == null) {
             curationView = new SourceListView();
         }
         curationView.setCurationBegin(sentence.getBegin());
