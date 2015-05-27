@@ -344,15 +344,16 @@ public class CurationPanel
                 item.add(click);
 
                 String cC = curationViewItem.getSentenceState().getValue();
-                if (cC != null) {
-                    item.add(AttributeModifier.append("class", "disagree"));
-                }
                 // mark current sentence in yellow
                 if (curationViewItem.getSentenceNumber() == bModel.getSentenceNumber()) {
                     if(cC!=null) {
                         item.add(AttributeModifier.append("class", "current-disagree"));
                     }
                 }
+                else if (cC != null) {
+                    item.add(AttributeModifier.append("class", "disagree"));
+                }
+
                 try {
                     getBColor(item, curationViewItem, fSn, lSn, cC);
                 }
