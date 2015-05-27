@@ -36,6 +36,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -68,6 +69,8 @@ public class BratAnnotatorModel
      */
     private User user;
 
+    private ScriptDirection scriptDirection;
+    
     /**
      * The sentence address where the display window starts with, in its UIMA annotation
      */
@@ -165,6 +168,17 @@ public class BratAnnotatorModel
     public void setProject(Project aProject)
     {
         project = aProject;
+        setScriptDirection(project.getScriptDirection());
+    }
+
+    public ScriptDirection getScriptDirection()
+    {
+        return scriptDirection;
+    }
+
+    public void setScriptDirection(ScriptDirection aScriptDirection)
+    {
+        scriptDirection = aScriptDirection;
     }
 
     public SourceDocument getDocument()
