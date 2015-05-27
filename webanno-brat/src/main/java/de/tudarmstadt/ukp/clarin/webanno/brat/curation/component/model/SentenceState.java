@@ -38,20 +38,26 @@ public enum SentenceState
      */
     RESOLVED(true, "#FFFF99"),
     /**
-     * Curator resolved conflicts - mark background in yellow
+     * Current sentence, where all annotators agree
      */
-    SELECTED(true, "#FFFF00"),
+    SELECTED_AGREE(true, "#58FAF4"),
+    /**
+     * Current sentence, where all annotators disagree
+     */
+    SELECTED_DISAGREE(true, "#C736D1"),
     /**
      *
      */
-    CONFIRMED(true, "#99FF99"),
-    DOTTED_BORDER(true, "dotted"),
-    BORDER_COLOR(true, "#0000ff");
+    /**
+     * In the range of current display window
+     */
+    SELECTED_RANGE(true, "#FFFF00"),
+    CONFIRMED(true, "#99FF99");
 
     private boolean hasDiff;
     private String colorCode;
 
-    private SentenceState(boolean aHasDiff, String aColorCode)
+    SentenceState(boolean aHasDiff, String aColorCode)
     {
         hasDiff = aHasDiff;
         colorCode = aColorCode;
